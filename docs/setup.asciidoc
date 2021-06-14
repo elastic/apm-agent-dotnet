@@ -286,7 +286,7 @@ NOTE: To learn more about adding modules, see the https://docs.microsoft.com/en-
 . Recompile your application and deploy it.
 +
 The `ElasticApmModule` instantiates the APM agent on the first initialization. However, there may be some scenarios where
-you want to control the agent instantiatiation, such as configuring filters in the application start.
+you want to control the agent instantiation, such as configuring filters in the application start.
 +
 To do so, the `ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with
 ASP.NET Full Framework, which can then instantiate the agent.
