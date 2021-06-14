@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -117,7 +116,7 @@ namespace Elastic.Apm.Tests
 
 				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler,
 					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentsContainer,
-					MockApmServerInfo.Version710, new BreakdownMetricsProvider());
+					MockApmServerInfo.Version710);
 				if (transaction.IsSampled) ++sampledCount;
 
 				// ReSharper disable once InvertIf
