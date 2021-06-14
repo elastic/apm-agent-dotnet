@@ -211,7 +211,8 @@ impl IMetaDataAssemblyImport {
                 &mut en,
                 assembly_refs.as_mut_ptr(),
                 max,
-                assembly_len.as_mut_ptr())
+                assembly_len.as_mut_ptr(),
+            )
         };
 
         if FAILED(hr) {
@@ -239,7 +240,8 @@ impl IMetaDataAssemblyImport {
                     &mut en,
                     assembly_refs.as_mut_ptr(),
                     max,
-                    assembly_len.as_mut_ptr())
+                    assembly_len.as_mut_ptr(),
+                )
             };
 
             if FAILED(hr) {
@@ -261,7 +263,10 @@ impl IMetaDataAssemblyImport {
         Ok(all_assembly_refs)
     }
 
-    pub fn get_referenced_assembly_metadata(&self, assembly_ref: mdAssemblyRef) -> Result<AssemblyMetaData, HRESULT> {
+    pub fn get_referenced_assembly_metadata(
+        &self,
+        assembly_ref: mdAssemblyRef,
+    ) -> Result<AssemblyMetaData, HRESULT> {
         let mut name_buffer_length = MaybeUninit::uninit();
 
         // get the length of the name first
@@ -276,7 +281,7 @@ impl IMetaDataAssemblyImport {
                 ptr::null_mut(),
                 ptr::null_mut(),
                 ptr::null_mut(),
-                ptr::null_mut()
+                ptr::null_mut(),
             )
         };
 
@@ -305,7 +310,7 @@ impl IMetaDataAssemblyImport {
                 assembly_metadata.as_mut_ptr(),
                 ptr::null_mut(),
                 ptr::null_mut(),
-                assembly_flags.as_mut_ptr()
+                assembly_flags.as_mut_ptr(),
             )
         };
 

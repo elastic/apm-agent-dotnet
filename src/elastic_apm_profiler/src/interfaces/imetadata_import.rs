@@ -919,4 +919,33 @@ impl IMetaDataImport2 {
             }
         }
     }
+
+    pub fn get_module_version_id(&self) -> Result<GUID, HRESULT> {
+        let mut module = mdModuleNil;
+        let hr = unsafe {
+            self.GetModuleFromScope(&mut module)
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let mut module_version_id = MaybeUninit::uninit();
+
+        let hr = unsafe {
+            self.GetScopeProps(
+                ptr::null_mut(),
+                0,
+                ptr::null_mut(),
+                module_version_id.as_mut_ptr(),
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let module_version_id = unsafe { module_version_id.assume_init() };
+        Ok(module_version_id)
+    }
 }

@@ -19,8 +19,10 @@ use crate::{
         imetadata_import::{IMetaDataImport, IMetaDataImport2},
     },
     profiler::managed::ManagedLoader,
-    profiler::types::{Integration, IntegrationMethod},
-    types::{HashAlgorithmType, ModuleInfo, RuntimeInfo, Version},
+    profiler::types::{
+        Integration, IntegrationMethod, MethodReplacement, ModuleMetadata, TargetMethodReference,
+    },
+    types::{AssemblyMetaData, HashAlgorithmType, ModuleInfo, RuntimeInfo, Version},
 };
 use com::{
     interfaces::iunknown::IUnknown,
@@ -39,8 +41,6 @@ use std::{
     ffi::c_void,
     sync::{atomic::AtomicBool, Mutex},
 };
-use crate::types::AssemblyMetaData;
-use crate::profiler::types::{MethodReplacement, TargetMethodReference};
 
 const MANAGED_PROFILER_ASSEMBLY_LOADER: &'static str = "Elastic.Apm.Profiler.Managed.Loader";
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
@@ -51,8 +51,6 @@ const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str =
 // TODO: Look at moving static refs that can be moved onto CorProfiler as fields.
 lazy_static! {
     static ref LOCK: Mutex<i32> = Mutex::new(0);
-    static ref MODULES: Mutex<HashMap<ModuleID, crate::profiler::types::ModuleInfo>> =
-        Mutex::new(HashMap::new());
     static ref FIRST_JIT_COMPILATION_APP_DOMAINS: Mutex<Vec<AppDomainID>> = Mutex::new(Vec::new());
     static ref MANAGED_PROFILER_LOADED_APP_DOMAINS: Mutex<Vec<AppDomainID>> =
         Mutex::new(Vec::new());
@@ -108,6 +106,7 @@ class! {
                 ICorProfilerCallback3(ICorProfilerCallback2(ICorProfilerCallback)))))))) {
         profiler_info: RefCell<Option<ICorProfilerInfo4>>,
         runtime_info: RefCell<Option<RuntimeInfo>>,
+        modules: RefCell<HashMap<ModuleID, ModuleMetadata>>,
     }
 
     impl ICorProfilerCallback for CorProfiler {
@@ -558,8 +557,8 @@ impl CorProfiler {
             return Ok(());
         }
 
-        let borrow = self.profiler_info.borrow();
-        let profiler_info = borrow.as_ref().unwrap();
+        let profiler_info_borrow = self.profiler_info.borrow();
+        let profiler_info = profiler_info_borrow.as_ref().unwrap();
 
         let assembly_info = profiler_info.get_assembly_info(assembly_id)?;
         let metadata_import = profiler_info.get_module_metadata::<IMetaDataImport2>(
@@ -569,7 +568,7 @@ impl CorProfiler {
 
         let metadata_assembly_import = metadata_import
             .query_interface::<IMetaDataAssemblyImport>()
-            .expect("AssemblyLoadFinished: unable to get meta data assembly import");
+            .expect("AssemblyLoadFinished: unable to get metadata assembly import");
 
         let assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
 
@@ -580,6 +579,7 @@ impl CorProfiler {
             &assembly_metadata.name,
             &assembly_metadata.version
         );
+
         if is_managed_profiler_assembly {
             if &assembly_metadata.version == PROFILER_VERSION.deref() {
                 log::info!(
@@ -766,13 +766,14 @@ impl CorProfiler {
             // subscribe to DiagnosticSource events.
             // don't skip Dapper: it makes ADO.NET calls even though it doesn't reference
             // System.Data or System.Data.Common
-            if assembly_name != "Microsoft.AspNetCore.Hosting" &&
-                assembly_name != "Dapper" &&
-                !is_call_target_enabled {
-
+            if assembly_name != "Microsoft.AspNetCore.Hosting"
+                && assembly_name != "Dapper"
+                && !is_call_target_enabled
+            {
                 fn meets_requirements(
                     assembly_metadata: &AssemblyMetaData,
-                    method_replacement: &MethodReplacement) -> bool {
+                    method_replacement: &MethodReplacement,
+                ) -> bool {
                     match &method_replacement.target {
                         None => false,
                         Some(target) => {
@@ -803,24 +804,37 @@ impl CorProfiler {
 
                 let assembly_ref_metadata = assembly_ref_metadata.unwrap();
                 filtered_integrations.retain(|i| {
-                   meets_requirements(&assembly_metadata, &i.method_replacement) ||
-                   assembly_ref_metadata
-                           .iter()
-                           .any(|m| meets_requirements(m, &i.method_replacement))
+                    meets_requirements(&assembly_metadata, &i.method_replacement)
+                        || assembly_ref_metadata
+                            .iter()
+                            .any(|m| meets_requirements(m, &i.method_replacement))
                 });
 
                 if filtered_integrations.is_empty() {
-                    log::debug!("ModuleLoadFinished: skipping module {} {} because filtered by target", module_id, assembly_name);
+                    log::debug!(
+                        "ModuleLoadFinished: skipping module {} {} because filtered by target",
+                        module_id,
+                        assembly_name
+                    );
                     return Ok(());
                 }
             }
 
-            // TODO: store module and metadata and request rejit
+            let module_version_id = metadata_import.get_module_version_id()?;
+            let module_metadata = ModuleMetadata::new(
+                metadata_import,
+                metadata_emit,
+                assembly_import,
+                assembly_emit,
+                assembly_name.to_string(),
+                appdomain_id,
+                module_version_id,
+                filtered_integrations,
+            );
 
-            let mut modules = MODULES.lock().unwrap();
-            modules.insert(module_id, module_info);
-
-            log::trace!("Tracking {} modules", modules.len());
+            let mut modules = self.modules.borrow_mut();
+            modules.insert(module_id, module_metadata);
+            log::trace!("Tracking {} module(s)", modules.len());
         }
 
         Ok(())

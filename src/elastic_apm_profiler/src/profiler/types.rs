@@ -1,5 +1,9 @@
 use crate::error::Error;
 use crate::ffi::{AppDomainID, AssemblyID, ModuleID, BYTE, COR_PRF_MODULE_FLAGS};
+use crate::interfaces::imetadata_assembly_emit::IMetaDataAssemblyEmit;
+use crate::interfaces::imetadata_assembly_import::IMetaDataAssemblyImport;
+use crate::interfaces::imetadata_emit::IMetaDataEmit2;
+use crate::interfaces::imetadata_import::IMetaDataImport2;
 use crate::types::{PublicKey, Version};
 use core::fmt;
 use serde::de::{DeserializeOwned, MapAccess, Visitor};
@@ -7,6 +11,7 @@ use serde::{de, Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::str::FromStr;
+use com::sys::GUID;
 
 pub(crate) struct ModuleInfo {
     pub id: ModuleID,
@@ -236,6 +241,41 @@ pub struct IntegrationMethod {
 pub struct Integration {
     pub(crate) name: String,
     pub(crate) method_replacements: Vec<MethodReplacement>,
+}
+
+pub struct ModuleMetadata {
+    metadata_import: IMetaDataImport2,
+    metadata_emit: IMetaDataEmit2,
+    assembly_import: IMetaDataAssemblyImport,
+    assembly_emit: IMetaDataAssemblyEmit,
+    assembly_name: String,
+    appdomain_id: AppDomainID,
+    module_version_id: GUID,
+    integrations: Vec<IntegrationMethod>,
+}
+
+impl ModuleMetadata {
+    pub fn new(
+        metadata_import: IMetaDataImport2,
+        metadata_emit: IMetaDataEmit2,
+        assembly_import: IMetaDataAssemblyImport,
+        assembly_emit: IMetaDataAssemblyEmit,
+        assembly_name: String,
+        appdomain_id: AppDomainID,
+        module_version_id: GUID,
+        integrations: Vec<IntegrationMethod>,
+    ) -> Self {
+        Self {
+            metadata_import,
+            metadata_emit,
+            assembly_import,
+            assembly_emit,
+            assembly_name,
+            appdomain_id,
+            module_version_id,
+            integrations,
+        }
+    }
 }
 
 #[cfg(test)]
