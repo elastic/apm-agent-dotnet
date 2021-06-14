@@ -202,7 +202,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Sets the SuppressTraceContextHeaders config and makes sure that the traceparent header is ignored
+		/// Sets the TraceContextIgnoreSampledFalse config and makes sure that the traceparent header is ignored
 		/// </summary>
 		[Fact]
 		public async Task TraceContextIgnoreSampledFalse_WithNoTraceState()
@@ -224,7 +224,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Sets the TraceContextIgnoreSampledFalse config and makes sends a traceparent with es vendor part.
+		/// Sets the TraceContextIgnoreSampledFalse config and sends a traceparent with es vendor part.
 		/// Makes sure in that case the sampled flag from traceparent is honored.
 		/// </summary>
 		[Fact]
@@ -248,7 +248,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Sets the TraceContextIgnoreSampledFalse config and makes sends a traceparent without es vendor part.
+		/// Sets the TraceContextIgnoreSampledFalse config and sends a traceparent without es vendor part.
 		/// Makes sure in that case the sampled flag from traceparent is ignored.
 		/// </summary>
 		[Fact]
@@ -273,7 +273,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Does not set the TraceContextIgnoreSampledFalse config and makes sure that the traceparent header is not ignored.
-		/// This tests the default case when the config is not set, so the agent just follows W3C and takes the sampled flag as it is
+		/// This tests the default case when the config is not set, so the agent just follows W3C and takes the sampled flag as it is.
 		/// </summary>
 		[Fact]
 		public async Task TraceContextIgnoreSampledFalse_NotSet_WithNonEsTraceState_NotSampled()
