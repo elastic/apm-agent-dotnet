@@ -39,7 +39,6 @@ namespace Elastic.Apm.Model
 		private readonly Activity _activity;
 
 		private readonly IApmServerInfo _apmServerInfo;
-		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
@@ -83,7 +82,6 @@ namespace Elastic.Apm.Model
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
-		/// <param name="breakdownMetricsProvider">A metric provider that tracks breakdown metrics</param>
 		/// <param name="ignoreActivity">
 		/// If set the transaction will ignore Activity.Current and it's trace id,
 		/// otherwise the agent will try to keep ids in-sync across async work-flows
@@ -103,7 +101,6 @@ namespace Elastic.Apm.Model
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
-			BreakdownMetricsProvider breakdownMetricsProvider = null,
 			bool ignoreActivity = false,
 			long? timestamp = null
 		)
@@ -113,7 +110,6 @@ namespace Elastic.Apm.Model
 
 			_logger = logger?.Scoped(nameof(Transaction));
 			_apmServerInfo = apmServerInfo;
-			_breakdownMetricsProvider = breakdownMetricsProvider;
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
@@ -510,16 +506,14 @@ namespace Elastic.Apm.Model
 			if (!isFirstEndCall)
 				return;
 
-			var handler = Ended;
-			handler?.Invoke(this, EventArgs.Empty);
-			Ended = null;
-
 			if (SpanTimings.ContainsKey(("app", null)))
 				SpanTimings[("app", null)].IncrementTimer(SelfDuration);
 			else
 				SpanTimings.TryAdd(("app", null), new SpanTimer(SelfDuration));
 
-			_breakdownMetricsProvider?.CaptureTransaction(this);
+			var handler = Ended;
+			handler?.Invoke(this, EventArgs.Empty);
+			Ended = null;
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
@@ -553,7 +547,6 @@ namespace Elastic.Apm.Model
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
-				_breakdownMetricsProvider,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);

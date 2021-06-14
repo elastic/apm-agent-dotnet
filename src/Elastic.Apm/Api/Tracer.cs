@@ -76,13 +76,24 @@ namespace Elastic.Apm.Api
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, _breakdownMetricsProvider, ignoreActivity, timestamp)
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, ignoreActivity, timestamp)
 			{
 				Service = _service
 			};
 
+			retVal.Ended += RetValOnEnded;
+
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
+
+			void RetValOnEnded(object sender, EventArgs e)
+			{
+				if (sender is Transaction t)
+				{
+					_breakdownMetricsProvider.CaptureTransaction(t);
+					t.Ended -= RetValOnEnded;
+				}
+			}
 		}
 
 		public void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null)

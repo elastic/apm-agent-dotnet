@@ -12,11 +12,9 @@ using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
@@ -24,7 +22,6 @@ namespace Elastic.Apm.Model
 	internal class Span : ISpan
 	{
 		private readonly IApmServerInfo _apmServerInfo;
-		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 
 		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
@@ -56,7 +53,6 @@ namespace Elastic.Apm.Model
 			IApmLogger logger,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
-			BreakdownMetricsProvider breakdownMetricsProvider,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
 			bool captureStackTraceOnStart = false,
@@ -73,7 +69,6 @@ namespace Elastic.Apm.Model
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
 			_apmServerInfo = apmServerInfo;
-			_breakdownMetricsProvider = breakdownMetricsProvider;
 			Name = name;
 			Type = type;
 
@@ -287,7 +282,7 @@ namespace Elastic.Apm.Model
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, _breakdownMetricsProvider, this, instrumentationFlag, captureStackTraceOnStart, timestamp);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
