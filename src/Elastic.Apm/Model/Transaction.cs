@@ -208,7 +208,7 @@ namespace Elastic.Apm.Model
 				isSamplingFromDistributedTracingData = true;
 				_traceState = distributedTracingData.TraceState;
 
-				// If SuppressTraceContextHeaders is set and the upstream service is not from our agent (aka no sample rate set)
+				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
 				if (configSnapshot.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
 					|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))

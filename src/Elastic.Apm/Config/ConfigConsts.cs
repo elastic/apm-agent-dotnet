@@ -34,7 +34,7 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = "5ms";
 			public const double SpanFramesMinDurationInMilliseconds = 5;
 			public const int StackTraceLimit = 50;
-			public const bool SuppressTraceContextHeaders = false;
+			public const bool TraceContextIgnoreSampledFalse = false;
 			public const int TransactionMaxSpans = 500;
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";

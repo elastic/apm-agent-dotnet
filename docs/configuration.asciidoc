@@ -1049,14 +1049,21 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 [[config-trace-context-ignore-sampled-false]]
 ==== `TraceContextIgnoreSampledFalse`
 
-By setting this to `true` the agent will ignore the sampled part of the W3C TraceContext traceparent header when it's false and when the upstream transaction is not coming from a non-Elastic APM agent.
+[IMPORTANT]
+--
+..NET 5 applications set the https://www.w3.org/TR/trace-context/[W3C Trace Context] headers for outgoing HTTP requests by default, but with the traceparent sampled flag set to `false`. If the application has an active agent, the agent will ensure that the sampled flag is propagated appropriately. If the application does not have an active agent however, and the application calls another application (the callee) that does have an active agent, the propagation of a sampled flag of `false` results in no sampled traces in the callee application.
+
+If your application is called by an unmonitored .NET 5 application, setting `TraceContextIgnoreSampledFalse` to `true` will instruct the agent to start a new trace and make a new sampling decision based on <<config-transaction-sample-rate>> when the traceparent sampled flag is `false` and there is no agent specific tracestate present.
+--
+
+The agent uses the W3C TraceContext standard for distributed tracing. The traceparent header from the W3C TraceContext standard defines a flag called `sampled`, which stored whether a trace is sampled or not and by default the agent accepts this flag and behaves accordingly.
+
+By setting this config to `true`, the agent will ignore the sampled part of the W3C TraceContext traceparent header when it's false and when the upstream transaction is not coming from a non-Elastic APM agent.
 In practice this means that in case a caller service calls another service where this value is `true`,
 the agent will ignore the sampling decision of the upstream service, and it will make a new sampling decision.
 
 This can be useful when a caller service always sets the sampled flag to false and the agent would have no chance to
 create any sampled transaction.
-
-NOTE: .NET 5 by default sets the W3C TraceContext headers, but without an active agent it sets the sampled flag to `false` leading to 0% sampling. If your service is called by an unmonitored .NET 5 application, setting this flag will instruct the agent to start a new trace and make a new sampling decision based on <<config-transaction-sample-rate>>.
 
 [options="header"]
 |============

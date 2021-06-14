@@ -201,9 +201,9 @@ namespace Elastic.Apm.Config
 
 		protected bool ParseTraceContextIgnoreSampledFalse(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.SuppressTraceContextHeaders;
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.TraceContextIgnoreSampledFalse;
 			// ReSharper disable once SimplifyConditionalTernaryExpression
-			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.SuppressTraceContextHeaders;
+			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.TraceContextIgnoreSampledFalse;
 		}
 
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
