@@ -50,7 +50,9 @@ namespace Elastic.Apm.Api
 				{ nameof(Container), Container },
 				{ nameof(ConfiguredHostName), ConfiguredHostName },
 				{ nameof(DetectedHostName), DetectedHostName },
+#pragma warning disable 618
 				{ nameof(HostName), HostName }
+#pragma warning restore 618
 			}.ToString();
 	}
 }
