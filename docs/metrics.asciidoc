@@ -192,7 +192,7 @@ This timer tracks the duration of transactions and allows for the creation of gr
 
 Fields:
 
-* `sum.us`: The sum of all transaction durations in ms since the last report (the delta)
+* `sum.us`: The sum of all transaction durations in microseconds since the last report (the delta)
 * `count`: The count of all transactions since the last report (the delta)
 
 You can filter and group by these dimensions:
@@ -230,7 +230,7 @@ This timer tracks the span self-times and is the basis of the transaction breakd
 
 Fields:
 
-* `sum.us`: The sum of all span self-times in ms since the last report (the delta)
+* `sum.us`: The sum of all span self-times in microseconds since the last report (the delta)
 * `count`: The count of all span self-times since the last report (the delta)
 
 You can filter and group by these dimensions:
