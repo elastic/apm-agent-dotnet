@@ -123,6 +123,7 @@ namespace Elastic.Apm.Config
 
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
 
+		public bool TraceContextIgnoreSampledFalse => ParseTraceContextIgnoreSampledFalse(Read(ConfigConsts.EnvVarNames.TraceContextIgnoreSampledFalse));
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);
 	}

@@ -199,6 +199,13 @@ namespace Elastic.Apm.Config
 			return true;
 		}
 
+		protected bool ParseTraceContextIgnoreSampledFalse(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.TraceContextIgnoreSampledFalse;
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.TraceContextIgnoreSampledFalse;
+		}
+
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;

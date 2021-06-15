@@ -34,6 +34,7 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = "5ms";
 			public const double SpanFramesMinDurationInMilliseconds = 5;
 			public const int StackTraceLimit = 50;
+			public const bool TraceContextIgnoreSampledFalse = false;
 			public const int TransactionMaxSpans = 500;
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
@@ -142,6 +143,7 @@ namespace Elastic.Apm.Config
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
+			public const string TraceContextIgnoreSampledFalse = Prefix + "TRACE_CONTEXT_IGNORE_SAMPLED_FALSE";
 			public const string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
@@ -183,6 +185,7 @@ namespace Elastic.Apm.Config
 			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
 			public const string ServiceVersion = Prefix + nameof(ServiceVersion);
 			public const string SpanFramesMinDuration = Prefix + nameof(SpanFramesMinDuration);
+			public const string TraceContextIgnoreSampledFalse = Prefix + nameof(TraceContextIgnoreSampledFalse);
 			public const string StackTraceLimit = Prefix + nameof(StackTraceLimit);
 			public const string TransactionIgnoreUrls = Prefix + nameof(TransactionIgnoreUrls);
 			public const string TransactionMaxSpans = Prefix + nameof(TransactionMaxSpans);
