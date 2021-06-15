@@ -90,7 +90,7 @@ namespace Elastic.Apm.Api
 			{
 				if (sender is Transaction t)
 				{
-					_breakdownMetricsProvider.CaptureTransaction(t);
+					_breakdownMetricsProvider?.CaptureTransaction(t);
 					t.Ended -= RetValOnEnded;
 				}
 			}
