@@ -57,10 +57,16 @@ namespace Elastic.Apm
 
 				if (ConfigurationReader.Enabled)
 				{
-					breakdownMetricsProvider ??= new BreakdownMetricsProvider();
+					var isBreakdownEnabled =
+						!WildcardMatcher.IsAnyMatch(ConfigStore.CurrentSnapshot.DisableMetrics, BreakdownMetricsProvider.SpanSelfTime);
+
+					if (isBreakdownEnabled)
+						breakdownMetricsProvider ??= new BreakdownMetricsProvider();
 
 					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
-					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider);
+					MetricsCollector = metricsCollector ?? (isBreakdownEnabled
+						? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider)
+						: new MetricsCollector(Logger, PayloadSender, ConfigStore));
 					MetricsCollector.StartCollecting();
 				}
 				else

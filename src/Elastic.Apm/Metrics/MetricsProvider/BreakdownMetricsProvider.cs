@@ -47,7 +47,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 								new($"{SpanSelfTime}.count", item.Value.Count), new($"{SpanSelfTime}.sum.us", item.Value.TotalDuration * 1000)
 							})
 						{
-							Span = new SpanInfo { Type = item.Key.Item1, SubType = item.Key.Item2 },
+							Span = new SpanInfo { Type = item.Key.Type, SubType = item.Key.SubType },
 							Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type }
 						};
 
@@ -61,8 +61,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							new("transaction.duration.count", _transactionCount),
 							new("transaction.duration.sum.us", transaction.Duration!.Value * 1000),
 							new("transaction.breakdown.count", _transactionCount),
-						})
-					{ Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type } };
+						}) { Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type } };
 
 				_itemsToSend.Add(transactionMetric);
 			}

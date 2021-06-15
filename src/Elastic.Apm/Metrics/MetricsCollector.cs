@@ -69,15 +69,8 @@ namespace Elastic.Apm.Metrics
 			if (metricsProvider != null)
 			{
 				foreach (var item in metricsProvider)
-				{
-					if (item != null)
-					{
-						if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, BreakdownMetricsProvider.SpanSelfTime))
-							MetricsProviders.Add(item);
-					}
-				}
+					if (item != null) MetricsProviders.Add(item);
 			}
-
 
 			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
 				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));

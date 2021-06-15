@@ -15,7 +15,6 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
@@ -28,7 +27,7 @@ namespace Elastic.Apm.Model
 
 		internal readonly TraceState _traceState;
 
-		internal readonly ConcurrentDictionary<(string, string), SpanTimer> SpanTimings = new();
+		internal readonly ConcurrentDictionary<SpanTypeAndSubtype, SpanTimer> SpanTimings = new();
 
 		/// <summary>
 		/// The agent also starts an Activity when a transaction is started and stops it when the transaction ends.
@@ -506,10 +505,10 @@ namespace Elastic.Apm.Model
 			if (!isFirstEndCall)
 				return;
 
-			if (SpanTimings.ContainsKey(("app", null)))
-				SpanTimings[("app", null)].IncrementTimer(SelfDuration);
+			if (SpanTimings.ContainsKey(SpanTypeAndSubtype.AppSpanType))
+				SpanTimings[SpanTypeAndSubtype.AppSpanType].IncrementTimer(SelfDuration);
 			else
-				SpanTimings.TryAdd(("app", null), new SpanTimer(SelfDuration));
+				SpanTimings.TryAdd(SpanTypeAndSubtype.AppSpanType, new SpanTimer(SelfDuration));
 
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);
