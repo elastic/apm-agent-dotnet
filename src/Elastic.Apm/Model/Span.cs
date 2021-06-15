@@ -33,8 +33,8 @@ namespace Elastic.Apm.Model
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
 
-		// This constructor is meant for deserialization
 		[JsonConstructor]
+		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
 		private Span(double duration, string id, string name, string parentId)
 		{
 			Duration = duration;

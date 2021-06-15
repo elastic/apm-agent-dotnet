@@ -43,9 +43,8 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
-		// This constructor is meant for serialization
 		[JsonConstructor]
-		// ReSharper disable once UnusedMember.Local
+		// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
 		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
 			bool isSampled, string result, SpanCount spanCount
 		)
@@ -367,7 +366,7 @@ namespace Elastic.Apm.Model
 				_outcome = value;
 			}
 		}
-		
+
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
 

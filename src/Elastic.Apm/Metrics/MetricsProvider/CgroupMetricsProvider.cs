@@ -19,65 +19,66 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	/// </summary>
 	internal class CgroupMetricsProvider : IMetricsProvider
 	{
-		private readonly bool _collectMemLimitBytes;
-		private readonly bool _collectMemUsageBytes;
-		private readonly bool _collectStatsInactiveFileBytes;
-		private readonly IApmLogger _logger;
-		private const string ProcSelfCgroup = "/proc/self/cgroup";
-		private const string ProcSelfMountinfo = "/proc/self/mountinfo";
-		private const string DefaultSysFsCgroup = "/sys/fs/cgroup";
 		private const string Cgroup1MaxMemory = "memory.limit_in_bytes";
+		private const string Cgroup1Unlimited = "9223372036854771712";
 		private const string Cgroup1UsedMemory = "memory.usage_in_bytes";
 		private const string Cgroup2MaxMemory = "memory.max";
+		private const string Cgroup2Unlimited = "max";
 		private const string Cgroup2UsedMemory = "memory.current";
 		private const string CgroupMemoryStat = "memory.stat";
-		private const string Cgroup1Unlimited = "9223372036854771712";
-		private const string Cgroup2Unlimited = "max";
+		private const string DefaultSysFsCgroup = "/sys/fs/cgroup";
+		private const string ProcSelfCgroup = "/proc/self/cgroup";
+		private const string ProcSelfMountinfo = "/proc/self/mountinfo";
 
 		internal const string SystemProcessCgroupMemoryMemLimitBytes = "system.process.cgroup.memory.mem.limit.bytes";
 		internal const string SystemProcessCgroupMemoryMemUsageBytes = "system.process.cgroup.memory.mem.usage.bytes";
 		internal const string SystemProcessCgroupMemoryStatsInactiveFileBytes = "system.process.cgroup.memory.stats.inactive_file.bytes";
-
-		internal static readonly Regex MemoryCgroup = new Regex("^\\d+:memory:.*");
 		internal static readonly Regex Cgroup1MountPoint = new Regex("^\\d+? \\d+? .+? .+? (.*?) .*cgroup.*memory.*");
 		internal static readonly Regex Cgroup2MountPoint = new Regex("^\\d+? \\d+? .+? .+? (.*?) .*cgroup2.*cgroup.*");
 
+		internal static readonly Regex MemoryCgroup = new Regex("^\\d+:memory:.*");
+
 		private readonly CgroupFiles _cGroupFiles;
+		private readonly bool _collectMemLimitBytes;
+		private readonly bool _collectMemUsageBytes;
+		private readonly bool _collectStatsInactiveFileBytes;
+		private readonly IApmLogger _logger;
 
 		/// <summary>
-		/// Initializes a new instance of <see cref="CgroupMetricsProvider"/>
+		/// Initializes a new instance of <see cref="CgroupMetricsProvider" />
 		/// </summary>
 		/// <param name="logger">the logger</param>
-		/// <param name="collectMemLimitBytes">whether to collect <see cref="SystemProcessCgroupMemoryMemLimitBytes"/> metric</param>
-		/// <param name="collectMemUsageBytes">whether to collect <see cref="SystemProcessCgroupMemoryMemUsageBytes"/> metric</param>
-		/// <param name="collectStatsInactiveFileBytes">whether to collect <see cref="SystemProcessCgroupMemoryStatsInactiveFileBytes"/> metric</param>
-		public CgroupMetricsProvider(IApmLogger logger, bool collectMemLimitBytes = true, bool collectMemUsageBytes = true, bool collectStatsInactiveFileBytes = true)
-			: this(ProcSelfCgroup, ProcSelfMountinfo, logger, collectMemLimitBytes, collectMemUsageBytes, collectStatsInactiveFileBytes)
-		{
-		}
+		/// <param name="disabledMetrics">List of disabled metrics</param>
+		public CgroupMetricsProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics
+		)
+			: this(ProcSelfCgroup, ProcSelfMountinfo, logger, disabledMetrics) { }
 
 		/// <summary>
-		/// Initializes a new instance of <see cref="CgroupMetricsProvider"/>
+		///  Initializes a new instance of <see cref="CgroupMetricsProvider" />
 		/// </summary>
-		/// <param name="procSelfCGroup">the <see cref="ProcSelfCgroup"/> file</param>
-		/// <param name="mountInfo">the <see cref="ProcSelfMountinfo"/> file</param>
+		/// <param name="procSelfCGroup">the <see cref="ProcSelfCgroup" /> file</param>
+		/// <param name="mountInfo">the <see cref="ProcSelfMountinfo" /> file</param>
 		/// <param name="logger">the logger</param>
-		/// <param name="collectMemLimitBytes">whether to collect <see cref="SystemProcessCgroupMemoryMemLimitBytes"/> metric</param>
-		/// <param name="collectMemUsageBytes">whether to collect <see cref="SystemProcessCgroupMemoryMemUsageBytes"/> metric</param>
-		/// <param name="collectStatsInactiveFileBytes">whether to collect <see cref="SystemProcessCgroupMemoryStatsInactiveFileBytes"/> metric</param>
+		/// <param name="disabledMetrics">List of disabled metrics</param>
 		/// <remarks>
-		///	Used for testing
+		/// 	Used for testing
 		/// </remarks>
-		internal CgroupMetricsProvider(string procSelfCGroup, string mountInfo, IApmLogger logger, bool collectMemLimitBytes = true, bool collectMemUsageBytes = true, bool collectStatsInactiveFileBytes = true)
+		internal CgroupMetricsProvider(string procSelfCGroup, string mountInfo, IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics
+		)
 		{
-			_collectMemLimitBytes = collectMemLimitBytes;
-			_collectMemUsageBytes = collectMemUsageBytes;
-			_collectStatsInactiveFileBytes = collectStatsInactiveFileBytes;
+			_collectMemLimitBytes = IsSystemProcessCgroupMemoryMemLimitBytesEnabled(disabledMetrics);
+			_collectMemUsageBytes = IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics);
+			_collectStatsInactiveFileBytes = IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
 			_logger = logger.Scoped(nameof(CgroupMetricsProvider));
 			_cGroupFiles = FindCGroupFiles(procSelfCGroup, mountInfo);
 
 			IsMetricAlreadyCaptured = true;
 		}
+
+		public int ConsecutiveNumberOfFailedReads { get; set; }
+		public string DbgName { get; } = nameof(CgroupMetricsProvider);
+
+		public bool IsMetricAlreadyCaptured { get; }
 
 		private CgroupFiles FindCGroupFiles(string procSelfCGroup, string mountInfo)
 		{
@@ -153,10 +154,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 			else
 			{
-				_logger.Info()?.Log(
-					"{File} file does not exist. Looking for memory files in {DefaultFile}.",
-					ProcSelfMountinfo,
-					DefaultSysFsCgroup);
+				_logger.Info()
+					?.Log(
+						"{File} file does not exist. Looking for memory files in {DefaultFile}.",
+						ProcSelfMountinfo,
+						DefaultSysFsCgroup);
 			}
 
 
@@ -206,7 +208,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			return null;
 		}
 
-		internal static string ApplyCgroupRegex(Regex regex, string mountLine) {
+		internal static string ApplyCgroupRegex(Regex regex, string mountLine)
+		{
 			var match = regex.Match(mountLine);
 			return match.Success
 				? match.Groups[1].Value
@@ -233,9 +236,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				return null;
 			}
 		}
-
-		public int ConsecutiveNumberOfFailedReads { get; set; }
-		public string DbgName { get; } = nameof(CgroupMetricsProvider);
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
@@ -324,7 +324,20 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 		}
 
-		public bool IsMetricAlreadyCaptured { get; }
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => IsSystemProcessCgroupMemoryMemLimitBytesEnabled(disabledMetrics) ||
+			IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics)
+			|| IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
+
+
+		private bool IsSystemProcessCgroupMemoryMemLimitBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(
+			disabledMetrics, SystemProcessCgroupMemoryMemLimitBytes);
+
+		private bool IsSystemProcessCgroupMemoryMemUsageBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(
+			disabledMetrics, SystemProcessCgroupMemoryMemUsageBytes);
+
+		private bool IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
+			!WildcardMatcher.IsAnyMatch(
+				disabledMetrics, SystemProcessCgroupMemoryStatsInactiveFileBytes);
 	}
 
 	/// <summary>
@@ -332,15 +345,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	/// </summary>
 	internal class CgroupFiles
 	{
-		public string MaxMemoryFile { get; }
-		public string UsedMemoryFile { get; }
-		public string StatMemoryFile { get; }
-
 		public CgroupFiles(string maxMemoryFile, string usedMemoryFile, string statMemoryFile)
 		{
 			MaxMemoryFile = maxMemoryFile;
 			UsedMemoryFile = usedMemoryFile;
 			StatMemoryFile = statMemoryFile;
 		}
+
+		public string MaxMemoryFile { get; }
+		public string StatMemoryFile { get; }
+		public string UsedMemoryFile { get; }
 	}
 }

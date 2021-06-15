@@ -94,7 +94,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void GetWorkingSetAndVirtualMemory()
 		{
-			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider(true, true);
+			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider(new List<WildcardMatcher>());
 			var retVal = processWorkingSetAndVirtualMemoryProvider.GetSamples();
 
 			var enumerable = retVal as MetricSet[] ?? retVal.ToArray();
@@ -294,7 +294,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger(LogLevel.Trace);
 			string traceEventSessionName;
-			using (var gcMetricsProvider = new GcMetricsProvider(logger))
+			using (var gcMetricsProvider = new GcMetricsProvider(logger, new List<WildcardMatcher>()))
 			{
 				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
@@ -412,6 +412,8 @@ namespace Elastic.Apm.Tests
 				NumberOfGetValueCalls++;
 				throw new Exception(ExceptionMessage);
 			}
+
+			public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => WildcardMatcher.IsAnyMatch(disabledMetrics, BreakdownMetricsProvider.SpanSelfTime);
 		}
 
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
