@@ -1049,21 +1049,18 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 [[config-trace-context-ignore-sampled-false]]
 ==== `TraceContextIgnoreSampledFalse`
 
+The agent uses the https://www.w3.org/TR/trace-context/[W3C Trace Context] specification and standards for distributed tracing. The traceparent header from the W3C Trace Context specification defines a https://www.w3.org/TR/trace-context/#sampled-flag[sampled flag] which is propagated from a caller service to a callee service, and determines whether a trace is sampled in the callee service. The default behavior of the agent honors the sampled flag value and behaves accordingly.
+
+There may be cases where you wish to change the default behavior of the agent with respect to the sampled flag. By setting the `TraceContextIgnoreSampled` configuration value to `true`, the agent ignores the sampled flag of the W3C Trace Context traceparent header when it has a value of `false` **and** and there is no agent specific tracestate header value present. In ignoring the sampled flag, the agent makes a sampling decision based on the <<config-transaction-sample-rate, sample rate>>. This can be useful when a caller service always sets a sampled flag value of `false`, that results in the agent never sampling any transactions.
+
 [IMPORTANT]
 --
-..NET 5 applications set the https://www.w3.org/TR/trace-context/[W3C Trace Context] headers for outgoing HTTP requests by default, but with the traceparent sampled flag set to `false`. If the application has an active agent, the agent will ensure that the sampled flag is propagated appropriately. If the application does not have an active agent however, and the application calls another application (the callee) that does have an active agent, the propagation of a sampled flag of `false` results in no sampled traces in the callee application.
+:dotnet5: .NET 5
 
-If your application is called by an unmonitored .NET 5 application, setting `TraceContextIgnoreSampledFalse` to `true` will instruct the agent to start a new trace and make a new sampling decision based on <<config-transaction-sample-rate>> when the traceparent sampled flag is `false` and there is no agent specific tracestate present.
+{dotnet5} applications set the W3C Trace Context for outgoing HTTP requests by default, but with the traceparent header sampled flag set to `false`. If a {dotnet5} application has an active agent, the agent ensures that the sampled flag is propagated with the agent's sampling decision. If a {dotnet5} application does not have an active agent however, and the application calls another service that does have an active agent, the propagation of a sampled flag value of `false` results in no sampled transactions in the callee service.
+
+If your application is called by an {dotnet5} application that does not have an active agent, setting the `TraceContextIgnoreSampledFalse` configuration value to `true` instructs the agent to start a new transaction and make a sampling decision based on the <<config-transaction-sample-rate, sample rate>>, when the traceparent header sampled flag has a value of `false` **and** there is no agent specific tracestate header value present.
 --
-
-The agent uses the W3C TraceContext standard for distributed tracing. The traceparent header from the W3C TraceContext standard defines a flag called `sampled`, which stored whether a trace is sampled or not and by default the agent accepts this flag and behaves accordingly.
-
-By setting this config to `true`, the agent will ignore the sampled part of the W3C TraceContext traceparent header when it's false and when the upstream transaction is not coming from a non-Elastic APM agent.
-In practice this means that in case a caller service calls another service where this value is `true`,
-the agent will ignore the sampling decision of the upstream service, and it will make a new sampling decision.
-
-This can be useful when a caller service always sets the sampled flag to false and the agent would have no chance to
-create any sampled transaction.
 
 [options="header"]
 |============
