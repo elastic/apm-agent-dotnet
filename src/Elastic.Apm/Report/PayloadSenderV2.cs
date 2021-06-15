@@ -20,6 +20,7 @@ using Elastic.Apm.Filters;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.ServerInfo;
@@ -49,6 +50,7 @@ namespace Elastic.Apm.Report
 		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
 		private readonly PayloadItemSerializer _payloadItemSerializer;
+		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 
 		private string _cachedMetadataJsonLine;
 		private long _eventQueueCount;
@@ -62,7 +64,8 @@ namespace Elastic.Apm.Report
 			HttpMessageHandler httpMessageHandler = null,
 			string dbgName = null,
 			bool isEnabled = true,
-			IEnvironmentVariables environmentVariables = null
+			IEnvironmentVariables environmentVariables = null,
+			BreakdownMetricsProvider breakdownMetricsProvider = null
 		)
 			: base(isEnabled, logger, ThisClassName, service, config, httpMessageHandler)
 		{
@@ -72,6 +75,7 @@ namespace Elastic.Apm.Report
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer();
 			_configSnapshot = config;
+			_breakdownMetricsProvider = breakdownMetricsProvider;
 
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl);
 
@@ -118,7 +122,8 @@ namespace Elastic.Apm.Report
 			List<Func<ISpan, ISpan>> spanFilters,
 			List<Func<IError, IError>> errorFilters,
 			IApmServerInfo apmServerInfo,
-			IApmLogger logger)
+			IApmLogger logger
+		)
 		{
 			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
 			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
@@ -135,13 +140,16 @@ namespace Elastic.Apm.Report
 		static PayloadSenderV2()
 		{
 			Utf8Encoding = new UTF8Encoding(false);
-			MediaTypeHeaderValue = new MediaTypeHeaderValue("application/x-ndjson")
-			{
-				CharSet = Utf8Encoding.WebName
-			};
+			MediaTypeHeaderValue = new MediaTypeHeaderValue("application/x-ndjson") { CharSet = Utf8Encoding.WebName };
 		}
 
-		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
+		public void QueueTransaction(ITransaction transaction)
+		{
+			if (transaction is Transaction realTransaction)
+				_breakdownMetricsProvider?.CaptureTransaction(realTransaction);
+
+			EnqueueEvent(transaction, "Transaction");
+		}
 
 		public void QueueSpan(ISpan span) => EnqueueEvent(span, "Span");
 
@@ -315,7 +323,7 @@ namespace Elastic.Apm.Report
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
 					var result = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
-			.ConfigureAwait(false);
+						.ConfigureAwait(false);
 
 					if (result != null && !result.IsSuccessStatusCode)
 					{
@@ -399,9 +407,9 @@ namespace Elastic.Apm.Report
 	[Specification("docs/spec/v2/metadata.json")]
 	internal class Metadata
 	{
-
 		/// <inheritdoc cref="Api.Cloud"/>
 		public Api.Cloud Cloud { get; set; }
+
 		public LabelsDictionary Labels { get; set; } = new LabelsDictionary();
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net

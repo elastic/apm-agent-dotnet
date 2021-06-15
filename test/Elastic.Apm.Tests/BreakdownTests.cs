@@ -27,7 +27,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TransactionWithSpans()
 		{
-			var payloadSender = new MockPayloadSender();
+			var breakdownMetricsProvider = new BreakdownMetricsProvider();
+			var payloadSender = new MockPayloadSender(breakdownMetricsProvider: breakdownMetricsProvider);
 			using var agent = new ApmAgent(
 				new AgentComponents(
 					new NoopLogger(),
@@ -36,7 +37,8 @@ namespace Elastic.Apm.Tests
 					null, //metricsCollector will be set in AgentComponents.ctor
 					new CurrentExecutionSegmentsContainer(),
 					new NoopCentralConfigFetcher(),
-					new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty))));
+					new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty)),
+					breakdownMetricsProvider));
 
 			Transaction transaction = null;
 			Span span1 = null;
@@ -734,7 +736,7 @@ namespace Elastic.Apm.Tests
 			var agentComponents = new AgentComponents(
 				new NoopLogger(),
 				new MockConfigSnapshot(metricsInterval: "1s"),
-				new NoopPayloadSender(),
+				new NoopPayloadSender(breakdownMetricsProvider),
 				new FakeMetricsCollector(), //metricsCollector will be set in AgentComponents.ctor
 				new CurrentExecutionSegmentsContainer(),
 				new NoopCentralConfigFetcher(),

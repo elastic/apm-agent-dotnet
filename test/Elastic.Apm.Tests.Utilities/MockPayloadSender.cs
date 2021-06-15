@@ -11,6 +11,7 @@ using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
@@ -26,8 +27,9 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly List<ISpan> _spans = new List<ISpan>();
 		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
 		private readonly List<ITransaction> _transactions = new List<ITransaction>();
+		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 
-		public MockPayloadSender(IApmLogger logger = null)
+		public MockPayloadSender(IApmLogger logger = null, BreakdownMetricsProvider breakdownMetricsProvider = null)
 		{
 			_waitHandles = new[]
 			{
@@ -37,6 +39,7 @@ namespace Elastic.Apm.Tests.Utilities
 				new AutoResetEvent(false)
 			};
 
+			_breakdownMetricsProvider = breakdownMetricsProvider;
 			_transactionWaitHandle = _waitHandles[0];
 			_spanWaitHandle = _waitHandles[1];
 			_errorWaitHandle = _waitHandles[2];
@@ -184,6 +187,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
 			_transactions.Add(transaction);
+			if(transaction is Transaction realTransaction)
+				_breakdownMetricsProvider?.CaptureTransaction(realTransaction);
 			_transactionWaitHandle.Set();
 		}
 

@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
@@ -25,7 +24,6 @@ namespace Elastic.Apm.Api
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
-		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 
 		public Tracer(
 			IApmLogger logger,
@@ -33,8 +31,7 @@ namespace Elastic.Apm.Api
 			IPayloadSender payloadSender,
 			IConfigSnapshotProvider configProvider,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			IApmServerInfo apmServerInfo,
-			BreakdownMetricsProvider breakdownMetricsProvider
+			IApmServerInfo apmServerInfo
 		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
@@ -44,7 +41,6 @@ namespace Elastic.Apm.Api
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 			DbSpanCommon = new DbSpanCommon(logger);
 			_apmServerInfo = apmServerInfo;
-			_breakdownMetricsProvider = breakdownMetricsProvider;
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
@@ -81,19 +77,8 @@ namespace Elastic.Apm.Api
 				Service = _service
 			};
 
-			retVal.Ended += RetValOnEnded;
-
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
-
-			void RetValOnEnded(object sender, EventArgs e)
-			{
-				if (sender is Transaction t)
-				{
-					_breakdownMetricsProvider?.CaptureTransaction(t);
-					t.Ended -= RetValOnEnded;
-				}
-			}
 		}
 
 		public void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null)
