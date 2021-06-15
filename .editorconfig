@@ -211,3 +211,6 @@ insert_final_newline=true
 
 [*.sh]
 end_of_line = lf
+
+[{LICENSE,NOTICE}]
+end_of_line = lf
