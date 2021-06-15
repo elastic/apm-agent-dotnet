@@ -5,13 +5,13 @@ use crate::interfaces::imetadata_assembly_import::IMetaDataAssemblyImport;
 use crate::interfaces::imetadata_emit::IMetaDataEmit2;
 use crate::interfaces::imetadata_import::IMetaDataImport2;
 use crate::types::{PublicKey, Version};
+use com::sys::GUID;
 use core::fmt;
 use serde::de::{DeserializeOwned, MapAccess, Visitor};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::str::FromStr;
-use com::sys::GUID;
 
 pub(crate) struct ModuleInfo {
     pub id: ModuleID,

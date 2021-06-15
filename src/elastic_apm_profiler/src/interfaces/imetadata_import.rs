@@ -922,9 +922,7 @@ impl IMetaDataImport2 {
 
     pub fn get_module_version_id(&self) -> Result<GUID, HRESULT> {
         let mut module = mdModuleNil;
-        let hr = unsafe {
-            self.GetModuleFromScope(&mut module)
-        };
+        let hr = unsafe { self.GetModuleFromScope(&mut module) };
 
         if FAILED(hr) {
             return Err(hr);

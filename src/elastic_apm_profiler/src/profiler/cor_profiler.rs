@@ -107,6 +107,7 @@ class! {
         profiler_info: RefCell<Option<ICorProfilerInfo4>>,
         runtime_info: RefCell<Option<RuntimeInfo>>,
         modules: RefCell<HashMap<ModuleID, ModuleMetadata>>,
+        cor_assembly_property: RefCell<Option<AssemblyMetaData>>,
     }
 
     impl ICorProfilerCallback for CorProfiler {
@@ -653,7 +654,7 @@ impl CorProfiler {
                 "ModuleLoadFinished: {} {} app domain {} {}",
                 module_id,
                 assembly_name,
-                &module_info.assembly.app_domain_id,
+                appdomain_id,
                 &module_info.assembly.app_domain_name
             );
 
@@ -662,6 +663,29 @@ impl CorProfiler {
             {
                 COR_LIB_MODULE_LOADED.store(true, Ordering::SeqCst);
                 COR_APP_DOMAIN_ID.store(appdomain_id, Ordering::SeqCst);
+
+                let profiler_borrow = self.profiler_info.borrow();
+                let profiler_info = profiler_borrow.as_ref().unwrap();
+                let metadata_assembly_import = profiler_info
+                    .get_module_metadata::<IMetaDataAssemblyImport>(
+                        module_id,
+                        CorOpenFlags::ofRead | CorOpenFlags::ofWrite,
+                    )?;
+
+                let mut assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
+                log::trace!(
+                    "assembly metadata name {}, module info assembly name {}",
+                    &assembly_metadata.name,
+                    assembly_name
+                );
+                assembly_metadata.name = assembly_name.to_string();
+
+                log::info!(
+                    "ModuleLoadFinished: Cor library {} {}",
+                    &assembly_metadata.name,
+                    &assembly_metadata.version
+                );
+                self.cor_assembly_property.replace(Some(assembly_metadata));
 
                 return Ok(());
             }
@@ -715,8 +739,7 @@ impl CorProfiler {
                 }
             }
 
-            // TODO: Avoid cloning integration methods. Should be possible to make all filtered_integrations
-            // a collection of references
+            // TODO: Avoid cloning integration methods. Should be possible to make all filtered_integrations a collection of references
             let is_call_target_enabled = CALLTARGET_ENABLED.load(Ordering::SeqCst);
 
             let mut filtered_integrations = if is_call_target_enabled {
@@ -834,7 +857,16 @@ impl CorProfiler {
 
             let mut modules = self.modules.borrow_mut();
             modules.insert(module_id, module_metadata);
-            log::trace!("Tracking {} module(s)", modules.len());
+
+            log::debug!(
+                "ModuleLoadFinished: stored metadata for {} {} app domain {} {}",
+                module_id,
+                assembly_name,
+                appdomain_id,
+                &module_info.assembly.app_domain_name
+            );
+
+            log::trace!("ModuleLoadFinished: tracking {} module(s)", modules.len());
         }
 
         Ok(())
