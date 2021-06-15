@@ -249,7 +249,7 @@ pub struct ModuleMetadata {
     assembly_import: IMetaDataAssemblyImport,
     assembly_emit: IMetaDataAssemblyEmit,
     assembly_name: String,
-    appdomain_id: AppDomainID,
+    pub appdomain_id: AppDomainID,
     module_version_id: GUID,
     integrations: Vec<IntegrationMethod>,
 }

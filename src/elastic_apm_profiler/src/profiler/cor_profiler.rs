@@ -162,7 +162,12 @@ class! {
                 Err(_) => S_OK,
             }
         }
-        pub fn ModuleUnloadStarted(&self, moduleId: ModuleID) -> HRESULT { S_OK }
+        pub fn ModuleUnloadStarted(&self, moduleId: ModuleID) -> HRESULT {
+            match self.module_unload_started(moduleId) {
+                Ok(_) => S_OK,
+                Err(_) => S_OK,
+            }
+        }
         pub fn ModuleUnloadFinished(&self, moduleId: ModuleID, hrStatus: HRESULT) -> HRESULT { S_OK }
         pub fn ModuleAttachedToAssembly(
              &self,
@@ -867,6 +872,43 @@ impl CorProfiler {
             );
 
             log::trace!("ModuleLoadFinished: tracking {} module(s)", modules.len());
+
+            if is_call_target_enabled {
+                // TODO: request rejit of module
+            }
+        }
+
+        Ok(())
+    }
+
+    fn module_unload_started(&self, module_id: ModuleID) -> Result<(), HRESULT> {
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+
+        if log::log_enabled!(log::Level::Debug) {
+            if let Some(module_info) = self.get_module_info(module_id) {
+                log::debug!(
+                    "ModuleUnloadStarted: {} {} app domain {} {}",
+                    module_id,
+                    &module_info.assembly.name,
+                    &module_info.assembly.app_domain_id,
+                    &module_info.assembly.app_domain_name
+                );
+            }
+        }
+
+        let _lock = LOCK.lock().unwrap();
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+
+        let mut modules = self.modules.borrow_mut();
+        if let Some(module_metadata) = modules.remove(&module_id) {
+            MANAGED_PROFILER_LOADED_APP_DOMAINS
+                .lock()
+                .unwrap()
+                .retain(|appdomain_id| appdomain_id != &module_metadata.appdomain_id);
         }
 
         Ok(())
