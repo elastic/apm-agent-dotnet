@@ -3,15 +3,15 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
 
 namespace Elastic.Apm.Tests.Metrics
@@ -43,7 +43,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			using (tempFile)
 			{
-				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger());
+				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
 
 				var samples = provider.GetSamples().ToList();
 
@@ -120,7 +120,7 @@ namespace Elastic.Apm.Tests.Metrics
 			var tempFile = TempFile.CreateWithContents(
 				$"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - {cgroup} rw,seclabel,memory\n");
 
-			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger());
+			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
 		}
 	}
 }

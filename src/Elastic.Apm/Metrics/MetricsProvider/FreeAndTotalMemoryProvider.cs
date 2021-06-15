@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -24,13 +25,24 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly bool _collectFreeMemory;
 		private readonly bool _collectTotalMemory;
 
-		public FreeAndTotalMemoryProvider(bool collectFreeMemory, bool collectTotalMemory) =>
-			(_collectFreeMemory, _collectTotalMemory, IsMetricAlreadyCaptured) = (collectFreeMemory, collectTotalMemory, true);
+		public FreeAndTotalMemoryProvider(IReadOnlyList<WildcardMatcher> disabledMetrics)
+		{
+			IsMetricAlreadyCaptured = true;
+			_collectFreeMemory = IsFreeMemoryEnabled(disabledMetrics);
+			_collectTotalMemory = IsTotalMemoryEnabled(disabledMetrics);
+		}
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total and free memory";
 
 		public bool IsMetricAlreadyCaptured { get; }
+
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
+			IsFreeMemoryEnabled(disabledMetrics) || IsTotalMemoryEnabled(disabledMetrics);
+
+		private bool IsFreeMemoryEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, FreeMemory);
+
+		private bool IsTotalMemoryEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, TotalMemory);
 
 		public IEnumerable<MetricSet> GetSamples()
 		{

@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -13,6 +14,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Analysis;
+using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using Microsoft.Diagnostics.Tracing.Session;
@@ -28,48 +30,37 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	/// </summary>
 	internal class GcMetricsProvider : IMetricsProvider, IDisposable
 	{
-		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
-
 		internal const string GcCountName = "clr.gc.count";
-		internal const string GcTimeName = "clr.gc.time";
 		internal const string GcGen0SizeName = "clr.gc.gen0size";
 		internal const string GcGen1SizeName = "clr.gc.gen1size";
 		internal const string GcGen2SizeName = "clr.gc.gen2size";
 		internal const string GcGen3SizeName = "clr.gc.gen3size";
+		internal const string GcTimeName = "clr.gc.time";
+		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
 
 		private readonly bool _collectGcCount;
-		private readonly bool _collectGcTime;
 		private readonly bool _collectGcGen0Size;
 		private readonly bool _collectGcGen1Size;
 		private readonly bool _collectGcGen2Size;
 		private readonly bool _collectGcGen3Size;
+		private readonly bool _collectGcTime;
+		private readonly int _currentProcessId;
 
 		private readonly GcEventListener _eventListener;
 		private readonly object _lock = new object();
 		private readonly IApmLogger _logger;
 		private readonly TraceEventSession _traceEventSession;
 		private readonly Task _traceEventSessionTask;
-		private readonly int _currentProcessId;
-		private TraceLoadedDotNetRuntime _traceLoadedDotNetRuntime;
 
-		private volatile bool _isMetricAlreadyCaptured;
-		private uint _gcCount;
-		private ulong _gen0Size;
-		private ulong _gen1Size;
-		private ulong _gen2Size;
-		private ulong _gen3Size;
-		private long _gcTimeInTicks;
-
-		public GcMetricsProvider(IApmLogger logger, bool collectGcCount = true, bool collectGcGen0Size = true, bool collectGcGen1Size = true,
-			bool collectGcGen2Size = true, bool collectGcGen3Size = true, bool collectGcTime = true
+		public GcMetricsProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics
 		)
 		{
-			_collectGcCount = collectGcCount;
-			_collectGcTime = collectGcTime;
-			_collectGcGen0Size = collectGcGen0Size;
-			_collectGcGen1Size = collectGcGen1Size;
-			_collectGcGen2Size = collectGcGen2Size;
-			_collectGcGen3Size = collectGcGen3Size;
+			_collectGcCount = IsGcCountNameEnabled(disabledMetrics);
+			_collectGcTime = IsGcTimeName(disabledMetrics);
+			_collectGcGen0Size = IsGcGen0SizeName(disabledMetrics);
+			_collectGcGen1Size = IsGcGen1SizeName(disabledMetrics);
+			_collectGcGen2Size = IsGcGen2SizeName(disabledMetrics);
+			_collectGcGen3Size = IsGcGen3SizeName(disabledMetrics);
 			_logger = logger.Scoped(DbgName);
 
 			if (PlatformDetection.IsDotNetFullFramework)
@@ -114,6 +105,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_eventListener = new GcEventListener(this, logger);
 		}
 
+		private uint _gcCount;
+		private long _gcTimeInTicks;
+		private ulong _gen0Size;
+		private ulong _gen1Size;
+		private ulong _gen2Size;
+		private ulong _gen3Size;
+
+		private volatile bool _isMetricAlreadyCaptured;
+		private TraceLoadedDotNetRuntime _traceLoadedDotNetRuntime;
+
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => nameof(GcMetricsProvider);
 
@@ -127,10 +128,26 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		}
 
 		/// <summary>
-		/// The name of the TraceEventSession when using <see cref="TraceEventSession"/>
+		/// The name of the TraceEventSession when using <see cref="TraceEventSession" />
 		/// to capture metrics, otherwise null.
 		/// </summary>
 		internal string TraceEventSessionName { get; }
+
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => IsGcCountNameEnabled(disabledMetrics) ||
+			IsGcTimeName(disabledMetrics) || IsGcGen0SizeName(disabledMetrics) || IsGcGen1SizeName(disabledMetrics)
+			|| IsGcGen2SizeName(disabledMetrics) || IsGcGen3SizeName(disabledMetrics);
+
+		private bool IsGcCountNameEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcCountName);
+
+		private bool IsGcTimeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcTimeName);
+
+		private bool IsGcGen0SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen0SizeName);
+
+		private bool IsGcGen1SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen1SizeName);
+
+		private bool IsGcGen2SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen2SizeName);
+
+		private bool IsGcGen3SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen3SizeName);
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
@@ -176,7 +193,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_traceEventSession.Source.Dispose();
 				_traceEventSession.Dispose();
 
-				if (_traceEventSessionTask != null && (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled))
+				if (_traceEventSessionTask != null
+					&& (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled))
 					_traceEventSessionTask.Dispose();
 			}
 		}
@@ -197,7 +215,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 		}
 
-		private void RuntimeGCEnd(TraceProcess traceProcess, Microsoft.Diagnostics.Tracing.Analysis.GC.TraceGC gc)
+		private void RuntimeGCEnd(TraceProcess traceProcess, TraceGC gc)
 		{
 			if (traceProcess.ProcessID == _currentProcessId)
 			{
@@ -219,7 +237,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			private static readonly int keywordGC = 1;
 			private readonly GcMetricsProvider _gcMetricsProvider;
 			private readonly IApmLogger _logger;
-			private long _gcStartTime;
 
 			public GcEventListener(GcMetricsProvider gcMetricsProvider, IApmLogger logger)
 			{
@@ -230,6 +247,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 
 			private EventSource _eventSourceDotNet;
+			private long _gcStartTime;
 
 			protected override void OnEventSourceCreated(EventSource eventSource)
 			{
@@ -298,7 +316,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					_logger?.Trace()?.Log("OnEventWritten with GCEnd");
 
 					var durationInTicks = DateTime.UtcNow.Ticks - Interlocked.Read(ref _gcStartTime);
-					Interlocked.Exchange(ref _gcMetricsProvider._gcTimeInTicks, Interlocked.Read(ref _gcMetricsProvider._gcTimeInTicks) + durationInTicks);
+					Interlocked.Exchange(ref _gcMetricsProvider._gcTimeInTicks,
+						Interlocked.Read(ref _gcMetricsProvider._gcTimeInTicks) + durationInTicks);
 
 					var indexOfCount = IndexOf("Count");
 					if (indexOfCount < 0)

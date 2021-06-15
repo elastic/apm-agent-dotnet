@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -13,10 +14,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class BreakdownMetricsProvider : IMetricsProvider
 	{
 		internal const string SpanSelfTime = "span.self_time";
-		public int ConsecutiveNumberOfFailedReads { get; set; }
+
+		private readonly List<MetricSet> _itemsToSend = new();
 
 		private readonly object _lock = new();
 		private int _transactionCount;
+		public int ConsecutiveNumberOfFailedReads { get; set; }
 
 		public string DbgName => nameof(BreakdownMetricsProvider);
 
@@ -29,7 +32,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 		}
 
-		private readonly List<MetricSet> _itemsToSend = new();
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> matchers) => !WildcardMatcher.IsAnyMatch(matchers, SpanSelfTime);
 
 		public void CaptureTransaction(Transaction transaction)
 		{

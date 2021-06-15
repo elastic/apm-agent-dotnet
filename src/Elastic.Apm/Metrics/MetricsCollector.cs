@@ -65,73 +65,41 @@ namespace Elastic.Apm.Metrics
 			}
 
 			MetricsProviders = new List<IMetricsProvider>();
+			var disabledMetrics = configSnapshotProvider.CurrentSnapshot.DisableMetrics;
 
 			if (metricsProvider != null)
 			{
 				foreach (var item in metricsProvider)
-					if (item != null) MetricsProviders.Add(item);
-			}
-
-			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
-				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
-			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
-				MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
-
-			var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory);
-			var collectProcessVirtualMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory);
-			if (collectProcessVirtualMemory || collectProcessWorkingSet)
-				MetricsProviders.Add(new ProcessWorkingSetAndVirtualMemoryProvider(collectProcessVirtualMemory, collectProcessWorkingSet));
-
-			var collectTotalMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				FreeAndTotalMemoryProvider.TotalMemory);
-			var collectFreeMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				FreeAndTotalMemoryProvider.FreeMemory);
-			if (collectFreeMemory || collectTotalMemory)
-				MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
-
-			var collectGcCount = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcCountName);
-			var collectGen0Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen0SizeName);
-			var collectGen1Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen1SizeName);
-			var collectGen2Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen2SizeName);
-			var collectGen3Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen3SizeName);
-			var collectGcTime = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcTimeName);
-			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
-			{
-				try
 				{
-					MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
-						collectGen3Size, collectGcTime));
-				}
-				catch (Exception e)
-				{
-					_logger.Warning()?.LogException(e, "Failed loading {ProviderName}", nameof(GcMetricsProvider));
+					if (item != null)
+						AddIfEnabled(item);
 				}
 			}
 
-			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				CgroupMetricsProvider.SystemProcessCgroupMemoryMemLimitBytes);
-			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				CgroupMetricsProvider.SystemProcessCgroupMemoryMemUsageBytes);
-			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				CgroupMetricsProvider.SystemProcessCgroupMemoryStatsInactiveFileBytes);
-			if (collectCgroupMemLimitBytes || collectCgroupMemUsageBytes || collectCgroupStatsInactiveFileBytes)
+			AddIfEnabled(new ProcessTotalCpuTimeProvider(_logger));
+			AddIfEnabled(new SystemTotalCpuProvider(_logger));
+			AddIfEnabled(new ProcessWorkingSetAndVirtualMemoryProvider(disabledMetrics));
+			AddIfEnabled(new FreeAndTotalMemoryProvider(disabledMetrics));
+			try
 			{
-				MetricsProviders.Add(
-					new CgroupMetricsProvider(_logger, collectCgroupMemLimitBytes, collectCgroupMemUsageBytes,
-						collectCgroupStatsInactiveFileBytes));
+				// We saw some Exceptions in GcMetricsProvider.ctor, so we try-catch it
+				AddIfEnabled(new GcMetricsProvider(_logger, disabledMetrics));
 			}
+			catch (Exception e)
+			{
+				_logger.Warning()?.LogException(e, "Failed loading {ProviderName}", nameof(GcMetricsProvider));
+			}
+			AddIfEnabled(new CgroupMetricsProvider(_logger, disabledMetrics));
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
+
+			void AddIfEnabled(IMetricsProvider provider)
+			{
+				if (provider.IsEnabled(disabledMetrics))
+					MetricsProviders.Add(provider);
+			}
 		}
 
 		public void StartCollecting() => _timer?.Start();
