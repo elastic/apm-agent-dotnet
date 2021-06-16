@@ -58,7 +58,7 @@ namespace Elastic.Apm.Tests
 				Thread.Sleep(100);
 			});
 
-			payloadSender.WaitForMetrics(TimeSpan.FromSeconds(5));
+			payloadSender.WaitForMetrics(TimeSpan.FromSeconds(15));
 			payloadSender.Metrics.Should().NotBeEmpty();
 
 			// Assert that span2 is captured and the span.self_time.sum.us == span2.Duration
