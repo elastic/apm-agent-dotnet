@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
@@ -16,12 +17,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string SpanSelfTime = "span.self_time";
 
 		private readonly List<MetricSet> _itemsToSend = new();
+		private readonly IApmLogger _logger;
 
 		private readonly object _lock = new();
 		private int _transactionCount;
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 
 		public string DbgName => nameof(BreakdownMetricsProvider);
+
+		public BreakdownMetricsProvider(IApmLogger logger) => _logger = logger.Scoped(nameof(BreakdownMetricsProvider));
 
 		public bool IsMetricAlreadyCaptured
 		{
@@ -54,7 +58,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type }
 						};
 
-					_itemsToSend.Add(metricSet);
+					if (_itemsToSend.Count < 1000)
+						_itemsToSend.Add(metricSet);
+					else
+					{
+						_logger.Warning()
+							?.Log(
+								"The limit of 1000 metricsets has been reached, no new metricsets will be created.");
+					}
 				}
 
 				var transactionMetric =
@@ -66,17 +77,24 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							new("transaction.breakdown.count", _transactionCount),
 						}) { Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type } };
 
-				_itemsToSend.Add(transactionMetric);
+				if (_itemsToSend.Count < 1000)
+					_itemsToSend.Add(transactionMetric);
+				else
+				{
+					_logger.Warning()
+						?.Log(
+							"The limit of 1000 metricsets has been reached, no new metricsets will be created.");
+				}
 			}
 		}
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
-			var retVal = new List<MetricSet>();
+			var retVal = new List<MetricSet>(_itemsToSend.Count < 1000 ? _itemsToSend.Count : 1000);
 
 			lock (_lock)
 			{
-				retVal.AddRange(_itemsToSend.Take(1000));
+				retVal.AddRange(_itemsToSend);
 				_itemsToSend.Clear();
 				_transactionCount = 0;
 			}

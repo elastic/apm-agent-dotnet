@@ -18,6 +18,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Metrics.MetricsProvider;
 
 namespace Elastic.Apm.Model
 {
@@ -27,7 +28,7 @@ namespace Elastic.Apm.Model
 
 		internal readonly TraceState _traceState;
 
-		internal readonly ConcurrentDictionary<SpanTypeAndSubtype, SpanTimer> SpanTimings = new();
+		internal readonly ConcurrentDictionary<SpanTimerKey, SpanTimer> SpanTimings = new();
 
 		/// <summary>
 		/// The agent also starts an Activity when a transaction is started and stops it when the transaction ends.
@@ -42,6 +43,7 @@ namespace Elastic.Apm.Model
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
+		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
@@ -65,7 +67,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type, long? timestamp = null)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, timestamp: timestamp) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, null, timestamp: timestamp) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -80,6 +82,7 @@ namespace Elastic.Apm.Model
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
+		/// <param name="breakdownMetricsProvider">The <see cref="BreakdownMetricsProvider"/> instance which will capture the breakdown metrics</param>
 		/// <param name="ignoreActivity">
 		/// If set the transaction will ignore Activity.Current and it's trace id,
 		/// otherwise the agent will try to keep ids in-sync across async work-flows
@@ -99,6 +102,7 @@ namespace Elastic.Apm.Model
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
+			BreakdownMetricsProvider breakdownMetricsProvider,
 			bool ignoreActivity = false,
 			long? timestamp = null
 		)
@@ -110,6 +114,7 @@ namespace Elastic.Apm.Model
 			_apmServerInfo = apmServerInfo;
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
+			_breakdownMetricsProvider = breakdownMetricsProvider;
 
 			Name = name;
 			HasCustomName = false;
@@ -504,10 +509,12 @@ namespace Elastic.Apm.Model
 			if (!isFirstEndCall)
 				return;
 
-			if (SpanTimings.ContainsKey(SpanTypeAndSubtype.AppSpanType))
-				SpanTimings[SpanTypeAndSubtype.AppSpanType].IncrementTimer(SelfDuration);
+			if (SpanTimings.ContainsKey(SpanTimerKey.AppSpanType))
+				SpanTimings[SpanTimerKey.AppSpanType].IncrementTimer(SelfDuration);
 			else
-				SpanTimings.TryAdd(SpanTypeAndSubtype.AppSpanType, new SpanTimer(SelfDuration));
+				SpanTimings.TryAdd(SpanTimerKey.AppSpanType, new SpanTimer(SelfDuration));
+
+			_breakdownMetricsProvider?.CaptureTransaction(this);
 
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);

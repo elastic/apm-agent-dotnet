@@ -57,7 +57,7 @@ namespace Elastic.Apm
 
 				if (ConfigurationReader.Enabled)
 				{
-					breakdownMetricsProvider ??= new BreakdownMetricsProvider();
+					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
 					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
 					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider);

@@ -2,8 +2,10 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
@@ -56,7 +58,7 @@ namespace Elastic.Apm.Benchmarks
 		[Benchmark]
 		public void CollectTotalAndFreeMemory2X()
 		{
-			var mockPayloadSender = new FreeAndTotalMemoryProvider(true, true);
+			var mockPayloadSender = new FreeAndTotalMemoryProvider( new List<WildcardMatcher>());
 
 			mockPayloadSender.GetSamples();
 			mockPayloadSender.GetSamples();
@@ -65,7 +67,7 @@ namespace Elastic.Apm.Benchmarks
 		[Benchmark]
 		public void CollectWorkingSetAndVirMem2X()
 		{
-			var mockPayloadSender = new ProcessWorkingSetAndVirtualMemoryProvider(true, true);
+			var mockPayloadSender = new ProcessWorkingSetAndVirtualMemoryProvider(new List<WildcardMatcher>());
 
 			mockPayloadSender.GetSamples();
 			mockPayloadSender.GetSamples();

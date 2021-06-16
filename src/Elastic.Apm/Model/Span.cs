@@ -372,10 +372,10 @@ namespace Elastic.Apm.Model
 				_payloadSender.QueueSpan(this);
 			}
 
-			if (_enclosingTransaction.SpanTimings.ContainsKey(new SpanTypeAndSubtype(Type, Subtype)))
-				_enclosingTransaction.SpanTimings[new SpanTypeAndSubtype(Type, Subtype)].IncrementTimer(SelfDuration);
+			if (_enclosingTransaction.SpanTimings.ContainsKey(new SpanTimerKey(Type, Subtype)))
+				_enclosingTransaction.SpanTimings[new SpanTimerKey(Type, Subtype)].IncrementTimer(SelfDuration);
 			else
-				_enclosingTransaction.SpanTimings.TryAdd(new SpanTypeAndSubtype(Type, Subtype), new SpanTimer(SelfDuration));
+				_enclosingTransaction.SpanTimings.TryAdd(new SpanTimerKey(Type, Subtype), new SpanTimer(SelfDuration));
 
 			if (isFirstEndCall)
 				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;

@@ -8,12 +8,12 @@ namespace Elastic.Apm.Model
 	/// <summary>
 	/// Encapsulates type and subtype
 	/// </summary>
-	internal struct SpanTypeAndSubtype
+	internal struct SpanTimerKey
 	{
-		public SpanTypeAndSubtype(string type, string subType) => (Type, SubType) = (type, subType);
-		public SpanTypeAndSubtype(string type) => (Type, SubType) = (type, null);
+		public SpanTimerKey(string type, string subType) => (Type, SubType) = (type, subType);
+		public SpanTimerKey(string type) => (Type, SubType) = (type, null);
 		public string Type { get; }
 		public string SubType { get; set; }
-		public static SpanTypeAndSubtype AppSpanType => new SpanTypeAndSubtype("app");
+		public static SpanTimerKey AppSpanType => new SpanTimerKey("app");
 	}
 }

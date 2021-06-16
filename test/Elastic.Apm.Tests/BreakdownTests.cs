@@ -725,11 +725,30 @@ namespace Elastic.Apm.Tests
 				.BeNullOrEmpty();
 		}
 
+		/// <summary>
+		/// Makes sure that the number of metricsets for breakdown is limited to 1k.
+		/// </summary>
+		[Fact]
+		public void MoreThan1KBreakDownMetrics()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent();
+			using (agent)
+			{
+				var t = agent.TracerInternal.StartTransactionInternal("test", "request");
+
+				var rnd = new Random();
+				for (var i = 0; i < 5000; i++) t.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
+				t.End();
+			}
+
+			breakdownMetricsProvider.GetSamples().Count().Should().Be(1000);
+		}
+
 		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 0.01;
 
 		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent()
 		{
-			var breakdownMetricsProvider = new BreakdownMetricsProvider();
+			var breakdownMetricsProvider = new BreakdownMetricsProvider(new NoopLogger());
 
 			var agentComponents = new AgentComponents(
 				new NoopLogger(),
