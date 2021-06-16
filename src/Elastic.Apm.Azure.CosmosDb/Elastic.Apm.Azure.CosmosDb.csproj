@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Elastic.Apm.Azure.CosmosDb</AssemblyName>
+    <RootNamespace>Elastic.Apm.Azure.CosmosDb</RootNamespace>
+    <PackageId>Elastic.Apm.Azure.CosmosDb</PackageId>
+    <Description>Elastic APM for Azure Cosmos DB. This package contains auto instrumentation for Microsoft.Azure.Cosmos,
+      Microsoft.Azure.DocumentDb, and Microsoft.Azure.DocumentDb.Core.</Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, azure, cosmos, cosmosdb, documentdb</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    </ItemGroup>
+
+</Project>
