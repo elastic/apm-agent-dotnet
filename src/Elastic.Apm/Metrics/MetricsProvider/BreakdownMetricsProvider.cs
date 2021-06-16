@@ -44,6 +44,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				_transactionCount++;
 				var timestampNow = TimeUtils.TimestampNow();
+				var loggedWarning = false;
 
 				foreach (var item in transaction.SpanTimings)
 				{
@@ -62,9 +63,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						_itemsToSend.Add(metricSet);
 					else
 					{
+						if (loggedWarning) continue;
+
 						_logger.Warning()
 							?.Log(
 								"The limit of 1000 metricsets has been reached, no new metricsets will be created.");
+						loggedWarning = true;
 					}
 				}
 
@@ -81,9 +85,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					_itemsToSend.Add(transactionMetric);
 				else
 				{
-					_logger.Warning()
-						?.Log(
-							"The limit of 1000 metricsets has been reached, no new metricsets will be created.");
+					if (!loggedWarning)
+					{
+						_logger.Warning()
+							?.Log(
+								"The limit of 1000 metricsets has been reached, no new metricsets will be created.");
+					}
 				}
 			}
 		}
