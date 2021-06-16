@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -94,21 +95,6 @@ namespace Elastic.Apm.Config
 		public virtual string ServerCert => ParseServerCert(Read(KeyNames.ServerCert, EnvVarNames.ServerCert));
 
 		/// <inheritdoc />
-		[Obsolete("Use ServerUrl")]
-		public virtual IReadOnlyList<Uri> ServerUrls
-		{
-			get
-			{
-				// Use ServerUrl if there's no value for ServerUrls so that usage of ServerUrls
-				// outside of the agent will work with ServerUrl
-				var configurationKeyValue = Read(KeyNames.ServerUrls, EnvVarNames.ServerUrls);
-				return ParseServerUrls(!string.IsNullOrEmpty(configurationKeyValue.Value)
-					? configurationKeyValue
-					: Read(KeyNames.ServerUrl, EnvVarNames.ServerUrl));
-			}
-		}
-
-		/// <inheritdoc />
 		public virtual Uri ServerUrl
 		{
 			get
@@ -123,6 +109,21 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		/// <inheritdoc />
+		[Obsolete("Use ServerUrl")]
+		public virtual IReadOnlyList<Uri> ServerUrls
+		{
+			get
+			{
+				// Use ServerUrl if there's no value for ServerUrls so that usage of ServerUrls
+				// outside of the agent will work with ServerUrl
+				var configurationKeyValue = Read(KeyNames.ServerUrls, EnvVarNames.ServerUrls);
+				return ParseServerUrls(!string.IsNullOrEmpty(configurationKeyValue.Value)
+					? configurationKeyValue
+					: Read(KeyNames.ServerUrl, EnvVarNames.ServerUrl));
+			}
+		}
+
 		public virtual string ServiceName => ParseServiceName(Read(KeyNames.ServiceName, EnvVarNames.ServiceName));
 
 		public string ServiceNodeName => ParseServiceNodeName(Read(KeyNames.ServiceNodeName, EnvVarNames.ServiceNodeName));
@@ -133,6 +134,9 @@ namespace Elastic.Apm.Config
 		public virtual double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public virtual int StackTraceLimit => _stackTraceLimit.Value;
+
+		public bool TraceContextIgnoreSampledFalse =>
+			ParseTraceContextIgnoreSampledFalse(Read(KeyNames.TraceContextIgnoreSampledFalse, EnvVarNames.TraceContextIgnoreSampledFalse));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Read(KeyNames.TransactionIgnoreUrls, EnvVarNames.TransactionIgnoreUrls));

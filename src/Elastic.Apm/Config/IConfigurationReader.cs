@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -51,8 +52,10 @@ namespace Elastic.Apm.Config
 		bool CentralConfig { get; }
 
 		/// <summary>
-		/// Specify which cloud provider should be assumed for metadata collection. By default, the agent will attempt to detect the cloud
-		/// provider or, if that fails, will use trial and error to collect the metadata. Valid options are "aws", "gcp", and "azure".
+		/// Specify which cloud provider should be assumed for metadata collection. By default, the agent will attempt to detect
+		/// the cloud
+		/// provider or, if that fails, will use trial and error to collect the metadata. Valid options are "aws", "gcp", and
+		/// "azure".
 		/// If this config value is set to "False", no cloud metadata will be collected.
 		/// </summary>
 		string CloudProvider { get; }
@@ -212,15 +215,15 @@ namespace Elastic.Apm.Config
 		string ServerCert { get; }
 
 		/// <summary>
+		/// The URL for APM server.
+		/// </summary>
+		Uri ServerUrl { get; }
+
+		/// <summary>
 		/// The URLs for APM server.
 		/// </summary>
 		[Obsolete("Use ServerUrl")]
 		IReadOnlyList<Uri> ServerUrls { get; }
-
-		/// <summary>
-		/// The URL for APM server.
-		/// </summary>
-		Uri ServerUrl { get; }
 
 		/// <summary>
 		/// The name of service instrumented by the APM agent. This is used to group all the errors and transactions
@@ -259,6 +262,17 @@ namespace Elastic.Apm.Config
 		int StackTraceLimit { get; }
 
 		/// <summary>
+		/// By setting this to <code>true</code> the agent will ignore the sampled part of the W3C TraceContext traceparent header
+		/// when it's false and when the upstream transaction is not coming from an Elastic APM agent.
+		/// In practice this means that in case a caller service calls another service where this value is <code>true</code>,
+		/// the agent will ignore the sampling decision of the upstream service, and it will make a new sampling decision.
+		///
+		/// This can be useful when a caller service always sets the sampled flag to false and the agent would have no chance to
+		/// create any sampled transaction.
+		/// </summary>
+		bool TraceContextIgnoreSampledFalse { get; }
+
+		/// <summary>
 		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the
 		/// patterns will not be reported as a transaction.
 		/// </summary>
@@ -283,14 +297,17 @@ namespace Elastic.Apm.Config
 
 		/// <summary>
 		/// The sample rate for transactions.
-		/// By default, the agent will sample every transaction (e.g. a request to your service). To reduce overhead and storage requirements,
-		/// the sample rate can be set to a value between 0.0 and 1.0. The agent still records the overall time and result for unsampled
+		/// By default, the agent will sample every transaction (e.g. a request to your service). To reduce overhead and storage
+		/// requirements,
+		/// the sample rate can be set to a value between 0.0 and 1.0. The agent still records the overall time and result for
+		/// unsampled
 		/// transactions, but no context information, labels, or spans are recorded.
 		/// </summary>
 		double TransactionSampleRate { get; }
 
 		/// <summary>
-		/// If <c>true</c>, for all outgoing HTTP requests the agent stores the traceparent in a "elastic-apm-traceparent" header name.
+		/// If <c>true</c>, for all outgoing HTTP requests the agent stores the traceparent in a "elastic-apm-traceparent" header
+		/// name.
 		/// Otherwise, it'll use the official w3c "traceparent" header name.
 		/// </summary>
 		bool UseElasticTraceparentHeader { get; }
