@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
@@ -28,13 +29,17 @@ namespace Elastic.Apm.Metrics
 
 	internal class TransactionInfo
 	{
+		[MaxLength]
 		public string Name { get; set; }
+		[MaxLength]
 		public string Type { get; set; }
 	}
 
 	internal class SpanInfo
 	{
+		[MaxLength]
 		public string Type { get; set; }
+		[MaxLength]
 		public string SubType { get; set; }
 	}
 }

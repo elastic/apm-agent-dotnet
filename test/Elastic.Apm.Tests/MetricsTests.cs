@@ -336,12 +336,12 @@ namespace Elastic.Apm.Tests
 					var samples = gcMetricsProvider.GetSamples()?.ToArray();
 
 					containsValue = samples != null && samples.Any();
-					hasGenSize = samples != null && samples
-						.Any(n => (n.Samples.First().KeyValue.Key.Contains("gen0size") || n.Samples.First().KeyValue.Key.Contains("gen1size")
-								|| n.Samples.First().KeyValue.Key.Contains("gen2size") || n.Samples.First().KeyValue.Key.Contains("gen3size"))
-							&& n.Samples.First().KeyValue.Value > 0);
-					hasGcTime = samples != null && samples
-						.Any(n => n.Samples.First().KeyValue.Key.Contains("clr.gc.time") && n.Samples.First().KeyValue.Value > 0);
+					hasGenSize = samples != null && samples.First().Samples
+						.Any(n => (n.KeyValue.Key.Contains("gen0size") || n.KeyValue.Key.Contains("gen1size")
+								|| n.KeyValue.Key.Contains("gen2size") || n.KeyValue.Key.Contains("gen3size"))
+							&& n.KeyValue.Value > 0);
+					hasGcTime = samples != null && samples.First().Samples
+						.Any(n => n.KeyValue.Key.Contains("clr.gc.time") && n.KeyValue.Value > 0);
 
 					if (containsValue && hasGenSize && hasGcTime)
 						break;
