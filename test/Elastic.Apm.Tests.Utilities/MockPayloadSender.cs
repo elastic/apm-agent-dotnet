@@ -66,25 +66,29 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			if (count != null)
 			{
+				int transactionCount;
 				var signalled = true;
 				if (timeout is null)
 				{
-					lock (_transactionLock)
+					lock (_transactionLock) transactionCount = _transactions.Count;
+					while (transactionCount < count && signalled)
 					{
-						while (_transactions.Count < count && signalled)
-							signalled = _transactionWaitHandle.WaitOne(DefaultTimeout);
+						signalled = _transactionWaitHandle.WaitOne(DefaultTimeout);
+						lock (_transactionLock) transactionCount = _transactions.Count;
 					}
 				}
 				else
 				{
 					var stopWatch = Stopwatch.StartNew();
+
 					lock (_transactionLock)
+						transactionCount = _transactions.Count;
+
+					while (transactionCount < count && signalled)
 					{
-						while (_transactions.Count < count && signalled)
-						{
-							var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
-							signalled = _transactionWaitHandle.WaitOne(elapsedMilliseconds);
-						}
+						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
+						signalled = _transactionWaitHandle.WaitOne(elapsedMilliseconds);
+						lock (_transactionLock) transactionCount = _transactions.Count;
 					}
 				}
 
@@ -103,25 +107,27 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			if (count != null)
 			{
+				int spanCount;
 				var signalled = true;
 				if (timeout is null)
 				{
-					lock (_spanLock)
+					lock (_spanLock) spanCount = _spans.Count;
+					while (spanCount < count && signalled)
 					{
-						while (_spans.Count < count && signalled)
-							signalled = _spanWaitHandle.WaitOne(DefaultTimeout);
+						signalled = _spanWaitHandle.WaitOne(DefaultTimeout);
+						lock (_spanLock) spanCount = _spans.Count;
 					}
 				}
 				else
 				{
 					var stopWatch = Stopwatch.StartNew();
-					lock (_spanLock)
+
+					lock (_spanLock) spanCount = _spans.Count;
+					while (spanCount < count && signalled)
 					{
-						while (_spans.Count < count && signalled)
-						{
-							var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
-							signalled = _spanWaitHandle.WaitOne(elapsedMilliseconds);
-						}
+						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
+						signalled = _spanWaitHandle.WaitOne(elapsedMilliseconds);
+						lock (_spanLock) spanCount = _spans.Count;
 					}
 				}
 
@@ -248,7 +254,7 @@ namespace Elastic.Apm.Tests.Utilities
 		public void Clear()
 		{
 			lock (_spanLock) _spans.Clear();
-			lock(_errorLock) _errors.Clear();
+			lock (_errorLock) _errors.Clear();
 			lock (_transactionLock) _transactions.Clear();
 			lock (_metricsLock) _metrics.Clear();
 		}
