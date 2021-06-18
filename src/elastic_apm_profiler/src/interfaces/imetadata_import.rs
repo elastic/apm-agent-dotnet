@@ -1043,7 +1043,11 @@ impl IMetaDataImport2 {
             }
         };
 
+        log::trace!("get_function_info: {}, parent_token {}", &function_name, parent_token);
         let type_info = self.get_type_info(parent_token)?;
+        if let Some(t) = &type_info {
+            log::trace!("get_function_info: type_info {}", &t.name);
+        }
 
         Ok(MyFunctionInfo::new(
             token,
