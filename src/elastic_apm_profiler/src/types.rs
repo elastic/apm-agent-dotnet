@@ -264,7 +264,7 @@ impl FunctionMethodSignature {
 }
 
 pub struct MyTypeInfo {
-    pub token: mdToken,
+    pub id: mdToken,
     pub name: String,
     pub type_spec: mdTypeSpec,
     pub token_type: CorTokenType,

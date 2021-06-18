@@ -1061,6 +1061,7 @@ impl IMetaDataImport2 {
         ))
     }
 
+    /// Gets the type information for the specified metadata token
     pub fn get_type_info(&self, token: mdToken) -> Result<Option<MyTypeInfo>, HRESULT> {
         let token_type = {
             let t = type_from_token(token);
@@ -1110,7 +1111,7 @@ impl IMetaDataImport2 {
                     return if let Some(base_type) = self.get_type_info(type_token.0)? {
                         Ok(
                             Some(MyTypeInfo {
-                                token: base_type.token,
+                                id: base_type.id,
                                 name: base_type.name,
                                 type_spec: token,
                                 token_type: base_type.token_type,
@@ -1143,14 +1144,14 @@ impl IMetaDataImport2 {
             }
         };
 
-        // check the type name for arity
+        // check the type name for generic arity
         if let Some(index) = name.rfind('`') {
             let from_right = name.len() - index - 1;
             is_generic = from_right == 1 || from_right == 2;
         }
 
         Ok(Some(MyTypeInfo {
-            token,
+            id: token,
             name,
             type_spec: mdTypeSpecNil,
             token_type,
