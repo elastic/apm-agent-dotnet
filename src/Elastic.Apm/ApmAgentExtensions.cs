@@ -44,7 +44,15 @@ namespace Elastic.Apm
 
 		internal static IExecutionSegment GetCurrentExecutionSegment(this IApmAgent agent) =>
 			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
+	}
 
+	internal class EmptyDisposable : IDisposable
+	{
+		private EmptyDisposable() { }
+
+		public static EmptyDisposable Instance = new EmptyDisposable();
+
+		public void Dispose() { }
 	}
 
 	/// <summary>
