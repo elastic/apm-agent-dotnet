@@ -67,7 +67,8 @@ namespace Elastic.Apm.Tests
 					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("Bar2") &&
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample =>
-						sample.KeyValue.Key.Equals("span.self_time.sum.us") && sample.KeyValue.Value == span2.Duration!.Value * 1000) &&
+						sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
+						DoubleCompare(sample.KeyValue.Value, span2.Duration!.Value * 1000)) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.count") && sample.KeyValue.Value == 1)
 				);
 
@@ -77,7 +78,7 @@ namespace Elastic.Apm.Tests
 					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("Bar") &&
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
-						sample.KeyValue.Value == (span1.Duration!.Value - span2.Duration!.Value) * 1000) &&
+						DoubleCompare(sample.KeyValue.Value, (span1.Duration!.Value - span2.Duration!.Value) * 1000)) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.count") && sample.KeyValue.Value == 1)
 				);
 
@@ -87,7 +88,7 @@ namespace Elastic.Apm.Tests
 					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("app") &&
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
-						sample.KeyValue.Value == transaction.SelfDuration * 1000) &&
+						DoubleCompare(sample.KeyValue.Value, transaction.SelfDuration * 1000)) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.count") && sample.KeyValue.Value == 1)
 				);
 		}
