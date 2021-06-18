@@ -998,6 +998,7 @@ impl IMetaDataImport2 {
 
     // other methods, not direct Rust abstractions over COM
 
+    /// Gets the function information from the specified metadata token
     pub fn get_function_info(&self, token: mdToken) -> Result<MyFunctionInfo, HRESULT> {
         let cor_token_type = {
             let t = type_from_token(token);
@@ -1007,35 +1008,35 @@ impl IMetaDataImport2 {
         let mut is_generic = false;
         let function_name;
         let parent_token;
-        let raw_signature;
+        let method_signature;
         let mut final_signature = None;
         let mut method_spec_signature = None;
-        let mut method_def_token = mdTokenNil;
+        let mut method_def_id = mdTokenNil;
 
         match cor_token_type {
             CorTokenType::mdtMemberRef => {
                 let member_ref_props = self.get_member_ref_props(token)?;
                 function_name = member_ref_props.name;
                 parent_token = member_ref_props.class_token;
-                raw_signature = FunctionMethodSignature::new(member_ref_props.signature);
+                method_signature = FunctionMethodSignature::new(member_ref_props.signature);
             }
             CorTokenType::mdtMethodDef => {
                 let member_props = self.get_member_props(token)?;
                 function_name = member_props.name;
                 parent_token = member_props.class_token;
-                raw_signature = FunctionMethodSignature::new(member_props.signature);
+                method_signature = FunctionMethodSignature::new(member_props.signature);
             }
             CorTokenType::mdtMethodSpec => {
                 let method_spec = self.get_method_spec_props(token)?;
                 parent_token = method_spec.parent;
-                raw_signature = FunctionMethodSignature::new(method_spec.signature.clone());
+                method_signature = FunctionMethodSignature::new(method_spec.signature.clone());
 
                 is_generic = true;
                 let generic_info = self.get_function_info(parent_token)?;
                 function_name = generic_info.name;
                 final_signature = generic_info.signature;
                 method_spec_signature = Some(MethodSignature::new(method_spec.signature));
-                method_def_token = generic_info.id;
+                method_def_id = generic_info.id;
             }
             _ => {
                 log::warn!("get_function_info: unknown token type {}", token);
@@ -1043,11 +1044,7 @@ impl IMetaDataImport2 {
             }
         };
 
-        log::trace!("get_function_info: {}, parent_token {}", &function_name, parent_token);
         let type_info = self.get_type_info(parent_token)?;
-        if let Some(t) = &type_info {
-            log::trace!("get_function_info: type_info {}", &t.name);
-        }
 
         Ok(MyFunctionInfo::new(
             token,
@@ -1056,8 +1053,8 @@ impl IMetaDataImport2 {
             type_info,
             final_signature,
             method_spec_signature,
-            method_def_token,
-            raw_signature,
+            method_def_id,
+            method_signature,
         ))
     }
 
@@ -1139,8 +1136,7 @@ impl IMetaDataImport2 {
                 return Ok(function_info.type_info)
             }
             _ => {
-                log::warn!("get_type_info: unknown token type {}", token);
-                return Err(E_FAIL)
+                return Ok(None)
             }
         };
 
