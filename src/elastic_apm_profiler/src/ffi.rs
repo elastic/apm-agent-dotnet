@@ -6,6 +6,7 @@ use com::{
     AbiTransferable, CLSID, IID,
 };
 use core::ffi::c_void;
+use num_traits::FromPrimitive;
 use std::intrinsics::transmute;
 
 // numeric types
@@ -355,7 +356,7 @@ pub enum COR_PRF_RUNTIME_TYPE {
     COR_PRF_CORE_CLR = 2,
 }
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, FromPrimitive)]
 pub enum CorElementType {
     ELEMENT_TYPE_END = 0x00,
     ELEMENT_TYPE_VOID = 0x01,
@@ -924,40 +925,50 @@ bitflags! {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, FromPrimitive)]
 pub enum CorCallingConvention {
+    /// Indicates a default calling convention.
     IMAGE_CEE_CS_CALLCONV_DEFAULT = 0x0,
-
+    /// Indicates that the method takes a variable number of parameters.
     IMAGE_CEE_CS_CALLCONV_VARARG = 0x5,
+    /// Indicates that the call is to a field.
     IMAGE_CEE_CS_CALLCONV_FIELD = 0x6,
+    /// Indicates that the call is to a local method.
     IMAGE_CEE_CS_CALLCONV_LOCAL_SIG = 0x7,
+    /// Indicates that the call is to a property.
     IMAGE_CEE_CS_CALLCONV_PROPERTY = 0x8,
-    IMAGE_CEE_CS_CALLCONV_UNMGD = 0x9,
-    IMAGE_CEE_CS_CALLCONV_GENERICINST = 0xa, // generic method instantiation
-    IMAGE_CEE_CS_CALLCONV_NATIVEVARARG = 0xb, // used ONLY for 64bit vararg PInvoke calls
-    IMAGE_CEE_CS_CALLCONV_MAX = 0xc,         // first invalid calling convention
-
-    // The high bits of the calling convention convey additional info
-    IMAGE_CEE_CS_CALLCONV_MASK = 0x0f, // Calling convention is bottom 4 bits
-    IMAGE_CEE_CS_CALLCONV_HASTHIS = 0x20, // Top bit indicates a 'this' parameter
-    IMAGE_CEE_CS_CALLCONV_EXPLICITTHIS = 0x40, // This parameter is explicitly in the signature
-    IMAGE_CEE_CS_CALLCONV_GENERIC = 0x10, // Generic method sig with explicit number of type arguments (precedes ordinary parameter count)
-                                          // 0x80 is reserved for internal use
+    /// Indicates that the call is unmanaged.
+    IMAGE_CEE_CS_CALLCONV_UNMANAGED = 0x9,
+    /// Indicates a generic method instantiation.
+    IMAGE_CEE_CS_CALLCONV_GENERICINST = 0xa,
+    /// Indicates a 64-bit PInvoke call to a method that takes a variable number of parameters.
+    IMAGE_CEE_CS_CALLCONV_NATIVEVARARG = 0xb,
+    /// Describes an invalid 4-bit value.
+    IMAGE_CEE_CS_CALLCONV_MAX = 0xc,
+    /// Indicates that the calling convention is described by the bottom four bits.
+    IMAGE_CEE_CS_CALLCONV_MASK = 0x0f,
+    /// Indicates that the top bit describes a 'this' parameter.
+    IMAGE_CEE_CS_CALLCONV_HASTHIS = 0x20,
+    /// Indicates that a 'this' parameter is explicitly described in the signature.
+    IMAGE_CEE_CS_CALLCONV_EXPLICITTHIS = 0x40,
+    /// Indicates a generic method signature with an explicit number of type arguments.
+    /// This precedes an ordinary parameter count.
+    IMAGE_CEE_CS_CALLCONV_GENERIC = 0x10,
 }
 
 /// Gets the type from the token
-/// https://github.com/tpn/winsdk-10/blob/9b69fd26ac0c7d0b83d378dba01080e93349c2ed/Include/10.0.10240.0/um/corhdr.h#L1412
+/// https://github.com/dotnet/coreclr/blob/a9f3fc16483eecfc47fb79c362811d870be02249/src/inc/corhdr.h#L1516
 pub fn type_from_token(token: mdToken) -> ULONG32 {
     token & 0xff000000
 }
 
-pub fn rid_from_token(token: mdToken) -> RID {
-    token & 0x00ffffff
-}
+pub fn rid_from_token(token: mdToken) -> RID { token & 0x00ffffff }
 
-// pub fn rid_to_token(rid: RID, token_type: ULONG32) -> mdToken {
-//     rid | token_type
-// }
+pub fn token_from_rid(rid: RID, token_type: mdToken) -> mdToken { rid | token_type }
+
+pub fn rid_to_token(rid: RID, token_type: mdToken) -> mdToken { rid | token_type }
+
+pub fn is_nil_token(token: mdToken) -> bool { rid_from_token(token) == 0 }
 
 #[cfg(test)]
 mod tests {

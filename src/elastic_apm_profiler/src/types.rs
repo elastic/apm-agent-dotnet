@@ -23,6 +23,8 @@ use crate::{
         icor_profiler_method_enum::ICorProfilerMethodEnum, imetadata_import::IMetaDataImport,
     },
 };
+use crate::ffi::{mdTypeSpec, ULONG32, CorTokenType};
+use crate::profiler::types::MethodSignature;
 
 pub struct ArrayClassInfo {
     pub element_type: CorElementType,
@@ -171,6 +173,14 @@ pub struct ScopeProps {
     pub name: String,
     pub version: GUID,
 }
+pub struct TypeSpec {
+    /// The type spec signature
+    pub signature: Vec<COR_SIGNATURE>,
+}
+pub struct ModuleRefProps {
+    /// The name of the referenced module
+    pub name: String,
+}
 pub struct TypeDefProps {
     /// The type name
     pub name: String,
@@ -178,6 +188,12 @@ pub struct TypeDefProps {
     pub cor_type_attr: CorTypeAttr,
     /// A TypeDef or TypeRef metadata token that represents the base type of the requested type.
     pub extends_td: mdToken,
+}
+pub struct TypeRefProps {
+    /// The type name
+    pub name: String,
+    /// A pointer to the scope in which the reference is made. This value is an AssemblyRef or ModuleRef metadata token.
+    pub parent_token: mdToken,
 }
 pub struct MemberRefProps {
     /// The type name
@@ -204,16 +220,58 @@ pub struct MethodSpecProps {
 }
 
 pub struct MyFunctionInfo {
-    // pub module_id: ModuleID,
-    // pub class_id: ClassID,
-    // pub parent_token: mdToken,
-    // pub type_info: TypeInfo,
-    // pub metadata_token: mdToken,
-    // pub function_name: String,
+    pub id: mdToken,
     pub name: String,
+    pub type_info: Option<MyTypeInfo>,
     pub is_generic: bool,
-    pub signature: Vec<COR_SIGNATURE>,
-    //pub type_arguments_num: u32
+    pub signature: Option<MethodSignature>,
+    pub function_spec_signature: Option<MethodSignature>,
+    pub method_def_id: mdToken,
+    pub method_signature: FunctionMethodSignature,
+}
+
+impl MyFunctionInfo {
+    pub fn new(
+        id: mdToken,
+        name: String,
+        is_generic: bool,
+        type_info: Option<MyTypeInfo>,
+        signature: Option<MethodSignature>,
+        function_spec_signature: Option<MethodSignature>,
+        method_def_id: mdToken,
+        method_signature: FunctionMethodSignature) -> Self {
+        Self {
+            id,
+            name,
+            type_info,
+            is_generic,
+            signature,
+            function_spec_signature,
+            method_def_id,
+            method_signature
+        }
+    }
+}
+
+pub struct FunctionMethodSignature {
+    pub data: Vec<COR_SIGNATURE>,
+}
+
+impl FunctionMethodSignature {
+    pub fn new(data: Vec<COR_SIGNATURE>) -> Self {
+        Self { data }
+    }
+}
+
+pub struct MyTypeInfo {
+    pub token: mdToken,
+    pub name: String,
+    pub type_spec: mdTypeSpec,
+    pub token_type: CorTokenType,
+    pub extends_from: Option<Box<MyTypeInfo>>,
+    pub is_value_type: bool,
+    pub is_generic: bool,
+    pub parent_type: Option<Box<MyTypeInfo>>,
 }
 
 /// A .NET version

@@ -919,107 +919,40 @@ impl CorProfiler {
         function_id: FunctionID,
         is_safe_to_block: BOOL,
     ) -> Result<(), HRESULT> {
-        let _lock = LOCK.lock().unwrap();
-
-        let borrow = self.profiler_info.borrow();
-        let profiler_info = borrow.as_ref().unwrap();
-        let function_info = profiler_info.get_function_info(function_id)?;
-
-        let metadata_import = profiler_info.get_module_metadata::<IMetaDataImport2>(
-            function_info.module_id,
-            CorOpenFlags::ofRead | CorOpenFlags::ofWrite,
-        )?;
-
-        let method_props = metadata_import.get_method_props(function_info.token)?;
-        let type_def_props = metadata_import.get_type_def_props(method_props.class_token)?;
-
-        //log::trace!("jit_compilation_started for {}.{}", &type_def_props.name, &method_props.name);
-
-        if method_props.name == "Greeting" {
-            log::trace!("get il function body for Greeting");
-
-            let il_body =
-                profiler_info.get_il_function_body(function_info.module_id, function_info.token)?;
-
-            let slice = unsafe {
-                std::slice::from_raw_parts(il_body.method_header, il_body.method_size as usize)
-            };
-
-            log::trace!("original bytes {:?}", &slice);
-
-            let mut method = Method::new(il_body.method_header, il_body.method_size).unwrap();
-
-            let metadata_emit = metadata_import.query_interface::<IMetaDataEmit2>().unwrap();
-            match metadata_emit.define_user_string("Goodbye World!") {
-                Ok(md_string) => {
-                    log::trace!("Defined user string");
-
-                    let result = metadata_import.get_user_string(md_string);
-                    if result.is_err() {
-                        log::trace!("Could not read user string {}", md_string);
-                        return Ok(());
-                    } else {
-                        log::trace!("retrieved string '{}'", result.unwrap());
-                    }
-
-                    for instr in method.instructions.iter_mut() {
-                        if instr.opcode.name == "ldstr" {
-                            log::trace!("Found ldstr instruction");
-                            match instr.operand {
-                                Operand::InlineString(t) => {
-                                    let str = metadata_import.get_user_string(t)?;
-                                    log::trace!("user string is '{}'", &str);
-                                    if str == "Hello World!" {
-                                        log::trace!("replaced operand");
-                                        instr.operand = Operand::InlineString(md_string);
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-
-                    let new_method = method.into_bytes();
-                    log::trace!("rewritten bytes {:?}", &new_method);
-                    log::trace!("get il allocator");
-                    let allocator =
-                        profiler_info.get_il_function_body_allocator(function_info.module_id)?;
-                    log::trace!("get allocate {} bytes", new_method.len());
-                    let allocated_bytes = allocator.alloc(new_method.len() as ULONG)?;
-                    log::trace!("copy new_method into allocated bytes");
-
-                    let address = unsafe { allocated_bytes.into_inner() };
-                    unsafe {
-                        std::ptr::copy(new_method.as_ptr(), address, new_method.len());
-                    }
-
-                    log::trace!("set il_function_body");
-                    profiler_info.set_il_function_body(
-                        function_info.module_id,
-                        function_info.token,
-                        address as *const _,
-                    )?;
-
-                    if let Some(profiler_info7) =
-                        profiler_info.query_interface::<ICorProfilerInfo7>()
-                    {
-                        profiler_info7
-                            .apply_metadata(function_info.module_id)
-                            .unwrap();
-                    }
-                }
-                Err(_) => {}
-            }
-
-            let op_codes = method
-                .instructions
-                .iter()
-                .map(|instr| instr.opcode.name)
-                .collect::<Vec<_>>()
-                .join(",");
-
-            log::info!("method: {}, op_codes: {}", method_props.name, op_codes);
+        if !IS_ATTACHED.load(Ordering::SeqCst) || is_safe_to_block == 0 {
+            return Ok(());
         }
+
+        let _lock = LOCK.lock().unwrap();
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+
+        let profiler_borrow = self.profiler_info.borrow();
+        let profiler_info = profiler_borrow.as_ref().unwrap();
+        let function_info = profiler_info.get_function_info(function_id)
+            .map_err(|e| {
+                log::warn!("JITCompilationStarted: get function info failed for {}", function_id);
+                e
+            })?;
+
+        let modules = self.modules.borrow();
+
+        let module_metadata = modules.get(&function_info.module_id);
+        if module_metadata.is_none() {
+            return Ok(());
+        }
+
+        let module_metadata = module_metadata.unwrap();
+        let call_target_enabled = CALLTARGET_ENABLED.load(Ordering::SeqCst);
+        if call_target_enabled {
+            let app_domains = FIRST_JIT_COMPILATION_APP_DOMAINS.lock().unwrap();
+            if app_domains.contains(&module_metadata.appdomain_id) {
+                return Ok(());
+            }
+        }
+
+        let caller = module_metadata.metadata_import.get_function_info(function_info.token)?;
 
         Ok(())
     }

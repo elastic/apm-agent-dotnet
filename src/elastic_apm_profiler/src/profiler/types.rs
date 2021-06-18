@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::ffi::{AppDomainID, AssemblyID, ModuleID, BYTE, COR_PRF_MODULE_FLAGS};
+use crate::ffi::{AppDomainID, AssemblyID, ModuleID, BYTE, COR_PRF_MODULE_FLAGS, CorCallingConvention, CorElementType};
 use crate::interfaces::imetadata_assembly_emit::IMetaDataAssemblyEmit;
 use crate::interfaces::imetadata_assembly_import::IMetaDataAssemblyImport;
 use crate::interfaces::imetadata_emit::IMetaDataEmit2;
@@ -12,6 +12,7 @@ use serde::{de, Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::str::FromStr;
+use num_traits::FromPrimitive;
 
 pub(crate) struct ModuleInfo {
     pub id: ModuleID,
@@ -39,6 +40,69 @@ pub struct MethodSignature {
     data: Vec<BYTE>,
 }
 
+impl From<&[BYTE]> for MethodSignature {
+    fn from(data: &[u8]) -> Self {
+        MethodSignature::new(data.to_vec())
+    }
+}
+
+impl MethodSignature {
+    pub fn new(data: Vec<BYTE>) -> Self {
+        Self { data }
+    }
+
+    pub fn calling_convention(&self) -> CorCallingConvention {
+        if self.data.is_empty() {
+            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT
+        } else {
+            // assume the unwrap is safe here
+            CorCallingConvention::from_u8(self.data[0]).unwrap()
+        }
+    }
+
+    pub fn number_of_type_arguments(&self) -> u8 {
+        if self.data.len() > 1 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+            self.data[1]
+        } else {
+            0
+        }
+    }
+
+    pub fn number_of_arguments(&self) -> u8 {
+        if self.data.len() > 2 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+            self.data[2]
+        } else if self.data.len() > 1 {
+            self.data[1]
+        } else {
+            0
+        }
+    }
+
+    pub fn return_type_is_object(&self) -> bool {
+        if self.data.len() > 2 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+            CorElementType::from_u8(self.data[3]) == Some(CorElementType::ELEMENT_TYPE_OBJECT)
+        } else if self.data.len() > 1 {
+            CorElementType::from_u8(self.data[2]) == Some(CorElementType::ELEMENT_TYPE_OBJECT)
+        } else {
+            false
+        }
+    }
+
+    pub fn index_of_return_type(&self) -> usize {
+        if self.data.len() > 2 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+            3
+        } else if self.data.len() > 1 {
+            2
+        } else {
+            0
+        }
+    }
+
+    pub fn is_instance_method(&self) -> bool {
+        self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS
+    }
+}
+
 struct MethodSignatureVisitor;
 impl<'de> Visitor<'de> for MethodSignatureVisitor {
     type Value = MethodSignature;
@@ -53,9 +117,7 @@ impl<'de> Visitor<'de> for MethodSignatureVisitor {
     {
         let parse_bytes: Result<Vec<_>, _> = v.split(' ').map(|p| hex::decode(p)).collect();
         match parse_bytes {
-            Ok(b) => Ok(MethodSignature {
-                data: b.into_iter().flatten().collect(),
-            }),
+            Ok(b) => Ok(MethodSignature::new(b.into_iter().flatten().collect())),
             Err(e) => Err(de::Error::custom(format!(
                 "Could not parse MethodSignature: {:?}",
                 e.to_string()
@@ -244,7 +306,7 @@ pub struct Integration {
 }
 
 pub struct ModuleMetadata {
-    metadata_import: IMetaDataImport2,
+    pub metadata_import: IMetaDataImport2,
     metadata_emit: IMetaDataEmit2,
     assembly_import: IMetaDataAssemblyImport,
     assembly_emit: IMetaDataAssemblyEmit,

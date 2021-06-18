@@ -3,9 +3,11 @@ use com::{
     interfaces::iunknown::IUnknown,
     sys::{FAILED, GUID, HRESULT},
 };
-use core::ptr;
+use core::{ptr, slice};
 use std::{ffi::c_void, mem::MaybeUninit};
 use widestring::U16CString;
+use crate::cli::uncompress_token;
+use crate::profiler::types::MethodSignature;
 
 interfaces! {
     #[uuid("7DAC8207-D3AE-4c75-9B67-92801A497D44")]
@@ -770,11 +772,55 @@ impl IMetaDataImport {
         }
     }
 
-    pub fn get_type_def_props(&self, td: mdTypeDef) -> Result<TypeDefProps, HRESULT> {
+    /// Gets the name of the module referenced by the specified metadata token.
+    pub fn get_module_ref_props(&self, token: mdModuleRef) -> Result<ModuleRefProps, HRESULT> {
+        let mut name_buffer_length = MaybeUninit::uninit();
+        let hr = unsafe {
+            self.GetModuleRefProps(
+                token,
+                ptr::null_mut(),
+                0,
+                name_buffer_length.as_mut_ptr(),
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
+        unsafe { name_buffer.set_len(name_buffer_length as usize) };
+        let mut name_length = MaybeUninit::uninit();
+
+        let hr = unsafe {
+            self.GetModuleRefProps(
+                token,
+                name_buffer.as_mut_ptr(),
+                name_buffer_length,
+                name_length.as_mut_ptr(),
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let name = U16CString::from_vec_with_nul(name_buffer)
+            .unwrap()
+            .to_string_lossy();
+
+        Ok(ModuleRefProps {
+            name
+        })
+    }
+
+    /// Gets metadata information for the Type represented by the specified metadata token.
+    pub fn get_type_def_props(&self, token: mdTypeDef) -> Result<TypeDefProps, HRESULT> {
         let mut name_buffer_length = MaybeUninit::uninit();
         let hr = unsafe {
             self.GetTypeDefProps(
-                td,
+                token,
                 ptr::null_mut(),
                 0,
                 name_buffer_length.as_mut_ptr(),
@@ -797,7 +843,7 @@ impl IMetaDataImport {
 
         let hr = unsafe {
             self.GetTypeDefProps(
-                td,
+                token,
                 name_buffer.as_mut_ptr(),
                 name_buffer_length,
                 name_length.as_mut_ptr(),
@@ -822,6 +868,79 @@ impl IMetaDataImport {
             name,
             cor_type_attr,
             extends_td,
+        })
+    }
+
+    pub fn get_type_ref_props(&self, token: mdTypeRef) -> Result<TypeRefProps, HRESULT> {
+        let mut name_buffer_length = MaybeUninit::uninit();
+        let mut parent_token = mdTokenNil;
+
+        let hr = unsafe {
+            self.GetTypeRefProps(
+                token,
+                &mut parent_token,
+                ptr::null_mut(),
+                0,
+                name_buffer_length.as_mut_ptr()
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
+        unsafe { name_buffer.set_len(name_buffer_length as usize) };
+        let mut name_length = MaybeUninit::uninit();
+
+        let hr = unsafe {
+            self.GetTypeRefProps(
+                token,
+                &mut parent_token,
+                name_buffer.as_mut_ptr(),
+                name_buffer_length,
+                name_length.as_mut_ptr()
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let name = U16CString::from_vec_with_nul(name_buffer)
+            .unwrap()
+            .to_string_lossy();
+
+        Ok(TypeRefProps {
+            name,
+            parent_token
+        })
+    }
+
+    pub fn get_type_spec_from_token(&self, token: mdTypeSpec) -> Result<TypeSpec, HRESULT> {
+        let mut signature = MaybeUninit::uninit();
+        let mut signature_len = MaybeUninit::uninit();
+        let hr = unsafe {
+            self.GetTypeSpecFromToken(
+                token,
+                signature.as_mut_ptr(),
+                signature_len.as_mut_ptr()
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let signature = unsafe {
+            let s = signature.assume_init();
+            let l = signature_len.assume_init();
+            std::slice::from_raw_parts(s, l as usize).to_vec()
+        };
+
+        Ok(TypeSpec {
+            signature
         })
     }
 
@@ -850,16 +969,16 @@ impl IMetaDataImport {
 
 impl IMetaDataImport2 {
     /// Gets the metadata signature of the method referenced by the specified MethodSpec token.
-    pub fn get_method_spec_props(&self, mi: mdMethodSpec) -> Result<MethodSpecProps, HRESULT> {
-        let mut tk_parent = MaybeUninit::uninit();
-        let mut ppv_sig_blob = MaybeUninit::uninit();
-        let mut pcb_sig_blob = MaybeUninit::uninit();
+    pub fn get_method_spec_props(&self, token: mdMethodSpec) -> Result<MethodSpecProps, HRESULT> {
+        let mut parent = MaybeUninit::uninit();
+        let mut signature = MaybeUninit::uninit();
+        let mut signature_len = MaybeUninit::uninit();
         let hr = unsafe {
             self.GetMethodSpecProps(
-                mi,
-                tk_parent.as_mut_ptr(),
-                ppv_sig_blob.as_mut_ptr(),
-                pcb_sig_blob.as_mut_ptr(),
+                token,
+                parent.as_mut_ptr(),
+                signature.as_mut_ptr(),
+                signature_len.as_mut_ptr(),
             )
         };
 
@@ -867,11 +986,11 @@ impl IMetaDataImport2 {
             return Err(hr);
         }
 
-        let parent = unsafe { tk_parent.assume_init() };
+        let parent = unsafe { parent.assume_init() };
         let signature = unsafe {
-            let pcb_sig_blob = pcb_sig_blob.assume_init();
-            let ppv_sig_blob = ppv_sig_blob.assume_init();
-            std::slice::from_raw_parts(ppv_sig_blob, pcb_sig_blob as usize).to_vec()
+            let s = signature.assume_init();
+            let l = signature_len.assume_init();
+            std::slice::from_raw_parts(s, l as usize).to_vec()
         };
 
         Ok(MethodSpecProps { parent, signature })
@@ -886,38 +1005,156 @@ impl IMetaDataImport2 {
         };
 
         let mut is_generic = false;
+        let function_name;
+        let parent_token;
+        let raw_signature;
+        let mut final_signature = None;
+        let mut method_spec_signature = None;
+        let mut method_def_token = mdTokenNil;
+
         match cor_token_type {
             CorTokenType::mdtMemberRef => {
                 let member_ref_props = self.get_member_ref_props(token)?;
-                Ok(MyFunctionInfo {
-                    name: member_ref_props.name,
-                    is_generic,
-                    signature: member_ref_props.signature,
-                })
+                function_name = member_ref_props.name;
+                parent_token = member_ref_props.class_token;
+                raw_signature = FunctionMethodSignature::new(member_ref_props.signature);
             }
             CorTokenType::mdtMethodDef => {
                 let member_props = self.get_member_props(token)?;
-                Ok(MyFunctionInfo {
-                    name: member_props.name,
-                    is_generic,
-                    signature: member_props.signature,
-                })
+                function_name = member_props.name;
+                parent_token = member_props.class_token;
+                raw_signature = FunctionMethodSignature::new(member_props.signature);
             }
             CorTokenType::mdtMethodSpec => {
                 let method_spec = self.get_method_spec_props(token)?;
+                parent_token = method_spec.parent;
+                raw_signature = FunctionMethodSignature::new(method_spec.signature.clone());
+
                 is_generic = true;
-                let generic_info = self.get_function_info(method_spec.parent)?;
-                Ok(MyFunctionInfo {
-                    name: generic_info.name,
-                    is_generic,
-                    signature: method_spec.signature,
-                })
+                let generic_info = self.get_function_info(parent_token)?;
+                function_name = generic_info.name;
+                final_signature = generic_info.signature;
+                method_spec_signature = Some(MethodSignature::new(method_spec.signature));
+                method_def_token = generic_info.id;
             }
             _ => {
-                log::warn!("Unknown token type {}", token);
-                Err(E_FAIL)
+                log::warn!("get_function_info: unknown token type {}", token);
+                return Err(E_FAIL)
             }
+        };
+
+        let type_info = self.get_type_info(parent_token)?;
+
+        Ok(MyFunctionInfo::new(
+            token,
+            function_name,
+            is_generic,
+            type_info,
+            final_signature,
+            method_spec_signature,
+            method_def_token,
+            raw_signature,
+        ))
+    }
+
+    pub fn get_type_info(&self, token: mdToken) -> Result<Option<MyTypeInfo>, HRESULT> {
+        let token_type = {
+            let t = type_from_token(token);
+            CorTokenType::from_bits(t).unwrap()
+        };
+
+        let mut parent_type = None;
+        let mut extends_from = None;
+        let mut name: String = String::new();
+        let mut is_value_type = false;
+        let mut is_generic = false;
+
+        match token_type {
+            CorTokenType::mdtTypeDef => {
+                let type_def_props = self.get_type_def_props(token)?;
+                name = type_def_props.name;
+
+                let mut parent_type_token = mdTokenNil;
+
+                // try to get the parent type if type is nested
+                let hr = unsafe { self.GetNestedClassProps(token, &mut parent_type_token) };
+                if parent_type_token != mdTokenNil {
+                    parent_type = Some(Box::new(self.get_type_info(parent_type_token)?.unwrap()));
+                }
+
+                // get the base type
+                if type_def_props.extends_td != mdTokenNil {
+                    if let Some(extends_type_info) = self.get_type_info(type_def_props.extends_td)? {
+                        is_value_type = &extends_type_info.name == "System.ValueType" || &extends_type_info.name == "System.Enum";
+                        extends_from = Some(Box::new(extends_type_info));
+                    }
+                }
+            },
+            CorTokenType::mdtTypeRef => {
+                let type_ref_props = self.get_type_ref_props(token)?;
+                name = type_ref_props.name;
+            },
+            CorTokenType::mdtTypeSpec => {
+                let type_spec = self.get_type_spec_from_token(token)?;
+
+                if type_spec.signature.len() < 3 {
+                    return Ok(None)
+                }
+
+                if type_spec.signature[0] == CorElementType::ELEMENT_TYPE_GENERICINST as u8 {
+                    let type_token = uncompress_token(&type_spec.signature[2..=2]);
+                    return if let Some(base_type) = self.get_type_info(type_token.0)? {
+                        Ok(
+                            Some(MyTypeInfo {
+                                token: base_type.token,
+                                name: base_type.name,
+                                type_spec: token,
+                                token_type: base_type.token_type,
+                                extends_from: base_type.extends_from,
+                                is_value_type: base_type.is_value_type,
+                                is_generic: base_type.is_generic,
+                                parent_type: base_type.parent_type
+                            })
+                        )
+                    } else {
+                        Ok(None)
+                    }
+                }
+            },
+            CorTokenType::mdtModuleRef => {
+                let module_ref_props = self.get_module_ref_props(token)?;
+                name = module_ref_props.name;
+            },
+            CorTokenType::mdtMemberRef => {
+                let function_info = self.get_function_info(token)?;
+                return Ok(function_info.type_info)
+            }
+            CorTokenType::mdtMethodDef => {
+                let function_info = self.get_function_info(token)?;
+                return Ok(function_info.type_info)
+            }
+            _ => {
+                log::warn!("get_type_info: unknown token type {}", token);
+                return Err(E_FAIL)
+            }
+        };
+
+        // check the type name for arity
+        if let Some(index) = name.rfind('`') {
+            let from_right = name.len() - index - 1;
+            is_generic = from_right == 1 || from_right == 2;
         }
+
+        Ok(Some(MyTypeInfo {
+            token,
+            name,
+            type_spec: mdTypeSpecNil,
+            token_type,
+            extends_from,
+            is_value_type,
+            is_generic,
+            parent_type
+        }))
     }
 
     pub fn get_module_version_id(&self) -> Result<GUID, HRESULT> {
