@@ -307,13 +307,13 @@ pub struct Integration {
 
 pub struct ModuleMetadata {
     pub metadata_import: IMetaDataImport2,
-    metadata_emit: IMetaDataEmit2,
-    assembly_import: IMetaDataAssemblyImport,
-    assembly_emit: IMetaDataAssemblyEmit,
-    assembly_name: String,
+    pub metadata_emit: IMetaDataEmit2,
+    pub assembly_import: IMetaDataAssemblyImport,
+    pub assembly_emit: IMetaDataAssemblyEmit,
+    pub assembly_name: String,
     pub appdomain_id: AppDomainID,
-    module_version_id: GUID,
-    integrations: Vec<IntegrationMethod>,
+    pub module_version_id: GUID,
+    pub integrations: Vec<IntegrationMethod>,
 }
 
 impl ModuleMetadata {

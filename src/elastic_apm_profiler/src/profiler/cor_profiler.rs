@@ -108,6 +108,7 @@ class! {
         runtime_info: RefCell<Option<RuntimeInfo>>,
         modules: RefCell<HashMap<ModuleID, ModuleMetadata>>,
         cor_assembly_property: RefCell<Option<AssemblyMetaData>>,
+        is_desktop_iis: AtomicBool,
     }
 
     impl ICorProfilerCallback for CorProfiler {
@@ -521,7 +522,11 @@ impl CorProfiler {
 
         // get the details for the runtime
         let runtime_info = profiler_info.get_runtime_information()?;
-        log::info!("Initialize: runtime {}", &runtime_info);
+        let process_path = std::env::current_exe().unwrap();
+        let process_name = process_path.file_name().unwrap();
+        if process_name == "w3wp.exe" || process_name == "iisexpress.exe" {
+            self.is_desktop_iis.store(runtime_info.is_desktop_clr(), Ordering::SeqCst);
+        }
 
         // Store the profiler and runtime info for later use
         self.profiler_info.replace(Some(profiler_info));
@@ -937,7 +942,6 @@ impl CorProfiler {
             })?;
 
         let modules = self.modules.borrow();
-
         let module_metadata = modules.get(&function_info.module_id);
         if module_metadata.is_none() {
             return Ok(());
@@ -945,14 +949,71 @@ impl CorProfiler {
 
         let module_metadata = module_metadata.unwrap();
         let call_target_enabled = CALLTARGET_ENABLED.load(Ordering::SeqCst);
-        if call_target_enabled {
+        let loader_injected_in_appdomain = {
             let app_domains = FIRST_JIT_COMPILATION_APP_DOMAINS.lock().unwrap();
-            if app_domains.contains(&module_metadata.appdomain_id) {
-                return Ok(());
-            }
+            app_domains.contains(&module_metadata.appdomain_id)
+        };
+
+        if call_target_enabled && loader_injected_in_appdomain {
+            return Ok(());
         }
 
         let caller = module_metadata.metadata_import.get_function_info(function_info.token)?;
+        log::trace!(
+            "JITCompilationStarted: function_id={} token={} name={}()",
+            function_id,
+            &function_info.token,
+            &caller.full_name());
+
+        let is_desktop_iis = self.is_desktop_iis.load(Ordering::SeqCst);
+        let valid_startup_hook_callsite = if is_desktop_iis {
+            match &caller.type_info {
+                Some(t) => &module_metadata.assembly_name == "System.Web" &&
+                    t.name == "System.Web.Compilation.BuildManager" &&
+                    &caller.name== "InvokerPreInitMethods",
+                None => false
+            }
+        } else if &module_metadata.assembly_name == "System" || &module_metadata.assembly_name == "System.Net.Http" {
+            false
+        } else {
+            true
+        };
+
+        if valid_startup_hook_callsite && !loader_injected_in_appdomain {
+            let runtime_info_borrow = self.runtime_info.borrow();
+            let runtime_info = runtime_info_borrow.as_ref().unwrap();
+
+            let domain_neutral_assembly = runtime_info.is_desktop_clr() &&
+                COR_LIB_MODULE_LOADED.load(Ordering::SeqCst) &&
+                COR_APP_DOMAIN_ID.load(Ordering::SeqCst) == module_metadata.appdomain_id;
+
+            log::info!(
+                "JITCompilationStarted: Startup hook registered in function_id={} token={} name={}() assembly_name={} app_domain_id={} domain_neutral={}",
+                function_id,
+                &function_info.token,
+                &caller.full_name(),
+                &module_metadata.assembly_name,
+                &module_metadata.appdomain_id,
+                domain_neutral_assembly
+            );
+
+            FIRST_JIT_COMPILATION_APP_DOMAINS.lock().unwrap().push(module_metadata.appdomain_id);
+
+            self.run_il_startup_hook(
+                &module_metadata,
+                function_info.module_id,
+                function_info.token)?;
+
+            if is_desktop_iis {
+                // TODO: hookup IIS module
+
+            }
+        }
+
+        if !call_target_enabled {
+
+            // TODO: process calls
+        }
 
         Ok(())
     }
@@ -1042,5 +1103,45 @@ impl CorProfiler {
                 true
             }
         }
+    }
+
+    fn run_il_startup_hook(
+        &self,
+        module_metadata: &ModuleMetadata,
+        module_id: ModuleID,
+        function_token: mdToken) -> Result<(), HRESULT> {
+
+        let startup_method_def = self.generate_void_il_startup_method(module_id, module_metadata)?;
+
+        // TODO: finish
+
+        Ok(())
+    }
+
+    fn generate_void_il_startup_method(&self, module_id: ModuleID, module_metadata: &ModuleMetadata) -> Result<mdMethodDef, HRESULT> {
+        let mscorlib_ref = self.create_assembly_ref_to_mscorlib(&module_metadata.assembly_emit)?;
+
+        log::trace!("generate_void_il_startup_method: created mscorlib ref");
+
+        // TODO: implement
+        Ok(mdMethodDefNil)
+    }
+
+    fn create_assembly_ref_to_mscorlib(&self, assembly_emit: &IMetaDataAssemblyEmit) -> Result<mdAssemblyRef, HRESULT> {
+        let assembly_metadata = ASSEMBLYMETADATA {
+            usMajorVersion: 4,
+            usMinorVersion: 0,
+            usBuildNumber: 0,
+            usRevisionNumber: 0,
+            szLocale: std::ptr::null_mut(),
+            cbLocale: 0,
+            rProcessor: std::ptr::null_mut(),
+            ulProcessor: 0,
+            rOS: std::ptr::null_mut(),
+            ulOS: 0
+        };
+
+        let public_key: &[u8; 8] = &[0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89];
+        assembly_emit.define_assembly_ref(public_key, "mscorlib", assembly_metadata, &[], CorAssemblyFlags::afPA_None)
     }
 }

@@ -420,19 +420,30 @@ pub struct OSINFO {
     dwOSMajorVersion: DWORD, // OS Major version.
     dwOSMinorVersion: DWORD, // OS Minor version.
 }
+/// Managed assembly metadata
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub struct ASSEMBLYMETADATA {
-    pub usMajorVersion: USHORT,   // Major Version.
-    pub usMinorVersion: USHORT,   // Minor Version.
-    pub usBuildNumber: USHORT,    // Build Number.
-    pub usRevisionNumber: USHORT, // Revision Number.
-    pub szLocale: *mut WCHAR,     // Locale.
-    pub cbLocale: ULONG,          // [IN/OUT] Size of the buffer in wide chars/Actual size.
-    pub rProcessor: *const DWORD, // Processor ID array.
-    pub ulProcessor: ULONG, // [IN/OUT] Size of the Processor ID array/Actual # of entries filled in.
-    pub rOS: *const OSINFO, // OSINFO array.
-    pub ulOS: ULONG,        // [IN/OUT]Size of the OSINFO array/Actual # of entries filled in.
+    /// Major version
+    pub usMajorVersion: USHORT,
+    /// Minor version
+    pub usMinorVersion: USHORT,
+    /// Build number
+    pub usBuildNumber: USHORT,
+    /// Revision number
+    pub usRevisionNumber: USHORT,
+    /// Locale
+    pub szLocale: *mut WCHAR,
+    /// Locale buffer size in wide chars
+    pub cbLocale: ULONG,
+    /// Processor ID array
+    pub rProcessor: *const DWORD,
+    /// Processor ID array size
+    pub ulProcessor: ULONG,
+    /// OS info array
+    pub rOS: *const OSINFO,
+    /// OS info array size
+    pub ulOS: ULONG,
 }
 #[repr(C)]
 #[derive(Debug, PartialEq)]

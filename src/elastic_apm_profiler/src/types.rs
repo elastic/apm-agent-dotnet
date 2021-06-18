@@ -251,6 +251,14 @@ impl MyFunctionInfo {
             method_signature
         }
     }
+
+    /// Full type and function name
+    pub fn full_name(&self) -> String {
+        match &self.type_info {
+            Some(t) => format!("{}.{}", &t.name, &self.name),
+            None => format!(".{}", &self.name)
+        }
+    }
 }
 
 pub struct FunctionMethodSignature {
