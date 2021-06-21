@@ -12,19 +12,19 @@ use num_traits::FromPrimitive;
 use crate::{
     error::Error,
     ffi::{
-        mdAssembly, mdMethodDef, mdToken, mdTypeDef, AppDomainID, AssemblyID, ClassID,
-        ClrInstanceID, CorAssemblyFlags, CorElementType, CorMethodAttr, CorMethodImpl, CorTypeAttr,
-        FunctionID, ModuleID, ProcessID, ReJITID, BYTE, COR_FIELD_OFFSET, COR_PRF_FRAME_INFO,
-        COR_PRF_FUNCTION_ARGUMENT_INFO, COR_PRF_FUNCTION_ARGUMENT_RANGE, COR_PRF_HIGH_MONITOR,
-        COR_PRF_MODULE_FLAGS, COR_PRF_MONITOR, COR_PRF_RUNTIME_TYPE, COR_SIGNATURE, DWORD,
-        HCORENUM, LPCBYTE, PCCOR_SIGNATURE, S_FALSE, S_OK, ULONG,
+        mdAssembly, mdMethodDef, mdToken, mdTypeDef, mdTypeSpec, AppDomainID, AssemblyID, ClassID,
+        ClrInstanceID, CorAssemblyFlags, CorElementType, CorMethodAttr, CorMethodImpl,
+        CorTokenType, CorTypeAttr, FunctionID, ModuleID, ProcessID, ReJITID, BYTE,
+        COR_FIELD_OFFSET, COR_PRF_FRAME_INFO, COR_PRF_FUNCTION_ARGUMENT_INFO,
+        COR_PRF_FUNCTION_ARGUMENT_RANGE, COR_PRF_HIGH_MONITOR, COR_PRF_MODULE_FLAGS,
+        COR_PRF_MONITOR, COR_PRF_RUNTIME_TYPE, COR_SIGNATURE, DWORD, HCORENUM, LPCBYTE,
+        PCCOR_SIGNATURE, S_FALSE, S_OK, ULONG, ULONG32,
     },
     interfaces::{
         icor_profiler_method_enum::ICorProfilerMethodEnum, imetadata_import::IMetaDataImport,
     },
+    profiler::types::MethodSignature,
 };
-use crate::ffi::{mdTypeSpec, ULONG32, CorTokenType};
-use crate::profiler::types::MethodSignature;
 
 pub struct ArrayClassInfo {
     pub element_type: CorElementType,
@@ -239,7 +239,8 @@ impl MyFunctionInfo {
         signature: Option<MethodSignature>,
         function_spec_signature: Option<MethodSignature>,
         method_def_id: mdToken,
-        method_signature: FunctionMethodSignature) -> Self {
+        method_signature: FunctionMethodSignature,
+    ) -> Self {
         Self {
             id,
             name,
@@ -248,7 +249,7 @@ impl MyFunctionInfo {
             signature,
             function_spec_signature,
             method_def_id,
-            method_signature
+            method_signature,
         }
     }
 
@@ -256,7 +257,7 @@ impl MyFunctionInfo {
     pub fn full_name(&self) -> String {
         match &self.type_info {
             Some(t) => format!("{}.{}", &t.name, &self.name),
-            None => format!(".{}", &self.name)
+            None => format!(".{}", &self.name),
         }
     }
 }

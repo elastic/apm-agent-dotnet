@@ -1,7 +1,8 @@
-use crate::interfaces::icor_profiler_info::ICorProfilerInfo;
-use crate::interfaces::imethod_malloc::IMethodMalloc;
-use crate::ffi::{ModuleID, mdToken, mdTokenNil, BYTE, E_FAIL};
-use crate::cli::{ExceptionHandlingClauseFlags, Instruction, MethodHeaderFlags, Method, Section};
+use crate::{
+    cli::{ExceptionHandlingClauseFlags, Instruction, Method, MethodHeaderFlags, Section},
+    ffi::{mdToken, mdTokenNil, ModuleID, BYTE, E_FAIL},
+    interfaces::{icor_profiler_info::ICorProfilerInfo, imethod_malloc::IMethodMalloc},
+};
 use com::sys::HRESULT;
 
 struct IlRewriter {
@@ -20,7 +21,7 @@ struct IlRewriter {
 }
 
 struct EHClause {
-    flags: ExceptionHandlingClauseFlags
+    flags: ExceptionHandlingClauseFlags,
 }
 
 impl IlRewriter {
@@ -41,7 +42,7 @@ impl IlRewriter {
             method_malloc: None,
             max_stack: 0,
             flags: MethodHeaderFlags::empty(),
-            code_size: 0
+            code_size: 0,
         }
     }
 
@@ -63,9 +64,10 @@ impl IlRewriter {
     }
 
     pub fn import(&mut self) -> Result<(), HRESULT> {
-        let il_body = self.profiler_info.get_il_function_body(self.module_id, self.method_token)?;
-        let method = Method::new(il_body.method_header, il_body.method_size)
-            .map_err(|e| E_FAIL)?;
+        let il_body = self
+            .profiler_info
+            .get_il_function_body(self.module_id, self.method_token)?;
+        let method = Method::new(il_body.method_header, il_body.method_size).map_err(|e| E_FAIL)?;
 
         self.import_il(method.instructions);
         self.import_eh(method.sections);
@@ -79,7 +81,4 @@ impl IlRewriter {
     fn import_eh(&mut self, sections: Vec<Section>) {
         self.eh_clause = sections;
     }
-
-
-
 }

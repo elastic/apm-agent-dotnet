@@ -1,6 +1,10 @@
 use crate::{
-    cli::{Method, Operand},
-    ffi::*,
+    cli::{
+        brfalse_s, call, callvirt, ceq, compress_token, ldc_i4_0, ldc_i4_1, ldloc_0, ldloc_1,
+        ldloc_2, ldloc_3, ldloc_s, ldloca_s, ldsflda, ldstr, newarr, nop, pop, ret, stloc_s,
+        FatMethodHeader, Instruction, Method, MethodHeader, Operand, TinyMethodHeader,
+    },
+    ffi::{COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER, *},
     interfaces::{
         icor_profiler_assembly_reference_provider::ICorProfilerAssemblyReferenceProvider,
         icor_profiler_callback::{
@@ -18,9 +22,12 @@ use crate::{
         imetadata_emit::{IMetaDataEmit, IMetaDataEmit2},
         imetadata_import::{IMetaDataImport, IMetaDataImport2},
     },
-    profiler::managed::ManagedLoader,
-    profiler::types::{
-        Integration, IntegrationMethod, MethodReplacement, ModuleMetadata, TargetMethodReference,
+    profiler::{
+        managed::ManagedLoader,
+        types::{
+            Integration, IntegrationMethod, MethodReplacement, ModuleMetadata,
+            TargetMethodReference,
+        },
     },
     types::{AssemblyMetaData, HashAlgorithmType, ModuleInfo, RuntimeInfo, Version},
 };
@@ -31,18 +38,18 @@ use com::{
 };
 use rust_embed::RustEmbed;
 use simple_logger::SimpleLogger;
-use std::fs::File;
-use std::io::BufReader;
-use std::ops::Deref;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{
     cell::RefCell,
     collections::HashMap,
     ffi::c_void,
-    sync::{atomic::AtomicBool, Mutex},
+    fs::File,
+    io::BufReader,
+    ops::Deref,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Mutex,
+    },
 };
-use crate::cli::{Instruction, nop, ldsflda, ldc_i4_1, ldc_i4_0, call, ceq, ret, MethodHeader, TinyMethodHeader, compress_token, brfalse_s, ldloca_s, ldloc_1, newarr, stloc_s, ldloc_0, ldloc_s, ldloc_3, ldloc_2, callvirt, ldstr, pop, FatMethodHeader};
-use crate::ffi::COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER;
 
 const MANAGED_PROFILER_ASSEMBLY_LOADER: &'static str = "Elastic.Apm.Profiler.Managed.Loader";
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
@@ -940,11 +947,13 @@ impl CorProfiler {
 
         let profiler_borrow = self.profiler_info.borrow();
         let profiler_info = profiler_borrow.as_ref().unwrap();
-        let function_info = profiler_info.get_function_info(function_id)
-            .map_err(|e| {
-                log::warn!("JITCompilationStarted: get function info failed for {}", function_id);
-                e
-            })?;
+        let function_info = profiler_info.get_function_info(function_id).map_err(|e| {
+            log::warn!(
+                "JITCompilationStarted: get function info failed for {}",
+                function_id
+            );
+            e
+        })?;
 
         let modules = self.modules.borrow();
         let module_metadata = modules.get(&function_info.module_id);
@@ -963,22 +972,29 @@ impl CorProfiler {
             return Ok(());
         }
 
-        let caller = module_metadata.metadata_import.get_function_info(function_info.token)?;
+        let caller = module_metadata
+            .metadata_import
+            .get_function_info(function_info.token)?;
         log::trace!(
             "JITCompilationStarted: function_id={} token={} name={}()",
             function_id,
             &function_info.token,
-            &caller.full_name());
+            &caller.full_name()
+        );
 
         let is_desktop_iis = self.is_desktop_iis.load(Ordering::SeqCst);
         let valid_startup_hook_callsite = if is_desktop_iis {
             match &caller.type_info {
-                Some(t) => &module_metadata.assembly_name == "System.Web" &&
-                    t.name == "System.Web.Compilation.BuildManager" &&
-                    &caller.name== "InvokerPreInitMethods",
-                None => false
+                Some(t) => {
+                    &module_metadata.assembly_name == "System.Web"
+                        && t.name == "System.Web.Compilation.BuildManager"
+                        && &caller.name == "InvokerPreInitMethods"
+                }
+                None => false,
             }
-        } else if &module_metadata.assembly_name == "System" || &module_metadata.assembly_name == "System.Net.Http" {
+        } else if &module_metadata.assembly_name == "System"
+            || &module_metadata.assembly_name == "System.Net.Http"
+        {
             false
         } else {
             true
@@ -988,9 +1004,9 @@ impl CorProfiler {
             let runtime_info_borrow = self.runtime_info.borrow();
             let runtime_info = runtime_info_borrow.as_ref().unwrap();
 
-            let domain_neutral_assembly = runtime_info.is_desktop_clr() &&
-                COR_LIB_MODULE_LOADED.load(Ordering::SeqCst) &&
-                COR_APP_DOMAIN_ID.load(Ordering::SeqCst) == module_metadata.appdomain_id;
+            let domain_neutral_assembly = runtime_info.is_desktop_clr()
+                && COR_LIB_MODULE_LOADED.load(Ordering::SeqCst)
+                && COR_APP_DOMAIN_ID.load(Ordering::SeqCst) == module_metadata.appdomain_id;
 
             log::info!(
                 "JITCompilationStarted: Startup hook registered in function_id={} token={} name={}() assembly_name={} app_domain_id={} domain_neutral={}",
@@ -1002,16 +1018,19 @@ impl CorProfiler {
                 domain_neutral_assembly
             );
 
-            FIRST_JIT_COMPILATION_APP_DOMAINS.lock().unwrap().push(module_metadata.appdomain_id);
+            FIRST_JIT_COMPILATION_APP_DOMAINS
+                .lock()
+                .unwrap()
+                .push(module_metadata.appdomain_id);
 
             self.run_il_startup_hook(
                 &module_metadata,
                 function_info.module_id,
-                function_info.token)?;
+                function_info.token,
+            )?;
 
             if is_desktop_iis {
                 // TODO: hookup IIS module
-
             }
         }
 
@@ -1114,9 +1133,10 @@ impl CorProfiler {
         &self,
         module_metadata: &ModuleMetadata,
         module_id: ModuleID,
-        function_token: mdToken) -> Result<(), HRESULT> {
-
-        let startup_method_def = self.generate_void_il_startup_method(module_id, module_metadata)?;
+        function_token: mdToken,
+    ) -> Result<(), HRESULT> {
+        let startup_method_def =
+            self.generate_void_il_startup_method(module_id, module_metadata)?;
 
         let profiler_borrow = self.profiler_info.borrow();
         let profiler_info = profiler_borrow.as_ref().unwrap();
@@ -1127,35 +1147,52 @@ impl CorProfiler {
             E_FAIL
         })?;
 
-        method.insert_prelude(vec![call(startup_method_def)]).map_err(|e| {
-            log::warn!("run_il_startup_hook: error inserting prelude. {:?}", e);
-            E_FAIL
-        })?;
+        method
+            .insert_prelude(vec![call(startup_method_def)])
+            .map_err(|e| {
+                log::warn!("run_il_startup_hook: error inserting prelude. {:?}", e);
+                E_FAIL
+            })?;
 
         let method_bytes = method.into_bytes();
         let allocator = profiler_info.get_il_function_body_allocator(module_id)?;
         let allocated_bytes = allocator.alloc(method_bytes.len() as ULONG)?;
         let address = unsafe { allocated_bytes.into_inner() };
-        unsafe { std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len()); }
-        profiler_info.set_il_function_body(module_id, function_token, address as *const _).map_err(|e| {
-            log::warn!("run_il_startup_hook: failed to set il for startup hook");
-            e
-        })?;
+        unsafe {
+            std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len());
+        }
+        profiler_info
+            .set_il_function_body(module_id, function_token, address as *const _)
+            .map_err(|e| {
+                log::warn!("run_il_startup_hook: failed to set il for startup hook");
+                e
+            })?;
 
         Ok(())
     }
 
-    fn generate_void_il_startup_method(&self, module_id: ModuleID, module_metadata: &ModuleMetadata) -> Result<mdMethodDef, HRESULT> {
+    fn generate_void_il_startup_method(
+        &self,
+        module_id: ModuleID,
+        module_metadata: &ModuleMetadata,
+    ) -> Result<mdMethodDef, HRESULT> {
         let mscorlib_ref = self.create_assembly_ref_to_mscorlib(&module_metadata.assembly_emit)?;
 
         log::trace!("generate_void_il_startup_method: created mscorlib ref");
 
-        let object_type_ref = module_metadata.metadata_emit.define_type_ref_by_name(mscorlib_ref, "System.Object")?;
-        let new_type_def = module_metadata.metadata_emit.define_type_def("__ElasticVoidMethodType__", CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed, object_type_ref, None)?;
+        let object_type_ref = module_metadata
+            .metadata_emit
+            .define_type_ref_by_name(mscorlib_ref, "System.Object")?;
+        let new_type_def = module_metadata.metadata_emit.define_type_def(
+            "__ElasticVoidMethodType__",
+            CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed,
+            object_type_ref,
+            None,
+        )?;
         let initialize_signature = &[
             CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
             0,
-            CorElementType::ELEMENT_TYPE_VOID as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_VOID as COR_SIGNATURE,
         ];
 
         let new_method = module_metadata.metadata_emit.define_method(
@@ -1164,11 +1201,12 @@ impl CorProfiler {
             CorMethodAttr::mdStatic,
             initialize_signature,
             0,
-            CorMethodImpl::miIL)?;
+            CorMethodImpl::miIL,
+        )?;
 
         let field_signature = &[
             CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
         ];
 
         let is_assembly_loaded_field_def = module_metadata.metadata_emit.define_field(
@@ -1178,13 +1216,13 @@ impl CorProfiler {
             field_signature,
             CorElementType::ELEMENT_TYPE_END,
             None,
-            0
+            0,
         )?;
 
         let already_loaded_signature = &[
             CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
             0,
-            CorElementType::ELEMENT_TYPE_BOOLEAN as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_BOOLEAN as COR_SIGNATURE,
         ];
 
         let already_loaded_method_token = module_metadata.metadata_emit.define_method(
@@ -1193,9 +1231,12 @@ impl CorProfiler {
             CorMethodAttr::mdStatic | CorMethodAttr::mdPrivate,
             already_loaded_signature,
             0,
-            CorMethodImpl::miIL)?;
+            CorMethodImpl::miIL,
+        )?;
 
-        let interlocked_type_ref = module_metadata.metadata_emit.define_type_ref_by_name(mscorlib_ref, "System.Threading.Interlocked")?;
+        let interlocked_type_ref = module_metadata
+            .metadata_emit
+            .define_type_ref_by_name(mscorlib_ref, "System.Threading.Interlocked")?;
 
         // Create method signature for System.Threading.Interlocked::CompareExchange(int32&, int32, int32)
         let interlocked_compare_exchange_signature = &[
@@ -1205,13 +1246,14 @@ impl CorProfiler {
             CorElementType::ELEMENT_TYPE_BYREF as COR_SIGNATURE,
             CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
             CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
         ];
 
         let interlocked_compare_member_ref = module_metadata.metadata_emit.define_member_ref(
             interlocked_type_ref,
             "CompareExchange",
-            interlocked_compare_exchange_signature)?;
+            interlocked_compare_exchange_signature,
+        )?;
 
         // Write the instructions for the IsAlreadyLoaded method
         let mut instructions: Vec<Instruction> = Vec::with_capacity(7);
@@ -1223,22 +1265,28 @@ impl CorProfiler {
         instructions.push(ceq());
         instructions.push(ret());
 
-        let method_bytes = Method::tiny(instructions).map_err(|e| {
-            log::warn!("failed to define IsAlreadyLoaded method");
-            E_FAIL
-        })?.into_bytes();
+        let method_bytes = Method::tiny(instructions)
+            .map_err(|e| {
+                log::warn!("failed to define IsAlreadyLoaded method");
+                E_FAIL
+            })?
+            .into_bytes();
 
         let profiler_borrow = self.profiler_info.borrow();
         let profiler_info = profiler_borrow.as_ref().unwrap();
         let allocator = profiler_info.get_il_function_body_allocator(module_id)?;
         let allocated_bytes = allocator.alloc(method_bytes.len() as ULONG)?;
         let address = unsafe { allocated_bytes.into_inner() };
-        unsafe { std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len()); }
+        unsafe {
+            std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len());
+        }
         log::trace!("generate_void_il_startup_method: write IsAlreadyLoaded body");
-        profiler_info.set_il_function_body(module_id, already_loaded_method_token, address as *const _).map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to set il for IsAlreadyLoaded");
-            e
-        })?;
+        profiler_info
+            .set_il_function_body(module_id, already_loaded_method_token, address as *const _)
+            .map_err(|e| {
+                log::warn!("generate_void_il_startup_method: failed to set il for IsAlreadyLoaded");
+                e
+            })?;
 
         let get_assembly_bytes_signature = &[
             CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
@@ -1281,20 +1329,23 @@ impl CorProfiler {
                     Ok(v) => {
                         log::debug!("env var {}: {}", env_var, &v);
                         v
-                    },
-                    Err(_) => {
-                        std::env::var("CORECLR_PROFILER_PATH").map_err(|e| {
-                            log::warn!("problem getting env var CORECLR_PROFILER_PATH: {}", e.to_string());
-                            E_FAIL
-                        })?
                     }
+                    Err(_) => std::env::var("CORECLR_PROFILER_PATH").map_err(|e| {
+                        log::warn!(
+                            "problem getting env var CORECLR_PROFILER_PATH: {}",
+                            e.to_string()
+                        );
+                        E_FAIL
+                    })?,
                 }
             } else {
                 "elastic_apm_profiler.dll".into()
             }
         };
 
-        let profiler_ref = module_metadata.metadata_emit.define_module_ref(&native_profiler_file)?;
+        let profiler_ref = module_metadata
+            .metadata_emit
+            .define_module_ref(&native_profiler_file)?;
 
         module_metadata.metadata_emit.define_pinvoke_map(
             pinvoke_method_def,
@@ -1322,16 +1373,16 @@ impl CorProfiler {
             CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE,
             CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE,
             CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
         ];
 
-        let marshal_copy_member_ref = module_metadata.metadata_emit.define_member_ref(
-            marshal_type_ref,
-            "Copy",
-            marshal_copy_signature).map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to define member ref for Copy");
-            e
-        })?;
+        let marshal_copy_member_ref = module_metadata
+            .metadata_emit
+            .define_member_ref(marshal_type_ref, "Copy", marshal_copy_signature)
+            .map_err(|e| {
+                log::warn!("generate_void_il_startup_method: failed to define member ref for Copy");
+                e
+            })?;
 
         let system_reflection_assembly_type_ref = module_metadata.metadata_emit.define_type_ref_by_name(mscorlib_ref, "System.Reflection.Assembly").map_err(|e| {
             log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.Reflection.Assembly");
@@ -1346,7 +1397,7 @@ impl CorProfiler {
         let mut appdomain_get_current_domain_signature: Vec<COR_SIGNATURE> = vec![
             CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
             0,
-            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
         ];
         appdomain_get_current_domain_signature
             .append(&mut compress_token(system_appdomain_type_ref).unwrap());
@@ -1362,7 +1413,7 @@ impl CorProfiler {
         let mut appdomain_load_signature = vec![
             CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS as COR_SIGNATURE,
             2,
-            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
         ];
         appdomain_load_signature
             .append(&mut compress_token(system_reflection_assembly_type_ref).unwrap());
@@ -1371,26 +1422,32 @@ impl CorProfiler {
         appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE);
         appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE);
 
-        let appdomain_load_member_ref = module_metadata.metadata_emit.define_member_ref(
-            system_appdomain_type_ref,
-            "Load",
-            &appdomain_load_signature).map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to define member ref Load");
-            e
-        })?;
+        let appdomain_load_member_ref = module_metadata
+            .metadata_emit
+            .define_member_ref(system_appdomain_type_ref, "Load", &appdomain_load_signature)
+            .map_err(|e| {
+                log::warn!("generate_void_il_startup_method: failed to define member ref Load");
+                e
+            })?;
 
         let assembly_create_instance_signature = &[
             CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS as COR_SIGNATURE,
             1,
             CorElementType::ELEMENT_TYPE_OBJECT as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_STRING as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_STRING as COR_SIGNATURE,
         ];
 
-        let assembly_create_instance_member_ref = module_metadata.metadata_emit.define_member_ref(
-            system_reflection_assembly_type_ref,
-            "CreateInstance",
-            assembly_create_instance_signature).map_err(|e| {
-                log::warn!("generate_void_il_startup_method: failed to define member ref CreateInstance");
+        let assembly_create_instance_member_ref = module_metadata
+            .metadata_emit
+            .define_member_ref(
+                system_reflection_assembly_type_ref,
+                "CreateInstance",
+                assembly_create_instance_signature,
+            )
+            .map_err(|e| {
+                log::warn!(
+                    "generate_void_il_startup_method: failed to define member ref CreateInstance"
+                );
                 e
             })?;
 
@@ -1411,11 +1468,13 @@ impl CorProfiler {
             CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE,
             CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE,
             CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE
+            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
         ];
         locals_signature.append(&mut compress_token(system_reflection_assembly_type_ref).unwrap());
 
-        let locals_signature_token = module_metadata.metadata_emit.get_token_from_sig(&locals_signature)?;
+        let locals_signature_token = module_metadata
+            .metadata_emit
+            .get_token_from_sig(&locals_signature)?;
 
         let mut instructions: Vec<Instruction> = Vec::new();
 
@@ -1473,10 +1532,10 @@ impl CorProfiler {
                 local_var_sig_tok: locals_signature_token,
                 more_sects: false,
                 init_locals: false,
-                max_stack: instructions.iter().map(|i| i.opcode.length as u16).sum()
+                max_stack: instructions.iter().map(|i| i.opcode.length as u16).sum(),
             }),
             instructions,
-            sections: vec![]
+            sections: vec![],
         };
 
         let method_bytes = method.into_bytes();
@@ -1488,7 +1547,9 @@ impl CorProfiler {
         })?;
 
         let address = unsafe { allocated_bytes.into_inner() };
-        unsafe { std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len()); }
+        unsafe {
+            std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len());
+        }
         log::trace!("generate_void_il_startup_method: write __ElasticVoidMethodCall__ body");
         profiler_info.set_il_function_body(module_id, new_method, address as *const _).map_err(|e| {
             log::warn!("generate_void_il_startup_method: failed to set il for __ElasticVoidMethodCall__");
@@ -1498,7 +1559,10 @@ impl CorProfiler {
         Ok(new_method)
     }
 
-    fn create_assembly_ref_to_mscorlib(&self, assembly_emit: &IMetaDataAssemblyEmit) -> Result<mdAssemblyRef, HRESULT> {
+    fn create_assembly_ref_to_mscorlib(
+        &self,
+        assembly_emit: &IMetaDataAssemblyEmit,
+    ) -> Result<mdAssemblyRef, HRESULT> {
         let assembly_metadata = ASSEMBLYMETADATA {
             usMajorVersion: 4,
             usMinorVersion: 0,
@@ -1509,10 +1573,16 @@ impl CorProfiler {
             rProcessor: std::ptr::null_mut(),
             ulProcessor: 0,
             rOS: std::ptr::null_mut(),
-            ulOS: 0
+            ulOS: 0,
         };
 
         let public_key: &[u8; 8] = &[0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89];
-        assembly_emit.define_assembly_ref(public_key, "mscorlib", assembly_metadata, &[], CorAssemblyFlags::afPA_None)
+        assembly_emit.define_assembly_ref(
+            public_key,
+            "mscorlib",
+            assembly_metadata,
+            &[],
+            CorAssemblyFlags::afPA_None,
+        )
     }
 }

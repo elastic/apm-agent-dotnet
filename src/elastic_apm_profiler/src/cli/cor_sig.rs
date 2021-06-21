@@ -1,4 +1,7 @@
-use crate::ffi::{mdToken, rid_from_token, type_from_token, CorTokenType, BYTE, ULONG, DWORD, mdTokenNil, token_from_rid};
+use crate::ffi::{
+    mdToken, mdTokenNil, rid_from_token, token_from_rid, type_from_token, CorTokenType, BYTE,
+    DWORD, ULONG,
+};
 
 const ENCODE_TOKEN: [mdToken; 4] = [
     CorTokenType::mdtTypeDef.bits(),
@@ -68,10 +71,11 @@ pub fn compress_data(int: ULONG) -> Option<Vec<u8>> {
 pub fn uncompress_data(data: &[u8]) -> Option<(ULONG, usize)> {
     if data.is_empty() {
         None
-    }
-    else if data[0] & 0x80 == 0x00 { // 0??? ????
+    } else if data[0] & 0x80 == 0x00 {
+        // 0??? ????
         Some((data[0] as ULONG, 1 as usize))
-    } else if data[0] & 0xC0 == 0x80 { // 10?? ????
+    } else if data[0] & 0xC0 == 0x80 {
+        // 10?? ????
         if data.len() < 2 {
             None
         } else {
@@ -79,7 +83,8 @@ pub fn uncompress_data(data: &[u8]) -> Option<(ULONG, usize)> {
             out |= data[1] as ULONG;
             Some((out, 2 as usize))
         }
-    } else if data[0] & 0xE0 == 0xC0 { // 110? ????
+    } else if data[0] & 0xE0 == 0xC0 {
+        // 110? ????
         if data.len() < 4 {
             None
         } else {

@@ -1039,13 +1039,21 @@ pub fn type_from_token(token: mdToken) -> ULONG32 {
     token & 0xff000000
 }
 
-pub fn rid_from_token(token: mdToken) -> RID { token & 0x00ffffff }
+pub fn rid_from_token(token: mdToken) -> RID {
+    token & 0x00ffffff
+}
 
-pub fn token_from_rid(rid: RID, token_type: mdToken) -> mdToken { rid | token_type }
+pub fn token_from_rid(rid: RID, token_type: mdToken) -> mdToken {
+    rid | token_type
+}
 
-pub fn rid_to_token(rid: RID, token_type: mdToken) -> mdToken { rid | token_type }
+pub fn rid_to_token(rid: RID, token_type: mdToken) -> mdToken {
+    rid | token_type
+}
 
-pub fn is_nil_token(token: mdToken) -> bool { rid_from_token(token) == 0 }
+pub fn is_nil_token(token: mdToken) -> bool {
+    rid_from_token(token) == 0
+}
 
 #[cfg(test)]
 mod tests {

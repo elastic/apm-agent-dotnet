@@ -1,4 +1,4 @@
-use crate::{ffi::*, types::*};
+use crate::{cli::uncompress_token, ffi::*, profiler::types::MethodSignature, types::*};
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{FAILED, GUID, HRESULT},
@@ -6,8 +6,6 @@ use com::{
 use core::{ptr, slice};
 use std::{ffi::c_void, mem::MaybeUninit};
 use widestring::U16CString;
-use crate::cli::uncompress_token;
-use crate::profiler::types::MethodSignature;
 
 interfaces! {
     #[uuid("7DAC8207-D3AE-4c75-9B67-92801A497D44")]
@@ -776,12 +774,7 @@ impl IMetaDataImport {
     pub fn get_module_ref_props(&self, token: mdModuleRef) -> Result<ModuleRefProps, HRESULT> {
         let mut name_buffer_length = MaybeUninit::uninit();
         let hr = unsafe {
-            self.GetModuleRefProps(
-                token,
-                ptr::null_mut(),
-                0,
-                name_buffer_length.as_mut_ptr(),
-            )
+            self.GetModuleRefProps(token, ptr::null_mut(), 0, name_buffer_length.as_mut_ptr())
         };
 
         if FAILED(hr) {
@@ -810,9 +803,7 @@ impl IMetaDataImport {
             .unwrap()
             .to_string_lossy();
 
-        Ok(ModuleRefProps {
-            name
-        })
+        Ok(ModuleRefProps { name })
     }
 
     /// Gets metadata information for the Type represented by the specified metadata token.
@@ -881,7 +872,7 @@ impl IMetaDataImport {
                 &mut parent_token,
                 ptr::null_mut(),
                 0,
-                name_buffer_length.as_mut_ptr()
+                name_buffer_length.as_mut_ptr(),
             )
         };
 
@@ -900,7 +891,7 @@ impl IMetaDataImport {
                 &mut parent_token,
                 name_buffer.as_mut_ptr(),
                 name_buffer_length,
-                name_length.as_mut_ptr()
+                name_length.as_mut_ptr(),
             )
         };
 
@@ -912,21 +903,14 @@ impl IMetaDataImport {
             .unwrap()
             .to_string_lossy();
 
-        Ok(TypeRefProps {
-            name,
-            parent_token
-        })
+        Ok(TypeRefProps { name, parent_token })
     }
 
     pub fn get_type_spec_from_token(&self, token: mdTypeSpec) -> Result<TypeSpec, HRESULT> {
         let mut signature = MaybeUninit::uninit();
         let mut signature_len = MaybeUninit::uninit();
         let hr = unsafe {
-            self.GetTypeSpecFromToken(
-                token,
-                signature.as_mut_ptr(),
-                signature_len.as_mut_ptr()
-            )
+            self.GetTypeSpecFromToken(token, signature.as_mut_ptr(), signature_len.as_mut_ptr())
         };
 
         if FAILED(hr) {
@@ -939,9 +923,7 @@ impl IMetaDataImport {
             std::slice::from_raw_parts(s, l as usize).to_vec()
         };
 
-        Ok(TypeSpec {
-            signature
-        })
+        Ok(TypeSpec { signature })
     }
 
     pub fn get_user_string(&self, stk: mdString) -> Result<String, HRESULT> {
@@ -1040,7 +1022,7 @@ impl IMetaDataImport2 {
             }
             _ => {
                 log::warn!("get_function_info: unknown token type {}", token);
-                return Err(E_FAIL)
+                return Err(E_FAIL);
             }
         };
 
@@ -1086,58 +1068,57 @@ impl IMetaDataImport2 {
 
                 // get the base type
                 if type_def_props.extends_td != mdTokenNil {
-                    if let Some(extends_type_info) = self.get_type_info(type_def_props.extends_td)? {
-                        is_value_type = &extends_type_info.name == "System.ValueType" || &extends_type_info.name == "System.Enum";
+                    if let Some(extends_type_info) =
+                        self.get_type_info(type_def_props.extends_td)?
+                    {
+                        is_value_type = &extends_type_info.name == "System.ValueType"
+                            || &extends_type_info.name == "System.Enum";
                         extends_from = Some(Box::new(extends_type_info));
                     }
                 }
-            },
+            }
             CorTokenType::mdtTypeRef => {
                 let type_ref_props = self.get_type_ref_props(token)?;
                 name = type_ref_props.name;
-            },
+            }
             CorTokenType::mdtTypeSpec => {
                 let type_spec = self.get_type_spec_from_token(token)?;
 
                 if type_spec.signature.len() < 3 {
-                    return Ok(None)
+                    return Ok(None);
                 }
 
                 if type_spec.signature[0] == CorElementType::ELEMENT_TYPE_GENERICINST as u8 {
                     let type_token = uncompress_token(&type_spec.signature[2..=2]);
                     return if let Some(base_type) = self.get_type_info(type_token.0)? {
-                        Ok(
-                            Some(MyTypeInfo {
-                                id: base_type.id,
-                                name: base_type.name,
-                                type_spec: token,
-                                token_type: base_type.token_type,
-                                extends_from: base_type.extends_from,
-                                is_value_type: base_type.is_value_type,
-                                is_generic: base_type.is_generic,
-                                parent_type: base_type.parent_type
-                            })
-                        )
+                        Ok(Some(MyTypeInfo {
+                            id: base_type.id,
+                            name: base_type.name,
+                            type_spec: token,
+                            token_type: base_type.token_type,
+                            extends_from: base_type.extends_from,
+                            is_value_type: base_type.is_value_type,
+                            is_generic: base_type.is_generic,
+                            parent_type: base_type.parent_type,
+                        }))
                     } else {
                         Ok(None)
-                    }
+                    };
                 }
-            },
+            }
             CorTokenType::mdtModuleRef => {
                 let module_ref_props = self.get_module_ref_props(token)?;
                 name = module_ref_props.name;
-            },
+            }
             CorTokenType::mdtMemberRef => {
                 let function_info = self.get_function_info(token)?;
-                return Ok(function_info.type_info)
+                return Ok(function_info.type_info);
             }
             CorTokenType::mdtMethodDef => {
                 let function_info = self.get_function_info(token)?;
-                return Ok(function_info.type_info)
+                return Ok(function_info.type_info);
             }
-            _ => {
-                return Ok(None)
-            }
+            _ => return Ok(None),
         };
 
         // check the type name for generic arity
@@ -1154,7 +1135,7 @@ impl IMetaDataImport2 {
             extends_from,
             is_value_type,
             is_generic,
-            parent_type
+            parent_type,
         }))
     }
 

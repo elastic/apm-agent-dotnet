@@ -1,18 +1,25 @@
-use crate::error::Error;
-use crate::ffi::{AppDomainID, AssemblyID, ModuleID, BYTE, COR_PRF_MODULE_FLAGS, CorCallingConvention, CorElementType};
-use crate::interfaces::imetadata_assembly_emit::IMetaDataAssemblyEmit;
-use crate::interfaces::imetadata_assembly_import::IMetaDataAssemblyImport;
-use crate::interfaces::imetadata_emit::IMetaDataEmit2;
-use crate::interfaces::imetadata_import::IMetaDataImport2;
-use crate::types::{PublicKey, Version};
+use crate::{
+    error::Error,
+    ffi::{
+        AppDomainID, AssemblyID, CorCallingConvention, CorElementType, ModuleID, BYTE,
+        COR_PRF_MODULE_FLAGS,
+    },
+    interfaces::{
+        imetadata_assembly_emit::IMetaDataAssemblyEmit,
+        imetadata_assembly_import::IMetaDataAssemblyImport, imetadata_emit::IMetaDataEmit2,
+        imetadata_import::IMetaDataImport2,
+    },
+    types::{PublicKey, Version},
+};
 use com::sys::GUID;
 use core::fmt;
-use serde::de::{DeserializeOwned, MapAccess, Visitor};
-use serde::{de, Deserialize, Deserializer, Serialize};
-use std::collections::BTreeMap;
-use std::marker::PhantomData;
-use std::str::FromStr;
 use num_traits::FromPrimitive;
+use serde::{
+    de,
+    de::{DeserializeOwned, MapAccess, Visitor},
+    Deserialize, Deserializer, Serialize,
+};
+use std::{collections::BTreeMap, marker::PhantomData, str::FromStr};
 
 pub(crate) struct ModuleInfo {
     pub id: ModuleID,
@@ -61,7 +68,9 @@ impl MethodSignature {
     }
 
     pub fn number_of_type_arguments(&self) -> u8 {
-        if self.data.len() > 1 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+        if self.data.len() > 1
+            && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC
+        {
             self.data[1]
         } else {
             0
@@ -69,7 +78,9 @@ impl MethodSignature {
     }
 
     pub fn number_of_arguments(&self) -> u8 {
-        if self.data.len() > 2 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+        if self.data.len() > 2
+            && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC
+        {
             self.data[2]
         } else if self.data.len() > 1 {
             self.data[1]
@@ -79,7 +90,9 @@ impl MethodSignature {
     }
 
     pub fn return_type_is_object(&self) -> bool {
-        if self.data.len() > 2 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+        if self.data.len() > 2
+            && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC
+        {
             CorElementType::from_u8(self.data[3]) == Some(CorElementType::ELEMENT_TYPE_OBJECT)
         } else if self.data.len() > 1 {
             CorElementType::from_u8(self.data[2]) == Some(CorElementType::ELEMENT_TYPE_OBJECT)
@@ -89,7 +102,9 @@ impl MethodSignature {
     }
 
     pub fn index_of_return_type(&self) -> usize {
-        if self.data.len() > 2 && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC {
+        if self.data.len() > 2
+            && self.calling_convention() == CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC
+        {
             3
         } else if self.data.len() > 1 {
             2
@@ -342,10 +357,11 @@ impl ModuleMetadata {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::profiler::types::{AssemblyReference, Integration, MethodSignature, PublicKeyToken};
-    use crate::types::Version;
-    use std::error::Error;
-    use std::fs::File;
+    use crate::{
+        profiler::types::{AssemblyReference, Integration, MethodSignature, PublicKeyToken},
+        types::Version,
+    };
+    use std::{error::Error, fs::File};
 
     #[test]
     fn deserialize_method_signature() -> Result<(), Box<dyn Error>> {

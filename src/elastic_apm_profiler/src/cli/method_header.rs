@@ -56,7 +56,6 @@ pub enum MethodHeader {
     Tiny(TinyMethodHeader),
 }
 impl MethodHeader {
-
     pub fn tiny(code_size: u8) -> MethodHeader {
         MethodHeader::Tiny(TinyMethodHeader { code_size })
     }
@@ -157,13 +156,11 @@ impl MethodHeader {
 
     fn is_tiny(method_header_flags: u8) -> bool {
         // Check only the 2 least significant bits
-        (method_header_flags & & 0b00000011)
-            == MethodHeaderFlags::CorILMethod_TinyFormat.bits()
+        (method_header_flags & &0b00000011) == MethodHeaderFlags::CorILMethod_TinyFormat.bits()
     }
 
     fn is_fat(method_header_flags: u8) -> bool {
         // Check only the 2 least significant bits
-        (method_header_flags & 0b00000011)
-            == MethodHeaderFlags::CorILMethod_FatFormat.bits()
+        (method_header_flags & 0b00000011) == MethodHeaderFlags::CorILMethod_FatFormat.bits()
     }
 }

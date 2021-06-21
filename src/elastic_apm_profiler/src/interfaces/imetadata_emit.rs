@@ -335,7 +335,7 @@ impl IMetaDataEmit {
 
         let value = match constant_value {
             Some(v) => &v,
-            None => std::ptr::null()
+            None => std::ptr::null(),
         };
         let mut field_def = mdFieldDefNil;
         let hr = unsafe {
@@ -348,12 +348,12 @@ impl IMetaDataEmit {
                 constant_flag as u32,
                 value as *const _,
                 constant_value_len,
-                &mut field_def
+                &mut field_def,
             )
         };
         match hr {
             S_OK => Ok(field_def),
-            _ => Err(hr)
+            _ => Err(hr),
         }
     }
 
@@ -485,21 +485,27 @@ impl IMetaDataEmit {
         name: &str,
         flags: CorTypeAttr,
         extends: mdToken,
-        implements: Option<mdToken>
+        implements: Option<mdToken>,
     ) -> Result<mdTypeDef, HRESULT> {
         let wstr = U16CString::from_str(name).unwrap();
         let implements: *const mdTypeDef = match implements {
             Some(v) => &v,
-            None => std::ptr::null()
+            None => std::ptr::null(),
         };
         let mut type_def = mdTypeDefNil;
         let hr = unsafe {
-            self.DefineTypeDef(wstr.as_ptr(), flags.bits(), extends, implements, &mut type_def)
+            self.DefineTypeDef(
+                wstr.as_ptr(),
+                flags.bits(),
+                extends,
+                implements,
+                &mut type_def,
+            )
         };
 
         match hr {
             S_OK => Ok(type_def),
-            _ => Err(hr)
+            _ => Err(hr),
         }
     }
 

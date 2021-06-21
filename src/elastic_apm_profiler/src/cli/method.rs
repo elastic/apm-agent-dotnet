@@ -39,7 +39,7 @@ impl Method {
             Ok(Method {
                 method_header: MethodHeader::tiny(code_size as u8),
                 instructions,
-                sections: vec![]
+                sections: vec![],
             })
         }
     }
