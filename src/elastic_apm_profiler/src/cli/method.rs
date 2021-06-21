@@ -20,7 +20,7 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FO
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-use crate::cli::{nearest_multiple, Instruction, MethodHeader, Section};
+use crate::cli::{nearest_multiple, Instruction, MethodHeader, Section, TinyMethodHeader};
 use crate::error::Error;
 use std::{convert::TryFrom, slice};
 
@@ -31,6 +31,19 @@ pub struct Method {
     pub sections: Vec<Section>,
 }
 impl Method {
+    pub fn tiny(instructions: Vec<Instruction>) -> Result<Self, Error> {
+        let code_size: usize = instructions.iter().map(|i| i.length()).sum();
+        if code_size > u8::MAX as usize {
+            Err(Error::InvalidCil)
+        } else {
+            Ok(Method {
+                method_header: MethodHeader::tiny(code_size as u8),
+                instructions,
+                sections: vec![]
+            })
+        }
+    }
+
     pub fn new(method_header: *const u8, method_size: u32) -> Result<Self, Error> {
         let body = unsafe { slice::from_raw_parts(method_header, method_size as usize) };
         let method_header = MethodHeader::from_bytes(&body)?;

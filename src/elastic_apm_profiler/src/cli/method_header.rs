@@ -56,6 +56,11 @@ pub enum MethodHeader {
     Tiny(TinyMethodHeader),
 }
 impl MethodHeader {
+
+    pub fn tiny(code_size: u8) -> MethodHeader {
+        MethodHeader::Tiny(TinyMethodHeader { code_size })
+    }
+
     pub fn from_bytes(method_il: &[u8]) -> Result<Self, Error> {
         let header_flags = method_il[0];
         if Self::is_tiny(header_flags) {

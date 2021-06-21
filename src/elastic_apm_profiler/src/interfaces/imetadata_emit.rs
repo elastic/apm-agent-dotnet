@@ -319,6 +319,44 @@ interfaces! {
 }
 
 impl IMetaDataEmit {
+    pub fn define_field(
+        &self,
+        type_def: mdTypeDef,
+        name: &str,
+        flags: CorFieldAttr,
+        sig: &[COR_SIGNATURE],
+        constant_flag: CorElementType,
+        constant_value: Option<DWORD>,
+        constant_value_len: ULONG,
+    ) -> Result<mdFieldDef, HRESULT> {
+        let wstr = U16CString::from_str(name).unwrap();
+        let ptr = sig.as_ptr();
+        let len = sig.len() as ULONG;
+
+        let value = match constant_value {
+            Some(v) => &v,
+            None => std::ptr::null()
+        };
+        let mut field_def = mdFieldDefNil;
+        let hr = unsafe {
+            self.DefineField(
+                type_def,
+                wstr.as_ptr(),
+                flags.bits(),
+                ptr,
+                len,
+                constant_flag as u32,
+                value as *const _,
+                constant_value_len,
+                &mut field_def
+            )
+        };
+        match hr {
+            S_OK => Ok(field_def),
+            _ => Err(hr)
+        }
+    }
+
     /// Updates references to a module defined by a prior call to
     /// [crate::interfaces::imetadata_emit::IMetaDataEmit::DefineModuleRef].
     pub fn set_module_props(&self, name: &str) -> Result<(), HRESULT> {
@@ -430,15 +468,38 @@ impl IMetaDataEmit {
     pub fn define_pinvoke_map(
         &self,
         token: mdToken,
-        mapping_flags: DWORD,
+        flags: CorPinvokeMap,
         import_name: &str,
         import_dll: mdModuleRef,
     ) -> Result<(), HRESULT> {
         let wstr = U16CString::from_str(import_name).unwrap();
-        let hr = unsafe { self.DefinePinvokeMap(token, mapping_flags, wstr.as_ptr(), import_dll) };
+        let hr = unsafe { self.DefinePinvokeMap(token, flags.bits(), wstr.as_ptr(), import_dll) };
         match hr {
             S_OK => Ok(()),
             _ => Err(hr),
+        }
+    }
+
+    pub fn define_type_def(
+        &self,
+        name: &str,
+        flags: CorTypeAttr,
+        extends: mdToken,
+        implements: Option<mdToken>
+    ) -> Result<mdTypeDef, HRESULT> {
+        let wstr = U16CString::from_str(name).unwrap();
+        let implements: *const mdTypeDef = match implements {
+            Some(v) => &v,
+            None => std::ptr::null()
+        };
+        let mut type_def = mdTypeDefNil;
+        let hr = unsafe {
+            self.DefineTypeDef(wstr.as_ptr(), flags.bits(), extends, implements, &mut type_def)
+        };
+
+        match hr {
+            S_OK => Ok(type_def),
+            _ => Err(hr)
         }
     }
 

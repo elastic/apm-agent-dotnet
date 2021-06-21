@@ -641,6 +641,38 @@ pub struct COR_SECATTR {
     cbCustomAttribute: ULONG,        // Length of the above blob.
 }
 bitflags! {
+    pub struct CorFieldAttr: DWORD {
+        // member access mask - Use this mask to retrieve accessibility information.
+        const fdFieldAccessMask           =   0x0007;
+        const fdPrivateScope              =   0x0000;     // Member not referenceable.
+        const fdPrivate                   =   0x0001;     // Accessible only by the parent type.
+        const fdFamANDAssem               =   0x0002;     // Accessible by sub-types only in this Assembly.
+        const fdAssembly                  =   0x0003;     // Accessibly by anyone in the Assembly.
+        const fdFamily                    =   0x0004;     // Accessible only by type and sub-types.
+        const fdFamORAssem                =   0x0005;     // Accessibly by sub-types anywhere, plus anyone in assembly.
+        const fdPublic                    =   0x0006;     // Accessibly by anyone who has visibility to this scope.
+        // end member access mask
+
+        // field contract attributes.
+        const fdStatic                    =   0x0010;     // Defined on type, else per instance.
+        const fdInitOnly                  =   0x0020;     // Field may only be initialized, not written to after init.
+        const fdLiteral                   =   0x0040;     // Value is compile time constant.
+        const fdNotSerialized             =   0x0080;     // Field does not have to be serialized when type is remoted.
+
+        const fdSpecialName               =   0x0200;     // field is special.  Name describes how.
+
+        // interop attributes
+        const fdPinvokeImpl               =   0x2000;     // Implementation is forwarded through pinvoke.
+
+        // Reserved flags for runtime use only.
+        const fdReservedMask              =   0x9500;
+        const fdRTSpecialName             =   0x0400;     // Runtime(metadata internal APIs) should check name encoding.
+        const fdHasFieldMarshal           =   0x1000;     // Field has marshalling information.
+        const fdHasDefault                =   0x8000;     // Field has default.
+        const fdHasFieldRVA               =   0x0100;     // Field has RVA.
+    }
+}
+bitflags! {
     pub struct CorMethodAttr: DWORD {
         // member access mask - Use this mask to retrieve accessibility information.
         const mdMemberAccessMask          =   0x0007;
@@ -723,6 +755,40 @@ bitflags! {
         | Self::miAggressiveOptimization.bits;
 
     const miMaxMethodImplVal   =   0xffff;   // Range check value
+    }
+}
+bitflags! {
+    pub struct CorPinvokeMap: DWORD {
+        const pmNoMangle          = 0x0001;   // Pinvoke is to use the member name as specified.
+
+        // Use this mask to retrieve the CharSet information.
+        const pmCharSetMask       = 0x0006;
+        const pmCharSetNotSpec    = 0x0000;
+        const pmCharSetAnsi       = 0x0002;
+        const pmCharSetUnicode    = 0x0004;
+        const pmCharSetAuto       = 0x0006;
+
+        const pmBestFitUseAssem   = 0x0000;
+        const pmBestFitEnabled    = 0x0010;
+        const pmBestFitDisabled   = 0x0020;
+        const pmBestFitMask       = 0x0030;
+
+        const pmThrowOnUnmappableCharUseAssem   = 0x0000;
+        const pmThrowOnUnmappableCharEnabled    = 0x1000;
+        const pmThrowOnUnmappableCharDisabled   = 0x2000;
+        const pmThrowOnUnmappableCharMask       = 0x3000;
+
+        const pmSupportsLastError = 0x0040;   // Information about target function. Not relevant for fields.
+
+        // None of the calling convention flags is relevant for fields.
+        const pmCallConvMask      = 0x0700;
+        const pmCallConvWinapi    = 0x0100;   // Pinvoke will use native callconv appropriate to target windows platform.
+        const pmCallConvCdecl     = 0x0200;
+        const pmCallConvStdcall   = 0x0300;
+        const pmCallConvThiscall  = 0x0400;   // In M9, pinvoke will raise exception.
+        const pmCallConvFastcall  = 0x0500;
+
+        const pmMaxValue          = 0xFFFF;
     }
 }
 
