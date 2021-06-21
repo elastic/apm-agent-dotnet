@@ -42,6 +42,7 @@ use std::{
     sync::{atomic::AtomicBool, Mutex},
 };
 use crate::cli::{Instruction, nop, ldsflda, ldc_i4_1, ldc_i4_0, call, ceq, ret, MethodHeader, TinyMethodHeader, compress_token, brfalse_s, ldloca_s, ldloc_1, newarr, stloc_s, ldloc_0, ldloc_s, ldloc_3, ldloc_2, callvirt, ldstr, pop, FatMethodHeader};
+use crate::ffi::COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER;
 
 const MANAGED_PROFILER_ASSEMBLY_LOADER: &'static str = "Elastic.Apm.Profiler.Managed.Loader";
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
@@ -98,6 +99,7 @@ static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(fals
 static CALLTARGET_ENABLED: AtomicBool = AtomicBool::new(true);
 
 pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
+pub(crate) static IS_DESKTOP_CLR: AtomicBool = AtomicBool::new(false);
 
 class! {
     /// The profiler implementation
@@ -525,8 +527,9 @@ impl CorProfiler {
         let runtime_info = profiler_info.get_runtime_information()?;
         let process_path = std::env::current_exe().unwrap();
         let process_name = process_path.file_name().unwrap();
+        let is_desktop_clr = runtime_info.is_desktop_clr();
         if process_name == "w3wp.exe" || process_name == "iisexpress.exe" {
-            self.is_desktop_iis.store(runtime_info.is_desktop_clr(), Ordering::SeqCst);
+            self.is_desktop_iis.store(is_desktop_clr, Ordering::SeqCst);
         }
 
         // Store the profiler and runtime info for later use
@@ -534,6 +537,7 @@ impl CorProfiler {
         self.runtime_info.replace(Some(runtime_info));
 
         IS_ATTACHED.store(true, Ordering::SeqCst);
+        IS_DESKTOP_CLR.store(is_desktop_clr, Ordering::SeqCst);
 
         Ok(())
     }
@@ -1114,8 +1118,29 @@ impl CorProfiler {
 
         let startup_method_def = self.generate_void_il_startup_method(module_id, module_metadata)?;
 
-        // TODO: get the il of the current function, insert call to startup_method_def at the start, and emit.
+        let profiler_borrow = self.profiler_info.borrow();
+        let profiler_info = profiler_borrow.as_ref().unwrap();
 
+        let il_body = profiler_info.get_il_function_body(module_id, function_token)?;
+        let mut method = Method::new(il_body.method_header, il_body.method_size).map_err(|e| {
+            log::warn!("run_il_startup_hook: error decoding il. {:?}", e);
+            E_FAIL
+        })?;
+
+        method.insert_prelude(vec![call(startup_method_def)]).map_err(|e| {
+            log::warn!("run_il_startup_hook: error inserting prelude. {:?}", e);
+            E_FAIL
+        })?;
+
+        let method_bytes = method.into_bytes();
+        let allocator = profiler_info.get_il_function_body_allocator(module_id)?;
+        let allocated_bytes = allocator.alloc(method_bytes.len() as ULONG)?;
+        let address = unsafe { allocated_bytes.into_inner() };
+        unsafe { std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len()); }
+        profiler_info.set_il_function_body(module_id, function_token, address as *const _).map_err(|e| {
+            log::warn!("run_il_startup_hook: failed to set il for startup hook");
+            e
+        })?;
 
         Ok(())
     }

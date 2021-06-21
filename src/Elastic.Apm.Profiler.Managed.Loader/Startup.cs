@@ -16,6 +16,8 @@ namespace Elastic.Apm.Profiler.Managed.Loader
     {
         static Startup()
         {
+            Console.WriteLine("Startup called");
+
             Directory = ResolveDirectory();
             try
             {

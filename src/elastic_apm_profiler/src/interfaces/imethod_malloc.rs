@@ -19,13 +19,7 @@ impl IMethodMalloc {
                 return Err(E_FAIL);
             }
 
-            // TODO: How is failure communicated?
-            // Docs say If Alloc fails to allocate the requested number of bytes at an address
-            // greater than the base address of the module, it returns E_OUTOFMEMORY, regardless
-            // of the actual amount of memory space available.
-            // https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/imethodmalloc-alloc-method
-            let vec = CVec::new(address, cb as usize);
-            Ok(vec)
+            Ok(CVec::new(address, cb as usize))
         }
     }
 }

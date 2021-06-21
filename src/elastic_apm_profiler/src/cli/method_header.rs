@@ -157,13 +157,13 @@ impl MethodHeader {
 
     fn is_tiny(method_header_flags: u8) -> bool {
         // Check only the 2 least significant bits
-        (method_header_flags & MethodHeaderFlags::CorILMethod_FormatMask.bits())
+        (method_header_flags & & 0b00000011)
             == MethodHeaderFlags::CorILMethod_TinyFormat.bits()
     }
 
     fn is_fat(method_header_flags: u8) -> bool {
         // Check only the 2 least significant bits
-        (method_header_flags & MethodHeaderFlags::CorILMethod_FormatMask.bits())
+        (method_header_flags & 0b00000011)
             == MethodHeaderFlags::CorILMethod_FatFormat.bits()
     }
 }

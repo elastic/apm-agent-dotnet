@@ -57,10 +57,3 @@ macro_rules! dll_get_class_object {
 // associates CorProfiler with a clsid so that an instance
 // can be created when the runtime asks for an instance by id when it calls DllGetClassObject
 dll_get_class_object![(IID_COR_PROFILER, CorProfiler),];
-
-/// Checks whether the profiler is attached.
-// Can be Pinvoked from managed code
-#[no_mangle]
-pub extern "C" fn IsProfilerAttached() -> bool {
-    crate::profiler::cor_profiler::IS_ATTACHED.load(Ordering::SeqCst)
-}
