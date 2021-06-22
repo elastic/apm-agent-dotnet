@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 use crate::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum StackBehaviorPop {
     Pop0,
     Pop1,
@@ -43,7 +43,7 @@ pub enum StackBehaviorPop {
     PopRefPopIPop1,
     PopIPopIPopI,
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum StackBehaviorPush {
     Push0,
     Push1,
@@ -55,7 +55,7 @@ pub enum StackBehaviorPush {
     Push1Push1,
     VarPush,
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum OperandParams {
     InlineNone,
     ShortInlineVar,
@@ -75,7 +75,7 @@ pub enum OperandParams {
     InlineField,
     InlineTok,
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum OpcodeKind {
     Primitive,
     Macro,
@@ -83,7 +83,7 @@ pub enum OpcodeKind {
     Internal,
     Prefix,
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum ControlFlow {
     Next,
     Break,
@@ -94,7 +94,7 @@ pub enum ControlFlow {
     Throw,
     Meta,
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Opcode {
     pub name: &'static str,
     pub stack_behavior_pop: StackBehaviorPop,
@@ -131,6 +131,7 @@ impl Opcode {
             control_flow,
         }
     }
+    //noinspection RsNonExhaustiveMatch
     pub fn from_byte(byte: u8) -> Self {
         match byte {
             0x00 => NOP,
