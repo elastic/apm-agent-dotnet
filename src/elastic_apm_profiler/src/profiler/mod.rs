@@ -1,4 +1,7 @@
+mod env;
 mod managed;
+mod profiler;
+
 pub(crate) mod types;
 
-pub(crate) mod cor_profiler;
+pub(crate) use profiler::*;

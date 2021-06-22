@@ -1,4 +1,4 @@
-use crate::profiler::cor_profiler::IS_DESKTOP_CLR;
+use crate::profiler::{IS_ATTACHED, IS_DESKTOP_CLR};
 use rust_embed::RustEmbed;
 use std::{
     borrow::{Borrow, Cow},
@@ -6,16 +6,16 @@ use std::{
     sync::atomic::Ordering,
 };
 
-/// Embedded assets of the managed loader
+/// Embedded assets of the managed loader assembly
 #[derive(RustEmbed)]
 #[folder = "../Elastic.Apm.Profiler.Managed.Loader/bin/Release"]
 #[prefix = ""]
-pub(crate) struct ManagedLoader;
+struct ManagedLoader;
 
 /// Checks whether the profiler is attached.
 #[no_mangle]
 pub extern "C" fn IsProfilerAttached() -> bool {
-    crate::profiler::cor_profiler::IS_ATTACHED.load(Ordering::SeqCst)
+    IS_ATTACHED.load(Ordering::SeqCst)
 }
 
 /// Gets the embedded loader assembly and symbol bytes

@@ -10,9 +10,6 @@ extern crate lazy_static;
 #[macro_use]
 extern crate num_derive;
 
-use std::sync::atomic::Ordering;
-use profiler::cor_profiler::CorProfiler;
-
 mod error;
 mod ffi;
 mod profiler;
@@ -21,9 +18,13 @@ pub mod cli;
 pub mod interfaces;
 pub mod types;
 
+use com::sys::IID;
+use profiler::Profiler;
+use std::sync::atomic::Ordering;
+
 /// The IID of the profiler
 /// FA65FE15-F085-4681-9B20-95E04F6C03CC
-pub const IID_COR_PROFILER: com::sys::IID = com::sys::IID {
+pub const IID_PROFILER: IID = IID {
     data1: 0xFA65FE15,
     data2: 0xF085,
     data3: 0x4681,
@@ -52,6 +53,6 @@ macro_rules! dll_get_class_object {
     };
 }
 
-// associates CorProfiler with a clsid so that an instance
+// associates Profiler with a clsid so that an instance
 // can be created when the runtime asks for an instance by id when it calls DllGetClassObject
-dll_get_class_object![(IID_COR_PROFILER, CorProfiler),];
+dll_get_class_object![(IID_PROFILER, Profiler),];

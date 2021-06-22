@@ -1,21 +1,21 @@
 use std::{ffi::c_void, mem::MaybeUninit, ptr};
 
 use com::{
-    Interface,
     interfaces,
     interfaces::IUnknown,
     sys::{FAILED, HRESULT},
+    Interface,
 };
 use widestring::U16CString;
 
 use crate::{
+    cli::MAX_LENGTH,
     ffi::*,
     types::{
         AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
         FunctionTokenAndMetadata, IlFunctionBody, ModuleInfo, ModuleInfo2, RuntimeInfo,
     },
 };
-use crate::cli::MAX_LENGTH;
 
 use super::{
     icor_profiler_function_enum::ICorProfilerFunctionEnum,

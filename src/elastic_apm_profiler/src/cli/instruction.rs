@@ -1520,5 +1520,3 @@ impl Instruction {
         }
     }
 }
-
-

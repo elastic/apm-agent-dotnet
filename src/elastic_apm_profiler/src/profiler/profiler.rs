@@ -1,7 +1,28 @@
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    ffi::c_void,
+    fs::File,
+    io::BufReader,
+    ops::Deref,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Mutex,
+    },
+};
+
+use com::{
+    interfaces::iunknown::IUnknown,
+    sys::{FAILED, GUID, HRESULT},
+    Interface,
+};
+use rust_embed::RustEmbed;
+use simple_logger::SimpleLogger;
+
 use crate::{
     cli::{
-        compress_token,
-        FatMethodHeader, Instruction, Method, MethodHeader, Operand, TinyMethodHeader,
+        compress_token, FatMethodHeader, Instruction, Method, MethodHeader, Operand,
+        TinyMethodHeader,
     },
     ffi::{COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER, *},
     interfaces::{
@@ -22,7 +43,7 @@ use crate::{
         imetadata_import::{IMetaDataImport, IMetaDataImport2},
     },
     profiler::{
-        managed::ManagedLoader,
+        env,
         types::{
             Integration, IntegrationMethod, MethodReplacement, ModuleMetadata,
             TargetMethodReference,
@@ -30,33 +51,11 @@ use crate::{
     },
     types::{AssemblyMetaData, HashAlgorithmType, ModuleInfo, RuntimeInfo, Version},
 };
-use com::{
-    interfaces::iunknown::IUnknown,
-    sys::{FAILED, GUID, HRESULT},
-    Interface,
-};
-use rust_embed::RustEmbed;
-use simple_logger::SimpleLogger;
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    ffi::c_void,
-    fs::File,
-    io::BufReader,
-    ops::Deref,
-    sync::{
-        atomic::{AtomicBool, AtomicUsize, Ordering},
-        Mutex,
-    },
-};
 
 const MANAGED_PROFILER_ASSEMBLY_LOADER: &'static str = "Elastic.Apm.Profiler.Managed.Loader";
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
-const ELASTIC_APM_PROFILER_INTEGRATIONS: &'static str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
-const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str =
-    "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
 
-// TODO: Look at moving static refs that can be moved onto CorProfiler as fields.
+// TODO: Look at moving static refs that can be moved onto Profiler as fields.
 lazy_static! {
     static ref LOCK: Mutex<i32> = Mutex::new(0);
     static ref FIRST_JIT_COMPILATION_APP_DOMAINS: Mutex<Vec<AppDomainID>> = Mutex::new(Vec::new());
@@ -109,7 +108,7 @@ pub(crate) static IS_DESKTOP_CLR: AtomicBool = AtomicBool::new(false);
 
 class! {
     /// The profiler implementation
-    pub class CorProfiler:
+    pub class Profiler:
         ICorProfilerCallback9(ICorProfilerCallback8(ICorProfilerCallback7(
             ICorProfilerCallback6(ICorProfilerCallback5(ICorProfilerCallback4(
                 ICorProfilerCallback3(ICorProfilerCallback2(ICorProfilerCallback)))))))) {
@@ -120,7 +119,7 @@ class! {
         is_desktop_iis: AtomicBool,
     }
 
-    impl ICorProfilerCallback for CorProfiler {
+    impl ICorProfilerCallback for Profiler {
         pub fn Initialize(
              &self,
             pICorProfilerInfoUnk: IUnknown,
@@ -315,7 +314,7 @@ class! {
         pub fn ExceptionCLRCatcherExecute(&self) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback2 for CorProfiler {
+    impl ICorProfilerCallback2 for Profiler {
         pub fn ThreadNameChanged(&self,
             threadId: ThreadID,
             cchName: ULONG,
@@ -350,7 +349,7 @@ class! {
         pub fn HandleDestroyed(&self, handleId: GCHandleID) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback3 for CorProfiler {
+    impl ICorProfilerCallback3 for Profiler {
         pub fn InitializeForAttach(&self,
             pCorProfilerInfoUnk: *const IUnknown,
             pvClientData: *const c_void,
@@ -360,7 +359,7 @@ class! {
         pub fn ProfilerDetachSucceeded(&self) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback4 for CorProfiler {
+    impl ICorProfilerCallback4 for Profiler {
         pub fn ReJITCompilationStarted(&self,
             functionId: FunctionID,
             rejitId: ReJITID,
@@ -396,7 +395,7 @@ class! {
         ) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback5 for CorProfiler {
+    impl ICorProfilerCallback5 for Profiler {
         pub fn ConditionalWeakTableElementReferences(&self,
             cRootRefs: ULONG,
             keyRefIds: *const ObjectID,
@@ -405,18 +404,18 @@ class! {
         ) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback6 for CorProfiler {
+    impl ICorProfilerCallback6 for Profiler {
         pub fn GetAssemblyReferences(&self,
             wszAssemblyPath: *const WCHAR,
             pAsmRefProvider: *const ICorProfilerAssemblyReferenceProvider,
         ) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback7 for CorProfiler {
+    impl ICorProfilerCallback7 for Profiler {
         pub fn ModuleInMemorySymbolsUpdated(&self, moduleId: ModuleID) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback8 for CorProfiler {
+    impl ICorProfilerCallback8 for Profiler {
         pub fn DynamicMethodJITCompilationStarted(&self,
             functionId: FunctionID,
             fIsSafeToBlock: BOOL,
@@ -430,32 +429,29 @@ class! {
         ) -> HRESULT { S_OK }
     }
 
-    impl ICorProfilerCallback9 for CorProfiler {
+    impl ICorProfilerCallback9 for Profiler {
         pub fn DynamicMethodUnloaded(&self, functionId: FunctionID) -> HRESULT { S_OK }
     }
 }
 
-impl CorProfiler {
+impl Profiler {
     fn initialize(&self, unknown: IUnknown) -> Result<(), HRESULT> {
         let _lock = LOCK.lock().unwrap();
 
         SimpleLogger::from_env().init().unwrap();
         log::trace!("Initialize: started");
 
-        let integrations = self.load_integrations()?;
-
         // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted
-        let profiler_info = unknown.query_interface::<ICorProfilerInfo4>();
-        if profiler_info.is_none() {
-            log::error!("Initialize: could not get ICorProfilerInfo4 from IUnknown");
-            return Err(E_FAIL);
-        }
-
-        let profiler_info = profiler_info.unwrap();
+        let profiler_info = unknown
+            .query_interface::<ICorProfilerInfo4>()
+            .ok_or_else(|| {
+                log::error!("Initialize: could not get ICorProfilerInfo4 from IUnknown");
+                E_FAIL
+            })?;
 
         // get the integrations from file
-        let integrations: Vec<Integration> = self.load_integrations()?;
-        let calltarget_enabled = self.read_calltarget_env_var();
+        let integrations = env::load_integrations()?;
+        let calltarget_enabled = env::read_calltarget_env_var();
         CALLTARGET_ENABLED.store(calltarget_enabled, Ordering::SeqCst);
 
         if calltarget_enabled {
@@ -590,10 +586,12 @@ impl CorProfiler {
 
         let metadata_assembly_import = metadata_import
             .query_interface::<IMetaDataAssemblyImport>()
-            .expect("AssemblyLoadFinished: unable to get metadata assembly import");
+            .ok_or_else(|| {
+                log::warn!("AssemblyLoadFinished: unable to get metadata assembly import");
+                E_FAIL
+            })?;
 
         let assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
-
         let is_managed_profiler_assembly = &assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
 
         log::debug!(
@@ -711,6 +709,7 @@ impl CorProfiler {
                 return Ok(());
             }
 
+            // if this is the loader module, track the app domain it's been loaded into
             if assembly_name == MANAGED_PROFILER_ASSEMBLY_LOADER {
                 log::info!(
                     "ModuleLoadFinished: {} loaded into AppDomain {} {}",
@@ -727,6 +726,7 @@ impl CorProfiler {
                 return Ok(());
             }
 
+            // if this is a windows runtime module, skip it
             if module_info.is_windows_runtime() {
                 log::debug!(
                     "ModuleLoadFinished: skipping windows metadata module {} {}",
@@ -798,13 +798,29 @@ impl CorProfiler {
                 module_id,
                 CorOpenFlags::ofRead | CorOpenFlags::ofWrite,
             )?;
-            let metadata_emit = metadata_import.query_interface::<IMetaDataEmit2>().unwrap();
+            let metadata_emit = metadata_import
+                .query_interface::<IMetaDataEmit2>()
+                .ok_or_else(|| {
+                    log::warn!(
+                        "ModuleLoadFinished: unable to get IMetaDataEmit2 for module id {}",
+                        module_id
+                    );
+                    E_FAIL
+                })?;
             let assembly_import = metadata_import
-                .query_interface::<IMetaDataAssemblyImport>()
-                .unwrap();
+                .query_interface::<IMetaDataAssemblyImport>().ok_or_else(|| {
+                log::warn!("ModuleLoadFinished: unable to get IMetaDataAssemblyImport for module id {}", module_id);
+                E_FAIL
+            })?;
             let assembly_emit = metadata_import
                 .query_interface::<IMetaDataAssemblyEmit>()
-                .unwrap();
+                .ok_or_else(|| {
+                    log::warn!(
+                        "ModuleLoadFinished: unable to get IMetaDataAssemblyEmit for module id {}",
+                        module_id
+                    );
+                    E_FAIL
+                })?;
 
             // don't skip Microsoft.AspNetCore.Hosting so we can run the startup hook and
             // subscribe to DiagnosticSource events.
@@ -1034,7 +1050,6 @@ impl CorProfiler {
         }
 
         if !call_target_enabled {
-
             // TODO: process calls
         }
 
@@ -1070,62 +1085,6 @@ impl CorProfiler {
         }
 
         None
-    }
-
-    fn load_integrations(&self) -> Result<Vec<Integration>, HRESULT> {
-        let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS).map_err(|e| {
-            log::warn!(
-                "Problem reading {} environment variable: {}. profiler is disabled.",
-                ELASTIC_APM_PROFILER_INTEGRATIONS,
-                e.to_string()
-            );
-            E_FAIL
-        })?;
-
-        let file = File::open(&path).map_err(|e| {
-            log::warn!(
-                "Problem reading integrations file {}: {}. profiler is disabled.",
-                &path,
-                e.to_string()
-            );
-            E_FAIL
-        })?;
-
-        let reader = BufReader::new(file);
-        let integrations = serde_json::from_reader(reader).map_err(|e| {
-            log::warn!(
-                "Problem reading integrations file {}: {}. profiler is disabled.",
-                &path,
-                e.to_string()
-            );
-            E_FAIL
-        })?;
-
-        Ok(integrations)
-    }
-
-    fn read_calltarget_env_var(&self) -> bool {
-        match std::env::var(ELASTIC_APM_PROFILER_CALLTARGET_ENABLED) {
-            Ok(enabled) => match enabled.as_str() {
-                "true" => true,
-                "True" => true,
-                "TRUE" => true,
-                "1" => true,
-                "false" => false,
-                "False" => false,
-                "FALSE" => false,
-                "0" => false,
-                _ => true,
-            },
-            Err(e) => {
-                log::info!(
-                    "Problem reading {}: {}. Setting to true",
-                    ELASTIC_APM_PROFILER_CALLTARGET_ENABLED,
-                    e.to_string()
-                );
-                true
-            }
-        }
     }
 
     fn run_il_startup_hook(
