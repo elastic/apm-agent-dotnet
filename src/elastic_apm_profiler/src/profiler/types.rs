@@ -321,34 +321,34 @@ pub struct Integration {
 }
 
 pub struct ModuleMetadata {
-    pub metadata_import: IMetaDataImport2,
-    pub metadata_emit: IMetaDataEmit2,
+    pub import: IMetaDataImport2,
+    pub emit: IMetaDataEmit2,
     pub assembly_import: IMetaDataAssemblyImport,
     pub assembly_emit: IMetaDataAssemblyEmit,
     pub assembly_name: String,
-    pub appdomain_id: AppDomainID,
+    pub app_domain_id: AppDomainID,
     pub module_version_id: GUID,
     pub integrations: Vec<IntegrationMethod>,
 }
 
 impl ModuleMetadata {
     pub fn new(
-        metadata_import: IMetaDataImport2,
-        metadata_emit: IMetaDataEmit2,
+        import: IMetaDataImport2,
+        emit: IMetaDataEmit2,
         assembly_import: IMetaDataAssemblyImport,
         assembly_emit: IMetaDataAssemblyEmit,
         assembly_name: String,
-        appdomain_id: AppDomainID,
+        app_domain_id: AppDomainID,
         module_version_id: GUID,
         integrations: Vec<IntegrationMethod>,
     ) -> Self {
         Self {
-            metadata_import,
-            metadata_emit,
+            import,
+            emit,
             assembly_import,
             assembly_emit,
             assembly_name,
-            appdomain_id,
+            app_domain_id,
             module_version_id,
             integrations,
         }

@@ -6,6 +6,8 @@ const ELASTIC_APM_PROFILER_INTEGRATIONS: &'static str = "ELASTIC_APM_PROFILER_IN
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
 
+/// Reads the [ELASTIC_APM_PROFILER_CALLTARGET_ENABLED] environment variable value to
+/// determine if calltarget is enabled
 pub fn read_calltarget_env_var() -> bool {
     match std::env::var(ELASTIC_APM_PROFILER_CALLTARGET_ENABLED) {
         Ok(enabled) => match enabled.as_str() {
@@ -37,6 +39,8 @@ pub fn read_calltarget_env_var() -> bool {
     }
 }
 
+/// Loads the integrations by reading the file pointed to by [ELASTIC_APM_PROFILER_INTEGRATIONS]
+/// environment variable
 pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
     let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS).map_err(|e| {
         log::warn!(
