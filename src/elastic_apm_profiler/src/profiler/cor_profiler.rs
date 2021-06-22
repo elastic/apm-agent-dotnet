@@ -1,7 +1,6 @@
 use crate::{
     cli::{
-        brfalse_s, call, callvirt, ceq, compress_token, ldc_i4_0, ldc_i4_1, ldloc_0, ldloc_1,
-        ldloc_2, ldloc_3, ldloc_s, ldloca_s, ldsflda, ldstr, newarr, nop, pop, ret, stloc_s,
+        compress_token,
         FatMethodHeader, Instruction, Method, MethodHeader, Operand, TinyMethodHeader,
     },
     ffi::{COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER, *},
@@ -1148,7 +1147,7 @@ impl CorProfiler {
         })?;
 
         method
-            .insert_prelude(vec![call(startup_method_def)])
+            .insert_prelude(vec![Instruction::call(startup_method_def)])
             .map_err(|e| {
                 log::warn!("run_il_startup_hook: error inserting prelude. {:?}", e);
                 E_FAIL
@@ -1256,14 +1255,14 @@ impl CorProfiler {
         )?;
 
         // Write the instructions for the IsAlreadyLoaded method
-        let mut instructions: Vec<Instruction> = Vec::with_capacity(7);
-        instructions.push(ldsflda(is_assembly_loaded_field_def));
-        instructions.push(ldc_i4_1());
-        instructions.push(ldc_i4_0());
-        instructions.push(call(interlocked_compare_member_ref));
-        instructions.push(ldc_i4_1());
-        instructions.push(ceq());
-        instructions.push(ret());
+        let mut instructions = Vec::with_capacity(7);
+        instructions.push(Instruction::ldsflda(is_assembly_loaded_field_def));
+        instructions.push(Instruction::ldc_i4_1());
+        instructions.push(Instruction::ldc_i4_0());
+        instructions.push(Instruction::call(interlocked_compare_member_ref));
+        instructions.push(Instruction::ldc_i4_1());
+        instructions.push(Instruction::ceq());
+        instructions.push(Instruction::ret());
 
         let method_bytes = Method::tiny(instructions)
             .map_err(|e| {
@@ -1476,55 +1475,55 @@ impl CorProfiler {
             .metadata_emit
             .get_token_from_sig(&locals_signature)?;
 
-        let mut instructions: Vec<Instruction> = Vec::new();
+        let mut instructions = Vec::with_capacity(34);
 
         // Step 0) Check if the assembly was already loaded
-        instructions.push(call(already_loaded_method_token));
+        instructions.push(Instruction::call(already_loaded_method_token));
 
         // val is the offset of the instruction to go to when false
-        instructions.push(brfalse_s(ret().length() as i8));
-        instructions.push(ret());
+        instructions.push(Instruction::brfalse_s(Instruction::ret().length() as i8));
+        instructions.push(Instruction::ret());
 
         // Step 1) Call void GetAssemblyAndSymbolsBytes(out IntPtr assemblyPtr, out int assemblySize, out IntPtr symbolsPtr, out int symbolsSize)
-        instructions.push(ldloca_s(0));
-        instructions.push(ldloca_s(1));
-        instructions.push(ldloca_s(2));
-        instructions.push(ldloca_s(3));
-        instructions.push(call(pinvoke_method_def));
+        instructions.push(Instruction::ldloca_s(0));
+        instructions.push(Instruction::ldloca_s(1));
+        instructions.push(Instruction::ldloca_s(2));
+        instructions.push(Instruction::ldloca_s(3));
+        instructions.push(Instruction::call(pinvoke_method_def));
 
         // Step 2) Call void Marshal.Copy(IntPtr source, byte[] destination, int startIndex, int length) to populate the managed assembly bytes
-        instructions.push(ldloc_1());
-        instructions.push(newarr(byte_type_ref));
-        instructions.push(stloc_s(4));
-        instructions.push(ldloc_0());
-        instructions.push(ldloc_s(4));
-        instructions.push(ldc_i4_0());
-        instructions.push(ldloc_1());
-        instructions.push(call(marshal_copy_member_ref));
+        instructions.push(Instruction::ldloc_1());
+        instructions.push(Instruction::newarr(byte_type_ref));
+        instructions.push(Instruction::stloc_s(4));
+        instructions.push(Instruction::ldloc_0());
+        instructions.push(Instruction::ldloc_s(4));
+        instructions.push(Instruction::ldc_i4_0());
+        instructions.push(Instruction::ldloc_1());
+        instructions.push(Instruction::call(marshal_copy_member_ref));
 
         // Step 3) Call void Marshal.Copy(IntPtr source, byte[] destination, int startIndex, int length) to populate the symbols bytes
-        instructions.push(ldloc_3());
-        instructions.push(newarr(byte_type_ref));
-        instructions.push(stloc_s(5));
-        instructions.push(ldloc_2());
-        instructions.push(ldloc_s(5));
-        instructions.push(ldc_i4_0());
-        instructions.push(ldloc_3());
-        instructions.push(call(marshal_copy_member_ref));
+        instructions.push(Instruction::ldloc_3());
+        instructions.push(Instruction::newarr(byte_type_ref));
+        instructions.push(Instruction::stloc_s(5));
+        instructions.push(Instruction::ldloc_2());
+        instructions.push(Instruction::ldloc_s(5));
+        instructions.push(Instruction::ldc_i4_0());
+        instructions.push(Instruction::ldloc_3());
+        instructions.push(Instruction::call(marshal_copy_member_ref));
 
         // Step 4) Call System.Reflection.Assembly System.AppDomain.CurrentDomain.Load(byte[], byte[]))
-        instructions.push(call(appdomain_get_current_domain_member_ref));
-        instructions.push(ldloc_s(4));
-        instructions.push(ldloc_s(5));
-        instructions.push(callvirt(appdomain_load_member_ref));
-        instructions.push(stloc_s(6));
+        instructions.push(Instruction::call(appdomain_get_current_domain_member_ref));
+        instructions.push(Instruction::ldloc_s(4));
+        instructions.push(Instruction::ldloc_s(5));
+        instructions.push(Instruction::callvirt(appdomain_load_member_ref));
+        instructions.push(Instruction::stloc_s(6));
 
         // Step 5) Call instance method Assembly.CreateInstance("Elastic.Apm.Profiler.Managed.Loader.Startup")
-        instructions.push(ldloc_s(6));
-        instructions.push(ldstr(load_helper_token));
-        instructions.push(callvirt(assembly_create_instance_member_ref));
-        instructions.push(pop());
-        instructions.push(ret());
+        instructions.push(Instruction::ldloc_s(6));
+        instructions.push(Instruction::ldstr(load_helper_token));
+        instructions.push(Instruction::callvirt(assembly_create_instance_member_ref));
+        instructions.push(Instruction::pop());
+        instructions.push(Instruction::ret());
 
         let method = Method {
             method_header: MethodHeader::Fat(FatMethodHeader {

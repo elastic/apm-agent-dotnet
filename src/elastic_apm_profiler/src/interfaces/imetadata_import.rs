@@ -8,6 +8,9 @@ use std::{ffi::c_void, mem::MaybeUninit};
 use widestring::U16CString;
 
 interfaces! {
+    /// Provides methods for importing and manipulating existing metadata from a portable
+    /// executable (PE) file or other source, such as a type library or a stand-alone,
+    /// run-time metadata binary.
     #[uuid("7DAC8207-D3AE-4c75-9B67-92801A497D44")]
     pub unsafe interface IMetaDataImport: IUnknown {
         pub unsafe fn CloseEnum(&self, hEnum: HCORENUM);
@@ -425,6 +428,8 @@ interfaces! {
         pub unsafe fn IsGlobal(&self, pd: mdToken, pbGlobal: *mut int) -> HRESULT;
     }
 
+    /// Extends the IMetaDataImport interface to provide the capability of working
+    /// with generic types.
     #[uuid("FCE5EFA0-8BBA-4F8E-A036-8F2022B08466")]
     pub unsafe interface IMetaDataImport2: IMetaDataImport {
         pub unsafe fn EnumGenericParams(&self,
@@ -482,6 +487,7 @@ interfaces! {
 }
 
 impl IMetaDataImport {
+    /// Gets a pointer to the TypeDef metadata token for the Type with the specified name.
     pub fn find_type_def_by_name(
         &self,
         name: &str,
@@ -504,6 +510,8 @@ impl IMetaDataImport {
         }
     }
 
+    /// Enumerates methods that have the specified name and that are defined by the
+    /// type referenced by the specified TypeDef token.
     pub fn enum_methods_with_name(
         &self,
         type_def: mdTypeDef,
@@ -862,6 +870,7 @@ impl IMetaDataImport {
         })
     }
 
+    /// Gets the metadata associated with the Type referenced by the specified TypeRef token.
     pub fn get_type_ref_props(&self, token: mdTypeRef) -> Result<TypeRefProps, HRESULT> {
         let mut name_buffer_length = MaybeUninit::uninit();
         let mut parent_token = mdTokenNil;
@@ -906,6 +915,8 @@ impl IMetaDataImport {
         Ok(TypeRefProps { name, parent_token })
     }
 
+    /// Gets the binary metadata signature of the type specification represented by
+    /// the specified token.
     pub fn get_type_spec_from_token(&self, token: mdTypeSpec) -> Result<TypeSpec, HRESULT> {
         let mut signature = MaybeUninit::uninit();
         let mut signature_len = MaybeUninit::uninit();
@@ -926,6 +937,7 @@ impl IMetaDataImport {
         Ok(TypeSpec { signature })
     }
 
+    /// Gets the literal string represented by the specified metadata token.
     pub fn get_user_string(&self, stk: mdString) -> Result<String, HRESULT> {
         let mut len = MaybeUninit::uninit();
         let hr = unsafe { self.GetUserString(stk, ptr::null_mut(), 0, len.as_mut_ptr()) };

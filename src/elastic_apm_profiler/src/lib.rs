@@ -10,8 +10,8 @@ extern crate lazy_static;
 #[macro_use]
 extern crate num_derive;
 
-use profiler::cor_profiler::CorProfiler;
 use std::sync::atomic::Ordering;
+use profiler::cor_profiler::CorProfiler;
 
 mod error;
 mod ffi;
@@ -20,8 +20,6 @@ mod profiler;
 pub mod cli;
 pub mod interfaces;
 pub mod types;
-
-const MAX_LENGTH: u32 = 1024;
 
 /// The IID of the profiler
 /// FA65FE15-F085-4681-9B20-95E04F6C03CC

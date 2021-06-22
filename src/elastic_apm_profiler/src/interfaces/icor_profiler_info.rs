@@ -1,3 +1,22 @@
+use std::{ffi::c_void, mem::MaybeUninit, ptr};
+
+use com::{
+    Interface,
+    interfaces,
+    interfaces::IUnknown,
+    sys::{FAILED, HRESULT},
+};
+use widestring::U16CString;
+
+use crate::{
+    ffi::*,
+    types::{
+        AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
+        FunctionTokenAndMetadata, IlFunctionBody, ModuleInfo, ModuleInfo2, RuntimeInfo,
+    },
+};
+use crate::cli::MAX_LENGTH;
+
 use super::{
     icor_profiler_function_enum::ICorProfilerFunctionEnum,
     icor_profiler_method_enum::ICorProfilerMethodEnum,
@@ -6,22 +25,6 @@ use super::{
     icor_profiler_thread_enum::ICorProfilerThreadEnum, imetadata_import::IMetaDataImport,
     imethod_malloc::IMethodMalloc,
 };
-use crate::{
-    ffi::*,
-    types::{
-        AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
-        FunctionTokenAndMetadata, IlFunctionBody, ModuleInfo, ModuleInfo2, RuntimeInfo,
-    },
-    MAX_LENGTH,
-};
-use com::{
-    interfaces,
-    interfaces::IUnknown,
-    sys::{FAILED, HRESULT},
-    Interface,
-};
-use std::{ffi::c_void, mem::MaybeUninit, ptr};
-use widestring::U16CString;
 
 interfaces! {
     #[uuid("28B5557D-3F3F-48b4-90B2-5F9EEA2F6C48")]

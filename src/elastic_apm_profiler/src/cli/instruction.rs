@@ -210,1313 +210,1315 @@ impl Instruction {
     pub fn length(&self) -> usize {
         self.opcode.length as usize + self.operand.length()
     }
+
+    pub fn nop() -> Self {
+        Self {
+            opcode: NOP,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn break_() -> Self {
+        Self {
+            opcode: BREAK,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldarg_0() -> Self {
+        Self {
+            opcode: LDARG_0,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldarg_1() -> Self {
+        Self {
+            opcode: LDARG_1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldarg_2() -> Self {
+        Self {
+            opcode: LDARG_2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldarg_3() -> Self {
+        Self {
+            opcode: LDARG_3,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldloc_0() -> Self {
+        Self {
+            opcode: LDLOC_0,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldloc_1() -> Self {
+        Self {
+            opcode: LDLOC_1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldloc_2() -> Self {
+        Self {
+            opcode: LDLOC_2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldloc_3() -> Self {
+        Self {
+            opcode: LDLOC_3,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stloc_0() -> Self {
+        Self {
+            opcode: STLOC_0,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stloc_1() -> Self {
+        Self {
+            opcode: STLOC_1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stloc_2() -> Self {
+        Self {
+            opcode: STLOC_2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stloc_3() -> Self {
+        Self {
+            opcode: STLOC_3,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldarg_s(val: u8) -> Self {
+        Self {
+            opcode: LDARG_S,
+            operand: Operand::ShortInlineVar(val),
+        }
+    }
+    pub fn ldarga_s(val: u8) -> Self {
+        Self {
+            opcode: LDARGA_S,
+            operand: Operand::ShortInlineVar(val),
+        }
+    }
+    pub fn starg_s(val: u8) -> Self {
+        Self {
+            opcode: STARG_S,
+            operand: Operand::ShortInlineVar(val),
+        }
+    }
+    pub fn ldloc_s(val: u8) -> Self {
+        Self {
+            opcode: LDLOC_S,
+            operand: Operand::ShortInlineVar(val),
+        }
+    }
+    pub fn ldloca_s(val: u8) -> Self {
+        Self {
+            opcode: LDLOCA_S,
+            operand: Operand::ShortInlineVar(val),
+        }
+    }
+    pub fn stloc_s(val: u8) -> Self {
+        Self {
+            opcode: STLOC_S,
+            operand: Operand::ShortInlineVar(val),
+        }
+    }
+    pub fn ldnull() -> Self {
+        Self {
+            opcode: LDNULL,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_m1() -> Self {
+        Self {
+            opcode: LDC_I4_M1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_0() -> Self {
+        Self {
+            opcode: LDC_I4_0,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_1() -> Self {
+        Self {
+            opcode: LDC_I4_1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_2() -> Self {
+        Self {
+            opcode: LDC_I4_2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_3() -> Self {
+        Self {
+            opcode: LDC_I4_3,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_4() -> Self {
+        Self {
+            opcode: LDC_I4_4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_5() -> Self {
+        Self {
+            opcode: LDC_I4_5,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_6() -> Self {
+        Self {
+            opcode: LDC_I4_6,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_7() -> Self {
+        Self {
+            opcode: LDC_I4_7,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_8() -> Self {
+        Self {
+            opcode: LDC_I4_8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldc_i4_s(val: u8) -> Self {
+        Self {
+            opcode: LDC_I4_S,
+            operand: Operand::ShortInlineI(val),
+        }
+    }
+    pub fn ldc_i4(val: i32) -> Self {
+        Self {
+            opcode: LDC_I4,
+            operand: Operand::InlineI(val),
+        }
+    }
+    pub fn ldc_i8(val: i64) -> Self {
+        Self {
+            opcode: LDC_I8,
+            operand: Operand::InlineI8(val),
+        }
+    }
+    pub fn ldc_r4(val: f32) -> Self {
+        Self {
+            opcode: LDC_R4,
+            operand: Operand::ShortInlineR(val),
+        }
+    }
+    pub fn ldc_r8(val: f64) -> Self {
+        Self {
+            opcode: LDC_R8,
+            operand: Operand::InlineR(val),
+        }
+    }
+    pub fn dup() -> Self {
+        Self {
+            opcode: DUP,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn pop() -> Self {
+        Self {
+            opcode: POP,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn jmp(val: u32) -> Self {
+        Self {
+            opcode: JMP,
+            operand: Operand::InlineMethod(val),
+        }
+    }
+    pub fn call(val: u32) -> Self {
+        Self {
+            opcode: CALL,
+            operand: Operand::InlineMethod(val),
+        }
+    }
+    pub fn calli(val: u32) -> Self {
+        Self {
+            opcode: CALLI,
+            operand: Operand::InlineSig(val),
+        }
+    }
+    pub fn ret() -> Self {
+        Self {
+            opcode: RET,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn br_s(val: i8) -> Self {
+        Self {
+            opcode: BR_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn brfalse_s(val: i8) -> Self {
+        Self {
+            opcode: BRFALSE_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn brtrue_s(val: i8) -> Self {
+        Self {
+            opcode: BRTRUE_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn beq_s(val: i8) -> Self {
+        Self {
+            opcode: BEQ_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn bge_s(val: i8) -> Self {
+        Self {
+            opcode: BGE_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn bgt_s(val: i8) -> Self {
+        Self {
+            opcode: BGT_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn ble_s(val: i8) -> Self {
+        Self {
+            opcode: BLE_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn blt_s(val: i8) -> Self {
+        Self {
+            opcode: BLT_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn bne_un_s(val: i8) -> Self {
+        Self {
+            opcode: BNE_UN_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn bge_un_s(val: i8) -> Self {
+        Self {
+            opcode: BGE_UN_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn bgt_un_s(val: i8) -> Self {
+        Self {
+            opcode: BGT_UN_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn ble_un_s(val: i8) -> Self {
+        Self {
+            opcode: BLE_UN_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn blt_un_s(val: i8) -> Self {
+        Self {
+            opcode: BLT_UN_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn br(val: i32) -> Self {
+        Self {
+            opcode: BR,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn brfalse(val: i32) -> Self {
+        Self {
+            opcode: BRFALSE,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn brtrue(val: i32) -> Self {
+        Self {
+            opcode: BRTRUE,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn beq(val: i32) -> Self {
+        Self {
+            opcode: BEQ,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn bge(val: i32) -> Self {
+        Self {
+            opcode: BGE,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn bgt(val: i32) -> Self {
+        Self {
+            opcode: BGT,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn ble(val: i32) -> Self {
+        Self {
+            opcode: BLE,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn blt(val: i32) -> Self {
+        Self {
+            opcode: BLT,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn bne_un(val: i32) -> Self {
+        Self {
+            opcode: BNE_UN,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn bge_un(val: i32) -> Self {
+        Self {
+            opcode: BGE_UN,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn bgt_un(val: i32) -> Self {
+        Self {
+            opcode: BGT_UN,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn ble_un(val: i32) -> Self {
+        Self {
+            opcode: BLE_UN,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn blt_un(val: i32) -> Self {
+        Self {
+            opcode: BLT_UN,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn switch(length: u32, targets: Vec<i32>) -> Self {
+        Self {
+            opcode: SWITCH,
+            operand: Operand::InlineSwitch(length, targets),
+        }
+    }
+    pub fn ldind_i1() -> Self {
+        Self {
+            opcode: LDIND_I1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_u1() -> Self {
+        Self {
+            opcode: LDIND_U1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_i2() -> Self {
+        Self {
+            opcode: LDIND_I2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_u2() -> Self {
+        Self {
+            opcode: LDIND_U2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_i4() -> Self {
+        Self {
+            opcode: LDIND_I4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_u4() -> Self {
+        Self {
+            opcode: LDIND_U4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_i8() -> Self {
+        Self {
+            opcode: LDIND_I8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_i() -> Self {
+        Self {
+            opcode: LDIND_I,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_r4() -> Self {
+        Self {
+            opcode: LDIND_R4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_r8() -> Self {
+        Self {
+            opcode: LDIND_R8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldind_ref() -> Self {
+        Self {
+            opcode: LDIND_REF,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stind_ref() -> Self {
+        Self {
+            opcode: STIND_REF,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stind_i1() -> Self {
+        Self {
+            opcode: STIND_I1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stind_i2() -> Self {
+        Self {
+            opcode: STIND_I2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stind_i4() -> Self {
+        Self {
+            opcode: STIND_I4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stind_i8() -> Self {
+        Self {
+            opcode: STIND_I8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stind_r4() -> Self {
+        Self {
+            opcode: STIND_R4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stind_r8() -> Self {
+        Self {
+            opcode: STIND_R8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn add() -> Self {
+        Self {
+            opcode: ADD,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn sub() -> Self {
+        Self {
+            opcode: SUB,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn mul() -> Self {
+        Self {
+            opcode: MUL,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn div() -> Self {
+        Self {
+            opcode: DIV,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn div_un() -> Self {
+        Self {
+            opcode: DIV_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn rem() -> Self {
+        Self {
+            opcode: REM,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn rem_un() -> Self {
+        Self {
+            opcode: REM_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn and() -> Self {
+        Self {
+            opcode: AND,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn or() -> Self {
+        Self {
+            opcode: OR,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn xor() -> Self {
+        Self {
+            opcode: XOR,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn shl() -> Self {
+        Self {
+            opcode: SHL,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn shr() -> Self {
+        Self {
+            opcode: SHR,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn shr_un() -> Self {
+        Self {
+            opcode: SHR_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn neg() -> Self {
+        Self {
+            opcode: NEG,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn not() -> Self {
+        Self {
+            opcode: NOT,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_i1() -> Self {
+        Self {
+            opcode: CONV_I1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_i2() -> Self {
+        Self {
+            opcode: CONV_I2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_i4() -> Self {
+        Self {
+            opcode: CONV_I4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_i8() -> Self {
+        Self {
+            opcode: CONV_I8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_r4() -> Self {
+        Self {
+            opcode: CONV_R4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_r8() -> Self {
+        Self {
+            opcode: CONV_R8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_u4() -> Self {
+        Self {
+            opcode: CONV_U4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_u8() -> Self {
+        Self {
+            opcode: CONV_U8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn callvirt(val: u32) -> Self {
+        Self {
+            opcode: CALLVIRT,
+            operand: Operand::InlineMethod(val),
+        }
+    }
+    pub fn cpobj(val: u32) -> Self {
+        Self {
+            opcode: CPOBJ,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn ldobj(val: u32) -> Self {
+        Self {
+            opcode: LDOBJ,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn ldstr(val: u32) -> Self {
+        Self {
+            opcode: LDSTR,
+            operand: Operand::InlineString(val),
+        }
+    }
+    pub fn newobj(val: u32) -> Self {
+        Self {
+            opcode: NEWOBJ,
+            operand: Operand::InlineMethod(val),
+        }
+    }
+    pub fn castclass(val: u32) -> Self {
+        Self {
+            opcode: CASTCLASS,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn isinst(val: u32) -> Self {
+        Self {
+            opcode: ISINST,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn conv_r_un() -> Self {
+        Self {
+            opcode: CONV_R_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn unbox(val: u32) -> Self {
+        Self {
+            opcode: UNBOX,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn throw() -> Self {
+        Self {
+            opcode: THROW,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldfld(val: u32) -> Self {
+        Self {
+            opcode: LDFLD,
+            operand: Operand::InlineField(val),
+        }
+    }
+    pub fn ldflda(val: u32) -> Self {
+        Self {
+            opcode: LDFLDA,
+            operand: Operand::InlineField(val),
+        }
+    }
+    pub fn stfld(val: u32) -> Self {
+        Self {
+            opcode: STFLD,
+            operand: Operand::InlineField(val),
+        }
+    }
+    pub fn ldsfld(val: u32) -> Self {
+        Self {
+            opcode: LDSFLD,
+            operand: Operand::InlineField(val),
+        }
+    }
+    pub fn ldsflda(val: u32) -> Self {
+        Self {
+            opcode: LDSFLDA,
+            operand: Operand::InlineField(val),
+        }
+    }
+    pub fn stsfld(val: u32) -> Self {
+        Self {
+            opcode: STSFLD,
+            operand: Operand::InlineField(val),
+        }
+    }
+    pub fn stobj(val: u32) -> Self {
+        Self {
+            opcode: STOBJ,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn conv_ovf_i1_un() -> Self {
+        Self {
+            opcode: CONV_OVF_I1_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i2_un() -> Self {
+        Self {
+            opcode: CONV_OVF_I2_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i4_un() -> Self {
+        Self {
+            opcode: CONV_OVF_I4_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i8_un() -> Self {
+        Self {
+            opcode: CONV_OVF_I8_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u1_un() -> Self {
+        Self {
+            opcode: CONV_OVF_U1_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u2_un() -> Self {
+        Self {
+            opcode: CONV_OVF_U2_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u4_un() -> Self {
+        Self {
+            opcode: CONV_OVF_U4_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u8_un() -> Self {
+        Self {
+            opcode: CONV_OVF_U8_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i_un() -> Self {
+        Self {
+            opcode: CONV_OVF_I_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u_un() -> Self {
+        Self {
+            opcode: CONV_OVF_U_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn box_(val: u32) -> Self {
+        Self {
+            opcode: BOX,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn newarr(val: u32) -> Self {
+        Self {
+            opcode: NEWARR,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn ldlen() -> Self {
+        Self {
+            opcode: LDLEN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelema(val: u32) -> Self {
+        Self {
+            opcode: LDELEMA,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn ldelem_i1() -> Self {
+        Self {
+            opcode: LDELEM_I1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_u1() -> Self {
+        Self {
+            opcode: LDELEM_U1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_i2() -> Self {
+        Self {
+            opcode: LDELEM_I2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_u2() -> Self {
+        Self {
+            opcode: LDELEM_U2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_i4() -> Self {
+        Self {
+            opcode: LDELEM_I4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_u4() -> Self {
+        Self {
+            opcode: LDELEM_U4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_i8() -> Self {
+        Self {
+            opcode: LDELEM_I8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_i() -> Self {
+        Self {
+            opcode: LDELEM_I,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_r4() -> Self {
+        Self {
+            opcode: LDELEM_R4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_r8() -> Self {
+        Self {
+            opcode: LDELEM_R8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem_ref() -> Self {
+        Self {
+            opcode: LDELEM_REF,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_i() -> Self {
+        Self {
+            opcode: STELEM_I,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_i1() -> Self {
+        Self {
+            opcode: STELEM_I1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_i2() -> Self {
+        Self {
+            opcode: STELEM_I2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_i4() -> Self {
+        Self {
+            opcode: STELEM_I4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_i8() -> Self {
+        Self {
+            opcode: STELEM_I8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_r4() -> Self {
+        Self {
+            opcode: STELEM_R4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_r8() -> Self {
+        Self {
+            opcode: STELEM_R8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn stelem_ref() -> Self {
+        Self {
+            opcode: STELEM_REF,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldelem(val: u32) -> Self {
+        Self {
+            opcode: LDELEM,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn stelem(val: u32) -> Self {
+        Self {
+            opcode: STELEM,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn unbox_any(val: u32) -> Self {
+        Self {
+            opcode: UNBOX_ANY,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn conv_ovf_i1() -> Self {
+        Self {
+            opcode: CONV_OVF_I1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u1() -> Self {
+        Self {
+            opcode: CONV_OVF_U1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i2() -> Self {
+        Self {
+            opcode: CONV_OVF_I2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u2() -> Self {
+        Self {
+            opcode: CONV_OVF_U2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i4() -> Self {
+        Self {
+            opcode: CONV_OVF_I4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u4() -> Self {
+        Self {
+            opcode: CONV_OVF_U4,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i8() -> Self {
+        Self {
+            opcode: CONV_OVF_I8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u8() -> Self {
+        Self {
+            opcode: CONV_OVF_U8,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn refanyval(val: u32) -> Self {
+        Self {
+            opcode: REFANYVAL,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn ckfinite() -> Self {
+        Self {
+            opcode: CKFINITE,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn mkrefany(val: u32) -> Self {
+        Self {
+            opcode: MKREFANY,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn ldtoken(val: u32) -> Self {
+        Self {
+            opcode: LDTOKEN,
+            operand: Operand::InlineTok(val),
+        }
+    }
+    pub fn conv_u2() -> Self {
+        Self {
+            opcode: CONV_U2,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_u1() -> Self {
+        Self {
+            opcode: CONV_U1,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_i() -> Self {
+        Self {
+            opcode: CONV_I,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_i() -> Self {
+        Self {
+            opcode: CONV_OVF_I,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_ovf_u() -> Self {
+        Self {
+            opcode: CONV_OVF_U,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn add_ovf() -> Self {
+        Self {
+            opcode: ADD_OVF,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn add_ovf_un() -> Self {
+        Self {
+            opcode: ADD_OVF_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn mul_ovf() -> Self {
+        Self {
+            opcode: MUL_OVF,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn mul_ovf_un() -> Self {
+        Self {
+            opcode: MUL_OVF_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn sub_ovf() -> Self {
+        Self {
+            opcode: SUB_OVF,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn sub_ovf_un() -> Self {
+        Self {
+            opcode: SUB_OVF_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn endfinally() -> Self {
+        Self {
+            opcode: ENDFINALLY,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn leave(val: i32) -> Self {
+        Self {
+            opcode: LEAVE,
+            operand: Operand::InlineBrTarget(val),
+        }
+    }
+    pub fn leave_s(val: i8) -> Self {
+        Self {
+            opcode: LEAVE_S,
+            operand: Operand::ShortInlineBrTarget(val),
+        }
+    }
+    pub fn stind_i() -> Self {
+        Self {
+            opcode: STIND_I,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn conv_u() -> Self {
+        Self {
+            opcode: CONV_U,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn arglist() -> Self {
+        Self {
+            opcode: ARGLIST,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ceq() -> Self {
+        Self {
+            opcode: CEQ,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn cgt() -> Self {
+        Self {
+            opcode: CGT,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn cgt_un() -> Self {
+        Self {
+            opcode: CGT_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn clt() -> Self {
+        Self {
+            opcode: CLT,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn clt_un() -> Self {
+        Self {
+            opcode: CLT_UN,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn ldftn(val: u32) -> Self {
+        Self {
+            opcode: LDFTN,
+            operand: Operand::InlineMethod(val),
+        }
+    }
+    pub fn ldvirtftn(val: u32) -> Self {
+        Self {
+            opcode: LDVIRTFTN,
+            operand: Operand::InlineMethod(val),
+        }
+    }
+    pub fn ldarg(val: u16) -> Self {
+        Self {
+            opcode: LDARG,
+            operand: Operand::InlineVar(val),
+        }
+    }
+    pub fn ldarga(val: u16) -> Self {
+        Self {
+            opcode: LDARGA,
+            operand: Operand::InlineVar(val),
+        }
+    }
+    pub fn starg(val: u16) -> Self {
+        Self {
+            opcode: STARG,
+            operand: Operand::InlineVar(val),
+        }
+    }
+    pub fn ldloc(val: u16) -> Self {
+        Self {
+            opcode: LDLOC,
+            operand: Operand::InlineVar(val),
+        }
+    }
+    pub fn ldloca(val: u16) -> Self {
+        Self {
+            opcode: LDLOCA,
+            operand: Operand::InlineVar(val),
+        }
+    }
+    pub fn stloc(val: u16) -> Self {
+        Self {
+            opcode: STLOC,
+            operand: Operand::InlineVar(val),
+        }
+    }
+    pub fn localloc() -> Self {
+        Self {
+            opcode: LOCALLOC,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn endfilter() -> Self {
+        Self {
+            opcode: ENDFILTER,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn unaligned(val: u8) -> Self {
+        Self {
+            opcode: UNALIGNED,
+            operand: Operand::ShortInlineI(val),
+        }
+    }
+    pub fn volatile() -> Self {
+        Self {
+            opcode: VOLATILE,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn tailcall() -> Self {
+        Self {
+            opcode: TAILCALL,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn initobj(val: u32) -> Self {
+        Self {
+            opcode: INITOBJ,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn constrained(val: u32) -> Self {
+        Self {
+            opcode: CONSTRAINED,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn cpblk() -> Self {
+        Self {
+            opcode: CPBLK,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn initblk() -> Self {
+        Self {
+            opcode: INITBLK,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn rethrow() -> Self {
+        Self {
+            opcode: RETHROW,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn sizeof(val: u32) -> Self {
+        Self {
+            opcode: SIZEOF,
+            operand: Operand::InlineType(val),
+        }
+    }
+    pub fn refanytype() -> Self {
+        Self {
+            opcode: REFANYTYPE,
+            operand: Operand::InlineNone,
+        }
+    }
+    pub fn readonly() -> Self {
+        Self {
+            opcode: READONLY,
+            operand: Operand::InlineNone,
+        }
+    }
 }
 
-pub fn nop() -> Instruction {
-    Instruction {
-        opcode: NOP,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn break_() -> Instruction {
-    Instruction {
-        opcode: BREAK,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldarg_0() -> Instruction {
-    Instruction {
-        opcode: LDARG_0,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldarg_1() -> Instruction {
-    Instruction {
-        opcode: LDARG_1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldarg_2() -> Instruction {
-    Instruction {
-        opcode: LDARG_2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldarg_3() -> Instruction {
-    Instruction {
-        opcode: LDARG_3,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldloc_0() -> Instruction {
-    Instruction {
-        opcode: LDLOC_0,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldloc_1() -> Instruction {
-    Instruction {
-        opcode: LDLOC_1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldloc_2() -> Instruction {
-    Instruction {
-        opcode: LDLOC_2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldloc_3() -> Instruction {
-    Instruction {
-        opcode: LDLOC_3,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stloc_0() -> Instruction {
-    Instruction {
-        opcode: STLOC_0,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stloc_1() -> Instruction {
-    Instruction {
-        opcode: STLOC_1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stloc_2() -> Instruction {
-    Instruction {
-        opcode: STLOC_2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stloc_3() -> Instruction {
-    Instruction {
-        opcode: STLOC_3,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldarg_s(val: u8) -> Instruction {
-    Instruction {
-        opcode: LDARG_S,
-        operand: Operand::ShortInlineVar(val),
-    }
-}
-pub fn ldarga_s(val: u8) -> Instruction {
-    Instruction {
-        opcode: LDARGA_S,
-        operand: Operand::ShortInlineVar(val),
-    }
-}
-pub fn starg_s(val: u8) -> Instruction {
-    Instruction {
-        opcode: STARG_S,
-        operand: Operand::ShortInlineVar(val),
-    }
-}
-pub fn ldloc_s(val: u8) -> Instruction {
-    Instruction {
-        opcode: LDLOC_S,
-        operand: Operand::ShortInlineVar(val),
-    }
-}
-pub fn ldloca_s(val: u8) -> Instruction {
-    Instruction {
-        opcode: LDLOCA_S,
-        operand: Operand::ShortInlineVar(val),
-    }
-}
-pub fn stloc_s(val: u8) -> Instruction {
-    Instruction {
-        opcode: STLOC_S,
-        operand: Operand::ShortInlineVar(val),
-    }
-}
-pub fn ldnull() -> Instruction {
-    Instruction {
-        opcode: LDNULL,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_m1() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_M1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_0() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_0,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_1() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_2() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_3() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_3,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_4() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_5() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_5,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_6() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_6,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_7() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_7,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_8() -> Instruction {
-    Instruction {
-        opcode: LDC_I4_8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldc_i4_s(val: u8) -> Instruction {
-    Instruction {
-        opcode: LDC_I4_S,
-        operand: Operand::ShortInlineI(val),
-    }
-}
-pub fn ldc_i4(val: i32) -> Instruction {
-    Instruction {
-        opcode: LDC_I4,
-        operand: Operand::InlineI(val),
-    }
-}
-pub fn ldc_i8(val: i64) -> Instruction {
-    Instruction {
-        opcode: LDC_I8,
-        operand: Operand::InlineI8(val),
-    }
-}
-pub fn ldc_r4(val: f32) -> Instruction {
-    Instruction {
-        opcode: LDC_R4,
-        operand: Operand::ShortInlineR(val),
-    }
-}
-pub fn ldc_r8(val: f64) -> Instruction {
-    Instruction {
-        opcode: LDC_R8,
-        operand: Operand::InlineR(val),
-    }
-}
-pub fn dup() -> Instruction {
-    Instruction {
-        opcode: DUP,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn pop() -> Instruction {
-    Instruction {
-        opcode: POP,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn jmp(val: u32) -> Instruction {
-    Instruction {
-        opcode: JMP,
-        operand: Operand::InlineMethod(val),
-    }
-}
-pub fn call(val: u32) -> Instruction {
-    Instruction {
-        opcode: CALL,
-        operand: Operand::InlineMethod(val),
-    }
-}
-pub fn calli(val: u32) -> Instruction {
-    Instruction {
-        opcode: CALLI,
-        operand: Operand::InlineSig(val),
-    }
-}
-pub fn ret() -> Instruction {
-    Instruction {
-        opcode: RET,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn br_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BR_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn brfalse_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BRFALSE_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn brtrue_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BRTRUE_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn beq_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BEQ_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn bge_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BGE_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn bgt_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BGT_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn ble_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BLE_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn blt_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BLT_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn bne_un_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BNE_UN_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn bge_un_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BGE_UN_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn bgt_un_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BGT_UN_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn ble_un_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BLE_UN_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn blt_un_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: BLT_UN_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn br(val: i32) -> Instruction {
-    Instruction {
-        opcode: BR,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn brfalse(val: i32) -> Instruction {
-    Instruction {
-        opcode: BRFALSE,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn brtrue(val: i32) -> Instruction {
-    Instruction {
-        opcode: BRTRUE,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn beq(val: i32) -> Instruction {
-    Instruction {
-        opcode: BEQ,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn bge(val: i32) -> Instruction {
-    Instruction {
-        opcode: BGE,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn bgt(val: i32) -> Instruction {
-    Instruction {
-        opcode: BGT,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn ble(val: i32) -> Instruction {
-    Instruction {
-        opcode: BLE,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn blt(val: i32) -> Instruction {
-    Instruction {
-        opcode: BLT,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn bne_un(val: i32) -> Instruction {
-    Instruction {
-        opcode: BNE_UN,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn bge_un(val: i32) -> Instruction {
-    Instruction {
-        opcode: BGE_UN,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn bgt_un(val: i32) -> Instruction {
-    Instruction {
-        opcode: BGT_UN,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn ble_un(val: i32) -> Instruction {
-    Instruction {
-        opcode: BLE_UN,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn blt_un(val: i32) -> Instruction {
-    Instruction {
-        opcode: BLT_UN,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn switch(length: u32, targets: Vec<i32>) -> Instruction {
-    Instruction {
-        opcode: SWITCH,
-        operand: Operand::InlineSwitch(length, targets),
-    }
-}
-pub fn ldind_i1() -> Instruction {
-    Instruction {
-        opcode: LDIND_I1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_u1() -> Instruction {
-    Instruction {
-        opcode: LDIND_U1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_i2() -> Instruction {
-    Instruction {
-        opcode: LDIND_I2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_u2() -> Instruction {
-    Instruction {
-        opcode: LDIND_U2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_i4() -> Instruction {
-    Instruction {
-        opcode: LDIND_I4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_u4() -> Instruction {
-    Instruction {
-        opcode: LDIND_U4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_i8() -> Instruction {
-    Instruction {
-        opcode: LDIND_I8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_i() -> Instruction {
-    Instruction {
-        opcode: LDIND_I,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_r4() -> Instruction {
-    Instruction {
-        opcode: LDIND_R4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_r8() -> Instruction {
-    Instruction {
-        opcode: LDIND_R8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldind_ref() -> Instruction {
-    Instruction {
-        opcode: LDIND_REF,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stind_ref() -> Instruction {
-    Instruction {
-        opcode: STIND_REF,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stind_i1() -> Instruction {
-    Instruction {
-        opcode: STIND_I1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stind_i2() -> Instruction {
-    Instruction {
-        opcode: STIND_I2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stind_i4() -> Instruction {
-    Instruction {
-        opcode: STIND_I4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stind_i8() -> Instruction {
-    Instruction {
-        opcode: STIND_I8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stind_r4() -> Instruction {
-    Instruction {
-        opcode: STIND_R4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stind_r8() -> Instruction {
-    Instruction {
-        opcode: STIND_R8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn add() -> Instruction {
-    Instruction {
-        opcode: ADD,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn sub() -> Instruction {
-    Instruction {
-        opcode: SUB,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn mul() -> Instruction {
-    Instruction {
-        opcode: MUL,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn div() -> Instruction {
-    Instruction {
-        opcode: DIV,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn div_un() -> Instruction {
-    Instruction {
-        opcode: DIV_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn rem() -> Instruction {
-    Instruction {
-        opcode: REM,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn rem_un() -> Instruction {
-    Instruction {
-        opcode: REM_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn and() -> Instruction {
-    Instruction {
-        opcode: AND,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn or() -> Instruction {
-    Instruction {
-        opcode: OR,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn xor() -> Instruction {
-    Instruction {
-        opcode: XOR,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn shl() -> Instruction {
-    Instruction {
-        opcode: SHL,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn shr() -> Instruction {
-    Instruction {
-        opcode: SHR,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn shr_un() -> Instruction {
-    Instruction {
-        opcode: SHR_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn neg() -> Instruction {
-    Instruction {
-        opcode: NEG,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn not() -> Instruction {
-    Instruction {
-        opcode: NOT,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_i1() -> Instruction {
-    Instruction {
-        opcode: CONV_I1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_i2() -> Instruction {
-    Instruction {
-        opcode: CONV_I2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_i4() -> Instruction {
-    Instruction {
-        opcode: CONV_I4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_i8() -> Instruction {
-    Instruction {
-        opcode: CONV_I8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_r4() -> Instruction {
-    Instruction {
-        opcode: CONV_R4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_r8() -> Instruction {
-    Instruction {
-        opcode: CONV_R8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_u4() -> Instruction {
-    Instruction {
-        opcode: CONV_U4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_u8() -> Instruction {
-    Instruction {
-        opcode: CONV_U8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn callvirt(val: u32) -> Instruction {
-    Instruction {
-        opcode: CALLVIRT,
-        operand: Operand::InlineMethod(val),
-    }
-}
-pub fn cpobj(val: u32) -> Instruction {
-    Instruction {
-        opcode: CPOBJ,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn ldobj(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDOBJ,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn ldstr(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDSTR,
-        operand: Operand::InlineString(val),
-    }
-}
-pub fn newobj(val: u32) -> Instruction {
-    Instruction {
-        opcode: NEWOBJ,
-        operand: Operand::InlineMethod(val),
-    }
-}
-pub fn castclass(val: u32) -> Instruction {
-    Instruction {
-        opcode: CASTCLASS,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn isinst(val: u32) -> Instruction {
-    Instruction {
-        opcode: ISINST,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn conv_r_un() -> Instruction {
-    Instruction {
-        opcode: CONV_R_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn unbox(val: u32) -> Instruction {
-    Instruction {
-        opcode: UNBOX,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn throw() -> Instruction {
-    Instruction {
-        opcode: THROW,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldfld(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDFLD,
-        operand: Operand::InlineField(val),
-    }
-}
-pub fn ldflda(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDFLDA,
-        operand: Operand::InlineField(val),
-    }
-}
-pub fn stfld(val: u32) -> Instruction {
-    Instruction {
-        opcode: STFLD,
-        operand: Operand::InlineField(val),
-    }
-}
-pub fn ldsfld(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDSFLD,
-        operand: Operand::InlineField(val),
-    }
-}
-pub fn ldsflda(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDSFLDA,
-        operand: Operand::InlineField(val),
-    }
-}
-pub fn stsfld(val: u32) -> Instruction {
-    Instruction {
-        opcode: STSFLD,
-        operand: Operand::InlineField(val),
-    }
-}
-pub fn stobj(val: u32) -> Instruction {
-    Instruction {
-        opcode: STOBJ,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn conv_ovf_i1_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I1_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i2_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I2_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i4_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I4_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i8_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I8_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u1_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U1_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u2_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U2_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u4_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U4_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u8_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U8_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u_un() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn box_(val: u32) -> Instruction {
-    Instruction {
-        opcode: BOX,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn newarr(val: u32) -> Instruction {
-    Instruction {
-        opcode: NEWARR,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn ldlen() -> Instruction {
-    Instruction {
-        opcode: LDLEN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelema(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDELEMA,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn ldelem_i1() -> Instruction {
-    Instruction {
-        opcode: LDELEM_I1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_u1() -> Instruction {
-    Instruction {
-        opcode: LDELEM_U1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_i2() -> Instruction {
-    Instruction {
-        opcode: LDELEM_I2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_u2() -> Instruction {
-    Instruction {
-        opcode: LDELEM_U2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_i4() -> Instruction {
-    Instruction {
-        opcode: LDELEM_I4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_u4() -> Instruction {
-    Instruction {
-        opcode: LDELEM_U4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_i8() -> Instruction {
-    Instruction {
-        opcode: LDELEM_I8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_i() -> Instruction {
-    Instruction {
-        opcode: LDELEM_I,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_r4() -> Instruction {
-    Instruction {
-        opcode: LDELEM_R4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_r8() -> Instruction {
-    Instruction {
-        opcode: LDELEM_R8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem_ref() -> Instruction {
-    Instruction {
-        opcode: LDELEM_REF,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_i() -> Instruction {
-    Instruction {
-        opcode: STELEM_I,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_i1() -> Instruction {
-    Instruction {
-        opcode: STELEM_I1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_i2() -> Instruction {
-    Instruction {
-        opcode: STELEM_I2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_i4() -> Instruction {
-    Instruction {
-        opcode: STELEM_I4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_i8() -> Instruction {
-    Instruction {
-        opcode: STELEM_I8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_r4() -> Instruction {
-    Instruction {
-        opcode: STELEM_R4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_r8() -> Instruction {
-    Instruction {
-        opcode: STELEM_R8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn stelem_ref() -> Instruction {
-    Instruction {
-        opcode: STELEM_REF,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldelem(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDELEM,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn stelem(val: u32) -> Instruction {
-    Instruction {
-        opcode: STELEM,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn unbox_any(val: u32) -> Instruction {
-    Instruction {
-        opcode: UNBOX_ANY,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn conv_ovf_i1() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u1() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i2() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u2() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i4() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u4() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U4,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i8() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u8() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U8,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn refanyval(val: u32) -> Instruction {
-    Instruction {
-        opcode: REFANYVAL,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn ckfinite() -> Instruction {
-    Instruction {
-        opcode: CKFINITE,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn mkrefany(val: u32) -> Instruction {
-    Instruction {
-        opcode: MKREFANY,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn ldtoken(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDTOKEN,
-        operand: Operand::InlineTok(val),
-    }
-}
-pub fn conv_u2() -> Instruction {
-    Instruction {
-        opcode: CONV_U2,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_u1() -> Instruction {
-    Instruction {
-        opcode: CONV_U1,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_i() -> Instruction {
-    Instruction {
-        opcode: CONV_I,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_i() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_I,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_ovf_u() -> Instruction {
-    Instruction {
-        opcode: CONV_OVF_U,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn add_ovf() -> Instruction {
-    Instruction {
-        opcode: ADD_OVF,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn add_ovf_un() -> Instruction {
-    Instruction {
-        opcode: ADD_OVF_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn mul_ovf() -> Instruction {
-    Instruction {
-        opcode: MUL_OVF,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn mul_ovf_un() -> Instruction {
-    Instruction {
-        opcode: MUL_OVF_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn sub_ovf() -> Instruction {
-    Instruction {
-        opcode: SUB_OVF,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn sub_ovf_un() -> Instruction {
-    Instruction {
-        opcode: SUB_OVF_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn endfinally() -> Instruction {
-    Instruction {
-        opcode: ENDFINALLY,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn leave(val: i32) -> Instruction {
-    Instruction {
-        opcode: LEAVE,
-        operand: Operand::InlineBrTarget(val),
-    }
-}
-pub fn leave_s(val: i8) -> Instruction {
-    Instruction {
-        opcode: LEAVE_S,
-        operand: Operand::ShortInlineBrTarget(val),
-    }
-}
-pub fn stind_i() -> Instruction {
-    Instruction {
-        opcode: STIND_I,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn conv_u() -> Instruction {
-    Instruction {
-        opcode: CONV_U,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn arglist() -> Instruction {
-    Instruction {
-        opcode: ARGLIST,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ceq() -> Instruction {
-    Instruction {
-        opcode: CEQ,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn cgt() -> Instruction {
-    Instruction {
-        opcode: CGT,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn cgt_un() -> Instruction {
-    Instruction {
-        opcode: CGT_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn clt() -> Instruction {
-    Instruction {
-        opcode: CLT,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn clt_un() -> Instruction {
-    Instruction {
-        opcode: CLT_UN,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn ldftn(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDFTN,
-        operand: Operand::InlineMethod(val),
-    }
-}
-pub fn ldvirtftn(val: u32) -> Instruction {
-    Instruction {
-        opcode: LDVIRTFTN,
-        operand: Operand::InlineMethod(val),
-    }
-}
-pub fn ldarg(val: u16) -> Instruction {
-    Instruction {
-        opcode: LDARG,
-        operand: Operand::InlineVar(val),
-    }
-}
-pub fn ldarga(val: u16) -> Instruction {
-    Instruction {
-        opcode: LDARGA,
-        operand: Operand::InlineVar(val),
-    }
-}
-pub fn starg(val: u16) -> Instruction {
-    Instruction {
-        opcode: STARG,
-        operand: Operand::InlineVar(val),
-    }
-}
-pub fn ldloc(val: u16) -> Instruction {
-    Instruction {
-        opcode: LDLOC,
-        operand: Operand::InlineVar(val),
-    }
-}
-pub fn ldloca(val: u16) -> Instruction {
-    Instruction {
-        opcode: LDLOCA,
-        operand: Operand::InlineVar(val),
-    }
-}
-pub fn stloc(val: u16) -> Instruction {
-    Instruction {
-        opcode: STLOC,
-        operand: Operand::InlineVar(val),
-    }
-}
-pub fn localloc() -> Instruction {
-    Instruction {
-        opcode: LOCALLOC,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn endfilter() -> Instruction {
-    Instruction {
-        opcode: ENDFILTER,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn unaligned(val: u8) -> Instruction {
-    Instruction {
-        opcode: UNALIGNED,
-        operand: Operand::ShortInlineI(val),
-    }
-}
-pub fn volatile() -> Instruction {
-    Instruction {
-        opcode: VOLATILE,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn tailcall() -> Instruction {
-    Instruction {
-        opcode: TAILCALL,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn initobj(val: u32) -> Instruction {
-    Instruction {
-        opcode: INITOBJ,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn constrained(val: u32) -> Instruction {
-    Instruction {
-        opcode: CONSTRAINED,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn cpblk() -> Instruction {
-    Instruction {
-        opcode: CPBLK,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn initblk() -> Instruction {
-    Instruction {
-        opcode: INITBLK,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn rethrow() -> Instruction {
-    Instruction {
-        opcode: RETHROW,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn sizeof(val: u32) -> Instruction {
-    Instruction {
-        opcode: SIZEOF,
-        operand: Operand::InlineType(val),
-    }
-}
-pub fn refanytype() -> Instruction {
-    Instruction {
-        opcode: REFANYTYPE,
-        operand: Operand::InlineNone,
-    }
-}
-pub fn readonly() -> Instruction {
-    Instruction {
-        opcode: READONLY,
-        operand: Operand::InlineNone,
-    }
-}
+
