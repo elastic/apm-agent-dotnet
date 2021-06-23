@@ -6,6 +6,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using Elastic.Apm.Config;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Model;
@@ -28,15 +29,25 @@ namespace Elastic.Apm.Tests
 		public void TransactionWithSpans()
 		{
 			var payloadSender = new MockPayloadSender();
+			var breakdownMetricsProvider = new BreakdownMetricsProvider(new NoopLogger());
+			var metricsCollector = new MetricsCollector(new NoopLogger(), payloadSender, new ConfigStore(
+				new MockConfigSnapshot(metricsInterval: "1s"),
+				new NoopLogger()), breakdownMetricsProvider);
+
+			// Only collect breakdown metrics - other metrics are not relevant for this test
+			metricsCollector.MetricsProviders.Clear();
+			metricsCollector.MetricsProviders.Add(breakdownMetricsProvider);
+
 			using var agent = new ApmAgent(
 				new AgentComponents(
 					new NoopLogger(),
 					new MockConfigSnapshot(metricsInterval: "1s"),
 					payloadSender,
-					null, //metricsCollector will be set in AgentComponents.ctor
+					metricsCollector,
 					new CurrentExecutionSegmentsContainer(),
 					new NoopCentralConfigFetcher(),
-					new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty))));
+					new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty)),
+					breakdownMetricsProvider));
 
 			Transaction transaction = null;
 			Span span1 = null;
@@ -44,18 +55,18 @@ namespace Elastic.Apm.Tests
 			agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 			{
 				transaction = t as Transaction;
-				Thread.Sleep(100);
+				Thread.Sleep(1000);
 				t.CaptureSpan("Foo1", "Bar", s1 =>
 				{
 					span1 = s1 as Span;
-					Thread.Sleep(100);
+					Thread.Sleep(1000);
 					s1.CaptureSpan("Foo2", "Bar2", s2 =>
 					{
 						span2 = s2 as Span;
-						Thread.Sleep(100);
+						Thread.Sleep(1000);
 					});
 				});
-				Thread.Sleep(100);
+				Thread.Sleep(1000);
 			});
 
 			payloadSender.WaitForMetrics(TimeSpan.FromSeconds(15));
