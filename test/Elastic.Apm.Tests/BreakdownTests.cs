@@ -745,7 +745,7 @@ namespace Elastic.Apm.Tests
 			breakdownMetricsProvider.GetSamples().Count().Should().Be(1000);
 		}
 
-		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 1;
+		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 10;
 
 		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent()
 		{
