@@ -65,7 +65,10 @@ namespace Elastic.Apm.Tests
 			payloadSender.Metrics.Should()
 				.Contain(n =>
 					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("Bar2") &&
-					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
+					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType));
+
+			payloadSender.Metrics.Should()
+				.Contain(n =>
 					((MetricSet)n)!.Samples.Any(sample =>
 						sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
 						DoubleCompare(sample.KeyValue.Value, span2.Duration!.Value * 1000)) &&
@@ -75,7 +78,10 @@ namespace Elastic.Apm.Tests
 			// Assert that span2 is captured and the span.self_time.sum.us == span1.Duration - span2.Duration
 			payloadSender.Metrics.Should()
 				.Contain(n =>
-					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("Bar") &&
+					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("Bar"));
+
+			payloadSender.Metrics.Should()
+				.Contain(n =>
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
 						DoubleCompare(sample.KeyValue.Value, (span1.Duration!.Value - span2.Duration!.Value) * 1000)) &&
@@ -85,7 +91,10 @@ namespace Elastic.Apm.Tests
 			// Assert that app (the transaction) is captured and the span.self_time.sum.us == transaction.SelfDuration
 			payloadSender.Metrics.Should()
 				.Contain(n =>
-					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("app") &&
+					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("app"));
+
+			payloadSender.Metrics.Should()
+				.Contain(n =>
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
 						DoubleCompare(sample.KeyValue.Value, transaction.SelfDuration * 1000)) &&
@@ -745,7 +754,7 @@ namespace Elastic.Apm.Tests
 			breakdownMetricsProvider.GetSamples().Count().Should().Be(1000);
 		}
 
-		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 100;
+		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 1000;
 
 		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent()
 		{
