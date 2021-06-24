@@ -55,21 +55,73 @@ namespace Elastic.Apm.Azure.ServiceBus
 				case "ServiceBusReceiver.ReceiveDeferred.Start":
 					OnReceiveStart(kv, "RECEIVEDEFERRED");
 					break;
+				case "ServiceBusProcessor.ProcessMessage.Start":
+				case "ServiceBusSessionProcessor.ProcessSessionMessage.Start":
+					OnProcessStart(kv, "PROCESS");
+					break;
 				case "ServiceBusSender.Send.Stop":
 				case "ServiceBusSender.Schedule.Stop":
 				case "ServiceBusReceiver.Receive.Stop":
 				case "ServiceBusReceiver.ReceiveDeferred.Stop":
+				case "ServiceBusProcessor.ProcessMessage.Stop":
+				case "ServiceBusSessionProcessor.ProcessSessionMessage.Stop":
 					OnStop();
 					break;
 				case "ServiceBusSender.Send.Exception":
 				case "ServiceBusSender.Schedule.Exception":
 				case "ServiceBusReceiver.Receive.Exception":
 				case "ServiceBusReceiver.ReceiveDeferred.Exception":
+				case "ServiceBusProcessor.ProcessMessage.Exception":
+				case "ServiceBusSessionProcessor.ProcessSessionMessage.Exception":
 					OnException(kv);
 					break;
 				default:
 					Logger.Trace()?.Log("`{DiagnosticEventKey}' key is not a traced diagnostic event", kv.Key);
 					break;
+			}
+		}
+
+		private void OnProcessStart(KeyValuePair<string, object> kv, string action)
+		{
+			if (!(kv.Value is Activity activity))
+			{
+				Logger.Trace()?.Log("Value is not an activity - exiting");
+				return;
+			}
+
+			string queueName = null;
+			foreach (var tag in activity.Tags)
+			{
+				switch (tag.Key)
+				{
+					case "message_bus.destination":
+						queueName = tag.Value;
+						break;
+					default:
+						continue;
+				}
+			}
+
+			if (MatchesIgnoreMessageQueues(queueName))
+				return;
+
+			var transactionName = queueName is null
+				? $"{ServiceBus.SegmentName} {action}"
+				: $"{ServiceBus.SegmentName} {action} from {queueName}";
+
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
+			transaction.Context.Service = new Service(null, null) { Framework = _framework };
+
+			// transaction creation will create an activity, so use this as the key.
+			var activityId = Activity.Current.Id;
+
+			if (!_processingSegments.TryAdd(activityId, transaction))
+			{
+				Logger.Trace()?.Log(
+					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
+					action,
+					transaction.Id,
+					activityId);
 			}
 		}
 

@@ -306,6 +306,109 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Spans.Should().HaveCount(0);
 		}
 
+		[AzureCredentialsFact]
+		public async Task Capture_Transaction_When_Process_From_Queue()
+		{
+			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
+			var receiver = new MessageReceiver(_environment.ServiceBusConnectionString, scope.QueueName, ReceiveMode.PeekLock);
+
+			receiver.RegisterMessageHandler((message, token) =>
+			{
+				_agent.Tracer.CurrentTransaction.CaptureSpan("ProcessMessage", "process", s =>
+				{
+					s.SetLabel("message", Encoding.UTF8.GetString(message.Body));
+				});
+				return Task.CompletedTask;
+			}, args =>
+			{
+				_agent.Tracer.CurrentTransaction.CaptureException(args.Exception);
+				return Task.CompletedTask;
+			});
+
+			var messageCount = 3;
+			var messages = Enumerable.Range(1, messageCount)
+				.Select(i => new Message(Encoding.UTF8.GetBytes($"test message {i}")))
+				.ToList();
+
+			await sender.SendAsync(messages).ConfigureAwait(false);
+
+			if (!_sender.WaitForTransactions(TimeSpan.FromMinutes(2), count: messageCount * 2))
+				throw new Exception("No transactions received in timeout");
+
+			var transactions = _sender.Transactions;
+			transactions.Should().HaveCount(messageCount * 2);
+			transactions
+				.Count(t => t.Name == $"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}")
+				.Should().Be(messageCount);
+
+			var processTransactions = transactions
+				.Where(t => t.Name == $"{ServiceBus.SegmentName} PROCESS from {scope.QueueName}")
+				.ToList();
+			processTransactions.Should().HaveCount(messageCount);
+
+			foreach (var transaction in processTransactions)
+			{
+				var spans = _sender.Spans.Where(s => s.TransactionId == transaction.Id).ToList();
+				spans.Should().HaveCount(1);
+			}
+
+			await receiver.CloseAsync();
+		}
+
+		[AzureCredentialsFact]
+		public async Task Capture_Transaction_When_ProcessSession_From_Queue()
+		{
+			await using var scope = await QueueScope.CreateWithQueue(_adminClient, new CreateQueueOptions(Guid.NewGuid().ToString("D"))
+			{
+				RequiresSession = true
+			});
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
+			var client = new QueueClient(_environment.ServiceBusConnectionString, scope.QueueName, ReceiveMode.PeekLock);
+
+			client.RegisterSessionHandler((session, message, token) =>
+			{
+				_agent.Tracer.CurrentTransaction.CaptureSpan("ProcessSessionMessage", "process", s =>
+				{
+					s.SetLabel("message", Encoding.UTF8.GetString(message.Body));
+				});
+				return Task.CompletedTask;
+			}, args =>
+			{
+				_agent.Tracer.CurrentTransaction.CaptureException(args.Exception);
+				return Task.CompletedTask;
+			});
+
+			var messageCount = 3;
+			var messages = Enumerable.Range(1, messageCount)
+				.Select(i => new Message(Encoding.UTF8.GetBytes($"test message {i}")) { SessionId = "test" })
+				.ToList();
+
+			await sender.SendAsync(messages).ConfigureAwait(false);
+
+			if (!_sender.WaitForTransactions(TimeSpan.FromMinutes(2), count: messageCount * 2))
+				throw new Exception("No transactions received in timeout");
+
+			var transactions = _sender.Transactions;
+			transactions.Should().HaveCount(messageCount * 2);
+			transactions
+				.Count(t => t.Name == $"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}")
+				.Should().Be(messageCount);
+
+			var processTransactions = transactions
+				.Where(t => t.Name == $"{ServiceBus.SegmentName} PROCESS from {scope.QueueName}")
+				.ToList();
+			processTransactions.Should().HaveCount(messageCount);
+
+			foreach (var transaction in processTransactions)
+			{
+				var spans = _sender.Spans.Where(s => s.TransactionId == transaction.Id).ToList();
+				spans.Should().HaveCount(1);
+			}
+
+			await client.CloseAsync();
+		}
+
 		public void Dispose() => _agent.Dispose();
 	}
 }
