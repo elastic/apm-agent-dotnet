@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -10,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
@@ -64,6 +66,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total system CPU time";
 
+		public bool IsMetricAlreadyCaptured => true;
+
 		internal (bool success, long idle, long total) ReadProcStat()
 		{
 			using (var sr = GetProcStatAsStream())
@@ -100,14 +104,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private StreamReader GetProcStatAsStream()
 			=> _procStatStreamReader ?? (File.Exists("/proc/stat") ? new StreamReader("/proc/stat") : null);
 
-		public IEnumerable<MetricSample> GetSamples()
+		public IEnumerable<MetricSet> GetSamples()
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				if (_processorTimePerfCounter == null) return null;
 
 				var val = _processorTimePerfCounter.NextValue();
-				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) };
+
+				return new List<MetricSet>
+				{
+					new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) })
+				};
 			}
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -122,13 +130,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_prevIdleTime = idle;
 				_prevTotalTime = total;
 
-				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, notIdle) };
+				return new List<MetricSet>
+				{
+					new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample(SystemCpuTotalPct, notIdle) })
+				};
 			}
 
 			return null;
 		}
 
-		public bool IsMetricAlreadyCaptured => true;
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, SystemCpuTotalPct);
 
 		public void Dispose()
 		{

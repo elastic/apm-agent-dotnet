@@ -48,6 +48,8 @@
     <InternalsVisibleTo Include="Elastic.Apm.Azure.ServiceBus.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Azure.Storage" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Azure.Storage.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Azure.CosmosDb" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Azure.CosmosDb.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.MongoDb" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.MongoDb.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>

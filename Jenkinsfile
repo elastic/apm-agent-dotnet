@@ -19,7 +19,7 @@ pipeline {
   }
   options {
     timeout(time: 4, unit: 'HOURS')
-    buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20', daysToKeepStr: '30'))
+    buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '10', daysToKeepStr: '30'))
     timestamps()
     ansiColor('xterm')
     disableResume()
@@ -583,7 +583,7 @@ def release(Map args = [:]){
 
 def reportTests() {
   dir("${BASE_DIR}"){
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml,target/**/Sequence_*.xml,target/**/testhost*.dmp')
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/Sequence_*.xml,target/**/testhost*.dmp')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }

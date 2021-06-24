@@ -10,6 +10,7 @@ using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 
@@ -30,7 +31,8 @@ namespace Elastic.Apm
 			IMetricsCollector metricsCollector,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			ICentralConfigFetcher centralConfigFetcher,
-			IApmServerInfo apmServerInfo
+			IApmServerInfo apmServerInfo,
+			BreakdownMetricsProvider breakdownMetricsProvider = null
 		)
 		{
 			try
@@ -53,17 +55,19 @@ namespace Elastic.Apm
 
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
-
 				if (ConfigurationReader.Enabled)
 				{
+					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
+
 					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
-					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore);
+					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider);
 					MetricsCollector.StartCollecting();
 				}
 				else
 					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+
+				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
+					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 			}
 			catch (Exception e)
 			{

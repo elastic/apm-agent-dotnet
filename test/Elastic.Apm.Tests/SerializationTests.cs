@@ -269,13 +269,13 @@ namespace Elastic.Apm.Tests
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
 			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710);
+				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
 			sampledTransaction.Context.Request = new Request("GET",
 				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
 			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710);
+				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = _payloadItemSerializer.Serialize(sampledTransaction);

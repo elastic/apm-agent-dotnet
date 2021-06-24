@@ -45,7 +45,9 @@ namespace Elastic.Apm.Metrics
 
 		private readonly Timer _timer;
 
-		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider)
+		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider,
+			params IMetricsProvider[] metricsProvider
+		)
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
@@ -63,97 +65,69 @@ namespace Elastic.Apm.Metrics
 			}
 
 			MetricsProviders = new List<IMetricsProvider>();
+			var disabledMetrics = configSnapshotProvider.CurrentSnapshot.DisableMetrics;
 
-			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
-				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
-			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
-				MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
-
-			var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory);
-			var collectProcessVirtualMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory);
-			if (collectProcessVirtualMemory || collectProcessWorkingSet)
-				MetricsProviders.Add(new ProcessWorkingSetAndVirtualMemoryProvider(collectProcessVirtualMemory, collectProcessWorkingSet));
-
-			var collectTotalMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				FreeAndTotalMemoryProvider.TotalMemory);
-			var collectFreeMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				FreeAndTotalMemoryProvider.FreeMemory);
-			if (collectFreeMemory || collectTotalMemory)
-				MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
-
-			var collectGcCount = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcCountName);
-			var collectGen0Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen0SizeName);
-			var collectGen1Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen1SizeName);
-			var collectGen2Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen2SizeName);
-			var collectGen3Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcGen3SizeName);
-			var collectGcTime = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				GcMetricsProvider.GcTimeName);
-			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
+			if (metricsProvider != null)
 			{
-				try
+				foreach (var item in metricsProvider)
 				{
-					MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
-						collectGen3Size, collectGcTime));
-				}
-				catch (Exception e)
-				{
-					_logger.Warning()?.LogException(e, "Failed loading {ProviderName}", nameof(GcMetricsProvider));
+					if (item != null)
+						AddIfEnabled(item);
 				}
 			}
 
-			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				CgroupMetricsProvider.SystemProcessCgroupMemoryMemLimitBytes);
-			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				CgroupMetricsProvider.SystemProcessCgroupMemoryMemUsageBytes);
-			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-				CgroupMetricsProvider.SystemProcessCgroupMemoryStatsInactiveFileBytes);
-			if (collectCgroupMemLimitBytes || collectCgroupMemUsageBytes || collectCgroupStatsInactiveFileBytes)
+			AddIfEnabled(new ProcessTotalCpuTimeProvider(_logger));
+			AddIfEnabled(new SystemTotalCpuProvider(_logger));
+			AddIfEnabled(new ProcessWorkingSetAndVirtualMemoryProvider(disabledMetrics));
+			AddIfEnabled(new FreeAndTotalMemoryProvider(disabledMetrics));
+			try
 			{
-				MetricsProviders.Add(
-					new CgroupMetricsProvider(_logger, collectCgroupMemLimitBytes, collectCgroupMemUsageBytes,
-						collectCgroupStatsInactiveFileBytes));
+				// We saw some Exceptions in GcMetricsProvider.ctor, so we try-catch it
+				AddIfEnabled(new GcMetricsProvider(_logger, disabledMetrics));
 			}
+			catch (Exception e)
+			{
+				_logger.Warning()?.LogException(e, "Failed loading {ProviderName}", nameof(GcMetricsProvider));
+			}
+			AddIfEnabled(new CgroupMetricsProvider(_logger, disabledMetrics));
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
+
+			void AddIfEnabled(IMetricsProvider provider)
+			{
+				if (provider.IsEnabled(disabledMetrics))
+					MetricsProviders.Add(provider);
+			}
 		}
 
 		public void StartCollecting() => _timer?.Start();
 
 		internal void CollectAllMetrics()
 		{
-			using (var acq = _isCollectionInProgress.TryAcquireWithDisposable())
+			using var acq = _isCollectionInProgress.TryAcquireWithDisposable();
+			if (!acq.IsAcquired)
 			{
-				if (!acq.IsAcquired)
-				{
-					_logger.Trace()?.Log("Previous CollectAllMetrics call is still in progress - skipping this one");
-					return;
-				}
+				_logger.Trace()?.Log("Previous CollectAllMetrics call is still in progress - skipping this one");
+				return;
+			}
 
-				if (!_configSnapshotProvider.CurrentSnapshot.Recording)
-				{
-					//We only handle the Recording=false here. If Enabled=false, then the MetricsCollector is not started at all.
-					_logger.Trace()?.Log("Skip collecting metrics - Recording is set to false");
-					return;
-				}
+			if (!_configSnapshotProvider.CurrentSnapshot.Recording)
+			{
+				//We only handle the Recording=false here. If Enabled=false, then the MetricsCollector is not started at all.
+				_logger.Trace()?.Log("Skip collecting metrics - Recording is set to false");
+				return;
+			}
 
-				try
-				{
-					CollectAllMetricsImpl();
-				}
-				catch (Exception e)
-				{
-					_logger.Error()
-						?.LogExceptionWithCaller(e);
-				}
+			try
+			{
+				CollectAllMetricsImpl();
+			}
+			catch (Exception e)
+			{
+				_logger.Error()
+					?.LogExceptionWithCaller(e);
 			}
 		}
 
@@ -168,11 +142,10 @@ namespace Elastic.Apm.Metrics
 				return;
 			}
 
-			var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
-
 			try
 			{
-				_payloadSender.QueueMetrics(metricSet);
+				foreach (var item in samplesFromAllProviders) _payloadSender.QueueMetrics(item);
+
 				_logger.Debug()
 					?.Log("Metrics collected: {data}",
 						samplesFromAllProviders.Any()
@@ -188,9 +161,9 @@ namespace Elastic.Apm.Metrics
 			}
 		}
 
-		private List<MetricSample> CollectMetricsFromProviders()
+		private List<IMetricSet> CollectMetricsFromProviders()
 		{
-			var samples = new List<MetricSample>();
+			var samples = new List<IMetricSet>();
 			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
 			foreach (var metricsProvider in MetricsProviders)
 			{
@@ -209,23 +182,28 @@ namespace Elastic.Apm.Metrics
 				{
 					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
 
-					var samplesFromProvider = metricsProvider.GetSamples()
-						?.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value))
-						.ToArray();
+					var samplesFromProvider = metricsProvider.GetSamples()?.ToArray();
 
-					if (samplesFromProvider != null && samplesFromProvider.Length > 0)
+					if (samplesFromProvider != null && samplesFromProvider.Any())
 					{
 						_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
-						samples.AddRange(samplesFromProvider);
-						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
+
+						foreach (var item in samplesFromProvider)
+						{
+							// filter out NaN and infinity
+							item.Samples = item.Samples.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value)).ToArray();
+
+							if (item.Samples.Any())
+							{
+								samples.Add(item);
+								metricsProvider.ConsecutiveNumberOfFailedReads = 0;
+							}
+							else
+								ProcessFailedReading(metricsProvider);
+						}
 					}
 					else
-					{
-						metricsProvider.ConsecutiveNumberOfFailedReads++;
-						_logger.Warning()
-							?.Log("Failed reading {MetricsProviderName} {NumberOfFails} times: no valid samples", metricsProvider.DbgName,
-								metricsProvider.ConsecutiveNumberOfFailedReads);
-					}
+						ProcessFailedReading(metricsProvider);
 				}
 				catch (Exception e)
 				{
@@ -243,6 +221,14 @@ namespace Elastic.Apm.Metrics
 			}
 
 			return samples;
+
+			void ProcessFailedReading(IMetricsProvider metricsProvider)
+			{
+				metricsProvider.ConsecutiveNumberOfFailedReads++;
+				_logger.Warning()
+					?.Log("Failed reading {MetricsProviderName} {NumberOfFails} times: no valid samples", metricsProvider.DbgName,
+						metricsProvider.ConsecutiveNumberOfFailedReads);
+			}
 		}
 
 		public void Dispose()

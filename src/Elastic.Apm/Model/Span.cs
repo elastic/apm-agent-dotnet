@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -14,7 +15,6 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
@@ -22,6 +22,8 @@ namespace Elastic.Apm.Model
 	internal class Span : ISpan
 	{
 		private readonly IApmServerInfo _apmServerInfo;
+
+		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -31,8 +33,8 @@ namespace Elastic.Apm.Model
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
 
-		// This constructor is meant for deserialization
 		[JsonConstructor]
+		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
 		private Span(double duration, string id, string name, string parentId)
 		{
 			Duration = duration;
@@ -53,11 +55,12 @@ namespace Elastic.Apm.Model
 			IApmServerInfo apmServerInfo,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
-			bool captureStackTraceOnStart = false
+			bool captureStackTraceOnStart = false,
+			long? timestamp = null
 		)
 		{
 			InstrumentationFlag = instrumentationFlag;
-			Timestamp = TimeUtils.TimestampNow();
+			Timestamp = timestamp ?? TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
 
@@ -68,6 +71,9 @@ namespace Elastic.Apm.Model
 			_apmServerInfo = apmServerInfo;
 			Name = name;
 			Type = type;
+
+			if (_parentSpan != null)
+				_parentSpan._childDurationTimer.OnChildStart(Timestamp);
 
 			ParentId = parentId;
 			TraceId = traceId;
@@ -107,6 +113,19 @@ namespace Elastic.Apm.Model
 		}
 
 		private bool _isEnded;
+
+		/// <summary>
+		/// In general if there is an error on the span, the outcome will be <code>Outcome.Failure</code>, otherwise it'll be
+		/// <code>Outcome.Success</code>.
+		/// There are some exceptions to this (see spec:
+		/// https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be
+		/// <code>Outcome.Unknown</code>.
+		/// Use <see cref="_outcomeChangedThroughApi" /> to check if it was specifically set to <code>Outcome.Unknown</code>, or if
+		/// it's just the default value.
+		/// </summary>
+		internal Outcome _outcome;
+
+		private bool _outcomeChangedThroughApi;
 
 		[MaxLength]
 		public string Action { get; set; }
@@ -160,15 +179,6 @@ namespace Elastic.Apm.Model
 			}
 		}
 
-		/// <summary>
-		/// In general if there is an error on the span, the outcome will be <see cref="Outcome.Failure"/>, otherwise it'll be <see cref="Outcome.Success"/>.
-		/// There are some exceptions to this (see spec: https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be <see cref="Outcome.Unknown"/>.
-		/// Use <see cref="_outcomeChangedThroughApi"/> to check if it was specifically set to <see cref="Outcome.Unknown"/>, or if it's just the default value.
-		/// </summary>
-		internal Outcome _outcome;
-
-		private bool _outcomeChangedThroughApi;
-
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
 			TraceId,
@@ -194,6 +204,8 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		[JsonProperty("sample_rate")]
 		internal double? SampleRate { get; }
+
+		private double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
 
 		[JsonIgnore]
 		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
@@ -266,12 +278,11 @@ namespace Elastic.Apm.Model
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this,
-				instrumentationFlag, captureStackTraceOnStart);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
@@ -290,7 +301,6 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
-
 			// If the outcome is still unknown and it was not specifically set to unknown, then it's success
 			if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
 				Outcome = Outcome.Success;
@@ -301,6 +311,13 @@ namespace Elastic.Apm.Model
 					?.Log("Ended {Span} (with Duration already set)." +
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+
+				if (_parentSpan != null)
+					_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+				else
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+
+				_childDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
 			}
 			else
 			{
@@ -312,6 +329,14 @@ namespace Elastic.Apm.Model
 
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+
+				if (_parentSpan != null)
+					_parentSpan?._childDurationTimer.OnChildEnd(endTimestamp);
+				else
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd(endTimestamp);
+
+				_childDurationTimer.OnSpanEnd(endTimestamp);
+
 				_logger.Trace()
 					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
@@ -325,6 +350,11 @@ namespace Elastic.Apm.Model
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);
 			Ended = null;
+
+			if (_enclosingTransaction.SpanTimings.ContainsKey(new SpanTimerKey(Type, Subtype)))
+				_enclosingTransaction.SpanTimings[new SpanTimerKey(Type, Subtype)].IncrementTimer(SelfDuration);
+			else
+				_enclosingTransaction.SpanTimings.TryAdd(new SpanTimerKey(Type, Subtype), new SpanTimer(SelfDuration));
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
@@ -515,5 +545,66 @@ namespace Elastic.Apm.Model
 				exception,
 				labels
 			);
+	}
+
+	internal class SpanTimer
+	{
+		public SpanTimer(double duration)
+		{
+			TotalDuration = duration;
+			Count = 1;
+		}
+
+		public int Count { get; set; }
+
+		public double TotalDuration { get; set; }
+
+		public void IncrementTimer(double duration)
+		{
+			Count++;
+			TotalDuration += duration;
+		}
+	}
+
+	internal class ChildDurationTimer
+	{
+		private int _activeChildren;
+		private long _start;
+
+		public double Duration { get; private set; }
+
+		/// <summary>
+		/// Starts the timer if it has not been started already.
+		/// </summary>
+		/// <param name="startTimestamp"></param>
+		public void OnChildStart(long startTimestamp)
+		{
+			if (++_activeChildren == 1) _start = startTimestamp;
+		}
+
+		/// <summary>
+		/// Stops the timer and increments the duration if no other direct children are still running
+		/// </summary>
+		/// <param name="endTimestamp"></param>
+		public void OnChildEnd(long endTimestamp)
+		{
+			if (--_activeChildren == 0) IncrementDuration(endTimestamp);
+		}
+
+		/// <summary>
+		/// Stops the timer and increments the duration even if there are direct children which are still running
+		/// </summary>
+		/// <param name="endTimestamp"></param>
+		public void OnSpanEnd(long endTimestamp)
+		{
+			if (_activeChildren != 0)
+			{
+				IncrementDuration(endTimestamp);
+				_activeChildren = 0;
+			}
+		}
+
+		private void IncrementDuration(long epochMicros)
+			=> Duration += TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
 	}
 }

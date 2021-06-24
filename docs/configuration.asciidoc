@@ -1045,6 +1045,36 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | `Error`                 | String
 |============
 
+[float]
+[[config-trace-context-ignore-sampled-false]]
+==== `TraceContextIgnoreSampledFalse`
+
+The agent uses the https://www.w3.org/TR/trace-context/[W3C Trace Context] specification and standards for distributed tracing. The traceparent header from the W3C Trace Context specification defines a https://www.w3.org/TR/trace-context/#sampled-flag[sampled flag] which is propagated from a caller service to a callee service, and determines whether a trace is sampled in the callee service. The default behavior of the agent honors the sampled flag value and behaves accordingly.
+
+There may be cases where you wish to change the default behavior of the agent with respect to the sampled flag. By setting the `TraceContextIgnoreSampled` configuration value to `true`, the agent ignores the sampled flag of the W3C Trace Context traceparent header when it has a value of `false` **and** and there is no agent specific tracestate header value present. In ignoring the sampled flag, the agent makes a sampling decision based on the <<config-transaction-sample-rate, sample rate>>. This can be useful when a caller service always sets a sampled flag value of `false`, that results in the agent never sampling any transactions.
+
+[IMPORTANT]
+--
+:dotnet5: .NET 5
+
+{dotnet5} applications set the W3C Trace Context for outgoing HTTP requests by default, but with the traceparent header sampled flag set to `false`. If a {dotnet5} application has an active agent, the agent ensures that the sampled flag is propagated with the agent's sampling decision. If a {dotnet5} application does not have an active agent however, and the application calls another service that does have an active agent, the propagation of a sampled flag value of `false` results in no sampled transactions in the callee service.
+
+If your application is called by an {dotnet5} application that does not have an active agent, setting the `TraceContextIgnoreSampledFalse` configuration value to `true` instructs the agent to start a new transaction and make a sampling decision based on the <<config-transaction-sample-rate, sample rate>>, when the traceparent header sampled flag has a value of `false` **and** there is no agent specific tracestate header value present.
+--
+
+[options="header"]
+|============
+| Environment variable name            | IConfiguration or Web.config key
+| `TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `false`                 | Boolean
+|============
+
+
 [[config-all-options-summary]]
 === All options summary
 
@@ -1080,6 +1110,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-service-version,`ServiceVersion`>> | No | Core
 | <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
+| <<config-trace-context-ignore-sampled-false,`TraceContextIgnoreSampledFalse`>> | No | Core
 | <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | Yes | HTTP, Performance
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
