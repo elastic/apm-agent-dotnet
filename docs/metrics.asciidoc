@@ -175,3 +175,70 @@ Platform: all.
 
 The approximate accumulated collection elapsed time in milliseconds.
 --
+
+[float]
+[[metrics-application]]
+=== Built-in application metrics
+
+To power the {apm-app-ref}/transactions.html[Time spent by span type] graph,
+the agent collects summarized metrics about the timings of spans and transactions,
+broken down by span type.
+
+*`transaction.duration`*::
++
+--
+type: simple timer
+
+This timer tracks the duration of transactions and allows for the creation of graphs displaying a weighted average.
+
+Fields:
+
+* `sum.us`: The sum of all transaction durations in microseconds since the last report (the delta)
+* `count`: The count of all transactions since the last report (the delta)
+
+You can filter and group by these dimensions:
+
+* `transaction.name`: The name of the transaction
+* `transaction.type`: The type of the transaction, for example `request`
+
+--
+
+
+*`transaction.breakdown.count`*::
++
+--
+type: long
+
+format: count (delta)
+
+The number of transactions for which breakdown metrics (`span.self_time`) have been created.
+As the Java agent tracks the breakdown for both sampled and non-sampled transactions,
+this metric is equivalent to `transaction.duration.count`
+
+You can filter and group by these dimensions:
+
+* `transaction.name`: The name of the transaction
+* `transaction.type`: The type of the transaction, for example `request`
+
+--
+
+*`span.self_time`*::
++
+--
+type: simple timer
+
+This timer tracks the span self-times and is the basis of the transaction breakdown visualization.
+
+Fields:
+
+* `sum.us`: The sum of all span self-times in microseconds since the last report (the delta)
+* `count`: The count of all span self-times since the last report (the delta)
+
+You can filter and group by these dimensions:
+
+* `transaction.name`: The name of the transaction
+* `transaction.type`: The type of the transaction, for example `request`
+* `span.type`: The type of the span, for example `app`, `template` or `db`
+* `span.subtype`: The sub-type of the span, for example `mysql` (optional)
+
+--

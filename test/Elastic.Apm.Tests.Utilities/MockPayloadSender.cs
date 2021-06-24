@@ -20,7 +20,10 @@ namespace Elastic.Apm.Tests.Utilities
 	{
 		private readonly List<IError> _errors = new List<IError>();
 		private readonly List<Func<IError, IError>> _errorFilters = new List<Func<IError, IError>>();
-		private readonly object _lock = new object();
+		private readonly object _spanLock = new object();
+		private readonly object _transactionLock = new object();
+		private readonly object _metricsLock = new object();
+		private readonly object _errorLock = new object();
 		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
 		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
 		private readonly List<ISpan> _spans = new List<ISpan>();
@@ -29,13 +32,7 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public MockPayloadSender(IApmLogger logger = null)
 		{
-			_waitHandles = new[]
-			{
-				new AutoResetEvent(false),
-				new AutoResetEvent(false),
-				new AutoResetEvent(false),
-				new AutoResetEvent(false)
-			};
+			_waitHandles = new[] { new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false) };
 
 			_transactionWaitHandle = _waitHandles[0];
 			_spanWaitHandle = _waitHandles[1];
@@ -69,19 +66,29 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			if (count != null)
 			{
+				int transactionCount;
 				var signalled = true;
 				if (timeout is null)
 				{
-					while (_transactions.Count < count && signalled)
+					lock (_transactionLock) transactionCount = _transactions.Count;
+					while (transactionCount < count && signalled)
+					{
 						signalled = _transactionWaitHandle.WaitOne(DefaultTimeout);
+						lock (_transactionLock) transactionCount = _transactions.Count;
+					}
 				}
 				else
 				{
 					var stopWatch = Stopwatch.StartNew();
-					while (_transactions.Count < count && signalled)
+
+					lock (_transactionLock)
+						transactionCount = _transactions.Count;
+
+					while (transactionCount < count && signalled)
 					{
 						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
 						signalled = _transactionWaitHandle.WaitOne(elapsedMilliseconds);
+						lock (_transactionLock) transactionCount = _transactions.Count;
 					}
 				}
 
@@ -100,19 +107,27 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			if (count != null)
 			{
+				int spanCount;
 				var signalled = true;
 				if (timeout is null)
 				{
-					while (_spans.Count < count && signalled)
+					lock (_spanLock) spanCount = _spans.Count;
+					while (spanCount < count && signalled)
+					{
 						signalled = _spanWaitHandle.WaitOne(DefaultTimeout);
+						lock (_spanLock) spanCount = _spans.Count;
+					}
 				}
 				else
 				{
 					var stopWatch = Stopwatch.StartNew();
-					while (_spans.Count < count && signalled)
+
+					lock (_spanLock) spanCount = _spans.Count;
+					while (spanCount < count && signalled)
 					{
 						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
 						signalled = _spanWaitHandle.WaitOne(elapsedMilliseconds);
+						lock (_spanLock) spanCount = _spans.Count;
 					}
 				}
 
@@ -152,44 +167,74 @@ namespace Elastic.Apm.Tests.Utilities
 		/// </summary>
 		public void SignalEndSpans() => _spanWaitHandle.Set();
 
-		public IReadOnlyList<IError> Errors => CreateImmutableSnapshot<IError>(_errors);
+		public IReadOnlyList<IError> Errors
+		{
+			get
+			{
+				lock (_errorLock) return CreateImmutableSnapshot<IError>(_errors);
+			}
+		}
 
-		public Error FirstError => _errors.FirstOrDefault() as Error;
-		public MetricSet FirstMetric => _metrics.FirstOrDefault() as MetricSet;
+		public Error FirstError => Errors.FirstOrDefault() as Error;
+		public MetricSet FirstMetric => Metrics.FirstOrDefault() as MetricSet;
 
 		/// <summary>
 		/// The 1. Span on the 1. Transaction
 		/// </summary>
-		public Span FirstSpan => _spans.FirstOrDefault() as Span;
+		public Span FirstSpan => Spans.FirstOrDefault() as Span;
 
 		public Transaction FirstTransaction =>
 			Transactions.FirstOrDefault() as Transaction;
 
-		public IReadOnlyList<IMetricSet> Metrics => CreateImmutableSnapshot<IMetricSet>(_metrics);
+		public IReadOnlyList<IMetricSet> Metrics
+		{
+			get
+			{
+				lock (_metricsLock) return CreateImmutableSnapshot<IMetricSet>(_metrics);
+			}
+		}
 
-		public IReadOnlyList<ISpan> Spans => CreateImmutableSnapshot<ISpan>(_spans);
+		public IReadOnlyList<ISpan> Spans
+		{
+			get
+			{
+				lock (_spanLock) return CreateImmutableSnapshot<ISpan>(_spans);
+			}
+		}
 
-		public IReadOnlyList<ITransaction> Transactions => CreateImmutableSnapshot<ITransaction>(_transactions);
+		public IReadOnlyList<ITransaction> Transactions
+		{
+			get
+			{
+				lock (_transactionLock) return CreateImmutableSnapshot<ITransaction>(_transactions);
+			}
+		}
 
 		public Span[] SpansOnFirstTransaction =>
-			_spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
+			Spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
 
 		public void QueueError(IError error)
 		{
-			_errors.Add(error);
-			_errorWaitHandle.Set();
+			lock (_errorLock)
+			{
+				_errors.Add(error);
+				_errorWaitHandle.Set();
+			}
 		}
 
 		public virtual void QueueTransaction(ITransaction transaction)
 		{
-			transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
-			_transactions.Add(transaction);
-			_transactionWaitHandle.Set();
+			lock (_transactionLock)
+			{
+				transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
+				_transactions.Add(transaction);
+				_transactionWaitHandle.Set();
+			}
 		}
 
 		public void QueueSpan(ISpan span)
 		{
-			lock (_lock)
+			lock (_spanLock)
 			{
 				span = _spanFilters.Aggregate(span, (current, filter) => filter(current));
 				_spans.Add(span);
@@ -199,16 +244,19 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public void QueueMetrics(IMetricSet metricSet)
 		{
-			_metrics.Add(metricSet);
-			_metricSetWaitHandle.Set();
+			lock (_metricsLock)
+			{
+				_metrics.Add(metricSet);
+				_metricSetWaitHandle.Set();
+			}
 		}
 
 		public void Clear()
 		{
-			_spans.Clear();
-			_errors.Clear();
-			_transactions.Clear();
-			_metrics.Clear();
+			lock (_spanLock) _spans.Clear();
+			lock (_errorLock) _errors.Clear();
+			lock (_transactionLock) _transactions.Clear();
+			lock (_metricsLock) _metrics.Clear();
 		}
 
 		private static IReadOnlyList<T> CreateImmutableSnapshot<T>(IEnumerable<T> source) => new List<T>(source);

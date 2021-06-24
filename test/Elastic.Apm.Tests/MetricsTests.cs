@@ -44,10 +44,16 @@ namespace Elastic.Apm.Tests
 			get
 			{
 				yield return new object[] { null };
-				yield return new object[] { new List<MetricSample>() };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NaN) } };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NegativeInfinity) } };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.PositiveInfinity) } };
+				yield return new object[] { new List<MetricSet> { new(DateTime.UtcNow.Ticks, new List<MetricSample>()) } };
+				yield return new object[] { new List<MetricSet> { new(DateTime.UtcNow.Ticks, new List<MetricSample> { new("key", double.NaN) }) } };
+				yield return new object[]
+				{
+					new List<MetricSet> { new(DateTime.UtcNow.Ticks, new List<MetricSample> { new("key", double.NegativeInfinity) }) }
+				};
+				yield return new object[]
+				{
+					new List<MetricSet> { new(DateTime.UtcNow.Ticks, new List<MetricSample> { new("key", double.PositiveInfinity) }) }
+				};
 			}
 		}
 
@@ -70,10 +76,10 @@ namespace Elastic.Apm.Tests
 			using var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = systemTotalCpuProvider.GetSamples();
-			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
+			var metricSamples = retVal as MetricSet[] ?? retVal.ToArray();
 
-			metricSamples.First().KeyValue.Value.Should().BeGreaterOrEqualTo(0);
-			metricSamples.First().KeyValue.Value.Should().BeLessOrEqualTo(1);
+			metricSamples.First().Samples.First().KeyValue.Value.Should().BeGreaterOrEqualTo(0);
+			metricSamples.First().Samples.First().KeyValue.Value.Should().BeLessOrEqualTo(1);
 		}
 
 		[Fact]
@@ -82,18 +88,18 @@ namespace Elastic.Apm.Tests
 			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = processTotalCpuProvider.GetSamples();
-			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
+			retVal.First().Samples.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
 
 		[Fact]
 		public void GetWorkingSetAndVirtualMemory()
 		{
-			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider(true, true);
+			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider(new List<WildcardMatcher>());
 			var retVal = processWorkingSetAndVirtualMemoryProvider.GetSamples();
 
-			var enumerable = retVal as MetricSample[] ?? retVal.ToArray();
+			var enumerable = retVal as MetricSet[] ?? retVal.ToArray();
 			enumerable.Should().NotBeEmpty();
-			enumerable.First().KeyValue.Value.Should().BeGreaterThan(0);
+			enumerable.First().Samples.First().KeyValue.Value.Should().BeGreaterThan(0);
 		}
 
 		[Fact]
@@ -101,7 +107,8 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(disableMetrics: "*"), testLogger)))
+			using (var mc = new MetricsCollector(testLogger, mockPayloadSender,
+				new ConfigStore(new MockConfigSnapshot(disableMetrics: "*"), testLogger)))
 			{
 				mc.MetricsProviders.Clear();
 				var providerWithException = new MetricsProviderWithException();
@@ -214,7 +221,7 @@ namespace Elastic.Apm.Tests
 
 		[Theory]
 		[MemberData(nameof(DisableProviderTestData))]
-		public void CollectAllMetrics_ShouldDisableProvider_WhenSamplesAreInvalid(List<MetricSample> samples)
+		internal void CollectAllMetrics_ShouldDisableProvider_WhenSamplesAreInvalid(List<MetricSet> samples)
 		{
 			const int iterations = MetricsCollector.MaxTryWithoutSuccess * 2;
 
@@ -262,7 +269,11 @@ namespace Elastic.Apm.Tests
 			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
 
 			metricsProviderMock.Setup(x => x.GetSamples())
-				.Returns(() => new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) });
+				.Returns(() => new List<MetricSet>
+				{
+					new(DateTime.UtcNow.Ticks,
+						new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) })
+				});
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
 
 			metricsCollector.MetricsProviders.Clear();
@@ -283,7 +294,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger(LogLevel.Trace);
 			string traceEventSessionName;
-			using (var gcMetricsProvider = new GcMetricsProvider(logger))
+			using (var gcMetricsProvider = new GcMetricsProvider(logger, new List<WildcardMatcher>()))
 			{
 				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
@@ -304,7 +315,7 @@ namespace Elastic.Apm.Tests
 					{
 						var array = new int[10000000];
 						// In order to make sure the line above is not optimized away, let's use the array:
-						Console.WriteLine($"GC test, int[] allocated with length: {array.Length}");
+						_output.WriteLine($"GC test, int[] allocated with length: {array.Length}");
 					}
 
 					GC.Collect(2, GCCollectionMode.Forced, true, true);
@@ -315,7 +326,7 @@ namespace Elastic.Apm.Tests
 					{
 						var array = new int[10000000];
 						// In order to make sure the line above is not optimized away, let's use the array:
-						Console.WriteLine($"GC test, int[] allocated with length: {array.Length}");
+						_output.WriteLine($"GC test, int[] allocated with length: {array.Length}");
 					}
 
 					GC.Collect(2, GCCollectionMode.Forced, true, true);
@@ -325,11 +336,11 @@ namespace Elastic.Apm.Tests
 					var samples = gcMetricsProvider.GetSamples()?.ToArray();
 
 					containsValue = samples != null && samples.Any();
-					hasGenSize = samples != null && samples
+					hasGenSize = samples != null && samples.First().Samples
 						.Any(n => (n.KeyValue.Key.Contains("gen0size") || n.KeyValue.Key.Contains("gen1size")
-						|| n.KeyValue.Key.Contains("gen2size") || n.KeyValue.Key.Contains("gen3size"))
-						&& n.KeyValue.Value > 0);
-					hasGcTime = samples != null && samples
+								|| n.KeyValue.Key.Contains("gen2size") || n.KeyValue.Key.Contains("gen3size"))
+							&& n.KeyValue.Value > 0);
+					hasGcTime = samples != null && samples.First().Samples
 						.Any(n => n.KeyValue.Key.Contains("clr.gc.time") && n.KeyValue.Value > 0);
 
 					if (containsValue && hasGenSize && hasGcTime)
@@ -396,18 +407,19 @@ namespace Elastic.Apm.Tests
 
 			public int NumberOfGetValueCalls { get; private set; }
 
-			public IEnumerable<MetricSample> GetSamples()
+			IEnumerable<MetricSet> IMetricsProvider.GetSamples()
 			{
 				NumberOfGetValueCalls++;
 				throw new Exception(ExceptionMessage);
 			}
+
+			public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => WildcardMatcher.IsAnyMatch(disabledMetrics, BreakdownMetricsProvider.SpanSelfTime);
 		}
 
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
-			{ }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
 		}
 	}
 }
