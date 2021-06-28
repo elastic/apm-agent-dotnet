@@ -23,6 +23,18 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+
+[[release-notes-1.11.0]]
+==== 1.11.0
+
+[float]
+===== Features
+- {pull}1302[#1302] Prefer W3C traceparent over elastic-apm-traceparent
+- {pull}1310[#1310] Add TraceContextIgnoreSampledFalse config setting
+- {pull}1342[#1342] CosmosDb support (issue: {issue}1154[#1154])
+- {pull}1271[#1271] Support "Time spent by span type" (aka Breakdown metrics) (issue: {issue}227[#227])
+- {pull}1331[#1331] Create transactions for Azure Service Bus Processors (issue: {issue}1321[#1321])
+
 [[release-notes-1.10.0]]
 ==== 1.10.0
 

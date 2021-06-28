@@ -21,6 +21,7 @@ declare -a projectsToPublish=(
 "Elastic.Apm.StackExchange.Redis"
 "Elastic.Apm.Azure.ServiceBus"
 "Elastic.Apm.Azure.Storage"
+"Elastic.Apm.Azure.CosmosDb"
 "Elastic.Apm.MongoDb"
 )
 
