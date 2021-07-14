@@ -1,3 +1,11 @@
+use com::{
+    interfaces::iunknown::IUnknown,
+    sys::{FAILED, GUID, HRESULT, S_OK},
+    Interface,
+};
+use num_traits::FromPrimitive;
+use rust_embed::RustEmbed;
+use simple_logger::SimpleLogger;
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -11,99 +19,100 @@ use std::{
     },
 };
 
-use com::{
-    interfaces::iunknown::IUnknown,
-    sys::{FAILED, GUID, HRESULT},
-    Interface,
-};
-use rust_embed::RustEmbed;
-use simple_logger::SimpleLogger;
-
 use crate::{
     cli::{
-        compress_token, FatMethodHeader, Instruction, Method, MethodHeader, Operand,
-        TinyMethodHeader,
+        compress_token, uncompress_token, FatMethodHeader, Instruction, Method, MethodHeader,
+        Operand, Operand::InlineMethod, TinyMethodHeader, CALL, CALLVIRT, CONSTRAINED, NOP,
     },
     ffi::{COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER, *},
     interfaces::{
-        icor_profiler_assembly_reference_provider::ICorProfilerAssemblyReferenceProvider,
-        icor_profiler_callback::{
-            ICorProfilerCallback, ICorProfilerCallback2, ICorProfilerCallback3,
-            ICorProfilerCallback4, ICorProfilerCallback5, ICorProfilerCallback6,
-            ICorProfilerCallback7, ICorProfilerCallback8, ICorProfilerCallback9,
-        },
-        icor_profiler_function_control::ICorProfilerFunctionControl,
-        icor_profiler_info::{
-            ICorProfilerInfo, ICorProfilerInfo2, ICorProfilerInfo3, ICorProfilerInfo4,
-            ICorProfilerInfo5, ICorProfilerInfo7, IID_ICOR_PROFILER_INFO, IID_ICOR_PROFILER_INFO4,
-        },
-        imetadata_assembly_emit::IMetaDataAssemblyEmit,
-        imetadata_assembly_import::IMetaDataAssemblyImport,
-        imetadata_emit::{IMetaDataEmit, IMetaDataEmit2},
-        imetadata_import::{IMetaDataImport, IMetaDataImport2},
+        ICorProfilerAssemblyReferenceProvider, ICorProfilerCallback, ICorProfilerCallback2,
+        ICorProfilerCallback3, ICorProfilerCallback4, ICorProfilerCallback5, ICorProfilerCallback6,
+        ICorProfilerCallback7, ICorProfilerCallback8, ICorProfilerCallback9,
+        ICorProfilerFunctionControl, ICorProfilerInfo, ICorProfilerInfo2, ICorProfilerInfo3,
+        ICorProfilerInfo4, ICorProfilerInfo5, ICorProfilerInfo7, IMetaDataAssemblyEmit,
+        IMetaDataAssemblyImport, IMetaDataEmit, IMetaDataEmit2, IMetaDataImport, IMetaDataImport2,
+        IID_ICOR_PROFILER_INFO, IID_ICOR_PROFILER_INFO4,
     },
     profiler::{
         env,
+        helpers::{
+            create_assembly_ref_to_mscorlib, get_il_codes, return_type_is_value_type_or_generic,
+        },
+        managed::{MANAGED_PROFILER_ASSEMBLY, MANAGED_PROFILER_ASSEMBLY_LOADER},
+        process,
+        sig::parse_type,
+        startup_hook,
         types::{
-            Integration, IntegrationMethod, MethodReplacement, ModuleMetadata,
-            TargetMethodReference,
+            Integration, IntegrationMethod, MetadataBuilder, MethodReplacement, ModuleMetadata,
+            TargetMethodReference, WrapperMethodReference,
         },
     },
-    types::{AssemblyMetaData, HashAlgorithmType, ModuleInfo, RuntimeInfo, Version},
+    types::{
+        AssemblyMetaData, HashAlgorithmType, ModuleInfo, MyFunctionInfo, MyTypeInfo, RuntimeInfo,
+        Version, WrapperMethodRef,
+    },
 };
+use log::Level;
+use once_cell::sync::Lazy;
+use std::{
+    ffi::CStr,
+    mem::{transmute, transmute_copy},
+    process::id,
+};
+use widestring::{U16CStr, U16CString, WideString};
 
-const MANAGED_PROFILER_ASSEMBLY_LOADER: &'static str = "Elastic.Apm.Profiler.Managed.Loader";
-const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
+const SKIP_ASSEMBLY_PREFIXES: [&'static str; 22] = [
+    "Elastic.Apm",
+    "MessagePack",
+    "Microsoft.AI",
+    "Microsoft.ApplicationInsights",
+    "Microsoft.Build",
+    "Microsoft.CSharp",
+    "Microsoft.Extensions",
+    "Microsoft.Web.Compilation.Snapshots",
+    "Sigil",
+    "System.Core",
+    "System.Console",
+    "System.Collections",
+    "System.ComponentModel",
+    "System.Diagnostics",
+    "System.Drawing",
+    "System.EnterpriseServices",
+    "System.IO",
+    "System.Runtime",
+    "System.Text",
+    "System.Threading",
+    "System.Xml",
+    "Newtonsoft",
+];
+const SKIP_ASSEMBLIES: [&'static str; 7] = [
+    "mscorlib",
+    "netstandard",
+    "System.Configuration",
+    "Microsoft.AspNetCore.Razor.Language",
+    "Microsoft.AspNetCore.Mvc.RazorPages",
+    "Anonymously Hosted DynamicMethods Assembly",
+    "ISymWrapper",
+];
 
-// TODO: Look at moving static refs that can be moved onto Profiler as fields.
-lazy_static! {
-    static ref LOCK: Mutex<i32> = Mutex::new(0);
-    static ref FIRST_JIT_COMPILATION_APP_DOMAINS: Mutex<Vec<AppDomainID>> = Mutex::new(Vec::new());
-    static ref MANAGED_PROFILER_LOADED_APP_DOMAINS: Mutex<Vec<AppDomainID>> =
-        Mutex::new(Vec::new());
-    static ref SKIP_ASSEMBLY_PREFIXES: Vec<&'static str> = vec![
-        "Elastic.Apm",
-        "MessagePack",
-        "Microsoft.AI",
-        "Microsoft.ApplicationInsights",
-        "Microsoft.Build",
-        "Microsoft.CSharp",
-        "Microsoft.Extensions",
-        "Microsoft.Web.Compilation.Snapshots",
-        "Sigil",
-        "System.Core",
-        "System.Console",
-        "System.Collections",
-        "System.ComponentModel",
-        "System.Diagnostics",
-        "System.Drawing",
-        "System.EnterpriseServices",
-        "System.IO",
-        "System.Runtime",
-        "System.Text",
-        "System.Threading",
-        "System.Xml",
-        "Newtonsoft",
-    ];
-    static ref SKIP_ASSEMBLIES: Vec<&'static str> = vec![
-        "mscorlib",
-        "netstandard",
-        "System.Configuration",
-        "Microsoft.AspNetCore.Razor.Language",
-        "Microsoft.AspNetCore.Mvc.RazorPages",
-        "Anonymously Hosted DynamicMethods Assembly",
-        "ISymWrapper",
-    ];
-    static ref PROFILER_VERSION: Version = Version::new(1, 9, 0, 0);
-    static ref INTEGRATION_METHODS: Mutex<Vec<IntegrationMethod>> = Mutex::new(Vec::new());
-}
+/// The profiler version. Must match the managed assembly version
+const PROFILER_VERSION: Version = Version::new(1, 9, 0, 0);
 
+static LOCK: Lazy<Mutex<i32>> = Lazy::new(|| Mutex::new(0));
+static FIRST_JIT_COMPILATION_APP_DOMAINS: Lazy<Mutex<Vec<AppDomainID>>> =
+    Lazy::new(|| Mutex::new(Vec::new()));
+static MANAGED_PROFILER_LOADED_APP_DOMAINS: Lazy<Mutex<Vec<AppDomainID>>> =
+    Lazy::new(|| Mutex::new(Vec::new()));
+static INTEGRATION_METHODS: Lazy<Mutex<Vec<IntegrationMethod>>> =
+    Lazy::new(|| Mutex::new(Vec::new()));
 static COR_LIB_MODULE_LOADED: AtomicBool = AtomicBool::new(false);
 static COR_APP_DOMAIN_ID: AtomicUsize = AtomicUsize::new(0);
 static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
-static CALLTARGET_ENABLED: AtomicBool = AtomicBool::new(true);
 
+/// Indicates whether the profiler is attached
 pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
+/// Indicates whether the CLR thr profiler is running in is a Desktop CLR
 pub(crate) static IS_DESKTOP_CLR: AtomicBool = AtomicBool::new(false);
 
 class! {
@@ -126,7 +135,7 @@ class! {
         ) -> HRESULT {
             match self.initialize(pICorProfilerInfoUnk) {
                 Ok(_) => S_OK,
-                Err(_) => S_OK
+                Err(hr) => hr
             }
         }
         pub fn Shutdown(&self) -> HRESULT {
@@ -407,8 +416,13 @@ class! {
     impl ICorProfilerCallback6 for Profiler {
         pub fn GetAssemblyReferences(&self,
             wszAssemblyPath: *const WCHAR,
-            pAsmRefProvider: *const ICorProfilerAssemblyReferenceProvider,
-        ) -> HRESULT { S_OK }
+            pAsmRefProvider: ICorProfilerAssemblyReferenceProvider,
+        ) -> HRESULT {
+            match self.get_assembly_references(wszAssemblyPath, pAsmRefProvider) {
+                Ok(_) => S_OK,
+                Err(_) => S_OK,
+            }
+        }
     }
 
     impl ICorProfilerCallback7 for Profiler {
@@ -451,9 +465,7 @@ impl Profiler {
 
         // get the integrations from file
         let integrations = env::load_integrations()?;
-        let calltarget_enabled = env::read_calltarget_env_var();
-        CALLTARGET_ENABLED.store(calltarget_enabled, Ordering::SeqCst);
-
+        let calltarget_enabled = *env::ELASTIC_APM_PROFILER_CALLTARGET_ENABLED;
         if calltarget_enabled {
             // TODO: initialize rejit handler
         }
@@ -513,16 +525,22 @@ impl Profiler {
             log::info!("Initialize: CallTarget instrumentation is disabled");
         }
 
-        // TODO: enable/disable inlining and optimizations
+        // TODO: enable rejit
 
-        log::trace!("Initialize: set event mask to {:?}", &event_mask);
-        profiler_info.set_event_mask(event_mask)?;
+        // TODO: enable/disable inlining and optimizations
 
         // if the runtime also supports ICorProfilerInfo5, set eventmask2
         if let Some(profiler_info5) = unknown.query_interface::<ICorProfilerInfo5>() {
             let event_mask2 = COR_PRF_HIGH_MONITOR::COR_PRF_HIGH_ADD_ASSEMBLY_REFERENCES;
-            log::trace!("Initialize: set event mask2 to {:?}", &event_mask2);
+            log::trace!(
+                "Initialize: set event mask2 to {:?}, {:?}",
+                &event_mask,
+                &event_mask2
+            );
             profiler_info5.set_event_mask2(event_mask, event_mask2)?;
+        } else {
+            log::trace!("Initialize: set event mask to {:?}", &event_mask);
+            profiler_info.set_event_mask(event_mask)?;
         }
 
         // get the details for the runtime
@@ -546,7 +564,7 @@ impl Profiler {
 
     fn shutdown(&self) -> Result<(), HRESULT> {
         log::trace!("Shutdown: started");
-        let _ = LOCK.lock().unwrap();
+        let _lock = LOCK.lock().unwrap();
 
         self.profiler_info.replace(None);
         IS_ATTACHED.store(false, Ordering::SeqCst);
@@ -592,7 +610,7 @@ impl Profiler {
             })?;
 
         let assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
-        let is_managed_profiler_assembly = &assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
+        let is_managed_profiler_assembly = assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
 
         log::debug!(
             "AssemblyLoadFinished: name={}, version={}",
@@ -601,12 +619,12 @@ impl Profiler {
         );
 
         if is_managed_profiler_assembly {
-            if &assembly_metadata.version == PROFILER_VERSION.deref() {
+            if assembly_metadata.version == PROFILER_VERSION {
                 log::info!(
                     "AssemblyLoadFinished: {} {} matched profiler version {}",
                     MANAGED_PROFILER_ASSEMBLY,
                     &assembly_metadata.version,
-                    PROFILER_VERSION.deref()
+                    PROFILER_VERSION
                 );
 
                 MANAGED_PROFILER_LOADED_APP_DOMAINS
@@ -636,7 +654,7 @@ impl Profiler {
                     "AssemblyLoadFinished: {} {} did not match profiler version {}",
                     MANAGED_PROFILER_ASSEMBLY,
                     &assembly_metadata.version,
-                    PROFILER_VERSION.deref()
+                    PROFILER_VERSION
                 );
             }
         }
@@ -760,10 +778,10 @@ impl Profiler {
                 }
             }
 
-            // TODO: Avoid cloning integration methods. Should be possible to make all filtered_integrations a collection of references
-            let is_call_target_enabled = CALLTARGET_ENABLED.load(Ordering::SeqCst);
+            let call_target_enabled = *env::ELASTIC_APM_PROFILER_CALLTARGET_ENABLED;
 
-            let mut filtered_integrations = if is_call_target_enabled {
+            // TODO: Avoid cloning integration methods. Should be possible to make all filtered_integrations a collection of references
+            let mut filtered_integrations = if call_target_enabled {
                 INTEGRATION_METHODS.lock().unwrap().to_vec()
             } else {
                 INTEGRATION_METHODS
@@ -772,12 +790,10 @@ impl Profiler {
                     .iter()
                     .filter(|m| {
                         if let Some(caller) = &m.method_replacement.caller {
-                            if caller.assembly.is_empty() || &caller.assembly == assembly_name {
-                                return true;
-                            }
+                            caller.assembly.is_empty() || &caller.assembly == assembly_name
+                        } else {
+                            true
                         }
-
-                        false
                     })
                     .cloned()
                     .collect()
@@ -789,15 +805,25 @@ impl Profiler {
                     module_id,
                     assembly_name
                 );
+                return Ok(());
             }
 
             // get the metadata interfaces for the module
             let profiler_borrow = self.profiler_info.borrow();
             let profiler_info = profiler_borrow.as_ref().unwrap();
-            let metadata_import = profiler_info.get_module_metadata::<IMetaDataImport2>(
-                module_id,
-                CorOpenFlags::ofRead | CorOpenFlags::ofWrite,
-            )?;
+            let metadata_import = profiler_info
+                .get_module_metadata::<IMetaDataImport2>(
+                    module_id,
+                    CorOpenFlags::ofRead | CorOpenFlags::ofWrite,
+                )
+                .map_err(|e| {
+                    log::warn!(
+                        "ModuleLoadFinished: unable to get IMetaDataEmit2 for module id {}",
+                        module_id
+                    );
+                    e
+                })?;
+
             let metadata_emit = metadata_import
                 .query_interface::<IMetaDataEmit2>()
                 .ok_or_else(|| {
@@ -828,7 +854,7 @@ impl Profiler {
             // System.Data or System.Data.Common
             if assembly_name != "Microsoft.AspNetCore.Hosting"
                 && assembly_name != "Dapper"
-                && !is_call_target_enabled
+                && !call_target_enabled
             {
                 fn meets_requirements(
                     assembly_metadata: &AssemblyMetaData,
@@ -837,13 +863,13 @@ impl Profiler {
                     match &method_replacement.target {
                         None => false,
                         Some(target) => {
-                            if &target.assembly != &assembly_metadata.name {
+                            if target.assembly != assembly_metadata.name {
                                 return false;
                             }
-                            if &target.minimum_version() > &assembly_metadata.version {
+                            if target.minimum_version() > assembly_metadata.version {
                                 return false;
                             }
-                            if &target.maximum_version() < &assembly_metadata.version {
+                            if target.maximum_version() < assembly_metadata.version {
                                 return false;
                             }
 
@@ -852,13 +878,21 @@ impl Profiler {
                     }
                 }
 
-                let assembly_metadata = assembly_import.get_assembly_metadata()?;
+                let assembly_metadata = assembly_import.get_assembly_metadata().map_err(|e| {
+                    log::warn!(
+                        "ModuleLoadFinished: unable to get assembly metadata for {}",
+                        assembly_name
+                    );
+                    e
+                })?;
+
                 let assembly_refs = assembly_import.enum_assembly_refs()?;
                 let assembly_ref_metadata: Result<Vec<AssemblyMetaData>, HRESULT> = assembly_refs
                     .into_iter()
                     .map(|r| assembly_import.get_referenced_assembly_metadata(r))
                     .collect();
                 if assembly_ref_metadata.is_err() {
+                    log::warn!("ModuleLoadFinished: unable to get referenced assembly metadata");
                     return Err(assembly_ref_metadata.err().unwrap());
                 }
 
@@ -880,7 +914,15 @@ impl Profiler {
                 }
             }
 
-            let module_version_id = metadata_import.get_module_version_id()?;
+            let module_version_id = metadata_import.get_module_version_id().map_err(|e| {
+               log::warn!("ModuleLoadFinished: unable to get module version id for {} {} app domain {} {}",
+                module_id,
+                assembly_name,
+                app_domain_id,
+                &module_info.assembly.app_domain_name);
+                e
+            })?;
+
             let module_metadata = ModuleMetadata::new(
                 metadata_import,
                 metadata_emit,
@@ -905,7 +947,7 @@ impl Profiler {
 
             log::trace!("ModuleLoadFinished: tracking {} module(s)", modules.len());
 
-            if is_call_target_enabled {
+            if call_target_enabled {
                 // TODO: request rejit of module
             }
         }
@@ -970,14 +1012,14 @@ impl Profiler {
             e
         })?;
 
-        let modules = self.modules.borrow();
-        let module_metadata = modules.get(&function_info.module_id);
+        let mut modules = self.modules.borrow_mut();
+        let module_metadata = modules.get_mut(&function_info.module_id);
         if module_metadata.is_none() {
             return Ok(());
         }
 
-        let module_metadata = module_metadata.unwrap();
-        let call_target_enabled = CALLTARGET_ENABLED.load(Ordering::SeqCst);
+        let mut module_metadata = module_metadata.unwrap();
+        let call_target_enabled = *env::ELASTIC_APM_PROFILER_CALLTARGET_ENABLED;
         let loader_injected_in_appdomain = {
             let app_domains = FIRST_JIT_COMPILATION_APP_DOMAINS.lock().unwrap();
             app_domains.contains(&module_metadata.app_domain_id)
@@ -990,12 +1032,6 @@ impl Profiler {
         let caller = module_metadata
             .import
             .get_function_info(function_info.token)?;
-        log::trace!(
-            "JITCompilationStarted: function_id={} token={} name={}()",
-            function_id,
-            &function_info.token,
-            &caller.full_name()
-        );
 
         let is_desktop_iis = self.is_desktop_iis.load(Ordering::SeqCst);
         let valid_startup_hook_callsite = if is_desktop_iis {
@@ -1007,12 +1043,9 @@ impl Profiler {
                 }
                 None => false,
             }
-        } else if &module_metadata.assembly_name == "System"
-            || &module_metadata.assembly_name == "System.Net.Http"
-        {
-            false
         } else {
-            true
+            !(&module_metadata.assembly_name == "System"
+                || &module_metadata.assembly_name == "System.Net.Http")
         };
 
         if valid_startup_hook_callsite && !loader_injected_in_appdomain {
@@ -1024,7 +1057,8 @@ impl Profiler {
                 && COR_APP_DOMAIN_ID.load(Ordering::SeqCst) == module_metadata.app_domain_id;
 
             log::info!(
-                "JITCompilationStarted: Startup hook registered in function_id={} token={} name={}() assembly_name={} app_domain_id={} domain_neutral={}",
+                "JITCompilationStarted: Startup hook registered in function_id={} token={} \
+                name={}() assembly_name={} app_domain_id={} domain_neutral={}",
                 function_id,
                 &function_info.token,
                 &caller.full_name(),
@@ -1038,7 +1072,8 @@ impl Profiler {
                 .unwrap()
                 .push(module_metadata.app_domain_id);
 
-            self.run_il_startup_hook(
+            startup_hook::run_il_startup_hook(
+                profiler_info,
                 &module_metadata,
                 function_info.module_id,
                 function_info.token,
@@ -1050,7 +1085,34 @@ impl Profiler {
         }
 
         if !call_target_enabled {
-            // TODO: process calls
+            if &module_metadata.assembly_name == "Microsoft.AspNetCore.Hosting" {
+                return Ok(());
+            }
+
+            let method_replacements = module_metadata.get_method_replacements_for_caller(&caller);
+            if method_replacements.is_empty() {
+                return Ok(());
+            }
+
+            process::process_insertion_calls(
+                profiler_info,
+                &mut module_metadata,
+                function_id,
+                function_info.module_id,
+                function_info.token,
+                &caller,
+                &method_replacements,
+            )?;
+
+            process::process_replacement_calls(
+                profiler_info,
+                &mut module_metadata,
+                function_id,
+                function_info.module_id,
+                function_info.token,
+                &caller,
+                &method_replacements,
+            )?;
         }
 
         Ok(())
@@ -1059,14 +1121,10 @@ impl Profiler {
     fn get_module_info(&self, module_id: ModuleID) -> Option<super::types::ModuleInfo> {
         let borrow = self.profiler_info.borrow();
         let profiler_info = borrow.as_ref().unwrap();
-        if let Some(module_info) = profiler_info.get_module_info_2(module_id).ok() {
-            if let Some(assembly_info) = profiler_info
-                .get_assembly_info(module_info.assembly_id)
-                .ok()
-            {
-                if let Some(app_domain_info) = profiler_info
-                    .get_app_domain_info(assembly_info.app_domain_id)
-                    .ok()
+        if let Ok(module_info) = profiler_info.get_module_info_2(module_id) {
+            if let Ok(assembly_info) = profiler_info.get_assembly_info(module_info.assembly_id) {
+                if let Ok(app_domain_info) =
+                    profiler_info.get_app_domain_info(assembly_info.app_domain_id)
                 {
                     return Some(super::types::ModuleInfo {
                         id: module_id,
@@ -1087,460 +1145,26 @@ impl Profiler {
         None
     }
 
-    fn run_il_startup_hook(
+    fn get_assembly_references(
         &self,
-        module_metadata: &ModuleMetadata,
-        module_id: ModuleID,
-        function_token: mdToken,
+        assembly_path: *const WCHAR,
+        assembly_reference_provider: ICorProfilerAssemblyReferenceProvider,
     ) -> Result<(), HRESULT> {
-        let startup_method_def =
-            self.generate_void_il_startup_method(module_id, module_metadata)?;
+        let path = {
+            let p = unsafe { U16CStr::from_ptr_str(assembly_path) };
+            p.to_string_lossy()
+        };
 
-        let profiler_borrow = self.profiler_info.borrow();
-        let profiler_info = profiler_borrow.as_ref().unwrap();
-
-        let il_body = profiler_info.get_il_function_body(module_id, function_token)?;
-        let mut method = Method::new(il_body.method_header, il_body.method_size).map_err(|e| {
-            log::warn!("run_il_startup_hook: error decoding il. {:?}", e);
-            E_FAIL
-        })?;
-
-        method
-            .insert_prelude(vec![Instruction::call(startup_method_def)])
-            .map_err(|e| {
-                log::warn!("run_il_startup_hook: error inserting prelude. {:?}", e);
-                E_FAIL
-            })?;
-
-        let method_bytes = method.into_bytes();
-        let allocator = profiler_info.get_il_function_body_allocator(module_id)?;
-        let allocated_bytes = allocator.alloc(method_bytes.len() as ULONG)?;
-        let address = unsafe { allocated_bytes.into_inner() };
-        unsafe {
-            std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len());
-        }
-        profiler_info
-            .set_il_function_body(module_id, function_token, address as *const _)
-            .map_err(|e| {
-                log::warn!("run_il_startup_hook: failed to set il for startup hook");
-                e
-            })?;
+        log::debug!("GetAssemblyReferences: called for {}", &path);
 
         Ok(())
     }
+}
 
-    fn generate_void_il_startup_method(
-        &self,
-        module_id: ModuleID,
-        module_metadata: &ModuleMetadata,
-    ) -> Result<mdMethodDef, HRESULT> {
-        let mscorlib_ref = self.create_assembly_ref_to_mscorlib(&module_metadata.assembly_emit)?;
-
-        log::trace!("generate_void_il_startup_method: created mscorlib ref");
-
-        let object_type_ref = module_metadata
-            .emit
-            .define_type_ref_by_name(mscorlib_ref, "System.Object")?;
-        let new_type_def = module_metadata.emit.define_type_def(
-            "__ElasticVoidMethodType__",
-            CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed,
-            object_type_ref,
-            None,
-        )?;
-        let initialize_signature = &[
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
-            0,
-            CorElementType::ELEMENT_TYPE_VOID as COR_SIGNATURE,
-        ];
-
-        let new_method = module_metadata.emit.define_method(
-            new_type_def,
-            "__ElasticVoidMethodCall__",
-            CorMethodAttr::mdStatic,
-            initialize_signature,
-            0,
-            CorMethodImpl::miIL,
-        )?;
-
-        let field_signature = &[
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-        ];
-
-        let is_assembly_loaded_field_def = module_metadata.emit.define_field(
-            new_type_def,
-            "_isAssemblyLoaded",
-            CorFieldAttr::fdStatic | CorFieldAttr::fdPrivate,
-            field_signature,
-            CorElementType::ELEMENT_TYPE_END,
-            None,
-            0,
-        )?;
-
-        let already_loaded_signature = &[
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
-            0,
-            CorElementType::ELEMENT_TYPE_BOOLEAN as COR_SIGNATURE,
-        ];
-
-        let already_loaded_method_token = module_metadata.emit.define_method(
-            new_type_def,
-            "IsAlreadyLoaded",
-            CorMethodAttr::mdStatic | CorMethodAttr::mdPrivate,
-            already_loaded_signature,
-            0,
-            CorMethodImpl::miIL,
-        )?;
-
-        let interlocked_type_ref = module_metadata
-            .emit
-            .define_type_ref_by_name(mscorlib_ref, "System.Threading.Interlocked")?;
-
-        // Create method signature for System.Threading.Interlocked::CompareExchange(int32&, int32, int32)
-        let interlocked_compare_exchange_signature = &[
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
-            3,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_BYREF as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-        ];
-
-        let interlocked_compare_member_ref = module_metadata.emit.define_member_ref(
-            interlocked_type_ref,
-            "CompareExchange",
-            interlocked_compare_exchange_signature,
-        )?;
-
-        // Write the instructions for the IsAlreadyLoaded method
-        let mut instructions = Vec::with_capacity(7);
-        instructions.push(Instruction::ldsflda(is_assembly_loaded_field_def));
-        instructions.push(Instruction::ldc_i4_1());
-        instructions.push(Instruction::ldc_i4_0());
-        instructions.push(Instruction::call(interlocked_compare_member_ref));
-        instructions.push(Instruction::ldc_i4_1());
-        instructions.push(Instruction::ceq());
-        instructions.push(Instruction::ret());
-
-        let method_bytes = Method::tiny(instructions)
-            .map_err(|e| {
-                log::warn!("failed to define IsAlreadyLoaded method");
-                E_FAIL
-            })?
-            .into_bytes();
-
-        let profiler_borrow = self.profiler_info.borrow();
-        let profiler_info = profiler_borrow.as_ref().unwrap();
-        let allocator = profiler_info.get_il_function_body_allocator(module_id)?;
-        let allocated_bytes = allocator.alloc(method_bytes.len() as ULONG)?;
-        let address = unsafe { allocated_bytes.into_inner() };
-        unsafe {
-            std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len());
-        }
-        log::trace!("generate_void_il_startup_method: write IsAlreadyLoaded body");
-        profiler_info
-            .set_il_function_body(module_id, already_loaded_method_token, address as *const _)
-            .map_err(|e| {
-                log::warn!("generate_void_il_startup_method: failed to set il for IsAlreadyLoaded");
-                e
-            })?;
-
-        let get_assembly_bytes_signature = &[
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
-            4,
-            CorElementType::ELEMENT_TYPE_VOID as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_BYREF as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_BYREF as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_BYREF as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_BYREF as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-        ];
-
-        let pinvoke_method_def = module_metadata.emit.define_method(
-            new_type_def,
-            "GetAssemblyAndSymbolsBytes",
-            CorMethodAttr::mdStatic | CorMethodAttr::mdPinvokeImpl | CorMethodAttr::mdHideBySig,
-            get_assembly_bytes_signature,
-            0,
-            CorMethodImpl::empty()).map_err(|e| {
-                log::warn!("generate_void_il_startup_method: failed to define method GetAssemblyAndSymbolsBytes");
-                e
-        })?;
-
-        module_metadata.emit.set_method_impl_flags(pinvoke_method_def, CorMethodImpl::miPreserveSig).map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to set method impl flags for GetAssemblyAndSymbolsBytes");
-            e
-        })?;
-
-        let native_profiler_file = {
-            if cfg!(target_os = "linux") {
-                let env_var = if cfg!(target_pointer_width = "64") {
-                    "CORECLR_PROFILER_PATH_64"
-                } else {
-                    "CORECLR_PROFILER_PATH_32"
-                };
-                match std::env::var(env_var) {
-                    Ok(v) => {
-                        log::debug!("env var {}: {}", env_var, &v);
-                        v
-                    }
-                    Err(_) => std::env::var("CORECLR_PROFILER_PATH").map_err(|e| {
-                        log::warn!(
-                            "problem getting env var CORECLR_PROFILER_PATH: {}",
-                            e.to_string()
-                        );
-                        E_FAIL
-                    })?,
-                }
-            } else {
-                "elastic_apm_profiler.dll".into()
-            }
-        };
-
-        let profiler_ref = module_metadata
-            .emit
-            .define_module_ref(&native_profiler_file)?;
-
-        module_metadata.emit.define_pinvoke_map(
-            pinvoke_method_def,
-            CorPinvokeMap::empty(),
-            "GetAssemblyAndSymbolsBytes",
-            profiler_ref).map_err(|e| {
-                log::warn!("generate_void_il_startup_method: failed to define pinvoke map for GetAssemblyAndSymbolsBytes");
-                e
-        })?;
-
-        let byte_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.Byte").map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.Byte");
-            e
-        })?;
-        let marshal_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.Runtime.InteropServices.Marshal").map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.Runtime.InteropServices.Marshal");
-            e
-        })?;
-
-        let marshal_copy_signature = &[
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
-            4,
-            CorElementType::ELEMENT_TYPE_VOID as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-        ];
-
-        let marshal_copy_member_ref = module_metadata
-            .emit
-            .define_member_ref(marshal_type_ref, "Copy", marshal_copy_signature)
-            .map_err(|e| {
-                log::warn!("generate_void_il_startup_method: failed to define member ref for Copy");
-                e
-            })?;
-
-        let system_reflection_assembly_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.Reflection.Assembly").map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.Reflection.Assembly");
-            e
-        })?;
-
-        let system_appdomain_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.AppDomain").map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.AppDomain");
-            e
-        })?;
-
-        let mut appdomain_get_current_domain_signature: Vec<COR_SIGNATURE> = vec![
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT as COR_SIGNATURE,
-            0,
-            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
-        ];
-        appdomain_get_current_domain_signature
-            .append(&mut compress_token(system_appdomain_type_ref).unwrap());
-
-        let appdomain_get_current_domain_member_ref = module_metadata.emit.define_member_ref(
-            system_appdomain_type_ref,
-            "get_CurrentDomain",
-            &appdomain_get_current_domain_signature).map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to define member ref get_CurrentDomain");
-            e
-        })?;
-
-        let mut appdomain_load_signature = vec![
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS as COR_SIGNATURE,
-            2,
-            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
-        ];
-        appdomain_load_signature
-            .append(&mut compress_token(system_reflection_assembly_type_ref).unwrap());
-        appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE);
-        appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE);
-        appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE);
-        appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE);
-
-        let appdomain_load_member_ref = module_metadata
-            .emit
-            .define_member_ref(system_appdomain_type_ref, "Load", &appdomain_load_signature)
-            .map_err(|e| {
-                log::warn!("generate_void_il_startup_method: failed to define member ref Load");
-                e
-            })?;
-
-        let assembly_create_instance_signature = &[
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS as COR_SIGNATURE,
-            1,
-            CorElementType::ELEMENT_TYPE_OBJECT as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_STRING as COR_SIGNATURE,
-        ];
-
-        let assembly_create_instance_member_ref = module_metadata
-            .emit
-            .define_member_ref(
-                system_reflection_assembly_type_ref,
-                "CreateInstance",
-                assembly_create_instance_signature,
-            )
-            .map_err(|e| {
-                log::warn!(
-                    "generate_void_il_startup_method: failed to define member ref CreateInstance"
-                );
-                e
-            })?;
-
-        let load_helper_token =  module_metadata.emit
-            .define_user_string("Elastic.Apm.Profiler.Managed.Loader.Startup").map_err(|e| {
-                log::warn!("generate_void_il_startup_method: failed to define user string Elastic.Apm.Profiler.Managed.Loader.Startup");
-                e
-            })?;
-
-        let mut locals_signature = vec![
-            CorCallingConvention::IMAGE_CEE_CS_CALLCONV_LOCAL_SIG as COR_SIGNATURE,
-            7,
-            CorElementType::ELEMENT_TYPE_I as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_I4 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE,
-            CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
-        ];
-        locals_signature.append(&mut compress_token(system_reflection_assembly_type_ref).unwrap());
-
-        let locals_signature_token = module_metadata
-            .emit
-            .get_token_from_sig(&locals_signature)?;
-
-        let mut instructions = Vec::with_capacity(34);
-
-        // Step 0) Check if the assembly was already loaded
-        instructions.push(Instruction::call(already_loaded_method_token));
-
-        // val is the offset of the instruction to go to when false
-        instructions.push(Instruction::brfalse_s(Instruction::ret().length() as i8));
-        instructions.push(Instruction::ret());
-
-        // Step 1) Call void GetAssemblyAndSymbolsBytes(out IntPtr assemblyPtr, out int assemblySize, out IntPtr symbolsPtr, out int symbolsSize)
-        instructions.push(Instruction::ldloca_s(0));
-        instructions.push(Instruction::ldloca_s(1));
-        instructions.push(Instruction::ldloca_s(2));
-        instructions.push(Instruction::ldloca_s(3));
-        instructions.push(Instruction::call(pinvoke_method_def));
-
-        // Step 2) Call void Marshal.Copy(IntPtr source, byte[] destination, int startIndex, int length) to populate the managed assembly bytes
-        instructions.push(Instruction::ldloc_1());
-        instructions.push(Instruction::newarr(byte_type_ref));
-        instructions.push(Instruction::stloc_s(4));
-        instructions.push(Instruction::ldloc_0());
-        instructions.push(Instruction::ldloc_s(4));
-        instructions.push(Instruction::ldc_i4_0());
-        instructions.push(Instruction::ldloc_1());
-        instructions.push(Instruction::call(marshal_copy_member_ref));
-
-        // Step 3) Call void Marshal.Copy(IntPtr source, byte[] destination, int startIndex, int length) to populate the symbols bytes
-        instructions.push(Instruction::ldloc_3());
-        instructions.push(Instruction::newarr(byte_type_ref));
-        instructions.push(Instruction::stloc_s(5));
-        instructions.push(Instruction::ldloc_2());
-        instructions.push(Instruction::ldloc_s(5));
-        instructions.push(Instruction::ldc_i4_0());
-        instructions.push(Instruction::ldloc_3());
-        instructions.push(Instruction::call(marshal_copy_member_ref));
-
-        // Step 4) Call System.Reflection.Assembly System.AppDomain.CurrentDomain.Load(byte[], byte[]))
-        instructions.push(Instruction::call(appdomain_get_current_domain_member_ref));
-        instructions.push(Instruction::ldloc_s(4));
-        instructions.push(Instruction::ldloc_s(5));
-        instructions.push(Instruction::callvirt(appdomain_load_member_ref));
-        instructions.push(Instruction::stloc_s(6));
-
-        // Step 5) Call instance method Assembly.CreateInstance("Elastic.Apm.Profiler.Managed.Loader.Startup")
-        instructions.push(Instruction::ldloc_s(6));
-        instructions.push(Instruction::ldstr(load_helper_token));
-        instructions.push(Instruction::callvirt(assembly_create_instance_member_ref));
-        instructions.push(Instruction::pop());
-        instructions.push(Instruction::ret());
-
-        let method = Method {
-            method_header: MethodHeader::Fat(FatMethodHeader {
-                code_size: instructions.iter().map(|i| i.length() as u32).sum(),
-                local_var_sig_tok: locals_signature_token,
-                more_sects: false,
-                init_locals: false,
-                max_stack: instructions.iter().map(|i| i.opcode.length as u16).sum(),
-            }),
-            instructions,
-            sections: vec![],
-        };
-
-        let method_bytes = method.into_bytes();
-
-        //TODO: does code_size need to be DWORD aligned when allocating memory?
-        let allocated_bytes = allocator.alloc(method_bytes.len() as ULONG).map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to allocate memory for __ElasticVoidMethodCall__");
-            e
-        })?;
-
-        let address = unsafe { allocated_bytes.into_inner() };
-        unsafe {
-            std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len());
-        }
-        log::trace!("generate_void_il_startup_method: write __ElasticVoidMethodCall__ body");
-        profiler_info.set_il_function_body(module_id, new_method, address as *const _).map_err(|e| {
-            log::warn!("generate_void_il_startup_method: failed to set il for __ElasticVoidMethodCall__");
-            e
-        })?;
-
-        Ok(new_method)
-    }
-
-    fn create_assembly_ref_to_mscorlib(
-        &self,
-        assembly_emit: &IMetaDataAssemblyEmit,
-    ) -> Result<mdAssemblyRef, HRESULT> {
-        let assembly_metadata = ASSEMBLYMETADATA {
-            usMajorVersion: 4,
-            usMinorVersion: 0,
-            usBuildNumber: 0,
-            usRevisionNumber: 0,
-            szLocale: std::ptr::null_mut(),
-            cbLocale: 0,
-            rProcessor: std::ptr::null_mut(),
-            ulProcessor: 0,
-            rOS: std::ptr::null_mut(),
-            ulOS: 0,
-        };
-
-        let public_key: &[u8; 8] = &[0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89];
-        assembly_emit.define_assembly_ref(
-            public_key,
-            "mscorlib",
-            assembly_metadata,
-            &[],
-            CorAssemblyFlags::afPA_None,
-        )
-    }
+pub fn profiler_assembly_loaded_in_app_domain(app_domain_id: AppDomainID) -> bool {
+    MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL.load(Ordering::SeqCst)
+        || MANAGED_PROFILER_LOADED_APP_DOMAINS
+            .lock()
+            .unwrap()
+            .contains(&app_domain_id)
 }

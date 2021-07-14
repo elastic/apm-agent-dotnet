@@ -1,7 +1,7 @@
 use crate::{cli::uncompress_token, ffi::*, profiler::types::MethodSignature, types::*};
 use com::{
     interfaces::iunknown::IUnknown,
-    sys::{FAILED, GUID, HRESULT},
+    sys::{FAILED, GUID, HRESULT, S_FALSE, S_OK},
 };
 use core::{ptr, slice};
 use std::{ffi::c_void, mem::MaybeUninit};
@@ -170,11 +170,11 @@ interfaces! {
             pmb: *mut mdFieldDef,
         ) -> HRESULT;
         pub unsafe fn FindMemberRef(&self,
-            td: mdTypeDef,
+            td: mdTypeRef,
             szName: LPCWSTR,
             pvSigBlob: PCCOR_SIGNATURE,
             cbSigBlob: ULONG,
-            pmb: *mut mdMemberRef,
+            pmr: *mut mdMemberRef,
         ) -> HRESULT;
         pub unsafe fn GetMethodProps(&self,
             mb: mdMethodDef,
@@ -487,6 +487,29 @@ interfaces! {
 }
 
 impl IMetaDataImport {
+    pub fn find_member_ref(
+        &self,
+        type_ref: mdTypeRef,
+        name: &str,
+        signature: &[u8],
+    ) -> Result<mdMemberRef, HRESULT> {
+        let wide_name = U16CString::from_str(name).unwrap();
+        let mut member_ref = mdMemberRefNil;
+        let hr = unsafe {
+            self.FindMemberRef(
+                type_ref,
+                wide_name.as_ptr(),
+                signature.as_ptr(),
+                signature.len() as ULONG,
+                &mut member_ref,
+            )
+        };
+        match hr {
+            S_OK => Ok(member_ref),
+            _ => Err(hr),
+        }
+    }
+
     /// Gets a pointer to the TypeDef metadata token for the Type with the specified name.
     pub fn find_type_def_by_name(
         &self,
@@ -494,18 +517,27 @@ impl IMetaDataImport {
         enclosing_class: Option<mdToken>,
     ) -> Result<mdTypeDef, HRESULT> {
         let wide_name = U16CString::from_str(name).unwrap();
-        let mut type_def = MaybeUninit::uninit();
+        let mut type_def = mdTypeDefNil;
         let hr = unsafe {
             match enclosing_class {
-                Some(t) => self.FindTypeDefByName(wide_name.as_ptr(), t, type_def.as_mut_ptr()),
-                None => self.FindTypeDefByName(wide_name.as_ptr(), 0, type_def.as_mut_ptr()),
+                Some(t) => self.FindTypeDefByName(wide_name.as_ptr(), t, &mut type_def),
+                None => self.FindTypeDefByName(wide_name.as_ptr(), 0, &mut type_def),
             }
         };
         match hr {
-            S_OK => {
-                let type_def = unsafe { type_def.assume_init() };
-                Ok(type_def)
-            }
+            S_OK => Ok(type_def),
+            _ => Err(hr),
+        }
+    }
+
+    pub fn find_type_ref(&self, scope: mdToken, name: &str) -> Result<mdTypeRef, HRESULT> {
+        let wide_name = U16CString::from_str(name).unwrap();
+        let mut type_ref = mdTypeRefNil;
+
+        let hr = unsafe { self.FindTypeRef(scope, wide_name.as_ptr(), &mut type_ref) };
+
+        match hr {
+            S_OK => Ok(type_ref),
             _ => Err(hr),
         }
     }
@@ -778,6 +810,15 @@ impl IMetaDataImport {
         }
     }
 
+    pub fn get_module_from_scope(&self) -> Result<mdModule, HRESULT> {
+        let mut module = mdModuleNil;
+        let hr = unsafe { self.GetModuleFromScope(&mut module) };
+        match hr {
+            S_OK => Ok(module),
+            _ => Err(hr),
+        }
+    }
+
     /// Gets the name of the module referenced by the specified metadata token.
     pub fn get_module_ref_props(&self, token: mdModuleRef) -> Result<ModuleRefProps, HRESULT> {
         let mut name_buffer_length = MaybeUninit::uninit();
@@ -812,6 +853,31 @@ impl IMetaDataImport {
             .to_string_lossy();
 
         Ok(ModuleRefProps { name })
+    }
+
+    pub fn get_nested_class_props(&self, token: mdTypeDef) -> Result<mdTypeDef, HRESULT> {
+        let mut parent_token = mdTypeDefNil;
+        let hr = unsafe { self.GetNestedClassProps(token, &mut parent_token) };
+        match hr {
+            S_OK => Ok(parent_token),
+            _ => Err(hr),
+        }
+    }
+
+    pub fn get_sig_from_token(&self, token: mdSignature) -> Result<Vec<u8>, HRESULT> {
+        let mut sig = MaybeUninit::uninit();
+        let mut len = 0;
+        let hr = unsafe { self.GetSigFromToken(token, sig.as_mut_ptr(), &mut len) };
+        match hr {
+            S_OK => {
+                let signature = unsafe {
+                    let s = sig.assume_init();
+                    slice::from_raw_parts(s as *const u8, len as usize).to_vec()
+                };
+                Ok(signature)
+            }
+            _ => Err(hr),
+        }
     }
 
     /// Gets metadata information for the Type represented by the specified metadata token.
@@ -1002,33 +1068,36 @@ impl IMetaDataImport2 {
         let mut is_generic = false;
         let function_name;
         let parent_token;
-        let method_signature;
-        let mut final_signature = None;
-        let mut method_spec_signature = None;
         let mut method_def_id = mdTokenNil;
+        let final_signature;
+        let method_signature;
+        let mut method_spec_signature = None;
 
         match cor_token_type {
             CorTokenType::mdtMemberRef => {
                 let member_ref_props = self.get_member_ref_props(token)?;
                 function_name = member_ref_props.name;
                 parent_token = member_ref_props.class_token;
+                final_signature = MethodSignature::new(member_ref_props.signature.clone());
                 method_signature = FunctionMethodSignature::new(member_ref_props.signature);
             }
             CorTokenType::mdtMethodDef => {
                 let member_props = self.get_member_props(token)?;
                 function_name = member_props.name;
                 parent_token = member_props.class_token;
+                final_signature = MethodSignature::new(member_props.signature.clone());
                 method_signature = FunctionMethodSignature::new(member_props.signature);
             }
             CorTokenType::mdtMethodSpec => {
                 let method_spec = self.get_method_spec_props(token)?;
                 parent_token = method_spec.parent;
-                method_signature = FunctionMethodSignature::new(method_spec.signature.clone());
 
                 is_generic = true;
                 let generic_info = self.get_function_info(parent_token)?;
+
                 function_name = generic_info.name;
                 final_signature = generic_info.signature;
+                method_signature = FunctionMethodSignature::new(method_spec.signature.clone());
                 method_spec_signature = Some(MethodSignature::new(method_spec.signature));
                 method_def_id = generic_info.id;
             }
@@ -1101,8 +1170,8 @@ impl IMetaDataImport2 {
                 }
 
                 if type_spec.signature[0] == CorElementType::ELEMENT_TYPE_GENERICINST as u8 {
-                    let type_token = uncompress_token(&type_spec.signature[2..=2]);
-                    return if let Some(base_type) = self.get_type_info(type_token.0)? {
+                    let (base_token, base_len) = uncompress_token(&type_spec.signature[2..]);
+                    return if let Some(base_type) = self.get_type_info(base_token)? {
                         Ok(Some(MyTypeInfo {
                             id: base_type.id,
                             name: base_type.name,

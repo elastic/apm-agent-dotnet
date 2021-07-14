@@ -228,7 +228,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
             }
             else
             {
-                //Log.Warning($"Unable to resolve module version id {_moduleVersionId}. Using method builder fallback.");
+                Console.WriteLine($"Unable to resolve module version id {_moduleVersionId}. Using method builder fallback.");
             }
 
             MethodInfo methodInfo = null;

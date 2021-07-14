@@ -23,7 +23,7 @@ use crate::cli::{
 };
 use crate::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Operand {
     InlineNone,
     ShortInlineVar(u8),
@@ -44,7 +44,7 @@ pub enum Operand {
     InlineTok(u32),
 }
 impl Operand {
-    pub fn length(&self) -> usize {
+    pub fn len(&self) -> usize {
         match self {
             Self::InlineNone => 0,
             Self::ShortInlineVar(_) => 1,
@@ -66,7 +66,7 @@ impl Operand {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Instruction {
     pub opcode: Opcode,
     pub operand: Operand,
@@ -85,7 +85,7 @@ impl Instruction {
         } else {
             Ok(Opcode::from_byte(byte_1))
         }?;
-        let operand_index = opcode.length as usize;
+        let operand_index = opcode.len as usize;
         let operand = match &opcode.operand_params {
             OperandParams::InlineNone => Operand::InlineNone,
             OperandParams::ShortInlineVar => {
@@ -163,9 +163,9 @@ impl Instruction {
     }
     pub fn into_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
-        if self.opcode.length == 1 {
+        if self.opcode.len == 1 {
             bytes.push(self.opcode.byte_2);
-        } else if self.opcode.length == 2 {
+        } else if self.opcode.len == 2 {
             bytes.push(self.opcode.byte_1);
             bytes.push(self.opcode.byte_2);
         }
@@ -184,17 +184,6 @@ impl Instruction {
             Operand::InlineBrTarget(val) => bytes.extend_from_slice(&val.to_le_bytes()),
             Operand::InlineSwitch(length, val) => {
                 bytes.extend_from_slice(&length.to_le_bytes());
-                println!(
-                    "{}!!! {}!!! {:?}!!! {:?}!!! {:?}!!! {:?}!!! {:?}!!! {:?}!!!",
-                    length,
-                    val.len(),
-                    length.to_le_bytes(),
-                    val[0].to_le_bytes(),
-                    val[1].to_le_bytes(),
-                    val[2].to_le_bytes(),
-                    val[3].to_le_bytes(),
-                    val[4].to_le_bytes(),
-                );
                 let mut target_bytes: Vec<u8> =
                     val.iter().flat_map(|s| s.to_le_bytes().to_vec()).collect();
                 bytes.append(&mut target_bytes);
@@ -207,8 +196,15 @@ impl Instruction {
 
         bytes
     }
-    pub fn length(&self) -> usize {
-        self.opcode.length as usize + self.operand.length()
+
+    /// stack size of the instruction
+    pub fn stack_size(&self) -> usize {
+        self.opcode.stack_behavior_push.size()
+    }
+
+    /// length of the instruction
+    pub fn len(&self) -> usize {
+        self.opcode.len as usize + self.operand.len()
     }
 
     pub fn nop() -> Self {
@@ -313,12 +309,14 @@ impl Instruction {
             operand: Operand::ShortInlineVar(val),
         }
     }
+    /// Loads the local variable at a specific index onto the evaluation stack, short form.
     pub fn ldloc_s(val: u8) -> Self {
         Self {
             opcode: LDLOC_S,
             operand: Operand::ShortInlineVar(val),
         }
     }
+    /// Loads the address of the local variable at a specific index onto the evaluation stack, short form.
     pub fn ldloca_s(val: u8) -> Self {
         Self {
             opcode: LDLOCA_S,
@@ -331,6 +329,7 @@ impl Instruction {
             operand: Operand::ShortInlineVar(val),
         }
     }
+    /// Pushes a null reference (type O) onto the evaluation stack.
     pub fn ldnull() -> Self {
         Self {
             opcode: LDNULL,
@@ -1517,6 +1516,25 @@ impl Instruction {
         Self {
             opcode: READONLY,
             operand: Operand::InlineNone,
+        }
+    }
+
+    /// Convenience method
+    pub fn load_int32(val: i32) -> Self {
+        let op_codes = vec![
+            LDC_I4_0, LDC_I4_1, LDC_I4_2, LDC_I4_3, LDC_I4_4, LDC_I4_5, LDC_I4_6, LDC_I4_7,
+            LDC_I4_8,
+        ];
+
+        if (0..=8).contains(&val) {
+            Self {
+                opcode: op_codes[val as usize],
+                operand: Operand::InlineNone,
+            }
+        } else if -128 <= val && val <= 127 {
+            Self::ldc_i4_s(val as u8)
+        } else {
+            Self::ldc_i4(val)
         }
     }
 }

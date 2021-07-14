@@ -6,8 +6,6 @@ extern crate bitflags;
 #[macro_use]
 extern crate com;
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate num_derive;
 
 mod error;
@@ -34,7 +32,10 @@ pub const IID_PROFILER: IID = IID {
 macro_rules! dll_get_class_object {
     (($class_id_one:ident, $class_type_one:ty), $(($class_id:ident, $class_type:ty)),*) => {
         #[no_mangle]
-        unsafe extern "system" fn DllGetClassObject(class_id: *const ::com::sys::CLSID, iid: *const ::com::sys::IID, result: *mut *mut ::core::ffi::c_void) -> ::com::sys::HRESULT {
+        unsafe extern "system" fn DllGetClassObject(
+            class_id: *const ::com::sys::CLSID,
+            iid: *const ::com::sys::IID,
+            result: *mut *mut ::core::ffi::c_void) -> ::com::sys::HRESULT {
 
             assert!(!class_id.is_null(), "class id passed to DllGetClassObject should never be null");
             let class_id = &*class_id;
@@ -47,8 +48,6 @@ macro_rules! dll_get_class_object {
             })* else {
                 ::com::sys::CLASS_E_CLASSNOTAVAILABLE
             }
-
-
         }
     };
 }

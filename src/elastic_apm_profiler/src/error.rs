@@ -5,7 +5,8 @@ pub enum Error {
     InvalidSectionHeader,
     InvalidCil,
     InvalidCilOpcode,
-    PreludeTooBig,
+    CodeSize,
+    StackSize,
     InvalidVersion,
     InvalidAssemblyReference,
 }

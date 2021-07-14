@@ -43,8 +43,9 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
         public const string HttpResponseMessageTask = "System.Threading.Tasks.Task`1<System.Net.Http.HttpResponseMessage>";
 
         public const string GenericTask = "System.Threading.Tasks.Task`1";
+		public const string GenericParameterTask = "System.Threading.Tasks.Task`1<T>";
     }
-    
+
     internal static class Interception
     {
         internal const Type[] NullTypeArray = null;

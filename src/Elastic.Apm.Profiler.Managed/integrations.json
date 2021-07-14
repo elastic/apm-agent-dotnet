@@ -1,0 +1,119 @@
+[
+  {
+    "name": "HttpMessageHandler",
+    "method_replacements": [
+      {
+        "caller": {},
+        "target": {
+          "assembly": "System.Net.Http",
+          "type": "System.Net.Http.HttpMessageHandler",
+          "method": "SendAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Net.Http.HttpResponseMessage>",
+            "System.Net.Http.HttpRequestMessage",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_major": 4,
+          "minimum_minor": 0,
+          "minimum_patch": 0,
+          "maximum_major": 5,
+          "maximum_minor": 65535,
+          "maximum_patch": 65535
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.HttpMessageHandlerIntegration",
+          "method": "HttpMessageHandler_SendAsync",
+          "signature": "00 06 1C 1C 1C 1C 08 08 0A",
+          "action": "ReplaceTargetMethod"
+        }
+      },
+      {
+        "caller": {},
+        "target": {
+          "assembly": "System.Net.Http",
+          "type": "System.Net.Http.HttpClientHandler",
+          "method": "SendAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Net.Http.HttpResponseMessage>",
+            "System.Net.Http.HttpRequestMessage",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_major": 4,
+          "minimum_minor": 0,
+          "minimum_patch": 0,
+          "maximum_major": 5,
+          "maximum_minor": 65535,
+          "maximum_patch": 65535
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.HttpMessageHandlerIntegration",
+          "method": "HttpClientHandler_SendAsync",
+          "signature": "00 06 1C 1C 1C 1C 08 08 0A",
+          "action": "ReplaceTargetMethod"
+        }
+      }
+    ]
+  },
+  {
+    "name": "ElasticsearchNet6",
+    "method_replacements": [
+      {
+        "caller": {
+          "assembly": "Elasticsearch.Net"
+        },
+        "target": {
+          "assembly": "Elasticsearch.Net",
+          "type": "Elasticsearch.Net.IRequestPipeline",
+          "method": "CallElasticsearch",
+          "signature_types": [
+            "T",
+            "Elasticsearch.Net.RequestData"
+          ],
+          "minimum_major": 6,
+          "minimum_minor": 0,
+          "minimum_patch": 0,
+          "maximum_major": 6,
+          "maximum_minor": 65535,
+          "maximum_patch": 65535
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.ElasticsearchNet6Integration",
+          "method": "CallElasticsearch",
+          "signature": "10 01 05 1C 1C 1C 08 08 0A",
+          "action": "ReplaceTargetMethod"
+        }
+      },
+      {
+        "caller": {
+          "assembly": "Elasticsearch.Net"
+        },
+        "target": {
+          "assembly": "Elasticsearch.Net",
+          "type": "Elasticsearch.Net.IRequestPipeline",
+          "method": "CallElasticsearchAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<T>",
+            "Elasticsearch.Net.RequestData",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_major": 6,
+          "minimum_minor": 0,
+          "minimum_patch": 0,
+          "maximum_major": 6,
+          "maximum_minor": 65535,
+          "maximum_patch": 65535
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.ElasticsearchNet6Integration",
+          "method": "CallElasticsearchAsync",
+          "signature": "10 01 06 1C 1C 1C 1C 08 08 0A",
+          "action": "ReplaceTargetMethod"
+        }
+      }
+    ]
+  }
+]

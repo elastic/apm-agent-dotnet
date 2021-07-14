@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 use crate::error::Error;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum StackBehaviorPop {
     Pop0,
     Pop1,
@@ -43,7 +43,7 @@ pub enum StackBehaviorPop {
     PopRefPopIPop1,
     PopIPopIPopI,
 }
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum StackBehaviorPush {
     Push0,
     Push1,
@@ -55,7 +55,24 @@ pub enum StackBehaviorPush {
     Push1Push1,
     VarPush,
 }
-#[derive(Debug, Eq, PartialEq)]
+impl StackBehaviorPush {
+    /// the size on the stack
+    pub fn size(&self) -> usize {
+        match self {
+            Push0 => 0,
+            Push1 => 1,
+            PushI => 1,
+            PushRef => 1,
+            PushI8 => 1,
+            PushR4 => 1,
+            PushR8 => 1,
+            Push1Push1 => 2,
+            VarPush => 1,
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum OperandParams {
     InlineNone,
     ShortInlineVar,
@@ -75,7 +92,7 @@ pub enum OperandParams {
     InlineField,
     InlineTok,
 }
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum OpcodeKind {
     Primitive,
     Macro,
@@ -83,7 +100,7 @@ pub enum OpcodeKind {
     Internal,
     Prefix,
 }
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ControlFlow {
     Next,
     Break,
@@ -94,14 +111,14 @@ pub enum ControlFlow {
     Throw,
     Meta,
 }
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub struct Opcode {
     pub name: &'static str,
     pub stack_behavior_pop: StackBehaviorPop,
     pub stack_behavior_push: StackBehaviorPush,
     pub operand_params: OperandParams,
     pub opcode_kind: OpcodeKind,
-    pub length: u8,
+    pub len: u8,
     pub byte_1: u8,
     pub byte_2: u8,
     pub control_flow: ControlFlow,
@@ -114,7 +131,7 @@ impl Opcode {
         stack_behavior_push: StackBehaviorPush,
         operand_params: OperandParams,
         opcode_kind: OpcodeKind,
-        length: u8,
+        len: u8,
         byte_1: u8,
         byte_2: u8,
         control_flow: ControlFlow,
@@ -125,7 +142,7 @@ impl Opcode {
             stack_behavior_push,
             operand_params,
             opcode_kind,
-            length,
+            len,
             byte_1,
             byte_2,
             control_flow,

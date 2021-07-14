@@ -7,7 +7,7 @@ use com::{
 };
 use core::ffi::c_void;
 use num_traits::FromPrimitive;
-use std::intrinsics::transmute;
+use std::{intrinsics::transmute, ptr};
 
 // numeric types
 pub type c_int = i32;
@@ -414,7 +414,7 @@ impl From<DWORD> for CorElementType {
     }
 }
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct OSINFO {
     dwOSPlatformId: DWORD,   // Operating system platform.
     dwOSMajorVersion: DWORD, // OS Major version.
@@ -437,14 +437,31 @@ pub struct ASSEMBLYMETADATA {
     /// Locale buffer size in wide chars
     pub cbLocale: ULONG,
     /// Processor ID array
-    pub rProcessor: *const DWORD,
+    pub rProcessor: *mut DWORD,
     /// Processor ID array size
     pub ulProcessor: ULONG,
     /// OS info array
-    pub rOS: *const OSINFO,
+    pub rOS: *mut OSINFO,
     /// OS info array size
     pub ulOS: ULONG,
 }
+impl Default for ASSEMBLYMETADATA {
+    fn default() -> Self {
+        Self {
+            usMajorVersion: 0,
+            usMinorVersion: 0,
+            usBuildNumber: 0,
+            usRevisionNumber: 0,
+            szLocale: ptr::null_mut(),
+            cbLocale: 0,
+            rProcessor: ptr::null_mut(),
+            ulProcessor: 0,
+            rOS: ptr::null_mut(),
+            ulOS: 0,
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub struct FILETIME {
@@ -715,46 +732,46 @@ bitflags! {
 }
 bitflags! {
     pub struct CorMethodImpl: DWORD {
-    // code impl mask
-    const miCodeTypeMask       =   0x0003;   // Flags about code type.
-    const miIL                 =   0x0000;   // Method impl is IL.
-    const miNative             =   0x0001;   // Method impl is native.
-    const miOPTIL              =   0x0002;   // Method impl is OPTIL
-    const miRuntime            =   0x0003;   // Method impl is provided by the runtime.
-    // end code impl mask
+        // code impl mask
+        const miCodeTypeMask       =   0x0003;   // Flags about code type.
+        const miIL                 =   0x0000;   // Method impl is IL.
+        const miNative             =   0x0001;   // Method impl is native.
+        const miOPTIL              =   0x0002;   // Method impl is OPTIL
+        const miRuntime            =   0x0003;   // Method impl is provided by the runtime.
+        // end code impl mask
 
-    // managed mask
-    const miManagedMask        =   0x0004;   // Flags specifying whether the code is managed or unmanaged.
-    const miUnmanaged          =   0x0004;   // Method impl is unmanaged, otherwise managed.
-    const miManaged            =   0x0000;   // Method impl is managed.
-    // end managed mask
+        // managed mask
+        const miManagedMask        =   0x0004;   // Flags specifying whether the code is managed or unmanaged.
+        const miUnmanaged          =   0x0004;   // Method impl is unmanaged, otherwise managed.
+        const miManaged            =   0x0000;   // Method impl is managed.
+        // end managed mask
 
-    // implementation info and interop
-    const miForwardRef         =   0x0010;   // Indicates method is defined; used primarily in merge scenarios.
-    const miPreserveSig        =   0x0080;   // Indicates method sig is not to be mangled to do HRESULT conversion.
+        // implementation info and interop
+        const miForwardRef         =   0x0010;   // Indicates method is defined; used primarily in merge scenarios.
+        const miPreserveSig        =   0x0080;   // Indicates method sig is not to be mangled to do HRESULT conversion.
 
-    const miInternalCall       =   0x1000;   // Reserved for internal use.
+        const miInternalCall       =   0x1000;   // Reserved for internal use.
 
-    const miSynchronized       =   0x0020;   // Method is single threaded through the body.
-    const miNoInlining         =   0x0008;   // Method may not be inlined.
-    const miAggressiveInlining =   0x0100;   // Method should be inlined if possible.
-    const miNoOptimization     =   0x0040;   // Method may not be optimized.
-    const miAggressiveOptimization = 0x0200; // Method may contain hot code and should be aggressively optimized.
+        const miSynchronized       =   0x0020;   // Method is single threaded through the body.
+        const miNoInlining         =   0x0008;   // Method may not be inlined.
+        const miAggressiveInlining =   0x0100;   // Method should be inlined if possible.
+        const miNoOptimization     =   0x0040;   // Method may not be optimized.
+        const miAggressiveOptimization = 0x0200; // Method may contain hot code and should be aggressively optimized.
 
-    // These are the flags that are allowed in MethodImplAttribute's Value
-    // property. This should include everything above except the code impl
-    // flags (which are used for MethodImplAttribute's MethodCodeType field).
-    const miUserMask = Self::miManagedMask.bits
-        | Self::miForwardRef.bits
-        | Self::miPreserveSig.bits
-        | Self::miInternalCall.bits
-        | Self::miSynchronized.bits
-        | Self::miNoInlining.bits
-        | Self::miAggressiveInlining.bits
-        | Self::miNoOptimization.bits
-        | Self::miAggressiveOptimization.bits;
+        // These are the flags that are allowed in MethodImplAttribute's Value
+        // property. This should include everything above except the code impl
+        // flags (which are used for MethodImplAttribute's MethodCodeType field).
+        const miUserMask = Self::miManagedMask.bits
+            | Self::miForwardRef.bits
+            | Self::miPreserveSig.bits
+            | Self::miInternalCall.bits
+            | Self::miSynchronized.bits
+            | Self::miNoInlining.bits
+            | Self::miAggressiveInlining.bits
+            | Self::miNoOptimization.bits
+            | Self::miAggressiveOptimization.bits;
 
-    const miMaxMethodImplVal   =   0xffff;   // Range check value
+        const miMaxMethodImplVal   =   0xffff;   // Range check value
     }
 }
 bitflags! {
@@ -792,8 +809,6 @@ bitflags! {
     }
 }
 
-pub const S_OK: HRESULT = 0;
-pub const S_FALSE: HRESULT = 0x00000001;
 pub const E_NOINTERFACE: HRESULT = 0x8000_4002;
 pub const E_OUTOFMEMORY: HRESULT = 0x8007_000E;
 pub const CLASS_E_NOAGGREGATION: HRESULT = 0x8004_0110;
@@ -801,6 +816,9 @@ pub const E_FAIL: HRESULT = 0x8000_4005;
 pub const COR_E_INVALIDPROGRAM: HRESULT = 0x8013_153A;
 pub const COR_E_INVALIDOPERATION: HRESULT = 0x8013_1509;
 pub const COR_E_INDEXOUTOFRANGE: HRESULT = 0x8;
+
+/// record not found on lookup
+pub const CLDB_E_RECORD_NOTFOUND: HRESULT = 0x80131130;
 
 bitflags! {
     pub struct CorAssemblyFlags: DWORD {
@@ -1001,36 +1019,36 @@ bitflags! {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, PartialEq, FromPrimitive)]
-pub enum CorCallingConvention {
-    /// Indicates a default calling convention.
-    IMAGE_CEE_CS_CALLCONV_DEFAULT = 0x0,
-    /// Indicates that the method takes a variable number of parameters.
-    IMAGE_CEE_CS_CALLCONV_VARARG = 0x5,
-    /// Indicates that the call is to a field.
-    IMAGE_CEE_CS_CALLCONV_FIELD = 0x6,
-    /// Indicates that the call is to a local method.
-    IMAGE_CEE_CS_CALLCONV_LOCAL_SIG = 0x7,
-    /// Indicates that the call is to a property.
-    IMAGE_CEE_CS_CALLCONV_PROPERTY = 0x8,
-    /// Indicates that the call is unmanaged.
-    IMAGE_CEE_CS_CALLCONV_UNMANAGED = 0x9,
-    /// Indicates a generic method instantiation.
-    IMAGE_CEE_CS_CALLCONV_GENERICINST = 0xa,
-    /// Indicates a 64-bit PInvoke call to a method that takes a variable number of parameters.
-    IMAGE_CEE_CS_CALLCONV_NATIVEVARARG = 0xb,
-    /// Describes an invalid 4-bit value.
-    IMAGE_CEE_CS_CALLCONV_MAX = 0xc,
-    /// Indicates that the calling convention is described by the bottom four bits.
-    IMAGE_CEE_CS_CALLCONV_MASK = 0x0f,
-    /// Indicates that the top bit describes a 'this' parameter.
-    IMAGE_CEE_CS_CALLCONV_HASTHIS = 0x20,
-    /// Indicates that a 'this' parameter is explicitly described in the signature.
-    IMAGE_CEE_CS_CALLCONV_EXPLICITTHIS = 0x40,
-    /// Indicates a generic method signature with an explicit number of type arguments.
-    /// This precedes an ordinary parameter count.
-    IMAGE_CEE_CS_CALLCONV_GENERIC = 0x10,
+bitflags! {
+    pub struct CorCallingConvention : COR_SIGNATURE {
+        /// Indicates a default calling convention.
+        const IMAGE_CEE_CS_CALLCONV_DEFAULT = 0x0;
+        /// Indicates that the method takes a variable number of parameters.
+        const IMAGE_CEE_CS_CALLCONV_VARARG = 0x5;
+        /// Indicates that the call is to a field.
+        const IMAGE_CEE_CS_CALLCONV_FIELD = 0x6;
+        /// Indicates that the call is to a local method.
+        const IMAGE_CEE_CS_CALLCONV_LOCAL_SIG = 0x7;
+        /// Indicates that the call is to a property.
+        const IMAGE_CEE_CS_CALLCONV_PROPERTY = 0x8;
+        /// Indicates that the call is unmanaged.
+        const IMAGE_CEE_CS_CALLCONV_UNMANAGED = 0x9;
+        /// Indicates a generic method instantiation.
+        const IMAGE_CEE_CS_CALLCONV_GENERICINST = 0xa;
+        /// Indicates a 64-bit PInvoke call to a method that takes a variable number of parameters.
+        const IMAGE_CEE_CS_CALLCONV_NATIVEVARARG = 0xb;
+        /// Describes an invalid 4-bit value.
+        const IMAGE_CEE_CS_CALLCONV_MAX = 0xc;
+        /// Indicates that the calling convention is described by the bottom four bits.
+        const IMAGE_CEE_CS_CALLCONV_MASK = 0x0f;
+        /// Indicates that the top bit describes a 'this' parameter.
+        const IMAGE_CEE_CS_CALLCONV_HASTHIS = 0x20;
+        /// Indicates that a 'this' parameter is explicitly described in the signature.
+        const IMAGE_CEE_CS_CALLCONV_EXPLICITTHIS = 0x40;
+        /// Indicates a generic method signature with an explicit number of type arguments.
+        /// This precedes an ordinary parameter count.
+        const IMAGE_CEE_CS_CALLCONV_GENERIC = 0x10;
+    }
 }
 
 /// Gets the type from the token

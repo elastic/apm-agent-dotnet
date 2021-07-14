@@ -13,10 +13,10 @@ bitflags = "1.2.1"
 c_vec = "2.0.0"
 com = { git = "https://github.com/russcam/com-rs.git", branch = "master", features = ["production"] }
 hex = "0.4.3"
-lazy_static = "1.4.0"
 log = "0.4.14"
 num-derive = "0.3"
 num-traits = "0.2"
+once_cell = "1.8.0"
 rust-crypto = "^0.2"
 rust-embed = { version = "5.9.0", features = ["compression", "debug-embed"] }
 serde = { version = "1.0.126", features = ["derive"] }

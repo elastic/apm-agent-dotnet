@@ -16,22 +16,35 @@ namespace Elastic.Apm.Profiler.Managed.Loader
     {
         static Startup()
         {
-            Console.WriteLine("Startup called");
+			Directory = ResolveDirectory();
 
-            Directory = ResolveDirectory();
-            try
+			try
             {
-                AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
+				AppDomain.CurrentDomain.AssemblyResolve += ResolveDependencies;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 throw;
             }
+
+			TryLoadManagedAssembly();
         }
-        
+
+		private static void TryLoadManagedAssembly()
+		{
+			try
+			{
+				Assembly.Load("Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error when loading managed assemblies: {ex}");
+			}
+		}
+
         internal static string Directory { get; }
-        
+
         private static string ReadEnvironmentVariable(string key)
         {
             try
@@ -90,7 +103,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         private static string ResolveDirectory()
         {
             var framework = "netstandard2.0";
-            var directory = ReadEnvironmentVariable("PROFILER_HOME") ?? string.Empty;
+            var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
             return Path.Combine(directory, framework);
         }
         
@@ -114,12 +127,12 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 
             // Only load the main dll into the default Assembly Load Context.
             // If other libraries are provided by the NuGet package their loads are handled in the following two ways.
-            // 1) The AssemblyVersion is greater than or equal to the version used by Profiler.Managed, the assembly
+            // 1) The AssemblyVersion is greater than or equal to the version used by Elastic.Apm.Profiler.Managed, the assembly
             //    will load successfully and will not invoke this resolve event.
-            // 2) The AssemblyVersion is lower than the version used by Profiler.Managed, the assembly will fail to load
+            // 2) The AssemblyVersion is lower than the version used by Elastic.Apm.Profiler.Managed, the assembly will fail to load
             //    and invoke this resolve event. It must be loaded in a separate AssemblyLoadContext since the application will only
             //    load the originally referenced version
-            if (assemblyName.Name.StartsWith("Profiler.Managed", StringComparison.OrdinalIgnoreCase)
+            if (assemblyName.Name.StartsWith("Elastic.Apm.Profiler.Managed", StringComparison.OrdinalIgnoreCase)
                 && assemblyName.FullName.IndexOf("PublicKeyToken=ae7400d2c189cf22", StringComparison.OrdinalIgnoreCase) >= 0
                 && File.Exists(path))
             {
@@ -135,11 +148,11 @@ namespace Elastic.Apm.Profiler.Managed.Loader
             return null;
         }
     }
-    
+
     internal class ProfilerAssemblyLoadContext : AssemblyLoadContext
     {
         protected override Assembly Load(AssemblyName assemblyName) => null;
     }
 #endif
-    
+
 }

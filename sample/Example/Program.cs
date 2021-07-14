@@ -1,23 +1,21 @@
 ﻿using System;
+using System.Net.Http;
+using Elasticsearch.Net;
 
 namespace Example
 {
-    class Program
+	internal static class Program
     {
-        static void Main(string[] args)
-        {
-            WriteEnvironmentVariable("CORECLR_ENABLE_PROFILING");
-            WriteEnvironmentVariable("CORECLR_PROFILER");
-            WriteEnvironmentVariable("CORECLR_PROFILER_PATH");
-            Greeting();
-        }
+		private static void Main(string[] args)
+		{
+			var client = new HttpClient();
+			var uri = "https://elastic.co";
+			var response = client.GetAsync(uri).Result;
+			Console.WriteLine($"status code from {uri} is {response.StatusCode}");
 
-        static void Greeting() => Console.WriteLine("Hello World!");
-
-        static void WriteEnvironmentVariable(string name)
-        {
-            var value = Environment.GetEnvironmentVariable(name);
-            Console.WriteLine($"{name} = {value}");
-        }
-    }
+			var elasticLowLevelClient = new ElasticLowLevelClient();
+			var info = elasticLowLevelClient.Info<StringResponse>();
+			Console.WriteLine(info);
+		}
+	}
 }

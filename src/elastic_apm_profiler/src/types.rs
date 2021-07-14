@@ -12,17 +12,15 @@ use num_traits::FromPrimitive;
 use crate::{
     error::Error,
     ffi::{
-        mdAssembly, mdMethodDef, mdToken, mdTypeDef, mdTypeSpec, AppDomainID, AssemblyID, ClassID,
-        ClrInstanceID, CorAssemblyFlags, CorElementType, CorMethodAttr, CorMethodImpl,
-        CorTokenType, CorTypeAttr, FunctionID, ModuleID, ProcessID, ReJITID, BYTE,
-        COR_FIELD_OFFSET, COR_PRF_FRAME_INFO, COR_PRF_FUNCTION_ARGUMENT_INFO,
+        mdAssembly, mdMemberRef, mdMethodDef, mdToken, mdTypeDef, mdTypeRef, mdTypeSpec,
+        AppDomainID, AssemblyID, ClassID, ClrInstanceID, CorAssemblyFlags, CorElementType,
+        CorMethodAttr, CorMethodImpl, CorTokenType, CorTypeAttr, FunctionID, ModuleID, ProcessID,
+        ReJITID, BYTE, COR_FIELD_OFFSET, COR_PRF_FRAME_INFO, COR_PRF_FUNCTION_ARGUMENT_INFO,
         COR_PRF_FUNCTION_ARGUMENT_RANGE, COR_PRF_HIGH_MONITOR, COR_PRF_MODULE_FLAGS,
         COR_PRF_MONITOR, COR_PRF_RUNTIME_TYPE, COR_SIGNATURE, DWORD, HCORENUM, LPCBYTE,
-        PCCOR_SIGNATURE, S_FALSE, S_OK, ULONG, ULONG32,
+        PCCOR_SIGNATURE, ULONG, ULONG32,
     },
-    interfaces::{
-        icor_profiler_method_enum::ICorProfilerMethodEnum, imetadata_import::IMetaDataImport,
-    },
+    interfaces::{ICorProfilerMethodEnum, IMetaDataImport},
     profiler::types::MethodSignature,
 };
 
@@ -55,6 +53,12 @@ pub struct IlFunctionBody {
     pub method_header: LPCBYTE,
     pub method_size: u32,
 }
+impl From<IlFunctionBody> for &[u8] {
+    fn from(body: IlFunctionBody) -> Self {
+        unsafe { std::slice::from_raw_parts(body.method_header, body.method_size as usize) }
+    }
+}
+
 pub struct AppDomainInfo {
     pub name: String,
     pub process_id: ProcessID,
@@ -219,12 +223,19 @@ pub struct MethodSpecProps {
     pub signature: Vec<COR_SIGNATURE>,
 }
 
+#[derive(Debug)]
+pub struct WrapperMethodRef {
+    pub type_ref: mdTypeRef,
+    pub method_ref: mdMemberRef,
+}
+
+#[derive(Debug)]
 pub struct MyFunctionInfo {
     pub id: mdToken,
     pub name: String,
     pub type_info: Option<MyTypeInfo>,
     pub is_generic: bool,
-    pub signature: Option<MethodSignature>,
+    pub signature: MethodSignature,
     pub function_spec_signature: Option<MethodSignature>,
     pub method_def_id: mdToken,
     pub method_signature: FunctionMethodSignature,
@@ -236,7 +247,7 @@ impl MyFunctionInfo {
         name: String,
         is_generic: bool,
         type_info: Option<MyTypeInfo>,
-        signature: Option<MethodSignature>,
+        signature: MethodSignature,
         function_spec_signature: Option<MethodSignature>,
         method_def_id: mdToken,
         method_signature: FunctionMethodSignature,
@@ -262,6 +273,7 @@ impl MyFunctionInfo {
     }
 }
 
+#[derive(Debug)]
 pub struct FunctionMethodSignature {
     pub data: Vec<COR_SIGNATURE>,
 }
@@ -272,6 +284,7 @@ impl FunctionMethodSignature {
     }
 }
 
+#[derive(Debug)]
 pub struct MyTypeInfo {
     pub id: mdToken,
     pub name: String,
@@ -287,10 +300,10 @@ pub struct MyTypeInfo {
 #[derive(Clone, Eq, Debug)]
 #[repr(C)]
 pub struct Version {
-    major: u16,
-    minor: u16,
-    build: u16,
-    revision: u16,
+    pub major: u16,
+    pub minor: u16,
+    pub build: u16,
+    pub revision: u16,
 }
 
 impl Version {
@@ -308,7 +321,7 @@ impl Version {
         revision: 0,
     };
 
-    pub fn new(major: u16, minor: u16, build: u16, revision: u16) -> Self {
+    pub const fn new(major: u16, minor: u16, build: u16, revision: u16) -> Self {
         Version {
             major,
             minor,
@@ -322,24 +335,23 @@ impl Version {
             return Err(Error::InvalidVersion);
         }
 
-        let res = version.split('.').collect::<Vec<&str>>();
-        if res.len() > 4 {
+        let parts = version.split('.').collect::<Vec<&str>>();
+        if parts.len() > 4 {
             return Err(Error::InvalidVersion);
         }
-
-        let major = res[0].parse::<u16>().map_err(|_| Error::InvalidVersion)?;
-        let minor = if res.len() > 1 {
-            res[1].parse::<u16>().map_err(|_| Error::InvalidVersion)?
+        let major = parts[0].parse::<u16>().map_err(|_| Error::InvalidVersion)?;
+        let minor = if parts.len() > 1 {
+            parts[1].parse::<u16>().map_err(|_| Error::InvalidVersion)?
         } else {
             0
         };
-        let build = if res.len() > 2 {
-            res[2].parse::<u16>().map_err(|_| Error::InvalidVersion)?
+        let build = if parts.len() > 2 {
+            parts[2].parse::<u16>().map_err(|_| Error::InvalidVersion)?
         } else {
             0
         };
-        let revision = if res.len() > 3 {
-            res[3].parse::<u16>().map_err(|_| Error::InvalidVersion)?
+        let revision = if parts.len() > 3 {
+            parts[3].parse::<u16>().map_err(|_| Error::InvalidVersion)?
         } else {
             0
         };
@@ -420,11 +432,9 @@ pub struct PublicKey {
 
 impl PublicKey {
     pub fn new(bytes: Vec<u8>, hash_algorithm: u32) -> Self {
-        let hash_algorithm = HashAlgorithmType::from_u32(hash_algorithm);
-
         Self {
             bytes,
-            hash_algorithm,
+            hash_algorithm: HashAlgorithmType::from_u32(hash_algorithm),
         }
     }
 
@@ -439,18 +449,15 @@ impl PublicKey {
         }
 
         match &self.hash_algorithm {
-            Some(algorithm) => match algorithm {
-                HashAlgorithmType::Sha1 => {
-                    let mut sha1 = Sha1::new();
-                    sha1.input(&self.bytes);
-                    let mut buf: Vec<u8> = repeat(0).take((sha1.output_bits() + 7) / 8).collect();
-                    sha1.result(&mut buf);
-                    buf.reverse();
-                    hex::encode(buf[0..8].as_ref())
-                }
-                _ => String::new(),
-            },
-            None => String::new(),
+            Some(HashAlgorithmType::Sha1) => {
+                let mut sha1 = Sha1::new();
+                sha1.input(&self.bytes);
+                let mut buf: Vec<u8> = repeat(0).take((sha1.output_bits() + 7) / 8).collect();
+                sha1.result(&mut buf);
+                buf.reverse();
+                hex::encode(buf[0..8].as_ref())
+            }
+            _ => String::new(),
         }
     }
 }

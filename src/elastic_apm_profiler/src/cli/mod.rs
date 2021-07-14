@@ -1,6 +1,5 @@
 mod cor_sig;
 mod helpers;
-mod il_rewriter;
 mod instruction;
 mod method;
 mod method_header;

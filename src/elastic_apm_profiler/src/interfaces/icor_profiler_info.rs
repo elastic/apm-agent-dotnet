@@ -3,7 +3,7 @@ use std::{ffi::c_void, mem::MaybeUninit, ptr};
 use com::{
     interfaces,
     interfaces::IUnknown,
-    sys::{FAILED, HRESULT},
+    sys::{FAILED, HRESULT, S_OK},
     Interface,
 };
 use widestring::U16CString;
@@ -98,6 +98,8 @@ interfaces! {
             riid: REFIID,
             ppOut: *mut *mut IUnknown,
         ) -> HRESULT;
+        /// Gets a pointer to the body of a method in Microsoft intermediate language (MSIL) code,
+        /// starting at its header.
         pub fn GetILFunctionBody(&self,
             moduleId: ModuleID,
             methodId: mdMethodDef,
@@ -848,26 +850,28 @@ impl ICorProfilerInfo {
         }
         Ok(unknown.unwrap())
     }
+
+    /// Gets a pointer to the body of a method in Microsoft intermediate language (MSIL) code,
+    /// starting at its header.
     pub fn get_il_function_body(
         &self,
         module_id: ModuleID,
         method_id: mdMethodDef,
     ) -> Result<IlFunctionBody, HRESULT> {
         let mut method_header = MaybeUninit::uninit();
-        let mut method_size = MaybeUninit::uninit();
+        let mut method_size = 0;
         let hr = unsafe {
             self.GetILFunctionBody(
                 module_id,
                 method_id,
                 method_header.as_mut_ptr(),
-                method_size.as_mut_ptr(),
+                &mut method_size,
             )
         };
 
         match hr {
             S_OK => {
                 let method_header = unsafe { method_header.assume_init() };
-                let method_size = unsafe { method_size.assume_init() };
                 Ok(IlFunctionBody {
                     method_header,
                     method_size,

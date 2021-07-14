@@ -6,7 +6,10 @@ use crate::{
         istream::IStream,
     },
 };
-use com::{interfaces::iunknown::IUnknown, sys::HRESULT};
+use com::{
+    interfaces::iunknown::IUnknown,
+    sys::{HRESULT, S_OK},
+};
 use std::{
     ffi::{c_void, CString, OsStr, OsString},
     mem::MaybeUninit,
@@ -357,6 +360,17 @@ impl IMetaDataEmit {
         }
     }
 
+    pub fn get_token_from_type_spec(&self, signature: &[u8]) -> Result<mdTypeSpec, HRESULT> {
+        let mut type_spec = mdTypeSpecNil;
+        let hr = unsafe {
+            self.GetTokenFromTypeSpec(signature.as_ptr(), signature.len() as ULONG, &mut type_spec)
+        };
+        match hr {
+            S_OK => Ok(type_spec),
+            _ => Err(hr),
+        }
+    }
+
     /// Updates references to a module defined by a prior call to
     /// [crate::interfaces::imetadata_emit::IMetaDataEmit::DefineModuleRef].
     pub fn set_module_props(&self, name: &str) -> Result<(), HRESULT> {
@@ -529,7 +543,7 @@ impl IMetaDataEmit {
         &self,
         token: mdToken,
         name: &str,
-    ) -> Result<mdTypeDef, HRESULT> {
+    ) -> Result<mdTypeRef, HRESULT> {
         let wstr = U16CString::from_str(name).unwrap();
         let mut type_ref = mdTypeRefNil;
         let hr = unsafe { self.DefineTypeRefByName(token, wstr.as_ptr(), &mut type_ref) };
@@ -571,6 +585,28 @@ impl IMetaDataEmit {
         let hr = unsafe { self.SetMethodImplFlags(method, implementation.bits()) };
         match hr {
             S_OK => Ok(()),
+            _ => Err(hr),
+        }
+    }
+}
+
+impl IMetaDataEmit2 {
+    pub fn define_method_spec(
+        &self,
+        token: mdToken,
+        signature: &[COR_SIGNATURE],
+    ) -> Result<mdMethodSpec, HRESULT> {
+        let mut method_spec = mdMethodSpecNil;
+        let hr = unsafe {
+            self.DefineMethodSpec(
+                token,
+                signature.as_ptr(),
+                signature.len() as ULONG,
+                &mut method_spec,
+            )
+        };
+        match hr {
+            S_OK => Ok(method_spec),
             _ => Err(hr),
         }
     }

@@ -20,7 +20,7 @@ pub fn compress_token(token: mdToken) -> Option<Vec<u8>> {
         return None;
     }
 
-    rid = rid << 2;
+    rid <<= 2;
 
     // TypeDef is encoded with low bits 00
     // TypeRef is encoded with low bits 01
@@ -43,24 +43,22 @@ pub fn compress_token(token: mdToken) -> Option<Vec<u8>> {
 /// Based on CorSigCompressData: https://github.com/dotnet/runtime/blob/01b7e73cd378145264a7cb7a09365b41ed42b240/src/coreclr/inc/cor.h#L2111
 pub fn compress_data(int: ULONG) -> Option<Vec<u8>> {
     if int <= 0x7F {
-        let mut buffer = Vec::with_capacity(1);
-        buffer.push(int as BYTE);
+        let buffer = vec![int as BYTE];
         return Some(buffer);
     }
 
     if int <= 0x3FFF {
-        let mut buffer = Vec::with_capacity(2);
-        buffer.push(((int >> 8) | 0x80) as BYTE);
-        buffer.push((int & 0xff) as BYTE);
+        let buffer = vec![((int >> 8) | 0x80) as BYTE, (int & 0xff) as BYTE];
         return Some(buffer);
     }
 
     if int <= 0x1FFFFFFF {
-        let mut buffer = Vec::with_capacity(4);
-        buffer.push(((int >> 24) | 0xC0) as BYTE);
-        buffer.push(((int >> 16) & 0xff) as BYTE);
-        buffer.push(((int >> 8) & 0xff) as BYTE);
-        buffer.push((int & 0xff) as BYTE);
+        let buffer = vec![
+            ((int >> 24) | 0xC0) as BYTE,
+            ((int >> 16) & 0xff) as BYTE,
+            ((int >> 8) & 0xff) as BYTE,
+            (int & 0xff) as BYTE,
+        ];
         return Some(buffer);
     }
 
@@ -73,7 +71,7 @@ pub fn uncompress_data(data: &[u8]) -> Option<(ULONG, usize)> {
         None
     } else if data[0] & 0x80 == 0x00 {
         // 0??? ????
-        Some((data[0] as ULONG, 1 as usize))
+        Some((data[0] as ULONG, 1_usize))
     } else if data[0] & 0xC0 == 0x80 {
         // 10?? ????
         if data.len() < 2 {
@@ -81,7 +79,7 @@ pub fn uncompress_data(data: &[u8]) -> Option<(ULONG, usize)> {
         } else {
             let mut out = ((data[0] as ULONG) & 0x3f) << 8;
             out |= data[1] as ULONG;
-            Some((out, 2 as usize))
+            Some((out, 2_usize))
         }
     } else if data[0] & 0xE0 == 0xC0 {
         // 110? ????
@@ -92,7 +90,7 @@ pub fn uncompress_data(data: &[u8]) -> Option<(ULONG, usize)> {
             out |= (data[1] as ULONG) << 16;
             out |= (data[2] as ULONG) << 8;
             out |= data[3] as ULONG;
-            Some((out, 4 as usize))
+            Some((out, 4_usize))
         }
     } else {
         None

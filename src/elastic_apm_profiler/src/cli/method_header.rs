@@ -66,22 +66,20 @@ impl MethodHeader {
             // In a tiny header, the first 6 bits encode the code size
             //let code_size = method_il[0] >> 2;
             let code_size = method_il[0] >> (MethodHeaderFlags::CorILMethod_FormatShift.bits() - 1);
-            let tiny_header = TinyMethodHeader { code_size };
-            Ok(MethodHeader::Tiny(tiny_header))
+            Ok(MethodHeader::Tiny(TinyMethodHeader { code_size }))
         } else if Self::is_fat(header_flags) {
             let more_sects = Self::more_sects(header_flags);
             let init_locals = Self::init_locals(header_flags);
             let max_stack = u16::from_le_bytes([method_il[2], method_il[3]]);
             let code_size = il_u32(method_il, 4)?;
             let local_var_sig_tok = il_u32(method_il, 8)?;
-            let fat_header = FatMethodHeader {
+            Ok(MethodHeader::Fat(FatMethodHeader {
                 more_sects,
                 init_locals,
                 max_stack,
                 code_size,
                 local_var_sig_tok,
-            };
-            Ok(MethodHeader::Fat(fat_header))
+            }))
         } else {
             Err(Error::InvalidMethodHeader)
         }
@@ -156,7 +154,7 @@ impl MethodHeader {
 
     fn is_tiny(method_header_flags: u8) -> bool {
         // Check only the 2 least significant bits
-        (method_header_flags & &0b00000011) == MethodHeaderFlags::CorILMethod_TinyFormat.bits()
+        (method_header_flags & 0b00000011) == MethodHeaderFlags::CorILMethod_TinyFormat.bits()
     }
 
     fn is_fat(method_header_flags: u8) -> bool {

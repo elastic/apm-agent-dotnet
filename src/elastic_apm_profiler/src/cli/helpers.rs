@@ -88,5 +88,5 @@ pub fn check_flag(flags: u8, flag: u8) -> bool {
     (flags & flag) == flag
 }
 pub fn nearest_multiple(multiple: usize, value: usize) -> usize {
-    value + (multiple - 1) & !(multiple - 1)
+    (value + (multiple - 1)) & !(multiple - 1)
 }

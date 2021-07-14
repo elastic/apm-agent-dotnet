@@ -57,11 +57,14 @@ bitflags! {
     }
 }
 bitflags! {
-    pub struct ExceptionHandlingClauseFlags: u8 {
-        const COR_ILEXCEPTION_CLAUSE_EXCEPTION = 0x0;
+    pub struct CorExceptionFlag: u8 {
+        const COR_ILEXCEPTION_CLAUSE_NONE = 0x0;
+        const COR_ILEXCEPTION_CLAUSE_OFFSETLEN = 0x0000;     // Deprecated
+        const COR_ILEXCEPTION_CLAUSE_DEPRECATED = 0x0000;    // Deprecated
         const COR_ILEXCEPTION_CLAUSE_FILTER = 0x1;
         const COR_ILEXCEPTION_CLAUSE_FINALLY = 0x2;
         const COR_ILEXCEPTION_CLAUSE_FAULT = 0x4;
+        const COR_ILEXCEPTION_CLAUSE_DUPLICATED = 0x8;
     }
 }
 #[derive(Debug)]
@@ -74,10 +77,7 @@ pub struct FatSectionHeader {
 }
 #[derive(Debug)]
 pub struct FatSectionClause {
-    pub is_exception: bool,
-    pub is_filter: bool,
-    pub is_finally: bool,
-    pub is_fault: bool,
+    pub flag: CorExceptionFlag,
     pub try_offset: u32,
     pub try_length: u32,
     pub handler_offset: u32,
@@ -87,33 +87,14 @@ pub struct FatSectionClause {
 impl FatSectionClause {
     const LENGTH: usize = 24;
     pub fn from_bytes(il: &[u8]) -> Result<Self, Error> {
-        let flags = il_u8(il, 0)?;
-        let is_exception = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_EXCEPTION.bits(),
-        );
-        let is_filter = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FILTER.bits(),
-        );
-        let is_finally = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FINALLY.bits(),
-        );
-        let is_fault = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FAULT.bits(),
-        );
+        let flag = CorExceptionFlag::from_bits(il[0]).unwrap();
         let try_offset = il_u32(il, 4)?;
         let try_length = il_u32(il, 8)?;
         let handler_offset = il_u32(il, 12)?;
         let handler_length = il_u32(il, 16)?;
         let class_token_or_filter_offset = il_u32(il, 20)?;
         Ok(FatSectionClause {
-            is_exception,
-            is_filter,
-            is_finally,
-            is_fault,
+            flag,
             try_offset,
             try_length,
             handler_offset,
@@ -130,10 +111,7 @@ pub struct SmallSectionHeader {
 }
 #[derive(Debug)]
 pub struct SmallSectionClause {
-    pub is_exception: bool,
-    pub is_filter: bool,
-    pub is_finally: bool,
-    pub is_fault: bool,
+    pub flag: CorExceptionFlag,
     pub try_offset: u16,
     pub try_length: u8,
     pub handler_offset: u16,
@@ -143,33 +121,14 @@ pub struct SmallSectionClause {
 impl SmallSectionClause {
     const LENGTH: usize = 12;
     pub fn from_bytes(il: &[u8]) -> Result<Self, Error> {
-        let flags = il_u8(il, 0)?;
-        let is_exception = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_EXCEPTION.bits(),
-        );
-        let is_filter = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FILTER.bits(),
-        );
-        let is_finally = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FINALLY.bits(),
-        );
-        let is_fault = check_flag(
-            flags,
-            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FAULT.bits(),
-        );
+        let flag = CorExceptionFlag::from_bits(il[0]).unwrap();
         let try_offset = il_u16(il, 2)?;
         let try_length = il_u8(il, 4)?;
         let handler_offset = il_u16(il, 5)?;
         let handler_length = il_u8(il, 7)?;
         let class_token_or_filter_offset = il_u32(il, 8)?;
         Ok(SmallSectionClause {
-            is_exception,
-            is_filter,
-            is_finally,
-            is_fault,
+            flag,
             try_offset,
             try_length,
             handler_offset,
@@ -229,19 +188,7 @@ impl Section {
                 bytes.push(flags);
                 bytes.extend_from_slice(&header.data_size.to_le_bytes()[0..3]);
                 for clause in clauses.iter() {
-                    let mut flags =
-                        ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_EXCEPTION.bits();
-                    if clause.is_filter {
-                        flags |= ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FILTER.bits();
-                    }
-                    if clause.is_finally {
-                        flags |=
-                            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FINALLY.bits();
-                    }
-                    if clause.is_fault {
-                        flags |= ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FAULT.bits();
-                    }
-                    let flags = flags as u32;
+                    let flags = clause.flag.bits() as u32;
                     bytes.extend_from_slice(&flags.to_le_bytes());
                     bytes.extend_from_slice(&clause.try_offset.to_le_bytes());
                     bytes.extend_from_slice(&clause.try_length.to_le_bytes());
@@ -263,19 +210,7 @@ impl Section {
                 bytes.push(0u8); // Padding for DWORD alignment
                 bytes.push(0u8); // Padding for DWORD alignment
                 for clause in clauses.iter() {
-                    let mut flags =
-                        ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_EXCEPTION.bits();
-                    if clause.is_filter {
-                        flags |= ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FILTER.bits();
-                    }
-                    if clause.is_finally {
-                        flags |=
-                            ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FINALLY.bits();
-                    }
-                    if clause.is_fault {
-                        flags |= ExceptionHandlingClauseFlags::COR_ILEXCEPTION_CLAUSE_FAULT.bits();
-                    }
-                    let flags = flags as u16;
+                    let flags = clause.flag.bits() as u16;
                     bytes.extend_from_slice(&flags.to_le_bytes());
                     bytes.extend_from_slice(&clause.try_offset.to_le_bytes());
                     bytes.push(clause.try_length);

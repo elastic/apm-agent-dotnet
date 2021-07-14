@@ -277,7 +277,7 @@ interfaces! {
     pub unsafe interface ICorProfilerCallback6: ICorProfilerCallback5 {
         pub fn GetAssemblyReferences(&self,
             wszAssemblyPath: *const WCHAR,
-            pAsmRefProvider: *const ICorProfilerAssemblyReferenceProvider,
+            pAsmRefProvider: ICorProfilerAssemblyReferenceProvider,
         ) -> HRESULT;
     }
 

@@ -1,7 +1,7 @@
-use crate::{ffi::*, types::*};
+use crate::{cli::MAX_LENGTH, ffi::*, types::*};
 use com::{
     interfaces::iunknown::IUnknown,
-    sys::{FAILED, HRESULT},
+    sys::{FAILED, HRESULT, S_OK},
 };
 use core::slice;
 use std::{ffi::c_void, mem::MaybeUninit, ptr};
@@ -227,7 +227,9 @@ impl IMetaDataAssemblyImport {
 
         // no more assembly refs
         if len < max {
-            unsafe { self.CloseEnum(en) }
+            unsafe {
+                self.CloseEnum(en);
+            }
             return Ok(assembly_refs);
         }
 
@@ -259,7 +261,9 @@ impl IMetaDataAssemblyImport {
             }
         }
 
-        unsafe { self.CloseEnum(en) }
+        unsafe {
+            self.CloseEnum(en);
+        }
         Ok(all_assembly_refs)
     }
 
@@ -267,50 +271,26 @@ impl IMetaDataAssemblyImport {
         &self,
         assembly_ref: mdAssemblyRef,
     ) -> Result<AssemblyMetaData, HRESULT> {
-        let mut name_buffer_length = MaybeUninit::uninit();
-
-        // get the length of the name first
-        let hr = unsafe {
-            self.GetAssemblyRefProps(
-                assembly_ref,
-                ptr::null_mut(),
-                ptr::null_mut(),
-                ptr::null_mut(),
-                0,
-                name_buffer_length.as_mut_ptr(),
-                ptr::null_mut(),
-                ptr::null_mut(),
-                ptr::null_mut(),
-                ptr::null_mut(),
-            )
-        };
-
-        if FAILED(hr) {
-            return Err(hr);
-        }
-
-        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
-        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
-
-        let mut name_length = MaybeUninit::uninit();
-        let mut assembly_metadata = MaybeUninit::uninit();
-        let mut assembly_flags = MaybeUninit::uninit();
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(MAX_LENGTH as usize);
+        let mut name_length = 0;
         let mut public_key = MaybeUninit::uninit();
-        let mut public_key_length = MaybeUninit::uninit();
+        // TODO: null_mut() default values will not populated. This is not an issue now, but would be if AssemblyMetaData were to expose these values
+        let mut assembly_metadata = ASSEMBLYMETADATA::default();
+        let mut public_key_length = 0;
+        let mut assembly_flags = 0;
 
         let hr = unsafe {
             self.GetAssemblyRefProps(
                 assembly_ref,
                 public_key.as_mut_ptr(),
-                public_key_length.as_mut_ptr(),
+                &mut public_key_length,
                 name_buffer.as_mut_ptr(),
-                name_buffer_length,
-                name_length.as_mut_ptr(),
-                assembly_metadata.as_mut_ptr(),
+                MAX_LENGTH,
+                &mut name_length,
+                &mut assembly_metadata as *mut _ as *mut ASSEMBLYMETADATA,
                 ptr::null_mut(),
                 ptr::null_mut(),
-                assembly_flags.as_mut_ptr(),
+                &mut assembly_flags,
             )
         };
 
@@ -318,24 +298,21 @@ impl IMetaDataAssemblyImport {
             return Err(hr);
         }
 
+        unsafe { name_buffer.set_len(name_length as usize) };
         let name = U16CString::from_vec_with_nul(name_buffer)
             .unwrap()
             .to_string_lossy();
+
         let public_key = unsafe {
-            let l = public_key_length.assume_init();
             let p = public_key.assume_init();
-            if l == 0 {
+            if public_key_length == 0 {
                 Vec::new()
             } else {
-                slice::from_raw_parts(p as *const u8, l as usize).to_vec()
+                slice::from_raw_parts(p as *const u8, public_key_length as usize).to_vec()
             }
         };
 
-        let assembly_metadata = unsafe { assembly_metadata.assume_init() };
-        let assembly_flags = unsafe {
-            let a = assembly_flags.assume_init();
-            CorAssemblyFlags::from_bits(a).unwrap()
-        };
+        let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
 
         Ok(AssemblyMetaData {
             name,
@@ -349,5 +326,21 @@ impl IMetaDataAssemblyImport {
             ),
             assembly_flags,
         })
+    }
+
+    // Other Rust abstractions
+
+    pub fn find_assembly_ref(&self, name: &str) -> Option<mdAssemblyRef> {
+        if let Ok(assembly_refs) = self.enum_assembly_refs() {
+            for assembly_ref in assembly_refs.into_iter() {
+                if let Ok(assembly_metadata) = self.get_referenced_assembly_metadata(assembly_ref) {
+                    if assembly_metadata.name == name {
+                        return Some(assembly_ref);
+                    }
+                }
+            }
+        }
+
+        None
     }
 }
