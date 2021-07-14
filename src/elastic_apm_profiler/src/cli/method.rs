@@ -19,7 +19,7 @@ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR P
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ */
 use crate::cli::{
     nearest_multiple, CorExceptionFlag, FatMethodHeader, Instruction, MethodHeader, Opcode,
     Section, TinyMethodHeader, BEQ, BGE, BGT, BRFALSE, BRTRUE,
@@ -40,6 +40,7 @@ pub struct Method {
     pub instructions: Vec<Instruction>,
     pub sections: Vec<Section>,
 }
+
 impl Method {
     pub fn tiny(instructions: Vec<Instruction>) -> Result<Self, Error> {
         let code_size: usize = instructions.iter().map(|i| i.len()).sum();
@@ -128,7 +129,7 @@ impl Method {
 
         self.update_header(len_diff, Some(stack_size_diff))?;
         self.update_sections(offset, len_diff)?;
-        self.update_instructions(index, len_diff);
+        self.update_instructions(index, offset, len_diff);
         let _ = self.instructions.remove(index);
         self.instructions.insert(index, instruction);
         Ok(())
@@ -147,7 +148,7 @@ impl Method {
             .map(|i| i.len())
             .sum();
         self.update_sections(offset, len)?;
-        self.update_instructions(index, len);
+        self.update_instructions(index, offset, len);
         self.instructions.insert(index, instruction);
         Ok(())
     }
@@ -171,8 +172,8 @@ impl Method {
         }
     }
 
-    fn update_instructions(&mut self, index: usize, len: i64) {
-        // update the offsets of control flow instructions:
+    fn update_instructions(&mut self, index: usize, offset: usize, len: i64) {
+        // update the offsets of control flow instructions and expand any short instructions:
         //
         // 1. for control flow instructions before the target index,
         //    if the offset is positive and results in an index after the target index,
@@ -181,23 +182,21 @@ impl Method {
         //    if the offset is negative and results in an index before the target index,
         //    subtract len from the offset i.e. offset is further away
         let mut map: Vec<usize> = self.instructions.iter().map(|i| i.len()).collect();
-        let current_map = map.clone();
         let mut updated_instructions = vec![];
         for (i, instruction) in self.instructions.iter_mut().enumerate() {
             if i < index {
-                if let ShortInlineBrTarget(offset) = instruction.operand {
-                    if offset >= 0 {
+                if let ShortInlineBrTarget(target_offset) = instruction.operand {
+                    if target_offset >= 0 {
                         let mut sum_len = 0;
                         let mut j = 1;
-                        while sum_len < offset as usize {
+                        while sum_len < target_offset as usize {
                             sum_len += map[i + j];
                             j += 1;
                         }
                         if i + j > index {
-                            let n = offset as i32 + len as i32;
+                            let n = target_offset as i32 + len as i32;
                             if n > i8::MAX as i32 {
                                 let current_len = instruction.len();
-                                let current_offset = current_map.iter().take(i + 1).sum();
 
                                 // update the instruction
                                 instruction.operand = InlineBrTarget(n);
@@ -207,45 +206,44 @@ impl Method {
                                 // the original offset and len diff.
                                 let new_len = instruction.len();
                                 map[i] = new_len;
-                                updated_instructions
-                                    .push((current_offset, (new_len - current_len) as i64));
+                                updated_instructions.push((offset, (new_len - current_len) as i64));
                             } else {
                                 instruction.operand = ShortInlineBrTarget(n as i8);
                             }
                         }
                     }
-                } else if let InlineBrTarget(offset) = instruction.operand {
-                    if offset >= 0 {
+                } else if let InlineBrTarget(target_offset) = instruction.operand {
+                    if target_offset >= 0 {
                         let mut sum_len = 0;
                         let mut j = 1;
-                        while sum_len < offset as usize {
+                        while sum_len < target_offset as usize {
                             sum_len += map[i + j];
                             j += 1;
                         }
                         if i + j > index {
-                            let n = offset + len as i32;
+                            let n = target_offset + len as i32;
                             instruction.operand = InlineBrTarget(n);
                         }
                     }
-                } else if let InlineSwitch(count, offsets) = &instruction.operand {
+                } else if let InlineSwitch(count, target_offsets) = &instruction.operand {
                     let mut changed = false;
-                    let new_offsets = offsets
+                    let new_offsets = target_offsets
                         .iter()
-                        .map(|&offset| {
-                            if offset >= 0 {
+                        .map(|&target_offset| {
+                            if target_offset >= 0 {
                                 let mut sum_len = 0;
                                 let mut j = 1;
-                                while sum_len < offset as usize {
+                                while sum_len < target_offset as usize {
                                     sum_len += map[i + j];
                                     j += 1;
                                 }
                                 if i + j > index {
                                     changed = true;
-                                    return offset + len as i32;
+                                    return target_offset + len as i32;
                                 }
                             }
 
-                            offset
+                            target_offset
                         })
                         .collect();
                     if changed {
@@ -253,19 +251,18 @@ impl Method {
                     }
                 }
             } else {
-                if let ShortInlineBrTarget(offset) = instruction.operand {
-                    if offset < 0 {
+                if let ShortInlineBrTarget(target_offset) = instruction.operand {
+                    if target_offset < 0 {
                         let mut sum_len = 0;
                         let mut j = 0;
-                        while offset < sum_len {
+                        while target_offset < sum_len {
                             sum_len -= map[i - j] as i8;
                             j += 1;
                         }
                         if i - j < index {
-                            let n = offset as i32 - len as i32;
+                            let n = target_offset as i32 - len as i32;
                             if n < i8::MIN as i32 {
                                 let current_len = instruction.len();
-                                let current_offset = current_map.iter().take(i + 1).sum();
 
                                 // update the instruction
                                 instruction.operand = InlineBrTarget(n);
@@ -275,45 +272,44 @@ impl Method {
                                 // the original offset and len diff.
                                 let new_len = instruction.len();
                                 map[i] = new_len;
-                                updated_instructions
-                                    .push((current_offset, (new_len - current_len) as i64));
+                                updated_instructions.push((offset, (new_len - current_len) as i64));
                             } else {
                                 instruction.operand = ShortInlineBrTarget(n as i8);
                             }
                         }
                     }
-                } else if let InlineBrTarget(offset) = instruction.operand {
-                    if offset < 0 {
+                } else if let InlineBrTarget(target_offset) = instruction.operand {
+                    if target_offset < 0 {
                         let mut sum_len = 0;
                         let mut j = 0;
-                        while offset < sum_len {
+                        while target_offset < sum_len {
                             sum_len -= map[i - j] as i32;
                             j += 1;
                         }
                         if i - j < index {
-                            let n = offset - len as i32;
+                            let n = target_offset - len as i32;
                             instruction.operand = InlineBrTarget(n);
                         }
                     }
-                } else if let InlineSwitch(count, offsets) = &instruction.operand {
+                } else if let InlineSwitch(count, target_offsets) = &instruction.operand {
                     let mut changed = false;
-                    let new_offsets = offsets
+                    let new_offsets = target_offsets
                         .iter()
-                        .map(|&offset| {
-                            if offset < 0 {
+                        .map(|&target_offset| {
+                            if target_offset < 0 {
                                 let mut sum_len = 0;
                                 let mut j = 0;
-                                while offset < sum_len {
+                                while target_offset < sum_len {
                                     sum_len -= map[i - j] as i32;
                                     j += 1;
                                 }
                                 if i - j < index {
                                     changed = true;
-                                    return offset - len as i32;
+                                    return target_offset - len as i32;
                                 }
                             }
 
-                            offset
+                            target_offset
                         })
                         .collect();
                     if changed {
