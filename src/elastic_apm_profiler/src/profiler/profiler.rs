@@ -53,7 +53,7 @@ use crate::{
         Version, WrapperMethodRef,
     },
 };
-use log::Level;
+use log::{Level, LevelFilter};
 use once_cell::sync::Lazy;
 use std::{
     ffi::CStr,
@@ -452,7 +452,15 @@ impl Profiler {
     fn initialize(&self, unknown: IUnknown) -> Result<(), HRESULT> {
         let _lock = LOCK.lock().unwrap();
 
-        SimpleLogger::from_env().init().unwrap();
+        SimpleLogger::new()
+            .with_level(env::read_log_level_from_env_var(LevelFilter::Warn))
+            .init()
+            .unwrap();
+
+        if log::log_enabled!(Level::Debug) {
+            log::debug!("Environment variables\n{}", env::get_env_vars());
+        }
+
         log::trace!("Initialize: started");
 
         // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted

@@ -4,12 +4,13 @@ default_to_workspace = false
 [env]
 DOTNET_VERSION = "netcoreapp3.1"
 DOTNET_CONFIG = "Debug"
-RUST_LOG = { value = "debug", condition = { env_not_set = ["RUST_LOG"] } }
 CORECLR_ENABLE_PROFILING = { value = "1", condition = { env_not_set = ["CORECLR_ENABLE_PROFILING"] } }
 CORECLR_PROFILER = { value = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}", condition = { env_not_set = ["CORECLR_PROFILER"] } }
 ELASTIC_APM_PROFILER_HOME = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elastic.Apm.Profiler.Managed/bin/Release", condition = { env_not_set = ["ELASTIC_APM_PROFILER_HOME"] } }
 ELASTIC_APM_PROFILER_INTEGRATIONS = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elastic.Apm.Profiler.Managed/integrations.json", condition = { env_not_set = ["ELASTIC_APM_PROFILER_INTEGRATIONS"] } }
-ELASTIC_APM_PROFILER_CALLTARGET_ENABLED = { value = "false", condition = { env_not_set = "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED" } }
+ELASTIC_APM_PROFILER_CALLTARGET_ENABLED = { value = "false", condition = { env_not_set = ["ELASTIC_APM_PROFILER_CALLTARGET_ENABLED"] } }
+ELASTIC_APM_PROFILER_LOG = { value = "debug", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG"] } }
+ELASTIC_APM_PROFILER_DISPLAY_IL = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_DISPLAY_IL"] } }
 
 [tasks.build-profiler]
 description = "Builds CLR Profiler"

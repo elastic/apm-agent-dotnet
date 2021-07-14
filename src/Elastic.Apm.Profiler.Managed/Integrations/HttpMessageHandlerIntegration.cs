@@ -44,7 +44,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations
 			var cancellationToken = (CancellationToken)boxedCancellationToken;
 			var httpMessageHandler = handler.GetInstrumentedType(SystemNetHttp, HttpMessageHandlerTypeName);
 
-			//Does not work...
 			Func<object, object, CancellationToken, object> instrumentedMethod = null;
 
 			try

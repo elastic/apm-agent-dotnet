@@ -1,10 +1,11 @@
 use crate::{ffi::E_FAIL, profiler::types::Integration};
 use com::sys::HRESULT;
+use log::LevelFilter;
 use once_cell::sync::Lazy;
 use std::{fs::File, io::BufReader};
 
 const ELASTIC_APM_PROFILER_INTEGRATIONS: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
-
+const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
 const ELASTIC_APM_PROFILER_DISPLAY_IL_ENV_VAR: &str = "ELASTIC_APM_PROFILER_DISPLAY_IL";
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
@@ -15,14 +16,18 @@ pub static ELASTIC_APM_PROFILER_DISPLAY_IL: Lazy<bool> =
 pub static ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: Lazy<bool> =
     Lazy::new(|| read_bool_env_var(ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR, true));
 
-/// Reads the [ELASTIC_APM_PROFILER_CALLTARGET_ENABLED] environment variable value to
-/// determine if calltarget is enabled\
-fn read_calltarget_env_var() -> bool {
-    read_bool_env_var(ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR, true)
-}
-
-fn read_display_il() -> bool {
-    read_bool_env_var(ELASTIC_APM_PROFILER_DISPLAY_IL_ENV_VAR, false)
+/// Gets the environment variables of interest
+pub fn get_env_vars() -> String {
+    std::env::vars()
+        .filter_map(|(k, v)| {
+            if k.starts_with("ELASTIC_") || k.starts_with("CORECLR_") || k.starts_with("COR_") {
+                Some(format!("  {}=\"{}\"", k, v))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// Gets the path to the profiler file
@@ -48,6 +53,19 @@ pub fn get_native_profiler_file() -> Result<String, HRESULT> {
         }
     } else {
         Ok("elastic_apm_profiler.dll".into())
+    }
+}
+
+pub fn read_log_level_from_env_var(default: LevelFilter) -> LevelFilter {
+    match std::env::var(ELASTIC_APM_PROFILER_LOG_ENV_VAR) {
+        Ok(level) => match level.to_lowercase().as_str() {
+            "trace" => log::LevelFilter::Trace,
+            "debug" => log::LevelFilter::Debug,
+            "info" => log::LevelFilter::Info,
+            "warn" => log::LevelFilter::Warn,
+            _ => log::LevelFilter::Error,
+        },
+        _ => default,
     }
 }
 

@@ -96,11 +96,14 @@ CoreCLR (Windows and Linux).
   cargo make test
   ```
 
-The log level of the profiler can be controlled with the `RUST_LOG` environment variable, which can be passed to cargo make
+The log level of the profiler can be controlled with the `ELASTIC_APM_PROFILER_LOG` environment variable, which can be passed to cargo make
 
   ```sh
-  cargo make test --env RUST_LOG=trace
+  cargo make test --env ELASTIC_APM_PROFILER_LOG=trace
   ```
+
+Similarly, other environment variables can be provided with `--env {key=value}` arguments to override
+any default values defined in the `[env]` section in [Makefile.toml](Makefile.toml).
 
 ## License
 
