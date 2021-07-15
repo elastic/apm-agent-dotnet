@@ -96,8 +96,16 @@ const SKIP_ASSEMBLIES: [&'static str; 7] = [
     "ISymWrapper",
 ];
 
+/// The profiler package version
+static PROFILER_PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// The profiler version. Must match the managed assembly version
-const PROFILER_VERSION: Version = Version::new(1, 9, 0, 0);
+static PROFILER_VERSION: Lazy<Version> = Lazy::new(|| {
+    let major = env!("CARGO_PKG_VERSION_MAJOR").parse::<u16>().unwrap();
+    let minor = env!("CARGO_PKG_VERSION_MINOR").parse::<u16>().unwrap();
+    let patch = env!("CARGO_PKG_VERSION_PATCH").parse::<u16>().unwrap();
+    Version::new(major, minor, patch, 0)
+});
 
 static LOCK: Lazy<Mutex<i32>> = Lazy::new(|| Mutex::new(0));
 static FIRST_JIT_COMPILATION_APP_DOMAINS: Lazy<Mutex<Vec<AppDomainID>>> =
@@ -461,7 +469,7 @@ impl Profiler {
             log::debug!("Environment variables\n{}", env::get_env_vars());
         }
 
-        log::trace!("Initialize: started");
+        log::trace!("Initialize: started. profiler package version {}", PROFILER_PACKAGE_VERSION);
 
         // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted
         let profiler_info = unknown
@@ -627,12 +635,12 @@ impl Profiler {
         );
 
         if is_managed_profiler_assembly {
-            if assembly_metadata.version == PROFILER_VERSION {
+            if assembly_metadata.version == *PROFILER_VERSION {
                 log::info!(
                     "AssemblyLoadFinished: {} {} matched profiler version {}",
                     MANAGED_PROFILER_ASSEMBLY,
                     &assembly_metadata.version,
-                    PROFILER_VERSION
+                    *PROFILER_VERSION
                 );
 
                 MANAGED_PROFILER_LOADED_APP_DOMAINS
@@ -659,10 +667,10 @@ impl Profiler {
                 }
             } else {
                 log::warn!(
-                    "AssemblyLoadFinished: {} {} did not match profiler version {}",
+                    "AssemblyLoadFinished: {} {} did not match profiler version {}. Will not be marked as loaded",
                     MANAGED_PROFILER_ASSEMBLY,
                     &assembly_metadata.version,
-                    PROFILER_VERSION
+                    *PROFILER_VERSION
                 );
             }
         }
@@ -718,11 +726,6 @@ impl Profiler {
                     )?;
 
                 let mut assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
-                log::trace!(
-                    "assembly metadata name {}, module info assembly name {}",
-                    &assembly_metadata.name,
-                    assembly_name
-                );
                 assembly_metadata.name = assembly_name.to_string();
 
                 log::info!(

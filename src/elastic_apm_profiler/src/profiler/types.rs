@@ -196,6 +196,10 @@ impl Display for AssemblyReference {
 pub struct PublicKeyToken(String);
 
 impl PublicKeyToken {
+    pub fn new<S: Into<String>>(str: S) -> Self {
+        Self(str.into())
+    }
+
     pub fn into_bytes(&self) -> Vec<BYTE> {
         hex::decode(&self.0).unwrap()
     }
@@ -424,8 +428,11 @@ impl ModuleMetadata {
     }
 
     pub fn is_failed_wrapper_member_key(&self, key: &str) -> bool {
-        let k = key.to_string();
-        self.failed_wrapper_keys.contains(&k)
+        self.failed_wrapper_keys.contains(key)
+    }
+
+    pub fn contains_wrapper_member_ref(&self, key: &str) -> bool {
+        self.wrapper_refs.contains_key(key)
     }
 
     pub fn get_wrapper_member_ref(&self, key: &str) -> Option<mdMemberRef> {
@@ -473,7 +480,7 @@ impl ModuleMetadata {
                 }
             })
             .cloned()
-            .collect::<Vec<_>>()
+            .collect()
     }
 }
 
@@ -525,7 +532,7 @@ impl<'a> MetadataBuilder<'a> {
             )
             .map_err(|e| {
                 log::warn!(
-                    "DefineAssemblyRef failed for assembly {} on module={}  version_id={:?}",
+                    "DefineAssemblyRef failed for assembly {} on module={} version_id={:?}",
                     &assembly_reference.name,
                     &self.module_metadata.assembly_name,
                     &self.module_metadata.module_version_id
@@ -597,8 +604,7 @@ impl<'a> MetadataBuilder<'a> {
         let cache_key = wrapper.get_method_cache_key();
         if self
             .module_metadata
-            .get_wrapper_member_ref(&cache_key)
-            .is_some()
+            .contains_wrapper_member_ref(&cache_key)
         {
             return Ok(());
         }
@@ -779,6 +785,7 @@ pub mod tests {
                 ]
               }
             ]"#;
+
         let integrations: Vec<Integration> = serde_json::from_str(json)?;
 
         assert_eq!(3, integrations.len());
@@ -787,7 +794,7 @@ pub mod tests {
 
     #[test]
     fn public_key_token_into_bytes() {
-        let public_key_token = PublicKeyToken("ae7400d2c189cf22".into());
+        let public_key_token = PublicKeyToken::new("ae7400d2c189cf22");
         let bytes = public_key_token.into_bytes();
         assert_eq!(vec![174, 116, 0, 210, 193, 137, 207, 34], bytes);
     }
