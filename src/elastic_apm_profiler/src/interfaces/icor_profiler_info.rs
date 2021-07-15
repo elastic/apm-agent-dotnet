@@ -11,19 +11,19 @@ use widestring::U16CString;
 use crate::{
     cli::MAX_LENGTH,
     ffi::*,
+    interfaces::{
+        ICorProfilerFunctionEnum,
+        ICorProfilerMethodEnum,
+        ICorProfilerModuleEnum,
+        ICorProfilerObjectEnum,
+        ICorProfilerThreadEnum,
+        IMetaDataImport,
+        IMethodMalloc,
+    },
     types::{
         AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
         FunctionTokenAndMetadata, IlFunctionBody, ModuleInfo, ModuleInfo2, RuntimeInfo,
     },
-};
-
-use super::{
-    icor_profiler_function_enum::ICorProfilerFunctionEnum,
-    icor_profiler_method_enum::ICorProfilerMethodEnum,
-    icor_profiler_module_enum::ICorProfilerModuleEnum,
-    icor_profiler_object_enum::ICorProfilerObjectEnum,
-    icor_profiler_thread_enum::ICorProfilerThreadEnum, imetadata_import::IMetaDataImport,
-    imethod_malloc::IMethodMalloc,
 };
 
 interfaces! {

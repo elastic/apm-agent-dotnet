@@ -45,6 +45,7 @@ pub type SIZE_T = ULONG_PTR;
 pub type LPVOID = *mut c_void;
 pub type HANDLE = *mut c_void;
 pub type UVCP_CONSTANT = *const c_void;
+pub type LPCVOID = *const c_void;
 
 // guid types
 pub type REFGUID = *const GUID;

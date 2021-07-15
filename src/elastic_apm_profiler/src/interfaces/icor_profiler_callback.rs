@@ -1,12 +1,11 @@
 use crate::{
     ffi::*,
     interfaces::{
-        icor_profiler_assembly_reference_provider::ICorProfilerAssemblyReferenceProvider,
-        icor_profiler_function_control::ICorProfilerFunctionControl,
+        ICorProfilerAssemblyReferenceProvider,
+        ICorProfilerFunctionControl,
     },
 };
 use com::{
-    interfaces,
     interfaces::IUnknown,
     sys::{GUID, HRESULT},
 };
