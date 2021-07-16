@@ -28,12 +28,7 @@ namespace Elastic.Apm.Report.Serialization
 			_serializer = JsonSerializer.CreateDefault(settings);
 		}
 
-		private void Serialize(object item, TextWriter writer)
-		{
-			using var jsonWriter = new JsonTextWriter(writer) { Formatting = _serializer.Formatting };
-			_serializer.Serialize(jsonWriter, item);
-			jsonWriter.Flush();
-		}
+		public void Serialize(object item, TextWriter writer) => _serializer.Serialize(writer, item);
 
 		/// <summary>
 		/// Deserializes an instance of <typeparamref name="T"/> from JSON
@@ -44,11 +39,7 @@ namespace Elastic.Apm.Report.Serialization
 		internal T Deserialize<T>(string json)
 		{
 			var val = _serializer.Deserialize<T>(new JsonTextReader(new StringReader(json)));
-
-			if (val != null)
-				return (T)val;
-			else
-				return default;
+			return val ?? default;
 		}
 
 		/// <summary>
