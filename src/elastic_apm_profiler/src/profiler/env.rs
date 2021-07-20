@@ -32,7 +32,9 @@ pub fn get_env_vars() -> String {
 
 /// Gets the path to the profiler file
 pub fn get_native_profiler_file() -> Result<String, HRESULT> {
-    if cfg!(target_os = "linux") {
+    if cfg!(target_os = "windows") {
+        Ok("elastic_apm_profiler.dll".into())
+    } else {
         let env_var = if cfg!(target_pointer_width = "64") {
             "CORECLR_PROFILER_PATH_64"
         } else {
@@ -40,7 +42,6 @@ pub fn get_native_profiler_file() -> Result<String, HRESULT> {
         };
         match std::env::var(env_var) {
             Ok(v) => {
-                log::debug!("env var {}: {}", env_var, &v);
                 Ok(v)
             }
             Err(_) => std::env::var("CORECLR_PROFILER_PATH").map_err(|e| {
@@ -51,8 +52,6 @@ pub fn get_native_profiler_file() -> Result<String, HRESULT> {
                 E_FAIL
             }),
         }
-    } else {
-        Ok("elastic_apm_profiler.dll".into())
     }
 }
 
