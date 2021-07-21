@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -314,10 +313,10 @@ namespace Elastic.Apm.Report
 				using (var content = new StreamContent(stream))
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
-					var result = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
-			.ConfigureAwait(false);
+					var response = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
+						.ConfigureAwait(false);
 
-					if (result != null && !result.IsSuccessStatusCode)
+					if (!response.IsSuccessStatusCode)
 					{
 						_logger?.Error()
 							?.Log("Failed sending event."
@@ -327,26 +326,43 @@ namespace Elastic.Apm.Report
 								, Http.Sanitize(_intakeV2EventsAbsoluteUrl, out var sanitizedServerUrl)
 									? sanitizedServerUrl
 									: _intakeV2EventsAbsoluteUrl.ToString()
-								, result.StatusCode, await result.Content.ReadAsStringAsync().ConfigureAwait(false));
+								, response.StatusCode, await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 					}
 					else
 					{
 						_logger?.Debug()
-							?.Log("Sent items to server:\n{SerializedItems}",
-								TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
+							?.Log("Sent items to server:"
+								+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}",
+								string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems));
 					}
 				}
+			}
+			catch (OperationCanceledException)
+			{
+				// handle cancellation specifically
+				_logger?.Warning()
+					?.Log(
+						"Cancellation requested. Following events were not transferred successfully to the server ({ApmServerUrl}):"
+							+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
+						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedServerUrl)
+							? sanitizedServerUrl
+							: HttpClient.BaseAddress.ToString()
+						, string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems));
+
+				// throw to allow Workloop to handle
+				throw;
 			}
 			catch (Exception e)
 			{
 				_logger?.Warning()
 					?.LogException(
 						e,
-						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
+						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):"
+							+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
 						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedServerUrl)
 							? sanitizedServerUrl
 							: HttpClient.BaseAddress.ToString()
-						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
+						, string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems)
 					);
 			}
 		}
@@ -394,27 +410,5 @@ namespace Elastic.Apm.Report
 
 			return item;
 		}
-	}
-
-	[Specification("docs/spec/v2/metadata.json")]
-	internal class Metadata
-	{
-
-		/// <inheritdoc cref="Api.Cloud"/>
-		public Api.Cloud Cloud { get; set; }
-		public LabelsDictionary Labels { get; set; } = new LabelsDictionary();
-
-		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
-		public Service Service { get; set; }
-
-		// ReSharper disable once UnusedAutoPropertyAccessor.Global
-		public Api.System System { get; set; }
-
-		/// <summary>
-		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.
-		/// See
-		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
-		/// </summary>
-		public bool ShouldSerializeLabels() => !Labels.IsEmpty();
 	}
 }
