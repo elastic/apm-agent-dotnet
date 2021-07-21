@@ -356,11 +356,17 @@ namespace Elastic.Apm.Report
 			writer.Write("{\"");
 			writer.Write(eventType);
 			writer.Write("\":");
-			// TODO: could write to the writer directly
-			var serialized = _payloadItemSerializer.Serialize(item);
-			writer.Write(serialized);
+			var traceLogger = _logger?.IfLevel(LogLevel.Trace);
+			if (traceLogger.HasValue)
+			{
+				var serialized = _payloadItemSerializer.Serialize(item);
+				writer.Write(serialized);
+				traceLogger.Value.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
+			}
+			else
+				_payloadItemSerializer.Serialize(item, writer);
+
 			writer.Write("}\n");
-			_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 		}
 
 		// Executes filters for the given filter collection and handles return value and errors
