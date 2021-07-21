@@ -54,10 +54,10 @@ namespace Elastic.Apm.Helpers
 					?.Log(MethodExitingNormallyMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
 						, DbgUtils.CurrentThreadDesc);
 			}
-			catch (OperationCanceledException ex)
+			catch (OperationCanceledException)
 			{
 				logger.Debug()
-					?.LogException(ex, MethodExitingCancelledMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
+					?.Log(MethodExitingCancelledMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
 						, DbgUtils.CurrentThreadDesc);
 
 				if (!shouldSwallowCancellation) throw;
