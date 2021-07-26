@@ -23,31 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 use crate::cli::{check_flag, il_u16, il_u32, il_u8};
 use crate::error::Error;
 
-// use std::ops::{Add};
-//
-// #[derive(Copy, Clone, Debug)]
-// #[allow(non_camel_case_types)]
-// #[repr(transparent)]
-// struct u24([u8; 3]);
-// impl Add for u24 {
-//     type Output = Self;
-//     fn add(self, rhs: Self) -> Self {
-//         Self::from_u32(self.to_u32() + rhs.to_u32())
-//     }
-// }
-//
-// impl u24 {
-//     fn to_u32(self) -> u32 {
-//         let u24([a, b, c]) = self;
-//         u32::from_le_bytes([a, b, c, 0])
-//     }
-//     fn from_u32(n: u32) -> Self {
-//         let [a, b, c, d] = n.to_le_bytes();
-//         debug_assert!(d == 0);
-//         u24([a, b, c])
-//     }
-// }
-
 bitflags! {
     pub struct SectionHeaderFlags: u8 {
         const CorILMethod_Sect_EHTable = 0x1;
@@ -75,6 +50,23 @@ pub struct FatSectionHeader {
     /// Must take care when converting back to CIL bytes.
     pub data_size: u32,
 }
+
+impl FatSectionHeader {
+    pub fn into_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(4);
+        let mut flags = SectionHeaderFlags::CorILMethod_Sect_FatFormat.bits();
+        if self.is_eh_table {
+            flags |= SectionHeaderFlags::CorILMethod_Sect_EHTable.bits();
+        }
+        if self.more_sects {
+            flags |= SectionHeaderFlags::CorILMethod_Sect_MoreSects.bits();
+        }
+        bytes.push(flags);
+        bytes.extend_from_slice(&self.data_size.to_le_bytes()[0..3]);
+        bytes
+    }
+}
+
 #[derive(Debug)]
 pub struct FatSectionClause {
     pub flag: CorExceptionFlag,
@@ -102,6 +94,18 @@ impl FatSectionClause {
             class_token_or_filter_offset,
         })
     }
+
+    pub fn into_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(Self::LENGTH);
+        let flags = self.flag.bits() as u32;
+        bytes.extend_from_slice(&flags.to_le_bytes());
+        bytes.extend_from_slice(&self.try_offset.to_le_bytes());
+        bytes.extend_from_slice(&self.try_length.to_le_bytes());
+        bytes.extend_from_slice(&self.handler_offset.to_le_bytes());
+        bytes.extend_from_slice(&self.handler_length.to_le_bytes());
+        bytes.extend_from_slice(&self.class_token_or_filter_offset.to_le_bytes());
+        bytes
+    }
 }
 #[derive(Debug)]
 pub struct SmallSectionHeader {
@@ -109,6 +113,26 @@ pub struct SmallSectionHeader {
     pub more_sects: bool,
     pub data_size: u8,
 }
+
+impl SmallSectionHeader {
+    pub fn into_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(4);
+        let mut flags = 0u8;
+        if self.is_eh_table {
+            flags |= SectionHeaderFlags::CorILMethod_Sect_EHTable.bits();
+        }
+        if self.more_sects {
+            flags |= SectionHeaderFlags::CorILMethod_Sect_MoreSects.bits();
+        }
+        bytes.push(flags);
+        bytes.push(self.data_size);
+        bytes.push(0u8); // Padding for DWORD alignment
+        bytes.push(0u8); // Padding for DWORD alignment
+        bytes
+    }
+}
+
+
 #[derive(Debug)]
 pub struct SmallSectionClause {
     pub flag: CorExceptionFlag,
@@ -135,6 +159,18 @@ impl SmallSectionClause {
             handler_length,
             class_token_or_filter_offset,
         })
+    }
+
+    pub fn into_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(Self::LENGTH);
+        let flags = self.flag.bits() as u16;
+        bytes.extend_from_slice(&flags.to_le_bytes());
+        bytes.extend_from_slice(&self.try_offset.to_le_bytes());
+        bytes.push(self.try_length);
+        bytes.extend_from_slice(&self.handler_offset.to_le_bytes());
+        bytes.push(self.handler_length);
+        bytes.extend_from_slice(&self.class_token_or_filter_offset.to_le_bytes());
+        bytes
     }
 }
 #[derive(Debug)]
@@ -174,49 +210,20 @@ impl Section {
             Err(Error::InvalidSectionHeader)
         }
     }
+
     pub fn into_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         match &self {
             Section::FatSection(header, clauses) => {
-                let mut flags = SectionHeaderFlags::CorILMethod_Sect_FatFormat.bits();
-                if header.is_eh_table {
-                    flags |= SectionHeaderFlags::CorILMethod_Sect_EHTable.bits();
-                }
-                if header.more_sects {
-                    flags |= SectionHeaderFlags::CorILMethod_Sect_MoreSects.bits();
-                }
-                bytes.push(flags);
-                bytes.extend_from_slice(&header.data_size.to_le_bytes()[0..3]);
+                bytes.extend_from_slice(&header.into_bytes());
                 for clause in clauses.iter() {
-                    let flags = clause.flag.bits() as u32;
-                    bytes.extend_from_slice(&flags.to_le_bytes());
-                    bytes.extend_from_slice(&clause.try_offset.to_le_bytes());
-                    bytes.extend_from_slice(&clause.try_length.to_le_bytes());
-                    bytes.extend_from_slice(&clause.handler_offset.to_le_bytes());
-                    bytes.extend_from_slice(&clause.handler_length.to_le_bytes());
-                    bytes.extend_from_slice(&clause.class_token_or_filter_offset.to_le_bytes());
+                    bytes.extend_from_slice(&clause.into_bytes());
                 }
             }
             Section::SmallSection(header, clauses) => {
-                let mut flags = 0u8;
-                if header.is_eh_table {
-                    flags |= SectionHeaderFlags::CorILMethod_Sect_EHTable.bits();
-                }
-                if header.more_sects {
-                    flags |= SectionHeaderFlags::CorILMethod_Sect_MoreSects.bits();
-                }
-                bytes.push(flags);
-                bytes.push(header.data_size);
-                bytes.push(0u8); // Padding for DWORD alignment
-                bytes.push(0u8); // Padding for DWORD alignment
+                bytes.extend_from_slice(&header.into_bytes());
                 for clause in clauses.iter() {
-                    let flags = clause.flag.bits() as u16;
-                    bytes.extend_from_slice(&flags.to_le_bytes());
-                    bytes.extend_from_slice(&clause.try_offset.to_le_bytes());
-                    bytes.push(clause.try_length);
-                    bytes.extend_from_slice(&clause.handler_offset.to_le_bytes());
-                    bytes.push(clause.handler_length);
-                    bytes.extend_from_slice(&clause.class_token_or_filter_offset.to_le_bytes());
+                    bytes.extend_from_slice(&clause.into_bytes());
                 }
             }
         }

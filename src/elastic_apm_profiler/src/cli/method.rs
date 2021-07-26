@@ -31,6 +31,7 @@ use crate::{
     ffi::{mdSignatureNil, mdTokenNil},
 };
 use std::{alloc::handle_alloc_error, convert::TryFrom, mem::transmute, slice};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub struct Method {
@@ -185,16 +186,16 @@ impl Method {
         let mut updated_instructions = vec![];
         for (i, instruction) in self.instructions.iter_mut().enumerate() {
             if i < index {
-                if let ShortInlineBrTarget(target_offset) = instruction.operand {
-                    if target_offset >= 0 {
+                if let ShortInlineBrTarget(target_offset) = &mut instruction.operand {
+                    if *target_offset >= 0 {
                         let mut sum_len = 0;
                         let mut j = 1;
-                        while sum_len < target_offset as usize {
+                        while sum_len < *target_offset as usize {
                             sum_len += map[i + j];
                             j += 1;
                         }
                         if i + j > index {
-                            let n = target_offset as i32 + len as i32;
+                            let n = *target_offset as i32 + len as i32;
                             if n > i8::MAX as i32 {
                                 let current_len = instruction.len();
 
@@ -208,59 +209,49 @@ impl Method {
                                 map[i] = new_len;
                                 updated_instructions.push((offset, (new_len - current_len) as i64));
                             } else {
-                                instruction.operand = ShortInlineBrTarget(n as i8);
+                                *target_offset = n as i8;
                             }
                         }
                     }
-                } else if let InlineBrTarget(target_offset) = instruction.operand {
-                    if target_offset >= 0 {
+                } else if let InlineBrTarget(target_offset) = &mut instruction.operand {
+                    if *target_offset >= 0 {
                         let mut sum_len = 0;
                         let mut j = 1;
-                        while sum_len < target_offset as usize {
+                        while sum_len < *target_offset as usize {
                             sum_len += map[i + j];
                             j += 1;
                         }
                         if i + j > index {
-                            let n = target_offset + len as i32;
-                            instruction.operand = InlineBrTarget(n);
+                            let n = *target_offset + len as i32;
+                            *target_offset = n;
                         }
                     }
-                } else if let InlineSwitch(count, target_offsets) = &instruction.operand {
-                    let mut changed = false;
-                    let new_offsets = target_offsets
-                        .iter()
-                        .map(|&target_offset| {
-                            if target_offset >= 0 {
-                                let mut sum_len = 0;
-                                let mut j = 1;
-                                while sum_len < target_offset as usize {
-                                    sum_len += map[i + j];
-                                    j += 1;
-                                }
-                                if i + j > index {
-                                    changed = true;
-                                    return target_offset + len as i32;
-                                }
+                } else if let InlineSwitch(count, target_offsets) = &mut instruction.operand {
+                    for target_offset in target_offsets {
+                        if *target_offset >= 0 {
+                            let mut sum_len = 0;
+                            let mut j = 1;
+                            while sum_len < *target_offset as usize {
+                                sum_len += map[i + j];
+                                j += 1;
                             }
-
-                            target_offset
-                        })
-                        .collect();
-                    if changed {
-                        instruction.operand = InlineSwitch(*count, new_offsets);
+                            if i + j > index {
+                                *target_offset = *target_offset + len as i32;
+                            }
+                        }
                     }
                 }
             } else {
-                if let ShortInlineBrTarget(target_offset) = instruction.operand {
-                    if target_offset < 0 {
+                if let ShortInlineBrTarget(target_offset) = &mut instruction.operand {
+                    if *target_offset < 0 {
                         let mut sum_len = 0;
                         let mut j = 0;
-                        while target_offset < sum_len {
+                        while *target_offset < sum_len {
                             sum_len -= map[i - j] as i8;
                             j += 1;
                         }
                         if i - j < index {
-                            let n = target_offset as i32 - len as i32;
+                            let n = *target_offset as i32 - len as i32;
                             if n < i8::MIN as i32 {
                                 let current_len = instruction.len();
 
@@ -274,46 +265,36 @@ impl Method {
                                 map[i] = new_len;
                                 updated_instructions.push((offset, (new_len - current_len) as i64));
                             } else {
-                                instruction.operand = ShortInlineBrTarget(n as i8);
+                                *target_offset = n as i8;
                             }
                         }
                     }
-                } else if let InlineBrTarget(target_offset) = instruction.operand {
-                    if target_offset < 0 {
+                } else if let InlineBrTarget(target_offset) = &mut instruction.operand {
+                    if *target_offset < 0 {
                         let mut sum_len = 0;
                         let mut j = 0;
-                        while target_offset < sum_len {
+                        while *target_offset < sum_len {
                             sum_len -= map[i - j] as i32;
                             j += 1;
                         }
                         if i - j < index {
-                            let n = target_offset - len as i32;
-                            instruction.operand = InlineBrTarget(n);
+                            let n = *target_offset - len as i32;
+                            *target_offset = n;
                         }
                     }
-                } else if let InlineSwitch(count, target_offsets) = &instruction.operand {
-                    let mut changed = false;
-                    let new_offsets = target_offsets
-                        .iter()
-                        .map(|&target_offset| {
-                            if target_offset < 0 {
-                                let mut sum_len = 0;
-                                let mut j = 0;
-                                while target_offset < sum_len {
-                                    sum_len -= map[i - j] as i32;
-                                    j += 1;
-                                }
-                                if i - j < index {
-                                    changed = true;
-                                    return target_offset - len as i32;
-                                }
+                } else if let InlineSwitch(count, target_offsets) = &mut instruction.operand {
+                    for target_offset in target_offsets {
+                        if *target_offset < 0 {
+                            let mut sum_len = 0;
+                            let mut j = 0;
+                            while *target_offset < sum_len {
+                                sum_len -= map[i - j] as i32;
+                                j += 1;
                             }
-
-                            target_offset
-                        })
-                        .collect();
-                    if changed {
-                        instruction.operand = InlineSwitch(*count, new_offsets);
+                            if i - j < index {
+                                *target_offset = *target_offset - len as i32;
+                            }
+                        }
                     }
                 }
             }
@@ -492,5 +473,30 @@ impl Method {
             _ => (),
         }
         bytes
+    }
+}
+
+impl Display for Method {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut d = f.debug_struct("Method");
+        let instructions = self.instructions_to_bytes();
+        d.field("header", &self.header.into_bytes())
+        .field("instructions", &instructions);
+
+        match &self.header {
+            MethodHeader::Fat(header) if header.more_sects => {
+                let padding_byte_size = nearest_multiple(4, instructions.len()) - instructions.len();
+                if padding_byte_size > 0 {
+                    d.field("alignment", &vec![0; padding_byte_size]);
+                }
+            }
+            _ => (),
+        };
+
+        if !self.sections.is_empty() {
+            d.field("sections", &self.sections.iter().map(|s| s.into_bytes()).collect::<Vec<_>>());
+        }
+
+        d.finish()
     }
 }

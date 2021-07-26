@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 use crate::cli::{check_flag, il_u32};
 use crate::error::Error;
+use crate::ffi::mdTokenNil;
 
 bitflags! {
     pub struct MethodHeaderFlags: u8 {
@@ -121,7 +122,7 @@ impl MethodHeader {
     pub fn local_var_sig_tok(&self) -> u32 {
         match self {
             MethodHeader::Fat(header) => header.local_var_sig_tok,
-            MethodHeader::Tiny(_) => 0,
+            MethodHeader::Tiny(_) => mdTokenNil,
         }
     }
 

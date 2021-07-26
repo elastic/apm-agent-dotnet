@@ -50,21 +50,7 @@ pub fn process_replacement_calls(
         E_FAIL
     })?;
 
-    // We're going to push instructions onto the stack which may exceed tiny format max stack,
-    // so expand tiny format to fat format to ensure the stack will be big enough
-    method.expand_tiny_to_fat();
-
-    let original_il = if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
-        Some(helpers::get_il_codes(
-            "IL original code for caller: ",
-            &method,
-            caller,
-            module_metadata,
-        ))
-    } else {
-        None
-    };
-
+    let mut original_il = None;
     let mut modified = false;
     for method_replacement in method_replacements {
         if method_replacement.wrapper.is_none() {
@@ -274,6 +260,19 @@ pub fn process_replacement_calls(
                 );
                 continue;
             }
+
+             if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
+                 original_il = Some(helpers::get_il_codes(
+                    "IL original code for caller: ",
+                    &method,
+                    caller,
+                    module_metadata,
+                ));
+            }
+
+            // We're going to push instructions onto the stack which may exceed tiny format max stack,
+            // so expand tiny format to fat format to ensure the stack will be big enough
+            method.expand_tiny_to_fat();
 
             let original_opcode = instruction.opcode;
 
