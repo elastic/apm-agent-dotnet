@@ -316,7 +316,7 @@ namespace Elastic.Apm.Report
 					var response = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
 						.ConfigureAwait(false);
 
-					if (!response.IsSuccessStatusCode)
+					if (response is null || !response.IsSuccessStatusCode)
 					{
 						_logger?.Error()
 							?.Log("Failed sending event."
@@ -326,7 +326,8 @@ namespace Elastic.Apm.Report
 								, Http.Sanitize(_intakeV2EventsAbsoluteUrl, out var sanitizedServerUrl)
 									? sanitizedServerUrl
 									: _intakeV2EventsAbsoluteUrl.ToString()
-								, response.StatusCode, await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+								, response?.StatusCode,
+								response is null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 					}
 					else
 					{
