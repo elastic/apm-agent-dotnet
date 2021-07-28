@@ -85,6 +85,9 @@ namespace Elastic.Apm.AspNetCore
 				subs.Add(new AspNetCoreErrorDiagnosticsSubscriber());
 
 			agent.Subscribe(subs.ToArray());
+#if NET5_0
+			// new Elastic.Apm.OpenTelemetry.ElasticActivityListener(agent);
+#endif
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
 

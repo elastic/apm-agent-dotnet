@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+#if  NET5_0
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+#endif
 using SampleAspNetCoreApp.Data;
 
 namespace SampleAspNetCoreApp
@@ -26,6 +30,13 @@ namespace SampleAspNetCoreApp
 		public void ConfigureServices(IServiceCollection services)
 		{
 			ConfigureServicesExceptMvc(services);
+#if  NET5_0
+
+			//
+			// services.AddOpenTelemetryTracing((builder) => builder
+			// 	.AddAspNetCoreInstrumentation());
+			//	.AddHttpClientInstrumentation());
+#endif
 			services.AddMvc();
 		}
 

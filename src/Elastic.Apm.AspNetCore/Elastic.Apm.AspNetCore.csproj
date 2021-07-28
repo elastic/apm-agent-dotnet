@@ -35,6 +35,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+    <ProjectReference Include="..\Elastic.Apm.OpenTelemetry\Elastic.Apm.OpenTelemetry.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Elastic.Apm.Extensions.Hosting\Elastic.Apm.Extensions.Hosting.csproj" />

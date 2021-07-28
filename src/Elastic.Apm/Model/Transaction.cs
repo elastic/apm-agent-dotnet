@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
@@ -107,7 +108,8 @@ namespace Elastic.Apm.Model
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider,
 			bool ignoreActivity = false,
-			long? timestamp = null
+			long? timestamp = null,
+			string id = null
 		)
 		{
 			Configuration = configuration;
@@ -179,7 +181,12 @@ namespace Elastic.Apm.Model
 				{
 					// If no activity is created, create new random ids
 					var idBytes = new byte[8];
-					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					if (id == null)
+						Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					else
+					{
+						Id = id;
+					}
 					IsSampled = sampler.DecideIfToSample(idBytes);
 
 					idBytes = new byte[16];
@@ -445,7 +452,7 @@ namespace Elastic.Apm.Model
 
 		private Activity StartActivity()
 		{
-			var activity = new Activity(ApmTransactionActivityName);
+			var activity = new Activity(KnownListeners.ApmTransactionActivityName);
 			activity.SetIdFormat(ActivityIdFormat.W3C);
 			activity.Start();
 			return activity;

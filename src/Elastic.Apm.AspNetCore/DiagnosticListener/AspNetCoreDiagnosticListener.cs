@@ -35,37 +35,40 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		{
 			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
 
+			if (kv.Key == $"{KnownListeners.MicrosoftAspNetCoreHostingHttpRequestIn}.Start")
+			{
+				if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
+				{
+					var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, Logger, ApmAgent.Tracer,
+						(ApmAgent as ApmAgent)?.ConfigurationStore.CurrentSnapshot);
+
+
+					Transaction transaction = null;
+					if (createdTransaction is Transaction t)
+						transaction = t;
+
+					if (transaction != null)
+						WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, Logger);
+
+					if (createdTransaction != null)
+						_processingRequests[httpContextStart] = createdTransaction;
+				}
+			}
+			else if (kv.Key == $"{KnownListeners.MicrosoftAspNetCoreHostingHttpRequestIn}.Stop")
+			{
+				if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
+				{
+					if (_processingRequests.TryRemove(httpContextStop, out var createdTransaction))
+					{
+						if (createdTransaction is Transaction transaction)
+							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, Logger);
+						else
+							createdTransaction.End();
+					}
+				}
+			}
 			switch (kv.Key)
 			{
-				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start":
-					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
-					{
-						var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, Logger, ApmAgent.Tracer,
-							(ApmAgent as ApmAgent)?.ConfigurationStore.CurrentSnapshot);
-
-						Transaction transaction = null;
-						if (createdTransaction is Transaction t)
-							transaction = t;
-
-						if (transaction != null)
-							WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, Logger);
-
-						if (createdTransaction != null)
-							_processingRequests[httpContextStart] = createdTransaction;
-					}
-					break;
-				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop":
-					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
-					{
-						if (_processingRequests.TryRemove(httpContextStop, out var createdTransaction))
-						{
-							if (createdTransaction is Transaction transaction)
-								WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, Logger);
-							else
-								createdTransaction.End();
-						}
-					}
-					break;
 				case "Microsoft.AspNetCore.Diagnostics.UnhandledException": //Called when exception handler is registered
 				case "Microsoft.AspNetCore.Diagnostics.HandledException":
 					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextDiagnosticsUnhandledException)) return;

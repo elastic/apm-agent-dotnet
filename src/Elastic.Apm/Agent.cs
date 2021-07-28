@@ -171,6 +171,11 @@ namespace Elastic.Apm
 				?.Log("Initialization - Agent.Setup called. Callstack: {callstack}", new StackTrace().ToString());
 
 			Components = agentComponents;
+
+
+#if NET5_0
+			new OpenTelemetry.ElasticActivityListener(Instance);
+#endif
 			_isConfigured = true;
 		}
 

@@ -10,6 +10,10 @@ using System.Threading;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 
+#if NET5_0
+using OpenTelemetry.Trace;
+#endif
+
 namespace ApiSamples
 {
 	/// <summary>
@@ -19,37 +23,54 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-			if (args.Length == 1) //in case it's started with arguments, parse DistributedTracingData from them
-			{
-				var distributedTracingData = DistributedTracingData.TryDeserializeFromString(args[0]);
+			Agent.Setup(new AgentComponents());
+#if NET5_0
+			ActivityMixedWithElasticApi();
+			//OpenTelemetryShim();
+			Console.ReadKey();
+#endif
 
-				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {distributedTracingData}");
-				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", distributedTracingData);
+		}
 
-				try
-				{
-					transaction2.CaptureSpan("TestSpan", "TestSpanType", () => Thread.Sleep(200));
-				}
-				finally
-				{
-					transaction2.End();
-				}
+		public static void ActivityOnlySample()
+		{
 
-				Thread.Sleep(TimeSpan.FromSeconds(11));
-				WriteLineToConsole("About to exit");
-			}
-			else
-			{
-				WriteLineToConsole("Started");
-				PassDistributedTracingData();
+			var foo = new Activity("foo").Start();
+			var bar = new Activity("bar").Start();
 
-				//WIP: if the process terminates the agent
-				//potentially does not have time to send the transaction to the server.
-				Thread.Sleep(TimeSpan.FromSeconds(11));
+			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
-				WriteLineToConsole("About to exit - press any key...");
-				Console.ReadKey();
-			}
+
+			bar.Stop();
+			foo.Stop();
+		}
+
+
+#if NET5_0
+		public static void OpenTelemetryShim()
+		{
+			var tracer = TracerProvider.Default.GetTracer("MyTracer", "1");
+			var fooSpan = tracer.StartActiveSpan("fooSpanWithShim");
+
+			var barSpan = tracer.StartActiveSpan("barSpanWithShim");
+			fooSpan.End();
+			barSpan.End();
+		}
+#endif
+
+		public static void ActivityMixedWithElasticApi()
+		{
+			var t = Agent.Tracer.StartTransaction("ElasticTransaction", "test");
+
+			var fooActivity = new Activity("fooActivity").Start();
+
+			var elasticSpan = Agent.Tracer.CurrentSpan.StartSpan("ElasticSpan", "test");
+			var barActivity = new Activity("barActivity").Start();
+
+			barActivity.Stop();
+			elasticSpan.End();
+			fooActivity.Stop();
+			t.End();
 		}
 
 		public static void SampleCustomTransaction()
@@ -169,11 +190,7 @@ namespace ApiSamples
 
 				WriteLineToConsole(
 					$"Spawning callee process and passing outgoing distributed tracing data: {traceParent} to it...");
-				var startInfo = new ProcessStartInfo
-				{
-					FileName = "dotnet",
-					Arguments = $"{assembly} {traceParent}"
-				};
+				var startInfo = new ProcessStartInfo { FileName = "dotnet", Arguments = $"{assembly} {traceParent}" };
 
 				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
 				var calleeProcess = Process.Start(startInfo);

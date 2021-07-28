@@ -23,6 +23,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="5.0.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc6"/>
+<!--    <PackageReference Include="OpenTelemetry" Version="1.0.0-rc6"/>-->
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc6"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
