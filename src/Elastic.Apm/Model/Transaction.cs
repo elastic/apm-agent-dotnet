@@ -238,6 +238,10 @@ namespace Elastic.Apm.Model
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
 					_traceState?.SetSampleRate(sampler.Rate);
+
+					// In order to have a root transaction, we also unset the ParentId.
+					// This ensures there is a root transaction within elastic.
+					ParentId = null;
 				}
 				else
 					IsSampled = distributedTracingData.FlagRecorded;
