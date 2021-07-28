@@ -67,9 +67,9 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			centralConfigFetcher.IsRunning.Should().BeTrue();
 			waitHandle.WaitOne();
 
-			// wait up to 60 seconds for the log level to change. Change can often be slower in CI
+			// wait up to 120 seconds for the log level to change. Change can often be slower in CI
 			var count = 0;
-			while (count < 60 && testLogger.LogLevelSwitch.Level == logLevel)
+			while (count < 120 && testLogger.LogLevelSwitch.Level == logLevel)
 			{
 				count++;
 				Thread.Sleep(TimeSpan.FromSeconds(1));
