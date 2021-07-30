@@ -86,7 +86,7 @@ namespace Elastic.Apm.Helpers
 			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || _containerUidRegex.IsMatch(idPart) || _shortenedUuidRegex.IsMatch(idPart))
 				return new Container { Id = idPart };
 
-			_logger.Debug()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
+			_logger.Info()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 			return null;
 		}
 
