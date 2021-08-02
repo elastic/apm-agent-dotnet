@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
-using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -18,6 +17,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private readonly List<MetricSet> _itemsToSend = new();
 		private readonly IApmLogger _logger;
+
+		/// <summary>
+		/// Indicates if the 10K limit log was already printed.
+		/// </summary>
+		private bool loggedWarning = false;
 
 		private readonly object _lock = new();
 		private int _transactionCount;
@@ -44,7 +48,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				_transactionCount++;
 				var timestampNow = TimeUtils.TimestampNow();
-				var loggedWarning = false;
 
 				foreach (var item in transaction.SpanTimings)
 				{
@@ -89,7 +92,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					{
 						_logger.Warning()
 							?.Log(
-								"The limit of 1000 metricsets has been reached, no new metricsets will be created.");
+								"The limit of 1000 metricsets has been reached, no new metricsets will be created until the current set is sent to APM Server.");
 					}
 				}
 			}
@@ -104,6 +107,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				retVal.AddRange(_itemsToSend);
 				_itemsToSend.Clear();
 				_transactionCount = 0;
+				loggedWarning = false;
 			}
 
 			return retVal;
