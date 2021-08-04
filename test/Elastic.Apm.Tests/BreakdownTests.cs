@@ -6,10 +6,9 @@
 using System;
 using System.Linq;
 using System.Threading;
-using Elastic.Apm.Config;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
-using Elastic.Apm.Model;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -673,14 +672,55 @@ namespace Elastic.Apm.Tests
 			breakdownMetricsProvider.GetSamples().Count().Should().Be(1000);
 		}
 
+		/// <summary>
+		/// Makes sure the 1K limit warning in <see cref="BreakdownMetricsProvider" /> is only printed once per metric collection
+		/// (and e.g. not per transaction).
+		/// See https://github.com/elastic/apm-agent-dotnet/issues/1361.
+		/// </summary>
+		[Fact]
+		public void BreakdownLogTest()
+		{
+			var testLogger = new TestLogger(LogLevel.Warning);
+			var rnd = new Random();
+
+			var (agent, breakdownMetricsProvider) = SetUpAgent(testLogger);
+			using (agent)
+			{
+				for (var transactionNumber = 0; transactionNumber < 50; transactionNumber++)
+				{
+					var t = agent.TracerInternal.StartTransactionInternal("test", "request");
+
+
+					for (var i = 0; i < 5000; i++) t.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
+					t.End();
+				}
+			}
+
+			// Make sure the 1K limit warning is only logged once
+			testLogger.Lines.Count(n => n.Contains("The limit of 1000 metricsets has been reached, no new metricsets will be created"))
+				.Should()
+				.Be(1);
+			breakdownMetricsProvider.GetSamples().Count().Should().Be(1000);
+
+			var t2 = agent.TracerInternal.StartTransactionInternal("test", "request");
+			for (var i = 0; i < 5000; i++) t2.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
+			t2.End();
+
+			// After BreakdownMetricsProvider.GetSamples() the warning is logged again
+			testLogger.Lines.Count(n => n.Contains("The limit of 1000 metricsets has been reached, no new metricsets will be created"))
+				.Should()
+				.Be(2);
+		}
+
 		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 1000;
 
-		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent()
+		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent(IApmLogger logger = null)
 		{
-			var breakdownMetricsProvider = new BreakdownMetricsProvider(new NoopLogger());
+			logger ??= new NoopLogger();
+			var breakdownMetricsProvider = new BreakdownMetricsProvider(logger);
 
 			var agentComponents = new AgentComponents(
-				new NoopLogger(),
+				logger,
 				new MockConfigSnapshot(metricsInterval: "1s"),
 				new NoopPayloadSender(),
 				new FakeMetricsCollector(), //metricsCollector will be set in AgentComponents.ctor
