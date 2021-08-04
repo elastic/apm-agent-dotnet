@@ -20,13 +20,13 @@
     script-path: Jenkinsfile
     scm:
     - github:
-        branch-discovery: all
+        branch-discovery: no-pr
         discover-pr-forks-strategy: merge-current
         discover-pr-forks-trust: permission
         discover-pr-origin: merge-current
         discover-tags: true
         notification-context: 'apm-ci'
-        repo: apm-agent-dotnet
+        repo: apm-agent-dotnet-auto-instrumentation
         repo-owner: elastic
         credentials-id: 2a9602aa-ab9f-4e52-baf3-b71ca88469c7-UserAndToken
         ssh-checkout:
@@ -53,7 +53,6 @@
         timeout: '15'
         use-author: true
         wipe-workspace: 'True'
-    periodic-folder-trigger: 1d
     prune-dead-branches: true
     publishers:
     - email:

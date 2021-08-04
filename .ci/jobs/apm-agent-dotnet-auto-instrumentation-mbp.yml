@@ -1,0 +1,5 @@
+---
+- job:
+    name: apm-agent-dotnet/apm-agent-dotnet-auto-instrumentation-mbp
+    display-name: APM Agent .NET auto instrumentation
+    description: Auto instrumentation for .NET APM agent
