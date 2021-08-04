@@ -90,7 +90,7 @@ namespace Elastic.Apm.BackendComm
 						await WorkLoopIteration().ConfigureAwait(false);
 					// ReSharper disable once FunctionNeverReturns
 				}
-				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.CurrentMethodName()).ConfigureAwait(false);
+				, dbgCallerMethodName: _dbgName + "." + DbgUtils.CurrentMethodName()).ConfigureAwait(false);
 
 			_logger.Debug()?.Log("Signaling work loop completed event...");
 			_loopCompleted.Set();
