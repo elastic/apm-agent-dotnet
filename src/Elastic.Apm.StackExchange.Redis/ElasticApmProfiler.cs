@@ -7,10 +7,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net;
+using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+using Elastic.Apm.Reflection;
 using StackExchange.Redis.Profiling;
 
 namespace Elastic.Apm.StackExchange.Redis
@@ -25,6 +27,27 @@ namespace Elastic.Apm.StackExchange.Redis
 
 		private readonly Lazy<IApmLogger> _logger;
 		private readonly Lazy<IApmAgent> _agent;
+		private static readonly Func<object,object> MessageFetcher;
+		private static readonly Func<object,object> CommandAndKeyFetcher;
+		private static readonly Type _profiledCommandType;
+
+		static ElasticApmProfiler()
+		{
+			var messageType = Type.GetType("StackExchange.Redis.Message,StackExchange.Redis", false);
+			_profiledCommandType = Type.GetType("StackExchange.Redis.Profiling.ProfiledCommand,StackExchange.Redis", false);
+			if (messageType != null && _profiledCommandType != null)
+			{
+				var commandAndKey = messageType.GetProperty("CommandAndKey", BindingFlags.Public | BindingFlags.Instance);
+				var messageProperty = _profiledCommandType.GetField("Message", BindingFlags.NonPublic | BindingFlags.Instance);
+				if (commandAndKey != null && messageProperty != null)
+				{
+					MessageFetcher = ExpressionBuilder.BuildFieldGetter(_profiledCommandType, messageProperty);
+					CommandAndKeyFetcher = ExpressionBuilder.BuildPropertyGetter(messageType, commandAndKey);
+				}
+			}
+
+
+		}
 
 		public ElasticApmProfiler(Func<IApmAgent> agentGetter)
 		{
@@ -128,10 +151,10 @@ namespace Elastic.Apm.StackExchange.Redis
 		}
 		private static void ProcessCommand(IProfiledCommand profiledCommand, IExecutionSegment executionSegment)
 		{
-			var name = GetCommandName(profiledCommand);
+			var name = GetCommand(profiledCommand);
 			if (profiledCommand.RetransmissionOf != null)
 			{
-				var retransmissionName = GetCommandName(profiledCommand.RetransmissionOf);
+				var retransmissionName = GetCommand(profiledCommand.RetransmissionOf);
 				name += $" (Retransmission of {retransmissionName}: {profiledCommand.RetransmissionReason})";
 			}
 
@@ -140,7 +163,7 @@ namespace Elastic.Apm.StackExchange.Redis
 				span.Context.Db = new Database
 				{
 					Instance = profiledCommand.Db.ToString(CultureInfo.InvariantCulture),
-					Statement = profiledCommand.Command,
+					Statement = GetCommandAndKey(profiledCommand) ?? name,
 					Type = ApiConstants.SubTypeRedis
 				};
 
@@ -175,9 +198,18 @@ namespace Elastic.Apm.StackExchange.Redis
 			}, ApiConstants.SubTypeRedis, "query");
 		}
 
-		private static string GetCommandName(IProfiledCommand profiledCommand) =>
+		private static string GetCommand(IProfiledCommand profiledCommand) =>
 			!string.IsNullOrEmpty(profiledCommand.Command)
 				? profiledCommand.Command
 				: "UNKNOWN";
+
+		private static string GetCommandAndKey(IProfiledCommand profiledCommand)
+		{
+			if (profiledCommand.GetType() != _profiledCommandType || MessageFetcher == null)
+				return null;
+
+			var message = MessageFetcher.Invoke(profiledCommand);
+			return CommandAndKeyFetcher.Invoke(message) as string;
+		}
 	}
 }
