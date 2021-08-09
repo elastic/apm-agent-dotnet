@@ -1,5 +1,9 @@
-// don't emit warnings for these for now.
 #![allow(dead_code, unused_variables, unused_imports)]
+
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 
 #[macro_use]
 extern crate bitflags;

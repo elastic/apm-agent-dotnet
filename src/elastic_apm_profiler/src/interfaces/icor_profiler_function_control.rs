@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::ffi::*;
 use com::{
     interfaces::iunknown::IUnknown,
@@ -22,12 +27,10 @@ interfaces! {
 }
 
 impl ICorProfilerFunctionControl {
-    pub fn set_il_function_body(
-        &self,
-        new_method_header_size: ULONG,
-        new_method_header: LPCBYTE,
-    ) -> Result<(), HRESULT> {
-        let hr = unsafe { self.SetILFunctionBody(new_method_header_size, new_method_header) };
+    pub fn set_il_function_body(&self, new_method: &[u8]) -> Result<(), HRESULT> {
+        let len = new_method.len() as ULONG;
+        let ptr = new_method.as_ptr();
+        let hr = unsafe { self.SetILFunctionBody(len, ptr) };
         if FAILED(hr) {
             Err(hr)
         } else {

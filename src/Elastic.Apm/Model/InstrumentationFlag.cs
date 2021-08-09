@@ -23,6 +23,10 @@ namespace Elastic.Apm.Model
 		EfClassic = 1 << 3,
 		SqlClient = 1 << 4,
 		AspNetClassic = 1 << 5,
-		Azure = 1 << 6
+		Azure = 1 << 6,
+		Postgres = 1 << 7,
+		Oracle = 1 << 8,
+		MySql = 1 << 9,
+		Sqlite = 1 << 10,
 	}
 }

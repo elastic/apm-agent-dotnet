@@ -1,6 +1,11 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{
     cli::{uncompress_data, uncompress_token},
-    ffi::{CorCallingConvention, CorElementType},
+    ffi::{CorCallingConvention, CorElementType, E_FAIL},
     interfaces::IMetaDataImport2,
     profiler::types::ModuleMetadata,
     types::{MyFunctionInfo, MyTypeInfo},
@@ -56,7 +61,7 @@ fn parse_optional_custom_mods(signature: &[u8]) -> Option<usize> {
     }
 }
 
-fn parse_number(signature: &[u8]) -> Option<usize> {
+pub fn parse_number(signature: &[u8]) -> Option<usize> {
     uncompress_data(signature).map(|(l, i)| i)
 }
 
@@ -303,9 +308,26 @@ fn retrieve_type_for_signature(
     signature: &[u8],
 ) -> Result<(MyTypeInfo, usize), HRESULT> {
     let (token, len) = uncompress_token(signature);
-    let type_info = metadata_import.get_type_info(token)?;
-    // TODO: double check the unwrap here is safe
-    Ok((type_info.unwrap(), len))
+    match metadata_import.get_type_info(token) {
+        Ok(Some(type_info)) => Ok((type_info, len)),
+        Ok(None) => {
+            log::warn!(
+                "None type info from token={} in signature={:?}",
+                token,
+                signature
+            );
+            Err(E_FAIL)
+        }
+        Err(e) => {
+            log::warn!(
+                "Could not get type info from token={} in signature={:?}, {}",
+                token,
+                signature,
+                e
+            );
+            Err(e)
+        }
+    }
 }
 
 pub fn parse_signature_types(
@@ -354,7 +376,6 @@ pub fn parse_signature_types(
                 let (j, next) = enumerator.next().unwrap();
                 let type_info = retrieve_type_for_signature(&module_metadata.import, &params[j..]);
                 if type_info.is_err() {
-                    log::warn!("Could not retrieve type for signature {:?}", &params[j..]);
                     return None;
                 }
                 let (type_data, len) = type_info.unwrap();
@@ -406,10 +427,6 @@ pub fn parse_signature_types(
                 let generic_type_info =
                     retrieve_type_for_signature(&module_metadata.import, &params[j..]);
                 if generic_type_info.is_err() {
-                    log::warn!(
-                        "Could not retrieve generic type for signature {:?}",
-                        &params[j..]
-                    );
                     return None;
                 }
                 let (generic_type_info, len) = generic_type_info.unwrap();
@@ -499,4 +516,95 @@ pub fn parse_signature_types(
     }
 
     Some(type_names)
+}
+
+pub fn get_sig_type_token_name(
+    signature: &[u8],
+    metadata_import: &IMetaDataImport2,
+) -> (String, usize) {
+    let mut token_name = String::new();
+    let mut ref_flag = false;
+    let mut idx = 0;
+    if signature[idx] == CorElementType::ELEMENT_TYPE_BYREF as u8 {
+        idx += 1;
+        ref_flag = true;
+    }
+
+    if let Some(elem_type) = CorElementType::from_u8(signature[idx]) {
+        match elem_type {
+            CorElementType::ELEMENT_TYPE_BOOLEAN => token_name.push_str("System.Boolean"),
+            CorElementType::ELEMENT_TYPE_CHAR => token_name.push_str("System.Char"),
+            CorElementType::ELEMENT_TYPE_I1 => token_name.push_str("System.SByte"),
+            CorElementType::ELEMENT_TYPE_U1 => token_name.push_str("System.Byte"),
+            CorElementType::ELEMENT_TYPE_I2 => token_name.push_str("System.Int16"),
+            CorElementType::ELEMENT_TYPE_U2 => token_name.push_str("System.UInt16"),
+            CorElementType::ELEMENT_TYPE_I4 => token_name.push_str("System.Int32"),
+            CorElementType::ELEMENT_TYPE_U4 => token_name.push_str("System.UInt32"),
+            CorElementType::ELEMENT_TYPE_I8 => token_name.push_str("System.Int64"),
+            CorElementType::ELEMENT_TYPE_U8 => token_name.push_str("System.UInt64"),
+            CorElementType::ELEMENT_TYPE_R4 => token_name.push_str("System.Single"),
+            CorElementType::ELEMENT_TYPE_R8 => token_name.push_str("System.Double"),
+            CorElementType::ELEMENT_TYPE_STRING => token_name.push_str("System.String"),
+            CorElementType::ELEMENT_TYPE_OBJECT => token_name.push_str("System.Object"),
+            CorElementType::ELEMENT_TYPE_CLASS | CorElementType::ELEMENT_TYPE_VALUETYPE => {
+                idx += 1;
+                let (token, len) = uncompress_token(&signature[idx..]);
+                if let Ok(Some(type_info)) = metadata_import.get_type_info(token) {
+                    token_name.push_str(&type_info.name);
+                }
+            }
+            CorElementType::ELEMENT_TYPE_SZARRAY => {
+                idx += 1;
+                let elem = get_sig_type_token_name(&signature[idx..], metadata_import);
+                token_name.push_str(&elem.0);
+                token_name.push_str("[]");
+            }
+            CorElementType::ELEMENT_TYPE_GENERICINST => {
+                idx += 1;
+                let (elem, end_idx) = get_sig_type_token_name(&signature[idx..], metadata_import);
+                idx += end_idx;
+                token_name.push_str(&elem);
+                token_name.push('[');
+
+                if let Some((data, len)) = uncompress_data(&signature[idx..]) {
+                    idx += data as usize;
+                    for i in 0..len {
+                        let (elem, end_idx) =
+                            get_sig_type_token_name(&signature[idx..], metadata_import);
+                        idx += end_idx;
+                        token_name.push_str(&elem);
+                        if i != (len - 1) {
+                            token_name.push(',');
+                        }
+                    }
+                }
+                token_name.push(']');
+            }
+            CorElementType::ELEMENT_TYPE_MVAR => {
+                idx += 1;
+                if let Some((data, len)) = uncompress_data(&signature[idx..]) {
+                    idx += data as usize;
+                    token_name.push_str("!!");
+                    token_name.push_str(&format!("{}", len));
+                }
+            }
+            CorElementType::ELEMENT_TYPE_VAR => {
+                idx += 1;
+                if let Some((data, len)) = uncompress_data(&signature[idx..]) {
+                    idx += data as usize;
+                    token_name.push('!');
+                    token_name.push_str(&format!("{}", len));
+                }
+            }
+            _ => {}
+        }
+    } else {
+        return (token_name, idx);
+    }
+
+    if ref_flag {
+        token_name.push('&');
+    }
+
+    (token_name, idx)
 }

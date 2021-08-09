@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::ffi::*;
 use com::{
     interfaces::iunknown::IUnknown,
@@ -90,7 +95,7 @@ impl IMetaDataAssemblyEmit {
         &self,
         public_key: &[u8],
         name: &str,
-        assembly_metadata: ASSEMBLYMETADATA,
+        assembly_metadata: &ASSEMBLYMETADATA,
         hash: &[u8],
         assembly_ref_flags: CorAssemblyFlags,
     ) -> Result<mdAssemblyRef, HRESULT> {
@@ -109,7 +114,7 @@ impl IMetaDataAssemblyEmit {
                 key_ptr as *const c_void,
                 key_len,
                 wstr.as_ptr(),
-                &assembly_metadata as *const _,
+                assembly_metadata as *const _,
                 hash_ptr as *const c_void,
                 hash_len,
                 assembly_ref_flags.bits(),

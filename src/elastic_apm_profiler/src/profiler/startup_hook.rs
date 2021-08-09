@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{
     cli::{compress_token, FatMethodHeader, Instruction, Method, MethodHeader},
     ffi::{
@@ -5,7 +10,7 @@ use crate::{
         CorMethodImpl, CorPinvokeMap, CorTypeAttr, ModuleID, COR_SIGNATURE, E_FAIL, ULONG,
     },
     interfaces::ICorProfilerInfo4,
-    profiler::{env, helpers, types::ModuleMetadata},
+    profiler::{env, helpers, managed, types::ModuleMetadata},
 };
 use com::sys::HRESULT;
 
@@ -309,7 +314,7 @@ fn generate_void_il_startup_method(
         })?;
 
     let load_helper_token =  module_metadata.emit
-        .define_user_string("Elastic.Apm.Profiler.Managed.Loader.Startup").map_err(|e| {
+        .define_user_string(managed::MANAGED_PROFILER_ASSEMBLY_LOADER_STARTUP).map_err(|e| {
         log::warn!("generate_void_il_startup_method: failed to define user string Elastic.Apm.Profiler.Managed.Loader.Startup");
         e
     })?;

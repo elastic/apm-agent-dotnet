@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{
     cli::{
         uncompress_data, uncompress_token, CorExceptionFlag, Method, Operand,
@@ -8,8 +13,8 @@ use crate::{
         Section, BOX, CALL, CALLVIRT, CASTCLASS, INITOBJ, LDSTR, NEWARR, NEWOBJ, UNBOX_ANY,
     },
     ffi::{
-        mdAssemblyRef, mdToken, mdTokenNil, type_from_token, CorAssemblyFlags, CorElementType,
-        CorTokenType, ModuleID, ASSEMBLYMETADATA,
+        mdAssemblyRef, mdToken, mdTokenNil, mdTypeDef, mdTypeDefNil, type_from_token,
+        CorAssemblyFlags, CorElementType, CorTokenType, ModuleID, ASSEMBLYMETADATA,
     },
     interfaces::{IMetaDataAssemblyEmit, IMetaDataEmit2, IMetaDataImport2},
     profiler::{
@@ -330,7 +335,7 @@ pub fn create_assembly_ref_to_mscorlib(
     assembly_emit.define_assembly_ref(
         public_key,
         "mscorlib",
-        assembly_metadata,
+        &assembly_metadata,
         &[],
         CorAssemblyFlags::empty(),
     )
@@ -370,9 +375,7 @@ pub fn get_il_codes(
             match section {
                 Section::FatSection(h, s) => {
                     for ss in s {
-                        if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_FINALLY
-                            || ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_NONE
-                        {
+                        if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_FINALLY {
                             if ss.try_offset as usize == sum_len {
                                 if indent > 0 {
                                     buf.push_str(&"  ".repeat(indent));
@@ -391,11 +394,7 @@ pub fn get_il_codes(
                                 if indent > 0 {
                                     buf.push_str(&"  ".repeat(indent));
                                 }
-                                if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_FINALLY {
-                                    buf.push_str(".finally {\n");
-                                } else if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_NONE {
-                                    buf.push_str(".catch {\n");
-                                }
+                                buf.push_str(".finally {\n");
                                 indent += 1;
                             }
                         }
@@ -403,9 +402,7 @@ pub fn get_il_codes(
                 }
                 Section::SmallSection(h, s) => {
                     for ss in s {
-                        if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_FINALLY
-                            || ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_NONE
-                        {
+                        if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_FINALLY {
                             if ss.try_offset as usize == sum_len {
                                 if indent > 0 {
                                     buf.push_str(&"  ".repeat(indent));
@@ -424,11 +421,66 @@ pub fn get_il_codes(
                                 if indent > 0 {
                                     buf.push_str(&"  ".repeat(indent));
                                 }
-                                if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_FINALLY {
-                                    buf.push_str(".finally {\n");
-                                } else if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_NONE {
-                                    buf.push_str(".catch {\n");
+                                buf.push_str(".finally {\n");
+                                indent += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for section in &method.sections {
+            match section {
+                Section::FatSection(h, s) => {
+                    for ss in s {
+                        if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_NONE {
+                            if ss.try_offset as usize == sum_len {
+                                if indent > 0 {
+                                    buf.push_str(&"  ".repeat(indent));
                                 }
+                                buf.push_str(".try {\n");
+                                indent += 1;
+                            }
+                            if (ss.try_offset + ss.try_length) as usize == sum_len {
+                                indent -= 1;
+                                if indent > 0 {
+                                    buf.push_str(&"  ".repeat(indent));
+                                }
+                                buf.push_str("}\n");
+                            }
+                            if ss.handler_offset as usize == sum_len {
+                                if indent > 0 {
+                                    buf.push_str(&"  ".repeat(indent));
+                                }
+                                buf.push_str(".catch {\n");
+                                indent += 1;
+                            }
+                        }
+                    }
+                }
+                Section::SmallSection(h, s) => {
+                    for ss in s {
+                        if ss.flag == CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_NONE {
+                            if ss.try_offset as usize == sum_len {
+                                if indent > 0 {
+                                    buf.push_str(&"  ".repeat(indent));
+                                }
+                                buf.push_str(".try {\n");
+                                indent += 1;
+                            }
+                            if (ss.try_offset + ss.try_length as u16) as usize == sum_len {
+                                indent -= 1;
+                                if indent > 0 {
+                                    buf.push_str(&"  ".repeat(indent));
+                                }
+                                buf.push_str("}\n");
+                            }
+                            if ss.handler_offset as usize == sum_len {
+                                if indent > 0 {
+                                    buf.push_str(&"  ".repeat(indent));
+                                }
+                                buf.push_str(".catch {\n");
                                 indent += 1;
                             }
                         }
@@ -544,4 +596,44 @@ pub fn get_il_codes(
     }
 
     buf
+}
+
+pub fn find_type_def_by_name(
+    target_method_type_name: &str,
+    assembly_name: &str,
+    metadata_import: &IMetaDataImport2,
+) -> Option<mdTypeDef> {
+    let parts: Vec<&str> = target_method_type_name.split('+').collect();
+    let method_type_name;
+    let mut parent = mdTypeDefNil;
+    match parts.len() {
+        1 => method_type_name = target_method_type_name,
+        2 => {
+            method_type_name = parts[1];
+            if let Ok(parent_type_def) = metadata_import.find_type_def_by_name(parts[0], None) {
+                parent = parent_type_def;
+            } else {
+                return None;
+            }
+        }
+        _ => {
+            log::warn!(
+                "Invalid type def- only one layer of nested classes are supported: {}, module={}",
+                target_method_type_name,
+                assembly_name
+            );
+            return None;
+        }
+    }
+
+    if let Ok(type_def) = metadata_import.find_type_def_by_name(method_type_name, Some(parent)) {
+        Some(type_def)
+    } else {
+        log::debug!(
+            "Cannot find type_def={}, module={}",
+            method_type_name,
+            assembly_name
+        );
+        None
+    }
 }

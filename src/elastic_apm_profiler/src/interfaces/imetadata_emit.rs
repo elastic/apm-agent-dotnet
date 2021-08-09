@@ -1,16 +1,17 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{
     ffi::*,
     interfaces::{
-        IMapToken,
-        IMetaDataAssemblyEmit,
-        IMetaDataAssemblyImport,
-        IMetaDataImport,
-        IStream,
+        IMapToken, IMetaDataAssemblyEmit, IMetaDataAssemblyImport, IMetaDataImport, IStream,
     },
 };
 use com::{
     interfaces::iunknown::IUnknown,
-    sys::{HRESULT, S_OK},
+    sys::{FAILED, HRESULT, S_OK},
 };
 use std::{
     ffi::{c_void, CString, OsStr, OsString},
@@ -367,9 +368,10 @@ impl IMetaDataEmit {
         let hr = unsafe {
             self.GetTokenFromTypeSpec(signature.as_ptr(), signature.len() as ULONG, &mut type_spec)
         };
-        match hr {
-            S_OK => Ok(type_spec),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(type_spec)
         }
     }
 
@@ -407,9 +409,10 @@ impl IMetaDataEmit {
         let ptr = sig.as_ptr();
         let len = sig.len() as ULONG;
         let hr = unsafe { self.DefineMemberRef(token, wstr.as_ptr(), ptr, len, &mut member_ref) };
-        match hr {
-            S_OK => Ok(member_ref),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(member_ref)
         }
     }
 
@@ -607,9 +610,10 @@ impl IMetaDataEmit2 {
                 &mut method_spec,
             )
         };
-        match hr {
-            S_OK => Ok(method_spec),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(method_spec)
         }
     }
 }

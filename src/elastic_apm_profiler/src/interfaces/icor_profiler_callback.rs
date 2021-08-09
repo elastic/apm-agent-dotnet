@@ -1,9 +1,11 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{
     ffi::*,
-    interfaces::{
-        ICorProfilerAssemblyReferenceProvider,
-        ICorProfilerFunctionControl,
-    },
+    interfaces::{ICorProfilerAssemblyReferenceProvider, ICorProfilerFunctionControl},
 };
 use com::{
     interfaces::IUnknown,
@@ -217,7 +219,7 @@ interfaces! {
     #[uuid("4FD2ED52-7731-4B8D-9469-03D2CC3086C5")]
     pub unsafe interface ICorProfilerCallback3: ICorProfilerCallback2 {
         pub fn InitializeForAttach(&self,
-            pCorProfilerInfoUnk: *const IUnknown,
+            pCorProfilerInfoUnk: IUnknown,
             pvClientData: *const c_void,
             cbClientData: UINT,
         ) -> HRESULT;
@@ -235,7 +237,7 @@ interfaces! {
         pub fn GetReJITParameters(&self,
             moduleId: ModuleID,
             methodId: mdMethodDef,
-            pFunctionControl: *const ICorProfilerFunctionControl,
+            pFunctionControl: ICorProfilerFunctionControl,
         ) -> HRESULT;
         pub fn ReJITCompilationFinished(&self,
             functionId: FunctionID,

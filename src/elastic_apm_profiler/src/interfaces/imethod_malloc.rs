@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::ffi::*;
 use c_vec::CVec;
 use com::{interfaces, interfaces::IUnknown, sys::HRESULT};
@@ -19,7 +24,7 @@ impl IMethodMalloc {
             let p = self.Alloc(cb);
             if p.is_null() {
                 log::error!("failed to allocate {} bytes", cb);
-                return Err(E_FAIL);
+                Err(E_FAIL)
             } else {
                 let address = p as *mut u8;
                 Ok(CVec::new(address, cb as usize))

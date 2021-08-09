@@ -1,4 +1,9 @@
-use crate::ffi::{REFCLSID,DWORD,REFIID,LPCVOID,ULONG,LPCWSTR};
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+use crate::ffi::{DWORD, LPCVOID, LPCWSTR, REFCLSID, REFIID, ULONG};
 use com::{interfaces::iunknown::IUnknown, sys::HRESULT};
 
 interfaces! {

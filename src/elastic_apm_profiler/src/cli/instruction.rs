@@ -1,34 +1,63 @@
-/**
-Copyright 2019 Camden Reslink
-MIT License
-https://github.com/camdenreslink/clr-profiler
+// Copyright 2019 Camden Reslink
+// MIT License
+// https://github.com/camdenreslink/clr-profiler
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the "Software"), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute,
-sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or
-substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-use crate::cli::{
-    il_f32, il_f64, il_i32, il_i64, il_i8, il_u16, il_u32, il_u8, opcode::*, OperandParams,
+use crate::{
+    cli::{il_f32, il_f64, il_i32, il_i64, il_i8, il_u16, il_u32, il_u8, opcode::*, OperandParams},
+    error::{Error, Error::InvalidCil},
 };
-use crate::error::Error;
+use std::fmt::{Display, Formatter};
+
+#[derive(Debug, Copy, Clone)]
+pub enum SingleByte {
+    Signed(i8),
+    Unsigned(u8),
+}
+
+impl SingleByte {
+    pub fn to_le_bytes(self) -> [u8; 1] {
+        match self {
+            SingleByte::Signed(val) => val.to_le_bytes(),
+            SingleByte::Unsigned(val) => val.to_le_bytes(),
+        }
+    }
+}
+
+impl Display for SingleByte {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SingleByte::Signed(i) => i.fmt(f),
+            SingleByte::Unsigned(u) => u.fmt(f),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum Operand {
     InlineNone,
     ShortInlineVar(u8),
     InlineVar(u16),
-    ShortInlineI(u8),
+    ShortInlineI(SingleByte),
     InlineI(i32),
     InlineI8(i64),
     ShortInlineR(f32),
@@ -43,6 +72,8 @@ pub enum Operand {
     InlineField(u32),
     InlineTok(u32),
 }
+
+#[allow(clippy::len_without_is_empty)]
 impl Operand {
     pub fn len(&self) -> usize {
         match self {
@@ -72,6 +103,7 @@ pub struct Instruction {
     pub operand: Operand,
 }
 
+#[allow(clippy::len_without_is_empty)]
 impl Instruction {
     /// Attempts to parse the first instruction at the beginning
     /// of the given byte array. Array must be at a valid instruction
@@ -97,8 +129,20 @@ impl Instruction {
                 Operand::InlineVar(val)
             }
             OperandParams::ShortInlineI => {
-                let val = il_u8(il, operand_index)?;
-                Operand::ShortInlineI(val)
+                match opcode {
+                    LDC_I4_S => {
+                        let val = il_i8(il, operand_index)?;
+                        Operand::ShortInlineI(SingleByte::Signed(val))
+                    }
+                    UNALIGNED => {
+                        let val = il_u8(il, operand_index)?;
+                        Operand::ShortInlineI(SingleByte::Unsigned(val))
+                    }
+                    _ => {
+                        // Handle other future instructions, in the future...
+                        return Err(InvalidCil);
+                    }
+                }
             }
             OperandParams::InlineI => {
                 let val = il_i32(il, operand_index)?;
@@ -396,10 +440,10 @@ impl Instruction {
             operand: Operand::InlineNone,
         }
     }
-    pub fn ldc_i4_s(val: u8) -> Self {
+    pub fn ldc_i4_s(val: i8) -> Self {
         Self {
             opcode: LDC_I4_S,
-            operand: Operand::ShortInlineI(val),
+            operand: Operand::ShortInlineI(SingleByte::Signed(val)),
         }
     }
     pub fn ldc_i4(val: i32) -> Self {
@@ -1455,7 +1499,7 @@ impl Instruction {
     pub fn unaligned(val: u8) -> Self {
         Self {
             opcode: UNALIGNED,
-            operand: Operand::ShortInlineI(val),
+            operand: Operand::ShortInlineI(SingleByte::Unsigned(val)),
         }
     }
     pub fn volatile() -> Self {
@@ -1519,22 +1563,62 @@ impl Instruction {
         }
     }
 
-    /// Convenience method
-    pub fn load_int32(val: i32) -> Self {
-        let op_codes = vec![
-            LDC_I4_0, LDC_I4_1, LDC_I4_2, LDC_I4_3, LDC_I4_4, LDC_I4_5, LDC_I4_6, LDC_I4_7,
-            LDC_I4_8,
-        ];
+    // Convenience methods
 
-        if (0..=8).contains(&val) {
-            Self {
-                opcode: op_codes[val as usize],
-                operand: Operand::InlineNone,
-            }
-        } else if -128 <= val && val <= 127 {
-            Self::ldc_i4_s(val as u8)
+    pub fn load_int32(val: i32) -> Self {
+        match val {
+            0 => Self::ldc_i4_0(),
+            1 => Self::ldc_i4_1(),
+            2 => Self::ldc_i4_2(),
+            3 => Self::ldc_i4_3(),
+            4 => Self::ldc_i4_4(),
+            5 => Self::ldc_i4_5(),
+            6 => Self::ldc_i4_6(),
+            7 => Self::ldc_i4_7(),
+            8 => Self::ldc_i4_8(),
+            i if i8::MIN as i32 <= val && val <= i8::MAX as i32 => Self::ldc_i4_s(val as i8),
+            i => Self::ldc_i4(i),
+        }
+    }
+
+    pub fn load_argument(val: u16) -> Self {
+        match val {
+            0 => Self::ldarg_0(),
+            1 => Self::ldarg_1(),
+            2 => Self::ldarg_2(),
+            3 => Self::ldarg_3(),
+            i if i <= u8::MAX as u16 => Self::ldarg_s(i as u8),
+            i => Self::ldarg(i),
+        }
+    }
+
+    pub fn store_local(val: u16) -> Self {
+        match val {
+            0 => Self::stloc_0(),
+            1 => Self::stloc_1(),
+            2 => Self::stloc_2(),
+            3 => Self::stloc_3(),
+            i if i <= u8::MAX as u16 => Self::stloc_s(i as u8),
+            i => Self::stloc(i),
+        }
+    }
+
+    pub fn load_local(val: u16) -> Self {
+        match val {
+            0 => Self::ldloc_0(),
+            1 => Self::ldloc_1(),
+            2 => Self::ldloc_2(),
+            3 => Self::ldloc_3(),
+            i if i <= u8::MAX as u16 => Self::ldloc_s(i as u8),
+            i => Self::ldloc(i),
+        }
+    }
+
+    pub fn load_local_address(val: u16) -> Self {
+        if val <= u8::MAX as u16 {
+            Self::ldloca_s(val as u8)
         } else {
-            Self::ldc_i4(val)
+            Self::ldloca(val)
         }
     }
 }

@@ -35,7 +35,14 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 		{
 			try
 			{
-				Assembly.Load("Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22");
+				var assembly = Assembly.Load("Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22");
+
+				if (assembly != null)
+				{
+					var type = assembly.GetType("Elastic.Apm.Profiler.Managed.AutoInstrumentation", throwOnError: false);
+					var method = type?.GetRuntimeMethod("Initialize", parameters: new Type[0]);
+					method?.Invoke(obj: null, parameters: null);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -59,7 +66,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
             return null;
         }
     }
-    
+
 #if NETFRAMEWORK
     public partial class Startup
     {
@@ -69,7 +76,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
             var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
             return Path.Combine(directory, framework);
         }
-        
+
         private static Assembly ResolveDependencies(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name).Name;
@@ -95,7 +102,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         }
     }
 #endif
-    
+
 #if !NETFRAMEWORK
     public partial class Startup
     {
@@ -106,7 +113,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
             var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
             return Path.Combine(directory, framework);
         }
-        
+
         private static Assembly ResolveDependencies(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);

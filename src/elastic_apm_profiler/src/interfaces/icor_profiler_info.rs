@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use std::{ffi::c_void, mem::MaybeUninit, ptr};
 
 use com::{
@@ -12,13 +17,8 @@ use crate::{
     cli::MAX_LENGTH,
     ffi::*,
     interfaces::{
-        ICorProfilerFunctionEnum,
-        ICorProfilerMethodEnum,
-        ICorProfilerModuleEnum,
-        ICorProfilerObjectEnum,
-        ICorProfilerThreadEnum,
-        IMetaDataImport,
-        IMethodMalloc,
+        ICorProfilerFunctionEnum, ICorProfilerMethodEnum, ICorProfilerModuleEnum,
+        ICorProfilerObjectEnum, ICorProfilerThreadEnum, IMetaDataImport, IMethodMalloc,
     },
     types::{
         AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
@@ -773,8 +773,8 @@ impl ICorProfilerInfo {
                 let metadata_import = unsafe { metadata_import.assume_init() };
                 let token = unsafe { token.assume_init() };
                 Ok(FunctionTokenAndMetadata {
-                    token,
                     metadata_import,
+                    token,
                 })
             }
             _ => Err(hr),
@@ -975,8 +975,8 @@ impl ICorProfilerInfo {
                 let module_id = unsafe { module_id.assume_init() };
                 Ok(AssemblyInfo {
                     name,
-                    app_domain_id,
                     module_id,
+                    app_domain_id,
                 })
             }
             _ => Err(hr),
@@ -1176,6 +1176,33 @@ impl ICorProfilerInfo3 {
         }
     }
 }
+
+impl ICorProfilerInfo4 {
+    pub fn initialize_current_thread(&self) -> Result<(), HRESULT> {
+        let hr = unsafe { self.InitializeCurrentThread() };
+        match hr {
+            S_OK => Ok(()),
+            _ => Err(hr),
+        }
+    }
+
+    pub fn request_rejit(
+        &self,
+        module_ids: &[ModuleID],
+        method_ids: &[mdMethodDef],
+    ) -> Result<(), HRESULT> {
+        let len = method_ids.len() as ULONG;
+        let hr = unsafe { self.RequestReJIT(len, module_ids.as_ptr(), method_ids.as_ptr()) };
+        match hr {
+            S_OK => Ok(()),
+            _ => Err(hr),
+        }
+    }
+}
+
+// allow it to be moved to another thread for rejitting.
+// We know this is safe to perform, but compiler doesn't
+unsafe impl Send for ICorProfilerInfo4 {}
 
 impl ICorProfilerInfo5 {
     pub fn set_event_mask2(

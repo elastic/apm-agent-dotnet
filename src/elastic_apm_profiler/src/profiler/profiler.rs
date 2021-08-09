@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{FAILED, GUID, HRESULT, S_OK},
@@ -15,7 +20,7 @@ use std::{
     ops::Deref,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Mutex,
+        Mutex, RwLock,
     },
 };
 
@@ -35,17 +40,19 @@ use crate::{
         IID_ICOR_PROFILER_INFO, IID_ICOR_PROFILER_INFO4,
     },
     profiler::{
-        env,
+        calltarget_tokens::CallTargetTokens,
+        env, helpers,
         helpers::{
             create_assembly_ref_to_mscorlib, get_il_codes, return_type_is_value_type_or_generic,
         },
-        managed::{MANAGED_PROFILER_ASSEMBLY, MANAGED_PROFILER_ASSEMBLY_LOADER},
-        process,
-        sig::parse_type,
+        managed::{IGNORE, MANAGED_PROFILER_ASSEMBLY, MANAGED_PROFILER_ASSEMBLY_LOADER},
+        process, rejit,
+        rejit::{RejitHandler, RejitHandlerModule, RejitHandlerModuleMethod},
+        sig::{get_sig_type_token_name, parse_type},
         startup_hook,
         types::{
             Integration, IntegrationMethod, MetadataBuilder, MethodReplacement, ModuleMetadata,
-            TargetMethodReference, WrapperMethodReference,
+            ModuleWrapperTokens, TargetMethodReference, WrapperMethodReference,
         },
     },
     types::{
@@ -53,16 +60,18 @@ use crate::{
         Version, WrapperMethodRef,
     },
 };
+use crypto::ed25519::signature;
 use log::{Level, LevelFilter};
 use once_cell::sync::Lazy;
 use std::{
+    collections::HashSet,
     ffi::CStr,
     mem::{transmute, transmute_copy},
     process::id,
 };
 use widestring::{U16CStr, U16CString, WideString};
 
-const SKIP_ASSEMBLY_PREFIXES: [&'static str; 22] = [
+const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
     "Elastic.Apm",
     "MessagePack",
     "Microsoft.AI",
@@ -86,7 +95,7 @@ const SKIP_ASSEMBLY_PREFIXES: [&'static str; 22] = [
     "System.Xml",
     "Newtonsoft",
 ];
-const SKIP_ASSEMBLIES: [&'static str; 7] = [
+const SKIP_ASSEMBLIES: [&str; 7] = [
     "mscorlib",
     "netstandard",
     "System.Configuration",
@@ -100,27 +109,24 @@ const SKIP_ASSEMBLIES: [&'static str; 7] = [
 static PROFILER_PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// The profiler version. Must match the managed assembly version
-static PROFILER_VERSION: Lazy<Version> = Lazy::new(|| {
+pub static PROFILER_VERSION: Lazy<Version> = Lazy::new(|| {
     let major = env!("CARGO_PKG_VERSION_MAJOR").parse::<u16>().unwrap();
     let minor = env!("CARGO_PKG_VERSION_MINOR").parse::<u16>().unwrap();
     let patch = env!("CARGO_PKG_VERSION_PATCH").parse::<u16>().unwrap();
     Version::new(major, minor, patch, 0)
 });
 
-static LOCK: Lazy<Mutex<i32>> = Lazy::new(|| Mutex::new(0));
-static FIRST_JIT_COMPILATION_APP_DOMAINS: Lazy<Mutex<Vec<AppDomainID>>> =
-    Lazy::new(|| Mutex::new(Vec::new()));
-static MANAGED_PROFILER_LOADED_APP_DOMAINS: Lazy<Mutex<Vec<AppDomainID>>> =
-    Lazy::new(|| Mutex::new(Vec::new()));
-static INTEGRATION_METHODS: Lazy<Mutex<Vec<IntegrationMethod>>> =
-    Lazy::new(|| Mutex::new(Vec::new()));
-static COR_LIB_MODULE_LOADED: AtomicBool = AtomicBool::new(false);
-static COR_APP_DOMAIN_ID: AtomicUsize = AtomicUsize::new(0);
+/// Whether the managed profiler has been loaded as domain-neutral i.e.
+/// into the shared domain, which can be shared code among other app domains
 static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
+
+/// Tracks the app domain ids into which the managed profiler assembly has been loaded
+static MANAGED_PROFILER_LOADED_APP_DOMAINS: Lazy<Mutex<HashSet<AppDomainID>>> =
+    Lazy::new(|| Mutex::new(HashSet::new()));
 
 /// Indicates whether the profiler is attached
 pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
-/// Indicates whether the CLR thr profiler is running in is a Desktop CLR
+/// Indicates whether the profiler is running is a Desktop CLR
 pub(crate) static IS_DESKTOP_CLR: AtomicBool = AtomicBool::new(false);
 
 class! {
@@ -130,10 +136,17 @@ class! {
             ICorProfilerCallback6(ICorProfilerCallback5(ICorProfilerCallback4(
                 ICorProfilerCallback3(ICorProfilerCallback2(ICorProfilerCallback)))))))) {
         profiler_info: RefCell<Option<ICorProfilerInfo4>>,
+        rejit_handler: RefCell<Option<RejitHandler>>,
         runtime_info: RefCell<Option<RuntimeInfo>>,
-        modules: RefCell<HashMap<ModuleID, ModuleMetadata>>,
+        modules: Mutex<HashMap<ModuleID, ModuleMetadata>>,
+        module_wrapper_tokens: Mutex<HashMap<ModuleID, ModuleWrapperTokens>>,
+        call_target_tokens: RefCell<HashMap<ModuleID, CallTargetTokens>>,
         cor_assembly_property: RefCell<Option<AssemblyMetaData>>,
+        cor_lib_module_loaded: AtomicBool,
+        cor_app_domain_id: AtomicUsize,
         is_desktop_iis: AtomicBool,
+        integration_methods: RwLock<Vec<IntegrationMethod>>,
+        first_jit_compilation_app_domains: Mutex<HashSet<AppDomainID>>,
     }
 
     impl ICorProfilerCallback for Profiler {
@@ -163,7 +176,10 @@ class! {
              &self,
             appDomainId: AppDomainID,
             hrStatus: HRESULT,
-        ) -> HRESULT { S_OK }
+        ) -> HRESULT {
+            self.app_domain_shutdown_finished(appDomainId, hrStatus);
+            S_OK
+        }
         pub fn AssemblyLoadStarted(&self, assemblyId: AssemblyID) -> HRESULT { S_OK }
         pub fn AssemblyLoadFinished(
             &self,
@@ -368,7 +384,7 @@ class! {
 
     impl ICorProfilerCallback3 for Profiler {
         pub fn InitializeForAttach(&self,
-            pCorProfilerInfoUnk: *const IUnknown,
+            pCorProfilerInfoUnk: IUnknown,
             pvClientData: *const c_void,
             cbClientData: UINT,
         ) -> HRESULT { S_OK }
@@ -381,24 +397,40 @@ class! {
             functionId: FunctionID,
             rejitId: ReJITID,
             fIsSafeToBlock: BOOL,
-        ) -> HRESULT { S_OK }
+        ) -> HRESULT {
+            match self.rejit_compilation_started(functionId, rejitId, fIsSafeToBlock) {
+                Ok(_) => S_OK,
+                Err(_) => S_OK,
+            }
+        }
         pub fn GetReJITParameters(&self,
             moduleId: ModuleID,
             methodId: mdMethodDef,
-            pFunctionControl: *const ICorProfilerFunctionControl,
-        ) -> HRESULT { S_OK }
+            pFunctionControl: ICorProfilerFunctionControl,
+        ) -> HRESULT {
+            match self.get_rejit_parameters(moduleId, methodId, pFunctionControl) {
+                Ok(_) => S_OK,
+                Err(hr) => hr,
+            }
+        }
         pub fn ReJITCompilationFinished(&self,
             functionId: FunctionID,
             rejitId: ReJITID,
             hrStatus: HRESULT,
             fIsSafeToBlock: BOOL,
-        ) -> HRESULT { S_OK }
+        ) -> HRESULT {
+            self.rejit_compilation_finished(functionId, rejitId, hrStatus, fIsSafeToBlock);
+            S_OK
+        }
         pub fn ReJITError(&self,
             moduleId: ModuleID,
             methodId: mdMethodDef,
             functionId: FunctionID,
             hrStatus: HRESULT,
-        ) -> HRESULT { S_OK }
+        ) -> HRESULT {
+            self.rejit_error(moduleId, methodId, functionId, hrStatus);
+            S_OK
+        }
         pub fn MovedReferences2(&self,
             cMovedObjectIDRanges: ULONG,
             oldObjectIDRangeStart: *const ObjectID,
@@ -458,7 +490,9 @@ class! {
 
 impl Profiler {
     fn initialize(&self, unknown: IUnknown) -> Result<(), HRESULT> {
-        let _lock = LOCK.lock().unwrap();
+        unsafe {
+            unknown.AddRef();
+        }
 
         SimpleLogger::new()
             .with_level(env::read_log_level_from_env_var(LevelFilter::Warn))
@@ -469,7 +503,10 @@ impl Profiler {
             log::debug!("Environment variables\n{}", env::get_env_vars());
         }
 
-        log::trace!("Initialize: started. profiler package version {}", PROFILER_PACKAGE_VERSION);
+        log::trace!(
+            "Initialize: started. profiler package version {}",
+            PROFILER_PACKAGE_VERSION
+        );
 
         // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted
         let profiler_info = unknown
@@ -483,21 +520,19 @@ impl Profiler {
         let integrations = env::load_integrations()?;
         let calltarget_enabled = *env::ELASTIC_APM_PROFILER_CALLTARGET_ENABLED;
         if calltarget_enabled {
-            // TODO: initialize rejit handler
+            let rejit_handler = RejitHandler::new(profiler_info.clone());
+            self.rejit_handler.replace(Some(rejit_handler));
         }
 
         let mut integration_methods: Vec<IntegrationMethod> = integrations
             .iter()
             .flat_map(|i| {
                 i.method_replacements.iter().filter_map(move |m| {
-                    if let Some(wrapper_method) = &m.wrapper {
+                    if let Some(wrapper_method) = m.wrapper() {
                         let is_calltarget = &wrapper_method.action == "CallTargetModification";
-                        if calltarget_enabled && is_calltarget {
-                            Some(IntegrationMethod {
-                                name: i.name.clone(),
-                                method_replacement: m.clone(),
-                            })
-                        } else if !calltarget_enabled && !is_calltarget {
+                        if (calltarget_enabled && is_calltarget)
+                            || (!calltarget_enabled && !is_calltarget)
+                        {
                             Some(IntegrationMethod {
                                 name: i.name.clone(),
                                 method_replacement: m.clone(),
@@ -522,8 +557,8 @@ impl Profiler {
             );
         }
 
-        INTEGRATION_METHODS
-            .lock()
+        self.integration_methods
+            .write()
             .unwrap()
             .append(&mut integration_methods);
 
@@ -532,6 +567,7 @@ impl Profiler {
             | COR_PRF_MONITOR::COR_PRF_DISABLE_TRANSPARENCY_CHECKS_UNDER_FULL_TRUST
             | COR_PRF_MONITOR::COR_PRF_MONITOR_MODULE_LOADS
             | COR_PRF_MONITOR::COR_PRF_MONITOR_ASSEMBLY_LOADS
+            | COR_PRF_MONITOR::COR_PRF_MONITOR_APPDOMAIN_LOADS
             | COR_PRF_MONITOR::COR_PRF_DISABLE_ALL_NGEN_IMAGES;
 
         if calltarget_enabled {
@@ -541,9 +577,17 @@ impl Profiler {
             log::info!("Initialize: CallTarget instrumentation is disabled");
         }
 
-        // TODO: enable rejit
+        if !env::enable_inlining(calltarget_enabled) {
+            log::info!("Initialize: JIT Inlining is disabled");
+            event_mask |= COR_PRF_MONITOR::COR_PRF_DISABLE_INLINING;
+        } else {
+            log::info!("Initialize: JIT Inlining is enabled");
+        }
 
-        // TODO: enable/disable inlining and optimizations
+        if env::disable_optimizations() {
+            log::info!("Initialize: Optimizations are disabled");
+            event_mask |= COR_PRF_MONITOR::COR_PRF_DISABLE_OPTIMIZATIONS;
+        }
 
         // if the runtime also supports ICorProfilerInfo5, set eventmask2
         if let Some(profiler_info5) = unknown.query_interface::<ICorProfilerInfo5>() {
@@ -580,12 +624,40 @@ impl Profiler {
 
     fn shutdown(&self) -> Result<(), HRESULT> {
         log::trace!("Shutdown: started");
-        let _lock = LOCK.lock().unwrap();
+        let _lock = self.modules.lock();
 
+        // shutdown the rejit handler, if it's running
+        if let Some(rejit_handler) = self.rejit_handler.replace(None) {
+            rejit_handler.shutdown();
+        }
+
+        // Cannot safely call methods on profiler_info after shutdown is called,
+        // so replace it on the profiler
         self.profiler_info.replace(None);
+
         IS_ATTACHED.store(false, Ordering::SeqCst);
 
         Ok(())
+    }
+
+    fn app_domain_shutdown_finished(&self, app_domain_id: AppDomainID, hr_status: HRESULT) {
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return;
+        }
+        let _lock = self.modules.lock();
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return;
+        }
+
+        self.first_jit_compilation_app_domains
+            .lock()
+            .unwrap()
+            .remove(&app_domain_id);
+
+        log::debug!(
+            "AppDomainShutdownFinished: app_domain={} removed ",
+            app_domain_id
+        );
     }
 
     fn assembly_load_finished(
@@ -594,16 +666,12 @@ impl Profiler {
         hr_status: HRESULT,
     ) -> Result<(), HRESULT> {
         if FAILED(hr_status) {
-            log::error!("AssemblyLoadFinished: hrStatus is {:X}", hr_status);
+            log::error!("AssemblyLoadFinished: hr_status is {:X}", hr_status);
             return Ok(());
         }
 
-        if !IS_ATTACHED.load(Ordering::SeqCst) {
-            log::trace!("AssemblyLoadFinished: profiler not attached");
-            return Ok(());
-        }
+        let _lock = self.modules.lock();
 
-        let _lock = LOCK.lock().unwrap();
         if !IS_ATTACHED.load(Ordering::SeqCst) {
             log::trace!("AssemblyLoadFinished: profiler not attached");
             return Ok(());
@@ -646,13 +714,16 @@ impl Profiler {
                 MANAGED_PROFILER_LOADED_APP_DOMAINS
                     .lock()
                     .unwrap()
-                    .push(assembly_info.app_domain_id);
+                    .insert(assembly_info.app_domain_id);
 
                 let runtime_borrow = self.runtime_info.borrow();
                 let runtime_info = runtime_borrow.as_ref().unwrap();
 
-                if runtime_info.is_desktop_clr() && COR_LIB_MODULE_LOADED.load(Ordering::SeqCst) {
-                    if assembly_info.app_domain_id == COR_APP_DOMAIN_ID.load(Ordering::SeqCst) {
+                if runtime_info.is_desktop_clr()
+                    && self.cor_lib_module_loaded.load(Ordering::SeqCst)
+                {
+                    if assembly_info.app_domain_id == self.cor_app_domain_id.load(Ordering::SeqCst)
+                    {
                         log::info!(
                             "AssemblyLoadFinished: {} was loaded domain-neutral",
                             MANAGED_PROFILER_ASSEMBLY
@@ -693,7 +764,8 @@ impl Profiler {
             return Ok(());
         }
 
-        let _lock = LOCK.lock().unwrap();
+        let mut modules = self.modules.lock().unwrap();
+
         if !IS_ATTACHED.load(Ordering::SeqCst) {
             log::trace!("ModuleLoadFinished: profiler not attached");
             return Ok(());
@@ -711,11 +783,12 @@ impl Profiler {
                 &module_info.assembly.app_domain_name
             );
 
-            if !COR_LIB_MODULE_LOADED.load(Ordering::SeqCst) && assembly_name == "mscorlib"
+            if !self.cor_lib_module_loaded.load(Ordering::SeqCst) && assembly_name == "mscorlib"
                 || assembly_name == "System.Private.CoreLib"
             {
-                COR_LIB_MODULE_LOADED.store(true, Ordering::SeqCst);
-                COR_APP_DOMAIN_ID.store(app_domain_id, Ordering::SeqCst);
+                self.cor_lib_module_loaded.store(true, Ordering::SeqCst);
+                self.cor_app_domain_id
+                    .store(app_domain_id, Ordering::SeqCst);
 
                 let profiler_borrow = self.profiler_info.borrow();
                 let profiler_info = profiler_borrow.as_ref().unwrap();
@@ -747,10 +820,10 @@ impl Profiler {
                     &module_info.assembly.app_domain_name
                 );
 
-                FIRST_JIT_COMPILATION_APP_DOMAINS
+                self.first_jit_compilation_app_domains
                     .lock()
                     .unwrap()
-                    .push(app_domain_id);
+                    .insert(app_domain_id);
 
                 return Ok(());
             }
@@ -793,14 +866,14 @@ impl Profiler {
 
             // TODO: Avoid cloning integration methods. Should be possible to make all filtered_integrations a collection of references
             let mut filtered_integrations = if call_target_enabled {
-                INTEGRATION_METHODS.lock().unwrap().to_vec()
+                self.integration_methods.read().unwrap().to_vec()
             } else {
-                INTEGRATION_METHODS
-                    .lock()
+                self.integration_methods
+                    .read()
                     .unwrap()
                     .iter()
                     .filter(|m| {
-                        if let Some(caller) = &m.method_replacement.caller {
+                        if let Some(caller) = m.method_replacement.caller() {
                             caller.assembly.is_empty() || &caller.assembly == assembly_name
                         } else {
                             true
@@ -867,28 +940,6 @@ impl Profiler {
                 && assembly_name != "Dapper"
                 && !call_target_enabled
             {
-                fn meets_requirements(
-                    assembly_metadata: &AssemblyMetaData,
-                    method_replacement: &MethodReplacement,
-                ) -> bool {
-                    match &method_replacement.target {
-                        None => false,
-                        Some(target) => {
-                            if target.assembly != assembly_metadata.name {
-                                return false;
-                            }
-                            if target.minimum_version() > assembly_metadata.version {
-                                return false;
-                            }
-                            if target.maximum_version() < assembly_metadata.version {
-                                return false;
-                            }
-
-                            true
-                        }
-                    }
-                }
-
                 let assembly_metadata = assembly_import.get_assembly_metadata().map_err(|e| {
                     log::warn!(
                         "ModuleLoadFinished: unable to get assembly metadata for {}",
@@ -905,6 +956,23 @@ impl Profiler {
                 if assembly_ref_metadata.is_err() {
                     log::warn!("ModuleLoadFinished: unable to get referenced assembly metadata");
                     return Err(assembly_ref_metadata.err().unwrap());
+                }
+
+                fn meets_requirements(
+                    assembly_metadata: &AssemblyMetaData,
+                    method_replacement: &MethodReplacement,
+                ) -> bool {
+                    match method_replacement.target() {
+                        Some(target)
+                            if target.is_valid_for_assembly(
+                                &assembly_metadata.name,
+                                &assembly_metadata.version,
+                            ) =>
+                        {
+                            true
+                        }
+                        _ => false,
+                    }
                 }
 
                 let assembly_ref_metadata = assembly_ref_metadata.unwrap();
@@ -934,6 +1002,11 @@ impl Profiler {
                 e
             })?;
 
+            let cor_assembly_property = {
+                let cor_assembly_property_borrow = self.cor_assembly_property.borrow();
+                cor_assembly_property_borrow.as_ref().unwrap().clone()
+            };
+
             let module_metadata = ModuleMetadata::new(
                 metadata_import,
                 metadata_emit,
@@ -943,10 +1016,19 @@ impl Profiler {
                 app_domain_id,
                 module_version_id,
                 filtered_integrations,
+                cor_assembly_property,
             );
 
-            let mut modules = self.modules.borrow_mut();
             modules.insert(module_id, module_metadata);
+            let module_metadata = modules.get(&module_id).unwrap();
+
+            {
+                let module_wrapper_tokens = self
+                    .module_wrapper_tokens
+                    .lock()
+                    .unwrap()
+                    .insert(module_id, ModuleWrapperTokens::new());
+            }
 
             log::debug!(
                 "ModuleLoadFinished: stored metadata for {} {} app domain {} {}",
@@ -959,7 +1041,14 @@ impl Profiler {
             log::trace!("ModuleLoadFinished: tracking {} module(s)", modules.len());
 
             if call_target_enabled {
-                // TODO: request rejit of module
+                let rejit_count =
+                    self.calltarget_request_rejit_for_module(module_id, module_metadata)?;
+                if rejit_count > 0 {
+                    log::trace!(
+                        "ModuleLoadFinished: requested rejit of {} methods",
+                        rejit_count
+                    );
+                }
             }
         }
 
@@ -983,12 +1072,12 @@ impl Profiler {
             }
         }
 
-        let _lock = LOCK.lock().unwrap();
+        let mut modules = self.modules.lock().unwrap();
+
         if !IS_ATTACHED.load(Ordering::SeqCst) {
             return Ok(());
         }
 
-        let mut modules = self.modules.borrow_mut();
         if let Some(module_metadata) = modules.remove(&module_id) {
             MANAGED_PROFILER_LOADED_APP_DOMAINS
                 .lock()
@@ -1008,7 +1097,8 @@ impl Profiler {
             return Ok(());
         }
 
-        let _lock = LOCK.lock().unwrap();
+        let modules = self.modules.lock().unwrap();
+
         if !IS_ATTACHED.load(Ordering::SeqCst) {
             return Ok(());
         }
@@ -1023,16 +1113,15 @@ impl Profiler {
             e
         })?;
 
-        let mut modules = self.modules.borrow_mut();
-        let module_metadata = modules.get_mut(&function_info.module_id);
+        let module_metadata = modules.get(&function_info.module_id);
         if module_metadata.is_none() {
             return Ok(());
         }
 
-        let mut module_metadata = module_metadata.unwrap();
+        let module_metadata = module_metadata.unwrap();
         let call_target_enabled = *env::ELASTIC_APM_PROFILER_CALLTARGET_ENABLED;
         let loader_injected_in_appdomain = {
-            let app_domains = FIRST_JIT_COMPILATION_APP_DOMAINS.lock().unwrap();
+            let app_domains = self.first_jit_compilation_app_domains.lock().unwrap();
             app_domains.contains(&module_metadata.app_domain_id)
         };
 
@@ -1043,6 +1132,12 @@ impl Profiler {
         let caller = module_metadata
             .import
             .get_function_info(function_info.token)?;
+
+        log::trace!(
+            "JITCompilationStarted: function_id={}, name={}()",
+            function_id,
+            caller.full_name()
+        );
 
         let is_desktop_iis = self.is_desktop_iis.load(Ordering::SeqCst);
         let valid_startup_hook_callsite = if is_desktop_iis {
@@ -1064,8 +1159,8 @@ impl Profiler {
             let runtime_info = runtime_info_borrow.as_ref().unwrap();
 
             let domain_neutral_assembly = runtime_info.is_desktop_clr()
-                && COR_LIB_MODULE_LOADED.load(Ordering::SeqCst)
-                && COR_APP_DOMAIN_ID.load(Ordering::SeqCst) == module_metadata.app_domain_id;
+                && self.cor_lib_module_loaded.load(Ordering::SeqCst)
+                && self.cor_app_domain_id.load(Ordering::SeqCst) == module_metadata.app_domain_id;
 
             log::info!(
                 "JITCompilationStarted: Startup hook registered in function_id={} token={} \
@@ -1078,10 +1173,10 @@ impl Profiler {
                 domain_neutral_assembly
             );
 
-            FIRST_JIT_COMPILATION_APP_DOMAINS
+            self.first_jit_compilation_app_domains
                 .lock()
                 .unwrap()
-                .push(module_metadata.app_domain_id);
+                .insert(module_metadata.app_domain_id);
 
             startup_hook::run_il_startup_hook(
                 profiler_info,
@@ -1105,9 +1200,15 @@ impl Profiler {
                 return Ok(());
             }
 
+            let mut module_wrapper_tokens = self.module_wrapper_tokens.lock().unwrap();
+            let mut module_wrapper_token = module_wrapper_tokens
+                .get_mut(&function_info.module_id)
+                .unwrap();
+
             process::process_insertion_calls(
                 profiler_info,
-                &mut module_metadata,
+                &module_metadata,
+                &mut module_wrapper_token,
                 function_id,
                 function_info.module_id,
                 function_info.token,
@@ -1117,7 +1218,8 @@ impl Profiler {
 
             process::process_replacement_calls(
                 profiler_info,
-                &mut module_metadata,
+                &module_metadata,
+                &mut module_wrapper_token,
                 function_id,
                 function_info.module_id,
                 function_info.token,
@@ -1169,6 +1271,277 @@ impl Profiler {
         log::debug!("GetAssemblyReferences: called for {}", &path);
 
         Ok(())
+    }
+
+    fn rejit_compilation_started(
+        &self,
+        function_id: FunctionID,
+        rejit_id: ReJITID,
+        is_safe_to_block: BOOL,
+    ) -> Result<(), HRESULT> {
+        if !IS_ATTACHED.load(Ordering::SeqCst) || is_safe_to_block == 0 {
+            return Ok(());
+        }
+
+        log::debug!(
+            "ReJITCompilationStarted: function_id={} rejit_id={} is_safe_to_block={}",
+            function_id,
+            rejit_id,
+            is_safe_to_block
+        );
+
+        let borrow = self.rejit_handler.borrow();
+        let rejit_handler: &RejitHandler = borrow.as_ref().unwrap();
+        rejit_handler.notify_rejit_compilation_started(function_id, rejit_id)
+    }
+
+    fn rejit_compilation_finished(
+        &self,
+        function_id: FunctionID,
+        rejit_id: ReJITID,
+        hr_status: HRESULT,
+        is_safe_to_block: BOOL,
+    ) {
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return;
+        }
+
+        log::debug!(
+            "ReJITCompilationFinished: function_id={} rejit_id={} hr_status={} is_safe_to_block={}",
+            function_id,
+            rejit_id,
+            hr_status,
+            is_safe_to_block
+        );
+    }
+
+    fn get_rejit_parameters(
+        &self,
+        module_id: ModuleID,
+        method_id: mdMethodDef,
+        function_control: ICorProfilerFunctionControl,
+    ) -> Result<(), HRESULT> {
+        unsafe {
+            function_control.AddRef();
+        }
+
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+
+        log::debug!(
+            "GetReJITParameters: module_id={} method_id={}",
+            module_id,
+            method_id
+        );
+
+        let modules = self.modules.lock().unwrap();
+
+        if let Some(module_metadata) = modules.get(&module_id) {
+            let mut module_wrapper_tokens = self.module_wrapper_tokens.lock().unwrap();
+
+            let module_wrapper_token = module_wrapper_tokens.get_mut(&module_id).unwrap();
+
+            let borrow = self.profiler_info.borrow();
+            let profiler_info = borrow.as_ref().unwrap();
+
+            let mut tokens = self.call_target_tokens.borrow_mut();
+            let call_target_tokens = tokens
+                .entry(module_id)
+                .or_insert_with(CallTargetTokens::new);
+
+            let mut rejit_borrow = self.rejit_handler.borrow_mut();
+            let rejit_handler: &mut RejitHandler = rejit_borrow.as_mut().unwrap();
+            rejit_handler.notify_rejit_parameters(
+                module_id,
+                method_id,
+                &function_control,
+                module_metadata,
+                module_wrapper_token,
+                profiler_info,
+                call_target_tokens,
+            )
+        } else {
+            Ok(())
+        }
+    }
+
+    fn rejit_error(
+        &self,
+        module_id: ModuleID,
+        method_id: mdMethodDef,
+        function_id: FunctionID,
+        hr_status: HRESULT,
+    ) {
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            return;
+        }
+
+        log::warn!(
+            "ReJITError: function_id={} module_id={} method_id={} hr_status={}",
+            function_id,
+            module_id,
+            method_id,
+            hr_status
+        );
+    }
+
+    fn calltarget_request_rejit_for_module(
+        &self,
+        module_id: ModuleID,
+        module_metadata: &ModuleMetadata,
+    ) -> Result<usize, HRESULT> {
+        let metadata_import = &module_metadata.import;
+        let assembly_metadata: AssemblyMetaData =
+            module_metadata.assembly_import.get_assembly_metadata()?;
+
+        let mut method_ids = vec![];
+
+        for integration in &module_metadata.integrations {
+            let target = match integration.method_replacement.target() {
+                Some(t)
+                    if t.is_valid_for_assembly(
+                        &module_metadata.assembly_name,
+                        &assembly_metadata.version,
+                    ) =>
+                {
+                    t
+                }
+                _ => continue,
+            };
+
+            let wrapper = match integration.method_replacement.wrapper() {
+                Some(w) if &w.action == "CallTargetModification" => w,
+                _ => continue,
+            };
+
+            let type_def = match helpers::find_type_def_by_name(
+                target.type_name(),
+                &module_metadata.assembly_name,
+                &metadata_import,
+            ) {
+                Some(t) => t,
+                None => continue,
+            };
+
+            let method_defs =
+                metadata_import.enum_methods_with_name(type_def, target.method_name())?;
+            for method_def in method_defs {
+                let caller: MyFunctionInfo = match metadata_import.get_function_info(method_def) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::warn!(
+                            "Could not get function_info for method_def={}, {}",
+                            method_def,
+                            e
+                        );
+                        continue;
+                    }
+                };
+
+                let parsed_signature = match caller.method_signature.try_parse() {
+                    Some(p) => p,
+                    None => {
+                        log::warn!(
+                            "The method {} with signature={:?} cannot be parsed",
+                            &caller.full_name(),
+                            &caller.method_signature.data
+                        );
+                        continue;
+                    }
+                };
+
+                let signature_types = match target.signature_types() {
+                    Some(s) => s,
+                    None => {
+                        log::debug!("target does not have arguments defined");
+                        continue;
+                    }
+                };
+
+                if parsed_signature.arg_len as usize != signature_types.len() - 1 {
+                    log::debug!(
+                        "The caller for method_def {} does not have expected number of arguments",
+                        target.method_name()
+                    );
+                    continue;
+                }
+
+                log::trace!(
+                    "comparing signature for method {}.{}",
+                    target.type_name(),
+                    target.method_name()
+                );
+                let mut mismatch = false;
+                for arg_idx in 0..parsed_signature.arg_len {
+                    let (start_idx, _) = parsed_signature.args[arg_idx as usize];
+                    let (argument_type_name, _) = get_sig_type_token_name(
+                        &parsed_signature.data[start_idx..],
+                        &metadata_import,
+                    );
+
+                    let integration_argument_type_name = &signature_types[arg_idx as usize + 1];
+                    log::debug!(
+                        "{} = {}",
+                        &argument_type_name,
+                        integration_argument_type_name
+                    );
+                    if &argument_type_name != integration_argument_type_name
+                        && integration_argument_type_name != IGNORE
+                    {
+                        mismatch = true;
+                        break;
+                    }
+                }
+
+                if mismatch {
+                    log::debug!(
+                        "The caller for method_def {} does not have the right type of arguments",
+                        target.method_name()
+                    );
+                    continue;
+                }
+
+                let mut borrow = self.rejit_handler.borrow_mut();
+                let rejit_handler: &mut RejitHandler = borrow.as_mut().unwrap();
+                let rejit_module = rejit_handler.get_or_add_module(module_id);
+                let rejit_method = rejit_module.get_or_add_method(method_def);
+                rejit_method.set_function_info(caller);
+                rejit_method.set_method_replacement(integration.method_replacement.clone());
+
+                method_ids.push(method_def);
+
+                if log::log_enabled!(Level::Info) {
+                    let caller_assembly_is_domain_neutral = IS_DESKTOP_CLR.load(Ordering::SeqCst)
+                        && self.cor_lib_module_loaded.load(Ordering::SeqCst)
+                        && module_metadata.app_domain_id
+                            == self.cor_app_domain_id.load(Ordering::SeqCst);
+                    let caller = rejit_method.function_info().unwrap();
+
+                    log::info!(
+                        "enqueue for ReJIT module_id={}, method_def={}, app_domain_id={}, \
+                        domain_neutral={}, assembly={}, type={}, method={}, signature={:?}",
+                        module_id,
+                        method_def,
+                        module_metadata.app_domain_id,
+                        caller_assembly_is_domain_neutral,
+                        &module_metadata.assembly_name,
+                        caller.type_info.as_ref().map_or("", |t| t.name.as_str()),
+                        &caller.name,
+                        &caller.signature.bytes()
+                    );
+                }
+            }
+        }
+
+        let len = method_ids.len();
+        if !method_ids.is_empty() {
+            let borrow = self.rejit_handler.borrow();
+            let rejit_handler = borrow.as_ref().unwrap();
+            rejit_handler.enqueue_for_rejit(vec![module_id; method_ids.len()], method_ids);
+        }
+
+        Ok(len)
     }
 }
 

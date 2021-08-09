@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{
     cli::{
         uncompress_token, Instruction, Method, Operand::InlineMethod, Section, CALL, CALLVIRT,
@@ -11,8 +16,12 @@ use crate::{
     profiler::{
         env, helpers,
         helpers::return_type_is_value_type_or_generic,
+        managed::IGNORE,
         sig::{parse_signature_types, parse_type},
-        types::{MetadataBuilder, MethodReplacement, ModuleMetadata, WrapperMethodReference},
+        types::{
+            MetadataBuilder, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
+            WrapperMethodReference,
+        },
     },
     types::{MyFunctionInfo, WrapperMethodRef},
 };
@@ -23,7 +32,8 @@ use std::mem::transmute;
 
 pub fn process_insertion_calls(
     profiler_info: &ICorProfilerInfo4,
-    module_metadata: &mut ModuleMetadata,
+    module_metadata: &ModuleMetadata,
+    module_wrapper_tokens: &mut ModuleWrapperTokens,
     function_id: FunctionID,
     module_id: ModuleID,
     function_token: mdToken,
@@ -37,7 +47,8 @@ pub fn process_insertion_calls(
 
 pub fn process_replacement_calls(
     profiler_info: &ICorProfilerInfo4,
-    module_metadata: &mut ModuleMetadata,
+    module_metadata: &ModuleMetadata,
+    module_wrapper_tokens: &mut ModuleWrapperTokens,
     function_id: FunctionID,
     module_id: ModuleID,
     function_token: mdToken,
@@ -53,16 +64,16 @@ pub fn process_replacement_calls(
     let mut original_il = None;
     let mut modified = false;
     for method_replacement in method_replacements {
-        if method_replacement.wrapper.is_none() {
+        if method_replacement.wrapper().is_none() {
             continue;
         }
-        let wrapper = method_replacement.wrapper.as_ref().unwrap();
+        let wrapper = method_replacement.wrapper().unwrap();
         if &wrapper.action != "ReplaceTargetMethod" {
             continue;
         }
 
         let wrapper_method_key = wrapper.get_method_cache_key();
-        if module_metadata.is_failed_wrapper_member_key(&wrapper_method_key) {
+        if module_wrapper_tokens.is_failed_wrapper_member_key(&wrapper_method_key) {
             continue;
         }
 
@@ -80,18 +91,17 @@ pub fn process_replacement_calls(
                 continue;
             }
 
-            let target = module_metadata.import.get_function_info(original_argument);
-            if target.is_err() {
-                continue;
-            }
-            let target = target.unwrap();
+            let target = match module_metadata.import.get_function_info(original_argument) {
+                Ok(t) => t,
+                Err(_) => continue,
+            };
 
-            if method_replacement.target.as_ref().map_or(true, |t| {
+            if method_replacement.target().map_or(true, |t| {
                 target
                     .type_info
                     .as_ref()
-                    .map_or(true, |tt| tt.name != t.type_name)
-                    || t.method_name != target.name
+                    .map_or(true, |tt| tt.name != t.type_name())
+                    || t.method_name() != target.name
             }) {
                 continue;
             }
@@ -133,6 +143,7 @@ pub fn process_replacement_calls(
             let mut generated_wrapper_method_ref = match get_wrapper_method_ref(
                 profiler_info,
                 module_metadata,
+                module_wrapper_tokens,
                 module_id,
                 wrapper,
                 &wrapper_method_key,
@@ -189,11 +200,9 @@ pub fn process_replacement_calls(
 
             let actual_sig = actual_sig.unwrap();
             let expected_sig = method_replacement
-                .target
-                .as_ref()
+                .target()
                 .unwrap()
-                .signature_types
-                .as_ref()
+                .signature_types()
                 .unwrap();
 
             if actual_sig.len() != expected_sig.len() {
@@ -212,7 +221,7 @@ pub fn process_replacement_calls(
 
             let mut mismatch = false;
             for (idx, expected) in expected_sig.iter().enumerate() {
-                if expected != "_" && expected != &actual_sig[idx] {
+                if expected != IGNORE && expected != &actual_sig[idx] {
                     if log::log_enabled!(log::Level::Debug) {
                         log::debug!("JITCompilationStarted: skipping function call, types don't match. function_id={}, function_token={}, name={}(), expected_sig[{}]={}, actual_sig[{}]={}",
                                     function_id,
@@ -261,8 +270,8 @@ pub fn process_replacement_calls(
                 continue;
             }
 
-             if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
-                 original_il = Some(helpers::get_il_codes(
+            if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
+                original_il = Some(helpers::get_il_codes(
                     "IL original code for caller: ",
                     &method,
                     caller,
@@ -529,16 +538,18 @@ pub fn process_replacement_calls(
     Ok(())
 }
 
+// TODO: move
 pub fn get_wrapper_method_ref(
     profiler_info: &ICorProfilerInfo4,
-    module_metadata: &mut ModuleMetadata,
+    module_metadata: &ModuleMetadata,
+    module_wrapper_tokens: &mut ModuleWrapperTokens,
     module_id: ModuleID,
     wrapper: &WrapperMethodReference,
     wrapper_method_key: &str,
 ) -> Result<WrapperMethodRef, HRESULT> {
     let wrapper_type_key = wrapper.get_type_cache_key();
-    if let Some(method_ref) = module_metadata.get_wrapper_member_ref(wrapper_method_key) {
-        let type_ref = module_metadata
+    if let Some(method_ref) = module_wrapper_tokens.get_wrapper_member_ref(wrapper_method_key) {
+        let type_ref = module_wrapper_tokens
             .get_wrapper_parent_type_ref(&wrapper_type_key)
             .unwrap_or(mdTypeRefNil);
         return Ok(WrapperMethodRef {
@@ -560,7 +571,7 @@ pub fn get_wrapper_method_ref(
             e
         })?;
 
-    let mut metadata_builder = MetadataBuilder::new(module_metadata, module);
+    let mut metadata_builder = MetadataBuilder::new(module_metadata, module_wrapper_tokens, module);
 
     metadata_builder
         .emit_assembly_ref(&wrapper.assembly)
@@ -583,10 +594,10 @@ pub fn get_wrapper_method_ref(
             e
         })?;
 
-    let method_ref = module_metadata
+    let method_ref = module_wrapper_tokens
         .get_wrapper_member_ref(&wrapper_method_key)
         .unwrap_or(mdMemberRefNil);
-    let type_ref = module_metadata
+    let type_ref = module_wrapper_tokens
         .get_wrapper_parent_type_ref(&wrapper_type_key)
         .unwrap_or(mdTypeRefNil);
 

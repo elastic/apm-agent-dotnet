@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{ffi::E_FAIL, profiler::types::Integration};
 use com::sys::HRESULT;
 use log::LevelFilter;
@@ -9,6 +14,9 @@ const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
 const ELASTIC_APM_PROFILER_DISPLAY_IL_ENV_VAR: &str = "ELASTIC_APM_PROFILER_DISPLAY_IL";
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
+const ELASTIC_APM_PROFILER_ENABLE_INLINING: &str = "ELASTIC_APM_PROFILER_ENABLE_INLINING";
+const ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS: &str =
+    "ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS";
 
 pub static ELASTIC_APM_PROFILER_DISPLAY_IL: Lazy<bool> =
     Lazy::new(|| read_bool_env_var(ELASTIC_APM_PROFILER_DISPLAY_IL_ENV_VAR, false));
@@ -30,29 +38,38 @@ pub fn get_env_vars() -> String {
         .join("\n")
 }
 
-/// Gets the path to the profiler file
+/// Gets the path to the profiler file on windows
+#[cfg(target_os = "windows")]
 pub fn get_native_profiler_file() -> Result<String, HRESULT> {
-    if cfg!(target_os = "windows") {
-        Ok("elastic_apm_profiler.dll".into())
+    Ok("elastic_apm_profiler.dll".into())
+}
+
+/// Gets the path to the profiler file on non windows
+#[cfg(not(target_os = "windows"))]
+pub fn get_native_profiler_file() -> Result<String, HRESULT> {
+    let env_var = if cfg!(target_pointer_width = "64") {
+        "CORECLR_PROFILER_PATH_64"
     } else {
-        let env_var = if cfg!(target_pointer_width = "64") {
-            "CORECLR_PROFILER_PATH_64"
-        } else {
-            "CORECLR_PROFILER_PATH_32"
-        };
-        match std::env::var(env_var) {
-            Ok(v) => {
-                Ok(v)
-            }
-            Err(_) => std::env::var("CORECLR_PROFILER_PATH").map_err(|e| {
-                log::warn!(
-                    "problem getting env var CORECLR_PROFILER_PATH: {}",
-                    e.to_string()
-                );
-                E_FAIL
-            }),
-        }
+        "CORECLR_PROFILER_PATH_32"
+    };
+    match std::env::var(env_var) {
+        Ok(v) => Ok(v),
+        Err(_) => std::env::var("CORECLR_PROFILER_PATH").map_err(|e| {
+            log::warn!(
+                "problem getting env var CORECLR_PROFILER_PATH: {}",
+                e.to_string()
+            );
+            E_FAIL
+        }),
     }
+}
+
+pub fn disable_optimizations() -> bool {
+    read_bool_env_var(ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS, false)
+}
+
+pub fn enable_inlining(default: bool) -> bool {
+    read_bool_env_var(ELASTIC_APM_PROFILER_ENABLE_INLINING, default)
 }
 
 pub fn read_log_level_from_env_var(default: LevelFilter) -> LevelFilter {

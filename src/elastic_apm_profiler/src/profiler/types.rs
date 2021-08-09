@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{
     error::Error,
     ffi::{
@@ -8,7 +13,8 @@ use crate::{
     interfaces::{
         IMetaDataAssemblyEmit, IMetaDataAssemblyImport, IMetaDataEmit2, IMetaDataImport2,
     },
-    types::{MyFunctionInfo, PublicKey, Version, WrapperMethodRef},
+    profiler::calltarget_tokens::CallTargetTokens,
+    types::{AssemblyMetaData, MyFunctionInfo, PublicKey, Version, WrapperMethodRef},
 };
 use com::sys::{GUID, HRESULT};
 use core::fmt;
@@ -83,11 +89,7 @@ impl MethodSignature {
     }
 
     pub fn type_arguments_len(&self) -> u8 {
-        if self.data.len() > 1
-            && self
-                .calling_convention()
-                .contains(CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC)
-        {
+        if self.data.len() > 1 && self.calling_convention().is_generic() {
             self.data[1]
         } else {
             0
@@ -95,11 +97,7 @@ impl MethodSignature {
     }
 
     pub fn arguments_len(&self) -> u8 {
-        if self.data.len() > 2
-            && self
-                .calling_convention()
-                .contains(CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC)
-        {
+        if self.data.len() > 2 && self.calling_convention().is_generic() {
             self.data[2]
         } else if self.data.len() > 1 {
             self.data[1]
@@ -109,11 +107,7 @@ impl MethodSignature {
     }
 
     pub fn return_type_is_object(&self) -> bool {
-        if self.data.len() > 2
-            && self
-                .calling_convention()
-                .contains(CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC)
-        {
+        if self.data.len() > 2 && self.calling_convention().is_generic() {
             CorElementType::from_u8(self.data[3]) == Some(CorElementType::ELEMENT_TYPE_OBJECT)
         } else if self.data.len() > 1 {
             CorElementType::from_u8(self.data[2]) == Some(CorElementType::ELEMENT_TYPE_OBJECT)
@@ -123,11 +117,7 @@ impl MethodSignature {
     }
 
     pub fn index_of_return_type(&self) -> usize {
-        if self.data.len() > 2
-            && self
-                .calling_convention()
-                .contains(CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC)
-        {
+        if self.data.len() > 2 && self.calling_convention().is_generic() {
             3
         } else if self.data.len() > 1 {
             2
@@ -176,10 +166,26 @@ impl<'de> Deserialize<'de> for MethodSignature {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct AssemblyReference {
-    name: String,
-    version: Version,
-    locale: String,
-    public_key: PublicKeyToken,
+    pub name: String,
+    pub version: Version,
+    pub locale: String,
+    pub public_key: PublicKeyToken,
+}
+
+impl AssemblyReference {
+    pub fn new<S: Into<String>>(
+        name: S,
+        version: Version,
+        locale: S,
+        public_key: PublicKeyToken,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            version,
+            locale: locale.into(),
+            public_key,
+        }
+    }
 }
 
 impl Display for AssemblyReference {
@@ -189,19 +195,6 @@ impl Display for AssemblyReference {
             "{}, Version={}, Culture={}, PublicKeyToken={}",
             &self.name, &self.version, &self.locale, &self.public_key.0
         )
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct PublicKeyToken(String);
-
-impl PublicKeyToken {
-    pub fn new<S: Into<String>>(str: S) -> Self {
-        Self(str.into())
-    }
-
-    pub fn into_bytes(&self) -> Vec<BYTE> {
-        hex::decode(&self.0).unwrap()
     }
 }
 
@@ -262,6 +255,19 @@ impl<'de> Deserialize<'de> for AssemblyReference {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct PublicKeyToken(String);
+
+impl PublicKeyToken {
+    pub fn new<S: Into<String>>(str: S) -> Self {
+        Self(str.into())
+    }
+
+    pub fn into_bytes(&self) -> Vec<BYTE> {
+        hex::decode(&self.0).unwrap()
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct CallerMethodReference {
     pub(crate) assembly: String,
@@ -308,21 +314,21 @@ impl WrapperMethodReference {
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct TargetMethodReference {
-    pub(crate) assembly: String,
+    assembly: String,
     #[serde(rename = "type")]
-    pub(crate) type_name: String,
+    type_name: String,
     #[serde(rename = "method")]
-    pub(crate) method_name: String,
-    pub(crate) minimum_major: u16,
-    pub(crate) minimum_minor: u16,
-    pub(crate) minimum_patch: u16,
+    method_name: String,
+    minimum_major: u16,
+    minimum_minor: u16,
+    minimum_patch: u16,
     #[serde(default = "u16_max")]
-    pub(crate) maximum_major: u16,
+    maximum_major: u16,
     #[serde(default = "u16_max")]
-    pub(crate) maximum_minor: u16,
+    maximum_minor: u16,
     #[serde(default = "u16_max")]
-    pub(crate) maximum_patch: u16,
-    pub(crate) signature_types: Option<Vec<String>>,
+    maximum_patch: u16,
+    signature_types: Option<Vec<String>>,
 }
 
 fn u16_max() -> u16 {
@@ -330,7 +336,7 @@ fn u16_max() -> u16 {
 }
 
 impl TargetMethodReference {
-    pub fn minimum_version(&self) -> Version {
+    fn minimum_version(&self) -> Version {
         Version::new(
             self.minimum_major,
             self.minimum_minor,
@@ -339,7 +345,7 @@ impl TargetMethodReference {
         )
     }
 
-    pub fn maximum_version(&self) -> Version {
+    fn maximum_version(&self) -> Version {
         Version::new(
             self.maximum_major,
             self.maximum_minor,
@@ -347,14 +353,60 @@ impl TargetMethodReference {
             0,
         )
     }
+
+    pub fn assembly(&self) -> &str {
+        &self.assembly
+    }
+
+    pub fn method_name(&self) -> &str {
+        &self.method_name
+    }
+
+    pub fn type_name(&self) -> &str {
+        &self.type_name
+    }
+
+    pub fn signature_types(&self) -> Option<&[String]> {
+        self.signature_types.as_ref().map(|s| s.as_slice())
+    }
+
+    pub fn is_valid_for_assembly(&self, assembly_name: &str, version: &Version) -> bool {
+        if &self.assembly != assembly_name {
+            return false;
+        }
+
+        if &self.minimum_version() > version {
+            return false;
+        }
+
+        if &self.maximum_version() < version {
+            return false;
+        }
+
+        true
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct MethodReplacement {
     #[serde(deserialize_with = "empty_struct_is_none")]
-    pub(crate) caller: Option<CallerMethodReference>,
-    pub(crate) target: Option<TargetMethodReference>,
-    pub(crate) wrapper: Option<WrapperMethodReference>,
+    caller: Option<CallerMethodReference>,
+    target: Option<TargetMethodReference>,
+    wrapper: Option<WrapperMethodReference>,
+}
+
+impl MethodReplacement {
+    pub fn caller(&self) -> Option<&CallerMethodReference> {
+        self.caller.as_ref()
+    }
+
+    pub fn target(&self) -> Option<&TargetMethodReference> {
+        self.target.as_ref()
+    }
+
+    pub fn wrapper(&self) -> Option<&WrapperMethodReference> {
+        self.wrapper.as_ref()
+    }
 }
 
 fn empty_struct_is_none<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
@@ -387,40 +439,16 @@ pub struct Integration {
     pub(crate) method_replacements: Vec<MethodReplacement>,
 }
 
-pub struct ModuleMetadata {
-    pub import: IMetaDataImport2,
-    pub emit: IMetaDataEmit2,
-    pub assembly_import: IMetaDataAssemblyImport,
-    pub assembly_emit: IMetaDataAssemblyEmit,
-    pub assembly_name: String,
-    pub app_domain_id: AppDomainID,
-    pub module_version_id: GUID,
-    pub integrations: Vec<IntegrationMethod>,
+#[derive(Debug, Clone)]
+pub struct ModuleWrapperTokens {
     failed_wrapper_keys: HashSet<String>,
     wrapper_refs: HashMap<String, mdMemberRef>,
     wrapper_parent_type: HashMap<String, mdTypeRef>,
 }
 
-impl ModuleMetadata {
-    pub fn new(
-        import: IMetaDataImport2,
-        emit: IMetaDataEmit2,
-        assembly_import: IMetaDataAssemblyImport,
-        assembly_emit: IMetaDataAssemblyEmit,
-        assembly_name: String,
-        app_domain_id: AppDomainID,
-        module_version_id: GUID,
-        integrations: Vec<IntegrationMethod>,
-    ) -> Self {
+impl ModuleWrapperTokens {
+    pub fn new() -> Self {
         Self {
-            import,
-            emit,
-            assembly_import,
-            assembly_emit,
-            assembly_name,
-            app_domain_id,
-            module_version_id,
-            integrations,
             failed_wrapper_keys: HashSet::new(),
             wrapper_refs: HashMap::new(),
             wrapper_parent_type: HashMap::new(),
@@ -454,6 +482,45 @@ impl ModuleMetadata {
     pub fn set_wrapper_member_ref<S: Into<String>>(&mut self, key: S, member_ref: mdMemberRef) {
         self.wrapper_refs.insert(key.into(), member_ref);
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct ModuleMetadata {
+    pub import: IMetaDataImport2,
+    pub emit: IMetaDataEmit2,
+    pub assembly_import: IMetaDataAssemblyImport,
+    pub assembly_emit: IMetaDataAssemblyEmit,
+    pub assembly_name: String,
+    pub app_domain_id: AppDomainID,
+    pub module_version_id: GUID,
+    pub integrations: Vec<IntegrationMethod>,
+    pub(crate) cor_assembly_property: AssemblyMetaData,
+}
+
+impl ModuleMetadata {
+    pub fn new(
+        import: IMetaDataImport2,
+        emit: IMetaDataEmit2,
+        assembly_import: IMetaDataAssemblyImport,
+        assembly_emit: IMetaDataAssemblyEmit,
+        assembly_name: String,
+        app_domain_id: AppDomainID,
+        module_version_id: GUID,
+        integrations: Vec<IntegrationMethod>,
+        cor_assembly_property: AssemblyMetaData,
+    ) -> Self {
+        Self {
+            import,
+            emit,
+            assembly_import,
+            assembly_emit,
+            assembly_name,
+            app_domain_id,
+            module_version_id,
+            integrations,
+            cor_assembly_property,
+        }
+    }
 
     pub fn get_method_replacements_for_caller(
         &self,
@@ -485,14 +552,20 @@ impl ModuleMetadata {
 }
 
 pub struct MetadataBuilder<'a> {
-    module_metadata: &'a mut ModuleMetadata,
+    module_metadata: &'a ModuleMetadata,
+    module_wrapper_tokens: &'a mut ModuleWrapperTokens,
     module: mdModule,
 }
 
 impl<'a> MetadataBuilder<'a> {
-    pub fn new(module_metadata: &'a mut ModuleMetadata, module: mdModule) -> Self {
+    pub fn new(
+        module_metadata: &'a ModuleMetadata,
+        module_wrapper_tokens: &'a mut ModuleWrapperTokens,
+        module: mdModule,
+    ) -> Self {
         Self {
             module_metadata,
+            module_wrapper_tokens,
             module,
         }
     }
@@ -526,7 +599,7 @@ impl<'a> MetadataBuilder<'a> {
             .define_assembly_ref(
                 &public_key_bytes,
                 &assembly_reference.name,
-                assembly_metadata,
+                &assembly_metadata,
                 &[],
                 CorAssemblyFlags::empty(),
             )
@@ -548,7 +621,10 @@ impl<'a> MetadataBuilder<'a> {
         wrapper: &WrapperMethodReference,
     ) -> Result<mdTypeRef, HRESULT> {
         let cache_key = wrapper.get_type_cache_key();
-        if let Some(type_ref) = self.module_metadata.get_wrapper_parent_type_ref(&cache_key) {
+        if let Some(type_ref) = self
+            .module_wrapper_tokens
+            .get_wrapper_parent_type_ref(&cache_key)
+        {
             return Ok(type_ref);
         }
 
@@ -592,7 +668,7 @@ impl<'a> MetadataBuilder<'a> {
             }
         }?;
 
-        self.module_metadata
+        self.module_wrapper_tokens
             .set_wrapper_parent_type_ref(cache_key, type_ref);
         Ok(type_ref)
     }
@@ -603,7 +679,7 @@ impl<'a> MetadataBuilder<'a> {
     ) -> Result<(), HRESULT> {
         let cache_key = wrapper.get_method_cache_key();
         if self
-            .module_metadata
+            .module_wrapper_tokens
             .contains_wrapper_member_ref(&cache_key)
         {
             return Ok(());
@@ -611,7 +687,7 @@ impl<'a> MetadataBuilder<'a> {
 
         let type_ref = self.find_wrapper_type_ref(wrapper).map_err(|e| {
             log::warn!("failed finding wrapper method ref {}", e);
-            self.module_metadata
+            self.module_wrapper_tokens
                 .set_failed_wrapper_member_key(&cache_key);
             e
         })?;
@@ -635,13 +711,13 @@ impl<'a> MetadataBuilder<'a> {
                                 ) {
                                     Ok(m) => member_ref = m,
                                     Err(e) => {
-                                        self.module_metadata
+                                        self.module_wrapper_tokens
                                             .set_failed_wrapper_member_key(&cache_key);
                                         return Err(e);
                                     }
                                 }
                             } else {
-                                self.module_metadata
+                                self.module_wrapper_tokens
                                     .set_failed_wrapper_member_key(&cache_key);
                                 return Err(e);
                             }
@@ -651,7 +727,7 @@ impl<'a> MetadataBuilder<'a> {
             }
         }
 
-        self.module_metadata
+        self.module_wrapper_tokens
             .set_wrapper_member_ref(&cache_key, member_ref);
         Ok(())
     }

@@ -1,6 +1,11 @@
 #![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
 #![allow(overflowing_literals)]
 
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use com::{
     sys::{GUID, HRESULT},
     AbiTransferable, CLSID, IID,
@@ -423,7 +428,7 @@ pub struct OSINFO {
 }
 /// Managed assembly metadata
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ASSEMBLYMETADATA {
     /// Major version
     pub usMajorVersion: USHORT,
@@ -1049,6 +1054,12 @@ bitflags! {
         /// Indicates a generic method signature with an explicit number of type arguments.
         /// This precedes an ordinary parameter count.
         const IMAGE_CEE_CS_CALLCONV_GENERIC = 0x10;
+    }
+}
+
+impl CorCallingConvention {
+    pub fn is_generic(&self) -> bool {
+        self.contains(CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC)
     }
 }
 

@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use std::{
     cmp::Ordering,
     fmt,
@@ -10,19 +15,22 @@ use crypto::{digest::Digest, sha1::Sha1};
 use num_traits::FromPrimitive;
 
 use crate::{
+    cli::{uncompress_data, uncompress_token},
     error::Error,
     ffi::{
-        mdAssembly, mdMemberRef, mdMethodDef, mdToken, mdTypeDef, mdTypeRef, mdTypeSpec,
-        AppDomainID, AssemblyID, ClassID, ClrInstanceID, CorAssemblyFlags, CorElementType,
-        CorMethodAttr, CorMethodImpl, CorTokenType, CorTypeAttr, FunctionID, ModuleID, ProcessID,
-        ReJITID, BYTE, COR_FIELD_OFFSET, COR_PRF_FRAME_INFO, COR_PRF_FUNCTION_ARGUMENT_INFO,
+        mdAssembly, mdAssemblyRef, mdMemberRef, mdMethodDef, mdToken, mdTokenNil, mdTypeDef,
+        mdTypeRef, mdTypeSpec, AppDomainID, AssemblyID, ClassID, ClrInstanceID, CorAssemblyFlags,
+        CorCallingConvention, CorElementType, CorMethodAttr, CorMethodImpl, CorTokenType,
+        CorTypeAttr, FunctionID, ModuleID, ProcessID, ReJITID, ASSEMBLYMETADATA, BYTE,
+        COR_FIELD_OFFSET, COR_PRF_FRAME_INFO, COR_PRF_FUNCTION_ARGUMENT_INFO,
         COR_PRF_FUNCTION_ARGUMENT_RANGE, COR_PRF_HIGH_MONITOR, COR_PRF_MODULE_FLAGS,
         COR_PRF_MONITOR, COR_PRF_RUNTIME_TYPE, COR_SIGNATURE, DWORD, HCORENUM, LPCBYTE,
         PCCOR_SIGNATURE, ULONG, ULONG32,
     },
-    interfaces::{ICorProfilerMethodEnum, IMetaDataImport},
+    interfaces::{ICorProfilerMethodEnum, IMetaDataEmit2, IMetaDataImport},
     profiler::types::MethodSignature,
 };
+use com::sys::HRESULT;
 
 pub struct ArrayClassInfo {
     pub element_type: CorElementType,
@@ -229,7 +237,7 @@ pub struct WrapperMethodRef {
     pub method_ref: mdMemberRef,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MyFunctionInfo {
     pub id: mdToken,
     pub name: String,
@@ -273,7 +281,7 @@ impl MyFunctionInfo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionMethodSignature {
     pub data: Vec<COR_SIGNATURE>,
 }
@@ -282,9 +290,392 @@ impl FunctionMethodSignature {
     pub fn new(data: Vec<COR_SIGNATURE>) -> Self {
         Self { data }
     }
+
+    fn parse_type_def_or_ref_encoded(signature: &[u8]) -> Option<(usize, usize)> {
+        if let Some((token, len)) = uncompress_data(signature) {
+            Some((0, len))
+        } else {
+            None
+        }
+    }
+
+    fn parse_type(signature: &[u8]) -> Option<(usize, usize)> {
+        let mut idx = 0;
+        if let Some(elem_type) = CorElementType::from_u8(signature[idx]) {
+            match elem_type {
+                CorElementType::ELEMENT_TYPE_VOID
+                | CorElementType::ELEMENT_TYPE_BOOLEAN
+                | CorElementType::ELEMENT_TYPE_CHAR
+                | CorElementType::ELEMENT_TYPE_I1
+                | CorElementType::ELEMENT_TYPE_U1
+                | CorElementType::ELEMENT_TYPE_I2
+                | CorElementType::ELEMENT_TYPE_U2
+                | CorElementType::ELEMENT_TYPE_I4
+                | CorElementType::ELEMENT_TYPE_U4
+                | CorElementType::ELEMENT_TYPE_I8
+                | CorElementType::ELEMENT_TYPE_U8
+                | CorElementType::ELEMENT_TYPE_R4
+                | CorElementType::ELEMENT_TYPE_R8
+                | CorElementType::ELEMENT_TYPE_STRING
+                | CorElementType::ELEMENT_TYPE_OBJECT => Some((idx, idx + 1)),
+                CorElementType::ELEMENT_TYPE_CLASS | CorElementType::ELEMENT_TYPE_VALUETYPE => {
+                    idx += 1;
+                    Self::parse_type_def_or_ref_encoded(&signature[idx..])
+                        .map(|(s, e)| (0, idx + e))
+                }
+                CorElementType::ELEMENT_TYPE_SZARRAY => {
+                    if signature.len() == 1 {
+                        return None;
+                    }
+
+                    idx += 1;
+                    if signature[idx] == CorElementType::ELEMENT_TYPE_CMOD_OPT as u8
+                        || signature[idx] == CorElementType::ELEMENT_TYPE_CMOD_REQD as u8
+                    {
+                        None
+                    } else {
+                        Self::parse_type(&signature[idx..]).map(|(s, e)| (0, idx + e))
+                    }
+                }
+                CorElementType::ELEMENT_TYPE_GENERICINST => {
+                    if signature.len() == 1 {
+                        return None;
+                    }
+
+                    idx += 1;
+                    if signature[idx] != CorElementType::ELEMENT_TYPE_CLASS as u8
+                        && signature[idx] != CorElementType::ELEMENT_TYPE_VALUETYPE as u8
+                    {
+                        return None;
+                    }
+
+                    if let Some((s, e)) = Self::parse_type_def_or_ref_encoded(&signature[idx..]) {
+                        idx += e;
+                    } else {
+                        return None;
+                    }
+
+                    let num;
+                    if let Some(num_idx) = crate::profiler::sig::parse_number(&signature[idx..]) {
+                        idx += num_idx;
+                        num = num_idx;
+                    } else {
+                        return None;
+                    }
+
+                    for _ in 0..num {
+                        if let Some((_, end_idx)) = Self::parse_type(&signature[idx..]) {
+                            idx += end_idx;
+                        } else {
+                            return None;
+                        }
+                    }
+
+                    Some((0, idx))
+                }
+                CorElementType::ELEMENT_TYPE_VAR | CorElementType::ELEMENT_TYPE_MVAR => {
+                    idx += 1;
+                    uncompress_data(&signature[idx..]).map(|(data, len)| (0, idx + len))
+                }
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
+    fn parse_return_type(&self) -> Option<(usize, usize)> {
+        let start_idx =
+            if self.data.len() > 2 && self.calling_convention().map_or(false, |c| c.is_generic()) {
+                3
+            } else if self.data.len() > 1 {
+                2
+            } else {
+                0
+            };
+
+        let mut idx = start_idx;
+
+        if let Some(elem_type) = CorElementType::from_u8(self.data[idx]) {
+            if elem_type == CorElementType::ELEMENT_TYPE_CMOD_OPT
+                || elem_type == CorElementType::ELEMENT_TYPE_CMOD_REQD
+            {
+                return None;
+            }
+
+            if elem_type == CorElementType::ELEMENT_TYPE_TYPEDBYREF {
+                return None;
+            }
+
+            if elem_type == CorElementType::ELEMENT_TYPE_VOID {
+                return Some((start_idx, start_idx + 1));
+            }
+
+            if elem_type == CorElementType::ELEMENT_TYPE_BYREF {
+                idx += 1;
+            }
+
+            Self::parse_type(&self.data[idx..]).map(|(_, end_idx)| (start_idx, start_idx + end_idx))
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn calling_convention(&self) -> Option<CorCallingConvention> {
+        if self.data.is_empty() {
+            None
+        } else {
+            CorCallingConvention::from_bits(self.data[0])
+        }
+    }
+
+    fn type_arguments_len(&self) -> u8 {
+        if self.data.len() > 1 && self.calling_convention().map_or(false, |c| c.is_generic()) {
+            self.data[1]
+        } else {
+            0
+        }
+    }
+
+    fn arguments_len(&self) -> u8 {
+        if self.data.len() > 2 && self.calling_convention().map_or(false, |c| c.is_generic()) {
+            self.data[2]
+        } else if self.data.len() > 1 {
+            self.data[1]
+        } else {
+            0
+        }
+    }
+
+    fn parse_param(signature: &[u8]) -> Option<(usize, usize)> {
+        let mut idx = 0;
+        if signature[idx] == CorElementType::ELEMENT_TYPE_CMOD_OPT as u8
+            || signature[idx] == CorElementType::ELEMENT_TYPE_CMOD_REQD as u8
+        {
+            return None;
+        }
+
+        if signature[idx] == CorElementType::ELEMENT_TYPE_TYPEDBYREF as u8 {
+            return None;
+        }
+
+        if signature[idx] == CorElementType::ELEMENT_TYPE_BYREF as u8 {
+            idx += 1;
+        }
+
+        Self::parse_type(&signature[idx..]).map(|(s, e)| (idx, idx + e))
+    }
+
+    pub fn try_parse(&self) -> Option<ParsedFunctionMethodSignature> {
+        if let Some(calling_convention) = self.calling_convention() {
+            let type_arg_len = self.type_arguments_len();
+            let arg_len = self.arguments_len();
+            let ret_type = match self.parse_return_type() {
+                Some(r) => r,
+                None => return None,
+            };
+
+            let mut sentinel_found = false;
+            let mut idx = ret_type.1;
+            let mut params = vec![];
+            for _ in 0..arg_len {
+                if self.data[idx] == CorElementType::ELEMENT_TYPE_SENTINEL as u8 {
+                    if sentinel_found {
+                        return None;
+                    }
+
+                    sentinel_found = true;
+                    idx += 1;
+                }
+
+                if let Some(param) = Self::parse_param(&self.data[idx..]) {
+                    params.push((idx, idx + param.1));
+                    idx += param.1;
+                } else {
+                    return None;
+                }
+            }
+
+            Some(ParsedFunctionMethodSignature {
+                data: self.data.clone(),
+                type_arg_len,
+                arg_len,
+                ret_type,
+                args: params,
+            })
+        } else {
+            None
+        }
+    }
 }
 
-#[derive(Debug)]
+pub struct FunctionMethodArgument<'a> {
+    data: &'a [u8],
+}
+
+impl<'a> FunctionMethodArgument<'a> {
+    pub fn new(data: &'a [u8]) -> Self {
+        Self { data }
+    }
+
+    pub fn signature(&self) -> &[u8] {
+        self.data
+    }
+
+    pub fn get_type_flags(&self) -> (CorElementType, MethodArgumentTypeFlag) {
+        let mut idx = 0;
+        if self.data[idx] == CorElementType::ELEMENT_TYPE_VOID as u8 {
+            return (
+                CorElementType::ELEMENT_TYPE_VOID,
+                MethodArgumentTypeFlag::VOID,
+            );
+        }
+
+        let mut flags = MethodArgumentTypeFlag::empty();
+        if self.data[idx] == CorElementType::ELEMENT_TYPE_BYREF as u8 {
+            flags |= MethodArgumentTypeFlag::BY_REF;
+            idx += 1;
+        }
+
+        let element_type = CorElementType::from_u8(self.data[idx]).unwrap();
+        match element_type {
+            CorElementType::ELEMENT_TYPE_BOOLEAN
+            | CorElementType::ELEMENT_TYPE_CHAR
+            | CorElementType::ELEMENT_TYPE_I1
+            | CorElementType::ELEMENT_TYPE_U1
+            | CorElementType::ELEMENT_TYPE_I2
+            | CorElementType::ELEMENT_TYPE_U2
+            | CorElementType::ELEMENT_TYPE_I4
+            | CorElementType::ELEMENT_TYPE_U4
+            | CorElementType::ELEMENT_TYPE_I8
+            | CorElementType::ELEMENT_TYPE_U8
+            | CorElementType::ELEMENT_TYPE_R4
+            | CorElementType::ELEMENT_TYPE_R8
+            | CorElementType::ELEMENT_TYPE_I
+            | CorElementType::ELEMENT_TYPE_U
+            | CorElementType::ELEMENT_TYPE_VALUETYPE
+            | CorElementType::ELEMENT_TYPE_VAR
+            | CorElementType::ELEMENT_TYPE_MVAR => {
+                flags |= MethodArgumentTypeFlag::BOXED_TYPE;
+            }
+            CorElementType::ELEMENT_TYPE_GENERICINST => {
+                idx += 1;
+                if self.data[idx] == CorElementType::ELEMENT_TYPE_VALUETYPE as u8 {
+                    flags |= MethodArgumentTypeFlag::BOXED_TYPE;
+                }
+            }
+            _ => (),
+        }
+
+        (element_type, flags)
+    }
+
+    pub fn get_type_tok(
+        &self,
+        metadata_emit: &IMetaDataEmit2,
+        cor_lib_assembly_ref: mdAssemblyRef,
+    ) -> Result<mdToken, HRESULT> {
+        let mut idx = 0;
+        if self.data[idx] == CorElementType::ELEMENT_TYPE_BYREF as u8 {
+            idx += 1;
+        }
+
+        let element_type = CorElementType::from_u8(self.data[idx]).unwrap();
+        match element_type {
+            CorElementType::ELEMENT_TYPE_BOOLEAN => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Boolean")
+            }
+            CorElementType::ELEMENT_TYPE_CHAR => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Char")
+            }
+            CorElementType::ELEMENT_TYPE_I1 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.SByte")
+            }
+            CorElementType::ELEMENT_TYPE_U1 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Byte")
+            }
+            CorElementType::ELEMENT_TYPE_I2 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Int16")
+            }
+            CorElementType::ELEMENT_TYPE_U2 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.UInt16")
+            }
+            CorElementType::ELEMENT_TYPE_I4 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.In32")
+            }
+            CorElementType::ELEMENT_TYPE_U4 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.UInt32")
+            }
+            CorElementType::ELEMENT_TYPE_I8 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Int64")
+            }
+            CorElementType::ELEMENT_TYPE_U8 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.UInt64")
+            }
+            CorElementType::ELEMENT_TYPE_R4 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Single")
+            }
+            CorElementType::ELEMENT_TYPE_R8 => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Double")
+            }
+            CorElementType::ELEMENT_TYPE_I => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.IntPtr")
+            }
+            CorElementType::ELEMENT_TYPE_U => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.UIntPtr")
+            }
+            CorElementType::ELEMENT_TYPE_STRING => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.String")
+            }
+            CorElementType::ELEMENT_TYPE_OBJECT => {
+                metadata_emit.define_type_ref_by_name(cor_lib_assembly_ref, "System.Object")
+            }
+            CorElementType::ELEMENT_TYPE_CLASS | CorElementType::ELEMENT_TYPE_VALUETYPE => {
+                idx += 1;
+                let (token, len) = uncompress_token(&self.data[idx..]);
+                Ok(token)
+            }
+            CorElementType::ELEMENT_TYPE_GENERICINST
+            | CorElementType::ELEMENT_TYPE_SZARRAY
+            | CorElementType::ELEMENT_TYPE_MVAR
+            | CorElementType::ELEMENT_TYPE_VAR => {
+                metadata_emit.get_token_from_type_spec(&self.data[idx..])
+            }
+            _ => Ok(mdTokenNil),
+        }
+    }
+}
+
+bitflags! {
+   pub struct MethodArgumentTypeFlag: u32 {
+        const BY_REF = 1;
+        const VOID = 2;
+        const BOXED_TYPE = 4;
+   }
+}
+
+pub struct ParsedFunctionMethodSignature {
+    pub type_arg_len: u8,
+    pub arg_len: u8,
+    pub ret_type: (usize, usize),
+    pub args: Vec<(usize, usize)>,
+    pub data: Vec<u8>,
+}
+
+impl ParsedFunctionMethodSignature {
+    pub fn arguments(&self) -> Vec<FunctionMethodArgument> {
+        self.args
+            .iter()
+            .map(|(s, e)| FunctionMethodArgument::new(&self.data[*s..*e]))
+            .collect()
+    }
+
+    pub fn return_type(&self) -> FunctionMethodArgument {
+        FunctionMethodArgument::new(&self.data[self.ret_type.0..self.ret_type.1])
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct MyTypeInfo {
     pub id: mdToken,
     pub name: String,
@@ -414,7 +805,7 @@ impl Display for Version {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AssemblyMetaData {
     pub name: String,
     pub assembly_token: mdAssembly,
@@ -424,10 +815,10 @@ pub struct AssemblyMetaData {
 }
 
 /// Assembly public key
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct PublicKey {
-    pub bytes: Vec<u8>,
-    pub hash_algorithm: Option<HashAlgorithmType>,
+    bytes: Vec<u8>,
+    hash_algorithm: Option<HashAlgorithmType>,
 }
 
 impl PublicKey {
@@ -438,8 +829,19 @@ impl PublicKey {
         }
     }
 
+    /// the public key bytes
+    pub fn bytes(&self) -> &[u8] {
+        self.bytes.as_slice()
+    }
+
+    /// the hash algorithm of the public key
+    pub fn hash_algorithm(&self) -> Option<HashAlgorithmType> {
+        self.hash_algorithm
+    }
+
+    /// the hex encoded public key
     pub fn public_key(&self) -> String {
-        hex::encode(self.bytes.as_slice())
+        hex::encode(self.bytes())
     }
 
     /// the low 8 bytes of the SHA-1 hash of the originator’s public key in the assembly reference
@@ -462,7 +864,7 @@ impl PublicKey {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, FromPrimitive)]
+#[derive(Debug, Eq, Copy, Clone, PartialEq, FromPrimitive)]
 pub enum HashAlgorithmType {
     Md5 = 32771,
     None = 0,

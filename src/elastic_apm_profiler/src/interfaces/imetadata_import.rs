@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{cli::uncompress_token, ffi::*, profiler::types::MethodSignature, types::*};
 use com::{
     interfaces::iunknown::IUnknown,
@@ -519,10 +524,11 @@ impl IMetaDataImport {
         let wide_name = U16CString::from_str(name).unwrap();
         let mut type_def = mdTypeDefNil;
         let hr = unsafe {
-            match enclosing_class {
-                Some(t) => self.FindTypeDefByName(wide_name.as_ptr(), t, &mut type_def),
-                None => self.FindTypeDefByName(wide_name.as_ptr(), 0, &mut type_def),
-            }
+            self.FindTypeDefByName(
+                wide_name.as_ptr(),
+                enclosing_class.unwrap_or(mdTokenNil),
+                &mut type_def,
+            )
         };
         match hr {
             S_OK => Ok(type_def),

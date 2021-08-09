@@ -1,27 +1,33 @@
 #![allow(non_upper_case_globals)]
 
-/**
-Copyright 2019 Camden Reslink
-MIT License
-https://github.com/camdenreslink/clr-profiler
+// Copyright 2019 Camden Reslink
+// MIT License
+// https://github.com/camdenreslink/clr-profiler
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the "Software"), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute,
-sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or
-substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-use crate::cli::{check_flag, il_u16, il_u32, il_u8};
-use crate::error::Error;
+use crate::{
+    cli::{check_flag, il_u16, il_u32, il_u8},
+    error::Error,
+};
 
 bitflags! {
     pub struct SectionHeaderFlags: u8 {
@@ -52,6 +58,7 @@ pub struct FatSectionHeader {
 }
 
 impl FatSectionHeader {
+    pub const LENGTH: usize = 4;
     pub fn into_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(4);
         let mut flags = SectionHeaderFlags::CorILMethod_Sect_FatFormat.bits();
@@ -77,7 +84,7 @@ pub struct FatSectionClause {
     pub class_token_or_filter_offset: u32,
 }
 impl FatSectionClause {
-    const LENGTH: usize = 24;
+    pub(crate) const LENGTH: usize = 24;
     pub fn from_bytes(il: &[u8]) -> Result<Self, Error> {
         let flag = CorExceptionFlag::from_bits(il[0]).unwrap();
         let try_offset = il_u32(il, 4)?;
@@ -131,7 +138,6 @@ impl SmallSectionHeader {
         bytes
     }
 }
-
 
 #[derive(Debug)]
 pub struct SmallSectionClause {
@@ -215,15 +221,15 @@ impl Section {
         let mut bytes = Vec::new();
         match &self {
             Section::FatSection(header, clauses) => {
-                bytes.extend_from_slice(&header.into_bytes());
+                bytes.append(&mut header.into_bytes());
                 for clause in clauses.iter() {
-                    bytes.extend_from_slice(&clause.into_bytes());
+                    bytes.append(&mut clause.into_bytes());
                 }
             }
             Section::SmallSection(header, clauses) => {
-                bytes.extend_from_slice(&header.into_bytes());
+                bytes.append(&mut header.into_bytes());
                 for clause in clauses.iter() {
-                    bytes.extend_from_slice(&clause.into_bytes());
+                    bytes.append(&mut clause.into_bytes());
                 }
             }
         }

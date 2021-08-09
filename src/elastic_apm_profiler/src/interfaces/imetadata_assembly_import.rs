@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 use crate::{cli::MAX_LENGTH, ffi::*, types::*};
 use com::{
     interfaces::iunknown::IUnknown,
@@ -140,7 +145,9 @@ impl IMetaDataAssemblyImport {
         unsafe { name_buffer.set_len(name_buffer_length as usize) };
 
         let mut name_length = MaybeUninit::uninit();
-        let mut assembly_metadata = MaybeUninit::uninit();
+        // NOTE: null_mut() default values on ASSEMBLYMETADATA will not populated.
+        // This is not an issue now, but would be if AssemblyMetaData were to expose these values
+        let mut assembly_metadata = ASSEMBLYMETADATA::default();
         let mut assembly_flags = MaybeUninit::uninit();
         let mut hash_algorithm = MaybeUninit::uninit();
         let mut public_key = MaybeUninit::uninit();
@@ -155,7 +162,7 @@ impl IMetaDataAssemblyImport {
                 name_buffer.as_mut_ptr(),
                 name_buffer_length,
                 name_length.as_mut_ptr(),
-                assembly_metadata.as_mut_ptr(),
+                &mut assembly_metadata,
                 assembly_flags.as_mut_ptr(),
             )
         };
@@ -177,7 +184,6 @@ impl IMetaDataAssemblyImport {
                 };
 
                 let hash_algorithm = unsafe { hash_algorithm.assume_init() };
-                let assembly_metadata = unsafe { assembly_metadata.assume_init() };
                 let assembly_flags = unsafe {
                     let a = assembly_flags.assume_init();
                     CorAssemblyFlags::from_bits(a).unwrap()
@@ -274,7 +280,8 @@ impl IMetaDataAssemblyImport {
         let mut name_buffer = Vec::<WCHAR>::with_capacity(MAX_LENGTH as usize);
         let mut name_length = 0;
         let mut public_key = MaybeUninit::uninit();
-        // TODO: null_mut() default values will not populated. This is not an issue now, but would be if AssemblyMetaData were to expose these values
+        // NOTE: null_mut() default values on ASSEMBLYMETADATA will not populated.
+        // This is not an issue now, but would be if AssemblyMetaData were to expose these values
         let mut assembly_metadata = ASSEMBLYMETADATA::default();
         let mut public_key_length = 0;
         let mut assembly_flags = 0;
@@ -287,7 +294,7 @@ impl IMetaDataAssemblyImport {
                 name_buffer.as_mut_ptr(),
                 MAX_LENGTH,
                 &mut name_length,
-                &mut assembly_metadata as *mut _ as *mut ASSEMBLYMETADATA,
+                &mut assembly_metadata,
                 ptr::null_mut(),
                 ptr::null_mut(),
                 &mut assembly_flags,
