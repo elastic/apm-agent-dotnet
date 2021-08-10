@@ -270,7 +270,7 @@ pub fn process_replacement_calls(
                 continue;
             }
 
-            if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
+            if *env::ELASTIC_APM_PROFILER_LOG_IL {
                 original_il = Some(helpers::get_il_codes(
                     "IL original code for caller: ",
                     &method,
@@ -502,7 +502,7 @@ pub fn process_replacement_calls(
     }
 
     if modified {
-        if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
+        if *env::ELASTIC_APM_PROFILER_LOG_IL {
             let modified_il = helpers::get_il_codes(
                 "IL modification for caller: ",
                 &method,

@@ -302,7 +302,7 @@ pub fn calltarget_rewriter_callback(
         S_FALSE
     })?;
 
-    let original_il = if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
+    let original_il = if *env::ELASTIC_APM_PROFILER_LOG_IL {
         Some(helpers::get_il_codes(
             "IL original code for caller: ",
             &method,
@@ -848,7 +848,7 @@ pub fn calltarget_rewriter_callback(
             S_FALSE
         })?;
 
-    if *env::ELASTIC_APM_PROFILER_DISPLAY_IL {
+    if *env::ELASTIC_APM_PROFILER_LOG_IL {
         let modified_il = helpers::get_il_codes(
             "IL modification for caller: ",
             &method,
