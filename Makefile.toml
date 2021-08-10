@@ -10,7 +10,7 @@ ELASTIC_APM_PROFILER_HOME = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elast
 ELASTIC_APM_PROFILER_INTEGRATIONS = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elastic.Apm.Profiler.Managed/integrations.json", condition = { env_not_set = ["ELASTIC_APM_PROFILER_INTEGRATIONS"] } }
 ELASTIC_APM_PROFILER_CALLTARGET_ENABLED = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_CALLTARGET_ENABLED"] } }
 ELASTIC_APM_PROFILER_LOG = { value = "debug", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG"] } }
-ELASTIC_APM_PROFILER_DISPLAY_IL = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_DISPLAY_IL"] } }
+ELASTIC_APM_PROFILER_LOG_IL = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_IL"] } }
 
 [tasks.build-profiler]
 description = "Builds CLR Profiler"
