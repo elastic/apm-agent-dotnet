@@ -16,6 +16,7 @@ pipeline {
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
+    AZURE_RESOURCE_GROUP_PREFIX = "ci-dotnet"
   }
   options {
     timeout(time: 4, unit: 'HOURS')
@@ -512,6 +513,10 @@ pipeline {
   }
   post {
     cleanup {
+            withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
+                powershell label: "Checking and removing any Azure related resource groups",
+                    script: "az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name | ForEach {az group delete --name $_}"
+            }
       notifyBuildResult()
     }
   }
