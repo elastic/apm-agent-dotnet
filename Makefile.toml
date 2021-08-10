@@ -56,6 +56,6 @@ env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}\\target\\debu
 command = "dotnet"
 args = ["${CARGO_MAKE_WORKING_DIRECTORY}/sample/Example/bin/${DOTNET_CONFIG}/${DOTNET_VERSION}/Example.dll"]
 
-[tasks.test]
+[tasks.test-sample]
 clear = true
 dependencies = ["build", "set-profiler-env"]
