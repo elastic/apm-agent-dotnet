@@ -16,7 +16,7 @@ pipeline {
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
-    AZURE_RESOURCE_GROUP_PREFIX = "ci-dotnet"
+    AZURE_RESOURCE_GROUP_PREFIX = "ci-dotnet-${env.BUILD_ID}"
   }
   options {
     timeout(time: 4, unit: 'HOURS')
@@ -512,10 +512,15 @@ pipeline {
     }
   }
   post {
-    cleanup {
-            withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
-                powershell label: "Checking and removing any Azure related resource groups",
-                    script: "az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name | ForEach {az group delete --name $_}"
+        cleanup {
+            withAzureAuth(){
+                if (isUnix()) {
+                    sh label: "Checking and removing any Azure related resource groups",
+                        script: "for group in `az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name`;do az group delete --name $group --no-wait --yes;done"
+                } else {
+                    powershell label: "Checking and removing any Azure related resource groups",
+                        script: "az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json| ConvertFrom-Json | ForEach {az group delete --name $_.name --no-wait --yes}"
+                }
             }
       notifyBuildResult()
     }
@@ -552,6 +557,20 @@ def dotnet(Closure body){
       }
     }
   }
+}
+
+def withAzureAuth(Closure body){
+    def authObj = getVaultSecret(secret: 'secret/apm-team/ci/apm-agent-dotnet-azure')
+    withEnvMask(vars:[
+        [var: 'AZ_CLIENT_ID', password: authObj.data.client_id]
+        [var: 'AZ_CLIENT_SECRET', password: authObj.data.client_secret]
+        [var: 'AZ_SUBSCRIPTION_ID', password: authObj.data.subscription_id]
+        [var: 'AZ_TENANT_ID', password: authObj.data.tenant_id]
+    ]){
+        cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
+        cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
+        body()
+    }
 }
 
 def withTerraform(Closure body){
