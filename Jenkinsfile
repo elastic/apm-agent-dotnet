@@ -569,9 +569,13 @@ def withAzureAuth(Closure body){
         [var: 'AZ_SUBSCRIPTION_ID', password: "${authObj.subscription_id}"],
         [var: 'AZ_TENANT_ID', password: "${authObj.tenant_id}"]
     ]) {
-        cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
-        cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
-        body()
+        // This PATH should be fine as the cleanup runs on Ubuntu
+        withEnv(["PATH=${env.PATH}:${env.HOME}/.local/bin"]) {
+            cmd label: "Install Azure CLI", script: "pip install --user azure-cli"
+            cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
+            cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
+            body()
+        }
     }
 }
 
