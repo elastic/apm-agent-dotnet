@@ -561,13 +561,14 @@ def dotnet(Closure body){
 }
 
 def withAzureAuth(Closure body){
-    def authObj = getVaultSecret(secret: 'secret/apm-team/ci/apm-agent-dotnet-azure')
-    withEnvMask(vars:[
-        [var: 'AZ_CLIENT_ID', password: authObj.data.client_id]
-        [var: 'AZ_CLIENT_SECRET', password: authObj.data.client_secret]
-        [var: 'AZ_SUBSCRIPTION_ID', password: authObj.data.subscription_id]
-        [var: 'AZ_TENANT_ID', password: authObj.data.tenant_id]
-    ]){
+    def props = getVaultSecret(secret: 'secret/apm-team/ci/apm-agent-dotnet-azure')
+    def authObj = props?.data
+    withEnvMask(vars: [
+        [var: 'AZ_CLIENT_ID', password: "${authObj.client_id}"]
+        [var: 'AZ_CLIENT_SECRET', password: "${authObj.client_secret}"]
+        [var: 'AZ_SUBSCRIPTION_ID', password: "${authObj.subscription_id}"]
+        [var: 'AZ_TENANT_ID', password: "${authObj.tenant_id}"]
+    ]) {
         cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
         cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
         body()
