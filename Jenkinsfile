@@ -514,10 +514,11 @@ pipeline {
   post {
         cleanup {
             withAzureAuth(){
-                if (isUnix()) {
+                whenTrue(isUnix()) {
                     sh label: "Checking and removing any Azure related resource groups",
                         script: "for group in `az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name`;do az group delete --name $group --no-wait --yes;done"
-                } else {
+                }
+                whenFalse(isUnix()) {
                     powershell label: "Checking and removing any Azure related resource groups",
                         script: "az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json| ConvertFrom-Json | ForEach {az group delete --name $_.name --no-wait --yes}"
                 }
