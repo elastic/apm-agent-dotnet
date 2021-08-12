@@ -59,22 +59,32 @@ fn generate_void_il_startup_method(
 ) -> Result<mdMethodDef, HRESULT> {
     let mscorlib_ref = helpers::create_assembly_ref_to_mscorlib(&module_metadata.assembly_emit)?;
 
-    log::trace!("generate_void_il_startup_method: created mscorlib ref");
+    log::trace!("generate_void_il_startup_method: created mscorlib ref {}", mscorlib_ref);
 
     let object_type_ref = module_metadata
         .emit
-        .define_type_ref_by_name(mscorlib_ref, "System.Object")?;
+        .define_type_ref_by_name(mscorlib_ref, "System.Object").map_err(|e| {
+        log::warn!("error defining type ref by name for System.Object. {:X}", e);
+        e
+    })?;
+
     let new_type_def = module_metadata.emit.define_type_def(
         "__ElasticVoidMethodType__",
         CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed,
         object_type_ref,
         None,
-    )?;
+    ).map_err(|e| {
+        log::warn!("error defining type def __ElasticVoidMethodType__. {:X}", e);
+        e
+    })?;
+
     let initialize_signature = &[
         CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT.bits(),
         0,
         CorElementType::ELEMENT_TYPE_VOID as COR_SIGNATURE,
     ];
+
+    log::trace!("generate_void_il_startup_method: define method __ElasticVoidMethodCall__");
 
     let new_method = module_metadata.emit.define_method(
         new_type_def,
@@ -83,7 +93,10 @@ fn generate_void_il_startup_method(
         initialize_signature,
         0,
         CorMethodImpl::miIL,
-    )?;
+    ).map_err(|e| {
+        log::warn!("error defining method __ElasticVoidMethodCall__. {:X}", e);
+        e
+    })?;
 
     let field_signature = &[
         CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD.bits(),
@@ -98,7 +111,10 @@ fn generate_void_il_startup_method(
         CorElementType::ELEMENT_TYPE_END,
         None,
         0,
-    )?;
+    ).map_err(|e| {
+        log::warn!("error defining field _isAssemblyLoaded. {:X}", e);
+        e
+    })?;
 
     let already_loaded_signature = &[
         CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT.bits(),
@@ -113,11 +129,17 @@ fn generate_void_il_startup_method(
         already_loaded_signature,
         0,
         CorMethodImpl::miIL,
-    )?;
+    ).map_err(|e| {
+        log::warn!("error defining method IsAlreadyLoaded. {:X}", e);
+        e
+    })?;
 
     let interlocked_type_ref = module_metadata
         .emit
-        .define_type_ref_by_name(mscorlib_ref, "System.Threading.Interlocked")?;
+        .define_type_ref_by_name(mscorlib_ref, "System.Threading.Interlocked").map_err(|e| {
+        log::warn!("error defining type ref by name for System.Threading.Interlocked. {:X}", e);
+        e
+    })?;
 
     // Create method signature for System.Threading.Interlocked::CompareExchange(int32&, int32, int32)
     let interlocked_compare_exchange_signature = &[
@@ -134,7 +156,10 @@ fn generate_void_il_startup_method(
         interlocked_type_ref,
         "CompareExchange",
         interlocked_compare_exchange_signature,
-    )?;
+    ).map_err(|e| {
+        log::warn!("error defining member ref CompareExchange. {:X}", e);
+        e
+    })?;
 
     // Write the instructions for the IsAlreadyLoaded method
     let instructions = vec![
@@ -315,7 +340,8 @@ fn generate_void_il_startup_method(
 
     let load_helper_token =  module_metadata.emit
         .define_user_string(managed::MANAGED_PROFILER_ASSEMBLY_LOADER_STARTUP).map_err(|e| {
-        log::warn!("generate_void_il_startup_method: failed to define user string Elastic.Apm.Profiler.Managed.Loader.Startup");
+        log::warn!("generate_void_il_startup_method: failed to define user string {}",
+            managed::MANAGED_PROFILER_ASSEMBLY_LOADER_STARTUP);
         e
     })?;
 

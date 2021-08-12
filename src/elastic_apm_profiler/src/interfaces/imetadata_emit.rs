@@ -357,9 +357,10 @@ impl IMetaDataEmit {
                 &mut field_def,
             )
         };
-        match hr {
-            S_OK => Ok(field_def),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(field_def)
         }
     }
 
@@ -380,9 +381,10 @@ impl IMetaDataEmit {
     pub fn set_module_props(&self, name: &str) -> Result<(), HRESULT> {
         let wstr = U16CString::from_str(name).unwrap();
         let hr = unsafe { self.SetModuleProps(wstr.as_ptr()) };
-        match hr {
-            S_OK => Ok(()),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(())
         }
     }
 
@@ -462,9 +464,10 @@ impl IMetaDataEmit {
                 &mut method_def,
             )
         };
-        match hr {
-            S_OK => Ok(method_def),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(method_def)
         }
     }
 
@@ -477,9 +480,10 @@ impl IMetaDataEmit {
         let wstr = U16CString::from_str(name).unwrap();
         let mut module_ref = mdModuleRefNil;
         let hr = unsafe { self.DefineModuleRef(wstr.as_ptr(), &mut module_ref) };
-        match hr {
-            S_OK => Ok(module_ref),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(module_ref)
         }
     }
 
@@ -493,9 +497,10 @@ impl IMetaDataEmit {
     ) -> Result<(), HRESULT> {
         let wstr = U16CString::from_str(import_name).unwrap();
         let hr = unsafe { self.DefinePinvokeMap(token, flags.bits(), wstr.as_ptr(), import_dll) };
-        match hr {
-            S_OK => Ok(()),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(())
         }
     }
 
@@ -522,9 +527,10 @@ impl IMetaDataEmit {
             )
         };
 
-        match hr {
-            S_OK => Ok(type_def),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(type_def)
         }
     }
 
@@ -552,9 +558,10 @@ impl IMetaDataEmit {
         let wstr = U16CString::from_str(name).unwrap();
         let mut type_ref = mdTypeRefNil;
         let hr = unsafe { self.DefineTypeRefByName(token, wstr.as_ptr(), &mut type_ref) };
-        match hr {
-            S_OK => Ok(type_ref),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(type_ref)
         }
     }
 
@@ -564,9 +571,10 @@ impl IMetaDataEmit {
         let wstr = U16CString::from_str(str).unwrap();
         let hr =
             unsafe { self.DefineUserString(wstr.as_ptr(), wstr.len() as ULONG, &mut md_string) };
-        match hr {
-            S_OK => Ok(md_string),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(md_string)
         }
     }
 
@@ -574,9 +582,10 @@ impl IMetaDataEmit {
     pub fn get_token_from_sig(&self, sig: &[u8]) -> Result<mdSignature, HRESULT> {
         let mut sig_token = mdSignatureNil;
         let hr = unsafe { self.GetTokenFromSig(sig.as_ptr(), sig.len() as ULONG, &mut sig_token) };
-        match hr {
-            S_OK => Ok(sig_token),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(sig_token)
         }
     }
 
@@ -588,9 +597,10 @@ impl IMetaDataEmit {
         implementation: CorMethodImpl,
     ) -> Result<(), HRESULT> {
         let hr = unsafe { self.SetMethodImplFlags(method, implementation.bits()) };
-        match hr {
-            S_OK => Ok(()),
-            _ => Err(hr),
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(())
         }
     }
 }

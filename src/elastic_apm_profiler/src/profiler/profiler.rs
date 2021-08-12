@@ -70,6 +70,9 @@ use std::{
     process::id,
 };
 use widestring::{U16CStr, U16CString, WideString};
+use std::path::{Path, PathBuf};
+use crate::profiler::types::AssemblyReference;
+use crate::profiler::managed::MANAGED_PROFILER_FULL_ASSEMBLY_VERSION;
 
 const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
     "Elastic.Apm",
@@ -146,7 +149,7 @@ class! {
         cor_app_domain_id: AtomicUsize,
         is_desktop_iis: AtomicBool,
         integration_methods: RwLock<Vec<IntegrationMethod>>,
-        first_jit_compilation_app_domains: Mutex<HashSet<AppDomainID>>,
+        first_jit_compilation_app_domains: RwLock<HashSet<AppDomainID>>,
     }
 
     impl ICorProfilerCallback for Profiler {
@@ -650,7 +653,7 @@ impl Profiler {
         }
 
         self.first_jit_compilation_app_domains
-            .lock()
+            .write()
             .unwrap()
             .remove(&app_domain_id);
 
@@ -783,8 +786,8 @@ impl Profiler {
                 &module_info.assembly.app_domain_name
             );
 
-            if !self.cor_lib_module_loaded.load(Ordering::SeqCst) && assembly_name == "mscorlib"
-                || assembly_name == "System.Private.CoreLib"
+            if !self.cor_lib_module_loaded.load(Ordering::SeqCst) && (assembly_name == "mscorlib"
+                || assembly_name == "System.Private.CoreLib")
             {
                 self.cor_lib_module_loaded.store(true, Ordering::SeqCst);
                 self.cor_app_domain_id
@@ -821,7 +824,7 @@ impl Profiler {
                 );
 
                 self.first_jit_compilation_app_domains
-                    .lock()
+                    .write()
                     .unwrap()
                     .insert(app_domain_id);
 
@@ -1120,19 +1123,22 @@ impl Profiler {
 
         let module_metadata = module_metadata.unwrap();
         let call_target_enabled = *env::ELASTIC_APM_PROFILER_CALLTARGET_ENABLED;
-        let loader_injected_in_appdomain = {
-            let app_domains = self.first_jit_compilation_app_domains.lock().unwrap();
-            app_domains.contains(&module_metadata.app_domain_id)
+        let loader_injected_in_app_domain = {
+            // scope reading to this block
+            self.first_jit_compilation_app_domains
+                .read()
+                .unwrap()
+                .contains(&module_metadata.app_domain_id)
         };
 
-        if call_target_enabled && loader_injected_in_appdomain {
+        if call_target_enabled && loader_injected_in_app_domain {
             return Ok(());
         }
 
         let caller = module_metadata
             .import
             .get_function_info(function_info.token)?;
-
+        
         log::trace!(
             "JITCompilationStarted: function_id={}, name={}()",
             function_id,
@@ -1145,7 +1151,7 @@ impl Profiler {
                 Some(t) => {
                     &module_metadata.assembly_name == "System.Web"
                         && t.name == "System.Web.Compilation.BuildManager"
-                        && &caller.name == "InvokerPreInitMethods"
+                        && &caller.name == "InvokePreStartInitMethods"
                 }
                 None => false,
             }
@@ -1154,7 +1160,7 @@ impl Profiler {
                 || &module_metadata.assembly_name == "System.Net.Http")
         };
 
-        if valid_startup_hook_callsite && !loader_injected_in_appdomain {
+        if valid_startup_hook_callsite && !loader_injected_in_app_domain {
             let runtime_info_borrow = self.runtime_info.borrow();
             let runtime_info = runtime_info_borrow.as_ref().unwrap();
 
@@ -1174,7 +1180,7 @@ impl Profiler {
             );
 
             self.first_jit_compilation_app_domains
-                .lock()
+                .write()
                 .unwrap()
                 .insert(module_metadata.app_domain_id);
 
