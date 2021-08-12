@@ -40,7 +40,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 				if (assembly != null)
 				{
 					var type = assembly.GetType("Elastic.Apm.Profiler.Managed.AutoInstrumentation", throwOnError: false);
-					var method = type?.GetRuntimeMethod("Initialize", parameters: new Type[0]);
+					var method = type?.GetRuntimeMethod("Initialize", parameters: Type.EmptyTypes);
 					method?.Invoke(obj: null, parameters: null);
 				}
 			}
@@ -109,7 +109,12 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         private static AssemblyLoadContext DependencyLoadContext { get; } = new ProfilerAssemblyLoadContext();
         private static string ResolveDirectory()
         {
-            var framework = "netstandard2.0";
+			var version = Environment.Version;
+			// use netcoreapp3.1 for netcoreapp3.1 and later
+			var framework = version.Major == 3 && version.Minor >= 1 || version.Major >= 5
+				? "netcoreapp3.1"
+				: "netstandard2.0";
+
             var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
             return Path.Combine(directory, framework);
         }
@@ -133,7 +138,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
             var path = Path.Combine(Directory, $"{assemblyName.Name}.dll");
 
             // Only load the main dll into the default Assembly Load Context.
-            // If other libraries are provided by the NuGet package their loads are handled in the following two ways.
+            // If Elastic.Apm or other libraries are provided by the NuGet package their loads are handled in the following two ways.
             // 1) The AssemblyVersion is greater than or equal to the version used by Elastic.Apm.Profiler.Managed, the assembly
             //    will load successfully and will not invoke this resolve event.
             // 2) The AssemblyVersion is lower than the version used by Elastic.Apm.Profiler.Managed, the assembly will fail to load

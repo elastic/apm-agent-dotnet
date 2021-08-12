@@ -28,10 +28,13 @@ namespace Elastic.Apm.Model
 			bool captureStackTraceOnStart = false
 		)
 		{
-			var spanName = dbCommand.CommandText.Replace(Environment.NewLine, " ");
+			var spanName = GetDbSpanName(dbCommand);
 			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, subType, instrumentationFlag,
 				captureStackTraceOnStart);
 		}
+
+		internal static string GetDbSpanName(IDbCommand dbCommand) =>
+			dbCommand.CommandText.Replace(Environment.NewLine, " ");
 
 		internal void EndSpan(ISpan span, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
 		{
@@ -47,7 +50,7 @@ namespace Elastic.Apm.Model
 				{
 					capturedSpan.Context.Db = new Database
 					{
-						Statement = dbCommand.CommandText.Replace(Environment.NewLine, " "),
+						Statement = GetDbSpanName(dbCommand),
 						Instance = dbCommand.Connection.Database,
 						Type = Database.TypeSql
 					};

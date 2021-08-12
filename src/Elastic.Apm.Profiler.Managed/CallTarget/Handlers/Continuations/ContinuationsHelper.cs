@@ -36,9 +36,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
             return typeof(object);
         }
 
-#if NETSTANDARD2_0
-#else
-        internal static TTo Convert<TFrom, TTo>(TFrom value) => Converter<TFrom, TTo>.Convert(value);
+#if !NETCOREAPP3_1
+		internal static TTo Convert<TFrom, TTo>(TFrom value) => Converter<TFrom, TTo>.Convert(value);
 
 		private static class Converter<TFrom, TTo>
         {

@@ -14,29 +14,32 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	internal static class DbSpanFactory<T>
 	{
 		private static readonly Type _type;
-		private static readonly string _fullName;
 		private static readonly InstrumentationFlag _instrumentationFlag;
 
 		static DbSpanFactory()
 		{
 			_type = typeof(T);
-			_fullName = _type.FullName;
-			_instrumentationFlag = GetInstrumentationFlag(_fullName);
+			_instrumentationFlag = GetInstrumentationFlag(_type.FullName);
 		}
 
 		internal static ISpan CreateSpan(ApmAgent agent, IDbCommand command)
 		{
-			var transaction = agent.Tracer.CurrentTransaction;
-
-			if (transaction is null)
+			if (agent.Tracer.CurrentTransaction is null)
 				return null;
 
-			// if the current execution segment is already for this instrumentation,
-			// skip creating another db span for it, to prevent instrumenting delegated methods.
-			if (agent.GetCurrentExecutionSegment() is Span span && span.InstrumentationFlag.HasFlag(_instrumentationFlag))
+			// var commandTypeName = command.GetType();
+			// var instrumentationFlag = commandTypeName == _type
+			// 	? _instrumentationFlag
+			// 	: GetInstrumentationFlag(commandTypeName.FullName);
+
+			// if the current execution segment is already for this instrumentation and
+			// for the same command, skip creating another db span for it, to prevent instrumenting delegated methods.
+			if (agent.GetCurrentExecutionSegment() is Span span &&
+				span.InstrumentationFlag.HasFlag(_instrumentationFlag) &&
+				span.Name == DbSpanCommon.GetDbSpanName(command))
 				return null;
 
-			return agent.TracerInternal.DbSpanCommon.StartSpan(Agent.Instance, command, _instrumentationFlag);
+			return agent.TracerInternal.DbSpanCommon.StartSpan(agent, command, _instrumentationFlag);
 		}
 
 		internal static void EndSpan(ApmAgent agent, IDbCommand command, ISpan span, Exception exception)
