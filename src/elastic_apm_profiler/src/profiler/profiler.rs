@@ -1269,12 +1269,85 @@ impl Profiler {
         assembly_path: *const WCHAR,
         assembly_reference_provider: ICorProfilerAssemblyReferenceProvider,
     ) -> Result<(), HRESULT> {
+        unsafe {
+            assembly_reference_provider.AddRef();
+        }
+
         let path = {
             let p = unsafe { U16CStr::from_ptr_str(assembly_path) };
             p.to_string_lossy()
         };
-
         log::debug!("GetAssemblyReferences: called for {}", &path);
+
+        let path_buf = PathBuf::from(&path);
+        let assembly_name = path_buf.file_name().unwrap().to_str().unwrap();
+
+        for pattern in SKIP_ASSEMBLY_PREFIXES.iter() {
+            if assembly_name.starts_with(pattern) {
+                log::debug!(
+                        "GetAssemblyReferences: skipping module {} {} because it matches skip pattern {}",
+                        assembly_name,
+                        &path,
+                        pattern
+                    );
+                return Ok(());
+            }
+        }
+
+        for skip in SKIP_ASSEMBLIES.iter() {
+            if &assembly_name == skip {
+                log::debug!(
+                        "GetAssemblyReferences: skipping assembly {} {} because it matches skip {}",
+                        assembly_name,
+                        &path,
+                        skip
+                    );
+                return Ok(());
+            }
+        }
+
+        let assembly_reference = MANAGED_PROFILER_FULL_ASSEMBLY_VERSION.deref();
+        let (sz_locale, cb_locale) = if &assembly_reference.locale == "neutral" {
+            (std::ptr::null_mut() as *mut WCHAR, 0)
+        } else {
+            let wstr = U16CString::from_str(&assembly_reference.locale).unwrap();
+            let len = wstr.len() as ULONG;
+            (wstr.into_vec().as_mut_ptr(), len)
+        };
+
+        let assembly_metadata = ASSEMBLYMETADATA {
+            usMajorVersion: assembly_reference.version.major,
+            usMinorVersion: assembly_reference.version.minor,
+            usBuildNumber: assembly_reference.version.build,
+            usRevisionNumber: assembly_reference.version.revision,
+            szLocale: sz_locale,
+            cbLocale: cb_locale,
+            rProcessor: std::ptr::null_mut(),
+            ulProcessor: 0,
+            rOS: std::ptr::null_mut(),
+            ulOS: 0,
+        };
+
+        let public_key = assembly_reference.public_key.into_bytes();
+        let (name, len) = {
+            let wstr = U16CString::from_str(&assembly_reference.name).unwrap();
+            let len = wstr.len() as ULONG;
+            (wstr.into_vec().as_ptr(), len)
+        };
+
+        let assembly_reference_info = COR_PRF_ASSEMBLY_REFERENCE_INFO {
+            pbPublicKeyOrToken: public_key.as_ptr() as *const _,
+            cbPublicKeyOrToken: public_key.len() as ULONG,
+            szName: name,
+            pMetaData: &assembly_metadata as * const _,
+            pbHashValue: std::ptr::null(),
+            cbHashValue: 0,
+            dwAssemblyRefFlags: 0
+        };
+
+        if let Err(err) = assembly_reference_provider.add_assembly_reference(&assembly_reference_info) {
+            log::warn!("GetAssemblyReferences failed for {}", &path);
+        }
 
         Ok(())
     }

@@ -5,6 +5,8 @@
 
 use crate::ffi::COR_PRF_ASSEMBLY_REFERENCE_INFO;
 use com::{interfaces::iunknown::IUnknown, sys::HRESULT};
+use crate::error::Error;
+use com::sys::FAILED;
 
 interfaces! {
     /// Enables the profiler to inform the common language runtime (CLR) of assembly references
@@ -19,5 +21,19 @@ interfaces! {
             &self,
             pAssemblyRefInfo: *const COR_PRF_ASSEMBLY_REFERENCE_INFO,
         ) -> HRESULT;
+    }
+}
+
+impl ICorProfilerAssemblyReferenceProvider {
+    pub fn add_assembly_reference(&self, assembly_reference_info: &COR_PRF_ASSEMBLY_REFERENCE_INFO) -> Result<(), HRESULT> {
+        let hr = unsafe {
+            self.AddAssemblyReference(assembly_reference_info as *const _)
+        };
+
+        if FAILED(hr) {
+            Err(hr)
+        } else {
+            Ok(())
+        }
     }
 }
