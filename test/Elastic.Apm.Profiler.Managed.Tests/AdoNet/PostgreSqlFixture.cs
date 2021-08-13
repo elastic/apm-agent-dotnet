@@ -10,6 +10,11 @@ using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
+	[CollectionDefinition("Postgres")]
+	public class PostgresCollection : ICollectionFixture<PostgreSqlFixture>
+	{
+	}
+
 	public class PostgreSqlFixture : IAsyncLifetime
 	{
 		private readonly PostgreSqlContainer _container;

@@ -17,6 +17,67 @@ namespace Elastic.Apm.AdoNet
 {
 	public class DbCommandRunner
 	{
+		/// <summary>
+		/// Creates a RunAllAsync&lt;TDbCommand&gt; transaction with the following spans,
+		/// when the profiler is attached:
+		/// <para/>
+		/// nameof(TDbCommand) command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		///		<item>async span + 7 command spans (if supports async)</item>
+		///		<item>async with cancellation span + 7 command spans (if supports async)</item>
+		/// </list>
+		/// 25 spans (if supports async), otherwise 9 spans
+		///
+		/// <para/>
+		/// DbCommand command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		///		<item>async span + 7 command spans</item>
+		///		<item>async with cancellation span + 7 command spans</item>
+		/// </list>
+		/// 25 spans
+		///
+		/// <para />
+		/// IDbCommand command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		/// </list>
+		/// 9 spans
+		///
+		/// <para />
+		/// IDbCommandGenericConstraint&lt;TDbCommand&gt; command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		/// </list>
+		/// 9 spans
+		///
+		/// <para/>
+		/// DbCommand-NetStandard command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		///		<item>async span + 7 command spans</item>
+		///		<item>async with cancellation span + 7 command spans</item>
+		/// </list>
+		/// 25 spans
+		///
+		/// <para />
+		/// IDbCommand-NetStandard command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		/// </list>
+		/// 9 spans
+		///
+		/// <para />
+		/// IDbCommandGenericConstraint&lt;TDbCommand&gt;-NetStandard command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		/// </list>
+		/// 9 spans
+		///
+		/// <para />
+		/// 111 spans total (if supports async), otherwise 95 spans
+		/// </summary>
 		public static async Task RunAllAsync<TDbCommand>(
 			DbCommandFactory commandFactory,
 			IDbCommandExecutor providerCommandExecutor,
@@ -43,6 +104,44 @@ namespace Elastic.Apm.AdoNet
 			});
 		}
 
+		/// <summary>
+		/// Creates a RunBaseTypesAsync transaction with the following spans,
+		/// when the profiler is attached:
+		/// <para/>
+		/// DbCommand command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		///		<item>async span + 7 command spans</item>
+		///		<item>async with cancellation span + 7 command spans</item>
+		/// </list>
+		/// 25 spans
+		///
+		/// <para />
+		/// IDbCommand command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		/// </list>
+		/// 9 spans
+		///
+		/// <para/>
+		/// DbCommand-NetStandard command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		///		<item>async span + 7 command spans</item>
+		///		<item>async with cancellation span + 7 command spans</item>
+		/// </list>
+		/// 25 spans
+		///
+		/// <para />
+		/// IDbCommand-NetStandard command span:
+		/// <list type="bullet">
+		///		<item>sync span + 7 command spans</item>
+		/// </list>
+		/// 9 spans
+		///
+		/// <para />
+		/// 68 spans total
+		/// </summary>
 		public static async Task RunBaseTypesAsync(
 			DbCommandFactory commandFactory,
 			CancellationToken token

@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			var contentRootDir = _configuration.GetValue<string>(WebHostDefaults.ContentRootKey);
 
 			var specBranch = "7.x";
-			var validator = new Validator(specBranch, Path.Combine(contentRootDir, "specs"));
+			var validator = new Validator(specBranch, Path.Combine(contentRootDir, Guid.NewGuid().ToString("N"), "specs"));
 			// not ideal to wait on async inside sync startup configuration, but do for now.
 			// Force the specs to work with to be downloaded now, to avoid race conditions with
 			// downloading for the first time.
