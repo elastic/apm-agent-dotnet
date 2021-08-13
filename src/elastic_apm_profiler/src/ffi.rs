@@ -493,13 +493,13 @@ pub struct STATSTG {
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub struct COR_PRF_ASSEMBLY_REFERENCE_INFO {
-    pbPublicKeyOrToken: *const c_void,
-    cbPublicKeyOrToken: ULONG,
-    szName: LPCWSTR,
-    pMetaData: *const ASSEMBLYMETADATA,
-    pbHashValue: *const c_void,
-    cbHashValue: ULONG,
-    dwAssemblyRefFlags: DWORD,
+    pub pbPublicKeyOrToken: *const c_void,
+    pub cbPublicKeyOrToken: ULONG,
+    pub szName: LPCWSTR,
+    pub pMetaData: *const ASSEMBLYMETADATA,
+    pub pbHashValue: *const c_void,
+    pub cbHashValue: ULONG,
+    pub dwAssemblyRefFlags: DWORD,
 }
 #[repr(C)]
 #[derive(Debug, PartialEq)]
