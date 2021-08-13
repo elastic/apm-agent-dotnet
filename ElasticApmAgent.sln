@@ -161,6 +161,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AdoNet.NetStand
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySqlDataSample", "sample\MySqlDataSample\MySqlDataSample.csproj", "{346D3A9A-1296-4915-BB6C-8533731D3B3B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqliteSample", "sample\SqliteSample\SqliteSample.csproj", "{F72182DC-A933-4C4B-8321-830D0DFB857C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -411,6 +413,10 @@ Global
 		{346D3A9A-1296-4915-BB6C-8533731D3B3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{346D3A9A-1296-4915-BB6C-8533731D3B3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{346D3A9A-1296-4915-BB6C-8533731D3B3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F72182DC-A933-4C4B-8321-830D0DFB857C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F72182DC-A933-4C4B-8321-830D0DFB857C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F72182DC-A933-4C4B-8321-830D0DFB857C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F72182DC-A933-4C4B-8321-830D0DFB857C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -477,6 +483,7 @@ Global
 		{14BEE605-6180-4B9E-87F5-A24BA79461B5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{AAB983A1-6080-449D-95D8-7E7BA05DDFAA} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{346D3A9A-1296-4915-BB6C-8533731D3B3B} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{F72182DC-A933-4C4B-8321-830D0DFB857C} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

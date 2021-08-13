@@ -43,7 +43,6 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
-					["ELASTIC_APM_TRANSACTION_MAX_SPANS"] = "-1",
 					["POSTGRES_CONNECTION_STRING"] = _fixture.ConnectionString,
 				};
 

@@ -17,17 +17,11 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
-	[Collection("MySql")]
-	public class MySqlCommandTests
+	public class SqliteCommandTests
 	{
-		private readonly MySqlFixture _fixture;
 		private readonly ITestOutputHelper _output;
 
-		public MySqlCommandTests(MySqlFixture fixture, ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_output = output;
-		}
+		public SqliteCommandTests(ITestOutputHelper output) => _output = output;
 
 		[Theory]
 		[ClassData(typeof(AdoNetTestData))]
@@ -38,12 +32,11 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			using (var profiledApplication = new ProfiledApplication("MySqlDataSample"))
+			using (var profiledApplication = new ProfiledApplication("SqliteSample"))
 			{
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
-					["MYSQL_CONNECTION_STRING"] = _fixture.ConnectionString,
 				};
 
 				profiledApplication.Start(
@@ -54,27 +47,20 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 					exception => _output.WriteLine($"{exception}"));
 			}
 
-			// RunAllAsync<TDbCommand> transaction
-			// RunBaseTypesAsync transaction
 			apmServer.ReceivedData.Transactions.Should().HaveCount(2);
-
-			// The first MySqlCommand on an opened MySqlConnection executes an additional
-			// command that the profiler instrumentation will create a span for. Since there
-			// are two connections opened, 1 for RunAllAsync<TDbCommand> and 1 for RunBaseTypesAsync,
-			// expect 2 additional spans
-			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans + 2);
+			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
 
 			var genericTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunAllAsync<TDbCommand>");
 			genericTransaction.Should().NotBeNull();
 
 			var genericSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == genericTransaction.Id).ToList();
-			genericSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunAllAsyncSpans + 1);
+			genericSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunAllAsyncSpans);
 
 			var baseTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunBaseTypesAsync");
 			baseTransaction.Should().NotBeNull();
 
 			var baseSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == baseTransaction.Id).ToList();
-			baseSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunBaseTypesAsyncSpans + 1);
+			baseSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunBaseTypesAsyncSpans);
 
 			await apmServer.StopAsync();
 		}
