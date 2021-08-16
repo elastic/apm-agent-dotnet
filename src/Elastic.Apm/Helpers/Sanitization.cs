@@ -60,8 +60,9 @@ namespace Elastic.Apm.Helpers
 		{
 			try
 			{
-				result = uri.Sanitize().ToString();
-				return true;
+				var sanitized = uri.Sanitize();
+				result = sanitized.ToString();
+				return sanitized != uri;
 			}
 			catch
 			{
