@@ -190,7 +190,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
 
 			foreach (var header in headerNames)
-				_capturedPayload.FirstTransaction.Context.Request.Headers[header].Should().Be("[REDACTED]");
+				_capturedPayload.FirstTransaction.Context.Request.Headers[header].Should().Be(Apm.Consts.Redacted);
 		}
 
 		/// <summary>
@@ -245,7 +245,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
 
-			_capturedPayload.FirstTransaction.Context.Request.Headers["foo"].Should().Be("[REDACTED]");
+			_capturedPayload.FirstTransaction.Context.Request.Headers["foo"].Should().Be(Apm.Consts.Redacted);
 		}
 
 		///// <summary>
@@ -273,7 +273,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
-			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be(shouldBeSanitized ? "[REDACTED]" : headerValue);
+			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be(shouldBeSanitized ? Apm.Consts.Redacted : headerValue);
 		}
 
 		///// <summary>
@@ -296,7 +296,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
-			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be("[REDACTED]");
+			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be(Apm.Consts.Redacted);
 		}
 
 		/// <summary>
@@ -317,14 +317,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
-			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be("[REDACTED]");
+			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be(Apm.Consts.Redacted);
 
 			_capturedPayload.WaitForErrors();
 			_capturedPayload.Errors.Should().NotBeEmpty();
 			_capturedPayload.FirstError.Context.Should().NotBeNull();
 			_capturedPayload.FirstError.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstError.Context.Request.Headers.Should().NotBeNull();
-			_capturedPayload.FirstError.Context.Request.Headers[headerName].Should().Be("[REDACTED]");
+			_capturedPayload.FirstError.Context.Request.Headers[headerName].Should().Be(Apm.Consts.Redacted);
 		}
 
 		///// <summary>
@@ -351,7 +351,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
-			_capturedPayload.FirstTransaction.Context.Request.Headers[returnedHeaderName].Should().Be("[REDACTED]");
+			_capturedPayload.FirstTransaction.Context.Request.Headers[returnedHeaderName].Should().Be(Apm.Consts.Redacted);
 		}
 
 

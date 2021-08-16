@@ -84,7 +84,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigSnapshot.ServerUrl, service);
 			_logger.Debug()
 				?.Log("Combined absolute URL for APM Server get central configuration endpoint: `{Url}'. Service: {Service}."
-					, _getConfigAbsoluteUrl, service);
+					, _getConfigAbsoluteUrl.Sanitize(), service);
 
 			StartWorkLoop();
 		}
@@ -141,16 +141,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 						+ Environment.NewLine + "+-> Response:{HttpResponse}"
 						+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
 						, _eTag.AsNullableToString()
-						, Http.Sanitize(_getConfigAbsoluteUrl, out var sanitizedAbsoluteUrl) ? sanitizedAbsoluteUrl : _getConfigAbsoluteUrl.ToString()
-						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedBaseAddress)
-							? sanitizedBaseAddress
-							: HttpClient.BaseAddress.ToString()
+						, _getConfigAbsoluteUrl.Sanitize().ToString()
+						, HttpClient.BaseAddress.Sanitize().ToString()
 						, waitInfo.Interval.ToHms(),
 						_dbgIterationsCount
-						, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(Http.HttpRequestSanitizedToString(httpRequest))
-						, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
+						, httpRequest == null ? " N/A" : Environment.NewLine + httpRequest.Sanitize(_configStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()
+						, httpResponse == null ? " N/A" : Environment.NewLine + httpResponse.ToString().Indent()
 						, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
-						, httpResponseBody == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponseBody));
+						, httpResponseBody == null ? " N/A" : Environment.NewLine + httpResponseBody.Indent());
 			}
 			finally
 			{
@@ -173,7 +171,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private async Task<(HttpResponseMessage, string)> FetchConfigHttpResponseImplAsync(HttpRequestMessage httpRequest)
 		{
-			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest);
+			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest.RequestUri.Sanitize());
 
 			var httpResponse = await HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, CancellationTokenSource.Token)
 				.ConfigureAwait(false);
@@ -181,8 +179,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			if (httpResponse == null)
 			{
 				throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
-					+ $" Request:{Environment.NewLine}{TextUtils.Indent(httpRequest.ToString())}",
-					new WaitInfoS(WaitTimeIfAnyError, "HttpResponseMessage from APM Server is equal to null"));
+					+ $" Request:{Environment.NewLine}{httpRequest.Sanitize(_configStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()}",
+					new WaitInfoS(WaitTimeIfAnyError, "HttpResponseMessage from APM Server is null"));
 			}
 
 			_logger.Trace()?.Log("Reading HTTP response body... Response: {HttpResponse}.", httpResponse);
