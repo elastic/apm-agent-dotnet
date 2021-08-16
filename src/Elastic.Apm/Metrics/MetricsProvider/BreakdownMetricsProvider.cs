@@ -17,7 +17,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string SpanSelfTime = "span.self_time";
 		internal const int MetricLimit = 1000;
 
-		private List<MetricSet> _itemsToSend = new();
+		private readonly List<MetricSet> _itemsToSend = new();
 		private readonly IApmLogger _logger;
 
 		/// <summary>
