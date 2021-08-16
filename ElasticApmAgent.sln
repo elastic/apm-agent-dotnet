@@ -163,6 +163,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySqlDataSample", "sample\M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqliteSample", "sample\SqliteSample\SqliteSample.csproj", "{F72182DC-A933-4C4B-8321-830D0DFB857C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OracleManagedDataAccessSample", "sample\OracleManagedDataAccessSample\OracleManagedDataAccessSample.csproj", "{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OracleManagedDataAccessCoreSample", "sample\OracleManagedDataAccessCoreSample\OracleManagedDataAccessCoreSample.csproj", "{8CF18906-150C-4AD9-B108-2A39B31105C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -417,6 +421,14 @@ Global
 		{F72182DC-A933-4C4B-8321-830D0DFB857C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F72182DC-A933-4C4B-8321-830D0DFB857C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F72182DC-A933-4C4B-8321-830D0DFB857C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CF18906-150C-4AD9-B108-2A39B31105C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CF18906-150C-4AD9-B108-2A39B31105C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CF18906-150C-4AD9-B108-2A39B31105C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CF18906-150C-4AD9-B108-2A39B31105C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -484,6 +496,8 @@ Global
 		{AAB983A1-6080-449D-95D8-7E7BA05DDFAA} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{346D3A9A-1296-4915-BB6C-8533731D3B3B} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{F72182DC-A933-4C4B-8321-830D0DFB857C} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{8CF18906-150C-4AD9-B108-2A39B31105C5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

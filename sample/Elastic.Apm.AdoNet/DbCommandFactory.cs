@@ -11,26 +11,27 @@ namespace Elastic.Apm.AdoNet
 {
 	public class DbCommandFactory
 	{
-		private readonly IDbConnection _connection;
-		private readonly string _tableName;
+		protected string TableName { get; set; }
+
+		protected IDbConnection Connection { get; }
 
 		public DbCommandFactory(IDbConnection connection, string tableName)
 		{
-			_connection = connection;
-			_tableName = tableName;
+			Connection = connection;
+			TableName = tableName;
 		}
 
 		public virtual IDbCommand GetCreateTableCommand()
         {
-            var command = _connection.CreateCommand();
-            command.CommandText = $"DROP TABLE IF EXISTS {_tableName}; CREATE TABLE {_tableName} (Id int PRIMARY KEY, Name varchar(100));";
+            var command = Connection.CreateCommand();
+            command.CommandText = $"DROP TABLE IF EXISTS {TableName}; CREATE TABLE {TableName} (Id int PRIMARY KEY, Name varchar(100));";
             return command;
         }
 
         public virtual IDbCommand GetInsertRowCommand()
         {
-            var command = _connection.CreateCommand();
-            command.CommandText = $"INSERT INTO {_tableName} (Id, Name) VALUES (@Id, @Name);";
+            var command = Connection.CreateCommand();
+            command.CommandText = $"INSERT INTO {TableName} (Id, Name) VALUES (@Id, @Name);";
             command.AddParameterWithValue("Id", 1);
             command.AddParameterWithValue("Name", "Name1");
             return command;
@@ -38,8 +39,8 @@ namespace Elastic.Apm.AdoNet
 
         public virtual IDbCommand GetUpdateRowCommand()
         {
-            var command = _connection.CreateCommand();
-            command.CommandText = $"UPDATE {_tableName} SET Name=@Name WHERE Id=@Id;";
+            var command = Connection.CreateCommand();
+            command.CommandText = $"UPDATE {TableName} SET Name=@Name WHERE Id=@Id;";
 			command.AddParameterWithValue("Name", "Name2");
             command.AddParameterWithValue("Id", 1);
             return command;
@@ -47,24 +48,24 @@ namespace Elastic.Apm.AdoNet
 
         public virtual IDbCommand GetSelectScalarCommand()
         {
-            var command = _connection.CreateCommand();
-            command.CommandText = $"SELECT Name FROM {_tableName} WHERE Id=@Id;";
+            var command = Connection.CreateCommand();
+            command.CommandText = $"SELECT Name FROM {TableName} WHERE Id=@Id;";
             command.AddParameterWithValue("Id", 1);
             return command;
         }
 
         public virtual IDbCommand GetSelectRowCommand()
         {
-            var command = _connection.CreateCommand();
-            command.CommandText = $"SELECT * FROM {_tableName} WHERE Id=@Id;";
+            var command = Connection.CreateCommand();
+            command.CommandText = $"SELECT * FROM {TableName} WHERE Id=@Id;";
             command.AddParameterWithValue("Id", 1);
             return command;
         }
 
         public virtual IDbCommand GetDeleteRowCommand()
         {
-            var command = _connection.CreateCommand();
-            command.CommandText = $"DELETE FROM {_tableName} WHERE Id=@Id;";
+            var command = Connection.CreateCommand();
+            command.CommandText = $"DELETE FROM {TableName} WHERE Id=@Id;";
             command.AddParameterWithValue("Id", 1);
             return command;
         }
