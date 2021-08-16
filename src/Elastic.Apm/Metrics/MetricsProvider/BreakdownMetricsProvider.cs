@@ -21,7 +21,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly IApmLogger _logger;
 
 		/// <summary>
-		/// Indicates if the 10K limit log was already printed.
+		/// Indicates if the metric limit log was already printed.
 		/// </summary>
 		private bool _loggedWarning;
 
@@ -72,7 +72,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 						_logger.Warning()
 							?.Log(
-								$"The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until the current set is sent to APM Server.");
+								"The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until "
+								+ "the current set is sent to APM Server.",
+								MetricLimit);
 						_loggedWarning = true;
 					}
 				}
@@ -93,8 +95,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					if (!_loggedWarning)
 					{
 						_logger.Warning()
-							?.Log(
-								$"The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until the current set is sent to APM Server.");
+							?.Log("The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until "
+								+ "the current set is sent to APM Server.",
+								MetricLimit);
 						_loggedWarning = true;
 					}
 				}
@@ -107,8 +110,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			lock (_lock)
 			{
-				retVal = _itemsToSend;
-				_itemsToSend = new List<MetricSet>(MetricLimit);
+				retVal = new List<MetricSet>(_itemsToSend.Count);
+				retVal.AddRange(_itemsToSend);
+				_itemsToSend.Clear();
 				_transactionCount = 0;
 				_loggedWarning = false;
 			}
