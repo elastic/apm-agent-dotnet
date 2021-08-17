@@ -221,6 +221,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// Assert that the transaction is sampled and the traceparent header was ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+
+			// Assert that the transaction is a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().BeNullOrEmpty();
 		}
 
 		/// <summary>
@@ -245,6 +248,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// Assert that the transaction is not sampled, so the traceparent header was not ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
+
+			// Assert that the transaction is not a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBeNullOrEmpty();
 		}
 
 		/// <summary>
@@ -269,6 +275,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// Assert that the transaction is sampled and the traceparent header was ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+
+			// Assert that the transaction is a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().BeNullOrEmpty();
 		}
 
 		/// <summary>
@@ -293,6 +302,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// Assert that the transaction is not sampled and the traceparent header was not ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
+
+			// Assert that the transaction is not a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBeNullOrEmpty();
 		}
 
 		public async Task DisposeAsync()
