@@ -45,8 +45,6 @@ namespace Elastic.Apm.StackExchange.Redis
 					CommandAndKeyFetcher = ExpressionBuilder.BuildPropertyGetter(messageType, commandAndKey);
 				}
 			}
-
-
 		}
 
 		public ElasticApmProfiler(Func<IApmAgent> agentGetter)
