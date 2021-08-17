@@ -150,7 +150,12 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 				parentSpans.Should().HaveCount(topLevelSpans);
 
 				var parentSpanId = parentSpans.OrderByDescending(s => s.Timestamp).First().Id;
-				transactionSpans.Count(s => s.ParentId == parentSpanId).Should().Be(spansPerParentSpan);
+
+				var spansOfParentSpan = transactionSpans.Where(s => s.ParentId == parentSpanId).ToList();
+
+				spansOfParentSpan.Should().HaveCount(spansPerParentSpan);
+				foreach (var span in spansOfParentSpan)
+					span.Context?.Db?.Statement.Should().MatchRegex(@"[G|S]ET string\d");
 			}
 
 			await container.StopAsync();
