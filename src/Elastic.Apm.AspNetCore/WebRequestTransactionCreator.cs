@@ -218,7 +218,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					transaction.Name = grpcCallInfo.methodname;
 					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
-					transaction.Outcome = GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result);
+					transaction.SetOutcome(GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result));
 				}
 
 				if (transaction.IsSampled)
@@ -239,10 +239,13 @@ namespace Elastic.Apm.AspNetCore
 
 		internal static void SetOutcomeForHttpResult(ITransaction transaction, int HttpReturnCode)
 		{
-			if (HttpReturnCode >= 500 || HttpReturnCode < 100)
-				transaction.Outcome = Outcome.Failure;
-			else
-				transaction.Outcome = Outcome.Success;
+			if (transaction is Transaction realTransaction)
+			{
+				if (HttpReturnCode >= 500 || HttpReturnCode < 100)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					realTransaction.SetOutcome(Outcome.Success);
+			}
 		}
 
 		/// <summary>

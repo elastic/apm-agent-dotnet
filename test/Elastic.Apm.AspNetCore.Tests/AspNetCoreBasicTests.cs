@@ -510,6 +510,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 			count.Should().Be(1, "One AspNetCoreErrorDiagnosticListener is registered");
 		}
 
+		/// <summary>
+		/// An HTTP call to an action method which manually sets <see cref="IExecutionSegment.Outcome"/>.
+		/// Makes sure auto instrumentation does not overwrite the outcome.
+		/// </summary>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task ManualTransactionOutcomeTest(bool withDiagnosticSourceOnly)
+		{
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
+
+			await _client.GetAsync("/Home/SampleWithManuallySettingOutcome");
+
+			_capturedPayload.WaitForTransactions();
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Outcome.Should().Be(Outcome.Failure);
+		}
+
 		private static IEnumerable<IDisposable> UnwrapCompositeDisposable(IEnumerable<IDisposable> disposables, FieldInfo disposablesField)
 		{
 			foreach (var disposable in disposables)

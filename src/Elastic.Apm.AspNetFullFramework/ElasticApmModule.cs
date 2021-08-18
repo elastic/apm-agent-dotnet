@@ -362,9 +362,12 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 
 			transaction.Result = Transaction.StatusCodeToResult("HTTP", response.StatusCode);
-			transaction.Outcome = response.StatusCode >= 500
-				? Outcome.Failure
-				: Outcome.Success;
+			if (transaction is Transaction realTransaction)
+			{
+				realTransaction.SetOutcome(response.StatusCode >= 500
+					? Outcome.Failure
+					: Outcome.Success);
+			}
 
 			if (transaction.IsSampled)
 			{
