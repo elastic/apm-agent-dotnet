@@ -564,7 +564,7 @@ def withAzureAuth(Closure body){
         [var: 'AZ_TENANT_ID', password: "${authObj.tenant_id}"]
     ]) {
         cmd label: "Setup Azure CLI Repo Signing Key", script: "curl -sL https://packages.microsoft.com/keys/microsoft.asc |gpg --dearmor |sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null"
-        cmd label: "Setup Azure CLI Repo", script: "echo \"deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main\" |sudo tee /etc/apt/sources.list.d/azure-cli.list"
+        cmd label: "Setup Azure CLI Repo", script: "echo \"deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/\$(lsb_release -cs) main\" |sudo tee /etc/apt/sources.list.d/azure-cli.list"
         cmd label: "Install Azure CLI", script: "sudo apt-get update && sudo apt-get install azure-cli -y"
         cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
         cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
