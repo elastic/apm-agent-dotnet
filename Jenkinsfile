@@ -514,14 +514,8 @@ pipeline {
   post {
         cleanup {
             withAzureAuth(){
-                whenTrue(isUnix()) {
-                    sh label: "Checking and removing any Azure related resource groups",
-                        script: "for group in `az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name`;do az group delete --name $group --no-wait --yes;done"
-                }
-                whenFalse(isUnix()) {
-                    powershell label: "Checking and removing any Azure related resource groups",
-                        script: "az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json| ConvertFrom-Json | ForEach {az group delete --name $_.name --no-wait --yes}"
-                }
+                sh label: "Checking and removing any Azure related resource groups",
+                    script: "for group in `az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name`;do az group delete --name $group --no-wait --yes;done"
             }
       notifyBuildResult()
     }
@@ -569,13 +563,12 @@ def withAzureAuth(Closure body){
         [var: 'AZ_SUBSCRIPTION_ID', password: "${authObj.subscription_id}"],
         [var: 'AZ_TENANT_ID', password: "${authObj.tenant_id}"]
     ]) {
-        // This PATH should be fine as the cleanup runs on Ubuntu
-        withEnv(["PATH=${env.PATH}:${env.HOME}/.local/bin"]) {
-            cmd label: "Install Azure CLI", script: "pip3 install --user azure-cli"
-            cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
-            cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
-            body()
-        }
+        cmd label: "Setup Azure CLI Repo Signing Key", script: "curl -sL https://packages.microsoft.com/keys/microsoft.asc |gpg --dearmor |sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null"
+        cmd label: "Setup Azure CLI Repo", script: "echo \"deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main\" |sudo tee /etc/apt/sources.list.d/azure-cli.list"
+        cmd label: "Install Azure CLI", script: "sudo apt-get update && sudo apt-get install azure-cli -y"
+        cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
+        cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
+        body()
     }
 }
 
