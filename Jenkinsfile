@@ -554,7 +554,7 @@ def dotnet(Closure body){
 def cleanupAzureResources(){
     def props = getVaultSecret(secret: 'secret/apm-team/ci/apm-agent-dotnet-azure')
     def authObj = props?.data
-    def dockerCmd = "docker run --rm -i -v ${BASE_DIR}/.azure:/root/.azure -v \$(pwd):/root mcr.microsoft.com/azure-cli:latest"
+    def dockerCmd = "docker run --rm -i -v .azure:/root/.azure mcr.microsoft.com/azure-cli:latest"
     withEnvMask(vars: [
         [var: 'AZ_CLIENT_ID', password: "${authObj.client_id}"],
         [var: 'AZ_CLIENT_SECRET', password: "${authObj.client_secret}"],
