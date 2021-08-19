@@ -8,6 +8,8 @@ using System.Data;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 using Elastic.Apm.Profiler.Managed.CallTarget;
+using Elastic.Apm.Profiler.Managed.Reflection;
+using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -15,6 +17,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
     /// CallTarget instrumentation for:
     /// [*]DataReader [Command].ExecuteReader()
     /// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteReader, ReturnType = MySql.DataReader)]
+	[InstrumentNpgsql(Method = ExecuteReader, ReturnType = Npgsql.DataReader)]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
+	[InstrumentSqlite(Method = ExecuteReader, ReturnType = Sqlite.DataReader)]
     public class CommandExecuteReaderIntegration
     {
 		/// <summary>

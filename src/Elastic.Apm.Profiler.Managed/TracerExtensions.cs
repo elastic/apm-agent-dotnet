@@ -7,6 +7,7 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Profiler.Managed
 {
+	// TODO: this should be public in Elastic.Apm somewhere
 	internal static class TracerExtensions
 	{
 		public static IExecutionSegment CurrentExecutionSegment(this ITracer tracer) => (IExecutionSegment)tracer.CurrentSpan ?? tracer.CurrentTransaction;

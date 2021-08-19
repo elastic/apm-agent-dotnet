@@ -45,14 +45,17 @@ use crate::{
         helpers::{
             create_assembly_ref_to_mscorlib, get_il_codes, return_type_is_value_type_or_generic,
         },
-        managed::{IGNORE, MANAGED_PROFILER_ASSEMBLY, MANAGED_PROFILER_ASSEMBLY_LOADER},
+        managed::{
+            IGNORE, MANAGED_PROFILER_ASSEMBLY, MANAGED_PROFILER_ASSEMBLY_LOADER,
+            MANAGED_PROFILER_FULL_ASSEMBLY_VERSION,
+        },
         process, rejit,
         rejit::{RejitHandler, RejitHandlerModule, RejitHandlerModuleMethod},
         sig::{get_sig_type_token_name, parse_type},
         startup_hook,
         types::{
-            Integration, IntegrationMethod, MetadataBuilder, MethodReplacement, ModuleMetadata,
-            ModuleWrapperTokens, TargetMethodReference, WrapperMethodReference,
+            AssemblyReference, Integration, IntegrationMethod, MetadataBuilder, MethodReplacement,
+            ModuleMetadata, ModuleWrapperTokens, TargetMethodReference, WrapperMethodReference,
         },
     },
     types::{
@@ -67,12 +70,10 @@ use std::{
     collections::HashSet,
     ffi::CStr,
     mem::{transmute, transmute_copy},
+    path::{Path, PathBuf},
     process::id,
 };
 use widestring::{U16CStr, U16CString, WideString};
-use std::path::{Path, PathBuf};
-use crate::profiler::types::AssemblyReference;
-use crate::profiler::managed::MANAGED_PROFILER_FULL_ASSEMBLY_VERSION;
 
 const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
     "Elastic.Apm",
@@ -786,8 +787,8 @@ impl Profiler {
                 &module_info.assembly.app_domain_name
             );
 
-            if !self.cor_lib_module_loaded.load(Ordering::SeqCst) && (assembly_name == "mscorlib"
-                || assembly_name == "System.Private.CoreLib")
+            if !self.cor_lib_module_loaded.load(Ordering::SeqCst)
+                && (assembly_name == "mscorlib" || assembly_name == "System.Private.CoreLib")
             {
                 self.cor_lib_module_loaded.store(true, Ordering::SeqCst);
                 self.cor_app_domain_id
@@ -1138,7 +1139,7 @@ impl Profiler {
         let caller = module_metadata
             .import
             .get_function_info(function_info.token)?;
-        
+
         log::trace!(
             "JITCompilationStarted: function_id={}, name={}()",
             function_id,
@@ -1297,11 +1298,11 @@ impl Profiler {
         for skip in SKIP_ASSEMBLIES.iter() {
             if &assembly_name == skip {
                 log::debug!(
-                        "GetAssemblyReferences: skipping assembly {} {} because it matches skip {}",
-                        assembly_name,
-                        &path,
-                        skip
-                    );
+                    "GetAssemblyReferences: skipping assembly {} {} because it matches skip {}",
+                    assembly_name,
+                    &path,
+                    skip
+                );
                 return Ok(());
             }
         }
@@ -1339,13 +1340,15 @@ impl Profiler {
             pbPublicKeyOrToken: public_key.as_ptr() as *const _,
             cbPublicKeyOrToken: public_key.len() as ULONG,
             szName: name,
-            pMetaData: &assembly_metadata as * const _,
+            pMetaData: &assembly_metadata as *const _,
             pbHashValue: std::ptr::null(),
             cbHashValue: 0,
-            dwAssemblyRefFlags: 0
+            dwAssemblyRefFlags: 0,
         };
 
-        if let Err(err) = assembly_reference_provider.add_assembly_reference(&assembly_reference_info) {
+        if let Err(err) =
+            assembly_reference_provider.add_assembly_reference(&assembly_reference_info)
+        {
             log::warn!("GetAssemblyReferences failed for {}", &path);
         }
 

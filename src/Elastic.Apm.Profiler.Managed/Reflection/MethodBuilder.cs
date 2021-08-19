@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using Elastic.Apm.Profiler.Managed.Core;
 
 namespace Elastic.Apm.Profiler.Managed.Reflection
 {
@@ -484,7 +485,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
                     var typesToCheck = new Type[] { m.ReturnType }.Concat(m.GetParameters().Select(p => p.ParameterType)).ToArray();
                     for (var i = 0; i < typesToCheck.Length; i++)
                     {
-                        if (_namespaceAndNameFilter[i] == ClrNames.Ignore)
+                        if (_namespaceAndNameFilter[i] == ClrTypeNames.Ignore)
                         {
                             // Allow for not specifying
                             continue;

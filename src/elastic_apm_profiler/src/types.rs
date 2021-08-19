@@ -28,9 +28,11 @@ use crate::{
         PCCOR_SIGNATURE, ULONG, ULONG32,
     },
     interfaces::{ICorProfilerMethodEnum, IMetaDataEmit2, IMetaDataImport},
-    profiler::types::MethodSignature,
+    profiler::types::{deserialize_from_str, MethodSignature},
 };
 use com::sys::HRESULT;
+use serde::{de, de::Visitor, Deserialize, Deserializer};
+use std::str::FromStr;
 
 pub struct ArrayClassInfo {
     pub element_type: CorElementType,
@@ -698,14 +700,14 @@ pub struct Version {
 }
 
 impl Version {
-    const MAX: Version = Version {
+    pub(crate) const MAX: Version = Version {
         major: u16::MAX,
         minor: u16::MAX,
         build: u16::MAX,
         revision: u16::MAX,
     };
 
-    const MIN: Version = Version {
+    pub(crate) const MIN: Version = Version {
         major: 0,
         minor: 0,
         build: 0,
@@ -721,7 +723,7 @@ impl Version {
         }
     }
 
-    pub fn parse(version: &str) -> Result<Version, Error> {
+    pub fn parse(version: &str, default_missing_value: u16) -> Result<Self, Error> {
         if version.is_empty() {
             return Err(Error::InvalidVersion);
         }
@@ -730,24 +732,45 @@ impl Version {
         if parts.len() > 4 {
             return Err(Error::InvalidVersion);
         }
-        let major = parts[0].parse::<u16>().map_err(|_| Error::InvalidVersion)?;
+
+        let major = match parts[0] {
+            "*" => u16::MAX,
+            m => m.parse::<u16>().map_err(|_| Error::InvalidVersion)?,
+        };
+
         let minor = if parts.len() > 1 {
-            parts[1].parse::<u16>().map_err(|_| Error::InvalidVersion)?
+            match parts[1] {
+                "*" => u16::MAX,
+                m => m.parse::<u16>().map_err(|_| Error::InvalidVersion)?,
+            }
         } else {
-            0
+            default_missing_value
         };
         let build = if parts.len() > 2 {
-            parts[2].parse::<u16>().map_err(|_| Error::InvalidVersion)?
+            match parts[2] {
+                "*" => u16::MAX,
+                m => m.parse::<u16>().map_err(|_| Error::InvalidVersion)?,
+            }
         } else {
-            0
+            default_missing_value
         };
         let revision = if parts.len() > 3 {
-            parts[3].parse::<u16>().map_err(|_| Error::InvalidVersion)?
+            match parts[3] {
+                "*" => u16::MAX,
+                m => m.parse::<u16>().map_err(|_| Error::InvalidVersion)?,
+            }
         } else {
-            0
+            default_missing_value
         };
 
         Ok(Version::new(major, minor, build, revision))
+    }
+}
+
+impl FromStr for Version {
+    type Err = Error;
+    fn from_str(version: &str) -> Result<Self, Self::Err> {
+        Self::parse(version, 0)
     }
 }
 
@@ -760,13 +783,11 @@ impl PartialEq for Version {
             && self.revision == other.revision
     }
 }
-
 impl PartialOrd for Version {
     fn partial_cmp(&self, other: &Version) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
-
 impl Ord for Version {
     fn cmp(&self, other: &Version) -> Ordering {
         match self.major.cmp(&other.major) {
@@ -787,13 +808,11 @@ impl Ord for Version {
         self.revision.cmp(&other.revision)
     }
 }
-
 impl Default for Version {
     fn default() -> Self {
         Version::new(0, 0, 0, 0)
     }
 }
-
 impl Display for Version {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
@@ -802,6 +821,35 @@ impl Display for Version {
             self.major, self.minor, self.build, self.revision
         )
     }
+}
+impl<'de> Deserialize<'de> for Version {
+    fn deserialize<D>(deserializer: D) -> Result<Version, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserialize_from_str(deserializer)
+    }
+}
+pub(crate) fn deserialize_max_version<'de, D>(deserializer: D) -> Result<Version, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct VersionVisitor;
+    impl<'de> Visitor<'de> for VersionVisitor {
+        type Value = Version;
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a string")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Self::Value::parse(value, u16::MAX).map_err(|e| E::custom(format!("{:?}", e)))
+        }
+    }
+
+    deserializer.deserialize_str(VersionVisitor)
 }
 
 #[repr(C)]
@@ -872,4 +920,44 @@ pub enum HashAlgorithmType {
     Sha256 = 32780,
     Sha384 = 32781,
     Sha512 = 32782,
+}
+
+#[cfg(test)]
+pub mod tests {
+    use crate::{
+        profiler::types::{AssemblyReference, Integration, MethodSignature, PublicKeyToken},
+        types::Version,
+    };
+    use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
+
+    fn deserialize_and_assert(json: &str, expected: Version) -> Result<(), Box<dyn Error>> {
+        let version: Version = serde_json::from_str(json)?;
+        assert_eq!(expected, version);
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_version_with_major() -> Result<(), Box<dyn Error>> {
+        deserialize_and_assert("\"5\"", Version::new(5, 0, 0, 0))
+    }
+
+    #[test]
+    fn deserialize_version_with_major_minor() -> Result<(), Box<dyn Error>> {
+        deserialize_and_assert("\"5.5\"", Version::new(5, 5, 0, 0))
+    }
+
+    #[test]
+    fn deserialize_version_with_major_minor_build() -> Result<(), Box<dyn Error>> {
+        deserialize_and_assert("\"5.5.5\"", Version::new(5, 5, 5, 0))
+    }
+
+    #[test]
+    fn deserialize_version_with_major_minor_build_revision() -> Result<(), Box<dyn Error>> {
+        deserialize_and_assert("\"5.5.5.5\"", Version::new(5, 5, 5, 5))
+    }
+
+    #[test]
+    fn deserialize_version_with_major_stars() -> Result<(), Box<dyn Error>> {
+        deserialize_and_assert("\"5.*.*.*\"", Version::new(5, u16::MAX, u16::MAX, u16::MAX))
+    }
 }

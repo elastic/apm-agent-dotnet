@@ -7,6 +7,7 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Profiler.Managed.Core;
 using Elastic.Apm.Profiler.Managed.Reflection;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations
@@ -43,7 +44,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations
 						.WithConcreteType(pipelineType)
 						.WithMethodGenerics(genericArgument)
 						.WithParameters(requestData)
-						.WithNamespaceAndNameFilters(ClrNames.Ignore, "Elasticsearch.Net.RequestData")
+						.WithNamespaceAndNameFilters(ClrTypeNames.Ignore, "Elasticsearch.Net.RequestData")
 						.Build();
 			}
 			catch (Exception ex)
@@ -88,7 +89,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations
 						.WithConcreteType(pipelineType)
 						.WithMethodGenerics(genericArgument)
 						.WithParameters(requestData, cancellationToken)
-						.WithNamespaceAndNameFilters(ClrNames.GenericParameterTask, "Elasticsearch.Net.RequestData", ClrNames.CancellationToken)
+						.WithNamespaceAndNameFilters(ClrTypeNames.GenericParameterTask, "Elasticsearch.Net.RequestData", ClrTypeNames.CancellationToken)
 						.Build();
 			}
 			catch (Exception ex)

@@ -27,11 +27,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			if (agent.Tracer.CurrentTransaction is null)
 				return null;
 
-			// var commandTypeName = command.GetType();
-			// var instrumentationFlag = commandTypeName == _type
-			// 	? _instrumentationFlag
-			// 	: GetInstrumentationFlag(commandTypeName.FullName);
-
 			// if the current execution segment is already for this instrumentation and
 			// for the same command, skip creating another db span for it, to prevent instrumenting delegated methods.
 			if (agent.GetCurrentExecutionSegment() is Span span &&

@@ -1,463 +1,18 @@
 [
   {
-    "name": "HttpMessageHandler",
-    "method_replacements": [
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Net.Http",
-          "type": "System.Net.Http.HttpMessageHandler",
-          "method": "SendAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Net.Http.HttpResponseMessage>",
-            "System.Net.Http.HttpRequestMessage",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.HttpMessageHandlerIntegration",
-          "method": "HttpMessageHandler_SendAsync",
-          "signature": "00 06 1C 1C 1C 1C 08 08 0A",
-          "action": "ReplaceTargetMethod"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Net.Http",
-          "type": "System.Net.Http.HttpClientHandler",
-          "method": "SendAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Net.Http.HttpResponseMessage>",
-            "System.Net.Http.HttpRequestMessage",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.HttpMessageHandlerIntegration",
-          "method": "HttpClientHandler_SendAsync",
-          "signature": "00 06 1C 1C 1C 1C 08 08 0A",
-          "action": "ReplaceTargetMethod"
-        }
-      }
-    ]
-  },
-  {
-    "name": "ElasticsearchNet6",
-    "method_replacements": [
-      {
-        "caller": {
-          "assembly": "Elasticsearch.Net"
-        },
-        "target": {
-          "assembly": "Elasticsearch.Net",
-          "type": "Elasticsearch.Net.IRequestPipeline",
-          "method": "CallElasticsearch",
-          "signature_types": [
-            "T",
-            "Elasticsearch.Net.RequestData"
-          ],
-          "minimum_major": 6,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 6,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.ElasticsearchNet6Integration",
-          "method": "CallElasticsearch",
-          "signature": "10 01 05 1C 1C 1C 08 08 0A",
-          "action": "ReplaceTargetMethod"
-        }
-      },
-      {
-        "caller": {
-          "assembly": "Elasticsearch.Net"
-        },
-        "target": {
-          "assembly": "Elasticsearch.Net",
-          "type": "Elasticsearch.Net.IRequestPipeline",
-          "method": "CallElasticsearchAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<T>",
-            "Elasticsearch.Net.RequestData",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 6,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 6,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.ElasticsearchNet6Integration",
-          "method": "CallElasticsearchAsync",
-          "signature": "10 01 06 1C 1C 1C 1C 08 08 0A",
-          "action": "ReplaceTargetMethod"
-        }
-      }
-    ]
-  },
-  {
-    "name": "SqliteCommand",
-    "method_replacements": [
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Microsoft.Data.Sqlite",
-          "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteNonQuery",
-          "signature_types": [
-            "System.Int32"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Data.SQLite",
-          "type": "System.Data.SQLite.SQLiteCommand",
-          "method": "ExecuteNonQuery",
-          "signature_types": [
-            "System.Int32"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Microsoft.Data.Sqlite",
-          "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteReaderAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>",
-            "System.Data.CommandBehavior",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Microsoft.Data.Sqlite",
-          "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteDbDataReaderAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
-            "System.Data.CommandBehavior",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Microsoft.Data.Sqlite",
-          "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "Microsoft.Data.Sqlite.SqliteDataReader"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Data.SQLite",
-          "type": "System.Data.SQLite.SQLiteCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "System.Data.SQLite.SQLiteDataReader"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Microsoft.Data.Sqlite",
-          "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "Microsoft.Data.Sqlite.SqliteDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Data.SQLite",
-          "type": "System.Data.SQLite.SQLiteCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "System.Data.SQLite.SQLiteDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Microsoft.Data.Sqlite",
-          "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteDbDataReader",
-          "signature_types": [
-            "System.Data.Common.DbDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Data.SQLite",
-          "type": "System.Data.SQLite.SQLiteCommand",
-          "method": "ExecuteDbDataReader",
-          "signature_types": [
-            "System.Data.Common.DbDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Microsoft.Data.Sqlite",
-          "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteScalar",
-          "signature_types": [
-            "System.Object"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Data.SQLite",
-          "type": "System.Data.SQLite.SQLiteCommand",
-          "method": "ExecuteScalar",
-          "signature_types": [
-            "System.Object"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Data.SQLite",
-          "type": "System.Data.SQLite.SQLiteCommand",
-          "method": "ExecuteScalar",
-          "signature_types": [
-            "System.Object",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "System.Data.SQLite",
-          "type": "System.Data.SQLite.SQLiteCommand",
-          "method": "ExecuteNonQuery",
-          "signature_types": [
-            "System.Int32",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      }
-    ]
-  },
-  {
     "name": "MySqlCommand",
     "method_replacements": [
       {
-        "caller": {},
         "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
+          "assembly": "MySql.Data",
+          "type": "MySql.Data.MySqlClient.MySqlCommand",
           "method": "ExecuteNonQueryAsync",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Int32>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -466,7 +21,6 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
@@ -474,12 +28,8 @@
           "signature_types": [
             "System.Int32"
           ],
-          "minimum_major": 6,
-          "minimum_minor": 7,
-          "minimum_patch": 0,
-          "maximum_major": 6,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -488,65 +38,34 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
           "method": "ExecuteNonQuery",
           "signature_types": [
-            "System.Int32"
+            "System.Int32",
+            "System.Data.CommandBehavior"
           ],
-          "minimum_major": 8,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 8,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
           "action": "CallTargetModification"
         }
       },
       {
-        "caller": {},
         "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
-          "method": "ExecuteNonQuery",
-          "signature_types": [
-            "System.Int32"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
+          "assembly": "MySql.Data",
+          "type": "MySql.Data.MySqlClient.MySqlCommand",
           "method": "ExecuteReaderAsync",
           "signature_types": [
-            "System.Threading.Tasks.Task`1<MySqlConnector.MySqlDataReader>",
+            "System.Threading.Tasks.Task`1<MySql.Data.MySqlClient.MySqlDataReader>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -555,22 +74,34 @@
         }
       },
       {
-        "caller": {},
         "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
+          "assembly": "MySql.Data",
+          "type": "MySql.Data.MySqlClient.MySqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "MySql.Data.MySqlClient.MySqlDataReader"
+          ],
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "MySql.Data",
+          "type": "MySql.Data.MySqlClient.MySqlCommand",
           "method": "ExecuteReaderAsync",
           "signature_types": [
-            "System.Threading.Tasks.Task`1<MySqlConnector.MySqlDataReader>",
+            "System.Threading.Tasks.Task`1<MySql.Data.MySqlClient.MySqlDataReader>",
             "System.Data.CommandBehavior",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -579,22 +110,17 @@
         }
       },
       {
-        "caller": {},
         "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
-          "method": "ExecuteDbDataReaderAsync",
+          "assembly": "MySql.Data",
+          "type": "MySql.Data.MySqlClient.MySqlCommand",
+          "method": "ExecuteDbDataReader",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
             "System.Data.CommandBehavior",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -603,73 +129,6 @@
         }
       },
       {
-        "caller": {},
-        "target": {
-          "assembly": "MySql.Data",
-          "type": "MySql.Data.MySqlClient.MySqlCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "MySql.Data.MySqlClient.MySqlDataReader"
-          ],
-          "minimum_major": 6,
-          "minimum_minor": 7,
-          "minimum_patch": 0,
-          "maximum_major": 6,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "MySql.Data",
-          "type": "MySql.Data.MySqlClient.MySqlCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "MySql.Data.MySqlClient.MySqlDataReader"
-          ],
-          "minimum_major": 8,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 8,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "MySqlConnector.MySqlDataReader"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
@@ -678,12 +137,8 @@
             "MySql.Data.MySqlClient.MySqlDataReader",
             "System.Data.CommandBehavior"
           ],
-          "minimum_major": 6,
-          "minimum_minor": 7,
-          "minimum_patch": 0,
-          "maximum_major": 6,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -692,53 +147,6 @@
         }
       },
       {
-        "caller": {},
-        "target": {
-          "assembly": "MySql.Data",
-          "type": "MySql.Data.MySqlClient.MySqlCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "MySql.Data.MySqlClient.MySqlDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 8,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 8,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "MySqlConnector.MySqlDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
@@ -747,12 +155,8 @@
             "System.Data.Common.DbDataReader",
             "System.Data.CommandBehavior"
           ],
-          "minimum_major": 6,
-          "minimum_minor": 7,
-          "minimum_patch": 0,
-          "maximum_major": 6,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -761,67 +165,16 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
-          "method": "ExecuteDbDataReader",
-          "signature_types": [
-            "System.Data.Common.DbDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 8,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 8,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
-          "method": "ExecuteDbDataReader",
-          "signature_types": [
-            "System.Data.Common.DbDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
           "method": "ExecuteScalarAsync",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Object>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -830,7 +183,6 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
@@ -838,12 +190,8 @@
           "signature_types": [
             "System.Object"
           ],
-          "minimum_major": 6,
-          "minimum_minor": 7,
-          "minimum_patch": 0,
-          "maximum_major": 6,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -852,46 +200,20 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
           "method": "ExecuteScalar",
           "signature_types": [
-            "System.Object"
+            "System.Object",
+            "System.Data.CommandBehavior"
           ],
-          "minimum_major": 8,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 8,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "6.7.0",
+          "maximum_version": "8.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "MySqlConnector",
-          "type": "MySqlConnector.MySqlCommand",
-          "method": "ExecuteScalar",
-          "signature_types": [
-            "System.Object"
-          ],
-          "minimum_major": 1,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 1,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
           "action": "CallTargetModification"
         }
       }
@@ -901,7 +223,6 @@
     "name": "NpgsqlCommand",
     "method_replacements": [
       {
-        "caller": {},
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
@@ -910,12 +231,8 @@
             "System.Threading.Tasks.Task`1<System.Int32>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -924,7 +241,6 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
@@ -932,12 +248,8 @@
           "signature_types": [
             "System.Int32"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -946,7 +258,59 @@
         }
       },
       {
-        "caller": {},
+        "target": {
+          "assembly": "Npgsql",
+          "type": "Npgsql.NpgsqlCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Npgsql",
+          "type": "Npgsql.NpgsqlCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<Npgsql.NpgsqlDataReader>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Npgsql",
+          "type": "Npgsql.NpgsqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Npgsql.NpgsqlDataReader"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
@@ -956,12 +320,8 @@
             "System.Data.CommandBehavior",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -970,22 +330,17 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
-          "method": "ExecuteDbDataReaderAsync",
+          "method": "ExecuteDbDataReader",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
             "System.Data.CommandBehavior",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -994,29 +349,6 @@
         }
       },
       {
-        "caller": {},
-        "target": {
-          "assembly": "Npgsql",
-          "type": "Npgsql.NpgsqlCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "Npgsql.NpgsqlDataReader"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
@@ -1025,12 +357,8 @@
             "Npgsql.NpgsqlDataReader",
             "System.Data.CommandBehavior"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -1039,7 +367,6 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
@@ -1048,12 +375,8 @@
             "System.Data.Common.DbDataReader",
             "System.Data.CommandBehavior"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -1062,7 +385,6 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
@@ -1071,12 +393,8 @@
             "System.Threading.Tasks.Task`1<System.Object>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -1085,7 +403,6 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
@@ -1093,16 +410,30 @@
           "signature_types": [
             "System.Object"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 5,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
           "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Npgsql",
+          "type": "Npgsql.NpgsqlCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
           "action": "CallTargetModification"
         }
       }
@@ -1112,29 +443,6 @@
     "name": "OracleCommand",
     "method_replacements": [
       {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteNonQuery",
-          "signature_types": [
-            "System.Int32"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
@@ -1143,12 +451,8 @@
             "System.Threading.Tasks.Task`1<System.Int32>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -1157,192 +461,6 @@
         }
       },
       {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "Oracle.ManagedDataAccess.Client.OracleDataReader"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteReader",
-          "signature_types": [
-            "Oracle.ManagedDataAccess.Client.OracleDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteDbDataReader",
-          "signature_types": [
-            "System.Data.Common.DbDataReader",
-            "System.Data.CommandBehavior"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteReaderAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteReaderAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
-            "System.Data.CommandBehavior",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteScalar",
-          "signature_types": [
-            "System.Object"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteScalarAsync",
-          "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Object>",
-            "System.Threading.CancellationToken"
-          ],
-          "minimum_major": 4,
-          "minimum_minor": 122,
-          "minimum_patch": 0,
-          "maximum_major": 4,
-          "maximum_minor": 122,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-
-      
-      
-      {
-        "caller": {},
-        "target": {
-          "assembly": "Oracle.ManagedDataAccess",
-          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteNonQuery",
-          "signature_types": [
-            "System.Int32"
-          ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
-        },
-        "wrapper": {
-          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
-          "action": "CallTargetModification"
-        }
-      },
-      {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
@@ -1351,12 +469,8 @@
             "System.Threading.Tasks.Task`1<System.Int32>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -1365,89 +479,86 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteReader",
+          "method": "ExecuteNonQuery",
           "signature_types": [
-            "Oracle.ManagedDataAccess.Client.OracleDataReader"
+            "System.Int32"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
           "action": "CallTargetModification"
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteReader",
+          "method": "ExecuteNonQuery",
           "signature_types": [
-            "Oracle.ManagedDataAccess.Client.OracleDataReader",
+            "System.Int32"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32",
             "System.Data.CommandBehavior"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
           "action": "CallTargetModification"
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteDbDataReader",
+          "method": "ExecuteNonQuery",
           "signature_types": [
-            "System.Data.Common.DbDataReader",
+            "System.Int32",
             "System.Data.CommandBehavior"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
           "action": "CallTargetModification"
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
           "method": "ExecuteReaderAsync",
           "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -1456,22 +567,69 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
           "method": "ExecuteReaderAsync",
           "signature_types": [
-            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Oracle.ManagedDataAccess.Client.OracleDataReader"
+          ],
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Oracle.ManagedDataAccess.Client.OracleDataReader"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>",
             "System.Data.CommandBehavior",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
@@ -1480,29 +638,135 @@
         }
       },
       {
-        "caller": {},
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteScalar",
+          "method": "ExecuteReaderAsync",
           "signature_types": [
-            "System.Object"
+            "System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
           "action": "CallTargetModification"
         }
       },
       {
-        "caller": {},
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Oracle.ManagedDataAccess.Client.OracleDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Oracle.ManagedDataAccess.Client.OracleDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Data.Common.DbDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Data.Common.DbDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
@@ -1511,16 +775,320 @@
             "System.Threading.Tasks.Task`1<System.Object>",
             "System.Threading.CancellationToken"
           ],
-          "minimum_major": 2,
-          "minimum_minor": 0,
-          "minimum_patch": 0,
-          "maximum_major": 2,
-          "maximum_minor": 65535,
-          "maximum_patch": 65535
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
         },
         "wrapper": {
           "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
           "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteScalarAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Object>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object"
+          ],
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.122.0",
+          "maximum_version": "4.122.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Oracle.ManagedDataAccess",
+          "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      }
+    ]
+  },
+  {
+    "name": "SqliteCommand",
+    "method_replacements": [
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteNonQueryAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Int32>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Microsoft.Data.Sqlite.SqliteDataReader"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Microsoft.Data.Sqlite.SqliteDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Data.Common.DbDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteScalarAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Object>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.Sqlite",
+          "type": "Microsoft.Data.Sqlite.SqliteCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "2.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
           "action": "CallTargetModification"
         }
       }

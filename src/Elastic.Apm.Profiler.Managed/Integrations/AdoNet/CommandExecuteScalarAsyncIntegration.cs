@@ -7,8 +7,9 @@ using System;
 using System.Data;
 using System.Threading;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 using Elastic.Apm.Profiler.Managed.CallTarget;
+using Elastic.Apm.Profiler.Managed.Core;
+using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -16,6 +17,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
     /// CallTarget instrumentation for:
     /// Task[object] [Command].ExecuteScalarAsync(CancellationToken)
     /// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentNpgsql(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentSqlite(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
     public class CommandExecuteScalarAsyncIntegration
     {
         /// <summary>

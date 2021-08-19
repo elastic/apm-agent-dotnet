@@ -16,7 +16,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
     {
 		private static readonly NullLogger Log = NullLogger.Instance;
 
-		private static volatile bool _disableIntegration = false;
+		private static volatile bool _disableIntegration;
 
         internal static bool IsIntegrationEnabled => !_disableIntegration;
 
@@ -33,12 +33,12 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
                  Log.Warning($"DuckTypeException has been detected, the integration <{typeof(TIntegration)}, {typeof(TTarget)}> will be disabled.");
                  _disableIntegration = true;
              }
-             else
-            if (exception is CallTargetInvokerException)
-            {
-                Log.Warning($"CallTargetInvokerException has been detected, the integration <{typeof(TIntegration)}, {typeof(TTarget)}> will be disabled.");
-				_disableIntegration = true;
-            }
-        }
+             else if (exception is CallTargetInvokerException)
+			 {
+				 Log.Warning(
+					 $"CallTargetInvokerException has been detected, the integration <{typeof(TIntegration)}, {typeof(TTarget)}> will be disabled.");
+				 _disableIntegration = true;
+			 }
+		}
     }
 }

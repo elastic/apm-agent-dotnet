@@ -3,11 +3,14 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use crate::{ffi::E_FAIL, profiler::types::Integration};
+use crate::{
+    ffi::{COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER, E_FAIL},
+    profiler::types::Integration,
+};
 use com::sys::HRESULT;
 use log::LevelFilter;
 use once_cell::sync::Lazy;
-use std::{fs::File, io::BufReader};
+use std::{borrow::Borrow, ffi::OsStr, fs::File, io::BufReader, path::PathBuf, str::FromStr};
 
 const ELASTIC_APM_PROFILER_INTEGRATIONS: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
 const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
@@ -134,15 +137,43 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
         E_FAIL
     })?;
 
-    let reader = BufReader::new(file);
-    let integrations = serde_json::from_reader(reader).map_err(|e| {
+    let path_buf = PathBuf::from_str(&path).map_err(|e| {
         log::warn!(
-            "Problem reading integrations file {}: {}. profiler is disabled.",
-            &path,
+            "Problem reading path buf from integrations file path: {}",
             e.to_string()
         );
         E_FAIL
     })?;
+    let reader = BufReader::new(file);
+    let extension = path_buf
+        .extension()
+        .unwrap_or_else(|| OsStr::new("json"))
+        .to_string_lossy()
+        .to_string()
+        .to_lowercase();
+
+    let integrations = match extension.as_str() {
+        "yml" | "yaml" => serde_yaml::from_reader(reader).map_err(|e| {
+            log::warn!(
+                "Problem reading integrations file {}: {}. profiler is disabled.",
+                &path,
+                e.to_string()
+            );
+            E_FAIL
+        })?,
+        "json" => serde_json::from_reader(reader).map_err(|e| {
+            log::warn!(
+                "Problem reading integrations file {}: {}. profiler is disabled.",
+                &path,
+                e.to_string()
+            );
+            E_FAIL
+        })?,
+        p => {
+            log::warn!("Problem reading integrations file {}: Unknown file extension {}. profiler is disabled.", &path, p);
+            return Err(E_FAIL);
+        }
+    };
 
     Ok(integrations)
 }

@@ -8,6 +8,8 @@ using System.Data;
 using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Profiler.Managed.CallTarget;
+using Elastic.Apm.Profiler.Managed.Core;
+using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -15,9 +17,14 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
     /// CallTarget instrumentation for:
     /// Task[int] [Command].ExecuteNonQueryAsync(CancellationToken)
     /// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentNpgsql(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentSqlite(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
     public class CommandExecuteNonQueryAsyncIntegration
-    {
-        /// <summary>
+	{
+		/// <summary>
         /// OnMethodBegin callback
         /// </summary>
         /// <typeparam name="TTarget">Type of the target</typeparam>

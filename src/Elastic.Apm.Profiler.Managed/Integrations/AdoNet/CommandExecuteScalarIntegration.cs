@@ -6,8 +6,9 @@
 using System;
 using System.Data;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 using Elastic.Apm.Profiler.Managed.CallTarget;
+using Elastic.Apm.Profiler.Managed.Core;
+using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -15,6 +16,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
     /// CallTarget instrumentation for:
     /// object [Command].ExecuteScalar()
     /// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object)]
+	[InstrumentNpgsql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object)]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object)]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object)]
+	[InstrumentSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object)]
     public class CommandExecuteScalarIntegration
     {
         /// <summary>

@@ -6,8 +6,9 @@
 using System;
 using System.Data;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 using Elastic.Apm.Profiler.Managed.CallTarget;
+using Elastic.Apm.Profiler.Managed.Core;
+using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -15,9 +16,14 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
     /// CallTarget instrumentation for:
     /// int [Command].ExecuteNonQuery()
     /// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
+	[InstrumentNpgsql(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
+	[InstrumentSqlite(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
     public class CommandExecuteNonQueryIntegration
     {
-        /// <summary>
+		/// <summary>
         /// OnMethodBegin callback
         /// </summary>
         /// <typeparam name="TTarget">Type of the target</typeparam>

@@ -92,14 +92,14 @@ CoreCLR (Windows and Linux).
 
 5. Compile profiler and .NET applications, and run the Example .NET console application with profiler attached
 
-  ```sh
-  cargo make test-sample
+  ```sh~~~~
+  cargo make test-example
   ```
 
 The log level of the profiler can be controlled with the `ELASTIC_APM_PROFILER_LOG` environment variable, which can be passed to cargo make
 
   ```sh
-  cargo make test-sample --env ELASTIC_APM_PROFILER_LOG=trace
+  cargo make test-example --env ELASTIC_APM_PROFILER_LOG=trace
   ```
 
 Similarly, other environment variables can be provided with `--env {key=value}` arguments to override

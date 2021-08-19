@@ -3,10 +3,11 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use crate::ffi::COR_PRF_ASSEMBLY_REFERENCE_INFO;
-use com::{interfaces::iunknown::IUnknown, sys::HRESULT};
-use crate::error::Error;
-use com::sys::FAILED;
+use crate::{error::Error, ffi::COR_PRF_ASSEMBLY_REFERENCE_INFO};
+use com::{
+    interfaces::iunknown::IUnknown,
+    sys::{FAILED, HRESULT},
+};
 
 interfaces! {
     /// Enables the profiler to inform the common language runtime (CLR) of assembly references
@@ -25,10 +26,11 @@ interfaces! {
 }
 
 impl ICorProfilerAssemblyReferenceProvider {
-    pub fn add_assembly_reference(&self, assembly_reference_info: &COR_PRF_ASSEMBLY_REFERENCE_INFO) -> Result<(), HRESULT> {
-        let hr = unsafe {
-            self.AddAssemblyReference(assembly_reference_info as *const _)
-        };
+    pub fn add_assembly_reference(
+        &self,
+        assembly_reference_info: &COR_PRF_ASSEMBLY_REFERENCE_INFO,
+    ) -> Result<(), HRESULT> {
+        let hr = unsafe { self.AddAssemblyReference(assembly_reference_info as *const _) };
 
         if FAILED(hr) {
             Err(hr)

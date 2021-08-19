@@ -7,8 +7,9 @@ using System;
 using System.Data;
 using System.Threading;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 using Elastic.Apm.Profiler.Managed.CallTarget;
+using Elastic.Apm.Profiler.Managed.Core;
+using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -17,6 +18,17 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
     /// Task[*DataReader] [Command].ExecuteReaderAsync(CommandBehavior, CancellationToken)
     /// Task[DbDataReader] [Command].ExecuteDbDataReaderAsync(CommandBehavior, CancellationToken)
     /// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteReaderAsync, ReturnType = MySql.TaskDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentNpgsql(Method = ExecuteReaderAsync, ReturnType = Npgsql.TaskDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteReaderAsync, ReturnType = OracleManagedDataAccess.TaskDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReaderAsync, ReturnType = OracleManagedDataAccess.TaskDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentSqlite(Method = ExecuteReaderAsync, ReturnType = Sqlite.TaskDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+
+	[InstrumentMySqlAttribute(Method = ExecuteDbDataReader, ReturnType = TaskDbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentNpgsql(Method = ExecuteDbDataReader, ReturnType = TaskDbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteDbDataReader, ReturnType = TaskDbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteDbDataReader, ReturnType = TaskDbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
+	[InstrumentSqlite(Method = ExecuteDbDataReader, ReturnType = TaskDbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior, ClrTypeNames.CancellationToken })]
     public class CommandExecuteReaderWithBehaviorAsyncIntegration
     {
         /// <summary>

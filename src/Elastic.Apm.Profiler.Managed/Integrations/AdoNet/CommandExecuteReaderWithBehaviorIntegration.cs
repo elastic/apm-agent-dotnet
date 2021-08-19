@@ -8,6 +8,7 @@ using System.Data;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 using Elastic.Apm.Profiler.Managed.CallTarget;
+using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -16,6 +17,17 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
     /// [*]DataReader [Command].ExecuteReader(CommandBehavior)
     /// [*]DataReader [Command].ExecuteDbDataReader(CommandBehavior)
     /// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteReader, ReturnType = MySql.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentNpgsql(Method = ExecuteReader, ReturnType = Npgsql.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSqlite(Method = ExecuteReader, ReturnType = Sqlite.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+
+	[InstrumentMySqlAttribute(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentNpgsql(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSqlite(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
     public class CommandExecuteReaderWithBehaviorIntegration
     {
         /// <summary>

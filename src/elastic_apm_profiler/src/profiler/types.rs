@@ -217,7 +217,7 @@ impl FromStr for AssemblyReference {
             })
             .collect();
 
-        let version = Version::parse(map["Version"])?;
+        let version = Version::from_str(map["Version"])?;
         let locale = map["Culture"].to_string();
         let public_key = PublicKeyToken(map["PublicKeyToken"].to_string());
         Ok(AssemblyReference {
@@ -229,21 +229,38 @@ impl FromStr for AssemblyReference {
     }
 }
 
-struct AssemblyReferenceVisitor;
-impl<'de> Visitor<'de> for AssemblyReferenceVisitor {
-    type Value = AssemblyReference;
+/// deserializes any type that implements FromStr from a str
+pub(crate) fn deserialize_from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    T: Deserialize<'de> + FromStr<Err = Error>,
+    D: Deserializer<'de>,
+{
+    // This is a Visitor that forwards string types to T's `FromStr` impl and
+    // forwards map types to T's `Deserialize` impl. The `PhantomData` is to
+    // keep the compiler from complaining about T being an unused generic type
+    // parameter. We need T in order to know the Value type for the Visitor
+    // impl.
+    struct String<T>(PhantomData<fn() -> T>);
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a string")
-    }
-
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    impl<'de, T> Visitor<'de> for String<T>
     where
-        E: de::Error,
+        T: Deserialize<'de> + FromStr<Err = Error>,
     {
-        AssemblyReference::from_str(v)
-            .map_err(|_| de::Error::custom("Could not deserialize AssemblyReference"))
+        type Value = T;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a string")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<T, E>
+        where
+            E: de::Error,
+        {
+            FromStr::from_str(value).map_err(|e| E::custom(format!("{:?}", e)))
+        }
     }
+
+    deserializer.deserialize_str(String(PhantomData))
 }
 
 impl<'de> Deserialize<'de> for AssemblyReference {
@@ -251,7 +268,7 @@ impl<'de> Deserialize<'de> for AssemblyReference {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_str(AssemblyReferenceVisitor)
+        deserialize_from_str(deserializer)
     }
 }
 
@@ -319,41 +336,24 @@ pub struct TargetMethodReference {
     type_name: String,
     #[serde(rename = "method")]
     method_name: String,
-    minimum_major: u16,
-    minimum_minor: u16,
-    minimum_patch: u16,
-    #[serde(default = "u16_max")]
-    maximum_major: u16,
-    #[serde(default = "u16_max")]
-    maximum_minor: u16,
-    #[serde(default = "u16_max")]
-    maximum_patch: u16,
+    #[serde(
+        default = "version_max",
+        deserialize_with = "crate::types::deserialize_max_version"
+    )]
+    maximum_version: Version,
+    #[serde(default = "version_min")]
+    minimum_version: Version,
     signature_types: Option<Vec<String>>,
 }
 
-fn u16_max() -> u16 {
-    u16::MAX
+fn version_max() -> Version {
+    Version::MAX
+}
+fn version_min() -> Version {
+    Version::MIN
 }
 
 impl TargetMethodReference {
-    fn minimum_version(&self) -> Version {
-        Version::new(
-            self.minimum_major,
-            self.minimum_minor,
-            self.minimum_patch,
-            0,
-        )
-    }
-
-    fn maximum_version(&self) -> Version {
-        Version::new(
-            self.maximum_major,
-            self.maximum_minor,
-            self.maximum_patch,
-            0,
-        )
-    }
-
     pub fn assembly(&self) -> &str {
         &self.assembly
     }
@@ -375,11 +375,11 @@ impl TargetMethodReference {
             return false;
         }
 
-        if &self.minimum_version() > version {
+        if &self.minimum_version > version {
             return false;
         }
 
-        if &self.maximum_version() < version {
+        if &self.maximum_version < version {
             return false;
         }
 
@@ -387,11 +387,16 @@ impl TargetMethodReference {
     }
 }
 
+/// The method replacement
 #[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct MethodReplacement {
+    /// The caller
+    #[serde(default)]
     #[serde(deserialize_with = "empty_struct_is_none")]
     caller: Option<CallerMethodReference>,
+    /// The target for instrumentation
     target: Option<TargetMethodReference>,
+    /// The wrapper providing the instrumentation
     wrapper: Option<WrapperMethodReference>,
 }
 
@@ -409,6 +414,7 @@ impl MethodReplacement {
     }
 }
 
+/// Deserializes a T to Option::Some(T) and an empty struct to Option::None
 fn empty_struct_is_none<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
 where
     T: DeserializeOwned,
@@ -416,14 +422,14 @@ where
 {
     #[derive(Deserialize)]
     #[serde(untagged)]
-    enum DataOrEmpty<T> {
+    enum EmptyOption<T> {
         Data(T),
         Empty {},
     }
 
-    match DataOrEmpty::deserialize(deserializer)? {
-        DataOrEmpty::Data(data) => Ok(Some(data)),
-        DataOrEmpty::Empty {} => Ok(None),
+    match EmptyOption::deserialize(deserializer)? {
+        EmptyOption::Data(data) => Ok(Some(data)),
+        EmptyOption::Empty {} => Ok(None),
     }
 }
 
@@ -739,7 +745,7 @@ pub mod tests {
         profiler::types::{AssemblyReference, Integration, MethodSignature, PublicKeyToken},
         types::Version,
     };
-    use std::{error::Error, fs::File};
+    use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
 
     #[test]
     fn deserialize_method_signature() -> Result<(), Box<dyn Error>> {
@@ -772,99 +778,95 @@ pub mod tests {
     }
 
     #[test]
-    fn deserialize_integrations() -> Result<(), Box<dyn Error>> {
-        let json = r#"[
+    fn deserialize_integration_from_json() -> Result<(), Box<dyn Error>> {
+        let json = r#"{
+            "name": "AdoNet",
+            "method_replacements": [
               {
-                "name": "AdoNet",
-                "method_replacements": [
-                  {
-                    "caller": {},
-                    "target": {
-                      "assembly": "System.Data",
-                      "type": "System.Data.Common.DbCommand",
-                      "method": "ExecuteNonQueryAsync",
-                      "signature_types": [
-                        "System.Threading.Tasks.Task`1<System.Int32>",
-                        "System.Threading.CancellationToken"
-                      ],
-                      "minimum_major": 4,
-                      "minimum_minor": 0,
-                      "minimum_patch": 0,
-                      "maximum_major": 4,
-                      "maximum_minor": 65535,
-                      "maximum_patch": 65535
-                    },
-                    "wrapper": {
-                      "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-                      "type": "Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
-                      "action": "CallTargetModification"
-                    }
-                  }
-                ]
-              },
-              {
-                "name": "AspNet",
-                "method_replacements": [
-                  {
-                    "caller": {},
-                    "target": {
-                      "assembly": "System.Web",
-                      "type": "System.Web.Compilation.BuildManager",
-                      "method": "InvokePreStartInitMethodsCore",
-                      "signature_types": [
-                        "System.Void",
-                        "System.Collections.Generic.ICollection`1[System.Reflection.MethodInfo]",
-                        "System.Func`1[System.IDisposable]"
-                      ],
-                      "minimum_major": 4,
-                      "minimum_minor": 0,
-                      "minimum_patch": 0,
-                      "maximum_major": 4,
-                      "maximum_minor": 65535,
-                      "maximum_patch": 65535
-                    },
-                    "wrapper": {
-                      "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-                      "type": "Elastic.Apm.Profiler.Integrations.AspNet.HttpModule_Integration",
-                      "action": "CallTargetModification"
-                    }
-                  }
-                ]
-              },
-              {
-                "name": "XUnit",
-                "method_replacements": [
-                  {
-                    "caller": {},
-                    "target": {
-                      "assembly": "xunit.execution.desktop",
-                      "type": "Xunit.Sdk.TestInvoker`1",
-                      "method": "RunAsync",
-                      "signature_types": [
-                        "System.Threading.Tasks.Task`1<System.Decimal>"
-                      ],
-                      "minimum_major": 2,
-                      "minimum_minor": 2,
-                      "minimum_patch": 0,
-                      "maximum_major": 2,
-                      "maximum_minor": 65535,
-                      "maximum_patch": 65535
-                    },
-                    "wrapper": {
-                      "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-                      "type": "Elastic.Apm.Profiler.Integrations.Testing.XUnitIntegration",
-                      "method": "TestInvoker_RunAsync",
-                      "signature": "00 04 1C 1C 08 08 0A",
-                      "action": "ReplaceTargetMethod"
-                    }
-                  }
-                ]
+                "caller": {},
+                "target": {
+                  "assembly": "System.Data",
+                  "type": "System.Data.Common.DbCommand",
+                  "method": "ExecuteNonQueryAsync",
+                  "signature_types": [
+                    "System.Threading.Tasks.Task`1<System.Int32>",
+                    "System.Threading.CancellationToken"
+                  ],
+                  "minimum_version": "4.0.0",
+                  "maximum_version": "4.*.*"
+                },
+                "wrapper": {
+                  "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+                  "type": "Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
+                  "action": "CallTargetModification"
+                }
               }
-            ]"#;
+            ]
+          }"#;
 
-        let integrations: Vec<Integration> = serde_json::from_str(json)?;
+        let integration: Integration = serde_json::from_str(json)?;
 
-        assert_eq!(3, integrations.len());
+        assert_eq!(&integration.name, "AdoNet");
+        assert_eq!(integration.method_replacements.len(), 1);
+
+        let method_replacement = &integration.method_replacements[0];
+
+        assert!(method_replacement.caller.is_none());
+
+        assert!(method_replacement.target.is_some());
+        let target = method_replacement.target.as_ref().unwrap();
+        assert_eq!(&target.assembly, "System.Data");
+        assert_eq!(&target.type_name, "System.Data.Common.DbCommand");
+        assert_eq!(&target.method_name, "ExecuteNonQueryAsync");
+        assert_eq!(
+            target
+                .signature_types
+                .as_ref()
+                .unwrap()
+                .iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            vec![
+                "System.Threading.Tasks.Task`1<System.Int32>",
+                "System.Threading.CancellationToken"
+            ]
+        );
+        assert_eq!(target.minimum_version, Version::new(4, 0, 0, 0));
+        assert_eq!(
+            target.maximum_version,
+            Version::new(4, u16::MAX, u16::MAX, u16::MAX)
+        );
+
+        assert!(method_replacement.wrapper.is_some());
+        let wrapper = method_replacement.wrapper.as_ref().unwrap();
+        assert_eq!(
+            &wrapper.type_name,
+            "Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration"
+        );
+        assert_eq!(&wrapper.action, "CallTargetModification");
+
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_integrations_from_json() -> Result<(), Box<dyn Error>> {
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push("../Elastic.Apm.Profiler.Managed/integrations.json");
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let integrations: Vec<Integration> = serde_json::from_reader(reader)?;
+        assert!(integrations.len() > 0);
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_integrations_from_yml() -> Result<(), Box<dyn Error>> {
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push("../Elastic.Apm.Profiler.Managed/integrations.yml");
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let integrations: Vec<Integration> = serde_yaml::from_reader(reader)?;
+        assert!(integrations.len() > 0);
         Ok(())
     }
 

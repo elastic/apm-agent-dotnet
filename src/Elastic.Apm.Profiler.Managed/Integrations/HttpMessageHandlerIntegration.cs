@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Elastic.Apm.Profiler.Managed.Core;
 using Elastic.Apm.Profiler.Managed.Reflection;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations
@@ -28,7 +29,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations
 		private const string SendAsync = "SendAsync";
 		private const string Send = "Send";
 
-		private static readonly string[] NamespaceAndNameFilters = { ClrNames.HttpResponseMessageTask, ClrNames.HttpRequestMessage, ClrNames.CancellationToken };
+		private static readonly string[] NamespaceAndNameFilters = { ClrTypeNames.HttpResponseMessageTask, ClrTypeNames.HttpRequestMessage, ClrTypeNames.CancellationToken };
 
 		public static object HttpMessageHandler_SendAsync(
 		    object handler,
