@@ -512,11 +512,8 @@ pipeline {
     }
   }
   post {
-        cleanup {
-            withAzureAuth(){
-                sh label: "Checking and removing any Azure related resource groups",
-                    script: "for group in `az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name`;do az group delete --name $group --no-wait --yes;done"
-            }
+    cleanup {
+      cleanupAzureResources()
       notifyBuildResult()
     }
   }
@@ -554,21 +551,26 @@ def dotnet(Closure body){
   }
 }
 
-def withAzureAuth(Closure body){
+def cleanupAzureResources(){
     def props = getVaultSecret(secret: 'secret/apm-team/ci/apm-agent-dotnet-azure')
     def authObj = props?.data
+    def dockerCmd = "docker run --rm -it -v ${BASE_DIR}/.azure:/root/.azure -v \$(pwd):/root mcr.microsoft.com/azure-cli:latest"
     withEnvMask(vars: [
         [var: 'AZ_CLIENT_ID', password: "${authObj.client_id}"],
         [var: 'AZ_CLIENT_SECRET', password: "${authObj.client_secret}"],
         [var: 'AZ_SUBSCRIPTION_ID', password: "${authObj.subscription_id}"],
         [var: 'AZ_TENANT_ID', password: "${authObj.tenant_id}"]
     ]) {
-        cmd label: "Setup Azure CLI Repo Signing Key", script: "curl -sL https://packages.microsoft.com/keys/microsoft.asc |gpg --dearmor |sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null"
-        cmd label: "Setup Azure CLI Repo", script: "echo \"deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/\$(lsb_release -cs) main\" |sudo tee /etc/apt/sources.list.d/azure-cli.list"
-        cmd label: "Install Azure CLI", script: "sudo apt-get update && sudo apt-get install azure-cli -y"
-        cmd label: "Logging into Azure", script: "az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
-        cmd label: "Setting Azure subscription", script: "az account set --subscription ${AZ_SUBSCRIPTION_ID}"
-        body()
+        dir("${BASE_DIR}"){
+            cmd label: "Create storage for Azure authentication",
+                script: "mkdir -p ${BASE_DIR}/.azure || true"
+            cmd label: "Logging into Azure",
+                script: "${dockerCmd} az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
+            cmd label: "Setting Azure subscription",
+                script: "${dockerCmd} az account set --subscription ${AZ_SUBSCRIPTION_ID}"
+            cmd label: "Checking and removing any Azure related resource groups",
+                script: "for group in `${dockerCmd} az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX})']\" --out json|jq .[].name`;do az group delete --name $group --no-wait --yes;done"
+        }
     }
 }
 
