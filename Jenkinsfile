@@ -569,7 +569,7 @@ def cleanupAzureResources(){
             cmd label: "Setting Azure subscription",
                 script: "${dockerCmd} az account set --subscription ${AZ_SUBSCRIPTION_ID}"
             cmd label: "Checking and removing any Azure related resource groups",
-                script: "for group in `${dockerCmd} az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX}')]\" --out json|jq .[].name`;do ${dockerCmd} az group delete --name \$group --no-wait --yes;done"
+                script: "for group in `${dockerCmd} az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX}')]\" --out json|jq .[].name --raw-output`;do ${dockerCmd} az group delete --name \$group --no-wait --yes;done"
         }
     }
 }
