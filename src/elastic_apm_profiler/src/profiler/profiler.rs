@@ -10,7 +10,6 @@ use com::{
 };
 use num_traits::FromPrimitive;
 use rust_embed::RustEmbed;
-use simple_logger::SimpleLogger;
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -65,6 +64,7 @@ use crate::{
 };
 use crypto::ed25519::signature;
 use log::{Level, LevelFilter};
+use log4rs::Handle;
 use once_cell::sync::Lazy;
 use std::{
     collections::HashSet,
@@ -139,6 +139,7 @@ class! {
         ICorProfilerCallback9(ICorProfilerCallback8(ICorProfilerCallback7(
             ICorProfilerCallback6(ICorProfilerCallback5(ICorProfilerCallback4(
                 ICorProfilerCallback3(ICorProfilerCallback2(ICorProfilerCallback)))))))) {
+        logger: RefCell<Option<Handle>>,
         profiler_info: RefCell<Option<ICorProfilerInfo4>>,
         rejit_handler: RefCell<Option<RejitHandler>>,
         runtime_info: RefCell<Option<RuntimeInfo>>,
@@ -498,11 +499,9 @@ impl Profiler {
             unknown.AddRef();
         }
 
-        SimpleLogger::new()
-            .with_level(env::read_log_level_from_env_var(LevelFilter::Warn))
-            .init()
-            .unwrap();
-
+        let process_path = std::env::current_exe().unwrap();
+        let logger =
+            env::initialize_logging(process_path.file_stem().unwrap().to_string_lossy().as_ref());
         if log::log_enabled!(Level::Debug) {
             log::debug!("Environment variables\n{}", env::get_env_vars());
         }
@@ -609,9 +608,8 @@ impl Profiler {
 
         // get the details for the runtime
         let runtime_info = profiler_info.get_runtime_information()?;
-        let process_path = std::env::current_exe().unwrap();
-        let process_name = process_path.file_name().unwrap();
         let is_desktop_clr = runtime_info.is_desktop_clr();
+        let process_name = process_path.file_name().unwrap();
         if process_name == "w3wp.exe" || process_name == "iisexpress.exe" {
             self.is_desktop_iis.store(is_desktop_clr, Ordering::SeqCst);
         }
@@ -619,6 +617,7 @@ impl Profiler {
         // Store the profiler and runtime info for later use
         self.profiler_info.replace(Some(profiler_info));
         self.runtime_info.replace(Some(runtime_info));
+        self.logger.replace(Some(logger));
 
         IS_ATTACHED.store(true, Ordering::SeqCst);
         IS_DESKTOP_CLR.store(is_desktop_clr, Ordering::SeqCst);

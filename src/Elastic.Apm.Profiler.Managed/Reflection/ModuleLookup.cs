@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Profiler.Managed.Reflection
 {
@@ -18,6 +19,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
         /// Some naive upper limit to resolving assemblies that we can use to stop making expensive calls.
         /// </summary>
         private const int MaxFailures = 50;
+
+		private static readonly IApmLogger Log = Agent.Instance.Logger.Scoped(nameof(ModuleLookup));
 
         private static ManualResetEventSlim _populationResetEvent = new ManualResetEventSlim(initialState: true);
         private static ConcurrentDictionary<Guid, Module> _modules = new ConcurrentDictionary<Guid, Module>();
@@ -50,7 +53,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
                 // For some unforeseeable reason we have failed on a lot of AppDomain lookups
                 if (!_shortCircuitLogicHasLogged)
                 {
-                    //Log.Warning("Datadog is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
+                    Log.Warning()?.Log("Elastic APM is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
                 }
 
                 return null;
@@ -66,7 +69,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
             catch (Exception ex)
             {
                 _failures++;
-                //Log.Error(ex, "Error when populating modules.");
+                Log.Error()?.LogException(ex, "Error when populating modules.");
             }
             finally
             {

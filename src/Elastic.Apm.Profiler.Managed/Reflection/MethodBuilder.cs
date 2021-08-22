@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Profiler.Managed.Core;
 
 namespace Elastic.Apm.Profiler.Managed.Reflection
@@ -22,7 +23,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
         /// Global dictionary for caching reflected delegates
         /// </summary>
         private static readonly ConcurrentDictionary<Key, TDelegate> Cache = new ConcurrentDictionary<Key, TDelegate>(new KeyComparer());
-        //private static readonly IDatadogLogger Log = DatadogLogging.GetLoggerFor(typeof(MethodBuilder<TDelegate>));
+		private static readonly IApmLogger Log = Agent.Instance.Logger.Scoped("typeof(MethodBuilder<TDelegate>)");
 
         /// <summary>
         /// Feature flag used primarily for forcing testing of the token lookup strategy.
@@ -56,6 +57,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
         static MethodBuilder()
         {
+			// TODO: implement environment variables for these?
             // ForceMdTokenLookup = bool.TryParse(EnvironmentHelpers.GetEnvironmentVariable(ConfigurationKeys.Debug.ForceMdTokenLookup), out bool result)
             //         ? result
             //         : false;
@@ -222,14 +224,16 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
                 }
                 catch (Exception ex)
                 {
-                    var message = $"Unable to resolve method {_concreteTypeName}.{_methodName} by metadata token: {_mdToken}";
-                    //Log.Error(ex, message);
+					Log.Error()?.LogException(ex, "Unable to resolve method {ConcreteTypeName}.{MethodName} by metadata token: {mdToken}",
+						_concreteType,
+						_methodName,
+						_mdToken);
                     requiresBestEffortMatching = true;
                 }
             }
             else
             {
-                Console.WriteLine($"Unable to resolve module version id {_moduleVersionId}. Using method builder fallback.");
+                Log.Warning()?.Log("Unable to resolve module version id {ModuleVersionId}. Using method builder fallback.", _moduleVersionId);
             }
 
             MethodInfo methodInfo = null;
@@ -393,21 +397,27 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
             if (!string.Equals(_methodName, methodInfo.Name))
             {
-                //Log.Warning($"Method name mismatch: {detailMessage}");
+                Log.Warning()?.Log($"Method name mismatch: {detailMessage}");
                 return null;
             }
 
             if (!GenericsAreViable(methodInfo))
             {
-                //Log.Warning($"Generics not viable: {detailMessage}");
+                Log.Warning()?.Log($"Generics not viable: {detailMessage}");
                 return null;
             }
 
             if (!ParametersAreViable(methodInfo))
             {
-                //Log.Warning($"Parameters not viable: {detailMessage}");
+                Log.Warning()?.Log($"Parameters not viable: {detailMessage}");
                 return null;
             }
+
+			if (!methodInfo.IsStatic && !methodInfo.ReflectedType.IsAssignableFrom(_concreteType))
+			{
+				Log.Warning()?.Log($"{_concreteType} cannot be assigned to the type containing the MethodInfo representing the instance method: {detailMessage}");
+				return null;
+			}
 
             return methodInfo;
         }
@@ -458,7 +468,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
         private MethodInfo TryFindMethod()
         {
             var logDetail = $"mdToken {_mdToken} on {_concreteTypeName}.{_methodName} in {_resolutionModule?.FullyQualifiedName ?? "NULL"}, {_resolutionModule?.ModuleVersionId ?? _moduleVersionId}";
-            //Log.Warning($"Using fallback method matching ({logDetail})");
+            Log.Warning()?.Log($"Using fallback method matching ({logDetail})");
 
             var methods =
                 _concreteType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
@@ -503,7 +513,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
             if (methods.Length == 1)
             {
-                //Log.Information($"Resolved by name and namespaceName filters ({logDetail})");
+                Log.Info()?.Log($"Resolved by name and namespaceName filters ({logDetail})");
                 return methods[0];
             }
 
@@ -514,7 +524,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
             if (methods.Length == 1)
             {
-                //Log.Information($"Resolved by viable parameters ({logDetail})");
+                Log.Info()?.Log($"Resolved by viable parameters ({logDetail})");
                 return methods[0];
             }
 
@@ -525,7 +535,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
             if (methods.Length == 1)
             {
-                //Log.Information($"Resolved by viable generics ({logDetail})");
+                Log.Info()?.Log($"Resolved by viable generics ({logDetail})");
                 return methods[0];
             }
 

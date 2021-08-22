@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
@@ -21,9 +22,9 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
         private const string EndMethodName = "OnMethodEnd";
         private const string EndAsyncMethodName = "OnAsyncMethodEnd";
 
-        private static readonly NullLogger Log = NullLogger.Instance;
-        private static readonly MethodInfo UnwrapReturnValueMethodInfo = typeof(IntegrationMapper).GetMethod(nameof(IntegrationMapper.UnwrapReturnValue), BindingFlags.NonPublic | BindingFlags.Static);
-        private static readonly MethodInfo ConvertTypeMethodInfo = typeof(IntegrationMapper).GetMethod(nameof(IntegrationMapper.ConvertType), BindingFlags.NonPublic | BindingFlags.Static);
+		private static readonly IApmLogger Log = Agent.Instance.Logger.Scoped(nameof(IntegrationMapper));
+        private static readonly MethodInfo UnwrapReturnValueMethodInfo = typeof(IntegrationMapper).GetMethod(nameof(UnwrapReturnValue), BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo ConvertTypeMethodInfo = typeof(IntegrationMapper).GetMethod(nameof(ConvertType), BindingFlags.NonPublic | BindingFlags.Static);
 
         internal static DynamicMethod CreateBeginMethodDelegate(Type integrationType, Type targetType, Type[] argumentsTypes)
         {
@@ -40,7 +41,11 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
              *
              */
 
-            Log.Debug($"Creating BeginMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}]");
+            Log.Debug()?.Log(
+				"Creating BeginMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}]",
+				integrationType.FullName,
+				targetType.FullName);
+
             var onMethodBeginMethodInfo = integrationType.GetMethod(BeginMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (onMethodBeginMethodInfo is null)
             {
@@ -149,7 +154,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
             ilWriter.EmitCall(OpCodes.Call, onMethodBeginMethodInfo, null);
             ilWriter.Emit(OpCodes.Ret);
 
-            Log.Debug($"Created BeginMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}]");
+            Log.Debug()?.Log($"Created BeginMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}]");
             return callMethod;
         }
 
@@ -168,7 +173,11 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
              *
              */
 
-            Log.Debug($"Creating SlowBeginMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}]");
+			Log.Debug()?.Log(
+				"Creating SlowBeginMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}]",
+				integrationType.FullName,
+				targetType.FullName);
+
             var onMethodBeginMethodInfo = integrationType.GetMethod(BeginMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (onMethodBeginMethodInfo is null)
             {
@@ -266,7 +275,11 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
             ilWriter.EmitCall(OpCodes.Call, onMethodBeginMethodInfo, null);
             ilWriter.Emit(OpCodes.Ret);
 
-            Log.Debug($"Created SlowBeginMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}]");
+			Log.Debug()?.Log(
+				"Created SlowBeginMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}]",
+				integrationType.FullName,
+				targetType.FullName);
+
             return callMethod;
         }
 
@@ -279,7 +292,11 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
              *
              */
 
-            Log.Debug($"Creating EndMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}]");
+			Log.Debug()?.Log(
+				"Creating EndMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}]",
+				integrationType.FullName,
+				targetType.FullName);
+
             var onMethodEndMethodInfo = integrationType.GetMethod(EndMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (onMethodEndMethodInfo is null)
             {
@@ -363,10 +380,13 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
             // Call Method
             onMethodEndMethodInfo = onMethodEndMethodInfo.MakeGenericMethod(callGenericTypes.ToArray());
             ilWriter.EmitCall(OpCodes.Call, onMethodEndMethodInfo, null);
+			ilWriter.Emit(OpCodes.Ret);
 
-            ilWriter.Emit(OpCodes.Ret);
+			Log.Debug()?.Log(
+				"Created EndMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}]",
+				integrationType.FullName,
+				targetType.FullName);
 
-            Log.Debug($"Created EndMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}]");
             return callMethod;
         }
 
@@ -380,8 +400,13 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
              *
              */
 
-            Log.Debug($"Creating EndMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}, ReturnType={returnType.FullName}]");
-            var onMethodEndMethodInfo = integrationType.GetMethod(EndMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			Log.Debug()?.Log(
+				"Creating EndMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}, ReturnType={ReturnTypeFullName}]",
+				integrationType.FullName,
+				targetType.FullName,
+				returnType.FullName);
+
+			var onMethodEndMethodInfo = integrationType.GetMethod(EndMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (onMethodEndMethodInfo is null)
             {
                 return null;
@@ -506,8 +531,12 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 
             ilWriter.Emit(OpCodes.Ret);
 
-            Log.Debug($"Created EndMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}, ReturnType={returnType.FullName}]");
-            return callMethod;
+			Log.Debug()?.Log(
+				"Created EndMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}, ReturnType={ReturnTypeFullName}]",
+				integrationType.FullName,
+				targetType.FullName,
+				returnType.FullName);
+			return callMethod;
         }
 
         internal static DynamicMethod CreateAsyncEndMethodDelegate(Type integrationType, Type targetType, Type returnType)
@@ -523,11 +552,15 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
              *
              */
 
-            Log.Debug($"Creating AsyncEndMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}, ReturnType={returnType.FullName}]");
-            var onAsyncMethodEndMethodInfo = integrationType.GetMethod(EndAsyncMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			Log.Debug()?.Log(
+				"Creating AsyncEndMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}, ReturnType={ReturnTypeFullName}]",
+				integrationType.FullName,
+				targetType.FullName,
+				returnType.FullName);
+			var onAsyncMethodEndMethodInfo = integrationType.GetMethod(EndAsyncMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (onAsyncMethodEndMethodInfo is null)
             {
-                Log.Warning($"Couldn't find the method: {EndAsyncMethodName} in type: {integrationType.FullName}");
+                Log.Warning()?.Log($"Couldn't find the method: {EndAsyncMethodName} in type: {{IntegrationTypeFullName}}", integrationType.FullName);
                 return null;
             }
 
@@ -650,8 +683,12 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 
             ilWriter.Emit(OpCodes.Ret);
 
-            Log.Debug($"Created AsyncEndMethod Dynamic Method for '{integrationType.FullName}' integration. [Target={targetType.FullName}, ReturnType={returnType.FullName}]");
-            return callMethod;
+			Log.Debug()?.Log(
+				"Created AsyncEndMethod Dynamic Method for '{IntegrationTypeName}' integration. [Target={TargetTypeName}, ReturnType={ReturnTypeFullName}]",
+				integrationType.FullName,
+				targetType.FullName,
+				returnType.FullName);
+			return callMethod;
         }
 
         private static void WriteCreateNewProxyInstance(ILGenerator ilWriter, Type proxyType, Type targetType)

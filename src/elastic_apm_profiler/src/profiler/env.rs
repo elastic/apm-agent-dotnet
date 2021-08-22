@@ -9,11 +9,35 @@ use crate::{
 };
 use com::sys::HRESULT;
 use log::LevelFilter;
+use log4rs::{
+    append::{
+        console::ConsoleAppender,
+        rolling_file::{
+            policy::compound::{
+                roll::fixed_window::FixedWindowRoller, trigger::size::SizeTrigger, CompoundPolicy,
+            },
+            RollingFileAppender,
+        },
+    },
+    config::{Appender, Logger, Root},
+    encode::pattern::PatternEncoder,
+    Config, Handle,
+};
 use once_cell::sync::Lazy;
-use std::{borrow::Borrow, ffi::OsStr, fs::File, io::BufReader, path::PathBuf, str::FromStr};
+use std::{
+    borrow::Borrow,
+    collections::{BTreeMap, HashMap, HashSet},
+    ffi::OsStr,
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 const ELASTIC_APM_PROFILER_INTEGRATIONS: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
+const ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_TARGETS";
 const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
+const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
 const ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_IL";
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
@@ -75,32 +99,44 @@ pub fn enable_inlining(default: bool) -> bool {
     read_bool_env_var(ELASTIC_APM_PROFILER_ENABLE_INLINING, default)
 }
 
+fn read_log_targets_from_env_var() -> HashSet<String> {
+    let mut set = match std::env::var(ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR) {
+        Ok(value) => value
+            .split(',')
+            .into_iter()
+            .filter_map(|s| match s.to_lowercase().as_str() {
+                out if out == "file" || out == "stdout" => Some(out.into()),
+                _ => None,
+            })
+            .collect(),
+        _ => HashSet::with_capacity(1),
+    };
+
+    if set.is_empty() {
+        set.insert("file".into());
+    }
+    set
+}
+
 pub fn read_log_level_from_env_var(default: LevelFilter) -> LevelFilter {
     match std::env::var(ELASTIC_APM_PROFILER_LOG_ENV_VAR) {
-        Ok(level) => match level.to_lowercase().as_str() {
-            "trace" => log::LevelFilter::Trace,
-            "debug" => log::LevelFilter::Debug,
-            "info" => log::LevelFilter::Info,
-            "warn" => log::LevelFilter::Warn,
-            _ => log::LevelFilter::Error,
-        },
+        Ok(value) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
         _ => default,
     }
 }
 
 fn read_bool_env_var(key: &str, default: bool) -> bool {
     match std::env::var(key) {
-        Ok(enabled) => match enabled.as_str() {
-            "true" => true,
-            "True" => true,
-            "TRUE" => true,
-            "1" => true,
-            "false" => false,
-            "False" => false,
-            "FALSE" => false,
-            "0" => false,
-            v => {
-                log::info!("Unknown value for {}: {}. Setting to {}", key, v, default);
+        Ok(enabled) => match enabled.to_lowercase().as_str() {
+            "true" | "1" => true,
+            "false" | "0" => false,
+            _ => {
+                log::info!(
+                    "Unknown value for {}: {}. Setting to {}",
+                    key,
+                    enabled,
+                    default
+                );
                 default
             }
         },
@@ -114,6 +150,117 @@ fn read_bool_env_var(key: &str, default: bool) -> bool {
             default
         }
     }
+}
+
+/// Gets the default log directory on Windows
+#[cfg(target_os = "windows")]
+pub fn get_default_log_dir() -> PathBuf {
+    // ideally we would use the windows function SHGetKnownFolderPath to get
+    // the CommonApplicationData special folder. However, this requires a few package dependencies
+    // like winapi that would increase the size of the profiler binary. Instead,
+    // use the %PROGRAMDATA% environment variable if it exists
+    match std::env::var("PROGRAMDATA") {
+        Ok(path) => {
+            let mut path_buf = PathBuf::from(path);
+            path_buf = path_buf
+                .join("elastic")
+                .join("apm-agent-dotnet")
+                .join("logs");
+            path_buf
+        }
+        Err(_) => PathBuf::from_str(".").unwrap(),
+    }
+}
+
+/// Gets the path to the profiler file on non windows
+#[cfg(not(target_os = "windows"))]
+pub fn get_default_log_dir() -> PathBuf {
+    PathBuf::from("/var/log/elastic/apm-agent-dotnet".into())
+}
+
+fn get_log_dir() -> PathBuf {
+    match std::env::var(ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR) {
+        Ok(path) => PathBuf::from(path),
+        Err(_) => get_default_log_dir(),
+    }
+}
+
+pub fn initialize_logging(process_name: &str) -> Handle {
+    let targets = read_log_targets_from_env_var();
+    let level = read_log_level_from_env_var(LevelFilter::Warn);
+    let mut root_builder = Root::builder();
+    let mut config_builder = Config::builder();
+    let log_pattern = "[{d(%Y-%m-%dT%H:%M:%S.%f%:z)}] [{l:<5}] {m}{n}";
+
+    if targets.contains("stdout") {
+        let pattern = PatternEncoder::new(log_pattern);
+        let stdout = ConsoleAppender::builder()
+            .encoder(Box::new(pattern))
+            .build();
+        config_builder =
+            config_builder.appender(Appender::builder().build("stdout", Box::new(stdout)));
+        root_builder = root_builder.appender("stdout");
+    }
+
+    if targets.contains("file") {
+        let pid = std::process::id();
+        let mut log_dir = get_log_dir();
+        let mut valid_log_dir = true;
+        if log_dir.exists() && !log_dir.is_dir() {
+            log_dir = get_default_log_dir();
+        }
+
+        if !log_dir.exists() {
+            // try to create the log directory ahead of time so that we can determine if it's a valid
+            // directory. if the directory can't be created, try the default log directory before
+            // bailing and not setting up the file logger.
+            if let Err(_) = std::fs::create_dir_all(&log_dir) {
+                if log_dir != get_default_log_dir() {
+                    log_dir = get_default_log_dir();
+                    if let Err(_) = std::fs::create_dir_all(&log_dir) {
+                        valid_log_dir = false;
+                    }
+                }
+            }
+        }
+
+        if valid_log_dir {
+            let log_file_name = log_dir
+                .clone()
+                .join(format!("elastic_apm_profiler_{}_{}.log", process_name, pid))
+                .to_string_lossy()
+                .to_string();
+            let rolling_log_file_name = log_dir
+                .clone()
+                .join(format!(
+                    "elastic_apm_profiler_{}_{}_{{}}.log",
+                    process_name, pid
+                ))
+                .to_string_lossy()
+                .to_string();
+
+            let trigger = SizeTrigger::new(5 * 1024 * 1024);
+            let roller = FixedWindowRoller::builder()
+                .build(&rolling_log_file_name, 10)
+                .unwrap();
+
+            let policy = CompoundPolicy::new(Box::new(trigger), Box::new(roller));
+            let pattern = PatternEncoder::new(log_pattern);
+            let file = RollingFileAppender::builder()
+                .append(true)
+                .encoder(Box::new(pattern))
+                .build(&log_file_name, Box::new(policy))
+                .unwrap();
+
+            config_builder =
+                config_builder.appender(Appender::builder().build("file", Box::new(file)));
+            root_builder = root_builder.appender("file");
+        }
+    }
+
+    let root = root_builder.build(level);
+    let config = config_builder.build(root).unwrap();
+    log4rs::init_config(config).unwrap()
 }
 
 /// Loads the integrations by reading the file pointed to by [ELASTIC_APM_PROFILER_INTEGRATIONS]

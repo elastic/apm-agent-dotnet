@@ -8,13 +8,14 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 {
     internal static class IntegrationOptions<TIntegration, TTarget>
     {
-		private static readonly NullLogger Log = NullLogger.Instance;
+		private static readonly IApmLogger Log = Agent.Instance.Logger.Scoped($"IntegrationOptions<{typeof(TIntegration).FullName},{typeof(TTarget).FullName}>");
 
 		private static volatile bool _disableIntegration;
 
@@ -27,16 +28,22 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
         internal static void LogException(Exception exception, string message = null)
         {
             // ReSharper disable twice ExplicitCallerInfoArgument
-            Log.Error(exception, message ?? exception?.Message);
+            Log.Error()?.LogException(exception, message ?? "exception whilst instrumenting integration <{TIntegration}, {TTarget}>",
+				typeof(TIntegration).FullName,
+				typeof(TTarget).FullName);
+
              if (exception is DuckTypeException)
              {
-                 Log.Warning($"DuckTypeException has been detected, the integration <{typeof(TIntegration)}, {typeof(TTarget)}> will be disabled.");
+                 Log.Warning()?.Log("DuckTypeException has been detected, the integration <{TIntegration}, {TTarget}> will be disabled.",
+					 typeof(TIntegration).FullName,
+					 typeof(TTarget).FullName);
                  _disableIntegration = true;
              }
              else if (exception is CallTargetInvokerException)
 			 {
-				 Log.Warning(
-					 $"CallTargetInvokerException has been detected, the integration <{typeof(TIntegration)}, {typeof(TTarget)}> will be disabled.");
+				 Log.Warning()?.Log("CallTargetInvokerException has been detected, the integration <{TIntegration}, {TTarget}> will be disabled.",
+					 typeof(TIntegration).FullName,
+					 typeof(TTarget).FullName);
 				 _disableIntegration = true;
 			 }
 		}
