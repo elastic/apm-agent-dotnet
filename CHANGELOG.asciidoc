@@ -23,6 +23,43 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+
+[[release-notes-1.11.0]]
+==== 1.11.0
+
+[float]
+===== Features
+- {pull}1342[#1342] CosmosDb support (issue: {issue}1154[#1154])
+- {pull}1271[#1271] Support "Time spent by span type" (aka Breakdown metrics) (issue: {issue}227[#227])
+- {pull}1302[#1302] Prefer W3C traceparent over elastic-apm-traceparent
+- {pull}1310[#1310] Add TraceContextIgnoreSampledFalse config setting
+- {pull}1331[#1331] Create transactions for Azure Service Bus Processors (issue: {issue}1321[#1321])
+
+[[release-notes-1.10.0]]
+==== 1.10.0
+
+[float]
+===== Features
+- {pull}1225[#1225] Add instrumentation for Azure Service Bus (issue: {issue}1157[#1157])
+- {pull}1247[#1247] Add Azure storage integration (issues: {issue}1156[#1156] and {issue}1155[#1155])
+- {pull}1241[#1241] Internalize `Newtonsoft.Json` - no more dependency on `Newtonsoft.Json`
+- {pull}1275[#1275] Internalize `Ben.Demystifier` - no more dependency on `Ben.Demystifier` (issue: {issue}1232[#1232])
+- {pull}1215[#1215] Add MongoDb support (issue: {issue}1158[#1158])
+- {pull}1277[#1277] Capture inner exceptions (issue: {issue}1267[#1267])
+- {pull}1290[#1290] Add configured hostname (issue: {issue}1289[#1289])
+- {pull}1288[#1288] Use TraceLogger as default logger in ASP.NET Full Framework (issue: {issue}1263[#1263])
+
+[float]
+===== Bug fixes
+- {pull}1252[#1252] Fix issue around setting `Recording` to `false` (issue: {issue}1250[#1250])
+- {pull}1259[#1259] ASP.NET: Move error capturing to Error event handler
+- {pull}1305[#1305] Use Logger to log exception in AgentComponents initialization (issue: {issue}1254[#1254])
+- {pull}1311[#1311] Fix `NullReferenceException` in Elastic.Apm.Extensions.Logging(issue: {issue}1309[#1309])
+
+[float]
+===== Breaking changes
+- {pull}1306[#1306] Do not capture HTTP child spans for Elasticsearch (issue: {issue}1276[#1276])
+
 [[release-notes-1.9.0]]
 ==== 1.9.0
 

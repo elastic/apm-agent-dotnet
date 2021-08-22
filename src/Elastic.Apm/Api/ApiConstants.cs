@@ -24,5 +24,6 @@ namespace Elastic.Apm.Api
 		public const string TypeExternal = "external";
 		public const string TypeMessaging = "messaging";
 		public const string TypeStorage = "storage";
+		public const string SubTypeCosmosDb = "cosmosdb";
 	}
 }

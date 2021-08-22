@@ -183,6 +183,130 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender2.FirstTransaction.Context.Request.Headers["tracestate"].Should().Be("rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
 		}
 
+		/// <summary>
+		/// Makes sure that the header `traceparent` is used when both `traceparent` and `elastic-apm-traceparent` are present.
+		/// </summary>
+		[Fact]
+		public async Task PreferW3CTraceHeaderOverElasticTraceHeader()
+		{
+			var client = new HttpClient();
+			var expectedTraceId = "0af7651916cd43dd8448eb211c80319c";
+			var expectedParentId = "b7ad6b7169203331";
+			client.DefaultRequestHeaders.Add("traceparent", $"00-{expectedTraceId}-{expectedParentId}-01");
+			client.DefaultRequestHeaders.Add("elastic-apm-traceparent", "00-000000000000000000000000000019c-0000000000000001-01");
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.TraceId.Should().Be(expectedTraceId);
+			_payloadSender1.FirstTransaction.ParentId.Should().Be(expectedParentId);
+		}
+
+		/// <summary>
+		/// Sets the TraceContextIgnoreSampledFalse config and makes sure that the traceparent header is ignored
+		/// </summary>
+		[Fact]
+		public async Task TraceContextIgnoreSampledFalse_WithNoTraceState()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigStore.CurrentSnapshot =
+				new MockConfigSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "true", transactionSampleRate: "1");
+
+			var client = new HttpClient();
+
+			// Send traceparent with sampled=false
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			// Assert that the transaction is sampled and the traceparent header was ignored
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+
+			// Assert that the transaction is a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().BeNullOrEmpty();
+		}
+
+		/// <summary>
+		/// Sets the TraceContextIgnoreSampledFalse config and sends a traceparent with es vendor part.
+		/// Makes sure in that case the sampled flag from traceparent is honored.
+		/// </summary>
+		[Fact]
+		public async Task TraceContextIgnoreSampledFalse_WithEsTraceState_NotSampled()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigStore.CurrentSnapshot =
+				new MockConfigSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "true", transactionSampleRate: "1");
+
+			var client = new HttpClient();
+
+			// Send traceparent with sampled=false and tracestate with a valid es flag
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00");
+			client.DefaultRequestHeaders.Add("tracestate", $"es=s:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			// Assert that the transaction is not sampled, so the traceparent header was not ignored
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
+
+			// Assert that the transaction is not a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBeNullOrEmpty();
+		}
+
+		/// <summary>
+		/// Sets the TraceContextIgnoreSampledFalse config and sends a traceparent without es vendor part.
+		/// Makes sure in that case the sampled flag from traceparent is ignored.
+		/// </summary>
+		[Fact]
+		public async Task TraceContextIgnoreSampledFalse_WithNonEsTraceState_NotSampled()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigStore.CurrentSnapshot =
+				new MockConfigSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "true", transactionSampleRate: "1");
+
+			var client = new HttpClient();
+
+			// Send traceparent with sampled=false and a tracestate with no es vendor flag
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00");
+			client.DefaultRequestHeaders.Add("tracestate", $"foo=bar:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			// Assert that the transaction is sampled and the traceparent header was ignored
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+
+			// Assert that the transaction is a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().BeNullOrEmpty();
+		}
+
+		/// <summary>
+		/// Does not set the TraceContextIgnoreSampledFalse config and makes sure that the traceparent header is not ignored.
+		/// This tests the default case when the config is not set, so the agent just follows W3C and takes the sampled flag as it is.
+		/// </summary>
+		[Fact]
+		public async Task TraceContextIgnoreSampledFalse_NotSet_WithNonEsTraceState_NotSampled()
+		{
+			// Set TraceContextIgnoreSampledFalse to default (and 100% sample rate)
+			_agent1.ConfigStore.CurrentSnapshot =
+				new MockConfigSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "false", transactionSampleRate: "1");
+
+			var client = new HttpClient();
+
+			// Send traceparent with sampled=false
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00");
+			client.DefaultRequestHeaders.Add("tracestate", $"foo=bar:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			// Assert that the transaction is not sampled and the traceparent header was not ignored
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
+
+			// Assert that the transaction is not a root transaction
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBeNullOrEmpty();
+		}
+
 		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();

@@ -26,8 +26,6 @@ namespace AspNetFullFrameworkSampleApp
 
 		public static void SetupLogging()
 		{
-			var logFileEnvVarValue = Environment.GetEnvironmentVariable(LogFileEnvVarName);
-
 			var config = new LoggingConfiguration();
 			const string layout = "${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff zzz}" +
 				" | ${level:uppercase=true:padding=-5}" + // negative values cause right padding
@@ -41,6 +39,7 @@ namespace AspNetFullFrameworkSampleApp
 				new PrefixingTraceTarget($"Elastic APM .NET {nameof(AspNetFullFrameworkSampleApp)}> "), LogMemoryTarget, new ConsoleTarget()
 			};
 
+			var logFileEnvVarValue = Environment.GetEnvironmentVariable(LogFileEnvVarName);
 			if (logFileEnvVarValue != null) logTargets.Add(new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true });
 
 			foreach (var logTarget in logTargets) logTarget.Layout = layout;

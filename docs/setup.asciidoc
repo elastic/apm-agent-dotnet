@@ -168,7 +168,7 @@ The following example only turns on outgoing HTTP monitoring (so, for instance, 
 [[zero-code-change-setup]]
 ==== Zero code change setup on .NET Core (added[1.7])
 
-If you can't or don't want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core. This feature is supported on .NET Core 2.2 and newer versions.
+If you can't or don't want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core. This feature is supported on .NET Core 3.0 and newer versions.
 
 Steps:
 
@@ -241,8 +241,14 @@ In case you only want to use the <<public-api>>, you don't need to do any initia
 [float]
 ==== Quick start
 
-For ASP.NET (Full .NET Framework), once you've referenced the https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework[`Elastic.Apm.AspNetFullFramework`] package,
-you can enable auto instrumentation by including the `ElasticApmModule` IIS Module in your application's `web.config`:
+To enable auto instrumentation for ASP.NET (Full .NET Framework), you need to install the `Elastic.Apm.AspNetFullFramework` package, add a reference
+to the package in your `web.config` file, and then compile and deploy your application.
+
+. Ensure you have access to the application source code and install the https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework[`Elastic.Apm.AspNetFullFramework`]
+package.
+
+. Reference the `Elastic.Apm.AspNetFullFramework` in your application's `web.config` file by adding the `ElasticApmModule` IIS module:
++
 [source,xml]
 ----
 <?xml version="1.0" encoding="utf-8"?>
@@ -254,12 +260,15 @@ you can enable auto instrumentation by including the `ElasticApmModule` IIS Modu
     </system.webServer>
 </configuration>
 ----
-
-By default the agent creates transactions for all HTTP requests, including the ones for static content:
-.html pages, images, etc. If you would like to create transactions only for HTTP requests with dynamic content,
-such as `.aspx` pages, you can add `managedHandler` `preCondition`
-(https://docs.microsoft.com/en-us/iis/configuration/system.webserver/modules/add[official documentation])
-as shown in the following example:
++
+NOTE: There are two available configuration sources. To learn more, see <<configuration-on-asp-net>>.
++
+By default, the agent creates transactions for all HTTP requests, including static content:
+.html pages, images, etc.
++
+To create transactions only for HTTP requests with dynamic content,
+such as `.aspx` pages, add the `managedHandler` preCondition to your `web.config` file:
++
 [source,xml]
 ----
 <?xml version="1.0" encoding="utf-8"?>
@@ -271,16 +280,19 @@ as shown in the following example:
     </system.webServer>
 </configuration>
 ----
++
+NOTE: To learn more about adding modules, see the https://docs.microsoft.com/en-us/iis/configuration/system.webserver/modules/add[Microsoft docs].
 
-You can also configure the agent using `web.config` as described at <<configuration-on-asp-net>>.
-
-The `ElasticApmModule` instantiates the APM agent on first initialization. There are some scenarios however where
-you might want to control agent instantiatiation, such as configuring filters in application start. The
-`ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with
-ASP.NET Full Framework, that can then be used to instantiate the agent.
-
-For example, one might wish to add transaction filters to the agent in application start
-
+. Recompile your application and deploy it.
++
+The `ElasticApmModule` instantiates the APM agent on the first initialization. However, there may be some scenarios where
+you want to control the agent instantiation, such as configuring filters in the application start.
++
+To do so, the `ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with
+ASP.NET Full Framework, which can then instantiate the agent.
++
+For example, you can add transaction filters to the agent in the application start:
++
 [source, c#]
 ----
 public class MvcApplication : HttpApplication
@@ -302,8 +314,8 @@ public class MvcApplication : HttpApplication
     }
 }
 ----
-
-Now, the `ElasticApmModule` will use the already instantiated APM agent instance upon initialization.
++
+Now, the `ElasticApmModule` will use the instantiated instance of the APM agent upon initialization.
 
 [[setup-ef6]]
 === Entity Framework 6
@@ -473,7 +485,7 @@ A prerequisite for auto instrumentation with [`MongoDb.Driver`] is to configure 
 ----
 var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
 
-settings.ClusterConfigurator = builder => builder.Subscribe(new MongoEventSubscriber());
+settings.ClusterConfigurator = builder => builder.Subscribe(new MongoDbEventSubscriber());
 var mongoClient = new MongoClient(settings);
 ----
 

@@ -212,7 +212,7 @@ namespace Elastic.Apm.Azure.Storage
 				Service = new Destination.DestinationService
 				{
 					Name = AzureBlobStorage.SubType,
-					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.ResourceName}",
+					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.StorageAccountName}",
 					Type = ApiConstants.TypeStorage
 				}
 			};

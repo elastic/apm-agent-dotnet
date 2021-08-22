@@ -10,6 +10,7 @@ using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 
@@ -30,7 +31,8 @@ namespace Elastic.Apm
 			IMetricsCollector metricsCollector,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			ICentralConfigFetcher centralConfigFetcher,
-			IApmServerInfo apmServerInfo
+			IApmServerInfo apmServerInfo,
+			BreakdownMetricsProvider breakdownMetricsProvider = null
 		)
 		{
 			try
@@ -50,24 +52,28 @@ namespace Elastic.Apm
 				PayloadSender = payloadSender
 					?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo,
 						isEnabled: ConfigurationReader.Enabled);
+				
+				if (ConfigurationReader.Enabled)
+					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
+					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
 				if (ConfigurationReader.Enabled)
 				{
 					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
-					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore);
+					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider);
 					MetricsCollector.StartCollecting();
 				}
 				else
-					Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+
 			}
 			catch (Exception e)
 			{
-				logger?.Error()?.LogException(e, "Failed initializing agent.");
+				Logger.Error()?.LogException(e, "Failed initializing agent.");
 			}
 		}
 

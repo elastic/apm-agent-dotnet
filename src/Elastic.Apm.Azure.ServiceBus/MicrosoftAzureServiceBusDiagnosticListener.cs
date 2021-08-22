@@ -27,6 +27,8 @@ namespace Elastic.Apm.Azure.ServiceBus
 		private readonly PropertyFetcherCollection _scheduleProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcherCollection _receiveProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcherCollection _receiveDeferredProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
+		private readonly PropertyFetcherCollection _processProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
+		private readonly PropertyFetcherCollection _processSessionProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcher _exceptionProperty = new PropertyFetcher("Exception");
 		private readonly Framework _framework;
 
@@ -74,6 +76,18 @@ namespace Elastic.Apm.Azure.ServiceBus
 				case "Microsoft.Azure.ServiceBus.ReceiveDeferred.Stop":
 					OnStop(kv, _receiveDeferredProperties);
 					break;
+				case "Microsoft.Azure.ServiceBus.Process.Start":
+					OnProcessStart(kv, "PROCESS", _processProperties);
+					break;
+				case "Microsoft.Azure.ServiceBus.Process.Stop":
+					OnStop(kv, _processProperties);
+					break;
+				case "Microsoft.Azure.ServiceBus.ProcessSession.Start":
+					OnProcessStart(kv, "PROCESS", _processSessionProperties);
+					break;
+				case "Microsoft.Azure.ServiceBus.ProcessSession.Stop":
+					OnStop(kv, _processSessionProperties);
+					break;
 				case "Microsoft.Azure.ServiceBus.Exception":
 					OnException(kv);
 					break;
@@ -83,7 +97,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			}
 		}
 
-		private void OnReceiveStart(KeyValuePair<string, object> kv, string action, PropertyFetcherCollection cachedProperties)
+		private void OnProcessStart(KeyValuePair<string, object> kv, string action, PropertyFetcherCollection cachedProperties)
 		{
 			if (kv.Value is null)
 			{
@@ -111,6 +125,49 @@ namespace Elastic.Apm.Azure.ServiceBus
 					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
 					action,
 					transaction.Id,
+					activityId);
+			}
+		}
+
+		private void OnReceiveStart(KeyValuePair<string, object> kv, string action, PropertyFetcherCollection cachedProperties)
+		{
+			if (kv.Value is null)
+			{
+				Logger.Trace()?.Log("Value is null - exiting");
+				return;
+			}
+
+			var queueName = cachedProperties.Fetch(kv.Value,"Entity") as string;
+			if (MatchesIgnoreMessageQueues(queueName))
+				return;
+
+			var transactionName = queueName is null
+				? $"{ServiceBus.SegmentName} {action}"
+				: $"{ServiceBus.SegmentName} {action} from {queueName}";
+
+			IExecutionSegment segment;
+			if (ApmAgent.Tracer.CurrentTransaction is null)
+			{
+				var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
+				transaction.Context.Service = new Service(null, null) { Framework = _framework };
+				segment = transaction;
+			}
+			else
+			{
+				var span = ApmAgent.GetCurrentExecutionSegment().StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action);
+				segment = span;
+			}
+
+			// transaction creation will create an activity, so use this as the key.
+			var activityId = Activity.Current.Id;
+
+			if (!_processingSegments.TryAdd(activityId, segment))
+			{
+				Logger.Trace()?.Log(
+					"Could not add {Action} {SegmentName} {TransactionId} for activity {ActivityId} to tracked segments",
+					action,
+					segment is ITransaction ? "transaction" : "span",
+					segment.Id,
 					activityId);
 			}
 		}

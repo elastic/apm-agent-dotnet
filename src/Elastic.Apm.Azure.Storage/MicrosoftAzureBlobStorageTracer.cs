@@ -14,7 +14,7 @@ namespace Elastic.Apm.Azure.Storage
 	/// <summary>
 	/// Creates HTTP spans wth Azure Blob storage details from Microsoft.Azure.Storage.Blob
 	/// </summary>
-	public class MicrosoftAzureBlobStorageTracer : IHttpSpanTracer
+	internal class MicrosoftAzureBlobStorageTracer : IHttpSpanTracer
 	{
 		public bool IsMatch(string method, Uri requestUrl, Func<string, string> headerGetter) =>
 			requestUrl.Host.EndsWith(".blob.core.windows.net", StringComparison.Ordinal) ||
@@ -109,7 +109,6 @@ namespace Elastic.Apm.Azure.Storage
 				return null;
 
 			var name = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
-
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, name,
 				ApiConstants.TypeStorage, AzureBlobStorage.SubType, InstrumentationFlag.Azure, true);
 			span.Action = action;
@@ -119,7 +118,7 @@ namespace Elastic.Apm.Azure.Storage
 				Service = new Destination.DestinationService
 				{
 					Name = AzureBlobStorage.SubType,
-					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.ResourceName}",
+					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.StorageAccountName}",
 					Type = ApiConstants.TypeStorage
 				}
 			};

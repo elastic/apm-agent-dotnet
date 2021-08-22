@@ -3,15 +3,15 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
 
 namespace Elastic.Apm.Tests.Metrics
@@ -43,22 +43,22 @@ namespace Elastic.Apm.Tests.Metrics
 
 			using (tempFile)
 			{
-				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger());
+				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
 
 				var samples = provider.GetSamples().ToList();
 
-				samples.Should().HaveCountGreaterOrEqualTo(2);
+				samples.First().Samples.Should().HaveCountGreaterOrEqualTo(2);
 
-				var inactiveFileBytesSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryStatsInactiveFileBytes);
+				var inactiveFileBytesSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryStatsInactiveFileBytes);
 				inactiveFileBytesSample.Should().NotBeNull();
 
-				var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+				var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 				memUsageSample.Should().NotBeNull();
 				memUsageSample?.KeyValue.Value.Should().Be(value);
 
 				if (memLimit.HasValue)
 				{
-					var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+					var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
 					memLimitSample.Should().NotBeNull();
 					memLimitSample?.KeyValue.Value.Should().Be(memLimit);
 				}
@@ -87,10 +87,10 @@ namespace Elastic.Apm.Tests.Metrics
 			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup","/proc/unlimited/memory", "cgroup cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
-			var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
 			memLimitSample.Should().BeNull();
 
-			var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
 			memUsageSample?.KeyValue.Value.Should().Be(964778496);
 		}
@@ -101,10 +101,10 @@ namespace Elastic.Apm.Tests.Metrics
 			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2","/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
-			var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
 			memLimitSample.Should().BeNull();
 
-			var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
 			memUsageSample?.KeyValue.Value.Should().Be(964778496);
 		}
@@ -120,7 +120,7 @@ namespace Elastic.Apm.Tests.Metrics
 			var tempFile = TempFile.CreateWithContents(
 				$"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - {cgroup} rw,seclabel,memory\n");
 
-			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger());
+			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
 		}
 	}
 }

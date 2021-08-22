@@ -320,7 +320,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be("[REDACTED]");
 
 			_capturedPayload.WaitForErrors();
-			_capturedPayload.Errors.Should().ContainSingle();
+			_capturedPayload.Errors.Should().NotBeEmpty();
 			_capturedPayload.FirstError.Context.Should().NotBeNull();
 			_capturedPayload.FirstError.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstError.Context.Request.Headers.Should().NotBeNull();

@@ -35,16 +35,80 @@ indent_size = 2
 # Sort using and Import directives with System.* appearing first
 dotnet_sort_system_directives_first = true
 
+# Style rules
 # https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/naming-rules?view=vs-2017
-dotnet_naming_rule.private_members_with_underscore.symbols  = private_fields
-dotnet_naming_rule.private_members_with_underscore.style    = prefix_underscore
-dotnet_naming_rule.private_members_with_underscore.severity = suggestion
+
+# Constants always pascal case
+dotnet_naming_rule.constants_should_be_pascal_case.symbols  = consts
+dotnet_naming_rule.constants_should_be_pascal_case.style    = consts
+dotnet_naming_rule.constants_should_be_pascal_case.severity = suggestion
+
+dotnet_naming_symbols.consts.applicable_kinds           = field
+dotnet_naming_symbols.consts.applicable_accessibilities = *
+dotnet_naming_symbols.consts.required_modifiers = const
+
+dotnet_naming_style.consts.capitalization = pascal_case
+
+# Non-public static fields always pascal case
+dotnet_naming_rule.non_public_static_fields_should_be_pascal_case.symbols  = non_public_static_fields
+dotnet_naming_rule.non_public_static_fields_should_be_pascal_case.style    = non_public_static_fields
+dotnet_naming_rule.non_public_static_fields_should_be_pascal_case.severity = suggestion
+
+dotnet_naming_symbols.non_public_static_fields.applicable_kinds           = field
+dotnet_naming_symbols.non_public_static_fields.applicable_accessibilities = private,protected,internal,protected_internal,private_protected
+dotnet_naming_symbols.non_public_static_fields.required_modifiers = static
+
+dotnet_naming_style.non_public_static_fields.capitalization = pascal_case
+
+# Non-private readonly fields are pascal case
+dotnet_naming_rule.non_private_readonly_fields_should_be_pascal_case.severity = suggestion
+dotnet_naming_rule.non_private_readonly_fields_should_be_pascal_case.symbols = non_private_readonly_fields
+dotnet_naming_rule.non_private_readonly_fields_should_be_pascal_case.style = non_private_readonly_fields
+
+dotnet_naming_symbols.non_private_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.non_private_readonly_fields.applicable_accessibilities = public,protected,internal,protected_internal,private_protected
+dotnet_naming_symbols.non_private_readonly_fields.required_modifiers = readonly
+
+dotnet_naming_style.non_private_readonly_fields.capitalization = pascal_case
+
+# Private instance fields are camel case prefixed underscore
+dotnet_naming_rule.private_fields_should_be_camelcase_prefix_underscore.symbols  = private_fields
+dotnet_naming_rule.private_fields_should_be_camelcase_prefix_underscore.style    = private_fields
+dotnet_naming_rule.private_fields_should_be_camelcase_prefix_underscore.severity = suggestion
 
 dotnet_naming_symbols.private_fields.applicable_kinds           = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 
-dotnet_naming_style.prefix_underscore.capitalization = camel_case
-dotnet_naming_style.prefix_underscore.required_prefix = _
+dotnet_naming_style.private_fields.capitalization = camel_case
+dotnet_naming_style.private_fields.required_prefix = _
+
+# Locals and parameters are camel case
+dotnet_naming_rule.locals.severity = suggestion
+dotnet_naming_rule.locals.symbols = locals
+dotnet_naming_rule.locals.style = locals
+
+dotnet_naming_symbols.locals.applicable_kinds = parameter, local
+
+dotnet_naming_style.locals.capitalization = camel_case
+
+# Local functions are pascal case
+dotnet_naming_rule.local_functions.severity = suggestion
+dotnet_naming_rule.local_functions.symbols = local_functions
+dotnet_naming_rule.local_functions.style = local_functions
+
+dotnet_naming_symbols.local_functions.applicable_kinds = local_function
+
+dotnet_naming_style.local_functions.capitalization = pascal_case
+
+# Public members always pascal case
+dotnet_naming_rule.public_members_should_be_pascal_case.symbols  = public_members
+dotnet_naming_rule.public_members_should_be_pascal_case.style    = public_members
+dotnet_naming_rule.public_members_should_be_pascal_case.severity = suggestion
+
+dotnet_naming_symbols.public_members.applicable_kinds           = property,method,field,event,delegate
+dotnet_naming_symbols.public_members.applicable_accessibilities = public
+
+dotnet_naming_style.public_members.capitalization = pascal_case
 
 dotnet_style_qualification_for_field = false:error
 dotnet_style_qualification_for_property = false:error
@@ -146,4 +210,7 @@ trim_trailing_whitespace=true
 insert_final_newline=true
 
 [*.sh]
+end_of_line = lf
+
+[{LICENSE,NOTICE}]
 end_of_line = lf

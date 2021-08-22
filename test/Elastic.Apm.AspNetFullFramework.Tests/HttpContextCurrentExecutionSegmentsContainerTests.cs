@@ -38,9 +38,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			bytes.Should().BeGreaterThan(20_000);
 			var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-			var client = new HttpClient();
 			var bulkSamplesUri = Consts.SampleApp.CreateUrl("/Database/Bulk");
-			var response = await client.PostAsync(bulkSamplesUri, content).ConfigureAwait(false);
+			var response = await HttpClient.PostAsync(bulkSamplesUri, content).ConfigureAwait(false);
 
 			var responseContent = await response.Content.ReadAsStringAsync();
 			response.IsSuccessStatusCode.Should().BeTrue(responseContent);
@@ -62,9 +61,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var count = 100;
 			var content = new StringContent($"{{\"count\":{count}}}", Encoding.UTF8, "application/json");
 
-			var client = new HttpClient();
 			var bulkSamplesUri = Consts.SampleApp.CreateUrl("/Database/Generate");
-			var response = await client.PostAsync(bulkSamplesUri, content).ConfigureAwait(false);
+			var response = await HttpClient.PostAsync(bulkSamplesUri, content).ConfigureAwait(false);
 
 			var responseContent = await response.Content.ReadAsStringAsync();
 			response.IsSuccessStatusCode.Should().BeTrue(responseContent);

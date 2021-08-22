@@ -98,7 +98,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.QueueUrl);
+			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.QueueFullyQualifiedNamespace);
 			destination.Service.Name.Should().Be(AzureQueueStorage.SubType);
 			destination.Service.Resource.Should().Be($"{AzureQueueStorage.SubType}/{queueName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);

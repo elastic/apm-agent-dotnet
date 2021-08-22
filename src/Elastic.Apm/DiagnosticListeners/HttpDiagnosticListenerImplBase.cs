@@ -124,26 +124,28 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
-			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan)
-			{
-				// if there's a current span that has been instrumented for Azure, don't create a span for
-				// the current request
-				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure)
-					return;
-			}
-
 			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
 			var transaction = ApmAgent.Tracer.CurrentTransaction;
-			if (transaction == null)
+			if (transaction is null)
 			{
 				Logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request");
 				return;
 			}
 
-			var method = RequestGetMethod(request);
-			string HeaderGetter(string header) => RequestTryGetHeader(request, header, out var value) ? value : null;
+			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan)
+			{
+				// if the current span is an exit span, don't create a span for the current request
+				// but still propagate trace context
+				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure
+					|| currentSpan.InstrumentationFlag == InstrumentationFlag.Elasticsearch)
+				{
+					PropagateTraceContext(request, transaction, currentSpan);
+					return;
+				}
+			}
 
+			var method = RequestGetMethod(request);
 			ISpan span = null;
 			if (_configuration?.HasTracers ?? false)
 			{
@@ -151,9 +153,11 @@ namespace Elastic.Apm.DiagnosticListeners
 				{
 					foreach (var httpSpanTracer in httpTracers)
 					{
-						if (httpSpanTracer.IsMatch(method, requestUrl, HeaderGetter))
+						if (httpSpanTracer.IsMatch(method, requestUrl,
+							header => RequestTryGetHeader(request, header, out var value) ? value : null))
 						{
-							span = httpSpanTracer.StartSpan(ApmAgent, method, requestUrl, HeaderGetter);
+							span = httpSpanTracer.StartSpan(ApmAgent, method, requestUrl,
+								header => RequestTryGetHeader(request, header, out var value) ? value : null);
 							if (span != null)
 								break;
 						}
@@ -188,6 +192,20 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
+			PropagateTraceContext(request, transaction, span);
+
+			if (span is Span realSpan)
+			{
+				if (!realSpan.ShouldBeSentToApmServer)
+					return;
+			}
+
+			span.Context.Http = new Http { Method = method };
+			span.Context.Http.SetUrl(requestUrl);
+		}
+
+		private void PropagateTraceContext(TRequest request, ITransaction transaction, ISpan span)
+		{
 			if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderName))
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
@@ -206,17 +224,9 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 			}
 
-			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && span.OutgoingDistributedTracingData != null && span.OutgoingDistributedTracingData.HasTraceState)
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && span.OutgoingDistributedTracingData != null
+				&& span.OutgoingDistributedTracingData.HasTraceState)
 				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, span.OutgoingDistributedTracingData.TraceState.ToTextHeader());
-
-			if (span is Span realSpan)
-			{
-				if (!realSpan.ShouldBeSentToApmServer)
-					return;
-			}
-
-			span.Context.Http = new Http { Method = method };
-			span.Context.Http.SetUrl(requestUrl);
 		}
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)

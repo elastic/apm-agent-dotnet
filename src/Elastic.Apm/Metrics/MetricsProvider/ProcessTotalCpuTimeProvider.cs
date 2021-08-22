@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
@@ -39,7 +41,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "process total CPU time";
 
-		public IEnumerable<MetricSample> GetSamples()
+		public bool IsMetricAlreadyCaptured { get; }
+
+		public IEnumerable<MetricSet> GetSamples()
 		{
 			// We have to make sure that the timespan of the wall clock time is the same or longer than the potential max possible CPU time -
 			// we do this by the order in which we capture those.
@@ -83,9 +87,13 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			_lastTimeWindowStart = timeWindowStart;
 			_lastCurrentProcessCpuTime = cpuUsage;
-			return new List<MetricSample> { new MetricSample(ProcessCpuTotalPct, cpuUsageTotal) };
+
+			return new List<MetricSet>
+			{
+				new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample(ProcessCpuTotalPct, cpuUsageTotal) })
+			};
 		}
 
-		public bool IsMetricAlreadyCaptured { get; }
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, ProcessCpuTotalPct);
 	}
 }

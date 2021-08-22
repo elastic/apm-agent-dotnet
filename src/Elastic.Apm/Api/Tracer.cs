@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
@@ -24,6 +25,7 @@ namespace Elastic.Apm.Api
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
+		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 
 		public Tracer(
 			IApmLogger logger,
@@ -31,7 +33,8 @@ namespace Elastic.Apm.Api
 			IPayloadSender payloadSender,
 			IConfigSnapshotProvider configProvider,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			IApmServerInfo apmServerInfo
+			IApmServerInfo apmServerInfo,
+			BreakdownMetricsProvider breakdownMetricsProvider
 		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
@@ -41,6 +44,7 @@ namespace Elastic.Apm.Api
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 			DbSpanCommon = new DbSpanCommon(logger);
 			_apmServerInfo = apmServerInfo;
+			_breakdownMetricsProvider = breakdownMetricsProvider;
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
@@ -61,16 +65,27 @@ namespace Elastic.Apm.Api
 			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
 		}
 
+		internal Transaction StartTransactionInternal(string name, string type,
+			long? timestamp = null
+		)
+			=> StartTransactionInternal(name, type, null, false, timestamp);
+
 		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null,
-			bool ignoreActivity = false
+			bool ignoreActivity = false, long? timestamp = null
 		)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, ignoreActivity) { Service = _service };
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, _breakdownMetricsProvider, ignoreActivity, timestamp)
+			{
+				Service = _service
+			};
+
+
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
+
 		}
 
 		public void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null)

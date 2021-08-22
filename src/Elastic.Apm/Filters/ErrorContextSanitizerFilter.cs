@@ -22,7 +22,7 @@ namespace Elastic.Apm.Filters
 			{
 				if (realError.Context.Request?.Headers != null && realError.ConfigSnapshot != null)
 				{
-					foreach (var key in realError.Context?.Request?.Headers?.Keys)
+					foreach (var key in realError.Context?.Request?.Headers?.Keys.ToList())
 					{
 						if (WildcardMatcher.IsAnyMatch(realError.ConfigSnapshot.SanitizeFieldNames, key))
 							realError.Context.Request.Headers[key] = Consts.Redacted;

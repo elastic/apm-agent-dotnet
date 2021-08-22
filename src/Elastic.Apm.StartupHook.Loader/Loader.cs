@@ -20,7 +20,7 @@ using ElasticApmStartupHook;
 namespace Elastic.Apm.StartupHook.Loader
 {
 	/// <summary>
-	/// Loads the agent assemblies, its dependent assemblies and starts it
+	/// Starts the agent
 	/// </summary>
 	internal class Loader
 	{
@@ -37,23 +37,9 @@ namespace Elastic.Apm.StartupHook.Loader
 		}
 
 		/// <summary>
-		/// Initializes assemblies and starts the agent
+		/// Initializes and starts the agent
 		/// </summary>
 		public static void Initialize()
-		{
-			var agentLibsToLoad =  new[]{ "Elastic.Apm", "Elastic.Apm.Extensions.Hosting", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.GrpcClient", "Elastic.Apm.Elasticsearch" };
-			var agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Elasticsearch.Net" };
-
-			foreach (var libToLoad in agentDependencyLibsToLoad)
-				AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(AssemblyDirectory, libToLoad + ".dll"));
-			foreach (var libToLoad in agentLibsToLoad)
-				AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(AssemblyDirectory, libToLoad + ".dll"));
-
-			StartAgent();
-		}
-
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		private static void StartAgent()
 		{
 			Agent.Setup(new AgentComponents());
 
