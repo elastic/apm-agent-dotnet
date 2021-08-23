@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -14,14 +15,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class BreakdownMetricsProvider : IMetricsProvider
 	{
 		internal const string SpanSelfTime = "span.self_time";
+		internal const int MetricLimit = 1000;
 
 		private readonly List<MetricSet> _itemsToSend = new();
 		private readonly IApmLogger _logger;
 
 		/// <summary>
-		/// Indicates if the 10K limit log was already printed.
+		/// Indicates if the metric limit log was already printed.
 		/// </summary>
-		private bool loggedWarning = false;
+		private bool _loggedWarning;
 
 		private readonly object _lock = new();
 		private int _transactionCount;
@@ -62,16 +64,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type }
 						};
 
-					if (_itemsToSend.Count < 1000)
+					if (_itemsToSend.Count < MetricLimit)
 						_itemsToSend.Add(metricSet);
 					else
 					{
-						if (loggedWarning) continue;
+						if (_loggedWarning) continue;
 
 						_logger.Warning()
 							?.Log(
-								"The limit of 1000 metricsets has been reached, no new metricsets will be created.");
-						loggedWarning = true;
+								"The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until "
+								+ "the current set is sent to APM Server.",
+								MetricLimit);
+						_loggedWarning = true;
 					}
 				}
 
@@ -84,15 +88,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							new("transaction.breakdown.count", _transactionCount),
 						}) { Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type } };
 
-				if (_itemsToSend.Count < 1000)
+				if (_itemsToSend.Count < MetricLimit)
 					_itemsToSend.Add(transactionMetric);
 				else
 				{
-					if (!loggedWarning)
+					if (!_loggedWarning)
 					{
 						_logger.Warning()
-							?.Log(
-								"The limit of 1000 metricsets has been reached, no new metricsets will be created until the current set is sent to APM Server.");
+							?.Log("The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until "
+								+ "the current set is sent to APM Server.",
+								MetricLimit);
+						_loggedWarning = true;
 					}
 				}
 			}
@@ -100,14 +106,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
-			var retVal = new List<MetricSet>(_itemsToSend.Count < 1000 ? _itemsToSend.Count : 1000);
+			List<MetricSet> retVal;
 
 			lock (_lock)
 			{
+				retVal = new List<MetricSet>(_itemsToSend.Count);
 				retVal.AddRange(_itemsToSend);
 				_itemsToSend.Clear();
 				_transactionCount = 0;
-				loggedWarning = false;
+				_loggedWarning = false;
 			}
 
 			return retVal;
