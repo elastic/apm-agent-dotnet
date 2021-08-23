@@ -144,6 +144,11 @@ module Build =
         dotnet "build" Paths.SolutionNetCore
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
+        
+    /// Builds the CLR profiler and supporting .NET managed assemblies
+    let BuildProfiler () =
+        dotnet "build" (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
+        Cargo.Exec [ "make"; "build-release"; ]
                               
     /// Publishes all projects with framework versions
     let Publish targets =
@@ -186,6 +191,9 @@ module Build =
         Shell.cleanDir Paths.BuildOutputFolder
         dotnet "clean" Paths.SolutionNetCore       
         if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
+        
+    let CleanProfiler () =
+        Cargo.Exec ["make"; "clean"]       
 
     /// Restores all packages for the solution
     let Restore () =

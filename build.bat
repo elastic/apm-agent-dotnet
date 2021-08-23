@@ -1,2 +1,2 @@
 @echo Off
-cargo make build
+dotnet run --project build\scripts -- %*

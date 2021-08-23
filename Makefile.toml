@@ -24,6 +24,11 @@ description = "Builds CLR Profiler"
 # loader assembly is embedded in the profiler
 dependencies = ["build-loader"]
 
+[tasks.build-release]
+description = "Builds CLR Profiler for release"
+# loader assembly is embedded in the profiler
+dependencies = ["build-loader"]
+
 [tasks.build-integrations]
 description = "Builds Managed Profiler .NET integrations"
 command = "dotnet"
@@ -71,7 +76,6 @@ cargo expand --manifest-path src/elastic_apm_profiler/Cargo.toml --color never >
 [tasks.set-profiler-env]
 private = true
 env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/debug/libelastic_apm_profiler.so" }
-run_task = "run-dotnet"
 
 [tasks.set-profiler-env.mac]
 env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/debug/libelastic_apm_profiler.dylib" }
@@ -82,10 +86,11 @@ env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}\\target\\debu
 [tasks.run-dotnet]
 command = "dotnet"
 args = ["${CARGO_MAKE_WORKING_DIRECTORY}/sample/Example/bin/${DOTNET_CONFIG}/${DOTNET_VERSION}/Example.dll"]
+dependencies = ["set-profiler-env"]
 
 [tasks.test]
 dependencies = ["generate-integrations"]
 
 [tasks.test-example]
 clear = true
-dependencies = ["build", "build-integrations", "build-example", "set-profiler-env"]
+dependencies = ["build-release", "build-integrations", "build-example", "run-dotnet"]

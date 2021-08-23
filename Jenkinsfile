@@ -96,7 +96,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          sh '.ci/linux/build.sh'
+                          sh '.ci/linux/build.sh build-profiler'
                           whenTrue(isPR()) {
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
                           }

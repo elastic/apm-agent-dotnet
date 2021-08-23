@@ -79,11 +79,15 @@ module Main =
             
             Targets.Target("clean", Build.Clean)
             
+            Targets.Target("clean-profiler", Build.CleanProfiler)
+            
             Targets.Target("netcore-sln", Build.GenerateNetCoreSln)
             
             Targets.Target("restore", ["netcore-sln"], Build.Restore)
            
-            Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
+            Targets.Target("build", ["restore"; "clean"; "version"; "build-profiler"], Build.Build)
+            
+            Targets.Target("build-profiler", ["restore"; "clean"; "version"; "clean-profiler"], Build.BuildProfiler)
             
             Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
             

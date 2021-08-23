@@ -19,6 +19,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 	/// </summary>
 	public class ProfiledApplication : IDisposable
 	{
+		private const string ProfilerClassId = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}";
 		private readonly string _profilerPath;
 		private readonly string _projectDirectory;
 		private readonly string _projectName;
@@ -40,11 +41,11 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			else
 				profilerFile = "libelastic_apm_profiler.dylib";
 
-			_profilerPath = Path.Combine(SolutionPaths.Root, "target", "debug", profilerFile);
+			_profilerPath = Path.Combine(SolutionPaths.Root, "target", "release", profilerFile);
 
 			if (!File.Exists(_profilerPath))
 				throw new FileNotFoundException(
-					$"profiler could not be found at {_profilerPath}. Build it with 'cargo make build' in project root",
+					$"profiler could not be found at {_profilerPath}. Run `build.[bat|sh] in project root to build it",
 					_profilerPath);
 
 			_publishDirectory = Path.Combine("bin", "Publish");
@@ -71,12 +72,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		/// can be reached.
 		/// </summary>
 		/// <param name="targetFramework">
-		/// The target framework under which to run the sample app. Must be a version supported in
-		/// the TargetFrameworks of the sample app
+		/// The target framework under which to run the profiled app. Must be a version supported in
+		/// the TargetFrameworks of the profiled app
 		/// </param>
+		/// <param name="timeout">A timeout to wait for the process to complete.</param>
 		/// <param name="environmentVariables">
-		/// The environment variables to start the sample app with. The DOTNET_STARTUP_HOOKS
-		/// environment variable will be added.
+		/// The environment variables to start the sample app with. The profiler
+		/// environment variables will be added.
 		/// </param>
 		/// <param name="onNext">delegate to call when line is received</param>
 		/// <param name="onException">delegate to call when exception occurs</param>
@@ -93,17 +95,17 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 			environmentVariables ??= new Dictionary<string, string>();
 			environmentVariables["CORECLR_ENABLE_PROFILING"] = "1";
-			environmentVariables["CORECLR_PROFILER"] = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}";
+			environmentVariables["CORECLR_PROFILER"] = ProfilerClassId;
 			environmentVariables["CORECLR_PROFILER_PATH"] = _profilerPath;
 
 			environmentVariables["COR_ENABLE_PROFILING"] = "1";
-			environmentVariables["COR_PROFILER"] = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}";
+			environmentVariables["COR_PROFILER"] = ProfilerClassId;
 			environmentVariables["COR_PROFILER_PATH"] = _profilerPath;
 
 			environmentVariables["ELASTIC_APM_PROFILER_HOME"] =
 				Path.Combine(SolutionPaths.Root, "src", "Elastic.Apm.Profiler.Managed", "bin", "Release");
 			environmentVariables["ELASTIC_APM_PROFILER_INTEGRATIONS"] =
-				Path.Combine(SolutionPaths.Root, "src", "Elastic.Apm.Profiler.Managed", "integrations.json");
+				Path.Combine(SolutionPaths.Root, "src", "Elastic.Apm.Profiler.Managed", "integrations.yml");
 
 			// log to stdout only for the profiler, which should make it easier to correlate problems in CI
 			environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "stdout";

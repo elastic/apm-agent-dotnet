@@ -175,7 +175,7 @@ pub fn get_default_log_dir() -> PathBuf {
 /// Gets the path to the profiler file on non windows
 #[cfg(not(target_os = "windows"))]
 pub fn get_default_log_dir() -> PathBuf {
-    PathBuf::from("/var/log/elastic/apm-agent-dotnet".into())
+    PathBuf::from_str("/var/log/elastic/apm-agent-dotnet").unwrap()
 }
 
 fn get_log_dir() -> PathBuf {

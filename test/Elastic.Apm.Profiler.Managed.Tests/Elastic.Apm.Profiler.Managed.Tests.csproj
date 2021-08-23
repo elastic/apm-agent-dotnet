@@ -4,6 +4,10 @@
       <!-- needed because of MockApmServer version -->
       <TargetFramework>netcoreapp2.1</TargetFramework>
       <IsPackable>false</IsPackable>
+      <!-- Don't run Roslyn analyzers as part of build. The StyleCop analyzers conflict with editorconfig -->
+      <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+      <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
+      <RunAnalyzers>false</RunAnalyzers>
     </PropertyGroup>
 
     <ItemGroup>

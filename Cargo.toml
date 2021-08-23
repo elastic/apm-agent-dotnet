@@ -3,3 +3,8 @@
 members = [
     "src/elastic_apm_profiler",
 ]
+
+# default release profile: https://doc.rust-lang.org/cargo/reference/profiles.html#release
+[profile.release]
+lto = true
+codegen-units = 1
