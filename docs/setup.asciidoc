@@ -403,7 +403,7 @@ sent with `IConnectionMultiplexer`.
 ==== Quick start
 
 Instrumentation can be enabled for Azure Cosmos DB by referencing https://www.nuget.org/packages/Elastic.Apm.Azure.CosmosDb[`Elastic.Apm.Azure.CosmosDb`]
-package and subscribing to diagnostic events
+package and subscribing to diagnostic events.
 
 [source, csharp]
 ----
