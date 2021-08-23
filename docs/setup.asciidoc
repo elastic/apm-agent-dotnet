@@ -467,7 +467,7 @@ For Azure Blob storage, a new span is created when there is a current transactio
 * A page blob is created, uploaded, downloaded, or deleted
 * A block blob is created, copied, uploaded, downloaded or deleted
 
-For Azure File Share storage, a new span is crated when there is a current transaction and when
+For Azure File Share storage, a new span is created when there is a current transaction and when
 
 * A share is created or deleted
 * A directory is created or deleted
