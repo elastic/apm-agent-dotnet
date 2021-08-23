@@ -14,6 +14,7 @@ On .NET Core the agent also supports auto instrumentation without any code chang
 * <<setup-ef6>>
 * <<setup-sqlclient>>
 * <<setup-stackexchange-redis>>
+* <<setup-azure-cosmosdb>>
 * <<setup-azure-servicebus>>
 * <<setup-azure-storage>>
 * <<setup-mongo-db>>
@@ -394,6 +395,22 @@ connection.UseElasticApm();
 
 A callback is registered with the `IConnectionMultiplexer` to provide a profiling session for each transaction and span that captures redis commands
 sent with `IConnectionMultiplexer`.
+
+[[setup-azure-cosmosdb]]
+=== Azure Cosmos DB
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for Azure Cosmos DB by referencing https://www.nuget.org/packages/Elastic.Apm.Azure.CosmosDb[`Elastic.Apm.Azure.CosmosDb`]
+package and subscribing to diagnostic events
+
+[source, csharp]
+----
+Agent.Subscribe(new AzureCosmosDbDiagnosticsSubscriber());
+----
+
+Diagnostic events from `Microsoft.Azure.Cosmos`, `Microsoft.Azure.DocumentDb`, and `Microsoft.Azure.DocumentDb.Core` are captured as DB spans.
 
 [[setup-azure-servicebus]]
 === Azure Service Bus

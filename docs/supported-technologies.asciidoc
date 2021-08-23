@@ -146,4 +146,11 @@ receive deferred messages. A new span is created for sent and scheduled messages
 | 
 | 1.10
 
+| Azure Cosmos DB
+| 3.0.0+ for Microsoft.Azure.Cosmos
+  2.4.1+ for Microsoft.Azure.DocumentDB.Core
+  2.4.1+ for Microsoft.Azure.DocumentDB
+| 
+| 1.11
+
 |===
