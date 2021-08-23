@@ -56,7 +56,6 @@ namespace Elastic.Apm.Model
 				}
 
 				capturedSpan.Outcome = outcome;
-				capturedSpan.End();
 			}
 
 			span.End();

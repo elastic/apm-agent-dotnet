@@ -45,13 +45,10 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 
 			_terraform = new TerraformResources(terraformResourceDirectory, credentials, messageSink);
 
-			var machineName = Environment.MachineName.ToLowerInvariant();
-			if (machineName.Length > 65)
-				machineName = machineName.Substring(0, 65);
-
+			var resourceGroupName = AzureResources.CreateResourceGroupName("cosmosdb-test");
 			_variables = new Dictionary<string, string>
 			{
-				["resource_group"] = $"dotnet-{machineName}-cosmosdb-test",
+				["resource_group"] = resourceGroupName,
 				["cosmos_db_account_name"] = "dotnet" + Guid.NewGuid().ToString("N").Substring(0, 18),
 			};
 

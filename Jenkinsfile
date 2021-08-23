@@ -16,6 +16,7 @@ pipeline {
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
+    AZURE_RESOURCE_GROUP_PREFIX = "ci-dotnet-${env.BUILD_ID}"
   }
   options {
     timeout(time: 4, unit: 'HOURS')
@@ -512,6 +513,7 @@ pipeline {
   }
   post {
     cleanup {
+      cleanupAzureResources()
       notifyBuildResult()
     }
   }
@@ -547,6 +549,29 @@ def dotnet(Closure body){
       }
     }
   }
+}
+
+def cleanupAzureResources(){
+    def props = getVaultSecret(secret: 'secret/apm-team/ci/apm-agent-dotnet-azure')
+    def authObj = props?.data
+    def dockerCmd = "docker run --rm -i -v \$(pwd)/.azure:/root/.azure mcr.microsoft.com/azure-cli:latest"
+    withEnvMask(vars: [
+        [var: 'AZ_CLIENT_ID', password: "${authObj.client_id}"],
+        [var: 'AZ_CLIENT_SECRET', password: "${authObj.client_secret}"],
+        [var: 'AZ_SUBSCRIPTION_ID', password: "${authObj.subscription_id}"],
+        [var: 'AZ_TENANT_ID', password: "${authObj.tenant_id}"]
+    ]) {
+        dir("${BASE_DIR}"){
+            cmd label: "Create storage for Azure authentication",
+                script: "mkdir -p ${BASE_DIR}/.azure || true"
+            cmd label: "Logging into Azure",
+                script: "${dockerCmd} az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
+            cmd label: "Setting Azure subscription",
+                script: "${dockerCmd} az account set --subscription ${AZ_SUBSCRIPTION_ID}"
+            cmd label: "Checking and removing any Azure related resource groups",
+                script: "for group in `${dockerCmd} az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX}')]\" --out json|jq .[].name --raw-output`;do ${dockerCmd} az group delete --name \$group --no-wait --yes;done"
+        }
+    }
 }
 
 def withTerraform(Closure body){
