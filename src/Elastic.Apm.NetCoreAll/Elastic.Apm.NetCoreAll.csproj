@@ -14,6 +14,7 @@
     <ProjectReference Include="..\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
     <ProjectReference Include="..\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj" />
     <ProjectReference Include="..\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Azure.CosmosDb\Elastic.Apm.Azure.CosmosDb.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj" />
     <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
