@@ -118,23 +118,12 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 			catch (Exception ex)
 			{
-				var severity = LogLevel.Error;
-
-				if (ex is FailedToFetchConfigException fEx)
-				{
-					severity = fEx.Severity;
-					waitInfo = fEx.WaitInfo;
-				}
-				else
-				{
-					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
+				waitInfo = ex is FailedToFetchConfigException fEx
+					? fEx.WaitInfo
+					: new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
 						+ " while fetching configuration from APM Server and parsing it.");
-				}
 
-				if (severity == LogLevel.Error) waitingLogSeverity = LogLevel.Information;
-
-				_logger.IfLevel(severity)
-					?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
+				_logger.Info()?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
 						+ " ETag: `{ETag}'. URL: `{Url}'. Apm Server base URL: `{ApmServerUrl}'. WaitInterval: {WaitInterval}."
 						+ " dbgIterationsCount: {dbgIterationsCount}."
 						+ Environment.NewLine + "+-> Request:{HttpRequest}"
@@ -156,8 +145,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				httpResponse?.Dispose();
 			}
 
-			_logger.IfLevel(waitingLogSeverity)
-				?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
+			_logger.Info()?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
 					, waitInfo.Interval.ToHms(), waitInfo.Reason, _dbgIterationsCount);
 			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CancellationTokenSource.Token).ConfigureAwait(false);
 		}
