@@ -118,12 +118,20 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 			catch (Exception ex)
 			{
-				waitInfo = ex is FailedToFetchConfigException fEx
-					? fEx.WaitInfo
-					: new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
-						+ " while fetching configuration from APM Server and parsing it.");
+				var level = LogLevel.Error;
 
-				_logger.Info()?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
+				if (ex is FailedToFetchConfigException fetchConfigException)
+				{
+					waitInfo = fetchConfigException.WaitInfo;
+					level = fetchConfigException.Severity;
+				}
+				else
+				{
+					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
+							+ " while fetching configuration from APM Server and parsing it.");
+				}
+
+				_logger.IfLevel(level)?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
 						+ " ETag: `{ETag}'. URL: `{Url}'. Apm Server base URL: `{ApmServerUrl}'. WaitInterval: {WaitInterval}."
 						+ " dbgIterationsCount: {dbgIterationsCount}."
 						+ Environment.NewLine + "+-> Request:{HttpRequest}"

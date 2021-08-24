@@ -86,12 +86,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			if (httpResponse.IsSuccessStatusCode) return true;
 
-			var statusCode = (int)httpResponse.StatusCode;
-			var severity = 400 <= statusCode && statusCode < 500 ? LogLevel.Debug : LogLevel.Error;
-
-			string message;
+			var severity = LogLevel.Error;
 			var statusAsString = $"HTTP status code is {httpResponse.ReasonPhrase} ({(int)httpResponse.StatusCode})";
-			var msgPrefix = $"{statusAsString} which most likely means that ";
+			string message;
+
 			// ReSharper disable once SwitchStatementMissingSomeCases
 			switch (httpResponse.StatusCode)
 			{
@@ -107,21 +105,24 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					return false;
 
 				case HttpStatusCode.BadRequest: // 400
-					severity = LogLevel.Error;
 					message = $"{statusAsString} which is unexpected";
 					break;
 
 				case HttpStatusCode.Forbidden: // 403
-					message = msgPrefix + "APM Server supports the central configuration endpoint but Kibana connection is not enabled";
+					severity = LogLevel.Debug;
+					message = $"{statusAsString} which most likely means that APM Server supports the central configuration "
+						+ "endpoint but Kibana connection is not enabled";
 					break;
 
 				case HttpStatusCode.NotFound: // 404
-					message = msgPrefix + "APM Server is an old (pre 7.3) version which doesn't support the central configuration endpoint";
+					severity = LogLevel.Debug;
+					message = $"{statusAsString} which most likely means that APM Server is an old (pre 7.3) version which "
+						+ "doesn't support the central configuration endpoint";
 					break;
 
 				case HttpStatusCode.ServiceUnavailable: // 503
-					message = msgPrefix + "APM Server supports the central configuration endpoint and Kibana connection is enabled"
-						+ ", but Kibana connection is unavailable";
+					message = $"{statusAsString} which most likely means that APM Server supports the central configuration "
+						+ "endpoint and Kibana connection is enabled, but Kibana connection is unavailable";
 					break;
 
 				default:
