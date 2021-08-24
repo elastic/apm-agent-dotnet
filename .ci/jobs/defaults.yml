@@ -3,12 +3,11 @@
 ##### GLOBAL METADATA
 
 - meta:
-    cluster: apm-ci
+    cluster: internal-ci
 
 ##### JOB DEFAULTS
 
 - job:
-    view: APM-CI
     project-type: multibranch
     logrotate:
       daysToKeep: 30

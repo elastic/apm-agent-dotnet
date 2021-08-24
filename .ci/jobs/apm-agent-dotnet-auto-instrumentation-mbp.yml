@@ -1,5 +1,5 @@
 ---
 - job:
-    name: apm-agent-dotnet/apm-agent-dotnet-auto-instrumentation-mbp
-    display-name: APM Agent .NET auto instrumentation
+    name: elastic+apm-agent-dotnet+auto-instrumentation-mbp
+    display-name: "elastic / apm-agent-dotnet # auto instrumentation"
     description: Auto instrumentation for .NET APM agent

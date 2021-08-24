@@ -1,4 +1,0 @@
----
-- job:
-    name: apm-agent-dotnet
-    project-type: folder
