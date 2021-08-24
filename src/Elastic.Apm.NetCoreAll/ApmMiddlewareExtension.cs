@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Azure.CosmosDb;
 using Elastic.Apm.Azure.ServiceBus;
 using Elastic.Apm.Azure.Storage;
 using Elastic.Apm.DiagnosticSource;
@@ -28,16 +29,18 @@ namespace Elastic.Apm.NetCoreAll
 		/// <see cref="MicrosoftAzureServiceBusDiagnosticsSubscriber"/>,
 		/// <see cref="AzureBlobStorageDiagnosticsSubscriber"/>,
 		/// <see cref="AzureQueueStorageDiagnosticsSubscriber"/>,
-		/// and <see cref="AzureFileShareStorageDiagnosticsSubscriber"/>.
+		/// <see cref="AzureFileShareStorageDiagnosticsSubscriber"/>,
+		/// <see cref="AzureCosmosDbDiagnosticsSubscriber"/>,
+		/// and <see cref="MongoDbDiagnosticsSubscriber"/>.
 		/// This method turns on ASP.NET Core monitoring with every other related monitoring components, for example the agent
 		/// will also automatically trace outgoing HTTP requests and database statements.
 		/// </summary>
-		/// <returns>The elastic apm.</returns>
+		/// <returns>The application builder instance</returns>
 		/// <param name="builder">Builder.</param>
 		/// <param name="configuration">
-		/// You can optionally pass the IConfiguration of your application to the Elastic APM Agent. By
-		/// doing this the agent will read agent related configurations through this IConfiguration instance.
-		/// If no <see cref="IConfiguration" /> is passed to the agent then it will read configs from environment variables.
+		/// You can optionally pass the <see cref="IConfiguration"/> of your application to the Elastic APM Agent.
+		/// The agent reads agent-related configuration from the <see cref="IConfiguration"/> instance, and uses it to configure the agent.
+		/// If no <see cref="IConfiguration" /> is provided, the agent reads agent-related configuration from environment variables.
 		/// </param>
 		public static IApplicationBuilder UseAllElasticApm(
 			this IApplicationBuilder builder,
@@ -54,6 +57,7 @@ namespace Elastic.Apm.NetCoreAll
 				new AzureBlobStorageDiagnosticsSubscriber(),
 				new AzureQueueStorageDiagnosticsSubscriber(),
 				new AzureFileShareStorageDiagnosticsSubscriber(),
+				new AzureCosmosDbDiagnosticsSubscriber(),
 				new MongoDbDiagnosticsSubscriber());
 	}
 }
