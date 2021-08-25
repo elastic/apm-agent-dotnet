@@ -92,7 +92,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		protected override async Task WorkLoopIteration()
 		{
 			++_dbgIterationsCount;
-			var waitingLogSeverity = LogLevel.Trace;
 			WaitInfoS waitInfo;
 			HttpRequestMessage httpRequest = null;
 			HttpResponseMessage httpResponse = null;
