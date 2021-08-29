@@ -8,3 +8,5 @@ members = [
 [profile.release]
 lto = true
 codegen-units = 1
+# reduce binary size by not unwinding on panic to get a backtrace
+#panic = "abort"
