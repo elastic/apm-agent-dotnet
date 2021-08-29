@@ -65,14 +65,12 @@ namespace Elastic.Apm.DiagnosticSource
 
 			if (!subscribedAny)
 			{
-				var listenerTypes = _listener != null
-					? _listener.GetType().FullName
-					: string.Join(", ", _listeners.Select(listener => listener.GetType().FullName));
-
 				_logger.Trace()
 					?.Log(
 						"There are no listeners in the current batch ({DiagnosticListeners}) that would like to subscribe to `{DiagnosticListenerName}' events source",
-						listenerTypes,
+						_listener != null
+							? _listener.GetType().FullName
+							: string.Join(", ", _listeners.Select(listener => listener.GetType().FullName)),
 						value.Name);
 			}
 		}
