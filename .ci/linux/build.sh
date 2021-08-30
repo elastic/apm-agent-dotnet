@@ -2,4 +2,4 @@
 
 set -euxo pipefail
 
-./build.sh
+cargo make build

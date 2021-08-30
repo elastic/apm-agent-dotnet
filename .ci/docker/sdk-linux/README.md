@@ -1,4 +1,4 @@
-# Linux docker build for building and testing the apm-agent-dotnet
+# Linux docker build for building and testing the apm-agent-dotnet auto instrumentation
 
 This is a Docker container with the dotnet SDK and the test tools required to run the
 build and test goals for the linux OS.
@@ -9,7 +9,7 @@ build and test goals for the linux OS.
 ## Build docker image
 docker build -t sdk .ci/docker/sdk-linux
 
-## Run container to build the apm-agent-dotnet
+## Run container to build the apm-agent-dotnet-auto-instrumentation
 docker run --rm -ti \
        --name sdk \
        -v $(pwd):/src \
@@ -17,7 +17,7 @@ docker run --rm -ti \
        sdk:latest \
        /bin/bash -c '.ci/linux/build.sh'
 
-## Run container to test the apm-agent-dotnet
+## Run container to test the apm-agent-dotnet-auto-instrumentation
 docker run --rm -ti \
        --name sdk \
        -v $(pwd):/src \
