@@ -22,6 +22,12 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentOracleManagedDataAccess(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
 	[InstrumentSqlite(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentSystemDataSql(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentSystemDataSqlClient(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+
+	[InstrumentSystemData(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
+	[InstrumentSystemDataCommon(Method = ExecuteScalarAsync, ReturnType = TaskObject, ParameterTypes = new [] { ClrTypeNames.CancellationToken })]
     public class CommandExecuteScalarAsyncIntegration
     {
         /// <summary>

@@ -1562,8 +1562,8 @@ impl Profiler {
                     );
 
                     let integration_argument_type_name = &signature_types[arg_idx as usize + 1];
-                    log::debug!(
-                        "{} = {}",
+                    log::trace!(
+                        "-> {} = {}",
                         &argument_type_name,
                         integration_argument_type_name
                     );

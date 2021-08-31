@@ -21,6 +21,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentOracleManagedDataAccess(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentSqlite(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSql(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSqlClient(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
     public class CommandExecuteNonQueryWithBehaviorIntegration
     {
         /// <summary>

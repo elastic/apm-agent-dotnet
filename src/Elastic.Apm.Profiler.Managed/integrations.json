@@ -1,5 +1,120 @@
 [
   {
+    "name": "AdoNet",
+    "method_replacements": [
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.Common.DbCommand",
+          "method": "ExecuteNonQueryAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Int32>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.Common",
+          "type": "System.Data.Common.DbCommand",
+          "method": "ExecuteNonQueryAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Int32>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.Common.DbCommand",
+          "method": "ExecuteDbDataReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.Common",
+          "type": "System.Data.Common.DbCommand",
+          "method": "ExecuteDbDataReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.Common.DbCommand",
+          "method": "ExecuteScalarAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Object>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.Common",
+          "type": "System.Data.Common.DbCommand",
+          "method": "ExecuteScalarAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Object>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "5.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      }
+    ]
+  },
+  {
     "name": "MySqlCommand",
     "method_replacements": [
       {
@@ -113,7 +228,7 @@
         "target": {
           "assembly": "MySql.Data",
           "type": "MySql.Data.MySqlClient.MySqlCommand",
-          "method": "ExecuteDbDataReader",
+          "method": "ExecuteDbDataReaderAsync",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
             "System.Data.CommandBehavior",
@@ -333,7 +448,7 @@
         "target": {
           "assembly": "Npgsql",
           "type": "Npgsql.NpgsqlCommand",
-          "method": "ExecuteDbDataReader",
+          "method": "ExecuteDbDataReaderAsync",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
             "System.Data.CommandBehavior",
@@ -660,7 +775,7 @@
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteDbDataReader",
+          "method": "ExecuteDbDataReaderAsync",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
             "System.Data.CommandBehavior",
@@ -679,7 +794,7 @@
         "target": {
           "assembly": "Oracle.ManagedDataAccess",
           "type": "Oracle.ManagedDataAccess.Client.OracleCommand",
-          "method": "ExecuteDbDataReader",
+          "method": "ExecuteDbDataReaderAsync",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
             "System.Data.CommandBehavior",
@@ -875,6 +990,656 @@
     ]
   },
   {
+    "name": "SqlCommand",
+    "method_replacements": [
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQueryAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Int32>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQueryAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Int32>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQueryAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Int32>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteNonQuery",
+          "signature_types": [
+            "System.Int32",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<Microsoft.Data.SqlClient.SqlDataReader>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "System.Data.SqlClient.SqlDataReader"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "System.Data.SqlClient.SqlDataReader"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Microsoft.Data.SqlClient.SqlDataReader"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<Microsoft.Data.SqlClient.SqlDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteDbDataReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteDbDataReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteDbDataReaderAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
+            "System.Data.CommandBehavior",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "System.Data.SqlClient.SqlDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "System.Data.SqlClient.SqlDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteReader",
+          "signature_types": [
+            "Microsoft.Data.SqlClient.SqlDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Data.Common.DbDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Data.Common.DbDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteDbDataReader",
+          "signature_types": [
+            "System.Data.Common.DbDataReader",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalarAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Object>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalarAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Object>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalarAsync",
+          "signature_types": [
+            "System.Threading.Tasks.Task`1<System.Object>",
+            "System.Threading.CancellationToken"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "System.Data.SqlClient",
+          "type": "System.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "4.0.0",
+          "maximum_version": "4.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      },
+      {
+        "target": {
+          "assembly": "Microsoft.Data.SqlClient",
+          "type": "Microsoft.Data.SqlClient.SqlCommand",
+          "method": "ExecuteScalar",
+          "signature_types": [
+            "System.Object",
+            "System.Data.CommandBehavior"
+          ],
+          "minimum_version": "1.0.0",
+          "maximum_version": "2.*.*"
+        },
+        "wrapper": {
+          "assembly": "Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
+          "type": "Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration",
+          "action": "CallTargetModification"
+        }
+      }
+    ]
+  },
+  {
     "name": "SqliteCommand",
     "method_replacements": [
       {
@@ -988,7 +1753,7 @@
         "target": {
           "assembly": "Microsoft.Data.Sqlite",
           "type": "Microsoft.Data.Sqlite.SqliteCommand",
-          "method": "ExecuteDbDataReader",
+          "method": "ExecuteDbDataReaderAsync",
           "signature_types": [
             "System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>",
             "System.Data.CommandBehavior",

@@ -22,7 +22,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentOracleManagedDataAccess(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
 	[InstrumentSqlite(Method = ExecuteReader, ReturnType = Sqlite.DataReader)]
-    public class CommandExecuteReaderIntegration
+
+	[InstrumentSystemDataSql(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader)]
+	[InstrumentSystemDataSqlClient(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader)]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteReader, ReturnType = MicrosoftDataSqlServer.DataReader)]
+	public class CommandExecuteReaderIntegration
     {
 		/// <summary>
 		/// OnMethodBegin callback

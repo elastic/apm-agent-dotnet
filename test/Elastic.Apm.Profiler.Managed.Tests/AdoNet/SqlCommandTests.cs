@@ -17,11 +17,17 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
-	public class SqliteCommandTests
+	[Collection("SqlServer")]
+	public class SqlCommandTests
 	{
+		private readonly SqlServerFixture _fixture;
 		private readonly ITestOutputHelper _output;
 
-		public SqliteCommandTests(ITestOutputHelper output) => _output = output;
+		public SqlCommandTests(SqlServerFixture fixture, ITestOutputHelper output)
+		{
+			_fixture = fixture;
+			_output = output;
+		}
 
 		[Theory]
 		[ClassData(typeof(AdoNetTestData))]
@@ -32,12 +38,14 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			using (var profiledApplication = new ProfiledApplication("SqliteSample"))
+			using (var profiledApplication = new ProfiledApplication("SqlClientSample"))
 			{
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 					["ELASTIC_APM_DISABLE_METRICS"] = "*",
+					["ELASTIC_APM_SERVICE_NAME"] = $"SqlClientSample-{targetFramework}",
+					["SQLSERVER_CONNECTION_STRING"] = _fixture.ConnectionString,
 				};
 
 				profiledApplication.Start(

@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading.Tasks;
+using Elastic.Apm.Tests.Utilities;
 using TestContainers.Core.Builders;
 using TestContainers.Core.Containers;
 using Xunit;
@@ -30,7 +31,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				.WithEnv(
 					("MYSQL_ROOT_PASSWORD", MySqlPassword),
 					("MYSQL_DATABASE", MySqlDatabaseName))
-				.WithExposedPorts(MySqlContainer.MYSQL_PORT);
+				.WithPortBindings((MySqlContainer.MYSQL_PORT, LocalPort.GetAvailablePort()));
 
 			_container = builder.Build();
 		}

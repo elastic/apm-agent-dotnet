@@ -694,71 +694,61 @@ pub fn calltarget_rewriter_callback(
             .map_err(|_| S_FALSE)?;
     }
 
-    // change all ret instructions in original method to leave.s
-    let mut i = 0;
-    let mut ret_to_leave_s_instructions = vec![];
+
+    let mut i = start_exception_catch_idx;
     let mut added_instruction_count = 0;
-    while i < method.instructions.len() {
-        // skip instructions before the original method, since we inserted them
-        if i < begin_original_method_idx {
-            i += 1;
-            continue;
-        }
 
-        // skip the last ret instruction, which we inserted
-        if (i + 1) == method.instructions.len() {
-            i += 1;
-            continue;
-        }
-
-        // skip any non ret instructions
+    // change all original method ret instructions to leave.s or leave instructions
+    // with an offset pointing to the instruction before the ending ret instruction.
+    while i > begin_original_method_idx {
         if method.instructions[i].opcode != RET {
-            i += 1;
+            i -= 1;
             continue;
         }
+
+        let mut current = i;
 
         if !is_void {
             // Since we're adding additional instructions to the original method,
             // make a note of how many are added so that we can later increment the indices
-            // of instructions that are targets for clauses that come after the original
+            // for instructions that are targets for clauses that come after the original
             // method instructions
             added_instruction_count += 1;
-
             method
                 .insert(
                     i,
                     Instruction::store_local(local_sig.return_value_index as u16),
                 )
                 .map_err(|_| S_FALSE)?;
-            i += 1;
+
+            i -= 1;
+            current += 1;
         }
 
         // calculate the offset to the target instruction to determine whether to
         // insert a leave_s or leave instruction
         let leave_instr = {
-            let mut sum = method
+            let mut leave_offset = method
                 .instructions
                 .iter()
-                .skip(i + 1)
+                .skip(current + 1)
                 .map(|i| i.len())
                 .sum::<usize>()
                 - Instruction::ret().len();
+
             if !is_void {
-                sum -= Instruction::load_local(local_sig.return_value_index as u16).len();
+                leave_offset -= Instruction::load_local(local_sig.return_value_index as u16).len();
             }
-            if sum > i8::MAX as usize {
-                Instruction::leave(-1)
+
+            if leave_offset > i8::MAX as usize {
+                Instruction::leave(leave_offset as i32)
             } else {
-                Instruction::leave_s(-1)
+                Instruction::leave_s(leave_offset as i8)
             }
         };
 
-        method.replace(i, leave_instr).map_err(|_| S_FALSE)?;
-        // make a note of the idx so that we can update the offset later,
-        // after all instructions have been changed
-        ret_to_leave_s_instructions.push(i);
-
-        i += 1;
+        method.replace(current, leave_instr).map_err(|_| S_FALSE)?;
+        i -= 1;
     }
 
     if added_instruction_count > 0 {
@@ -773,7 +763,7 @@ pub fn calltarget_rewriter_callback(
 
     let offsets = method.get_instruction_offsets();
 
-    // update the leave_s instruction offset to point to the endfinally
+    // update the end method leave_s instruction offset to point to the endfinally
     if let Some(end_method_try_leave) = method.instructions.get_mut(end_method_try_leave_idx) {
         if let ShortInlineBrTarget(offset) = &mut end_method_try_leave.operand {
             let finally_offset =
@@ -782,29 +772,7 @@ pub fn calltarget_rewriter_callback(
         }
     }
 
-    if !ret_to_leave_s_instructions.is_empty() {
-        // update the offsets for leave instructions to point to instr after endfinally.
-        // For !is_void methods, this will be a ldloc instruction to load the original ret value.
-        // For void methods, this will be the last ret instruction
-        let end_offset = if !is_void {
-            offsets[offsets.len() - 2]
-        } else {
-            offsets[offsets.len() - 1]
-        };
-
-        for i in ret_to_leave_s_instructions {
-            if let Some(instruction) = method.instructions.get_mut(i) {
-                if let ShortInlineBrTarget(offset) = &mut instruction.operand {
-                    *offset = (end_offset - offsets[i + 1]) as i8;
-                } else if let InlineBrTarget(offset) = &mut instruction.operand {
-                    *offset = (end_offset - offsets[i + 1]) as i32;
-                }
-            }
-        }
-    }
-
     // create all the later clauses, now that all instructions are inserted
-
     let end_method_ex_clause = {
         FatSectionClause {
             flag: CorExceptionFlag::COR_ILEXCEPTION_CLAUSE_NONE,

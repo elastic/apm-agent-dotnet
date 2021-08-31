@@ -21,6 +21,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentOracleManagedDataAccess(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
     public class CommandExecuteScalarWithBehaviorIntegration
     {
         /// <summary>

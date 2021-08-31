@@ -21,6 +21,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentOracleManagedDataAccess(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
 	[InstrumentSqlite(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
+	[InstrumentSystemDataSql(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
+	[InstrumentSystemDataSqlClient(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteNonQuery, ReturnType = ClrTypeNames.Int32)]
     public class CommandExecuteNonQueryIntegration
     {
 		/// <summary>

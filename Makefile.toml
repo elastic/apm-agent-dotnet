@@ -93,4 +93,4 @@ dependencies = ["generate-integrations"]
 
 [tasks.test-example]
 clear = true
-dependencies = ["build-release", "build-integrations", "build-example", "run-dotnet"]
+dependencies = ["build-release", "generate-integrations", "build-example", "run-dotnet"]

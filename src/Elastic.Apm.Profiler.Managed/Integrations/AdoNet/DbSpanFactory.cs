@@ -8,6 +8,7 @@ using System.Data;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
+using static Elastic.Apm.Model.InstrumentationFlag;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
@@ -27,10 +28,15 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			if (agent.Tracer.CurrentTransaction is null)
 				return null;
 
-			// if the current execution segment is already for this instrumentation and
-			// for the same command, skip creating another db span for it, to prevent instrumenting delegated methods.
+			// if the current execution segment is
+			// 1. already for this instrumentation or instrumentation is AdoNet (System.Data.Common.DbCommand) and the type is "db"
+			// and
+			// 2. for the same command text
+			// skip creating another db span for it, to prevent instrumenting delegated methods.
 			if (agent.GetCurrentExecutionSegment() is Span span &&
-				span.InstrumentationFlag.HasFlag(_instrumentationFlag) &&
+				(span.InstrumentationFlag.HasFlag(_instrumentationFlag) ||
+					span.Type == ApiConstants.TypeDb &&
+						(_instrumentationFlag == InstrumentationFlag.AdoNet || span.InstrumentationFlag == InstrumentationFlag.AdoNet)) &&
 				span.Name == DbSpanCommon.GetDbSpanName(command))
 				return null;
 
@@ -56,20 +62,22 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 		{
 			switch (typeName)
 			{
-				case { } str when str.ContainsOrdinalIgnoreCase("SQLite"):
-					return InstrumentationFlag.Sqlite;
+				case { } str when str.ContainsOrdinalIgnoreCase("Sqlite"):
+					return Sqlite;
 				case { } str when str.ContainsOrdinalIgnoreCase("MySQL"):
-					return InstrumentationFlag.MySql;
+					return MySql;
 				case { } when typeName.ContainsOrdinalIgnoreCase("Oracle"):
-					return InstrumentationFlag.Oracle;
+					return Oracle;
 				case { } when typeName.ContainsOrdinalIgnoreCase("Postgre"):
-				case { } when typeName.ContainsOrdinalIgnoreCase("NpgSQL"):
-					return InstrumentationFlag.Postgres;
+				case { } when typeName.ContainsOrdinalIgnoreCase("NpgSql"):
+					return Postgres;
 				case { } when typeName.ContainsOrdinalIgnoreCase("Microsoft"):
 				case { } when typeName.ContainsOrdinalIgnoreCase("System.Data.SqlClient"):
-					return InstrumentationFlag.SqlClient;
+					return SqlClient;
+				case { } when typeName.ContainsOrdinalIgnoreCase("System.Data.Common"):
+					return InstrumentationFlag.AdoNet;
 				default:
-					return InstrumentationFlag.None;
+					return None;
 			}
 		}
 	}

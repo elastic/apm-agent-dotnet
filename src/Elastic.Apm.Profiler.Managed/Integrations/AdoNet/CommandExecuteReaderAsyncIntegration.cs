@@ -22,6 +22,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentOracleManagedDataAccess(Method = ExecuteReaderAsync, ReturnType = OracleManagedDataAccess.TaskDataReader, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReaderAsync, ReturnType = OracleManagedDataAccess.TaskDataReader, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
 	[InstrumentSqlite(Method = ExecuteReaderAsync, ReturnType = Sqlite.TaskDataReader, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
+	[InstrumentSystemDataSql(Method = ExecuteReaderAsync, ReturnType = SystemDataSqlServer.TaskDataReader, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
+	[InstrumentSystemDataSqlClient(Method = ExecuteReaderAsync, ReturnType = SystemDataSqlServer.TaskDataReader, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteReaderAsync, ReturnType = MicrosoftDataSqlServer.TaskDataReader, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
     public class CommandExecuteReaderAsyncIntegration
     {
         /// <summary>

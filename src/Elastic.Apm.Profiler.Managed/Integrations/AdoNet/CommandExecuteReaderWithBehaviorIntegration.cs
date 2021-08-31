@@ -22,13 +22,19 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentOracleManagedDataAccess(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentSqlite(Method = ExecuteReader, ReturnType = Sqlite.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSql(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSqlClient(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteReader, ReturnType = MicrosoftDataSqlServer.DataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 
 	[InstrumentMySqlAttribute(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentNpgsql(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentOracleManagedDataAccess(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentSqlite(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-    public class CommandExecuteReaderWithBehaviorIntegration
+	[InstrumentSystemDataSql(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSqlClient(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteDbDataReader, ReturnType = DbDataReader, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
+	public class CommandExecuteReaderWithBehaviorIntegration
     {
         /// <summary>
         /// OnMethodBegin callback

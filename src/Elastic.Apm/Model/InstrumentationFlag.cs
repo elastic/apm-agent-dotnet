@@ -29,5 +29,6 @@ namespace Elastic.Apm.Model
 		Oracle = 1 << 9,
 		MySql = 1 << 10,
 		Sqlite = 1 << 11,
+		AdoNet = 1 << 12,
 	}
 }

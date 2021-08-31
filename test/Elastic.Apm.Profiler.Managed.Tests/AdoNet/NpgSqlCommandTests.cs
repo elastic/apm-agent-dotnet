@@ -44,6 +44,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 					["POSTGRES_CONNECTION_STRING"] = _fixture.ConnectionString,
+					["ELASTIC_APM_DISABLE_METRICS"] = "*",
 				};
 
 				profiledApplication.Start(

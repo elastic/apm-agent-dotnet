@@ -67,6 +67,66 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 		}
 	}
 
+	internal class InstrumentSystemDataSqlAttribute : InstrumentAttribute
+	{
+		public InstrumentSystemDataSqlAttribute()
+		{
+			Assembly = "System.Data";
+			Type = "System.Data.SqlClient.SqlCommand";
+			MinimumVersion = "4.0.0";
+			MaximumVersion = "4.*.*";
+			Group = "SqlCommand";
+		}
+	}
+
+	internal class InstrumentSystemDataSqlClientAttribute : InstrumentAttribute
+	{
+		public InstrumentSystemDataSqlClientAttribute()
+		{
+			Assembly = "System.Data.SqlClient";
+			Type = "System.Data.SqlClient.SqlCommand";
+			MinimumVersion = "4.0.0";
+			MaximumVersion = "4.*.*";
+			Group = "SqlCommand";
+		}
+	}
+
+	internal class InstrumentMicrosoftDataSqlClientAttribute : InstrumentAttribute
+	{
+		public InstrumentMicrosoftDataSqlClientAttribute()
+		{
+			Assembly = "Microsoft.Data.SqlClient";
+			Type = "Microsoft.Data.SqlClient.SqlCommand";
+			MinimumVersion = "1.0.0";
+			MaximumVersion = "2.*.*";
+			Group = "SqlCommand";
+		}
+	}
+
+	internal class InstrumentSystemDataAttribute : InstrumentAttribute
+	{
+		public InstrumentSystemDataAttribute()
+		{
+			Assembly = "System.Data";
+			Type = "System.Data.Common.DbCommand";
+			MinimumVersion = "4.0.0";
+			MaximumVersion = "4.*.*";
+			Group = "AdoNet";
+		}
+	}
+
+	internal class InstrumentSystemDataCommonAttribute : InstrumentAttribute
+	{
+		public InstrumentSystemDataCommonAttribute()
+		{
+			Assembly = "System.Data.Common";
+			Type = "System.Data.Common.DbCommand";
+			MinimumVersion = "4.0.0";
+			MaximumVersion = "5.*.*";
+			Group = "AdoNet";
+		}
+	}
+
 	internal class AdoNetTypeNames
 	{
 		public const string CommandBehavior = "System.Data.CommandBehavior";
@@ -106,6 +166,18 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 		{
 			public const string DataReader = "Microsoft.Data.Sqlite.SqliteDataReader";
 			public const string TaskDataReader = "System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>";
+		}
+
+		internal static class SystemDataSqlServer
+		{
+			public const string DataReader = "System.Data.SqlClient.SqlDataReader";
+			public const string TaskDataReader = "System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>";
+		}
+
+		internal static class MicrosoftDataSqlServer
+		{
+			public const string DataReader = "Microsoft.Data.SqlClient.SqlDataReader";
+			public const string TaskDataReader = "System.Threading.Tasks.Task`1<Microsoft.Data.SqlClient.SqlDataReader>";
 		}
 	}
 }

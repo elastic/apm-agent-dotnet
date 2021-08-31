@@ -6,6 +6,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Elastic.Apm.Tests.Utilities;
 using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 using Polly;
@@ -65,7 +66,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			var builder = new GenericContainerBuilder<OracleSqlContainer>()
 				.Begin()
 				.WithImage(OracleSqlContainer.IMAGE)
-				.WithExposedPorts(OracleSqlContainer.ORACLE_PORT);
+				.WithPortBindings((OracleSqlContainer.ORACLE_PORT, LocalPort.GetAvailablePort()));
 
 			_container = builder.Build();
 		}

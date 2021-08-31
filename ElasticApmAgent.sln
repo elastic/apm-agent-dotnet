@@ -175,6 +175,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Integr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Managed.Core", "src\Elastic.Apm.Profiler.Managed.Core\Elastic.Apm.Profiler.Managed.Core.csproj", "{4E235C21-5637-4498-8335-134ACAA4884E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlClientSample", "sample\SqlClientSample\SqlClientSample.csproj", "{456A8639-FE1B-426A-9C72-5252AB4D3AD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -453,6 +455,10 @@ Global
 		{4E235C21-5637-4498-8335-134ACAA4884E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E235C21-5637-4498-8335-134ACAA4884E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E235C21-5637-4498-8335-134ACAA4884E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{456A8639-FE1B-426A-9C72-5252AB4D3AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{456A8639-FE1B-426A-9C72-5252AB4D3AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{456A8639-FE1B-426A-9C72-5252AB4D3AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{456A8639-FE1B-426A-9C72-5252AB4D3AD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -526,6 +532,7 @@ Global
 		{8CF18906-150C-4AD9-B108-2A39B31105C5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{B7B0104C-CADC-42E0-B08B-5187926BFF6F} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{4E235C21-5637-4498-8335-134ACAA4884E} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{456A8639-FE1B-426A-9C72-5252AB4D3AD5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
