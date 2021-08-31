@@ -40,23 +40,7 @@ command = "dotnet"
 args = ["build", "-c", "${DOTNET_CONFIG}", "./sample/Example/Example.csproj"]
 
 [tasks.generate-integrations]
-description = "Generates integrations files from Managed Profiler assembly"
-dependencies = ["generate-integrations-json", "generate-integrations-yml"]
-
-[tasks.generate-integrations-json]
-description = "Generates integrations.json file"
-command = "dotnet"
-args = [
-    "run",
-    "--project", "./src/Elastic.Apm.Profiler.IntegrationsGenerator/Elastic.Apm.Profiler.IntegrationsGenerator.csproj",
-    "--",
-    "-i", "./src/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
-    "-o", "./src/Elastic.Apm.Profiler.Managed",
-    "-f", "json"]
-dependencies = ["build-integrations"]
-
-[tasks.generate-integrations-yml]
-description = "Generates integrations.json file"
+description = "Generates integrations.yml file"
 command = "dotnet"
 args = [
     "run",

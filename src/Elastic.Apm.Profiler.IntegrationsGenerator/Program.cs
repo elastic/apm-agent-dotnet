@@ -10,8 +10,6 @@ using System.Reflection;
 using System.Text;
 using CommandLine;
 using Elastic.Apm.Profiler.Managed.Core;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -82,18 +80,6 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 				string output;
 				switch (opts.Format)
 				{
-					case CommandLineOptions.OutputFormat.Json:
-						var serializerSettings = new JsonSerializerSettings
-						{
-							NullValueHandling = NullValueHandling.Ignore,
-							Formatting = Formatting.Indented,
-							ContractResolver = new DefaultContractResolver
-							{
-								NamingStrategy = new SnakeCaseNamingStrategy()
-							}
-						};
-						output = JsonConvert.SerializeObject(callTargetIntegrations, serializerSettings);
-						break;
 					case CommandLineOptions.OutputFormat.Yml:
 						var serializer = new SerializerBuilder()
 							.WithNamingConvention(UnderscoredNamingConvention.Instance)

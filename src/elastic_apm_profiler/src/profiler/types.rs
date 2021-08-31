@@ -750,7 +750,7 @@ pub mod tests {
     #[test]
     fn deserialize_method_signature() -> Result<(), Box<dyn Error>> {
         let json = "\"00 08 1C 1C 1C 1C 1C 1C 08 08 0A\"";
-        let method_signature: MethodSignature = serde_json::from_str(json)?;
+        let method_signature: MethodSignature = serde_yaml::from_str(json)?;
         assert_eq!(
             MethodSignature {
                 data: vec![0, 8, 28, 28, 28, 28, 28, 28, 8, 8, 10]
@@ -764,7 +764,7 @@ pub mod tests {
     fn deserialize_assembly_reference() -> Result<(), Box<dyn Error>> {
         let json =
             "\"Elastic.Apm, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22\"";
-        let assembly_reference: AssemblyReference = serde_json::from_str(json)?;
+        let assembly_reference: AssemblyReference = serde_yaml::from_str(json)?;
 
         let expected_assembly_reference = AssemblyReference {
             name: "Elastic.Apm".into(),
@@ -778,33 +778,26 @@ pub mod tests {
     }
 
     #[test]
-    fn deserialize_integration_from_json() -> Result<(), Box<dyn Error>> {
-        let json = r#"{
-            "name": "AdoNet",
-            "method_replacements": [
-              {
-                "caller": {},
-                "target": {
-                  "assembly": "System.Data",
-                  "type": "System.Data.Common.DbCommand",
-                  "method": "ExecuteNonQueryAsync",
-                  "signature_types": [
-                    "System.Threading.Tasks.Task`1<System.Int32>",
-                    "System.Threading.CancellationToken"
-                  ],
-                  "minimum_version": "4.0.0",
-                  "maximum_version": "4.*.*"
-                },
-                "wrapper": {
-                  "assembly": "Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22",
-                  "type": "Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration",
-                  "action": "CallTargetModification"
-                }
-              }
-            ]
-          }"#;
+    fn deserialize_integration_from_yml() -> Result<(), Box<dyn Error>> {
+        let json = r#"---
+name: AdoNet
+method_replacements:
+- caller: {}
+  target:
+    assembly: System.Data
+    type: System.Data.Common.DbCommand
+    method: ExecuteNonQueryAsync
+    signature_types:
+    - System.Threading.Tasks.Task`1<System.Int32>
+    - System.Threading.CancellationToken
+    minimum_version: 4.0.0
+    maximum_version: 4.*.*
+  wrapper:
+    assembly: Elastic.Apm.Profiler.Managed, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+    type: Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+    action: CallTargetModification"#;
 
-        let integration: Integration = serde_json::from_str(json)?;
+        let integration: Integration = serde_yaml::from_str(json)?;
 
         assert_eq!(&integration.name, "AdoNet");
         assert_eq!(integration.method_replacements.len(), 1);
@@ -845,17 +838,6 @@ pub mod tests {
         );
         assert_eq!(&wrapper.action, "CallTargetModification");
 
-        Ok(())
-    }
-
-    #[test]
-    fn deserialize_integrations_from_json() -> Result<(), Box<dyn Error>> {
-        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.push("../Elastic.Apm.Profiler.Managed/integrations.json");
-        let file = File::open(path)?;
-        let reader = BufReader::new(file);
-        let integrations: Vec<Integration> = serde_json::from_reader(reader)?;
-        assert!(integrations.len() > 0);
         Ok(())
     }
 

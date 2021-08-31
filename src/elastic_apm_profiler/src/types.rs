@@ -931,7 +931,7 @@ pub mod tests {
     use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
 
     fn deserialize_and_assert(json: &str, expected: Version) -> Result<(), Box<dyn Error>> {
-        let version: Version = serde_json::from_str(json)?;
+        let version: Version = serde_yaml::from_str(json)?;
         assert_eq!(expected, version);
         Ok(())
     }

@@ -20,7 +20,6 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 
 		public enum OutputFormat
 		{
-			Json,
 			Yml,
 		}
 	}

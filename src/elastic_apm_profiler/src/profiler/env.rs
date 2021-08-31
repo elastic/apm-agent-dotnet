@@ -263,8 +263,8 @@ pub fn initialize_logging(process_name: &str) -> Handle {
     log4rs::init_config(config).unwrap()
 }
 
-/// Loads the integrations by reading the file pointed to by [ELASTIC_APM_PROFILER_INTEGRATIONS]
-/// environment variable
+/// Loads the integrations by reading the yml file pointed to
+/// by [ELASTIC_APM_PROFILER_INTEGRATIONS] environment variable
 pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
     let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS).map_err(|e| {
         log::warn!(
@@ -284,43 +284,15 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
         E_FAIL
     })?;
 
-    let path_buf = PathBuf::from_str(&path).map_err(|e| {
-        log::warn!(
-            "Problem reading path buf from integrations file path: {}",
-            e.to_string()
-        );
-        E_FAIL
-    })?;
     let reader = BufReader::new(file);
-    let extension = path_buf
-        .extension()
-        .unwrap_or_else(|| OsStr::new("json"))
-        .to_string_lossy()
-        .to_string()
-        .to_lowercase();
-
-    let integrations = match extension.as_str() {
-        "yml" | "yaml" => serde_yaml::from_reader(reader).map_err(|e| {
+    let integrations = serde_yaml::from_reader(reader).map_err(|e| {
             log::warn!(
                 "Problem reading integrations file {}: {}. profiler is disabled.",
                 &path,
                 e.to_string()
             );
             E_FAIL
-        })?,
-        "json" => serde_json::from_reader(reader).map_err(|e| {
-            log::warn!(
-                "Problem reading integrations file {}: {}. profiler is disabled.",
-                &path,
-                e.to_string()
-            );
-            E_FAIL
-        })?,
-        p => {
-            log::warn!("Problem reading integrations file {}: Unknown file extension {}. profiler is disabled.", &path, p);
-            return Err(E_FAIL);
-        }
-    };
+        })?;
 
     Ok(integrations)
 }
