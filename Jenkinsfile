@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent { label 'linux && immutable' }
+  agent { label 'linux && immutable && docker' }
   environment {
     REPO = 'apm-agent-dotnet-auto-instrumentation'
     BASE_DIR = 'src'
@@ -45,9 +45,6 @@ pipeline {
           parallel{
             stage('Linux'){
               options { skipDefaultCheckout() }
-              environment {
-                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
-              }
               stages{
                 stage('Build') {
                   steps {
@@ -71,6 +68,40 @@ pipeline {
                 }
               }
             }
+            stage('Windows'){
+              agent { label 'windows-2019 && immutable' }
+              options { skipDefaultCheckout() }
+              environment {
+                HOME = "${env.WORKSPACE}"
+                CARGO_MAKE_HOME = "C:\\tools\\cargo"    // If cargo is installed within the CI build
+                PATH = "${PATH};${env.CARGO_MAKE_HOME}" // If cargo is installed within the CI build
+              }
+              stages{
+                stage('Install tools') {
+                  steps {
+                    cleanDir("${WORKSPACE}/*")
+                    unstash 'source'
+                    dir("${BASE_DIR}"){
+                      powershell(label: 'Install tools', script: ".ci\\windows\\tools.ps1")
+                    }
+                  }
+                }
+                stage('Build') {
+                  steps {
+                    dir("${BASE_DIR}"){
+                      bat(label: 'Build', script: 'cargo make build')
+                    }
+                  }
+                }
+                stage('Test') {
+                  steps {
+                    dir("${BASE_DIR}"){
+                      bat(label: 'Build', script: 'cargo make test')
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -89,4 +120,8 @@ def dotnet(Closure body){
       body()
     }
   }
+}
+
+def cleanDir(path){
+  powershell label: "Clean ${path}", script: "Remove-Item -Recurse -Force ${path}"
 }
