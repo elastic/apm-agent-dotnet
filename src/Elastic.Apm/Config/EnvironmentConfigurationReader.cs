@@ -9,7 +9,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigurationSnapshot
+	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigurationSnapshot, IConfigurationSnapshotDescription
 	{
 		internal const string Origin = "environment variables";
 		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
@@ -41,7 +41,7 @@ namespace Elastic.Apm.Config
 
 		public string CloudProvider => ParseCloudProvider(Read(ConfigConsts.EnvVarNames.CloudProvider));
 
-		public string DbgDescription => Origin;
+		public string Description => Origin;
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => ParseDisableMetrics(Read(ConfigConsts.EnvVarNames.DisableMetrics));
 		public bool Enabled => ParseEnabled(Read(ConfigConsts.EnvVarNames.Enabled));
 

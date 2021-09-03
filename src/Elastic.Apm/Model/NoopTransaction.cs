@@ -142,7 +142,7 @@ namespace Elastic.Apm.Model
 	/// <summary>
 	/// A static config snapshot which contains default values
 	/// </summary>
-	internal class DefaultConfigurationSnapshot : IConfigurationSnapshot
+	internal class DefaultConfigurationSnapshot : IConfigurationSnapshot, IConfigurationSnapshotDescription
 	{
 		public string ApiKey => string.Empty;
 		public IReadOnlyCollection<string> ApplicationNamespaces => new List<string>();
@@ -182,6 +182,6 @@ namespace Elastic.Apm.Model
 		public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader => false;
 		public bool VerifyServerCert => false;
-		public string DbgDescription => nameof(DefaultConfigurationSnapshot);
+		public string Description => nameof(DefaultConfigurationSnapshot);
 	}
 }

@@ -32,11 +32,11 @@ namespace Elastic.Apm.Tests
 			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
 		}
 
-		private class LogConfiguration : IConfigurationSnapshot
+		private class LogConfiguration : IConfigurationSnapshot, IConfigurationSnapshotDescription
 		{
 			public LogConfiguration(LogLevel level) => LogLevel = level;
 
-			public string DbgDescription => "LogConfig";
+			public string Description => "LogConfig";
 
 			// ReSharper disable UnassignedGetOnlyAutoProperty
 			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;

@@ -193,7 +193,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger.Info()?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfigurationReader);
 
 			_configurationStore.CurrentSnapshot = new WrappingConfigurationSnapshot(_initialSnapshot, centralConfigurationReader
-				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{centralConfigurationReader.ETag}')");
+				, $"{_initialSnapshot.Description()} + central (ETag: `{centralConfigurationReader.ETag}')");
 		}
 
 		internal class FailedToFetchConfigException : Exception
@@ -221,16 +221,16 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 		}
 
-		private class WrappingConfigurationSnapshot : IConfigurationSnapshot
+		private class WrappingConfigurationSnapshot : IConfigurationSnapshot, IConfigurationSnapshotDescription
 		{
 			private readonly CentralConfigurationReader _centralConfiguration;
 			private readonly IConfigurationSnapshot _wrapped;
 
-			internal WrappingConfigurationSnapshot(IConfigurationSnapshot wrapped, CentralConfigurationReader centralConfiguration, string dbgDescription)
+			internal WrappingConfigurationSnapshot(IConfigurationSnapshot wrapped, CentralConfigurationReader centralConfiguration, string description)
 			{
 				_wrapped = wrapped;
 				_centralConfiguration = centralConfiguration;
-				DbgDescription = dbgDescription;
+				Description = description;
 			}
 
 			public string ApiKey => _wrapped.ApiKey;
@@ -245,7 +245,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string CloudProvider => _wrapped.CloudProvider;
 
-			public string DbgDescription { get; }
+			public string Description { get; }
 
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
 			public bool Enabled => _wrapped.Enabled;

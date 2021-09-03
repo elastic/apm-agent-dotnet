@@ -10,14 +10,14 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class ConfigurationSnapshotFromReader : IConfigurationSnapshot
+	internal class ConfigurationSnapshotFromReader : IConfigurationSnapshot, IConfigurationSnapshotDescription
 	{
 		private readonly IConfigurationReader _content;
 
-		internal ConfigurationSnapshotFromReader(IConfigurationReader content, string dbgDescription)
+		internal ConfigurationSnapshotFromReader(IConfigurationReader content, string description)
 		{
 			_content = content;
-			DbgDescription = dbgDescription;
+			Description = description;
 		}
 
 		public string ApiKey => _content.ApiKey;
@@ -28,7 +28,7 @@ namespace Elastic.Apm.Config
 		public bool CaptureHeaders => _content.CaptureHeaders;
 		public bool CentralConfig => _content.CentralConfig;
 		public string CloudProvider => _content.CloudProvider;
-		public string DbgDescription { get; }
+		public string Description { get; }
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => _content.DisableMetrics;
 		public bool Enabled => _content.Enabled;
 		public string Environment => _content.Environment;

@@ -3,17 +3,32 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Runtime.CompilerServices;
+
 namespace Elastic.Apm.Config
 {
 	/// <summary>
-	/// This represents the snapshot of the merged local and central configuration values.
-	/// An instance of this is attached to each <see cref="Api.ITransaction" /> which holds a snapshot of the
-	/// merged config values from the point in time when the transaction started.
-	/// In case central config changes in the middle of a transaction, this snapshot won't chance. Instead changes will be
-	/// applied when the next transaction is created with its new snapshot.
+	/// A snapshot of agent configuration containing values
+	/// initial configuration combined with dynamic values from central configuration, if enabled.
 	/// </summary>
 	public interface IConfigurationSnapshot : IConfigurationReader
 	{
-		string DbgDescription { get; }
+	}
+
+	/// <summary>
+	/// A description for the configuration snapshot
+	/// </summary>
+	internal interface IConfigurationSnapshotDescription
+	{
+		public string Description { get; }
+	}
+
+	internal static class ConfigurationSnapshotExtensions
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string Description(this IConfigurationSnapshot snapshot) =>
+			snapshot is IConfigurationSnapshotDescription snapshotWithDescription
+				? snapshotWithDescription.Description
+				: null;
 	}
 }
