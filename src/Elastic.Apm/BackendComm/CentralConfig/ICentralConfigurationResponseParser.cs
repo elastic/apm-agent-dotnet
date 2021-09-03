@@ -6,7 +6,7 @@ using System.Net.Http;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal interface ICentralConfigResponseParser
+	internal interface ICentralConfigurationResponseParser
 	{
 		(CentralConfigurationReader, CentralConfigurationFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody);
 	}

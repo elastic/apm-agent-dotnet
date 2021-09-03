@@ -19,12 +19,12 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 {
 	public class CentralConfigResponseParserTests
 	{
-		private readonly CentralConfigResponseParser _parser;
+		private readonly CentralConfigurationResponseParser _parser;
 		private readonly HttpResponseMessage _correctResponse;
 
 		public CentralConfigResponseParserTests()
 		{
-			_parser = new CentralConfigResponseParser(new NoopLogger());
+			_parser = new CentralConfigurationResponseParser(new NoopLogger());
 			_correctResponse = new HttpResponseMessage
 			{
 				StatusCode = HttpStatusCode.OK,
@@ -116,7 +116,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			// Arrange
 			var testLogger = new TestLogger(LogLevel.Information);
-			var parser = new CentralConfigResponseParser(testLogger);
+			var parser = new CentralConfigurationResponseParser(testLogger);
 
 			// Act
 			parser.ParseHttpResponse(_correctResponse, "{\"unknownKey\": \"value\"}");
@@ -137,7 +137,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				{
 					yield return new object[]
 					{
-						$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureBodyKey}\": \"{value}\"}}",
+						$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyKey}\": \"{value}\"}}",
 						new Action<CentralConfigurationReader>(cfg =>
 						{
 							cfg.CaptureBody.Should()
@@ -149,7 +149,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.TransactionMaxSpansKey}\": \"{100}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionMaxSpansKey}\": \"{100}\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.TransactionMaxSpans.Should()
@@ -160,7 +160,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"{0.75}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"{0.75}\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.TransactionSampleRate.Should()
@@ -172,7 +172,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				var captureBodyContentTypes = "application/x-www-form-urlencoded*, application/json*";
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey}\": \"{captureBodyContentTypes}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey}\": \"{captureBodyContentTypes}\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.CaptureBodyContentTypes.Should()
@@ -183,7 +183,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey}\": \"{150}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.StackTraceLimitKey}\": \"{150}\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.StackTraceLimit.Should()
@@ -194,7 +194,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.SpanFramesMinDurationKey}\": \"{150}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.SpanFramesMinDurationKey}\": \"{150}\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.SpanFramesMinDurationInMilliseconds.Should()
@@ -205,7 +205,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{false}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{false}\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
@@ -216,7 +216,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{true}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{true}\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
@@ -229,7 +229,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				{
 					yield return new object[]
 					{
-						$"{{\"{CentralConfigResponseParser.CentralConfigPayload.LogLevelKey}\": \"{value}\"}}",
+						$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.LogLevelKey}\": \"{value}\"}}",
 						new Action<CentralConfigurationReader>(cfg =>
 						{
 							cfg.LogLevel.Should()

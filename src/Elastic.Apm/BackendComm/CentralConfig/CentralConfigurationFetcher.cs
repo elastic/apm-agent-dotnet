@@ -23,7 +23,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
-		private readonly ICentralConfigResponseParser _centralConfigResponseParser;
+		private readonly ICentralConfigurationResponseParser _centralConfigurationResponseParser;
 		private readonly IConfigurationStore _configurationStore;
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigurationSnapshot _initialSnapshot;
@@ -33,16 +33,16 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private long _dbgIterationsCount;
 		private EntityTagHeaderValue _eTag;
 
-		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, ICentralConfigResponseParser centralConfigResponseParser,
+		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, ICentralConfigurationResponseParser centralConfigurationResponseParser,
 			Service service,
 			HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		) : this(logger, configurationStore, configurationStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) =>
-			_centralConfigResponseParser = centralConfigResponseParser;
+			_centralConfigurationResponseParser = centralConfigurationResponseParser;
 
 		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, Service service
 			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		)
-			: this(logger, configurationStore, new CentralConfigResponseParser(logger), service, httpMessageHandler, agentTimer, dbgName) { }
+			: this(logger, configurationStore, new CentralConfigurationResponseParser(logger), service, httpMessageHandler, agentTimer, dbgName) { }
 
 		/// <summary>
 		/// We need this private ctor to avoid calling configStore.CurrentSnapshot twice (and thus possibly using different
@@ -103,7 +103,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest).ConfigureAwait(false);
 
 				CentralConfigurationReader centralConfigurationReader;
-				(centralConfigurationReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
+				(centralConfigurationReader, waitInfo) = _centralConfigurationResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
 				if (centralConfigurationReader != null)
 				{
 					_onResponse?.Invoke(centralConfigurationReader);

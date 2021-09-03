@@ -14,12 +14,12 @@ using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal class CentralConfigResponseParser : ICentralConfigResponseParser
+	internal class CentralConfigurationResponseParser : ICentralConfigurationResponseParser
 	{
 		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
 		private readonly IApmLogger _logger;
 
-		internal CentralConfigResponseParser(IApmLogger logger) => _logger = logger?.Scoped(nameof(CentralConfigResponseParser));
+		internal CentralConfigurationResponseParser(IApmLogger logger) => _logger = logger?.Scoped(nameof(CentralConfigurationResponseParser));
 
 		public (CentralConfigurationReader, CentralConfigurationFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
 			string httpResponseBody
