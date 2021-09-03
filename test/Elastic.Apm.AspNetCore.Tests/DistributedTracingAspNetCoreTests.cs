@@ -111,7 +111,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task DistributedTraceAcross2ServicesWithUseElasticTraceParentTrue()
 		{
-			_agent1.ConfigStore.CurrentSnapshot = new MockConfigurationSnapshot(useElasticTraceparentHeader: "true");
+			_agent1.ConfigurationStore.CurrentSnapshot = new MockConfigurationSnapshot(useElasticTraceparentHeader: "true");
 			await ExecuteAndCheckDistributedCall();
 
 			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceContext.TraceParentHeaderName);
@@ -125,7 +125,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task DistributedTraceAcross2ServicesWithUseElasticTraceParentFalse()
 		{
-			_agent1.ConfigStore.CurrentSnapshot = new MockConfigurationSnapshot(useElasticTraceparentHeader: "false");
+			_agent1.ConfigurationStore.CurrentSnapshot = new MockConfigurationSnapshot(useElasticTraceparentHeader: "false");
 			await ExecuteAndCheckDistributedCall();
 
 			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceContext.TraceParentHeaderName);
@@ -143,7 +143,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task NonSampledDistributedTraceAcross2Service()
 		{
-			_agent1.ConfigStore.CurrentSnapshot = new MockConfigurationSnapshot(transactionSampleRate: "0");
+			_agent1.ConfigurationStore.CurrentSnapshot = new MockConfigurationSnapshot(transactionSampleRate: "0");
 
 			await ExecuteAndCheckDistributedCall(false);
 
@@ -208,7 +208,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TraceContextIgnoreSampledFalse_WithNoTraceState()
 		{
 			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
-			_agent1.ConfigStore.CurrentSnapshot =
+			_agent1.ConfigurationStore.CurrentSnapshot =
 				new MockConfigurationSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "true", transactionSampleRate: "1");
 
 			var client = new HttpClient();
@@ -234,7 +234,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TraceContextIgnoreSampledFalse_WithEsTraceState_NotSampled()
 		{
 			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
-			_agent1.ConfigStore.CurrentSnapshot =
+			_agent1.ConfigurationStore.CurrentSnapshot =
 				new MockConfigurationSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "true", transactionSampleRate: "1");
 
 			var client = new HttpClient();
@@ -261,7 +261,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TraceContextIgnoreSampledFalse_WithNonEsTraceState_NotSampled()
 		{
 			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
-			_agent1.ConfigStore.CurrentSnapshot =
+			_agent1.ConfigurationStore.CurrentSnapshot =
 				new MockConfigurationSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "true", transactionSampleRate: "1");
 
 			var client = new HttpClient();
@@ -288,7 +288,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TraceContextIgnoreSampledFalse_NotSet_WithNonEsTraceState_NotSampled()
 		{
 			// Set TraceContextIgnoreSampledFalse to default (and 100% sample rate)
-			_agent1.ConfigStore.CurrentSnapshot =
+			_agent1.ConfigurationStore.CurrentSnapshot =
 				new MockConfigurationSnapshot(new NoopLogger(), traceContextIgnoreSampledFalse: "false", transactionSampleRate: "1");
 
 			var client = new HttpClient();

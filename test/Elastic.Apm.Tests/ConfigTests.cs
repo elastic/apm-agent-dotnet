@@ -953,7 +953,7 @@ namespace Elastic.Apm.Tests
 
 			var noopLogger = new NoopLogger();
 			using var metricsProvider =
-				new MetricsCollector(noopLogger, mockPayloadSender, new ConfigStore(new MockConfigurationSnapshot(disableMetrics: "*cpu*"), noopLogger));
+				new MetricsCollector(noopLogger, mockPayloadSender, new ConfigurationStore(new MockConfigurationSnapshot(disableMetrics: "*cpu*"), noopLogger));
 			metricsProvider.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();

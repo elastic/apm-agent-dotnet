@@ -332,7 +332,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						, transactionSampleRate: updateCfgVariant.IsSampled ? "1" : "0"
 					);
 
-					sutEnv.Agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+					sutEnv.Agent.ConfigurationStore.CurrentSnapshot = updateConfigSnapshot;
 
 					foreach (var isError in new[] { false, true })
 					{

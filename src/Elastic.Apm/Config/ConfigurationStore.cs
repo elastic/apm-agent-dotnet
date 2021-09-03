@@ -6,14 +6,14 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class ConfigStore : IConfigStore
+	internal class ConfigurationStore : IConfigurationStore
 	{
-		private const string ThisClassName = nameof(ConfigStore);
+		private const string ThisClassName = nameof(ConfigurationStore);
 		private readonly object _lock = new object();
 
 		private readonly IApmLogger _logger;
 
-		internal ConfigStore(IConfigurationSnapshot initialSnapshot, IApmLogger logger)
+		internal ConfigurationStore(IConfigurationSnapshot initialSnapshot, IApmLogger logger)
 		{
 			_logger = logger.Scoped(ThisClassName);
 			_currentSnapshot = initialSnapshot;

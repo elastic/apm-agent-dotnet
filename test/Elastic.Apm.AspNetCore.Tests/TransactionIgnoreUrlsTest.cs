@@ -90,7 +90,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new NoopLogger()
 				, transactionIgnoreUrls: "*SimplePage*"
 			);
-			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+			_agent.ConfigurationStore.CurrentSnapshot = updateConfigSnapshot;
 
 			await _client.GetAsync("/Home/SimplePage");
 
@@ -104,7 +104,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new NoopLogger()
 				, transactionIgnoreUrls: "FooBar"
 			);
-			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+			_agent.ConfigurationStore.CurrentSnapshot = updateConfigSnapshot;
 
 			await _client.GetAsync("/Home/SimplePage");
 

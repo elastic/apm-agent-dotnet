@@ -407,7 +407,7 @@ namespace Elastic.Apm.Tests
 			var configReader = new MockConfigurationSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8123", maxBatchEventCount: "0",
 				flushInterval: "0");
 
-			var configStore = new ConfigStore(configReader, inMemoryLogger);
+			var configStore = new ConfigurationStore(configReader, inMemoryLogger);
 			using var centralConfigFetcher =
 				new CentralConfigurationFetcher(inMemoryLogger, configStore, Service.GetDefaultService(configReader, inMemoryLogger));
 

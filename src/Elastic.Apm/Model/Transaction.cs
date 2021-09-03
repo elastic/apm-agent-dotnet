@@ -65,7 +65,7 @@ namespace Elastic.Apm.Model
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type, long? timestamp = null)
-			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationStore.CurrentSnapshot,
 				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, null, timestamp: timestamp) { }
 
 		/// <summary>
@@ -290,6 +290,12 @@ namespace Elastic.Apm.Model
 		public IConfigurationSnapshot ConfigurationSnapshot { get; }
 
 		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// <seealso cref="ShouldSerializeContext" />
+		/// </summary>
+		public Context Context => _context.Value;
+
+		/// <summary>
 		/// In general if there is an error on the span, the outcome will be <code> Outcome.Failure </code> otherwise it'll be
 		/// <code> Outcome.Success </code>..
 		/// There are some exceptions to this (see spec:
@@ -322,12 +328,6 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		[JsonIgnore]
 		public IConfigSnapshot ConfigSnapshot { get; }
-
-		/// <summary>
-		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
-		/// <seealso cref="ShouldSerializeContext" />
-		/// </summary>
-		public Context Context => _context.Value;
 
 		[JsonIgnore]
 		public Dictionary<string, string> Custom => Context.Custom;

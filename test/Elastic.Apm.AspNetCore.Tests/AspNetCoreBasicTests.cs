@@ -196,7 +196,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
 
 			//flip recording to true
-			_agent.ConfigStore.CurrentSnapshot = new MockConfigurationSnapshot(recording: "true");
+			_agent.ConfigurationStore.CurrentSnapshot = new MockConfigurationSnapshot(recording: "true");
 
 			response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();

@@ -235,7 +235,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				, sanitizeFieldNames: "foo"
 			);
 
-			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+			_agent.ConfigurationStore.CurrentSnapshot = updateConfigSnapshot;
 
 			await _client.GetAsync("/Home/SimplePage");
 

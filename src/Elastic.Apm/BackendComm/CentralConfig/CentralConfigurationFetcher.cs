@@ -24,7 +24,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private readonly IAgentTimer _agentTimer;
 		private readonly ICentralConfigResponseParser _centralConfigResponseParser;
-		private readonly IConfigStore _configStore;
+		private readonly IConfigurationStore _configurationStore;
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigurationSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
@@ -33,23 +33,23 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private long _dbgIterationsCount;
 		private EntityTagHeaderValue _eTag;
 
-		internal CentralConfigurationFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
+		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, ICentralConfigResponseParser centralConfigResponseParser,
 			Service service,
 			HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
-		) : this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) =>
+		) : this(logger, configurationStore, configurationStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) =>
 			_centralConfigResponseParser = centralConfigResponseParser;
 
-		internal CentralConfigurationFetcher(IApmLogger logger, IConfigStore configStore, Service service
+		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, Service service
 			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		)
-			: this(logger, configStore, new CentralConfigResponseParser(logger), service, httpMessageHandler, agentTimer, dbgName) { }
+			: this(logger, configurationStore, new CentralConfigResponseParser(logger), service, httpMessageHandler, agentTimer, dbgName) { }
 
 		/// <summary>
 		/// We need this private ctor to avoid calling configStore.CurrentSnapshot twice (and thus possibly using different
 		/// snapshots)
 		/// when passing isEnabled: initialConfigSnapshot.CentralConfig and config: initialConfigSnapshot to base
 		/// </summary>
-		private CentralConfigurationFetcher(IApmLogger logger, IConfigStore configStore, IConfigurationSnapshot initialConfigurationSnapshot, Service service
+		private CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, IConfigurationSnapshot initialConfigurationSnapshot, Service service
 			, HttpMessageHandler httpMessageHandler, IAgentTimer agentTimer, string dbgName
 		)
 			: base( /* isEnabled: */ initialConfigurationSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigurationSnapshot, httpMessageHandler)
@@ -77,7 +77,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			if (!_initialSnapshot.CentralConfig) return;
 
-			_configStore = configStore;
+			_configurationStore = configurationStore;
 
 			_agentTimer = agentTimer ?? new AgentTimer();
 
@@ -141,7 +141,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 						, HttpClient.BaseAddress.Sanitize().ToString()
 						, waitInfo.Interval.ToHms(),
 						_dbgIterationsCount
-						, httpRequest == null ? " N/A" : Environment.NewLine + httpRequest.Sanitize(_configStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()
+						, httpRequest == null ? " N/A" : Environment.NewLine + httpRequest.Sanitize(_configurationStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()
 						, httpResponse == null ? " N/A" : Environment.NewLine + httpResponse.ToString().Indent()
 						, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
 						, httpResponseBody == null ? " N/A" : Environment.NewLine + httpResponseBody.Indent());
@@ -174,7 +174,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			if (httpResponse == null)
 			{
 				throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
-					+ $" Request:{Environment.NewLine}{httpRequest.Sanitize(_configStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()}",
+					+ $" Request:{Environment.NewLine}{httpRequest.Sanitize(_configurationStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()}",
 					new WaitInfoS(WaitTimeIfAnyError, "HttpResponseMessage from APM Server is null"));
 			}
 
@@ -190,9 +190,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private void UpdateConfigStore(CentralConfigReader centralConfigReader)
 		{
-			_logger.Info()?.Log("Updating " + nameof(ConfigStore) + ". New central configuration: {CentralConfiguration}", centralConfigReader);
+			_logger.Info()?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfigReader);
 
-			_configStore.CurrentSnapshot = new WrappingConfigurationSnapshot(_initialSnapshot, centralConfigReader
+			_configurationStore.CurrentSnapshot = new WrappingConfigurationSnapshot(_initialSnapshot, centralConfigReader
 				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{centralConfigReader.ETag}')");
 		}
 

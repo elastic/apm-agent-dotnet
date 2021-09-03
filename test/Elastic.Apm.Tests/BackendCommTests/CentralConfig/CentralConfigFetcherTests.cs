@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var serverUrl = "http://username:password@localhost:8200";
 
 			var configSnapshotFromReader = new MockConfigurationSnapshot(testLogger, logLevel: "Trace", serverUrl: serverUrl, secretToken: secretToken);
-			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
+			var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
 			var waitHandle = new ManualResetEvent(false);
@@ -79,7 +79,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var testLogger = new ConsoleLogger(logLevel);
 
 			var configSnapshotFromReader = new MockConfigurationSnapshot(testLogger, logLevel: "Trace");
-			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
+			var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
 			var waitHandle = new ManualResetEvent(false);
@@ -140,7 +140,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var testLogger = new UnswitchableLogger(new LogLevelSwitch(LogLevel.Trace));
 
 			var configSnapshotFromReader = new MockConfigurationSnapshot(testLogger, logLevel: "Trace");
-			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
+			var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
 			var waitHandle = new ManualResetEvent(false);
@@ -176,7 +176,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		public void Should_Update_IgnoreMessageQueues_Configuration()
 		{
 			var configSnapshotFromReader = new MockConfigurationSnapshot(LoggerBase, ignoreMessageQueues: "");
-			var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
+			var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
 
 			configStore.CurrentSnapshot.IgnoreMessageQueues.Should().BeEmpty();
 
@@ -222,7 +222,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			CentralConfigurationFetcher lastCentralConfigurationFetcher;
 			var configSnapshotFromReader = new ConfigurationSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
-			var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
+			var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
 			var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
 			var handler = new MockHttpMessageHandler();
 			var configUrl = BackendCommUtils.ApmServerEndpoints
@@ -264,7 +264,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			{
 				var configSnapshotFromReader = new ConfigurationSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
 				var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
-				var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
+				var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
 
 				var handler = new MockHttpMessageHandler();
 				var configUrl = BackendCommUtils.ApmServerEndpoints

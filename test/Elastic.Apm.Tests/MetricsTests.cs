@@ -61,7 +61,7 @@ namespace Elastic.Apm.Tests
 		public void CollectAllMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new ConfigStore(new MockConfigurationSnapshot(_logger), _logger)))
+			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new ConfigurationStore(new MockConfigurationSnapshot(_logger), _logger)))
 				mc.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();
@@ -108,7 +108,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
 			using (var mc = new MetricsCollector(testLogger, mockPayloadSender,
-				new ConfigStore(new MockConfigurationSnapshot(disableMetrics: "*"), testLogger)))
+				new ConfigurationStore(new MockConfigurationSnapshot(disableMetrics: "*"), testLogger)))
 			{
 				mc.MetricsProviders.Clear();
 				var providerWithException = new MetricsProviderWithException();
@@ -190,12 +190,14 @@ namespace Elastic.Apm.Tests
 			payloadSender.Metrics.Should().BeEmpty();
 
 			//start recording
-			agent.ConfigStore.CurrentSnapshot = new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "true");
+			agent.ConfigurationStore.CurrentSnapshot =
+				new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "true");
 
 			await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
 
 			//stop recording
-			agent.ConfigStore.CurrentSnapshot = new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
+			agent.ConfigurationStore.CurrentSnapshot =
+				new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
 			payloadSender.Metrics.Should().NotBeEmpty();
 
 			await Task.Delay(500); //make sure collection on the MetricCollector is finished
@@ -230,7 +232,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender,
-				new ConfigStore(new MockConfigurationSnapshot(logger, "Information"), _logger));
+				new ConfigurationStore(new MockConfigurationSnapshot(logger, "Information"), _logger));
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 
 			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
@@ -262,7 +264,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender,
-				new ConfigStore(new MockConfigurationSnapshot(logger, "Information"), _logger));
+				new ConfigurationStore(new MockConfigurationSnapshot(logger, "Information"), _logger));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 
@@ -396,7 +398,7 @@ namespace Elastic.Apm.Tests
 			noopConfigReader.SetupGet(n => n.MetricsIntervalInMilliseconds).Returns(1);
 
 			var _ = new MetricsCollector(new NoopLogger(), new NoopPayloadSender(),
-				new ConfigStore(new ConfigurationSnapshotFromReader(noopConfigReader.Object, ""), new NoopLogger()));
+				new ConfigurationStore(new ConfigurationSnapshotFromReader(noopConfigReader.Object, ""), new NoopLogger()));
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider
