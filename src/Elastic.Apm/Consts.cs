@@ -8,8 +8,8 @@ namespace Elastic.Apm
 	{
 		internal const int PropertyMaxLength = 1024;
 
-		internal static string AgentName => "dotnet";
+		internal const string AgentName = "dotnet";
 
-		internal static string Redacted = "[REDACTED]";
+		internal const string Redacted = "[REDACTED]";
 	}
 }
