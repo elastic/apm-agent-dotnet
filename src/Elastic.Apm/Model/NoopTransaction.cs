@@ -24,7 +24,6 @@ namespace Elastic.Apm.Model
 	/// </summary>
 	internal class NoopTransaction : ITransaction
 	{
-		private static DefaultConfigurationSnapshot _defaultConfigurationSnapshot = new DefaultConfigurationSnapshot();
 		private static readonly Context ReusableContextInstance = new Context();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -32,12 +31,17 @@ namespace Elastic.Apm.Model
 
 		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
 
-		public NoopTransaction(string name, string type, ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer)
+		public NoopTransaction(
+			string name,
+			string type,
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IConfigurationSnapshot configurationSnapshot)
 		{
 			Name = name;
 			Type = type;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
+			ConfigurationSnapshot = configurationSnapshot;
 		}
 
 		public Context Context =>
@@ -45,7 +49,8 @@ namespace Elastic.Apm.Model
 
 		public Dictionary<string, string> Custom => _custom.Value;
 
-		public IConfigurationSnapshot ConfigurationSnapshot => _defaultConfigurationSnapshot;
+		public IConfigurationSnapshot ConfigurationSnapshot { get; }
+
 		public double? Duration { get; set; }
 
 		[MaxLength]
@@ -137,51 +142,5 @@ namespace Elastic.Apm.Model
 
 		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
 		) { }
-	}
-
-	/// <summary>
-	/// A static config snapshot which contains default values
-	/// </summary>
-	internal class DefaultConfigurationSnapshot : IConfigurationSnapshot, IConfigurationSnapshotDescription
-	{
-		public string ApiKey => string.Empty;
-		public IReadOnlyCollection<string> ApplicationNamespaces => new List<string>();
-		public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
-		public List<string> CaptureBodyContentTypes => new();
-		public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
-		public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
-		public string CloudProvider => ConfigConsts.DefaultValues.CloudProvider;
-		public IReadOnlyList<WildcardMatcher> DisableMetrics => new List<WildcardMatcher>();
-		public bool Enabled => false;
-		public string Environment => string.Empty;
-		public IReadOnlyCollection<string> ExcludedNamespaces => new List<string>();
-		public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
-		public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
-		public string HostName => string.Empty;
-		public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => new Collection<WildcardMatcher>();
-		public LogLevel LogLevel => LogLevel.Error;
-		public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
-		public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
-		public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
-		public bool Recording => false;
-		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => new List<WildcardMatcher>();
-		public string SecretToken => string.Empty;
-		public string ServerCert => string.Empty;
-		public IReadOnlyList<Uri> ServerUrls => new List<Uri>();
-		public Uri ServerUrl => ConfigConsts.DefaultValues.ServerUri;
-		public string ServiceName => string.Empty;
-		public string ServiceNodeName => string.Empty;
-		public string ServiceVersion => string.Empty;
-		public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
-		public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
-		public bool TraceContextIgnoreSampledFalse => ConfigConsts.DefaultValues.TraceContextIgnoreSampledFalse;
-		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => new Collection<WildcardMatcher>();
-		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
-
-
-		public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
-		public bool UseElasticTraceparentHeader => false;
-		public bool VerifyServerCert => false;
-		public string Description => nameof(DefaultConfigurationSnapshot);
 	}
 }

@@ -62,7 +62,7 @@ namespace Elastic.Apm.Api
 			if (_configurationProvider.CurrentSnapshot.Enabled && _configurationProvider.CurrentSnapshot.Recording)
 				return StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
 
-			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
+			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer, _configurationProvider.CurrentSnapshot);
 		}
 
 		internal Transaction StartTransactionInternal(string name, string type,
