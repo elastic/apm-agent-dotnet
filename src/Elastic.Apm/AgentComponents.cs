@@ -57,9 +57,8 @@ namespace Elastic.Apm
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
 				HttpTraceConfiguration = new HttpTraceConfiguration();
-				if (ConfigurationReader.Enabled)
-					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
+				// initialize the tracer before central configuration or metric collection is started
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 
