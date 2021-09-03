@@ -37,29 +37,65 @@ namespace Elastic.Apm.Tests
 		public void ParseKubernetesInfo_ShouldReturnNull_WhenNoEnvironmentVariablesAreSetAndContainerInfoIsNull()
 		{
 			// Arrange + Act
-			var kubernetesInfo = _systemInfoHelper.ParseKubernetesInfo(null, null);
+			var system = new Api.System();
+			_systemInfoHelper.ParseKubernetesInfo(system);
 
 			// Assert
-			kubernetesInfo.Should().BeNull();
+			system.Kubernetes.Should().BeNull();
+		}
+
+		[Theory]
+		// underscores
+		[InlineData("1:name=systemd:/kubepods.slice/kubepods-burstable.slice/" +
+			"kubepods-burstable-pod90d81341_92de_11e7_8cf2_507b9d4141fa.slice/" +
+			"crio-2227daf62df6694645fee5df53c1f91271546a9560e8600a525690ae252b7f63.scope",
+			"2227daf62df6694645fee5df53c1f91271546a9560e8600a525690ae252b7f63", "90d81341-92de-11e7-8cf2-507b9d4141fa")]
+		// openshift form
+		[InlineData("9:freezer:/kubepods.slice/kubepods-pod22949dce_fd8b_11ea_8ede_98f2b32c645c.slice" +
+			"/docker-b15a5bdedd2e7645c3be271364324321b908314e4c77857bbfd32a041148c07f.scope",
+			"b15a5bdedd2e7645c3be271364324321b908314e4c77857bbfd32a041148c07f",
+			"22949dce-fd8b-11ea-8ede-98f2b32c645c")]
+		// ubuntu cgroup
+		[InlineData("1:name=systemd:/user.slice/user-1000.slice/user@1000.service/apps.slice/apps-org.gnome.Terminal" +
+			".slice/vte-spawn-75bc72bd-6642-4cf5-b62c-0674e11bfc84.scope", null, null)]
+		public void ParseKubernetesInfo_FromCGroupLine(string line, string containerId, string podId)
+		{
+			var system = new Api.System();
+			_systemInfoHelper.ParseContainerId(system, "hostname", line);
+
+			if (containerId is null)
+				system.Container.Should().BeNull();
+			else
+				system.Container.Id.Should().Be(containerId);
+
+			if (podId is null)
+				system.Kubernetes.Should().BeNull();
+			else
+				system.Kubernetes.Pod.Uid.Should().Be(podId);
 		}
 
 		[Fact]
 		public void ParseKubernetesInfo_ShouldUseContainerInfoAndHostName_WhenNoEnvironmentVariablesAreSet()
 		{
 			// Arrange
-			var containerInfo = new Container { Id = "containerId" };
-			const string hostName = "hostName";
+			var containerId = "e9b90526-f47d-11e8-b2a5-080027b9f4fb";
+			var hostName = "hostName";
+			var line = $"1:name=systemd:/kubepods/besteffort/pod{containerId}/15aa6e53-b09a-40c7-8558-c6c31e36c88a";
 
 			// Act
-			var kubernetesInfo = _systemInfoHelper.ParseKubernetesInfo(containerInfo, hostName);
+			_systemInfoHelper.ParseSystemInfo(hostName);
+
+			var system = new Api.System();
+			_systemInfoHelper.ParseContainerId(system, hostName, line);
+			_systemInfoHelper.ParseKubernetesInfo(system);
 
 			// Assert
-			kubernetesInfo.Should().NotBeNull();
-			kubernetesInfo.Node.Should().BeNull();
-			kubernetesInfo.Namespace.Should().BeNull();
-			kubernetesInfo.Pod.Should().NotBeNull();
-			kubernetesInfo.Pod.Uid.Should().Be(containerInfo.Id);
-			kubernetesInfo.Pod.Name.Should().Be(hostName);
+			system.Kubernetes.Should().NotBeNull();
+			system.Kubernetes.Node.Should().BeNull();
+			system.Kubernetes.Namespace.Should().BeNull();
+			system.Kubernetes.Pod.Should().NotBeNull();
+			system.Kubernetes.Pod.Uid.Should().Be(containerId);
+			system.Kubernetes.Pod.Name.Should().Be(hostName);
 		}
 
 		public static IEnumerable<object[]> EnvironmentVariablesData
@@ -129,11 +165,12 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(name, value);
 
 			// Act
-			var kubernetesInfo = _systemInfoHelper.ParseKubernetesInfo(null, null);
+			var system = new Api.System();
+			_systemInfoHelper.ParseKubernetesInfo(system);
 
 			// Assert
-			kubernetesInfo.Should().NotBeNull();
-			validateAction.Invoke(kubernetesInfo);
+			system.Kubernetes.Should().NotBeNull();
+			validateAction.Invoke(system.Kubernetes);
 		}
 
 		public void Dispose()
