@@ -2,9 +2,12 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
+using Elastic.Apm.BackendComm.CentralConfig;
 
-namespace Elastic.Apm.BackendComm.CentralConfig
+namespace Elastic.Apm.Tests.Utilities
 {
-	internal interface ICentralConfigFetcher : IDisposable { }
+	public class NoopCentralConfigurationFetcher : ICentralConfigurationFetcher
+	{
+		public void Dispose() { }
+	}
 }

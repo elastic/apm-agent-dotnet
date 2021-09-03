@@ -74,7 +74,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var response = new HttpResponseMessage { StatusCode = statusCode };
 
 			// Act + Assert
-			var exception = Assert.Throws<CentralConfigFetcher.FailedToFetchConfigException>(
+			var exception = Assert.Throws<CentralConfigurationFetcher.FailedToFetchConfigException>(
 				() => _parser.ParseHttpResponse(response, string.Empty));
 
 			exception.Message.Should().Contain("HTTP status code is ");
@@ -87,7 +87,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var response = new HttpResponseMessage { StatusCode = HttpStatusCode.OK };
 
 			// Act + Assert
-			var exception = Assert.Throws<CentralConfigFetcher.FailedToFetchConfigException>(
+			var exception = Assert.Throws<CentralConfigurationFetcher.FailedToFetchConfigException>(
 				() => _parser.ParseHttpResponse(response, string.Empty));
 
 			exception.Message.Should().Contain("doesn't have ETag header");

@@ -18,7 +18,7 @@ namespace Elastic.Apm.Tests.Utilities
 			IConfigurationSnapshot configuration = null,
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
-			ICentralConfigFetcher centralConfigFetcher = null,
+			ICentralConfigurationFetcher centralConfigurationFetcher = null,
 			IApmServerInfo apmServerInfo = null
 		) : base(
 			logger ?? new NoopLogger(),
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Tests.Utilities
 			payloadSender ?? new MockPayloadSender(),
 			new FakeMetricsCollector(),
 			currentExecutionSegmentsContainer,
-			centralConfigFetcher ?? new NoopCentralConfigFetcher(),
+			centralConfigurationFetcher ?? new NoopCentralConfigurationFetcher(),
 			apmServerInfo ?? MockApmServerInfo.Version710
 		)
 		{ }

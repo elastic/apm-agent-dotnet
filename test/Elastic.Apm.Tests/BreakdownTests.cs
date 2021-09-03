@@ -633,7 +633,7 @@ namespace Elastic.Apm.Tests
 					payloadSender,
 					null, //metricsCollector will be set in AgentComponents.ctor
 					new CurrentExecutionSegmentsContainer(),
-					new NoopCentralConfigFetcher(),
+					new NoopCentralConfigurationFetcher(),
 					new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty))));
 
 			agent.Tracer.CaptureTransaction("Foo", "Bar", _ =>
@@ -725,7 +725,7 @@ namespace Elastic.Apm.Tests
 				new NoopPayloadSender(),
 				new FakeMetricsCollector(), //metricsCollector will be set in AgentComponents.ctor
 				new CurrentExecutionSegmentsContainer(),
-				new NoopCentralConfigFetcher(),
+				new NoopCentralConfigurationFetcher(),
 				new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty)),
 				breakdownMetricsProvider);
 

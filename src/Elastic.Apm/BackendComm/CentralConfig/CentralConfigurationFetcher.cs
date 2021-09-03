@@ -15,9 +15,9 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal class CentralConfigFetcher : BackendCommComponentBase, ICentralConfigFetcher
+	internal class CentralConfigurationFetcher : BackendCommComponentBase, ICentralConfigurationFetcher
 	{
-		private const string ThisClassName = nameof(CentralConfigFetcher);
+		private const string ThisClassName = nameof(CentralConfigurationFetcher);
 
 		internal static readonly TimeSpan GetConfigHttpRequestTimeout = TimeSpan.FromMinutes(5);
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
@@ -33,13 +33,13 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private long _dbgIterationsCount;
 		private EntityTagHeaderValue _eTag;
 
-		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
+		internal CentralConfigurationFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
 			Service service,
 			HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		) : this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) =>
 			_centralConfigResponseParser = centralConfigResponseParser;
 
-		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service
+		internal CentralConfigurationFetcher(IApmLogger logger, IConfigStore configStore, Service service
 			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		)
 			: this(logger, configStore, new CentralConfigResponseParser(logger), service, httpMessageHandler, agentTimer, dbgName) { }
@@ -49,7 +49,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		/// snapshots)
 		/// when passing isEnabled: initialConfigSnapshot.CentralConfig and config: initialConfigSnapshot to base
 		/// </summary>
-		private CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, IConfigurationSnapshot initialConfigurationSnapshot, Service service
+		private CentralConfigurationFetcher(IApmLogger logger, IConfigStore configStore, IConfigurationSnapshot initialConfigurationSnapshot, Service service
 			, HttpMessageHandler httpMessageHandler, IAgentTimer agentTimer, string dbgName
 		)
 			: base( /* isEnabled: */ initialConfigurationSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigurationSnapshot, httpMessageHandler)

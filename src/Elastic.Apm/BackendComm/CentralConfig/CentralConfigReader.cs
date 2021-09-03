@@ -14,7 +14,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 {
 	internal class CentralConfigReader : AbstractConfigurationReader
 	{
-		private const string ThisClassName = nameof(CentralConfigFetcher) + "." + nameof(CentralConfigReader);
+		private const string ThisClassName = nameof(CentralConfigurationFetcher) + "." + nameof(CentralConfigReader);
 
 		private readonly CentralConfigResponseParser.CentralConfigPayload _configPayload;
 

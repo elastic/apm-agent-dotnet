@@ -394,7 +394,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Initializes a <see cref="CentralConfigFetcher" /> with a server url which contains basic authentication.
+		/// Initializes a <see cref="CentralConfigurationFetcher" /> with a server url which contains basic authentication.
 		/// The test makes sure that the user name and password from basic auth. is not printed in the logs on error level.
 		/// </summary>
 		[Fact]
@@ -409,7 +409,7 @@ namespace Elastic.Apm.Tests
 
 			var configStore = new ConfigStore(configReader, inMemoryLogger);
 			using var centralConfigFetcher =
-				new CentralConfigFetcher(inMemoryLogger, configStore, Service.GetDefaultService(configReader, inMemoryLogger));
+				new CentralConfigurationFetcher(inMemoryLogger, configStore, Service.GetDefaultService(configReader, inMemoryLogger));
 
 			inMemoryLogger.Lines.Should().HaveCount(1);
 			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));

@@ -30,7 +30,7 @@ namespace Elastic.Apm
 			IPayloadSender payloadSender,
 			IMetricsCollector metricsCollector,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			ICentralConfigFetcher centralConfigFetcher,
+			ICentralConfigurationFetcher centralConfigurationFetcher,
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider = null
 		)
@@ -63,7 +63,9 @@ namespace Elastic.Apm
 
 				if (ConfigurationReader.Enabled)
 				{
-					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
+					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
+
+					CentralConfigurationFetcher = centralConfigurationFetcher ?? new CentralConfigurationFetcher(Logger, ConfigStore, Service);
 					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider);
 					MetricsCollector.StartCollecting();
 				}
@@ -77,7 +79,7 @@ namespace Elastic.Apm
 			}
 		}
 
-		internal ICentralConfigFetcher CentralConfigFetcher { get; }
+		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
 
 		internal IConfigStore ConfigStore { get; }
 
@@ -110,7 +112,7 @@ namespace Elastic.Apm
 
 			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
 
-			CentralConfigFetcher?.Dispose();
+			CentralConfigurationFetcher?.Dispose();
 		}
 	}
 }
