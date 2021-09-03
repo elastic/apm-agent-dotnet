@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.DistributedTracing;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -103,7 +104,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 				if (IsRequestFilteredOut(requestUrl))
 				{
-					Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", Http.Sanitize(requestUrl));
+					Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", requestUrl.Sanitize());
 					return;
 				}
 
@@ -124,7 +125,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
-			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
+			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", requestUrl.Sanitize());
 
 			var transaction = ApmAgent.Tracer.CurrentTransaction;
 			if (transaction is null)
@@ -174,13 +175,13 @@ namespace Elastic.Apm.DiagnosticListeners
 
 					if (span is null)
 					{
-						Logger.Trace()?.Log("Could not create span for outgoing HTTP request to {RequestUrl}", Http.Sanitize(requestUrl));
+						Logger.Trace()?.Log("Could not create span for outgoing HTTP request to {RequestUrl}", requestUrl.Sanitize());
 						return;
 					}
 				}
 				else
 				{
-					Logger.Trace()?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as not to known service", Http.Sanitize(requestUrl));
+					Logger.Trace()?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as not to known service", requestUrl.Sanitize());
 					return;
 				}
 			}
@@ -231,7 +232,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)
 		{
-			Logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
+			Logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", requestUrl.Sanitize().ToString());
 
 			if (!ProcessingRequests.TryRemove(request, out var span))
 			{
@@ -241,13 +242,13 @@ namespace Elastic.Apm.DiagnosticListeners
 				{
 					Logger.Debug()
 						?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent),
-							Http.Sanitize(requestUrl));
+							requestUrl.Sanitize().ToString());
 				}
 				else
 				{
 					Logger.Debug()
 						?.Log("Could not remove request from processing requests. This likely means it was not captured to begin with." +
-							"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
+							"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), requestUrl.Sanitize().ToString());
 				}
 
 				return;
@@ -285,7 +286,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
-			Logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
+			Logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl.Sanitize().ToString());
 
 			if (!(eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName)?.GetValue(eventValue) is Exception exception))
 			{
