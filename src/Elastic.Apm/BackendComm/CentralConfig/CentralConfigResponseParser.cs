@@ -21,7 +21,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal CentralConfigResponseParser(IApmLogger logger) => _logger = logger?.Scoped(nameof(CentralConfigResponseParser));
 
-		public (CentralConfigReader, CentralConfigurationFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
+		public (CentralConfigurationReader, CentralConfigurationFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
 			string httpResponseBody
 		)
 		{
@@ -53,7 +53,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 		}
 
-		private CentralConfigReader ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
+		private CentralConfigurationReader ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
 		{
 			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
 			{
@@ -66,7 +66,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			var eTag = httpResponse.Headers.ETag.ToString();
 
-			return new CentralConfigReader(_logger, configPayload, eTag);
+			return new CentralConfigurationReader(_logger, configPayload, eTag);
 		}
 
 		private static CentralConfigurationFetcher.WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)

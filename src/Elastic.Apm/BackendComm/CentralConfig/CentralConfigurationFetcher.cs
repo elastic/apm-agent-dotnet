@@ -28,7 +28,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigurationSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
-		private readonly Action<CentralConfigReader> _onResponse;
+		private readonly Action<CentralConfigurationReader> _onResponse;
 
 		private long _dbgIterationsCount;
 		private EntityTagHeaderValue _eTag;
@@ -102,12 +102,12 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest).ConfigureAwait(false);
 
-				CentralConfigReader centralConfigReader;
-				(centralConfigReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
-				if (centralConfigReader != null)
+				CentralConfigurationReader centralConfigurationReader;
+				(centralConfigurationReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
+				if (centralConfigurationReader != null)
 				{
-					_onResponse?.Invoke(centralConfigReader);
-					UpdateConfigStore(centralConfigReader);
+					_onResponse?.Invoke(centralConfigurationReader);
+					UpdateConfigStore(centralConfigurationReader);
 					_eTag = httpResponse.Headers.ETag;
 				}
 			}
@@ -188,12 +188,12 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
 				, _agentTimer.Now + GetConfigHttpRequestTimeout, CancellationTokenSource.Token).ConfigureAwait(false);
 
-		private void UpdateConfigStore(CentralConfigReader centralConfigReader)
+		private void UpdateConfigStore(CentralConfigurationReader centralConfigurationReader)
 		{
-			_logger.Info()?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfigReader);
+			_logger.Info()?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfigurationReader);
 
-			_configurationStore.CurrentSnapshot = new WrappingConfigurationSnapshot(_initialSnapshot, centralConfigReader
-				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{centralConfigReader.ETag}')");
+			_configurationStore.CurrentSnapshot = new WrappingConfigurationSnapshot(_initialSnapshot, centralConfigurationReader
+				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{centralConfigurationReader.ETag}')");
 		}
 
 		internal class FailedToFetchConfigException : Exception
@@ -223,24 +223,24 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private class WrappingConfigurationSnapshot : IConfigurationSnapshot
 		{
-			private readonly CentralConfigReader _centralConfig;
+			private readonly CentralConfigurationReader _centralConfiguration;
 			private readonly IConfigurationSnapshot _wrapped;
 
-			internal WrappingConfigurationSnapshot(IConfigurationSnapshot wrapped, CentralConfigReader centralConfig, string dbgDescription)
+			internal WrappingConfigurationSnapshot(IConfigurationSnapshot wrapped, CentralConfigurationReader centralConfiguration, string dbgDescription)
 			{
 				_wrapped = wrapped;
-				_centralConfig = centralConfig;
+				_centralConfiguration = centralConfiguration;
 				DbgDescription = dbgDescription;
 			}
 
 			public string ApiKey => _wrapped.ApiKey;
 			public IReadOnlyCollection<string> ApplicationNamespaces => _wrapped.ApplicationNamespaces;
 
-			public string CaptureBody => _centralConfig.CaptureBody ?? _wrapped.CaptureBody;
+			public string CaptureBody => _centralConfiguration.CaptureBody ?? _wrapped.CaptureBody;
 
-			public List<string> CaptureBodyContentTypes => _centralConfig.CaptureBodyContentTypes ?? _wrapped.CaptureBodyContentTypes;
+			public List<string> CaptureBodyContentTypes => _centralConfiguration.CaptureBodyContentTypes ?? _wrapped.CaptureBodyContentTypes;
 
-			public bool CaptureHeaders => _centralConfig.CaptureHeaders ?? _wrapped.CaptureHeaders;
+			public bool CaptureHeaders => _centralConfiguration.CaptureHeaders ?? _wrapped.CaptureHeaders;
 			public bool CentralConfig => _wrapped.CentralConfig;
 
 			public string CloudProvider => _wrapped.CloudProvider;
@@ -259,18 +259,18 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string HostName => _wrapped.HostName;
 
-			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => _centralConfig.IgnoreMessageQueues ?? _wrapped.IgnoreMessageQueues;
+			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => _centralConfiguration.IgnoreMessageQueues ?? _wrapped.IgnoreMessageQueues;
 
-			public LogLevel LogLevel => _centralConfig.LogLevel ?? _wrapped.LogLevel;
+			public LogLevel LogLevel => _centralConfiguration.LogLevel ?? _wrapped.LogLevel;
 
 			public int MaxBatchEventCount => _wrapped.MaxBatchEventCount;
 
 			public int MaxQueueEventCount => _wrapped.MaxQueueEventCount;
 
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
-			public bool Recording => _centralConfig.Recording ?? _wrapped.Recording;
+			public bool Recording => _centralConfiguration.Recording ?? _wrapped.Recording;
 
-			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _centralConfig.SanitizeFieldNames ?? _wrapped.SanitizeFieldNames;
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _centralConfiguration.SanitizeFieldNames ?? _wrapped.SanitizeFieldNames;
 
 			public string SecretToken => _wrapped.SecretToken;
 
@@ -287,14 +287,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public string ServiceVersion => _wrapped.ServiceVersion;
 
 			public double SpanFramesMinDurationInMilliseconds =>
-				_centralConfig.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
+				_centralConfiguration.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
-			public int StackTraceLimit => _centralConfig.StackTraceLimit ?? _wrapped.StackTraceLimit;
-			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _centralConfig.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
+			public int StackTraceLimit => _centralConfiguration.StackTraceLimit ?? _wrapped.StackTraceLimit;
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _centralConfiguration.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
 
-			public int TransactionMaxSpans => _centralConfig.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
+			public int TransactionMaxSpans => _centralConfiguration.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 
-			public double TransactionSampleRate => _centralConfig.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
+			public double TransactionSampleRate => _centralConfiguration.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
 
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 

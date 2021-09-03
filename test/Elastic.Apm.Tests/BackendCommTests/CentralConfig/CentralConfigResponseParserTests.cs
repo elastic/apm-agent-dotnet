@@ -138,7 +138,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 					yield return new object[]
 					{
 						$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureBodyKey}\": \"{value}\"}}",
-						new Action<CentralConfigReader>(cfg =>
+						new Action<CentralConfigurationReader>(cfg =>
 						{
 							cfg.CaptureBody.Should()
 								.NotBeNull()
@@ -150,7 +150,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.TransactionMaxSpansKey}\": \"{100}\"}}",
-					new Action<CentralConfigReader>(cfg =>
+					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.TransactionMaxSpans.Should()
 							.NotBeNull()
@@ -161,7 +161,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"{0.75}\"}}",
-					new Action<CentralConfigReader>(cfg =>
+					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.TransactionSampleRate.Should()
 							.NotBeNull()
@@ -173,7 +173,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey}\": \"{captureBodyContentTypes}\"}}",
-					new Action<CentralConfigReader>(cfg =>
+					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.CaptureBodyContentTypes.Should()
 							.NotBeNull()
@@ -184,7 +184,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey}\": \"{150}\"}}",
-					new Action<CentralConfigReader>(cfg =>
+					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.StackTraceLimit.Should()
 							.NotBeNull()
@@ -195,7 +195,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.SpanFramesMinDurationKey}\": \"{150}\"}}",
-					new Action<CentralConfigReader>(cfg =>
+					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.SpanFramesMinDurationInMilliseconds.Should()
 							.NotBeNull()
@@ -206,7 +206,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{false}\"}}",
-					new Action<CentralConfigReader>(cfg =>
+					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
 							.NotBeNull()
@@ -217,7 +217,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{true}\"}}",
-					new Action<CentralConfigReader>(cfg =>
+					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
 							.NotBeNull()
@@ -230,7 +230,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 					yield return new object[]
 					{
 						$"{{\"{CentralConfigResponseParser.CentralConfigPayload.LogLevelKey}\": \"{value}\"}}",
-						new Action<CentralConfigReader>(cfg =>
+						new Action<CentralConfigurationReader>(cfg =>
 						{
 							cfg.LogLevel.Should()
 								.NotBeNull()
@@ -243,7 +243,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 		[Theory]
 		[MemberData(nameof(ConfigDeltaData))]
-		internal void ParseHttpResponse_ShouldCorrectlyCalculateConfigDelta(string httpResponseBody, Action<CentralConfigReader> assert)
+		internal void ParseHttpResponse_ShouldCorrectlyCalculateConfigDelta(string httpResponseBody, Action<CentralConfigurationReader> assert)
 		{
 			// Arrange + Act
 			var (configDelta, _) = _parser.ParseHttpResponse(_correctResponse, httpResponseBody);

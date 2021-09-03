@@ -12,13 +12,13 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal class CentralConfigReader : AbstractConfigurationReader
+	internal class CentralConfigurationReader : AbstractConfigurationReader
 	{
-		private const string ThisClassName = nameof(CentralConfigurationFetcher) + "." + nameof(CentralConfigReader);
+		private const string ThisClassName = nameof(CentralConfigurationFetcher) + "." + nameof(CentralConfigurationReader);
 
 		private readonly CentralConfigResponseParser.CentralConfigPayload _configPayload;
 
-		public CentralConfigReader(IApmLogger logger, CentralConfigResponseParser.CentralConfigPayload configPayload, string eTag) : base(logger,
+		public CentralConfigurationReader(IApmLogger logger, CentralConfigResponseParser.CentralConfigPayload configPayload, string eTag) : base(logger,
 			ThisClassName)
 		{
 			_configPayload = configPayload;
