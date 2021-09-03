@@ -42,7 +42,7 @@ namespace Elastic.Apm.Api
 		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
 		/// and its spans is controlled by this configuration snapshot.
 		/// </summary>
-		public IConfigSnapshot ConfigSnapshot { get; }
+		public IConfigurationSnapshot ConfigurationSnapshot { get; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.

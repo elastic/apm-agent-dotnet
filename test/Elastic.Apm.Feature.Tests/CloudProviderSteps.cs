@@ -38,7 +38,7 @@ namespace Elastic.Apm.Feature.Tests
 		{
 			var output = _scenarioContext.ScenarioContainer.Resolve<ITestOutputHelper>();
 			var logger = new XUnitLogger(LogLevel.Trace, output);
-			var config = new MockConfigSnapshot(logger, cloudProvider: cloudProvider, flushInterval: "0");
+			var config = new MockConfigurationSnapshot(logger, cloudProvider: cloudProvider, flushInterval: "0");
 
 			var payloadCollector = new PayloadCollector();
 			_scenarioContext.Set(payloadCollector);

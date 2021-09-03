@@ -13,15 +13,15 @@ namespace Elastic.Apm.Config
 
 		private readonly IApmLogger _logger;
 
-		internal ConfigStore(IConfigSnapshot initialSnapshot, IApmLogger logger)
+		internal ConfigStore(IConfigurationSnapshot initialSnapshot, IApmLogger logger)
 		{
 			_logger = logger.Scoped(ThisClassName);
 			_currentSnapshot = initialSnapshot;
 		}
 
-		private volatile IConfigSnapshot _currentSnapshot;
+		private volatile IConfigurationSnapshot _currentSnapshot;
 
-		public IConfigSnapshot CurrentSnapshot
+		public IConfigurationSnapshot CurrentSnapshot
 		{
 			get => _currentSnapshot;
 

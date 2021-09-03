@@ -35,18 +35,18 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
 
 			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest, logger))
-				body = httpRequest.ExtractRequestBody(logger, transaction.ConfigSnapshot);
+				body = httpRequest.ExtractRequestBody(logger, transaction.ConfigurationSnapshot);
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
 			transaction.Context.Request.Body = body ?? Apm.Consts.Redacted;
 		}
 
 		internal static bool IsCaptureRequestBodyEnabled(this Transaction transaction, bool isForError) =>
-			transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll)
+			transaction.ConfigurationSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll)
 			||
 			(isForError
-				? transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors)
-				: transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
+				? transaction.ConfigurationSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors)
+				: transaction.ConfigurationSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
 
 		private static bool IsCaptureRequestBodyEnabledForContentType(Transaction transaction, HttpRequest request, IApmLogger logger)
 		{
@@ -58,7 +58,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				var contentType = new ContentType(request.ContentType);
 
 				//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
-				return transaction.ConfigSnapshot.CaptureBodyContentTypes.ContainsLike(contentType.MediaType);
+				return transaction.ConfigurationSnapshot.CaptureBodyContentTypes.ContainsLike(contentType.MediaType);
 			}
 			catch (Exception ex)
 			{

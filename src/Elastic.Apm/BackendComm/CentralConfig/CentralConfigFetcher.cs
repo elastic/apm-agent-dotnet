@@ -26,7 +26,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly ICentralConfigResponseParser _centralConfigResponseParser;
 		private readonly IConfigStore _configStore;
 		private readonly Uri _getConfigAbsoluteUrl;
-		private readonly IConfigSnapshot _initialSnapshot;
+		private readonly IConfigurationSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
 		private readonly Action<CentralConfigReader> _onResponse;
 
@@ -49,14 +49,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		/// snapshots)
 		/// when passing isEnabled: initialConfigSnapshot.CentralConfig and config: initialConfigSnapshot to base
 		/// </summary>
-		private CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, IConfigSnapshot initialConfigSnapshot, Service service
+		private CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, IConfigurationSnapshot initialConfigurationSnapshot, Service service
 			, HttpMessageHandler httpMessageHandler, IAgentTimer agentTimer, string dbgName
 		)
-			: base( /* isEnabled: */ initialConfigSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigSnapshot, httpMessageHandler)
+			: base( /* isEnabled: */ initialConfigurationSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigurationSnapshot, httpMessageHandler)
 		{
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 
-			_initialSnapshot = initialConfigSnapshot;
+			_initialSnapshot = initialConfigurationSnapshot;
 
 			var isCentralConfigOptEqDefault = _initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig;
 			var centralConfigStatus = _initialSnapshot.CentralConfig ? "enabled" : "disabled";
@@ -81,7 +81,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			_agentTimer = agentTimer ?? new AgentTimer();
 
-			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigSnapshot.ServerUrl, service);
+			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigurationSnapshot.ServerUrl, service);
 			_logger.Debug()
 				?.Log("Combined absolute URL for APM Server get central configuration endpoint: `{Url}'. Service: {Service}."
 					, _getConfigAbsoluteUrl.Sanitize(), service);
@@ -192,7 +192,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			_logger.Info()?.Log("Updating " + nameof(ConfigStore) + ". New central configuration: {CentralConfiguration}", centralConfigReader);
 
-			_configStore.CurrentSnapshot = new WrappingConfigSnapshot(_initialSnapshot, centralConfigReader
+			_configStore.CurrentSnapshot = new WrappingConfigurationSnapshot(_initialSnapshot, centralConfigReader
 				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{centralConfigReader.ETag}')");
 		}
 
@@ -221,12 +221,12 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 		}
 
-		private class WrappingConfigSnapshot : IConfigSnapshot
+		private class WrappingConfigurationSnapshot : IConfigurationSnapshot
 		{
 			private readonly CentralConfigReader _centralConfig;
-			private readonly IConfigSnapshot _wrapped;
+			private readonly IConfigurationSnapshot _wrapped;
 
-			internal WrappingConfigSnapshot(IConfigSnapshot wrapped, CentralConfigReader centralConfig, string dbgDescription)
+			internal WrappingConfigurationSnapshot(IConfigurationSnapshot wrapped, CentralConfigReader centralConfig, string dbgDescription)
 			{
 				_wrapped = wrapped;
 				_centralConfig = centralConfig;

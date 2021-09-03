@@ -15,7 +15,7 @@ namespace Elastic.Apm.Model
 	internal class Error : IError
 	{
 		[JsonIgnore]
-		internal IConfigSnapshot ConfigSnapshot { get; }
+		internal IConfigurationSnapshot ConfigurationSnapshot { get; }
 
 		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null
 		)
@@ -36,7 +36,7 @@ namespace Elastic.Apm.Model
 				TraceId = transaction.TraceId;
 				TransactionId = transaction.Id;
 				Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
-				ConfigSnapshot = transaction.ConfigSnapshot;
+				ConfigurationSnapshot = transaction.ConfigurationSnapshot;
 			}
 
 			ParentId = parentId;

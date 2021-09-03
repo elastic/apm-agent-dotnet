@@ -40,8 +40,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void ShouldNotReturnNotIncludedNamespaces()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigSnapshot(applicationNamespaces: "System.");
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: config)))
+			var config = new MockConfigurationSnapshot(applicationNamespaces: "System.");
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
 				{
@@ -62,8 +62,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void ShouldReturnIncludedNamespaces()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigSnapshot(applicationNamespaces: "MyApp1, Elastic.Apm.Tests., MyApp2");
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: config)))
+			var config = new MockConfigurationSnapshot(applicationNamespaces: "MyApp1, Elastic.Apm.Tests., MyApp2");
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
 				{
@@ -87,8 +87,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void GetCulpritWithLibraryFrames()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigSnapshot(excludedNamespaces: "LibraryNamespace");
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: config)))
+			var config = new MockConfigurationSnapshot(excludedNamespaces: "LibraryNamespace");
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
 				{
@@ -112,8 +112,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void GetCulpritWithLibraryFramesWithMultipleNamespaces()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigSnapshot(excludedNamespaces: "MyLib1, LibraryNamespace, MyLib2");
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: config)))
+			var config = new MockConfigurationSnapshot(excludedNamespaces: "MyLib1, LibraryNamespace, MyLib2");
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
 				{

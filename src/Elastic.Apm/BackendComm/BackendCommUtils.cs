@@ -112,11 +112,11 @@ namespace Elastic.Apm.BackendComm
 				servicePoint.ConnectionLimit = 20;
 			});
 
-		private static HttpClientHandler CreateHttpClientHandler(IConfigSnapshot config, IApmLogger logger)
+		private static HttpClientHandler CreateHttpClientHandler(IConfigurationSnapshot configuration, IApmLogger logger)
 		{
 			Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback = null;
 
-			if (!config.VerifyServerCert)
+			if (!configuration.VerifyServerCert)
 			{
 				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
 				{
@@ -125,11 +125,11 @@ namespace Elastic.Apm.BackendComm
 					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
 					return true;
 				};
-			} else if (!string.IsNullOrEmpty(config.ServerCert))
+			} else if (!string.IsNullOrEmpty(configuration.ServerCert))
 			{
 				try
 				{
-					var serverCertificate = new X509Certificate2(config.ServerCert);
+					var serverCertificate = new X509Certificate2(configuration.ServerCert);
 					var publicKey = serverCertificate.GetPublicKeyString();
 
 					serverCertificateCustomValidationCallback = (_, certificate, _, policyError) =>
@@ -150,7 +150,7 @@ namespace Elastic.Apm.BackendComm
 							?.Log(
 								"Certificate validation failed. Public key {PublicKey} does not match {ServerCert} public key",
 								publicKeyToValidate,
-								nameof(config.ServerCert));
+								nameof(configuration.ServerCert));
 
 						return false;
 					};
@@ -160,8 +160,8 @@ namespace Elastic.Apm.BackendComm
 					logger.Error()?.LogException(
 						e,
 						"Could not configure {ConfigServerCert} at path {Path} for certificate pinning",
-						nameof(config.ServerCert),
-						config.ServerCert);
+						nameof(configuration.ServerCert),
+						configuration.ServerCert);
 				}
 			}
 			else
@@ -179,20 +179,20 @@ namespace Elastic.Apm.BackendComm
 			return new HttpClientHandler { ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback };
 		}
 
-		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfigSnapshot config, Service service, string dbgCallerDesc
+		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfigurationSnapshot configuration, Service service, string dbgCallerDesc
 			, HttpMessageHandler httpMessageHandler = null
 		)
 		{
 			var logger = loggerArg.Scoped(ThisClassName);
 
-			var serverUrlBase = config.ServerUrl;
+			var serverUrlBase = configuration.ServerUrl;
 			ConfigServicePoint(serverUrlBase, loggerArg);
 
 			logger.Debug()
 				?.Log("Building HTTP client with BaseAddress: {ApmServerUrl} for {dbgCallerDesc}..."
 					, serverUrlBase.Sanitize(), dbgCallerDesc);
 			var httpClient =
-				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(config, loggerArg)) { BaseAddress = serverUrlBase };
+				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(configuration, loggerArg)) { BaseAddress = serverUrlBase };
 			httpClient.DefaultRequestHeaders.UserAgent.Add(
 				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service.Agent.Version)));
 			httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",
@@ -204,10 +204,10 @@ namespace Elastic.Apm.BackendComm
 					new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
 			}
 
-			if (config.ApiKey != null)
-				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("ApiKey", config.ApiKey);
-			else if (config.SecretToken != null)
-				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", config.SecretToken);
+			if (configuration.ApiKey != null)
+				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("ApiKey", configuration.ApiKey);
+			else if (configuration.SecretToken != null)
+				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configuration.SecretToken);
 
 			return httpClient;
 

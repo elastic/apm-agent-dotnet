@@ -24,7 +24,7 @@ namespace Elastic.Apm.Filters
 				{
 					foreach (var key in realTransaction.Context?.Request?.Headers?.Keys.ToList())
 					{
-						if (WildcardMatcher.IsAnyMatch(realTransaction.ConfigSnapshot.SanitizeFieldNames, key))
+						if (WildcardMatcher.IsAnyMatch(realTransaction.ConfigurationSnapshot.SanitizeFieldNames, key))
 							realTransaction.Context.Request.Headers[key] = Consts.Redacted;
 					}
 				}

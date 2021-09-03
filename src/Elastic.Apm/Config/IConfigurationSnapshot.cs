@@ -12,7 +12,7 @@ namespace Elastic.Apm.Config
 	/// In case central config changes in the middle of a transaction, this snapshot won't chance. Instead changes will be
 	/// applied when the next transaction is created with its new snapshot.
 	/// </summary>
-	public interface IConfigSnapshot : IConfigurationReader
+	public interface IConfigurationSnapshot : IConfigurationReader
 	{
 		string DbgDescription { get; }
 	}

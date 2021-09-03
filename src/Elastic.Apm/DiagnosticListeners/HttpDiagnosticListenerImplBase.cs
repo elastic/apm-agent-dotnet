@@ -215,7 +215,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (transaction is Transaction t)
 			{
-				if (t.ConfigSnapshot.UseElasticTraceparentHeader)
+				if (t.ConfigurationSnapshot.UseElasticTraceparentHeader)
 				{
 					if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderNamePrefixed))
 					{

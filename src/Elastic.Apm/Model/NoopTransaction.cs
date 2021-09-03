@@ -24,7 +24,7 @@ namespace Elastic.Apm.Model
 	/// </summary>
 	internal class NoopTransaction : ITransaction
 	{
-		private static DefaultConfigSnapshot _defaultConfigSnapshot = new DefaultConfigSnapshot();
+		private static DefaultConfigurationSnapshot _defaultConfigurationSnapshot = new DefaultConfigurationSnapshot();
 		private static readonly Context ReusableContextInstance = new Context();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -45,7 +45,7 @@ namespace Elastic.Apm.Model
 
 		public Dictionary<string, string> Custom => _custom.Value;
 
-		public IConfigSnapshot ConfigSnapshot => _defaultConfigSnapshot;
+		public IConfigurationSnapshot ConfigurationSnapshot => _defaultConfigurationSnapshot;
 		public double? Duration { get; set; }
 
 		[MaxLength]
@@ -142,7 +142,7 @@ namespace Elastic.Apm.Model
 	/// <summary>
 	/// A static config snapshot which contains default values
 	/// </summary>
-	internal class DefaultConfigSnapshot : IConfigSnapshot
+	internal class DefaultConfigurationSnapshot : IConfigurationSnapshot
 	{
 		public string ApiKey => string.Empty;
 		public IReadOnlyCollection<string> ApplicationNamespaces => new List<string>();
@@ -174,11 +174,14 @@ namespace Elastic.Apm.Model
 		public string ServiceVersion => string.Empty;
 		public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
+		public bool TraceContextIgnoreSampledFalse => ConfigConsts.DefaultValues.TraceContextIgnoreSampledFalse;
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => new Collection<WildcardMatcher>();
 		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
+
+
 		public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader => false;
 		public bool VerifyServerCert => false;
-		public string DbgDescription => nameof(DefaultConfigSnapshot);
+		public string DbgDescription => nameof(DefaultConfigurationSnapshot);
 	}
 }

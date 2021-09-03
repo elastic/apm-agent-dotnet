@@ -20,11 +20,11 @@ namespace Elastic.Apm.Filters
 		{
 			if (error is Error realError)
 			{
-				if (realError.Context.Request?.Headers != null && realError.ConfigSnapshot != null)
+				if (realError.Context.Request?.Headers != null && realError.ConfigurationSnapshot != null)
 				{
 					foreach (var key in realError.Context?.Request?.Headers?.Keys.ToList())
 					{
-						if (WildcardMatcher.IsAnyMatch(realError.ConfigSnapshot.SanitizeFieldNames, key))
+						if (WildcardMatcher.IsAnyMatch(realError.ConfigurationSnapshot.SanitizeFieldNames, key))
 							realError.Context.Request.Headers[key] = Consts.Redacted;
 					}
 				}

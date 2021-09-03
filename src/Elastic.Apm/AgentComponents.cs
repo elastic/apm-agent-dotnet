@@ -45,7 +45,7 @@ namespace Elastic.Apm
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
-				ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
+				ConfigStore = new ConfigStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 

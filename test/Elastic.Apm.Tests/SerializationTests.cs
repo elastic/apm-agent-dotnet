@@ -226,7 +226,7 @@ namespace Elastic.Apm.Tests
 			var maxLength = typeof(Service).GetMember(nameof(Service.Version))[0].GetCustomAttribute<MaxLengthAttribute>().Length;
 
 			var logger = new NoopLogger();
-			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
+			var service = Service.GetDefaultService(new MockConfigurationSnapshot(logger), logger);
 			service.Version = new string('a', maxLength * 2);
 
 			var json = _payloadItemSerializer.Serialize(service);
@@ -248,7 +248,7 @@ namespace Elastic.Apm.Tests
 			var maxLength = typeof(Service).GetMember(nameof(Service.Name))[0].GetCustomAttribute<MaxLengthAttribute>().Length;
 
 			var logger = new NoopLogger();
-			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
+			var service = Service.GetDefaultService(new MockConfigurationSnapshot(logger), logger);
 			service.Name = new string('a', maxLength * 2);
 
 			var json = _payloadItemSerializer.Serialize(service);
@@ -269,13 +269,13 @@ namespace Elastic.Apm.Tests
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
 			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
+				agent.PayloadSender, new MockConfigurationSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
 			sampledTransaction.Context.Request = new Request("GET",
 				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
 			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
+				agent.PayloadSender, new MockConfigurationSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = _payloadItemSerializer.Serialize(sampledTransaction);

@@ -10,11 +10,11 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class ConfigSnapshotFromReader : IConfigSnapshot
+	internal class ConfigurationSnapshotFromReader : IConfigurationSnapshot
 	{
 		private readonly IConfigurationReader _content;
 
-		internal ConfigSnapshotFromReader(IConfigurationReader content, string dbgDescription)
+		internal ConfigurationSnapshotFromReader(IConfigurationReader content, string dbgDescription)
 		{
 			_content = content;
 			DbgDescription = dbgDescription;

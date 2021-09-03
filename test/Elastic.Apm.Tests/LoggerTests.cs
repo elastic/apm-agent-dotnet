@@ -348,7 +348,7 @@ namespace Elastic.Apm.Tests
 			var userName = "abc";
 			var pw = "def";
 			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Warning);
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8234", maxBatchEventCount: "0",
+			var configReader = new MockConfigurationSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8234", maxBatchEventCount: "0",
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
@@ -378,7 +378,7 @@ namespace Elastic.Apm.Tests
 
 			var uri = new Uri(localServer.Uri);
 
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@{uri.Authority}", maxBatchEventCount: "0",
+			var configReader = new MockConfigurationSnapshot(serverUrls: $"http://{userName}:{pw}@{uri.Authority}", maxBatchEventCount: "0",
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
@@ -404,7 +404,7 @@ namespace Elastic.Apm.Tests
 			var pw = "def";
 
 			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Error);
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8123", maxBatchEventCount: "0",
+			var configReader = new MockConfigurationSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8123", maxBatchEventCount: "0",
 				flushInterval: "0");
 
 			var configStore = new ConfigStore(configReader, inMemoryLogger);

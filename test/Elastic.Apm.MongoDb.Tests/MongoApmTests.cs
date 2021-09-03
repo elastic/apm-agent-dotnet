@@ -25,8 +25,8 @@ namespace Elastic.Apm.MongoDb.Tests
 			_documents = fixture.Collection ?? throw new ArgumentNullException(nameof(fixture.Collection));
 			_payloadSender = new MockPayloadSender();
 
-			var config = new TestAgentComponents(config:
-				new MockConfigSnapshot(transactionSampleRate: "1.0", transactionMaxSpans: "50"),
+			var config = new TestAgentComponents(configuration:
+				new MockConfigurationSnapshot(transactionSampleRate: "1.0", transactionMaxSpans: "50"),
 				payloadSender: _payloadSender);
 
 			_agent = new ApmAgent(config);

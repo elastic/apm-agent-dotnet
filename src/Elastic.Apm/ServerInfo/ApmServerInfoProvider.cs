@@ -17,13 +17,13 @@ namespace Elastic.Apm.ServerInfo
 {
 	internal class ApmServerInfoProvider
 	{
-		internal static async Task FillApmServerInfo(IApmServerInfo apmServerInfo, IApmLogger logger, IConfigSnapshot configSnapshot,
+		internal static async Task FillApmServerInfo(IApmServerInfo apmServerInfo, IApmLogger logger, IConfigurationSnapshot configurationSnapshot,
 			HttpClient httpClient
 		)
 		{
 			try
 			{
-				using var requestMessage = new HttpRequestMessage(HttpMethod.Get, configSnapshot.ServerUrl);
+				using var requestMessage = new HttpRequestMessage(HttpMethod.Get, configurationSnapshot.ServerUrl);
 				requestMessage.Headers.Add("Metadata", "true");
 
 				var responseMessage = await httpClient.SendAsync(requestMessage).ConfigureAwait(false);

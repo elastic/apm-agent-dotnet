@@ -77,7 +77,7 @@ namespace Elastic.Apm.Model
 		/// <param name="sampler">The sampler implementation which makes the sampling decision</param>
 		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
 		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
-		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
+		/// <param name="configurationSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
@@ -98,7 +98,7 @@ namespace Elastic.Apm.Model
 			Sampler sampler,
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
-			IConfigSnapshot configSnapshot,
+			IConfigurationSnapshot configurationSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider,
@@ -106,7 +106,7 @@ namespace Elastic.Apm.Model
 			long? timestamp = null
 		)
 		{
-			ConfigSnapshot = configSnapshot;
+			ConfigurationSnapshot = configurationSnapshot;
 			Timestamp = timestamp ?? TimeUtils.TimestampNow();
 
 			_logger = logger?.Scoped(nameof(Transaction));
@@ -232,7 +232,7 @@ namespace Elastic.Apm.Model
 
 				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
-				if (configSnapshot.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
+				if (configurationSnapshot.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
 					|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
@@ -286,6 +286,9 @@ namespace Elastic.Apm.Model
 		private string _name;
 		internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
+		[JsonIgnore]
+		public IConfigurationSnapshot ConfigurationSnapshot { get; }
+
 		/// <summary>
 		/// In general if there is an error on the span, the outcome will be <code> Outcome.Failure </code> otherwise it'll be
 		/// <code> Outcome.Success </code>..
@@ -298,7 +301,6 @@ namespace Elastic.Apm.Model
 		private Outcome _outcome;
 
 		private bool _outcomeChangedThroughApi;
-
 
 		/// <summary>
 		/// Changes the <see cref="Outcome"/> by checking the <see cref="_outcomeChangedThroughApi"/> flag.
@@ -556,7 +558,7 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
+			if (ConfigurationSnapshot.Enabled && ConfigurationSnapshot.Recording)
 				return StartSpanInternal(name, type, subType, action);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
@@ -588,7 +590,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_sender,
 				this,
-				ConfigSnapshot,
+				ConfigurationSnapshot,
 				this,
 				_apmServerInfo,
 				culprit,
@@ -605,7 +607,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				ConfigSnapshot,
+				ConfigurationSnapshot,
 				this,
 				_apmServerInfo,
 				parentId,
@@ -710,7 +712,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				ConfigSnapshot,
+				ConfigurationSnapshot,
 				this,
 				null,
 				_apmServerInfo,

@@ -164,7 +164,7 @@ namespace Elastic.Apm.Tests
 			Action<List<Transaction>, List<Span>, List<Error>> assert
 		)
 		{
-			var mockConfig = new MockConfigSnapshot(maxBatchEventCount: "1", flushInterval: "0");
+			var mockConfig = new MockConfigurationSnapshot(maxBatchEventCount: "1", flushInterval: "0");
 
 			// The handler is executed in PayloadSenderV2, in a separate thread where all exceptions are handled.
 			// No exception bubbles up from PayloadSenderV2 (reason is that in prod if the HTTP Request fails, agent handles it and doesn't let it bubble up)
