@@ -37,10 +37,8 @@ namespace Elastic.Apm.Api
 		Dictionary<string, string> Custom { get; }
 
 		/// <summary>
-		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
-		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
-		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
-		/// and its spans is controlled by this configuration snapshot.
+		/// A snapshot of configuration from when the transaction started. A snapshot contains values
+		/// from initial configuration combined with dynamic values from central configuration, if enabled.
 		/// </summary>
 		public IConfigurationSnapshot ConfigurationSnapshot { get; }
 
