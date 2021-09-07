@@ -65,6 +65,11 @@ pipeline {
                       }
                     }
                   }
+                  post {
+                    always {
+                      junit(allowEmptyResults: true, keepLongStdio: true, testResults: "${BASE_DIR}/test_results/junit-*.xml")
+                    }
+                  }
                 }
               }
             }
@@ -74,7 +79,7 @@ pipeline {
               environment {
                 HOME = "${env.WORKSPACE}"
                 CARGO_MAKE_HOME = "C:\\tools\\cargo"    // If cargo is installed within the CI build
-                PATH = "${PATH};${env.CARGO_MAKE_HOME}" // If cargo is installed within the CI build
+                PATH = "${PATH};${env.CARGO_MAKE_HOME};${env.USERPROFILE}\\.cargo\\bin" // If cargo is installed within the CI build
               }
               stages{
                 stage('Install tools') {
@@ -97,6 +102,11 @@ pipeline {
                   steps {
                     dir("${BASE_DIR}"){
                       bat(label: 'Build', script: 'cargo make test')
+                    }
+                  }
+                  post {
+                    always {
+                      junit(allowEmptyResults: true, keepLongStdio: true, testResults: "${BASE_DIR}/test_results/junit-*.xml")
                     }
                   }
                 }

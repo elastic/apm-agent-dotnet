@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# This script runs the tests and stored them in an xml file defined in the
-# LogFilePath property
+# This script runs the tests and stored the test ouptut in a JUnit xml file
+# defined in the test_results folder
 #
 set -euxo pipefail
 

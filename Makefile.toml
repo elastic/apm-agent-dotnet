@@ -72,9 +72,54 @@ command = "dotnet"
 args = ["${CARGO_MAKE_WORKING_DIRECTORY}/sample/Example/bin/${DOTNET_CONFIG}/${DOTNET_VERSION}/Example.dll"]
 dependencies = ["set-profiler-env"]
 
-[tasks.test]
-dependencies = ["generate-integrations"]
-
 [tasks.test-example]
 clear = true
 dependencies = ["build-release", "generate-integrations", "build-example", "run-dotnet"]
+
+[tasks.test-local]
+private = true
+condition = { env_false = [ "CARGO_MAKE_CI" ] }
+command = "cargo"
+args = ["test"]
+
+[tasks.test-ci]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["cargo test -- -Z unstable-options --format json | tee test_results/results.json"]
+dependencies = ["create-test-results-dir"]
+
+[tasks.test-ci.windows]
+private = true
+script_runner = "powershell"
+script_extension = "ps1"
+script = ["cargo test -- -Z unstable-options --format json | Tee-Object -FilePath 'test_results/results.json'"]
+
+[tasks.create-test-results-dir]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["[ -d test_results ] || mkdir -p test_results"]
+
+[tasks.create-test-results-dir.windows]
+script_runner = "powershell"
+script_extension = "ps1"
+script = ["if (!(Test-Path test_results)) { New-Item test_results -Type Directory }"]
+
+[tasks.install-cargo2junit]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["cargo install cargo2junit"]
+
+[tasks.convert-test-results-junit]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["cat test_results/results.json | cargo2junit > test_results/junit-cargo.xml"]
+dependencies = ["install-cargo2junit", "create-test-results-dir"]
+
+[tasks.convert-test-results-junit.windows]
+script_runner = "powershell"
+script_extension = "ps1"
+script = ["Get-Content test_results/results.json | cargo2junit | Out-File -encoding utf8 -filepath test_results/junit-cargo.xml"]
+
+[tasks.test]
+clear = true
+dependencies = ["generate-integrations", "test-local", "test-ci", "convert-test-results-junit"]

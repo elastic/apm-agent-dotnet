@@ -359,3 +359,6 @@ src/Elastic.Apm.MongoDb/LICENSE
 target/
 Cargo.lock
 expanded.rs
+
+# JUnit test output
+test_results
