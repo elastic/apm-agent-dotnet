@@ -656,6 +656,7 @@ bitflags! {
    }
 }
 
+#[derive(Debug)]
 pub struct ParsedFunctionMethodSignature {
     pub type_arg_len: u8,
     pub arg_len: u8,

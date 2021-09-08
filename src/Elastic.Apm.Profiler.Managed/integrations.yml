@@ -80,6 +80,22 @@
       assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
+- name: AspNet
+  method_replacements:
+  - target:
+      assembly: System.Web
+      type: System.Web.Compilation.BuildManager
+      method: InvokePreStartInitMethodsCore
+      signature_types:
+      - System.Void
+      - System.Collections.Generic.ICollection`1[System.Reflection.MethodInfo]
+      - System.Func`1[System.IDisposable]
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AspNet.ElasticApmModuleIntegration
+      action: CallTargetModification
 - name: MySqlCommand
   method_replacements:
   - target:
@@ -1189,6 +1205,19 @@
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
       assembly: Microsoft.Data.Sqlite
       type: Microsoft.Data.Sqlite.SqliteCommand
       method: ExecuteNonQuery
@@ -1196,6 +1225,18 @@
       - System.Int32
       minimum_version: 2.0.0
       maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
@@ -1214,6 +1255,19 @@
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
       assembly: Microsoft.Data.Sqlite
       type: Microsoft.Data.Sqlite.SqliteCommand
       method: ExecuteReaderAsync
@@ -1222,6 +1276,19 @@
       - System.Threading.CancellationToken
       minimum_version: 2.0.0
       maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SQLite.SQLiteDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
@@ -1239,6 +1306,18 @@
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SQLite.SQLiteDataReader
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
       assembly: Microsoft.Data.Sqlite
       type: Microsoft.Data.Sqlite.SqliteCommand
       method: ExecuteReaderAsync
@@ -1248,6 +1327,20 @@
       - System.Threading.CancellationToken
       minimum_version: 2.0.0
       maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SQLite.SQLiteDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
@@ -1280,6 +1373,19 @@
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SQLite.SQLiteDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
       assembly: Microsoft.Data.Sqlite
       type: Microsoft.Data.Sqlite.SqliteCommand
       method: ExecuteDbDataReader
@@ -1306,6 +1412,19 @@
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
       assembly: Microsoft.Data.Sqlite
       type: Microsoft.Data.Sqlite.SqliteCommand
       method: ExecuteScalar
@@ -1313,6 +1432,18 @@
       - System.Object
       minimum_version: 2.0.0
       maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
@@ -1326,6 +1457,19 @@
       - System.Data.CommandBehavior
       minimum_version: 2.0.0
       maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.11.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration

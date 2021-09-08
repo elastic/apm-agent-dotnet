@@ -55,14 +55,26 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 		}
 	}
 
-	internal class InstrumentSqliteAttribute : InstrumentAttribute
+	internal class InstrumentMicrosoftDataSqliteAttribute : InstrumentAttribute
 	{
-		public InstrumentSqliteAttribute()
+		public InstrumentMicrosoftDataSqliteAttribute()
 		{
 			Assembly = "Microsoft.Data.Sqlite";
 			Type = "Microsoft.Data.Sqlite.SqliteCommand";
 			MinimumVersion = "2.0.0";
 			MaximumVersion = "5.*.*";
+			Group = "SqliteCommand";
+		}
+	}
+
+	internal class InstrumentSystemDataSqliteAttribute : InstrumentAttribute
+	{
+		public InstrumentSystemDataSqliteAttribute()
+		{
+			Assembly = "System.Data.SQLite";
+			Type = "System.Data.SQLite.SQLiteCommand";
+			MinimumVersion = "1.0.0";
+			MaximumVersion = "2.*.*";
 			Group = "SqliteCommand";
 		}
 	}
@@ -162,10 +174,16 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			public const string TaskDataReader = "System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>";
 		}
 
-		internal static class Sqlite
+		internal static class MicrosoftDataSqlite
 		{
 			public const string DataReader = "Microsoft.Data.Sqlite.SqliteDataReader";
 			public const string TaskDataReader = "System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>";
+		}
+
+		internal static class SystemDataSqlite
+		{
+			public const string DataReader = "System.Data.SQLite.SQLiteDataReader";
+			public const string TaskDataReader = "System.Threading.Tasks.Task`1<System.Data.SQLite.SQLiteDataReader>";
 		}
 
 		internal static class SystemDataSqlServer

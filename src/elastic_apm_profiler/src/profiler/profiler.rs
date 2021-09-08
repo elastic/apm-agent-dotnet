@@ -1277,10 +1277,15 @@ impl Profiler {
             let p = unsafe { U16CStr::from_ptr_str(assembly_path) };
             p.to_string_lossy()
         };
-        log::debug!("GetAssemblyReferences: called for {}", &path);
+        log::trace!("GetAssemblyReferences: called for {}", &path);
 
         let path_buf = PathBuf::from(&path);
-        let assembly_name = path_buf.file_name().unwrap().to_str().unwrap();
+        let mut assembly_name = path_buf.file_name().unwrap().to_str().unwrap();
+        if assembly_name.ends_with(".dll") {
+            assembly_name = assembly_name.strip_suffix(".dll").unwrap();
+        } else if assembly_name.ends_with(".ni.dll") {
+            assembly_name = assembly_name.strip_suffix(".ni.dll").unwrap();
+        }
 
         for pattern in SKIP_ASSEMBLY_PREFIXES.iter() {
             if assembly_name.starts_with(pattern) {
@@ -1307,14 +1312,14 @@ impl Profiler {
         }
 
         let assembly_reference = MANAGED_PROFILER_FULL_ASSEMBLY_VERSION.deref();
-        let (sz_locale, cb_locale) = if &assembly_reference.locale == "neutral" {
-            (std::ptr::null_mut() as *mut WCHAR, 0)
+        let locale = if &assembly_reference.locale == "neutral" {
+            U16CString::default()
         } else {
-            let wstr = U16CString::from_str(&assembly_reference.locale).unwrap();
-            let len = wstr.len() as ULONG;
-            (wstr.into_vec().as_mut_ptr(), len)
+            U16CString::from_str(&assembly_reference.locale).unwrap()
         };
 
+        let cb_locale = locale.len() as ULONG;
+        let sz_locale = locale.into_vec_with_nul().as_mut_ptr();
         let assembly_metadata = ASSEMBLYMETADATA {
             usMajorVersion: assembly_reference.version.major,
             usMinorVersion: assembly_reference.version.minor,
@@ -1329,26 +1334,24 @@ impl Profiler {
         };
 
         let public_key = assembly_reference.public_key.into_bytes();
-        let (name, len) = {
-            let wstr = U16CString::from_str(&assembly_reference.name).unwrap();
-            let len = wstr.len() as ULONG;
-            (wstr.into_vec().as_ptr(), len)
-        };
+        let name = U16CString::from_str(&assembly_reference.name).unwrap();
+        let len = name.len() as ULONG;
 
         let assembly_reference_info = COR_PRF_ASSEMBLY_REFERENCE_INFO {
-            pbPublicKeyOrToken: public_key.as_ptr() as *const _,
+            pbPublicKeyOrToken: public_key.as_ptr() as *const _ as *const c_void,
             cbPublicKeyOrToken: public_key.len() as ULONG,
-            szName: name,
-            pMetaData: &assembly_metadata as *const _,
-            pbHashValue: std::ptr::null(),
+            szName: name.as_ptr(),
+            pMetaData: &assembly_metadata as *const ASSEMBLYMETADATA,
+            pbHashValue: std::ptr::null() as *const c_void,
             cbHashValue: 0,
             dwAssemblyRefFlags: 0,
         };
 
-        if let Err(err) =
-            assembly_reference_provider.add_assembly_reference(&assembly_reference_info)
-        {
-            log::warn!("GetAssemblyReferences failed for {}", &path);
+        match assembly_reference_provider.add_assembly_reference(&assembly_reference_info) {
+            Ok(()) => {
+                log::trace!("GetAssemblyReferences succeeded for {}, path={}", assembly_name, &path)
+            },
+            Err(e) => log::warn!("GetAssemblyReferences failed for {}, path={}. 0x{:X}", assembly_name, &path, e)
         }
 
         Ok(())

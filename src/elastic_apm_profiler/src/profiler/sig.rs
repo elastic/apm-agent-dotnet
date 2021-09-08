@@ -549,6 +549,7 @@ pub fn get_sig_type_token_name(
             CorElementType::ELEMENT_TYPE_CLASS | CorElementType::ELEMENT_TYPE_VALUETYPE => {
                 idx += 1;
                 let (token, len) = uncompress_token(&signature[idx..]);
+                idx += len;
                 if let Ok(Some(type_info)) = metadata_import.get_type_info(token) {
                     token_name.push_str(&type_info.name);
                 }

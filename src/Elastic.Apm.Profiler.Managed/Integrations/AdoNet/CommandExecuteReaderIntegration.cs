@@ -21,7 +21,8 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	[InstrumentNpgsql(Method = ExecuteReader, ReturnType = Npgsql.DataReader)]
 	[InstrumentOracleManagedDataAccess(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
-	[InstrumentSqlite(Method = ExecuteReader, ReturnType = Sqlite.DataReader)]
+	[InstrumentMicrosoftDataSqlite(Method = ExecuteReader, ReturnType = MicrosoftDataSqlite.DataReader)]
+	[InstrumentSystemDataSqlite(Method = ExecuteReader, ReturnType = SystemDataSqlite.DataReader)]
 
 	[InstrumentSystemDataSql(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader)]
 	[InstrumentSystemDataSqlClient(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader)]
