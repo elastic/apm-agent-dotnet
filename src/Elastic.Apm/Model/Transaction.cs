@@ -301,6 +301,18 @@ namespace Elastic.Apm.Model
 		internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
 		/// <summary>
+		/// Changes the <see cref="Outcome"/> by checking the <see cref="_outcomeChangedThroughApi"/> flag.
+		/// This method is intended for all auto instrumentation usages where the <see cref="Outcome"/> property needs to be set.
+		/// Setting outcome via the <see cref="Outcome"/> property is intended for users who use the public API.
+		/// </summary>
+		/// <param name="outcome">The outcome of the transaction will be set to this value if it wasn't change to the public API previously</param>
+		internal void SetOutcome(Outcome outcome)
+		{
+			if (!_outcomeChangedThroughApi)
+				_outcome = outcome;
+		}
+
+		/// <summary>
 		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
 		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
 		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
