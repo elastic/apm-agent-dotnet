@@ -111,7 +111,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			// log to relative logs directory for managed loader
 			environmentVariables["ELASTIC_APM_PROFILER_LOG_DIR"] = Path.Combine(SolutionPaths.Root, "logs");
 
-			//environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file,stdout";
+			//environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout";
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_IL"] = "true";
 
 			var workingDirectory = Path.Combine(_projectDirectory, _publishDirectory, targetFramework);

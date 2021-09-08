@@ -102,7 +102,7 @@ pub fn enable_inlining(default: bool) -> bool {
 fn read_log_targets_from_env_var() -> HashSet<String> {
     let mut set = match std::env::var(ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR) {
         Ok(value) => value
-            .split(',')
+            .split(';')
             .into_iter()
             .filter_map(|s| match s.to_lowercase().as_str() {
                 out if out == "file" || out == "stdout" => Some(out.into()),

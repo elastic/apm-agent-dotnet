@@ -12,7 +12,7 @@ ELASTIC_APM_PROFILER_CALLTARGET_ENABLED = { value = "true", condition = { env_no
 ELASTIC_APM_PROFILER_LOG = { value = "debug", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG"] } }
 ELASTIC_APM_PROFILER_LOG_IL = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_IL"] } }
 ELASTIC_APM_PROFILER_LOG_DIR = { value = "logs", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_DIR"] } }
-ELASTIC_APM_PROFILER_LOG_TARGETS = { value = "file,stdout", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_TARGETS"] } }
+ELASTIC_APM_PROFILER_LOG_TARGETS = { value = "file;stdout", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_TARGETS"] } }
 
 [tasks.build-loader]
 description = "Builds Managed Profiler .NET loader"
