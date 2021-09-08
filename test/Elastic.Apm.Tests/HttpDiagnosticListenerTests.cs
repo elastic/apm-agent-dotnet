@@ -302,8 +302,8 @@ namespace Elastic.Apm.Tests
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should()
 					.Be(uriBuilder.Uri.ToString()
-						.Replace("TestUser", "[REDACTED]")
-						.Replace("TestPassword", "[REDACTED]"));
+						.Replace("TestUser", Consts.Redacted)
+						.Replace("TestPassword", Consts.Redacted));
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
@@ -615,7 +615,7 @@ namespace Elastic.Apm.Tests
 
 				// looking for lines with "localhost:8082" and asserting that those contain [REDACTED].
 				foreach (var lineWithHttpLog in logger.Lines.Where(n => n.Contains($"{uriBuilder.Host}:{uriBuilder.Port}")))
-					lineWithHttpLog.Should().Contain("[REDACTED]");
+					lineWithHttpLog.Should().Contain(Consts.Redacted);
 			}
 		}
 

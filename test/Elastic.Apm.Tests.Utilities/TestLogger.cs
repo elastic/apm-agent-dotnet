@@ -21,6 +21,9 @@ namespace Elastic.Apm.Tests.Utilities
 
 		private TestLogger(LogLevel level, SynchronizedStringWriter writer) : base(level, writer, writer) => _writer = writer;
 
+		/// <summary>
+		/// Gets the log lines
+		/// </summary>
 		public IReadOnlyList<string> Lines
 		{
 			get
@@ -32,6 +35,18 @@ namespace Elastic.Apm.Tests.Utilities
 						.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
 						.ToList();
 				}
+			}
+		}
+
+		/// <summary>
+		/// Gets the log
+		/// </summary>
+		public string Log
+		{
+			get
+			{
+				lock (_writer.Lock)
+					return _writer.GetStringBuilder().ToString();
 			}
 		}
 	}
