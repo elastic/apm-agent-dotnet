@@ -43,7 +43,7 @@ namespace Elastic.Apm
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
-				var system = systemInfoHelper.ParseSystemInfo(ConfigurationReader.HostName);
+				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
 				ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 

@@ -14,35 +14,30 @@ namespace Elastic.Apm.Helpers
 {
 	internal class SystemInfoHelper
 	{
-		private const string ContainerUidRegexString = "^[0-9a-fA-F]{64}$";
-
-		private const string ShortenedUuidPattern = "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4,}";
-
-		private const string PodRegexString = @"(?:^/kubepods[\S]*/pod([^/]+)$)|"
-			+ @"(?:^/kubepods\.slice/(kubepods-[^/]+\.slice/)?kubepods[^/]*-pod([^/]+)\.slice$)";
-
-		private readonly Regex _containerUidRegex = new Regex(ContainerUidRegexString);
-		private readonly Regex _shortenedUuidRegex = new Regex(ShortenedUuidPattern);
-		private readonly Regex _podRegex = new Regex(PodRegexString);
+		private readonly Regex _containerUidRegex = new Regex("^[0-9a-fA-F]{64}$");
+		private readonly Regex _shortenedUuidRegex = new Regex("^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4,}");
+		private readonly Regex _podRegex = new Regex(
+			@"(?:^/kubepods[\S]*/pod([^/]+)$)|(?:^/kubepods\.slice/(kubepods-[^/]+\.slice/)?kubepods[^/]*-pod([^/]+)\.slice$)");
 
 		private readonly IApmLogger _logger;
 
 		public SystemInfoHelper(IApmLogger logger)
 			=> _logger = logger.Scoped(nameof(SystemInfoHelper));
 
-		private Container ParseContainerId(string line)
+		internal void ParseContainerId(Api.System system, string reportedHostName, string line)
 		{
-			//Copied from the Java agent, and C#-ified
-
-			string kubernetesPodUid = null;
-
 			var fields = line.Split(':');
-			if (fields.Length != 3) return null;
+			if (fields.Length != 3)
+				return;
 
 			var cGroupPath = fields[2];
-			var idPart = Path.GetFileName(cGroupPath);
+			var lastIndexSlash = cGroupPath.LastIndexOf('/');
+			if (lastIndexSlash == -1)
+				return;
 
-			if (string.IsNullOrWhiteSpace(idPart)) return null;
+			var idPart = cGroupPath.Substring(lastIndexSlash + 1);
+			if (string.IsNullOrWhiteSpace(idPart))
+				return;
 
 			// Legacy, e.g.: /system.slice/docker-<CID>.scope
 			if (idPart.EndsWith(".scope"))
@@ -52,29 +47,25 @@ namespace Elastic.Apm.Helpers
 			}
 
 			// Looking for kubernetes info
-			var dirPathPart = Path.GetDirectoryName(cGroupPath);
-			if (dirPathPart != null)
+			var dir = cGroupPath.Substring(0, lastIndexSlash);
+			if (dir.Length > 0)
 			{
-				var dir = dirPathPart;
-
-				var matcher = _podRegex.Match(dir);
-
-				if (matcher.Success)
+				var match = _podRegex.Match(dir);
+				if (match.Success)
 				{
-					for (var i = 1; i <= matcher.Groups.Count; i++)
+					for (var i = 1; i <= match.Groups.Count; i++)
 					{
-						var podUid = matcher.Groups[i].Value;
+						var podUid = match.Groups[i].Value;
 						if (!string.IsNullOrWhiteSpace(podUid))
 						{
 							if (i == 2)
 								continue;
 
 							if (i == 3)
-								kubernetesPodUid = podUid.Replace('_', '-');
-							else
-								kubernetesPodUid = podUid;
+								podUid = podUid.Replace('_', '-');
 
-							_logger.Debug()?.Log("Found Kubernetes pod UID: {podUid}", kubernetesPodUid);
+							_logger.Debug()?.Log("Found Kubernetes pod UID: {podUid}", podUid);
+							system.Kubernetes = new KubernetesMetadata { Pod = new Pod { Name = reportedHostName, Uid = podUid } };
 							break;
 						}
 					}
@@ -83,26 +74,20 @@ namespace Elastic.Apm.Helpers
 
 			// If the line matched the one of the kubernetes patterns, we assume that the last part is always the container ID.
 			// Otherwise we validate that it is a 64-length hex string
-			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || _containerUidRegex.IsMatch(idPart) || _shortenedUuidRegex.IsMatch(idPart))
-				return new Container { Id = idPart };
-
-			_logger.Info()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
-			return null;
+			if (system.Kubernetes != null || _containerUidRegex.IsMatch(idPart) || _shortenedUuidRegex.IsMatch(idPart))
+				system.Container = new Container { Id = idPart };
+			else
+				_logger.Info()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 		}
 
-		internal Api.System ParseSystemInfo(string hostName)
+		internal Api.System GetSystemInfo(string hostName)
 		{
-			var containerInfo = ParseContainerInfo();
 			var detectedHostName = GetHostName();
-			var kubernetesInfo = ParseKubernetesInfo(containerInfo, detectedHostName);
+			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
+			ParseContainerInfo(system, string.IsNullOrEmpty(hostName) ? detectedHostName : hostName);
+			ParseKubernetesInfo(system);
 
-			return new Api.System
-			{
-				Container = containerInfo,
-				DetectedHostName = detectedHostName,
-				ConfiguredHostName = hostName,
-				Kubernetes = kubernetesInfo
-			};
+			return system;
 		}
 
 		internal string GetHostName()
@@ -119,27 +104,24 @@ namespace Elastic.Apm.Helpers
 			return null;
 		}
 
-		private Container ParseContainerInfo()
+		private void ParseContainerInfo(Api.System system, string reportedHostName)
 		{
 			try
 			{
 				using var sr = GetCGroupAsStream();
-				if (sr == null)
+				if (sr is null)
 				{
 					//just debug log, since this is normal on non-docker environments
 					_logger.Debug()?.Log("No /proc/self/cgroup found - the agent will not report container id");
-					return null;
+					return;
 				}
 
-				var line = sr.ReadLine();
-
-				while (line != null)
+				string line;
+				while ((line = sr.ReadLine()) != null)
 				{
-					var res = ParseContainerId(line);
-					if (res != null)
-						return res;
-
-					line = sr.ReadLine();
+					ParseContainerId(system, reportedHostName, line);
+					if (system.Container != null)
+						return;
 				}
 			}
 			catch (Exception e)
@@ -150,7 +132,6 @@ namespace Elastic.Apm.Helpers
 			_logger.Info()
 				?.Log(
 					"Failed parsing container id - the agent will not report container id. Likely the application is not running within a container");
-			return null;
 		}
 
 		protected virtual StreamReader GetCGroupAsStream()
@@ -161,27 +142,42 @@ namespace Elastic.Apm.Helpers
 		internal const string PodUid = "KUBERNETES_POD_UID";
 		internal const string NodeName = "KUBERNETES_NODE_NAME";
 
-		internal KubernetesMetadata ParseKubernetesInfo(Container containerInfo, string hostName)
+		internal void ParseKubernetesInfo(Api.System system)
 		{
-			var @namespace = Environment.GetEnvironmentVariable(Namespace);
-			var podName = Environment.GetEnvironmentVariable(PodName);
-			var podUid = Environment.GetEnvironmentVariable(PodUid);
-			var nodeName = Environment.GetEnvironmentVariable(NodeName);
-
-			if (@namespace == null && podName == null && podUid == null && nodeName == null)
+			try
 			{
-				// By default, Kubernetes will set the hostname of the pod containers to the pod name.
-				// Users that override the name should use the Downward API to override the pod name.
-				return containerInfo != null
-					? new KubernetesMetadata { Pod = new Pod { Uid = containerInfo.Id, Name = hostName } }
-					: null;
+				var @namespace = Environment.GetEnvironmentVariable(Namespace);
+				var podName = Environment.GetEnvironmentVariable(PodName);
+				var podUid = Environment.GetEnvironmentVariable(PodUid);
+				var nodeName = Environment.GetEnvironmentVariable(NodeName);
+
+				var podUidNotNullOrEmpty = !string.IsNullOrEmpty(podUid);
+				var podNameNotNullOrEmpty = !string.IsNullOrEmpty(podName);
+
+				if (podUidNotNullOrEmpty || podNameNotNullOrEmpty || !string.IsNullOrEmpty(@namespace) || !string.IsNullOrEmpty(nodeName))
+				{
+					system.Kubernetes ??= new KubernetesMetadata();
+					system.Kubernetes.Namespace = @namespace;
+
+					if (!string.IsNullOrEmpty(nodeName))
+						system.Kubernetes.Node = new Api.Kubernetes.Node { Name = nodeName };
+
+					if (podUidNotNullOrEmpty || podNameNotNullOrEmpty)
+					{
+						// retain any existing pod values, and overwrite with environment variables values only if not null or empty
+						system.Kubernetes.Pod ??= new Pod();
+						if (podUidNotNullOrEmpty)
+							system.Kubernetes.Pod.Uid = podUid;
+
+						if (podNameNotNullOrEmpty)
+							system.Kubernetes.Pod.Name = podName;
+					}
+				}
 			}
-
-			var kubernetesMetadata = new KubernetesMetadata { Namespace = @namespace };
-			if (podName != null || podUid != null) kubernetesMetadata.Pod = new Pod { Name = podName, Uid = podUid };
-			if (nodeName != null) kubernetesMetadata.Node = new Api.Kubernetes.Node { Name = nodeName };
-
-			return kubernetesMetadata;
+			catch (Exception e)
+			{
+				_logger.Warning()?.LogException(e, "Failed to read environment variables for Kubernetes Downward API discovery");
+			}
 		}
 	}
 }
