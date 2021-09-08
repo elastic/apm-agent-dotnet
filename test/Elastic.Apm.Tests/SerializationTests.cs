@@ -450,7 +450,7 @@ namespace Elastic.Apm.Tests
 			var systemHelper = new SystemInfoHelper(new NoopLogger());
 
 			var hostName = "this_is_my_hostname";
-			var system = systemHelper.ParseSystemInfo(hostName);
+			var system = systemHelper.GetSystemInfo(hostName);
 
 			var json = _payloadItemSerializer.Serialize(system);
 			var jObject = JObject.Parse(json);

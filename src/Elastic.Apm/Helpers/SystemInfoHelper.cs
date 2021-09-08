@@ -80,7 +80,7 @@ namespace Elastic.Apm.Helpers
 				_logger.Info()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 		}
 
-		internal Api.System ParseSystemInfo(string hostName)
+		internal Api.System GetSystemInfo(string hostName)
 		{
 			var detectedHostName = GetHostName();
 			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
@@ -109,22 +109,19 @@ namespace Elastic.Apm.Helpers
 			try
 			{
 				using var sr = GetCGroupAsStream();
-				if (sr == null)
+				if (sr is null)
 				{
 					//just debug log, since this is normal on non-docker environments
 					_logger.Debug()?.Log("No /proc/self/cgroup found - the agent will not report container id");
 					return;
 				}
 
-				var line = sr.ReadLine();
-
-				while (line != null)
+				string line;
+				while ((line = sr.ReadLine()) != null)
 				{
 					ParseContainerId(system, reportedHostName, line);
 					if (system.Container != null)
 						return;
-
-					line = sr.ReadLine();
 				}
 			}
 			catch (Exception e)
@@ -154,22 +151,25 @@ namespace Elastic.Apm.Helpers
 				var podUid = Environment.GetEnvironmentVariable(PodUid);
 				var nodeName = Environment.GetEnvironmentVariable(NodeName);
 
-				if (@namespace != null || podName != null || podUid != null || nodeName != null)
+				var podUidNotNullOrEmpty = !string.IsNullOrEmpty(podUid);
+				var podNameNotNullOrEmpty = !string.IsNullOrEmpty(podName);
+
+				if (podUidNotNullOrEmpty || podNameNotNullOrEmpty || !string.IsNullOrEmpty(@namespace) || !string.IsNullOrEmpty(nodeName))
 				{
 					system.Kubernetes ??= new KubernetesMetadata();
 					system.Kubernetes.Namespace = @namespace;
 
-					if (nodeName != null)
+					if (!string.IsNullOrEmpty(nodeName))
 						system.Kubernetes.Node = new Api.Kubernetes.Node { Name = nodeName };
 
-					if (podUid != null || podName != null)
+					if (podUidNotNullOrEmpty || podNameNotNullOrEmpty)
 					{
-						// retain existing pod values when environment variables are null
+						// retain any existing pod values, and overwrite with environment variables values only if not null or empty
 						system.Kubernetes.Pod ??= new Pod();
-						if (podUid != null)
+						if (podUidNotNullOrEmpty)
 							system.Kubernetes.Pod.Uid = podUid;
 
-						if (podName != null)
+						if (podNameNotNullOrEmpty)
 							system.Kubernetes.Pod.Name = podName;
 					}
 				}

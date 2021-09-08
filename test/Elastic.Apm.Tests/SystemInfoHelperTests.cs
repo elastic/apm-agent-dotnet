@@ -23,7 +23,7 @@ namespace Elastic.Apm.Tests
 		public void ParseSystemInfo_Should_Use_HostName_For_ConfiguredHostName()
 		{
 			var hostName = "This_is_my_host";
-			var system = _systemInfoHelper.ParseSystemInfo(hostName);
+			var system = _systemInfoHelper.GetSystemInfo(hostName);
 
 #pragma warning disable 618
 			system.HostName.Should().Be(hostName);
@@ -78,23 +78,24 @@ namespace Elastic.Apm.Tests
 		public void ParseKubernetesInfo_ShouldUseContainerInfoAndHostName_WhenNoEnvironmentVariablesAreSet()
 		{
 			// Arrange
-			var containerId = "e9b90526-f47d-11e8-b2a5-080027b9f4fb";
+			var podId = "e9b90526-f47d-11e8-b2a5-080027b9f4fb";
 			var hostName = "hostName";
-			var line = $"1:name=systemd:/kubepods/besteffort/pod{containerId}/15aa6e53-b09a-40c7-8558-c6c31e36c88a";
+			var containerId = "15aa6e53-b09a-40c7-8558-c6c31e36c88a";
+			var line = $"1:name=systemd:/kubepods/besteffort/pod{podId}/{containerId}";
 
 			// Act
-			_systemInfoHelper.ParseSystemInfo(hostName);
-
 			var system = new Api.System();
 			_systemInfoHelper.ParseContainerId(system, hostName, line);
 			_systemInfoHelper.ParseKubernetesInfo(system);
 
 			// Assert
+			system.Container.Should().NotBeNull();
+			system.Container.Id.Should().Be(containerId);
 			system.Kubernetes.Should().NotBeNull();
 			system.Kubernetes.Node.Should().BeNull();
 			system.Kubernetes.Namespace.Should().BeNull();
 			system.Kubernetes.Pod.Should().NotBeNull();
-			system.Kubernetes.Pod.Uid.Should().Be(containerId);
+			system.Kubernetes.Pod.Uid.Should().Be(podId);
 			system.Kubernetes.Pod.Name.Should().Be(hostName);
 		}
 
