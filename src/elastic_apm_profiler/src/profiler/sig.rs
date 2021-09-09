@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cli::{uncompress_data, uncompress_token},
+    cil::{uncompress_data, uncompress_token},
     ffi::{CorCallingConvention, CorElementType, E_FAIL},
     interfaces::IMetaDataImport2,
     profiler::types::ModuleMetadata,

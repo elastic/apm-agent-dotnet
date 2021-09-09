@@ -3,7 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use crate::{cli::uncompress_token, ffi::*, profiler::types::MethodSignature, types::*};
+use crate::{cil::uncompress_token, ffi::*, profiler::types::MethodSignature, types::*};
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{FAILED, GUID, HRESULT, S_FALSE, S_OK},

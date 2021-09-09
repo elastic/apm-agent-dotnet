@@ -15,7 +15,7 @@ use crypto::{digest::Digest, sha1::Sha1};
 use num_traits::FromPrimitive;
 
 use crate::{
-    cli::{uncompress_data, uncompress_token},
+    cil::{uncompress_data, uncompress_token},
     error::Error,
     ffi::{
         mdAssembly, mdAssemblyRef, mdMemberRef, mdMethodDef, mdToken, mdTokenNil, mdTypeDef,

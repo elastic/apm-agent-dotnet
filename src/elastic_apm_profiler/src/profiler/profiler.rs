@@ -24,7 +24,7 @@ use std::{
 };
 
 use crate::{
-    cli::{
+    cil::{
         compress_token, uncompress_token, FatMethodHeader, Instruction, Method, MethodHeader,
         Operand, Operand::InlineMethod, TinyMethodHeader, CALL, CALLVIRT, CONSTRAINED, NOP,
     },

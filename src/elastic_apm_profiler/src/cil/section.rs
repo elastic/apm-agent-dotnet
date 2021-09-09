@@ -25,7 +25,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{
-    cli::{check_flag, il_u16, il_u32, il_u8},
+    cil::{check_flag, il_u16, il_u32, il_u8},
     error::Error,
 };
 
@@ -40,8 +40,6 @@ bitflags! {
 bitflags! {
     pub struct CorExceptionFlag: u8 {
         const COR_ILEXCEPTION_CLAUSE_NONE = 0x0;
-        const COR_ILEXCEPTION_CLAUSE_OFFSETLEN = 0x0000;     // Deprecated
-        const COR_ILEXCEPTION_CLAUSE_DEPRECATED = 0x0000;    // Deprecated
         const COR_ILEXCEPTION_CLAUSE_FILTER = 0x1;
         const COR_ILEXCEPTION_CLAUSE_FINALLY = 0x2;
         const COR_ILEXCEPTION_CLAUSE_FAULT = 0x4;

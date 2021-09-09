@@ -25,12 +25,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{
-    cli,
-    cli::{
-        nearest_multiple, CorExceptionFlag, FatMethodHeader, FatSectionClause, FatSectionHeader,
-        Instruction, MethodHeader, Opcode,
+    cil,
+    cil::{
+        nearest_multiple, CorExceptionFlag, FatSectionClause, FatSectionHeader,
+        Instruction, Opcode,
         Operand::{InlineBrTarget, InlineSwitch, ShortInlineBrTarget},
-        Section, TinyMethodHeader, BEQ, BGE, BGT, BRFALSE, BRTRUE,
+        Section, BEQ, BGE, BGT, BRFALSE, BRTRUE,
     },
     error::Error,
     ffi::{mdSignatureNil, mdTokenNil},
@@ -42,6 +42,160 @@ use std::{
     mem::transmute,
     slice,
 };
+use crate::cil::{il_u32, check_flag};
+use crate::ffi::mdToken;
+
+bitflags! {
+    pub struct MethodHeaderFlags: u8 {
+        const CorILMethod_FatFormat = 0x3;
+        const CorILMethod_TinyFormat = 0x2;
+        const CorILMethod_MoreSects = 0x8;
+        const CorILMethod_InitLocals = 0x10;
+        const CorILMethod_FormatShift = 3;
+        const CorILMethod_FormatMask = ((1 << MethodHeaderFlags::CorILMethod_FormatShift.bits()) - 1);
+        const CorILMethod_SmallFormat = 0x0000;
+        const CorILMethod_TinyFormat1 = 0x0006;
+    }
+}
+
+#[derive(Debug)]
+pub struct FatMethodHeader {
+    pub more_sects: bool,
+    pub init_locals: bool,
+    pub max_stack: u16,
+    pub code_size: u32,
+    pub local_var_sig_tok: u32,
+}
+
+impl FatMethodHeader {
+    pub const SIZE: u8 = 12;
+}
+
+#[derive(Debug)]
+pub struct TinyMethodHeader {
+    pub code_size: u8,
+}
+
+#[derive(Debug)]
+pub enum MethodHeader {
+    Fat(FatMethodHeader),
+    Tiny(TinyMethodHeader),
+}
+
+impl MethodHeader {
+    pub fn tiny(code_size: u8) -> MethodHeader {
+        MethodHeader::Tiny(TinyMethodHeader { code_size })
+    }
+
+    pub fn from_bytes(method_il: &[u8]) -> Result<Self, Error> {
+        let header_flags = method_il[0];
+        if Self::is_tiny(header_flags) {
+            // In a tiny header, the first 6 bits encode the code size
+            //let code_size = method_il[0] >> 2;
+            let code_size = method_il[0] >> (MethodHeaderFlags::CorILMethod_FormatShift.bits() - 1);
+            Ok(MethodHeader::Tiny(TinyMethodHeader { code_size }))
+        } else if Self::is_fat(header_flags) {
+            let more_sects = Self::more_sects(header_flags);
+            let init_locals = Self::init_locals(header_flags);
+            let max_stack = u16::from_le_bytes([method_il[2], method_il[3]]);
+            let code_size = il_u32(method_il, 4)?;
+            let local_var_sig_tok = il_u32(method_il, 8)?;
+            Ok(MethodHeader::Fat(FatMethodHeader {
+                more_sects,
+                init_locals,
+                max_stack,
+                code_size,
+                local_var_sig_tok,
+            }))
+        } else {
+            Err(Error::InvalidMethodHeader)
+        }
+    }
+
+    pub fn into_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        match &self {
+            MethodHeader::Fat(header) => {
+                let mut flags = MethodHeaderFlags::CorILMethod_FatFormat.bits();
+                if header.more_sects {
+                    flags |= MethodHeaderFlags::CorILMethod_MoreSects.bits();
+                }
+                if header.init_locals {
+                    flags |= MethodHeaderFlags::CorILMethod_InitLocals.bits();
+                }
+                bytes.push(flags);
+                bytes.push(FatMethodHeader::SIZE.reverse_bits());
+                bytes.extend_from_slice(&header.max_stack.to_le_bytes());
+                bytes.extend_from_slice(&header.code_size.to_le_bytes());
+                bytes.extend_from_slice(&header.local_var_sig_tok.to_le_bytes());
+            }
+            MethodHeader::Tiny(header) => {
+                let byte = header.code_size << 2 | MethodHeaderFlags::CorILMethod_TinyFormat.bits();
+                bytes.push(byte);
+            }
+        }
+        bytes
+    }
+
+    /// Instructions start and end
+    pub fn instructions(&self) -> (usize, usize) {
+        match self {
+            MethodHeader::Fat(header) => (12, (12 + header.code_size - 1) as usize),
+            MethodHeader::Tiny(header) => (1, header.code_size as usize),
+        }
+    }
+
+    pub fn local_var_sig_tok(&self) -> u32 {
+        match self {
+            MethodHeader::Fat(header) => header.local_var_sig_tok,
+            MethodHeader::Tiny(_) => mdTokenNil,
+        }
+    }
+
+    pub fn set_local_var_sig_tok(&mut self, token: mdToken) {
+        match self {
+            MethodHeader::Fat(header) => header.local_var_sig_tok = token,
+            MethodHeader::Tiny(_) => (),
+        }
+    }
+
+    pub fn max_stack(&self) -> u16 {
+        match self {
+            MethodHeader::Fat(header) => header.max_stack,
+            MethodHeader::Tiny(_) => 8,
+        }
+    }
+
+    pub fn code_size(&self) -> u32 {
+        match self {
+            MethodHeader::Fat(header) => header.code_size,
+            MethodHeader::Tiny(header) => header.code_size as u32,
+        }
+    }
+
+    fn more_sects(method_header_flags: u8) -> bool {
+        check_flag(
+            method_header_flags,
+            MethodHeaderFlags::CorILMethod_MoreSects.bits(),
+        )
+    }
+    fn init_locals(method_header_flags: u8) -> bool {
+        check_flag(
+            method_header_flags,
+            MethodHeaderFlags::CorILMethod_InitLocals.bits(),
+        )
+    }
+
+    fn is_tiny(method_header_flags: u8) -> bool {
+        // Check only the 2 least significant bits
+        (method_header_flags & 0b00000011) == MethodHeaderFlags::CorILMethod_TinyFormat.bits()
+    }
+
+    fn is_fat(method_header_flags: u8) -> bool {
+        // Check only the 2 least significant bits
+        (method_header_flags & 0b00000011) == MethodHeaderFlags::CorILMethod_FatFormat.bits()
+    }
+}
 
 #[derive(Debug)]
 pub struct Method {
@@ -53,6 +207,8 @@ pub struct Method {
 }
 
 impl Method {
+    /// Creates a tiny method with the given instructions. If the code size
+    /// of the instructions is greater than [u8::MAX], an error result is returned.
     pub fn tiny(instructions: Vec<Instruction>) -> Result<Self, Error> {
         let code_size: usize = instructions.iter().map(|i| i.len()).sum();
         if code_size > u8::MAX as usize {
@@ -256,19 +412,19 @@ impl Method {
 
     fn get_long_opcode(opcode: Opcode) -> Opcode {
         match opcode {
-            cli::BRFALSE_S => cli::BRFALSE,
-            cli::BRTRUE_S => cli::BRTRUE,
-            cli::BEQ_S => cli::BEQ,
-            cli::BGE_S => cli::BGE,
-            cli::BGT_S => cli::BGT,
-            cli::BLE_S => cli::BLE,
-            cli::BLT_S => cli::BLT,
-            cli::BR_S => cli::BR,
-            cli::BGE_UN_S => cli::BGE_UN,
-            cli::BGT_UN_S => cli::BGT_UN,
-            cli::BLE_UN_S => cli::BLE_UN,
-            cli::BLT_UN_S => cli::BLT_UN,
-            cli::BNE_UN_S => cli::BNE_UN,
+            cil::BRFALSE_S => cil::BRFALSE,
+            cil::BRTRUE_S => cil::BRTRUE,
+            cil::BEQ_S => cil::BEQ,
+            cil::BGE_S => cil::BGE,
+            cil::BGT_S => cil::BGT,
+            cil::BLE_S => cil::BLE,
+            cil::BLT_S => cil::BLT,
+            cil::BR_S => cil::BR,
+            cil::BGE_UN_S => cil::BGE_UN,
+            cil::BGT_UN_S => cil::BGT_UN,
+            cil::BLE_UN_S => cil::BLE_UN,
+            cil::BLT_UN_S => cil::BLT_UN,
+            cil::BNE_UN_S => cil::BNE_UN,
             _ => opcode,
         }
     }

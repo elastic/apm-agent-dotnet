@@ -23,11 +23,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{
-    cli::{il_f32, il_f64, il_i32, il_i64, il_i8, il_u16, il_u32, il_u8, opcode::*, OperandParams},
+    cil::{il_f32, il_f64, il_i32, il_i64, il_i8, il_u16, il_u32, il_u8, opcode::*, OperandParams},
     error::{Error, Error::InvalidCil},
 };
 use std::fmt::{Display, Formatter};
 
+/// A signed or unsigned 8-bit integer type
 #[derive(Debug, Copy, Clone)]
 pub enum SingleByte {
     Signed(i8),
@@ -35,6 +36,7 @@ pub enum SingleByte {
 }
 
 impl SingleByte {
+    /// Return the memory representation of this integer as a byte array in little-endian byte order.
     pub fn to_le_bytes(self) -> [u8; 1] {
         match self {
             SingleByte::Signed(val) => val.to_le_bytes(),
@@ -1576,7 +1578,7 @@ impl Instruction {
             6 => Self::ldc_i4_6(),
             7 => Self::ldc_i4_7(),
             8 => Self::ldc_i4_8(),
-            i if i8::MIN as i32 <= val && val <= i8::MAX as i32 => Self::ldc_i4_s(val as i8),
+            i if i8::MIN as i32 <= i && i <= i8::MAX as i32 => Self::ldc_i4_s(i as i8),
             i => Self::ldc_i4(i),
         }
     }

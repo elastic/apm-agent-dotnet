@@ -16,7 +16,7 @@ mod error;
 mod ffi;
 mod profiler;
 
-pub mod cli;
+pub mod cil;
 pub mod interfaces;
 pub mod types;
 

@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cli::{compress_token, FatMethodHeader, Instruction, Method, MethodHeader},
+    cil::{compress_token, FatMethodHeader, Instruction, Method, MethodHeader},
     ffi::{
         mdMethodDef, mdToken, CorCallingConvention, CorElementType, CorFieldAttr, CorMethodAttr,
         CorMethodImpl, CorPinvokeMap, CorTypeAttr, ModuleID, COR_SIGNATURE, E_FAIL, ULONG,
@@ -13,6 +13,7 @@ use crate::{
     profiler::{env, helpers, managed, types::ModuleMetadata},
 };
 use com::sys::HRESULT;
+use crate::cil::MethodHeaderFlags;
 
 pub fn run_il_startup_hook(
     profiler_info: &ICorProfilerInfo4,

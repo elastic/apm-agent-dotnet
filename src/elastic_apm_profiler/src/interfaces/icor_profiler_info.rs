@@ -14,7 +14,7 @@ use com::{
 use widestring::U16CString;
 
 use crate::{
-    cli::MAX_LENGTH,
+    cil::MAX_LENGTH,
     ffi::*,
     interfaces::{
         ICorProfilerFunctionEnum, ICorProfilerMethodEnum, ICorProfilerModuleEnum,

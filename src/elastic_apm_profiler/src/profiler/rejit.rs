@@ -4,8 +4,8 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cli,
-    cli::{
+    cil,
+    cil::{
         CorExceptionFlag, FatMethodHeader, FatSectionClause, FatSectionHeader, Instruction, Method,
         MethodHeader,
         Operand::{InlineBrTarget, ShortInlineBrTarget},

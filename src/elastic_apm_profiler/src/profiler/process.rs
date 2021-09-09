@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cli::{
+    cil::{
         uncompress_token, Instruction, Method, Operand::InlineMethod, Section, CALL, CALLVIRT,
         CONSTRAINED,
     },

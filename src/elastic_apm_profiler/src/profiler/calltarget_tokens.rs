@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cli::{compress_data, compress_token, uncompress_data, Instruction, Method},
+    cil::{compress_data, compress_token, uncompress_data, Instruction, Method},
     ffi::{
         mdAssemblyRef, mdAssemblyRefNil, mdMemberRef, mdMemberRefNil, mdMethodSpec,
         mdMethodSpecNil, mdToken, mdTokenNil, mdTypeRef, mdTypeRefNil, mdTypeSpec, mdTypeSpecNil,

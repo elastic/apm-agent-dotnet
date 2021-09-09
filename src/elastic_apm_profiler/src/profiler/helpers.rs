@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cli::{
+    cil::{
         uncompress_data, uncompress_token, CorExceptionFlag, Method, Operand,
         Operand::{
             InlineBrTarget, InlineField, InlineI, InlineI8, InlineMethod, InlineString, InlineType,
