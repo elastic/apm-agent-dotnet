@@ -36,9 +36,12 @@ const IID_PROFILER: IID = IID {
 unsafe extern "system" fn DllGetClassObject(
     class_id: *const ::com::sys::CLSID,
     iid: *const ::com::sys::IID,
-    result: *mut *mut ::core::ffi::c_void) -> ::com::sys::HRESULT {
-
-    assert!(!class_id.is_null(), "class id passed to DllGetClassObject should never be null");
+    result: *mut *mut ::core::ffi::c_void,
+) -> ::com::sys::HRESULT {
+    assert!(
+        !class_id.is_null(),
+        "class id passed to DllGetClassObject should never be null"
+    );
     let class_id = &*class_id;
     if class_id == &IID_PROFILER {
         let instance = <Profiler as ::com::production::Class>::Factory::allocate();

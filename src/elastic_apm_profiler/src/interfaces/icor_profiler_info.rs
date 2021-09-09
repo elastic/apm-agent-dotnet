@@ -15,14 +15,16 @@ use widestring::U16CString;
 
 use crate::{
     cil::MAX_LENGTH,
-    ffi::*,
+    ffi::{
+        types::{
+            AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
+            FunctionTokenAndMetadata, IlFunctionBody, ModuleInfo, ModuleInfo2, RuntimeInfo,
+        },
+        *,
+    },
     interfaces::{
         ICorProfilerFunctionEnum, ICorProfilerMethodEnum, ICorProfilerModuleEnum,
         ICorProfilerObjectEnum, ICorProfilerThreadEnum, IMetaDataImport, IMethodMalloc,
-    },
-    ffi::types::{
-        AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
-        FunctionTokenAndMetadata, IlFunctionBody, ModuleInfo, ModuleInfo2, RuntimeInfo,
     },
 };
 

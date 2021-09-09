@@ -3,14 +3,20 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use crate::{cil::MAX_LENGTH, ffi::*, ffi::types::*};
+use core::slice;
+use std::{ffi::c_void, mem::MaybeUninit, ptr};
+
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{FAILED, HRESULT, S_OK},
 };
-use core::slice;
-use std::{ffi::c_void, mem::MaybeUninit, ptr};
 use widestring::U16CString;
+
+use crate::{
+    cil::MAX_LENGTH,
+    ffi::{types::*, *},
+    profiler::types::{AssemblyMetaData, PublicKey, Version},
+};
 
 interfaces! {
     #[uuid("EE62470B-E94B-424E-9B7C-2F00C9249F93")]

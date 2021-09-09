@@ -3,6 +3,12 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+use std::mem::transmute;
+
+use com::sys::HRESULT;
+use log::Level;
+use num_traits::FromPrimitive;
+
 use crate::{
     cil::{
         uncompress_token, Instruction, Method, Operand::InlineMethod, Section, CALL, CALLVIRT,
@@ -20,15 +26,10 @@ use crate::{
         sig::{parse_signature_types, parse_type},
         types::{
             MetadataBuilder, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
-            WrapperMethodReference,
+            MyFunctionInfo, WrapperMethodRef, WrapperMethodReference,
         },
     },
-    ffi::types::{MyFunctionInfo, WrapperMethodRef},
 };
-use com::sys::HRESULT;
-use log::Level;
-use num_traits::FromPrimitive;
-use std::mem::transmute;
 
 pub fn process_insertion_calls(
     profiler_info: &ICorProfilerInfo4,

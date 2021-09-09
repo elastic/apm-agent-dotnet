@@ -3,6 +3,21 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+use std::{
+    borrow::BorrowMut,
+    collections::HashMap,
+    ops::Deref,
+    sync::{
+        mpsc::{channel, SendError, Sender},
+        Arc, Mutex,
+    },
+    thread,
+    thread::JoinHandle,
+};
+
+use com::sys::{HRESULT, S_FALSE, S_OK};
+use log::{Level, Level::Info};
+
 use crate::{
     cil,
     cil::{
@@ -19,22 +34,11 @@ use crate::{
     profiler::{
         calltarget_tokens::CallTargetTokens,
         env, helpers, process,
-        types::{MethodReplacement, ModuleMetadata, ModuleWrapperTokens},
+        types::{
+            MethodArgumentTypeFlag, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
+            MyFunctionInfo, MyTypeInfo,
+        },
     },
-    ffi::types::{MethodArgumentTypeFlag, MyFunctionInfo, MyTypeInfo},
-};
-use com::sys::{HRESULT, S_FALSE, S_OK};
-use log::{Level, Level::Info};
-use std::{
-    borrow::BorrowMut,
-    collections::HashMap,
-    ops::Deref,
-    sync::{
-        mpsc::{channel, SendError, Sender},
-        Arc, Mutex,
-    },
-    thread,
-    thread::JoinHandle,
 };
 
 pub struct RejitHandlerModule {

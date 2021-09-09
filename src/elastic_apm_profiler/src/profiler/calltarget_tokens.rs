@@ -3,6 +3,11 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+use std::ops::Deref;
+
+use com::sys::HRESULT;
+use widestring::U16CString;
+
 use crate::{
     cil::{compress_data, compress_token, uncompress_data, Instruction, Method},
     ffi::{
@@ -15,13 +20,12 @@ use crate::{
     },
     profiler::{
         managed,
-        types::{MetadataBuilder, ModuleMetadata},
+        types::{
+            FunctionMethodArgument, MetadataBuilder, MethodArgumentTypeFlag, ModuleMetadata,
+            MyFunctionInfo, MyTypeInfo,
+        },
     },
-    ffi::types::{FunctionMethodArgument, MethodArgumentTypeFlag, MyFunctionInfo, MyTypeInfo},
 };
-use com::sys::HRESULT;
-use std::ops::Deref;
-use widestring::U16CString;
 
 /// Metadata tokens to modify call targets
 pub struct CallTargetTokens {

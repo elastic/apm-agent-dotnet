@@ -3,22 +3,48 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-mod calltarget_tokens;
-pub mod env;
-mod helpers;
-pub mod managed;
-mod process;
-mod rejit;
-pub mod sig;
-mod startup_hook;
-pub mod types;
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    ffi::{c_void, CStr},
+    fs::File,
+    io::BufReader,
+    mem::{transmute, transmute_copy},
+    ops::Deref,
+    path::{Path, PathBuf},
+    process::id,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Mutex, RwLock,
+    },
+};
+
+use com::{
+    interfaces::iunknown::IUnknown,
+    sys::{FAILED, GUID, HRESULT, S_OK},
+    Interface,
+};
+use log::{Level, LevelFilter};
+use log4rs::Handle;
+use num_traits::FromPrimitive;
+use once_cell::sync::Lazy;
+use rust_embed::RustEmbed;
+use widestring::{U16CStr, U16CString, WideString};
+
+use types::{
+    AssemblyMetaData, HashAlgorithmType, MyFunctionInfo, MyTypeInfo, Version, WrapperMethodRef,
+};
 
 use crate::{
     cil::{
         compress_token, uncompress_token, FatMethodHeader, Instruction, Method, MethodHeader,
         Operand, Operand::InlineMethod, TinyMethodHeader, CALL, CALLVIRT, CONSTRAINED, NOP,
     },
-    ffi::{COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER, *},
+    ffi::{
+        types::{ModuleInfo, RuntimeInfo},
+        COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER,
+        *,
+    },
     interfaces::{
         ICorProfilerAssemblyReferenceProvider, ICorProfilerCallback, ICorProfilerCallback2,
         ICorProfilerCallback3, ICorProfilerCallback4, ICorProfilerCallback5, ICorProfilerCallback6,
@@ -41,37 +67,17 @@ use crate::{
             ModuleMetadata, ModuleWrapperTokens, TargetMethodReference, WrapperMethodReference,
         },
     },
-    ffi::types::{
-        AssemblyMetaData, HashAlgorithmType, ModuleInfo, MyFunctionInfo, MyTypeInfo, RuntimeInfo,
-        Version, WrapperMethodRef,
-    },
 };
-use com::{
-    interfaces::iunknown::IUnknown,
-    sys::{FAILED, GUID, HRESULT, S_OK},
-    Interface,
-};
-use log::{Level, LevelFilter};
-use log4rs::Handle;
-use num_traits::FromPrimitive;
-use once_cell::sync::Lazy;
-use rust_embed::RustEmbed;
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    ffi::{c_void, CStr},
-    fs::File,
-    io::BufReader,
-    mem::{transmute, transmute_copy},
-    ops::Deref,
-    path::{Path, PathBuf},
-    process::id,
-    sync::{
-        atomic::{AtomicBool, AtomicUsize, Ordering},
-        Mutex, RwLock,
-    },
-};
-use widestring::{U16CStr, U16CString, WideString};
+
+mod calltarget_tokens;
+pub mod env;
+mod helpers;
+pub mod managed;
+mod process;
+mod rejit;
+pub mod sig;
+mod startup_hook;
+pub mod types;
 
 const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
     "Elastic.Apm",

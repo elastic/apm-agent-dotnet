@@ -3,14 +3,20 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use crate::{cil::uncompress_token, ffi::*, ffi::types::*, profiler::types::MethodSignature};
+use core::{ptr, slice};
+use std::{ffi::c_void, mem::MaybeUninit};
+
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{FAILED, GUID, HRESULT, S_FALSE, S_OK},
 };
-use core::{ptr, slice};
-use std::{ffi::c_void, mem::MaybeUninit};
 use widestring::U16CString;
+
+use crate::{
+    cil::uncompress_token,
+    ffi::{types::*, *},
+    profiler::types::{FunctionMethodSignature, MethodSignature, MyFunctionInfo, MyTypeInfo},
+};
 
 interfaces! {
     /// Provides methods for importing and manipulating existing metadata from a portable
