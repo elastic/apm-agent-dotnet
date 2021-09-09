@@ -130,7 +130,7 @@ static MANAGED_PROFILER_LOADED_APP_DOMAINS: Lazy<Mutex<HashSet<AppDomainID>>> =
 
 /// Indicates whether the profiler is attached
 pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
-/// Indicates whether the profiler is running is a Desktop CLR
+/// Indicates whether the profiler is running in a Desktop CLR
 pub(crate) static IS_DESKTOP_CLR: AtomicBool = AtomicBool::new(false);
 
 class! {

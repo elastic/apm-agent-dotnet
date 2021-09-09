@@ -454,6 +454,25 @@ impl Opcode {
             _ => Err(Error::InvalidCilOpcode),
         }
     }
+
+    pub fn short_to_long_form(opcode: Opcode) -> Opcode {
+        match opcode {
+            BRFALSE_S => BRFALSE,
+            BRTRUE_S => BRTRUE,
+            BEQ_S => BEQ,
+            BGE_S => BGE,
+            BGT_S => BGT,
+            BLE_S => BLE,
+            BLT_S => BLT,
+            BR_S => BR,
+            BGE_UN_S => BGE_UN,
+            BGT_UN_S => BGT_UN,
+            BLE_UN_S => BLE_UN,
+            BLT_UN_S => BLT_UN,
+            BNE_UN_S => BNE_UN,
+            _ => opcode,
+        }
+    }
 }
 
 use self::{

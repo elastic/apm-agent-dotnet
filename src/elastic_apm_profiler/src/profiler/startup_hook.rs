@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cil::{compress_token, FatMethodHeader, Instruction, Method, MethodHeader, MethodHeaderFlags},
+    cil::{compress_token, FatMethodHeader, Instruction, Method, MethodHeader, CorILMethodFlags},
     ffi::{
         mdMethodDef, mdToken, CorCallingConvention, CorElementType, CorFieldAttr, CorMethodAttr,
         CorMethodImpl, CorPinvokeMap, CorTypeAttr, ModuleID, COR_SIGNATURE, E_FAIL, ULONG,
@@ -438,13 +438,13 @@ fn generate_void_il_startup_method(
 
     let method = Method {
         address: 0,
-        header: MethodHeader::Fat(FatMethodHeader {
-            code_size: instructions.iter().map(|i| i.len() as u32).sum(),
-            local_var_sig_tok: locals_signature_token,
-            more_sects: false,
-            init_locals: false,
-            max_stack: instructions.iter().map(|i| i.opcode.len as u16).sum(),
-        }),
+        header: MethodHeader::fat(
+            false,
+            false,
+            instructions.iter().map(|i| i.opcode.len as u16).sum(),
+            instructions.iter().map(|i| i.len() as u32).sum(),
+            locals_signature_token
+        ),
         instructions,
         sections: vec![],
     };

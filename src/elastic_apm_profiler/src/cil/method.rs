@@ -44,13 +44,14 @@ use std::{
 };
 
 bitflags! {
-    pub struct MethodHeaderFlags: u8 {
+    /// Method header flags
+    pub struct CorILMethodFlags: u8 {
         const CorILMethod_FatFormat = 0x3;
         const CorILMethod_TinyFormat = 0x2;
         const CorILMethod_MoreSects = 0x8;
         const CorILMethod_InitLocals = 0x10;
         const CorILMethod_FormatShift = 3;
-        const CorILMethod_FormatMask = ((1 << MethodHeaderFlags::CorILMethod_FormatShift.bits()) - 1);
+        const CorILMethod_FormatMask = ((1 << CorILMethodFlags::CorILMethod_FormatShift.bits()) - 1);
         const CorILMethod_SmallFormat = 0x0000;
         const CorILMethod_TinyFormat1 = 0x0006;
     }
@@ -58,11 +59,11 @@ bitflags! {
 
 #[derive(Debug)]
 pub struct FatMethodHeader {
-    pub more_sects: bool,
-    pub init_locals: bool,
-    pub max_stack: u16,
-    pub code_size: u32,
-    pub local_var_sig_tok: u32,
+    more_sects: bool,
+    init_locals: bool,
+    max_stack: u16,
+    code_size: u32,
+    local_var_sig_tok: u32,
 }
 
 impl FatMethodHeader {
@@ -71,7 +72,11 @@ impl FatMethodHeader {
 
 #[derive(Debug)]
 pub struct TinyMethodHeader {
-    pub code_size: u8,
+    code_size: u8,
+}
+
+impl TinyMethodHeader {
+    pub const MAX_STACK: u8 = 8;
 }
 
 #[derive(Debug)]
@@ -81,16 +86,31 @@ pub enum MethodHeader {
 }
 
 impl MethodHeader {
+    /// creates a tiny method header
     pub fn tiny(code_size: u8) -> MethodHeader {
         MethodHeader::Tiny(TinyMethodHeader { code_size })
+    }
+
+    /// creates a fat method header
+    pub fn fat(
+        more_sects: bool,
+        init_locals: bool,
+        max_stack: u16,
+        code_size: u32,
+        local_var_sig_tok: u32) -> Self {
+        MethodHeader::Fat(FatMethodHeader {
+            more_sects,
+            init_locals,
+            max_stack,
+            code_size,
+            local_var_sig_tok
+        })
     }
 
     pub fn from_bytes(method_il: &[u8]) -> Result<Self, Error> {
         let header_flags = method_il[0];
         if Self::is_tiny(header_flags) {
-            // In a tiny header, the first 6 bits encode the code size
-            //let code_size = method_il[0] >> 2;
-            let code_size = method_il[0] >> (MethodHeaderFlags::CorILMethod_FormatShift.bits() - 1);
+            let code_size = method_il[0] >> (CorILMethodFlags::CorILMethod_FormatShift.bits() - 1);
             Ok(MethodHeader::Tiny(TinyMethodHeader { code_size }))
         } else if Self::is_fat(header_flags) {
             let more_sects = Self::more_sects(header_flags);
@@ -111,34 +131,35 @@ impl MethodHeader {
     }
 
     pub fn into_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::new();
         match &self {
             MethodHeader::Fat(header) => {
-                let mut flags = MethodHeaderFlags::CorILMethod_FatFormat.bits();
+                let mut bytes = Vec::with_capacity(FatMethodHeader::SIZE as usize);
+                let mut flags = CorILMethodFlags::CorILMethod_FatFormat.bits();
                 if header.more_sects {
-                    flags |= MethodHeaderFlags::CorILMethod_MoreSects.bits();
+                    flags |= CorILMethodFlags::CorILMethod_MoreSects.bits();
                 }
                 if header.init_locals {
-                    flags |= MethodHeaderFlags::CorILMethod_InitLocals.bits();
+                    flags |= CorILMethodFlags::CorILMethod_InitLocals.bits();
                 }
                 bytes.push(flags);
                 bytes.push(FatMethodHeader::SIZE.reverse_bits());
                 bytes.extend_from_slice(&header.max_stack.to_le_bytes());
                 bytes.extend_from_slice(&header.code_size.to_le_bytes());
                 bytes.extend_from_slice(&header.local_var_sig_tok.to_le_bytes());
+                bytes
             }
             MethodHeader::Tiny(header) => {
-                let byte = header.code_size << 2 | MethodHeaderFlags::CorILMethod_TinyFormat.bits();
-                bytes.push(byte);
+                let byte = header.code_size << 2 | CorILMethodFlags::CorILMethod_TinyFormat.bits();
+                vec![byte]
             }
         }
-        bytes
     }
 
     /// Instructions start and end
     pub fn instructions(&self) -> (usize, usize) {
         match self {
-            MethodHeader::Fat(header) => (12, (12 + header.code_size - 1) as usize),
+            MethodHeader::Fat(header) =>
+                (FatMethodHeader::SIZE as usize, (FatMethodHeader::SIZE as u32 + header.code_size - 1) as usize),
             MethodHeader::Tiny(header) => (1, header.code_size as usize),
         }
     }
@@ -160,7 +181,7 @@ impl MethodHeader {
     pub fn max_stack(&self) -> u16 {
         match self {
             MethodHeader::Fat(header) => header.max_stack,
-            MethodHeader::Tiny(_) => 8,
+            MethodHeader::Tiny(_) => TinyMethodHeader::MAX_STACK as u16,
         }
     }
 
@@ -174,24 +195,24 @@ impl MethodHeader {
     fn more_sects(method_header_flags: u8) -> bool {
         check_flag(
             method_header_flags,
-            MethodHeaderFlags::CorILMethod_MoreSects.bits(),
+            CorILMethodFlags::CorILMethod_MoreSects.bits(),
         )
     }
     fn init_locals(method_header_flags: u8) -> bool {
         check_flag(
             method_header_flags,
-            MethodHeaderFlags::CorILMethod_InitLocals.bits(),
+            CorILMethodFlags::CorILMethod_InitLocals.bits(),
         )
     }
 
     fn is_tiny(method_header_flags: u8) -> bool {
         // Check only the 2 least significant bits
-        (method_header_flags & 0b00000011) == MethodHeaderFlags::CorILMethod_TinyFormat.bits()
+        (method_header_flags & 0b00000011) == CorILMethodFlags::CorILMethod_TinyFormat.bits()
     }
 
     fn is_fat(method_header_flags: u8) -> bool {
         // Check only the 2 least significant bits
-        (method_header_flags & 0b00000011) == MethodHeaderFlags::CorILMethod_FatFormat.bits()
+        (method_header_flags & 0b00000011) == CorILMethodFlags::CorILMethod_FatFormat.bits()
     }
 }
 
@@ -257,6 +278,7 @@ impl Method {
         }
     }
 
+    /// Expands small sections to fat sections
     pub fn expand_small_sections_to_fat(&mut self) {
         match &mut self.header {
             MethodHeader::Fat(header) if header.more_sects => {
@@ -344,7 +366,6 @@ impl Method {
         let mut instructions = self.instructions_to_bytes();
         let instructions_len = instructions.len();
         bytes.append(&mut instructions);
-
         let mut section_bytes = self.sections_to_bytes(instructions_len);
         bytes.append(&mut section_bytes);
         bytes
@@ -408,25 +429,6 @@ impl Method {
         offsets
     }
 
-    fn get_long_opcode(opcode: Opcode) -> Opcode {
-        match opcode {
-            cil::BRFALSE_S => cil::BRFALSE,
-            cil::BRTRUE_S => cil::BRTRUE,
-            cil::BEQ_S => cil::BEQ,
-            cil::BGE_S => cil::BGE,
-            cil::BGT_S => cil::BGT,
-            cil::BLE_S => cil::BLE,
-            cil::BLT_S => cil::BLT,
-            cil::BR_S => cil::BR,
-            cil::BGE_UN_S => cil::BGE_UN,
-            cil::BGT_UN_S => cil::BGT_UN,
-            cil::BLE_UN_S => cil::BLE_UN,
-            cil::BLT_UN_S => cil::BLT_UN,
-            cil::BNE_UN_S => cil::BNE_UN,
-            _ => opcode,
-        }
-    }
-
     fn update_instructions(&mut self, index: usize, offset: usize, len: i64) {
         // update the offsets of control flow instructions and expand any short instructions:
         //
@@ -455,7 +457,7 @@ impl Method {
 
                                 // update the instruction
                                 instruction.operand = InlineBrTarget(n);
-                                instruction.opcode = Self::get_long_opcode(instruction.opcode);
+                                instruction.opcode = Opcode::short_to_long_form(instruction.opcode);
 
                                 // update the map with the new instruction len and record
                                 // the original offset and len diff.
@@ -511,7 +513,7 @@ impl Method {
 
                                 // update the instruction
                                 instruction.operand = InlineBrTarget(n);
-                                instruction.opcode = Self::get_long_opcode(instruction.opcode);
+                                instruction.opcode = Opcode::short_to_long_form(instruction.opcode);
 
                                 // update the map with the new instruction len and record
                                 // the original offset and len diff.
