@@ -10,6 +10,10 @@
 | System.Data.Common
 | 4.0.0 - 5.{star}.{star}
 
+| AspNet
+| System.Web
+| 4.0.0 - 4.{star}.{star}
+
 | MySqlCommand
 | MySql.Data
 | 6.7.0 - 8.{star}.{star}
@@ -41,5 +45,9 @@
 | SqliteCommand
 | Microsoft.Data.Sqlite
 | 2.0.0 - 5.{star}.{star}
+
+| SqliteCommand
+| System.Data.SQLite
+| 1.0.0 - 2.{star}.{star}
 
 |===
