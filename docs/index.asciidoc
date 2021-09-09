@@ -12,6 +12,8 @@ include::./intro.asciidoc[]
 
 include::./setup.asciidoc[]
 
+include::./packages.asciidoc[]
+
 include::./supported-technologies.asciidoc[]
 
 include::./configuration.asciidoc[]
@@ -19,8 +21,6 @@ include::./configuration.asciidoc[]
 include::./public-api.asciidoc[]
 
 include::./metrics.asciidoc[]
-
-// OpenTracing API
 
 include::./log-correlation.asciidoc[]
 

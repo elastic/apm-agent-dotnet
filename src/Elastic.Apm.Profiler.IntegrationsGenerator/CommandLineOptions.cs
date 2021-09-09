@@ -21,6 +21,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 		public enum OutputFormat
 		{
 			Yml,
+			Asciidoc
 		}
 	}
 }

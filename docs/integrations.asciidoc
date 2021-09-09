@@ -1,0 +1,45 @@
+:star: *
+
+|===
+|Integration |Assembly |Supported assembly version range
+| AdoNet
+| System.Data
+| 4.0.0 - 4.{star}.{star}
+
+| AdoNet
+| System.Data.Common
+| 4.0.0 - 5.{star}.{star}
+
+| MySqlCommand
+| MySql.Data
+| 6.7.0 - 8.{star}.{star}
+
+| NpgsqlCommand
+| Npgsql
+| 4.0.0 - 5.{star}.{star}
+
+| OracleCommand
+| Oracle.ManagedDataAccess
+| 4.122.0 - 4.122.{star}
+
+| OracleCommand
+| Oracle.ManagedDataAccess
+| 2.0.0 - 2.{star}.{star}
+
+| SqlCommand
+| System.Data
+| 4.0.0 - 4.{star}.{star}
+
+| SqlCommand
+| System.Data.SqlClient
+| 4.0.0 - 4.{star}.{star}
+
+| SqlCommand
+| Microsoft.Data.SqlClient
+| 1.0.0 - 2.{star}.{star}
+
+| SqliteCommand
+| Microsoft.Data.Sqlite
+| 2.0.0 - 5.{star}.{star}
+
+|===

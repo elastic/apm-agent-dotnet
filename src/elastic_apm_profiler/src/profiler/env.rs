@@ -152,6 +152,35 @@ fn read_bool_env_var(key: &str, default: bool) -> bool {
     }
 }
 
+/// get the profiler directory
+fn get_profiler_dir() -> String {
+    let env_var = if cfg!(target_pointer_width = "64") {
+        "CORECLR_PROFILER_PATH_64"
+    } else {
+        "CORECLR_PROFILER_PATH_32"
+    };
+
+    match std::env::var(env_var) {
+        Ok(v) => v,
+        Err(_) => match std::env::var("CORECLR_PROFILER_PATH") {
+            Ok(v) => v,
+            Err(_) => {
+                // try .NET Framework env vars
+                let env_var = if cfg!(target_pointer_width = "64") {
+                    "COR_PROFILER_PATH_64"
+                } else {
+                    "COR_PROFILER_PATH_32"
+                };
+
+                match std::env::var(env_var) {
+                    Ok(v) => v,
+                    Err(_) => std::env::var("COR_PROFILER_PATH").unwrap_or_else(|_| String::new())
+                }
+            }
+        }
+    }
+}
+
 /// Gets the default log directory on Windows
 #[cfg(target_os = "windows")]
 pub fn get_default_log_dir() -> PathBuf {
@@ -168,7 +197,11 @@ pub fn get_default_log_dir() -> PathBuf {
                 .join("logs");
             path_buf
         }
-        Err(_) => PathBuf::from_str(".").unwrap(),
+        Err(_) => {
+            let mut path_buf = PathBuf::from(get_profiler_dir());
+            path_buf = path_buf.join("logs");
+            path_buf
+        },
     }
 }
 

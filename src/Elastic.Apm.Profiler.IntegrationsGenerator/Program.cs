@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -51,10 +52,10 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 					orderby integrationName
 					group new { assembly, wrapperType, attribute } by integrationName
 					into g
-					select new
+					select new Integration
 					{
-						name = g.Key,
-						method_replacements = from item in g
+						Name = g.Key,
+						MethodReplacements = from item in g
 							select new MethodReplacement
 							{
 								Target = new Target
@@ -86,6 +87,9 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 							.Build();
 						output = serializer.Serialize(callTargetIntegrations);
 						break;
+					case CommandLineOptions.OutputFormat.Asciidoc:
+						output = GenerateAsciidoc(callTargetIntegrations);
+						break;
 					default: throw new ArgumentOutOfRangeException("format","Unknown format");
 				}
 
@@ -98,6 +102,32 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 				Console.Error.WriteLine(e);
 				return 1;
 			}
+		}
+
+		private static string GenerateAsciidoc(IEnumerable<Integration> integrations)
+		{
+			var builder = new StringBuilder();
+			builder
+				.AppendLine(":star: *")
+				.AppendLine()
+				.AppendLine("|===")
+				.AppendLine("|Integration |Assembly |Supported assembly version range");
+
+			foreach (var integration in integrations)
+			{
+				foreach (var integrationMethod in
+					integration.MethodReplacements.GroupBy(m => (m.Target.Assembly, m.Target.MinimumVersion, m.Target.MaximumVersion)))
+				{
+					builder.AppendLine($"| {integration.Name}")
+						.AppendLine($"| {integrationMethod.Key.Assembly}")
+						.AppendLine($"| {integrationMethod.Key.MinimumVersion.Replace("*", "{star}")} - "
+							+ $"{integrationMethod.Key.MaximumVersion.Replace("*", "{star}")}")
+						.AppendLine();
+				}
+			}
+
+			builder.AppendLine("|===");
+			return builder.ToString();
 		}
 	}
 }
