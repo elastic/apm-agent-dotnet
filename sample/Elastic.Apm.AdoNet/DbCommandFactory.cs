@@ -1,9 +1,10 @@
-﻿// Based on .NET Tracer for Datadog APM by Datadog
-// https://github.com/DataDog/dd-trace-dotnet
-// Licensed to Elasticsearch B.V under
+﻿// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
+//
+// Based on .NET Tracer for Datadog APM by Datadog
+// https://github.com/DataDog/dd-trace-dotnet
 
 using System.Data;
 

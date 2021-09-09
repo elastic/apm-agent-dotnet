@@ -2,6 +2,10 @@
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
+//
+// Contains Rust ports of .NET runtime functions defined in the .NET runtime in Cor.h.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 use crate::ffi::{
     mdToken, mdTokenNil, rid_from_token, token_from_rid, type_from_token, CorTokenType, BYTE,

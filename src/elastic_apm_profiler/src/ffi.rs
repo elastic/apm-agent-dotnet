@@ -5,6 +5,25 @@
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
+//
+// Copyright 2019 Camden Reslink
+// MIT License
+// https://github.com/camdenreslink/clr-profiler
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use com::{
     sys::{GUID, HRESULT},
@@ -202,29 +221,6 @@ pub type ObjectReferenceCallback = unsafe extern "system" fn(
     reference: *const ObjectID,
     clientData: *const c_void,
 ) -> BOOL;
-
-// allow types defined here to be passed across FFI boundary
-macro_rules! primitive_transferable_type {
-    ($($t:ty),+) => {
-        $(unsafe impl AbiTransferable for $t {
-            type Abi = Self;
-            fn get_abi(&self) -> Self::Abi {
-                *self
-            }
-            fn set_abi(&mut self) -> *mut Self::Abi {
-                self as *mut Self::Abi
-            }
-        })*
-    };
-}
-
-primitive_transferable_type! {
-    COR_PRF_JIT_CACHE,
-    COR_PRF_TRANSITION_REASON,
-    COR_PRF_SUSPEND_REASON,
-    COR_PRF_GC_REASON,
-    CorSaveSize
-}
 
 // profiler types
 #[repr(C)]
@@ -1058,6 +1054,7 @@ bitflags! {
 }
 
 impl CorCallingConvention {
+    /// Whether the calling convention is generic
     pub fn is_generic(&self) -> bool {
         self.contains(CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERIC)
     }
@@ -1083,6 +1080,29 @@ pub fn rid_to_token(rid: RID, token_type: mdToken) -> mdToken {
 
 pub fn is_nil_token(token: mdToken) -> bool {
     rid_from_token(token) == 0
+}
+
+// allow types defined here to be passed across FFI boundary
+macro_rules! primitive_transferable_type {
+    ($($t:ty),+) => {
+        $(unsafe impl AbiTransferable for $t {
+            type Abi = Self;
+            fn get_abi(&self) -> Self::Abi {
+                *self
+            }
+            fn set_abi(&mut self) -> *mut Self::Abi {
+                self as *mut Self::Abi
+            }
+        })*
+    };
+}
+
+primitive_transferable_type! {
+    COR_PRF_JIT_CACHE,
+    COR_PRF_TRANSITION_REASON,
+    COR_PRF_SUSPEND_REASON,
+    COR_PRF_GC_REASON,
+    CorSaveSize
 }
 
 #[cfg(test)]
