@@ -14,6 +14,9 @@ use crate::{
 };
 use com::sys::HRESULT;
 
+/// Generates the IL for the startup hook method to load the Elastic.Apm.Profiler.Managed.Loader
+/// assembly embedded in the profiler, and inserts into the method body of the method defined
+/// by module_id and function_token
 pub fn run_il_startup_hook(
     profiler_info: &ICorProfilerInfo4,
     module_metadata: &ModuleMetadata,

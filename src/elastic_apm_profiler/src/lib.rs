@@ -18,12 +18,12 @@ mod profiler;
 pub mod cil;
 pub mod interfaces;
 
-use com::sys::IID;
 use profiler::Profiler;
+use com::CLSID;
 
-/// The IID of the profiler
+/// The CLSID of the profiler
 /// {FA65FE15-F085-4681-9B20-95E04F6C03CC}
-const IID_PROFILER: IID = IID {
+const CLSID_PROFILER: CLSID = CLSID {
     data1: 0xFA65FE15,
     data2: 0xF085,
     data3: 0x4681,
@@ -37,12 +37,8 @@ unsafe extern "system" fn DllGetClassObject(
     iid: *const ::com::sys::IID,
     result: *mut *mut ::core::ffi::c_void,
 ) -> ::com::sys::HRESULT {
-    assert!(
-        !class_id.is_null(),
-        "class id passed to DllGetClassObject should never be null"
-    );
     let class_id = &*class_id;
-    if class_id == &IID_PROFILER {
+    if class_id == &CLSID_PROFILER {
         let instance = <Profiler as ::com::production::Class>::Factory::allocate();
         instance.QueryInterface(&*iid, result)
     } else {
