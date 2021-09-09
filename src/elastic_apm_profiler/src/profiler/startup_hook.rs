@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cil::{compress_token, FatMethodHeader, Instruction, Method, MethodHeader, CorILMethodFlags},
+    cil::{compress_token, CorILMethodFlags, FatMethodHeader, Instruction, Method, MethodHeader},
     ffi::{
         mdMethodDef, mdToken, CorCallingConvention, CorElementType, CorFieldAttr, CorMethodAttr,
         CorMethodImpl, CorPinvokeMap, CorTypeAttr, ModuleID, COR_SIGNATURE, E_FAIL, ULONG,
@@ -443,7 +443,7 @@ fn generate_void_il_startup_method(
             false,
             instructions.iter().map(|i| i.opcode.len as u16).sum(),
             instructions.iter().map(|i| i.len() as u32).sum(),
-            locals_signature_token
+            locals_signature_token,
         ),
         instructions,
         sections: vec![],

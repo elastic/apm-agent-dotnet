@@ -97,13 +97,14 @@ impl MethodHeader {
         init_locals: bool,
         max_stack: u16,
         code_size: u32,
-        local_var_sig_tok: u32) -> Self {
+        local_var_sig_tok: u32,
+    ) -> Self {
         MethodHeader::Fat(FatMethodHeader {
             more_sects,
             init_locals,
             max_stack,
             code_size,
-            local_var_sig_tok
+            local_var_sig_tok,
         })
     }
 
@@ -158,8 +159,10 @@ impl MethodHeader {
     /// Instructions start and end
     pub fn instructions(&self) -> (usize, usize) {
         match self {
-            MethodHeader::Fat(header) =>
-                (FatMethodHeader::SIZE as usize, (FatMethodHeader::SIZE as u32 + header.code_size - 1) as usize),
+            MethodHeader::Fat(header) => (
+                FatMethodHeader::SIZE as usize,
+                (FatMethodHeader::SIZE as u32 + header.code_size - 1) as usize,
+            ),
             MethodHeader::Tiny(header) => (1, header.code_size as usize),
         }
     }

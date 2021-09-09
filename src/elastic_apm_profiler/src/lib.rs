@@ -25,8 +25,8 @@ use profiler::Profiler;
 use std::sync::atomic::Ordering;
 
 /// The IID of the profiler
-/// FA65FE15-F085-4681-9B20-95E04F6C03CC
-pub const IID_PROFILER: IID = IID {
+/// {FA65FE15-F085-4681-9B20-95E04F6C03CC}
+const IID_PROFILER: IID = IID {
     data1: 0xFA65FE15,
     data2: 0xF085,
     data3: 0x4681,
