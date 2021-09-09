@@ -41,7 +41,7 @@ use crate::{
             ModuleMetadata, ModuleWrapperTokens, TargetMethodReference, WrapperMethodReference,
         },
     },
-    types::{
+    ffi::types::{
         AssemblyMetaData, HashAlgorithmType, ModuleInfo, MyFunctionInfo, MyTypeInfo, RuntimeInfo,
         Version, WrapperMethodRef,
     },

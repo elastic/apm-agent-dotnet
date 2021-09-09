@@ -1,5 +1,4 @@
 #![allow(dead_code, unused_variables, unused_imports)]
-
 // Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
@@ -18,7 +17,6 @@ mod profiler;
 
 pub mod cil;
 pub mod interfaces;
-pub mod types;
 
 use com::sys::IID;
 use profiler::Profiler;

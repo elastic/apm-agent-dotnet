@@ -21,7 +21,7 @@ use crate::{
         sig::parse_type,
         types::{MethodSignature, ModuleMetadata, WrapperMethodReference},
     },
-    types::{MyFunctionInfo, WrapperMethodRef},
+    ffi::types::{MyFunctionInfo, WrapperMethodRef},
 };
 use com::sys::HRESULT;
 use num_traits::FromPrimitive;

@@ -17,7 +17,7 @@ use crate::{
         managed,
         types::{MetadataBuilder, ModuleMetadata},
     },
-    types::{FunctionMethodArgument, MethodArgumentTypeFlag, MyFunctionInfo, MyTypeInfo},
+    ffi::types::{FunctionMethodArgument, MethodArgumentTypeFlag, MyFunctionInfo, MyTypeInfo},
 };
 use com::sys::HRESULT;
 use std::ops::Deref;

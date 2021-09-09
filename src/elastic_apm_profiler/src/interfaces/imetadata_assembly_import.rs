@@ -3,7 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use crate::{cil::MAX_LENGTH, ffi::*, types::*};
+use crate::{cil::MAX_LENGTH, ffi::*, ffi::types::*};
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{FAILED, HRESULT, S_OK},

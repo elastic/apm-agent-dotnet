@@ -23,7 +23,7 @@ use crate::{
             WrapperMethodReference,
         },
     },
-    types::{MyFunctionInfo, WrapperMethodRef},
+    ffi::types::{MyFunctionInfo, WrapperMethodRef},
 };
 use com::sys::HRESULT;
 use log::Level;

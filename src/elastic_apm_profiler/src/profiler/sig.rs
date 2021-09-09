@@ -8,7 +8,7 @@ use crate::{
     ffi::{CorCallingConvention, CorElementType, E_FAIL},
     interfaces::IMetaDataImport2,
     profiler::types::ModuleMetadata,
-    types::{MyFunctionInfo, MyTypeInfo},
+    ffi::types::{MyFunctionInfo, MyTypeInfo},
 };
 use com::sys::HRESULT;
 use num_traits::FromPrimitive;

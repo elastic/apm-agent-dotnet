@@ -14,7 +14,7 @@ use crate::{
         IMetaDataAssemblyEmit, IMetaDataAssemblyImport, IMetaDataEmit2, IMetaDataImport2,
     },
     profiler::calltarget_tokens::CallTargetTokens,
-    types::{AssemblyMetaData, MyFunctionInfo, PublicKey, Version, WrapperMethodRef},
+    ffi::types::{AssemblyMetaData, MyFunctionInfo, PublicKey, Version, WrapperMethodRef},
 };
 use com::sys::{GUID, HRESULT};
 use core::fmt;
@@ -338,7 +338,7 @@ pub struct TargetMethodReference {
     method_name: String,
     #[serde(
         default = "version_max",
-        deserialize_with = "crate::types::deserialize_max_version"
+        deserialize_with = "crate::ffi::types::deserialize_max_version"
     )]
     maximum_version: Version,
     #[serde(default = "version_min")]

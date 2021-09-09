@@ -20,7 +20,7 @@ use crate::{
         ICorProfilerFunctionEnum, ICorProfilerMethodEnum, ICorProfilerModuleEnum,
         ICorProfilerObjectEnum, ICorProfilerThreadEnum, IMetaDataImport, IMethodMalloc,
     },
-    types::{
+    ffi::types::{
         AppDomainInfo, ArrayClassInfo, AssemblyInfo, ClassInfo, FunctionInfo,
         FunctionTokenAndMetadata, IlFunctionBody, ModuleInfo, ModuleInfo2, RuntimeInfo,
     },

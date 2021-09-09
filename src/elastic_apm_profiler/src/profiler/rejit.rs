@@ -21,7 +21,7 @@ use crate::{
         env, helpers, process,
         types::{MethodReplacement, ModuleMetadata, ModuleWrapperTokens},
     },
-    types::{MethodArgumentTypeFlag, MyFunctionInfo, MyTypeInfo},
+    ffi::types::{MethodArgumentTypeFlag, MyFunctionInfo, MyTypeInfo},
 };
 use com::sys::{HRESULT, S_FALSE, S_OK};
 use log::{Level, Level::Info};
