@@ -15,7 +15,7 @@ use widestring::U16CString;
 use crate::{
     cil::uncompress_token,
     ffi::{types::*, *},
-    profiler::types::{FunctionMethodSignature, MethodSignature, MyFunctionInfo, MyTypeInfo},
+    profiler::types::{FunctionMethodSignature, MethodSignature, FunctionInfo, TypeInfo},
 };
 
 interfaces! {
@@ -1071,7 +1071,7 @@ impl IMetaDataImport2 {
     // other methods, not direct Rust abstractions over COM
 
     /// Gets the function information from the specified metadata token
-    pub fn get_function_info(&self, token: mdToken) -> Result<MyFunctionInfo, HRESULT> {
+    pub fn get_function_info(&self, token: mdToken) -> Result<FunctionInfo, HRESULT> {
         let cor_token_type = {
             let t = type_from_token(token);
             CorTokenType::from_bits(t).unwrap()
@@ -1121,7 +1121,7 @@ impl IMetaDataImport2 {
 
         let type_info = self.get_type_info(parent_token)?;
 
-        Ok(MyFunctionInfo::new(
+        Ok(FunctionInfo::new(
             token,
             function_name,
             is_generic,
@@ -1134,7 +1134,7 @@ impl IMetaDataImport2 {
     }
 
     /// Gets the type information for the specified metadata token
-    pub fn get_type_info(&self, token: mdToken) -> Result<Option<MyTypeInfo>, HRESULT> {
+    pub fn get_type_info(&self, token: mdToken) -> Result<Option<TypeInfo>, HRESULT> {
         let token_type = {
             let t = type_from_token(token);
             CorTokenType::from_bits(t).unwrap()
@@ -1184,7 +1184,7 @@ impl IMetaDataImport2 {
                 if type_spec.signature[0] == CorElementType::ELEMENT_TYPE_GENERICINST as u8 {
                     let (base_token, base_len) = uncompress_token(&type_spec.signature[2..]);
                     return if let Some(base_type) = self.get_type_info(base_token)? {
-                        Ok(Some(MyTypeInfo {
+                        Ok(Some(TypeInfo {
                             id: base_type.id,
                             name: base_type.name,
                             type_spec: token,
@@ -1220,7 +1220,7 @@ impl IMetaDataImport2 {
             is_generic = from_right == 1 || from_right == 2;
         }
 
-        Ok(Some(MyTypeInfo {
+        Ok(Some(TypeInfo {
             id: token,
             name,
             type_spec: mdTypeSpecNil,

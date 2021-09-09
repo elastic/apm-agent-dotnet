@@ -12,7 +12,7 @@ use crate::{
     cil::{uncompress_data, uncompress_token},
     ffi::{CorCallingConvention, CorElementType, E_FAIL},
     interfaces::IMetaDataImport2,
-    profiler::types::{ModuleMetadata, MyFunctionInfo, MyTypeInfo},
+    profiler::types::{ModuleMetadata, FunctionInfo, TypeInfo},
 };
 
 fn parse_type_def_or_ref_encoded(signature: &[u8]) -> Option<usize> {
@@ -307,7 +307,7 @@ pub fn parse_type(signature: &[u8]) -> Option<usize> {
 fn retrieve_type_for_signature(
     metadata_import: &IMetaDataImport2,
     signature: &[u8],
-) -> Result<(MyTypeInfo, usize), HRESULT> {
+) -> Result<(TypeInfo, usize), HRESULT> {
     let (token, len) = uncompress_token(signature);
     match metadata_import.get_type_info(token) {
         Ok(Some(type_info)) => Ok((type_info, len)),
@@ -333,7 +333,7 @@ fn retrieve_type_for_signature(
 
 pub fn parse_signature_types(
     module_metadata: &ModuleMetadata,
-    function_info: &MyFunctionInfo,
+    function_info: &FunctionInfo,
 ) -> Option<Vec<String>> {
     let signature = &function_info.signature;
     let signature_size = signature.len();

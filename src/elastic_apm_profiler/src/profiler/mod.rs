@@ -32,7 +32,7 @@ use rust_embed::RustEmbed;
 use widestring::{U16CStr, U16CString, WideString};
 
 use types::{
-    AssemblyMetaData, HashAlgorithmType, MyFunctionInfo, MyTypeInfo, Version, WrapperMethodRef,
+    AssemblyMetaData, HashAlgorithmType, FunctionInfo, TypeInfo, Version, WrapperMethodRef,
 };
 
 use crate::{
@@ -1524,7 +1524,7 @@ impl Profiler {
             let method_defs =
                 metadata_import.enum_methods_with_name(type_def, target.method_name())?;
             for method_def in method_defs {
-                let caller: MyFunctionInfo = match metadata_import.get_function_info(method_def) {
+                let caller: FunctionInfo = match metadata_import.get_function_info(method_def) {
                     Ok(c) => c,
                     Err(e) => {
                         log::warn!(

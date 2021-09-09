@@ -235,6 +235,15 @@ impl FromStr for AssemblyReference {
     }
 }
 
+impl<'de> Deserialize<'de> for AssemblyReference {
+    fn deserialize<D>(deserializer: D) -> Result<AssemblyReference, D::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        deserialize_from_str(deserializer)
+    }
+}
+
 /// deserializes any type that implements FromStr from a str
 pub(crate) fn deserialize_from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 where
@@ -269,14 +278,7 @@ where
     deserializer.deserialize_str(String(PhantomData))
 }
 
-impl<'de> Deserialize<'de> for AssemblyReference {
-    fn deserialize<D>(deserializer: D) -> Result<AssemblyReference, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserialize_from_str(deserializer)
-    }
-}
+
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct PublicKeyToken(String);
@@ -556,7 +558,7 @@ impl ModuleMetadata {
 
     pub fn get_method_replacements_for_caller(
         &self,
-        caller: &MyFunctionInfo,
+        caller: &FunctionInfo,
     ) -> Vec<MethodReplacement> {
         self.integrations
             .iter()
@@ -890,10 +892,10 @@ method_replacements:
 }
 
 #[derive(Debug, Clone)]
-pub struct MyFunctionInfo {
+pub struct FunctionInfo {
     pub id: mdToken,
     pub name: String,
-    pub type_info: Option<MyTypeInfo>,
+    pub type_info: Option<TypeInfo>,
     pub is_generic: bool,
     pub signature: MethodSignature,
     pub function_spec_signature: Option<MethodSignature>,
@@ -901,12 +903,12 @@ pub struct MyFunctionInfo {
     pub method_signature: FunctionMethodSignature,
 }
 
-impl MyFunctionInfo {
+impl FunctionInfo {
     pub fn new(
         id: mdToken,
         name: String,
         is_generic: bool,
-        type_info: Option<MyTypeInfo>,
+        type_info: Option<TypeInfo>,
         signature: MethodSignature,
         function_spec_signature: Option<MethodSignature>,
         method_def_id: mdToken,
@@ -1321,15 +1323,15 @@ impl ParsedFunctionMethodSignature {
 }
 
 #[derive(Debug, Clone)]
-pub struct MyTypeInfo {
+pub struct TypeInfo {
     pub id: mdToken,
     pub name: String,
     pub type_spec: mdTypeSpec,
     pub token_type: CorTokenType,
-    pub extends_from: Option<Box<MyTypeInfo>>,
+    pub extends_from: Option<Box<TypeInfo>>,
     pub is_value_type: bool,
     pub is_generic: bool,
-    pub parent_type: Option<Box<MyTypeInfo>>,
+    pub parent_type: Option<Box<TypeInfo>>,
 }
 
 /// A .NET version

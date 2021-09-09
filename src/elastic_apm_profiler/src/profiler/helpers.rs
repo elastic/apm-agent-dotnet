@@ -23,7 +23,7 @@ use crate::{
     profiler::{
         sig::parse_type,
         types::{
-            MethodSignature, ModuleMetadata, MyFunctionInfo, WrapperMethodRef,
+            MethodSignature, ModuleMetadata, FunctionInfo, WrapperMethodRef,
             WrapperMethodReference,
         },
     },
@@ -347,7 +347,7 @@ pub fn create_assembly_ref_to_mscorlib(
 pub fn get_il_codes(
     title: &str,
     method: &Method,
-    caller: &MyFunctionInfo,
+    caller: &FunctionInfo,
     module_metadata: &ModuleMetadata,
 ) -> String {
     let mut buf = String::new();

@@ -22,7 +22,7 @@ use crate::{
         managed,
         types::{
             FunctionMethodArgument, MetadataBuilder, MethodArgumentTypeFlag, ModuleMetadata,
-            MyFunctionInfo, MyTypeInfo,
+            FunctionInfo, TypeInfo,
         },
     },
 };
@@ -509,7 +509,7 @@ impl CallTargetTokens {
         Ok(default_method_spec)
     }
 
-    fn get_current_type_ref(&self, current_type: &MyTypeInfo) -> (mdToken, bool) {
+    fn get_current_type_ref(&self, current_type: &TypeInfo) -> (mdToken, bool) {
         let mut is_value_type = current_type.is_value_type;
         if current_type.type_spec != mdTypeSpecNil {
             (current_type.type_spec, is_value_type)
@@ -650,7 +650,7 @@ impl CallTargetTokens {
     pub fn write_begin_method_with_arguments_array(
         &mut self,
         integration_type_ref: mdTypeRef,
-        current_type: &MyTypeInfo,
+        current_type: &TypeInfo,
         module_metadata: &ModuleMetadata,
     ) -> Result<Instruction, HRESULT> {
         self.ensure_base_calltarget_tokens(module_metadata)?;
@@ -723,7 +723,7 @@ impl CallTargetTokens {
     pub fn modify_local_sig_and_initialize(
         &mut self,
         method: &Method,
-        function_info: &MyFunctionInfo,
+        function_info: &FunctionInfo,
         module_metadata: &ModuleMetadata,
     ) -> Result<(LocalSig, Vec<Instruction>), HRESULT> {
         // TODO: cache the parsed method in method_signature...
@@ -770,7 +770,7 @@ impl CallTargetTokens {
     pub fn write_begin_method(
         &mut self,
         integration_type_ref: mdTypeRef,
-        current_type: &MyTypeInfo,
+        current_type: &TypeInfo,
         method_arguments: &[FunctionMethodArgument],
         module_metadata: &ModuleMetadata,
     ) -> Result<Instruction, HRESULT> {
@@ -865,7 +865,7 @@ impl CallTargetTokens {
     pub fn write_end_void_return_member_ref(
         &mut self,
         integration_type_ref: mdTypeRef,
-        current_type: &MyTypeInfo,
+        current_type: &TypeInfo,
         module_metadata: &ModuleMetadata,
     ) -> Result<Instruction, HRESULT> {
         self.ensure_base_calltarget_tokens(module_metadata)?;
@@ -950,7 +950,7 @@ impl CallTargetTokens {
     pub fn write_end_return_member_ref(
         &mut self,
         integration_type_ref: mdTypeRef,
-        current_type: &MyTypeInfo,
+        current_type: &TypeInfo,
         return_argument: &FunctionMethodArgument,
         module_metadata: &ModuleMetadata,
     ) -> Result<Instruction, HRESULT> {
@@ -1048,7 +1048,7 @@ impl CallTargetTokens {
     pub fn write_log_exception(
         &mut self,
         integration_type_ref: mdTypeRef,
-        current_type: &MyTypeInfo,
+        current_type: &TypeInfo,
         module_metadata: &ModuleMetadata,
     ) -> Result<Instruction, HRESULT> {
         self.ensure_base_calltarget_tokens(module_metadata)?;

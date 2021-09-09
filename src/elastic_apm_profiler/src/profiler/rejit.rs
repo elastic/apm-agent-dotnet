@@ -36,7 +36,7 @@ use crate::{
         env, helpers, process,
         types::{
             MethodArgumentTypeFlag, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
-            MyFunctionInfo, MyTypeInfo,
+            FunctionInfo, TypeInfo,
         },
     },
 };
@@ -66,7 +66,7 @@ impl RejitHandlerModule {
 
 pub struct RejitHandlerModuleMethod {
     method_def: mdMethodDef,
-    function_info: Option<MyFunctionInfo>,
+    function_info: Option<FunctionInfo>,
     method_replacement: Option<MethodReplacement>,
 }
 
@@ -79,7 +79,7 @@ impl RejitHandlerModuleMethod {
         }
     }
 
-    pub fn set_function_info(&mut self, function_info: MyFunctionInfo) {
+    pub fn set_function_info(&mut self, function_info: FunctionInfo) {
         self.function_info = Some(function_info);
     }
 
@@ -87,7 +87,7 @@ impl RejitHandlerModuleMethod {
         self.method_replacement = Some(method_replacement);
     }
 
-    pub fn function_info(&self) -> Option<&MyFunctionInfo> {
+    pub fn function_info(&self) -> Option<&FunctionInfo> {
         self.function_info.as_ref()
     }
 }
@@ -855,7 +855,7 @@ pub fn calltarget_rewriter_callback(
     Ok(())
 }
 
-fn log_caller_type_info(caller: &MyFunctionInfo, type_info: &MyTypeInfo) {
+fn log_caller_type_info(caller: &FunctionInfo, type_info: &TypeInfo) {
     let mut s = vec![
         format!("caller type.id: {}", caller.id),
         format!("caller type.is_generic: {}", type_info.is_generic),

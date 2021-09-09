@@ -26,7 +26,7 @@ use crate::{
         sig::{parse_signature_types, parse_type},
         types::{
             MetadataBuilder, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
-            MyFunctionInfo, WrapperMethodRef, WrapperMethodReference,
+            FunctionInfo, WrapperMethodRef, WrapperMethodReference,
         },
     },
 };
@@ -38,7 +38,7 @@ pub fn process_insertion_calls(
     function_id: FunctionID,
     module_id: ModuleID,
     function_token: mdToken,
-    caller: &MyFunctionInfo,
+    caller: &FunctionInfo,
     method_replacements: &[MethodReplacement],
 ) -> Result<(), HRESULT> {
     // TODO: implement
@@ -53,7 +53,7 @@ pub fn process_replacement_calls(
     function_id: FunctionID,
     module_id: ModuleID,
     function_token: mdToken,
-    caller: &MyFunctionInfo,
+    caller: &FunctionInfo,
     method_replacements: &[MethodReplacement],
 ) -> Result<(), HRESULT> {
     let il_body = profiler_info.get_il_function_body(module_id, function_token)?;
