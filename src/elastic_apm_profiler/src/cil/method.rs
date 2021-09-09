@@ -27,13 +27,13 @@
 use crate::{
     cil,
     cil::{
-        nearest_multiple, CorExceptionFlag, FatSectionClause, FatSectionHeader,
+        check_flag, il_u32, nearest_multiple, CorExceptionFlag, FatSectionClause, FatSectionHeader,
         Instruction, Opcode,
         Operand::{InlineBrTarget, InlineSwitch, ShortInlineBrTarget},
         Section, BEQ, BGE, BGT, BRFALSE, BRTRUE,
     },
     error::Error,
-    ffi::{mdSignatureNil, mdTokenNil},
+    ffi::{mdSignatureNil, mdToken, mdTokenNil},
 };
 use std::{
     alloc::handle_alloc_error,
@@ -42,8 +42,6 @@ use std::{
     mem::transmute,
     slice,
 };
-use crate::cil::{il_u32, check_flag};
-use crate::ffi::mdToken;
 
 bitflags! {
     pub struct MethodHeaderFlags: u8 {

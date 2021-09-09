@@ -694,7 +694,6 @@ pub fn calltarget_rewriter_callback(
             .map_err(|_| S_FALSE)?;
     }
 
-
     let mut i = start_exception_catch_idx;
     let mut added_instruction_count = 0;
 

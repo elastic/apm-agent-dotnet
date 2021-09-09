@@ -1349,9 +1349,18 @@ impl Profiler {
 
         match assembly_reference_provider.add_assembly_reference(&assembly_reference_info) {
             Ok(()) => {
-                log::trace!("GetAssemblyReferences succeeded for {}, path={}", assembly_name, &path)
-            },
-            Err(e) => log::warn!("GetAssemblyReferences failed for {}, path={}. 0x{:X}", assembly_name, &path, e)
+                log::trace!(
+                    "GetAssemblyReferences succeeded for {}, path={}",
+                    assembly_name,
+                    &path
+                )
+            }
+            Err(e) => log::warn!(
+                "GetAssemblyReferences failed for {}, path={}. 0x{:X}",
+                assembly_name,
+                &path,
+                e
+            ),
         }
 
         Ok(())

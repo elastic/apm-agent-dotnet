@@ -174,10 +174,10 @@ fn get_profiler_dir() -> String {
 
                 match std::env::var(env_var) {
                     Ok(v) => v,
-                    Err(_) => std::env::var("COR_PROFILER_PATH").unwrap_or_else(|_| String::new())
+                    Err(_) => std::env::var("COR_PROFILER_PATH").unwrap_or_else(|_| String::new()),
                 }
             }
-        }
+        },
     }
 }
 
@@ -201,7 +201,7 @@ pub fn get_default_log_dir() -> PathBuf {
             let mut path_buf = PathBuf::from(get_profiler_dir());
             path_buf = path_buf.join("logs");
             path_buf
-        },
+        }
     }
 }
 
@@ -319,13 +319,13 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
 
     let reader = BufReader::new(file);
     let integrations = serde_yaml::from_reader(reader).map_err(|e| {
-            log::warn!(
-                "Problem reading integrations file {}: {}. profiler is disabled.",
-                &path,
-                e.to_string()
-            );
-            E_FAIL
-        })?;
+        log::warn!(
+            "Problem reading integrations file {}: {}. profiler is disabled.",
+            &path,
+            e.to_string()
+        );
+        E_FAIL
+    })?;
 
     Ok(integrations)
 }

@@ -10,8 +10,6 @@ mod method;
 mod opcode;
 mod section;
 
-pub use self::{
-    cor::*, helpers::*, instruction::*, method::*, opcode::*, section::*,
-};
+pub use self::{cor::*, helpers::*, instruction::*, method::*, opcode::*, section::*};
 
 pub const MAX_LENGTH: u32 = 1024;
