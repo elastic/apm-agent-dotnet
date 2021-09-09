@@ -3,29 +3,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use std::{
-    borrow::BorrowMut,
-    collections::HashMap,
-    ops::Deref,
-    sync::{
-        mpsc::{channel, SendError, Sender},
-        Arc, Mutex,
-    },
-    thread,
-    thread::JoinHandle,
-};
-
-use com::sys::{HRESULT, S_FALSE, S_OK};
-use log::{Level, Level::Info};
-
 use crate::{
-    cil,
     cil::{
-        CorExceptionFlag, FatMethodHeader, FatSectionClause, FatSectionHeader, Instruction, Method,
-        MethodHeader,
-        Operand::{InlineBrTarget, ShortInlineBrTarget},
-        OperandParams::InlineSwitch,
-        LEAVE_S, RET,
+        CorExceptionFlag, FatSectionClause, Instruction, Method, Operand::ShortInlineBrTarget, RET,
     },
     ffi::{
         mdMethodDef, mdTokenNil, mdTypeSpecNil, CorCallingConvention, FunctionID, ModuleID, ReJITID,
@@ -35,10 +15,21 @@ use crate::{
         calltarget_tokens::CallTargetTokens,
         env, helpers, process,
         types::{
-            MethodArgumentTypeFlag, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
-            FunctionInfo, TypeInfo,
+            FunctionInfo, MethodArgumentTypeFlag, MethodReplacement, ModuleMetadata,
+            ModuleWrapperTokens, TypeInfo,
         },
     },
+};
+use com::sys::{HRESULT, S_FALSE};
+use log::Level;
+use std::{
+    collections::HashMap,
+    sync::{
+        mpsc::{channel, Sender},
+        Mutex,
+    },
+    thread,
+    thread::JoinHandle,
 };
 
 pub struct RejitHandlerModule {

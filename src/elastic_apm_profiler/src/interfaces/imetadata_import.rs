@@ -15,7 +15,7 @@ use widestring::U16CString;
 use crate::{
     cil::uncompress_token,
     ffi::{types::*, *},
-    profiler::types::{FunctionMethodSignature, MethodSignature, FunctionInfo, TypeInfo},
+    profiler::types::{FunctionInfo, FunctionMethodSignature, MethodSignature, TypeInfo},
 };
 
 interfaces! {

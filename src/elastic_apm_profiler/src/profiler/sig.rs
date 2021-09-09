@@ -3,17 +3,14 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use std::process::id;
-
-use com::sys::HRESULT;
-use num_traits::FromPrimitive;
-
 use crate::{
     cil::{uncompress_data, uncompress_token},
     ffi::{CorCallingConvention, CorElementType, E_FAIL},
     interfaces::IMetaDataImport2,
-    profiler::types::{ModuleMetadata, FunctionInfo, TypeInfo},
+    profiler::types::{FunctionInfo, ModuleMetadata, TypeInfo},
 };
+use com::sys::HRESULT;
+use num_traits::FromPrimitive;
 
 fn parse_type_def_or_ref_encoded(signature: &[u8]) -> Option<usize> {
     let (token, len) = uncompress_token(signature);

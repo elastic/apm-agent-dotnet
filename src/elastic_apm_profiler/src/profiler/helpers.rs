@@ -3,12 +3,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use com::sys::HRESULT;
-use num_traits::FromPrimitive;
-
 use crate::{
     cil::{
-        uncompress_data, uncompress_token, CorExceptionFlag, Method, Operand,
+        uncompress_data, uncompress_token, CorExceptionFlag, Method,
         Operand::{
             InlineBrTarget, InlineField, InlineI, InlineI8, InlineMethod, InlineString, InlineType,
             ShortInlineBrTarget, ShortInlineI, ShortInlineVar,
@@ -17,17 +14,16 @@ use crate::{
     },
     ffi::{
         mdAssemblyRef, mdToken, mdTokenNil, mdTypeDef, mdTypeDefNil, type_from_token,
-        CorAssemblyFlags, CorElementType, CorTokenType, ModuleID, ASSEMBLYMETADATA,
+        CorAssemblyFlags, CorElementType, CorTokenType, ASSEMBLYMETADATA,
     },
     interfaces::{IMetaDataAssemblyEmit, IMetaDataEmit2, IMetaDataImport2},
     profiler::{
         sig::parse_type,
-        types::{
-            MethodSignature, ModuleMetadata, FunctionInfo, WrapperMethodRef,
-            WrapperMethodReference,
-        },
+        types::{FunctionInfo, MethodSignature, ModuleMetadata},
     },
 };
+use com::sys::HRESULT;
+use num_traits::FromPrimitive;
 
 pub(crate) fn return_type_is_value_type_or_generic(
     metadata_import: &IMetaDataImport2,

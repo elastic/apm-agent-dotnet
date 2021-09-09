@@ -8,8 +8,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 use crate::ffi::{
-    mdToken, mdTokenNil, rid_from_token, token_from_rid, type_from_token, CorTokenType, BYTE,
-    DWORD, ULONG,
+    mdToken, mdTokenNil, rid_from_token, token_from_rid, type_from_token, CorTokenType, BYTE, ULONG,
 };
 
 const ENCODE_TOKEN: [mdToken; 4] = [

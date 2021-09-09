@@ -9,11 +9,7 @@ use crate::profiler::{
 };
 use once_cell::sync::Lazy;
 use rust_embed::RustEmbed;
-use std::{
-    borrow::{Borrow, Cow},
-    ops::Deref,
-    sync::atomic::Ordering,
-};
+use std::sync::atomic::Ordering;
 
 /// Embedded assets of the managed loader assembly
 #[derive(RustEmbed)]

@@ -3,10 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use crate::{
-    ffi::{COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER, E_FAIL},
-    profiler::types::Integration,
-};
+use crate::{ffi::E_FAIL, profiler::types::Integration};
 use com::sys::HRESULT;
 use log::LevelFilter;
 use log4rs::{
@@ -19,20 +16,12 @@ use log4rs::{
             RollingFileAppender,
         },
     },
-    config::{Appender, Logger, Root},
+    config::{Appender, Root},
     encode::pattern::PatternEncoder,
     Config, Handle,
 };
 use once_cell::sync::Lazy;
-use std::{
-    borrow::Borrow,
-    collections::{BTreeMap, HashMap, HashSet},
-    ffi::OsStr,
-    fs::File,
-    io::BufReader,
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
 
 const ELASTIC_APM_PROFILER_INTEGRATIONS: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
 const ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_TARGETS";

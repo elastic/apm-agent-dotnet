@@ -11,16 +11,10 @@ use crate::{
 };
 use com::{
     interfaces::iunknown::IUnknown,
-    sys::{FAILED, HRESULT, S_OK},
+    sys::{FAILED, HRESULT},
 };
-use std::{
-    ffi::{c_void, CString, OsStr, OsString},
-    mem::MaybeUninit,
-    ops::{Deref, DerefMut},
-    pin::Pin,
-    str::FromStr,
-};
-use widestring::{U16CStr, U16CString, U16String, WideCString, WideString};
+use std::ffi::c_void;
+use widestring::U16CString;
 
 interfaces! {
     #[uuid("BA3FEE4C-ECB9-4E41-83B7-183FA41CD859")]

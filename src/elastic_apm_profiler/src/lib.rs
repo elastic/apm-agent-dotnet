@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_variables, unused_imports)]
+#![allow(dead_code, unused_variables)]
 // Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
@@ -20,7 +20,6 @@ pub mod interfaces;
 
 use com::sys::IID;
 use profiler::Profiler;
-use std::sync::atomic::Ordering;
 
 /// The IID of the profiler
 /// {FA65FE15-F085-4681-9B20-95E04F6C03CC}

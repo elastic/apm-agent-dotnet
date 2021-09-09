@@ -4,11 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::ffi::*;
-use com::{
-    interfaces,
-    interfaces::IUnknown,
-    sys::{GUID, HRESULT},
-};
+use com::{interfaces::IUnknown, sys::HRESULT};
 
 com::interfaces! {
     #[uuid("571194F7-25ED-419F-AA8B-7016B3159701")]

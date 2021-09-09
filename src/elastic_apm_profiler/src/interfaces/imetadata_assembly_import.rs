@@ -14,7 +14,7 @@ use widestring::U16CString;
 
 use crate::{
     cil::MAX_LENGTH,
-    ffi::{types::*, *},
+    ffi::*,
     profiler::types::{AssemblyMetaData, PublicKey, Version},
 };
 

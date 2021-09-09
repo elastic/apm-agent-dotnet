@@ -3,28 +3,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use core::fmt;
-use std::{
-    cmp::Ordering,
-    collections::{BTreeMap, HashMap, HashSet},
-    fmt::{Display, Formatter},
-    fs::metadata,
-    io::Read,
-    iter::repeat,
-    marker::PhantomData,
-    str::FromStr,
-};
-
-use com::sys::{GUID, HRESULT};
-use crypto::{digest::Digest, sha1::Sha1};
-use num_traits::FromPrimitive;
-use serde::{
-    de,
-    de::{DeserializeOwned, MapAccess, Visitor},
-    Deserialize, Deserializer, Serialize,
-};
-use widestring::U16CString;
-
 use crate::{
     cil::{uncompress_data, uncompress_token},
     error::Error,
@@ -32,13 +10,30 @@ use crate::{
         mdAssembly, mdAssemblyRef, mdMemberRef, mdMemberRefNil, mdModule, mdToken, mdTokenNil,
         mdTypeRef, mdTypeSpec, AppDomainID, AssemblyID, CorAssemblyFlags, CorCallingConvention,
         CorElementType, CorTokenType, ModuleID, ASSEMBLYMETADATA, BYTE, CLDB_E_RECORD_NOTFOUND,
-        COR_PRF_MODULE_FLAGS, COR_SIGNATURE, E_FAIL, LPCWSTR, ULONG, WCHAR,
+        COR_PRF_MODULE_FLAGS, COR_SIGNATURE, E_FAIL, ULONG, WCHAR,
     },
     interfaces::{
         IMetaDataAssemblyEmit, IMetaDataAssemblyImport, IMetaDataEmit2, IMetaDataImport2,
     },
-    profiler::calltarget_tokens::CallTargetTokens,
 };
+use com::sys::{GUID, HRESULT};
+use core::fmt;
+use crypto::{digest::Digest, sha1::Sha1};
+use num_traits::FromPrimitive;
+use serde::{
+    de,
+    de::{DeserializeOwned, Visitor},
+    Deserialize, Deserializer,
+};
+use std::{
+    cmp::Ordering,
+    collections::{BTreeMap, HashMap, HashSet},
+    fmt::{Display, Formatter},
+    iter::repeat,
+    marker::PhantomData,
+    str::FromStr,
+};
+use widestring::U16CString;
 
 pub(crate) struct ModuleInfo {
     pub id: ModuleID,
@@ -237,8 +232,8 @@ impl FromStr for AssemblyReference {
 
 impl<'de> Deserialize<'de> for AssemblyReference {
     fn deserialize<D>(deserializer: D) -> Result<AssemblyReference, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         deserialize_from_str(deserializer)
     }
@@ -277,8 +272,6 @@ where
 
     deserializer.deserialize_str(String(PhantomData))
 }
-
-
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct PublicKeyToken(String);
@@ -1443,10 +1436,10 @@ bitflags! {
 
 #[cfg(test)]
 pub mod tests {
-    use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
     use crate::profiler::types::{
         AssemblyReference, Integration, MethodSignature, PublicKeyToken, Version,
     };
+    use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
 
     fn deserialize_and_assert(json: &str, expected: Version) -> Result<(), Box<dyn Error>> {
         let version: Version = serde_yaml::from_str(json)?;

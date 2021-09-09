@@ -3,29 +3,24 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use std::ops::Deref;
-
-use com::sys::HRESULT;
-use widestring::U16CString;
-
 use crate::{
     cil::{compress_data, compress_token, uncompress_data, Instruction, Method},
     ffi::{
-        mdAssemblyRef, mdAssemblyRefNil, mdMemberRef, mdMemberRefNil, mdMethodSpec,
-        mdMethodSpecNil, mdToken, mdTokenNil, mdTypeRef, mdTypeRefNil, mdTypeSpec, mdTypeSpecNil,
-        CorAssemblyFlags, CorCallingConvention, CorElementType,
-        CorElementType::ELEMENT_TYPE_VALUETYPE, ASSEMBLYMETADATA,
-        COR_PRF_SNAPSHOT_INFO::COR_PRF_SNAPSHOT_REGISTER_CONTEXT,
-        COR_PRF_TRANSITION_REASON::COR_PRF_TRANSITION_CALL, COR_SIGNATURE, E_FAIL, ULONG, WCHAR,
+        mdAssemblyRef, mdAssemblyRefNil, mdMemberRef, mdMemberRefNil, mdMethodSpec, mdToken,
+        mdTokenNil, mdTypeRef, mdTypeRefNil, mdTypeSpec, mdTypeSpecNil, CorAssemblyFlags,
+        CorCallingConvention, CorElementType, ASSEMBLYMETADATA, COR_SIGNATURE, E_FAIL, ULONG,
+        WCHAR,
     },
     profiler::{
         managed,
         types::{
-            FunctionMethodArgument, MetadataBuilder, MethodArgumentTypeFlag, ModuleMetadata,
-            FunctionInfo, TypeInfo,
+            FunctionInfo, FunctionMethodArgument, MethodArgumentTypeFlag, ModuleMetadata, TypeInfo,
         },
     },
 };
+use com::sys::HRESULT;
+use std::ops::Deref;
+use widestring::U16CString;
 
 /// Metadata tokens to modify call targets
 pub struct CallTargetTokens {

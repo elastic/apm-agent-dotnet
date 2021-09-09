@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use crate::{
-    cil::{compress_token, CorILMethodFlags, FatMethodHeader, Instruction, Method, MethodHeader},
+    cil::{compress_token, Instruction, Method, MethodHeader},
     ffi::{
         mdMethodDef, mdToken, CorCallingConvention, CorElementType, CorFieldAttr, CorMethodAttr,
         CorMethodImpl, CorPinvokeMap, CorTypeAttr, ModuleID, COR_SIGNATURE, E_FAIL, ULONG,

@@ -3,36 +3,21 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+use crate::{
+    ffi::{
+        mdMethodDef, mdToken, mdTypeDef, AppDomainID, AssemblyID, ClassID, ClrInstanceID,
+        CorElementType, CorMethodAttr, CorMethodImpl, CorTypeAttr, FunctionID, ModuleID, ProcessID,
+        ReJITID, BYTE, COR_FIELD_OFFSET, COR_PRF_FRAME_INFO, COR_PRF_FUNCTION_ARGUMENT_INFO,
+        COR_PRF_FUNCTION_ARGUMENT_RANGE, COR_PRF_HIGH_MONITOR, COR_PRF_MODULE_FLAGS,
+        COR_PRF_MONITOR, COR_PRF_RUNTIME_TYPE, COR_SIGNATURE, DWORD, LPCBYTE, PCCOR_SIGNATURE,
+        ULONG,
+    },
+    interfaces::ICorProfilerMethodEnum,
+};
+use com::{interfaces::iunknown::IUnknown, sys::GUID};
 use std::{
-    cmp::Ordering,
     fmt,
     fmt::{Display, Formatter},
-    str::FromStr,
-};
-
-use com::{
-    interfaces::iunknown::IUnknown,
-    sys::{GUID, HRESULT},
-};
-use crypto::{digest::Digest, sha1::Sha1};
-use num_traits::FromPrimitive;
-use serde::{de, de::Visitor, Deserialize, Deserializer};
-
-use crate::{
-    cil::{uncompress_data, uncompress_token},
-    error::Error,
-    ffi::{
-        mdAssembly, mdAssemblyRef, mdMemberRef, mdMethodDef, mdToken, mdTokenNil, mdTypeDef,
-        mdTypeRef, mdTypeSpec, AppDomainID, AssemblyID, ClassID, ClrInstanceID, CorAssemblyFlags,
-        CorCallingConvention, CorElementType, CorMethodAttr, CorMethodImpl, CorTokenType,
-        CorTypeAttr, FunctionID, ModuleID, ProcessID, ReJITID, ASSEMBLYMETADATA, BYTE,
-        COR_FIELD_OFFSET, COR_PRF_FRAME_INFO, COR_PRF_FUNCTION_ARGUMENT_INFO,
-        COR_PRF_FUNCTION_ARGUMENT_RANGE, COR_PRF_HIGH_MONITOR, COR_PRF_MODULE_FLAGS,
-        COR_PRF_MONITOR, COR_PRF_RUNTIME_TYPE, COR_SIGNATURE, DWORD, HCORENUM, LPCBYTE,
-        PCCOR_SIGNATURE, ULONG, ULONG32,
-    },
-    interfaces::{ICorProfilerMethodEnum, IMetaDataEmit2, IMetaDataImport},
-    profiler::types::{deserialize_from_str, MethodSignature, PublicKey, Version},
 };
 
 pub struct ArrayClassInfo {

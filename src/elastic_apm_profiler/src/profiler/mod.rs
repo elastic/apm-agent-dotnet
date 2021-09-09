@@ -3,56 +3,14 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    ffi::{c_void, CStr},
-    fs::File,
-    io::BufReader,
-    mem::{transmute, transmute_copy},
-    ops::Deref,
-    path::{Path, PathBuf},
-    process::id,
-    sync::{
-        atomic::{AtomicBool, AtomicUsize, Ordering},
-        Mutex, RwLock,
-    },
-};
-
-use com::{
-    interfaces::iunknown::IUnknown,
-    sys::{FAILED, GUID, HRESULT, S_OK},
-    Interface,
-};
-use log::{Level, LevelFilter};
-use log4rs::Handle;
-use num_traits::FromPrimitive;
-use once_cell::sync::Lazy;
-use rust_embed::RustEmbed;
-use widestring::{U16CStr, U16CString, WideString};
-
-use types::{
-    AssemblyMetaData, HashAlgorithmType, FunctionInfo, TypeInfo, Version, WrapperMethodRef,
-};
-
 use crate::{
-    cil::{
-        compress_token, uncompress_token, FatMethodHeader, Instruction, Method, MethodHeader,
-        Operand, Operand::InlineMethod, TinyMethodHeader, CALL, CALLVIRT, CONSTRAINED, NOP,
-    },
-    ffi::{
-        types::{ModuleInfo, RuntimeInfo},
-        COR_PRF_CLAUSE_TYPE::COR_PRF_CLAUSE_FILTER,
-        *,
-    },
+    ffi::{types::RuntimeInfo, *},
     interfaces::{
         ICorProfilerAssemblyReferenceProvider, ICorProfilerCallback, ICorProfilerCallback2,
         ICorProfilerCallback3, ICorProfilerCallback4, ICorProfilerCallback5, ICorProfilerCallback6,
         ICorProfilerCallback7, ICorProfilerCallback8, ICorProfilerCallback9,
-        ICorProfilerFunctionControl, ICorProfilerInfo, ICorProfilerInfo2, ICorProfilerInfo3,
-        ICorProfilerInfo4, ICorProfilerInfo5, ICorProfilerInfo7, IMetaDataAssemblyEmit,
-        IMetaDataAssemblyImport, IMetaDataEmit, IMetaDataEmit2, IMetaDataImport, IMetaDataImport2,
-        IID_ICOR_PROFILER_INFO, IID_ICOR_PROFILER_INFO4,
+        ICorProfilerFunctionControl, ICorProfilerInfo4, ICorProfilerInfo5, IMetaDataAssemblyEmit,
+        IMetaDataAssemblyImport, IMetaDataEmit2, IMetaDataImport2,
     },
     profiler::{
         calltarget_tokens::CallTargetTokens,
@@ -60,14 +18,31 @@ use crate::{
             IGNORE, MANAGED_PROFILER_ASSEMBLY, MANAGED_PROFILER_ASSEMBLY_LOADER,
             MANAGED_PROFILER_FULL_ASSEMBLY_VERSION,
         },
-        rejit::{RejitHandler, RejitHandlerModule, RejitHandlerModuleMethod},
-        sig::{get_sig_type_token_name, parse_type},
-        types::{
-            AssemblyReference, Integration, IntegrationMethod, MetadataBuilder, MethodReplacement,
-            ModuleMetadata, ModuleWrapperTokens, TargetMethodReference, WrapperMethodReference,
-        },
+        rejit::RejitHandler,
+        sig::get_sig_type_token_name,
+        types::{IntegrationMethod, MethodReplacement, ModuleMetadata, ModuleWrapperTokens},
     },
 };
+use com::{
+    interfaces::iunknown::IUnknown,
+    sys::{FAILED, GUID, HRESULT, S_OK},
+};
+use log::Level;
+use log4rs::Handle;
+use once_cell::sync::Lazy;
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    ffi::c_void,
+    ops::Deref,
+    path::PathBuf,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Mutex, RwLock,
+    },
+};
+use types::{AssemblyMetaData, FunctionInfo, Version};
+use widestring::{U16CStr, U16CString};
 
 mod calltarget_tokens;
 pub mod env;

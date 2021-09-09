@@ -25,22 +25,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{
-    cil,
     cil::{
         check_flag, il_u32, nearest_multiple, CorExceptionFlag, FatSectionClause, FatSectionHeader,
         Instruction, Opcode,
         Operand::{InlineBrTarget, InlineSwitch, ShortInlineBrTarget},
-        Section, BEQ, BGE, BGT, BRFALSE, BRTRUE,
+        Section,
     },
     error::Error,
-    ffi::{mdSignatureNil, mdToken, mdTokenNil},
+    ffi::{mdToken, mdTokenNil},
 };
 use std::{
-    alloc::handle_alloc_error,
     convert::TryFrom,
     fmt::{Display, Formatter},
-    mem::transmute,
-    slice,
 };
 
 bitflags! {

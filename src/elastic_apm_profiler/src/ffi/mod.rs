@@ -32,7 +32,6 @@ use com::{
     AbiTransferable, CLSID, IID,
 };
 use core::ffi::c_void;
-use num_traits::FromPrimitive;
 use std::{intrinsics::transmute, ptr};
 
 // numeric types
