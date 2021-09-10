@@ -433,7 +433,7 @@ pub fn calltarget_rewriter_callback(
         }
     }
 
-    if log::log_enabled!(Level::Debug) {
+    if log::log_enabled!(Level::Trace) {
         log_caller_type_info(caller, type_info);
     }
 
@@ -901,5 +901,5 @@ fn log_caller_type_info(caller: &FunctionInfo, type_info: &TypeInfo) {
         ));
     }
 
-    log::debug!("{}", s.join("\n"));
+    log::trace!("{}", s.join("\n"));
 }
