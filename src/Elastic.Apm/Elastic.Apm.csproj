@@ -53,6 +53,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.MongoDb" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.MongoDb.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />

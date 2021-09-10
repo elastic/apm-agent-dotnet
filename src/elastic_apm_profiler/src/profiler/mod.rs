@@ -533,6 +533,8 @@ impl Profiler {
             }
         }
 
+        env::check_if_running_in_azure_app_service()?;
+
         // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted
         let profiler_info = unknown
             .query_interface::<ICorProfilerInfo4>()
@@ -1278,7 +1280,17 @@ impl Profiler {
             let p = unsafe { U16CStr::from_ptr_str(assembly_path) };
             p.to_string_lossy()
         };
-        log::trace!("GetAssemblyReferences: called for {}", &path);
+
+        if *env::IS_AZURE_APP_SERVICE {
+            log::debug!(
+                "GetAssemblyReferences: skipping because profiler is running in \
+                Azure App Services, which is not yet supported. path={}",
+                &path
+            );
+            return Ok(());
+        }
+
+        log::trace!("GetAssemblyReferences: called for path={}", &path);
 
         let path_buf = PathBuf::from(&path);
         let mut assembly_name = path_buf.file_name().unwrap().to_str().unwrap();

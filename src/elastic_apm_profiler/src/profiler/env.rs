@@ -23,6 +23,9 @@ use log4rs::{
 use once_cell::sync::Lazy;
 use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
 
+const APP_POOL_ID_ENV_VAR: &str = "APP_POOL_ID";
+const DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR: &str = "DOTNET_CLI_TELEMETRY_PROFILE";
+
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
 const ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS_ENV_VAR: &str =
@@ -48,11 +51,56 @@ pub static ELASTIC_APM_PROFILER_LOG_IL: Lazy<bool> =
 pub static ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: Lazy<bool> =
     Lazy::new(|| read_bool_env_var(ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR, true));
 
+pub static IS_AZURE_APP_SERVICE: Lazy<bool> = Lazy::new(|| {
+    std::env::var("WEBSITE_SITE_NAME").is_ok()
+        && std::env::var("WEBSITE_OWNER_NAME").is_ok()
+        && std::env::var("WEBSITE_RESOURCE_GROUP").is_ok()
+        && std::env::var("WEBSITE_INSTANCE_ID").is_ok()
+});
+
+/// Checks if the profiler is running in Azure App Service, in an infrastructure or
+/// reserved process, and returns an error if so
+pub fn check_if_running_in_azure_app_service() -> Result<(), HRESULT> {
+    if *IS_AZURE_APP_SERVICE {
+        log::info!("Initialize: detected Azure App Service context");
+        if let Some(app_pool_id) = std::env::var(APP_POOL_ID_ENV_VAR).ok() {
+            if app_pool_id.starts_with('~') {
+                log::info!(
+                    "Initialize: {} environment variable value {} suggests \
+                    this is an Azure App Service infrastructure process. Profiler disabled",
+                    APP_POOL_ID_ENV_VAR,
+                    app_pool_id
+                );
+                return Err(E_FAIL);
+            }
+        }
+
+        if let Some(cli_telemetry) = std::env::var(DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR).ok() {
+            if &cli_telemetry == "AzureKudu" {
+                log::info!(
+                    "Initialize: {} environment variable value {} suggests \
+                    this is an Azure App Service reserved process. Profiler disabled",
+                    DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR,
+                    cli_telemetry
+                );
+                return Err(E_FAIL);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Gets the environment variables of interest
 pub fn get_env_vars() -> String {
     std::env::vars()
         .filter_map(|(k, v)| {
-            if k.starts_with("ELASTIC_") || k.starts_with("CORECLR_") || k.starts_with("COR_") {
+            if k.starts_with("ELASTIC_")
+                || k.starts_with("CORECLR_")
+                || k.starts_with("COR_")
+                || &k == APP_POOL_ID_ENV_VAR
+                || &k == DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR
+            {
                 Some(format!("  {}=\"{}\"", k, v))
             } else {
                 None
