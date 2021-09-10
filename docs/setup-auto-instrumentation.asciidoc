@@ -282,6 +282,25 @@ The home directory of the profiler auto instrumentation
 The path to the integrations.yml file that determines which methods to target for
 auto instrumentation.
 
+`ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS`::
+
+A semi-colon separated list of integrations to exclude from auto-instrumentation.
+Valid values are those defined in the `Integration` column in the integrations
+table above.
+
+`ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES`::
+
+A semi-colon separated list of process names to exclude from auto-instrumentation.
+For example, `dotnet.exe;powershell.exe`. Can be used in scenarios where profiler
+environment variables have a global scope that would end up auto-instrumnenting
+applications that should not be.
+
+`ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES`::
+
+A semi-colon separated list of APM service names to exclude from auto-instrumentation.
+Values defined are checked against the value of `ELASTIC_APM_SERVICE_NAME` environment
+variable.
+
 `ELASTIC_APM_PROFILER_LOG`::
 
 The log level at which the profiler should log. Valid values are
