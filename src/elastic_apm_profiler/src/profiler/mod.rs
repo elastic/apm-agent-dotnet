@@ -484,11 +484,11 @@ impl Profiler {
             E_FAIL
         })?;
 
-        let process_file_name =
-            process_path.file_name()
-                .unwrap()
-                .to_string_lossy()
-                .to_string();
+        let process_file_name = process_path
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
 
         let process_name = process_path
             .file_stem()
