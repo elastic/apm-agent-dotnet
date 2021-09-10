@@ -18,8 +18,8 @@ mod profiler;
 pub mod cil;
 pub mod interfaces;
 
-use profiler::Profiler;
 use com::CLSID;
+use profiler::Profiler;
 
 /// The CLSID of the profiler
 /// {FA65FE15-F085-4681-9B20-95E04F6C03CC}

@@ -28,12 +28,19 @@ const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
 const ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS";
 const ELASTIC_APM_PROFILER_ENABLE_INLINING_ENV_VAR: &str = "ELASTIC_APM_PROFILER_ENABLE_INLINING";
-const ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS";
+const ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR: &str =
+    "ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS";
+const ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR: &str =
+    "ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES";
+const ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR: &str =
+    "ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES";
 const ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
 const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
 const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
 const ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_TARGETS";
 const ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_IL";
+
+const ELASTIC_APM_SERVICE_NAME_ENV_VAR: &str = "ELASTIC_APM_SERVICE_NAME";
 
 pub static ELASTIC_APM_PROFILER_LOG_IL: Lazy<bool> =
     Lazy::new(|| read_bool_env_var(ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR, false));
@@ -53,6 +60,25 @@ pub fn get_env_vars() -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+fn read_semicolon_separated_env_var(key: &str) -> Option<Vec<String>> {
+    match std::env::var(key) {
+        Ok(val) => Some(val.split(';').map(|s| s.to_string()).collect()),
+        Err(_) => None,
+    }
+}
+
+pub fn get_exclude_processes() -> Option<Vec<String>> {
+    read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR)
+}
+
+pub fn get_exclude_service_names() -> Option<Vec<String>> {
+    read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR)
+}
+
+pub fn get_service_name() -> Option<String> {
+    std::env::var(ELASTIC_APM_SERVICE_NAME_ENV_VAR).ok()
 }
 
 /// Gets the path to the profiler file on windows
@@ -319,7 +345,11 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
         E_FAIL
     })?;
 
-    log::trace!("loaded {} integration(s) from {}", integrations.len(), &path);
+    log::trace!(
+        "loaded {} integration(s) from {}",
+        integrations.len(),
+        &path
+    );
 
     // Now filter integrations
     match std::env::var(ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR) {
@@ -327,10 +357,11 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
             let exclude_integrations = val.split(';');
             for exclude_integration in exclude_integrations {
                 log::trace!("exclude integrations that match {}", exclude_integration);
-                integrations.retain(|i| i.name.to_lowercase() != exclude_integration.to_lowercase());
+                integrations
+                    .retain(|i| i.name.to_lowercase() != exclude_integration.to_lowercase());
             }
         }
-        Err(_) => ()
+        Err(_) => (),
     };
 
     Ok(integrations)

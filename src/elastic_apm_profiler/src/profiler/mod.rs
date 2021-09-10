@@ -14,6 +14,7 @@ use crate::{
     },
     profiler::{
         calltarget_tokens::CallTargetTokens,
+        helpers::flatten_integrations,
         managed::{
             IGNORE, MANAGED_PROFILER_ASSEMBLY, MANAGED_PROFILER_ASSEMBLY_LOADER,
             MANAGED_PROFILER_FULL_ASSEMBLY_VERSION,
@@ -43,7 +44,6 @@ use std::{
 };
 use types::{AssemblyMetaData, FunctionInfo, Version};
 use widestring::{U16CStr, U16CString};
-use crate::profiler::helpers::flatten_integrations;
 
 mod calltarget_tokens;
 pub mod env;
@@ -484,16 +484,54 @@ impl Profiler {
             E_FAIL
         })?;
 
-        let logger =
-            env::initialize_logging(process_path.file_stem().unwrap().to_string_lossy().as_ref());
-        if log::log_enabled!(Level::Debug) {
-            log::debug!("Environment variables\n{}", env::get_env_vars());
-        }
+        let process_file_name =
+            process_path.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string();
+
+        let process_name = process_path
+            .file_stem()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
+        let logger = env::initialize_logging(&process_name);
 
         log::trace!(
             "Initialize: started. profiler package version {}",
             PROFILER_PACKAGE_VERSION
         );
+
+        if log::log_enabled!(Level::Debug) {
+            log::debug!("Environment variables\n{}", env::get_env_vars());
+        }
+
+        if let Some(exclude_process_names) = env::get_exclude_processes() {
+            for exclude_process_name in exclude_process_names {
+                if process_file_name == exclude_process_name {
+                    log::info!(
+                        "Initialize: process name {} matches excluded name {}. Profiler disabled",
+                        &process_file_name,
+                        &exclude_process_name
+                    );
+                    return Err(E_FAIL);
+                }
+            }
+        }
+
+        if let Some(exclude_service_names) = env::get_exclude_service_names() {
+            if let Some(service_name) = env::get_service_name() {
+                for exclude_service_name in exclude_service_names {
+                    if service_name == exclude_service_name {
+                        log::info!(
+                            "Initialize: service name {} matches excluded name {}. Profiler disabled",
+                            &service_name,
+                            &exclude_service_name);
+                        return Err(E_FAIL);
+                    }
+                }
+            }
+        }
 
         // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted
         let profiler_info = unknown
@@ -511,8 +549,7 @@ impl Profiler {
             self.rejit_handler.replace(Some(rejit_handler));
         }
 
-        let mut integration_methods =
-            flatten_integrations(integrations, calltarget_enabled);
+        let mut integration_methods = flatten_integrations(integrations, calltarget_enabled);
 
         if integration_methods.is_empty() {
             log::warn!("Initialize: no integrations. Profiler disabled.");
