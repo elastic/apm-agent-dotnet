@@ -23,16 +23,17 @@ use log4rs::{
 use once_cell::sync::Lazy;
 use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
 
-const ELASTIC_APM_PROFILER_INTEGRATIONS: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
-const ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_TARGETS";
-const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
-const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
-const ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_IL";
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
-const ELASTIC_APM_PROFILER_ENABLE_INLINING: &str = "ELASTIC_APM_PROFILER_ENABLE_INLINING";
-const ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS: &str =
+const ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS";
+const ELASTIC_APM_PROFILER_ENABLE_INLINING_ENV_VAR: &str = "ELASTIC_APM_PROFILER_ENABLE_INLINING";
+const ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS";
+const ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
+const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
+const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
+const ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_TARGETS";
+const ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_IL";
 
 pub static ELASTIC_APM_PROFILER_LOG_IL: Lazy<bool> =
     Lazy::new(|| read_bool_env_var(ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR, false));
@@ -81,11 +82,11 @@ pub fn get_native_profiler_file() -> Result<String, HRESULT> {
 }
 
 pub fn disable_optimizations() -> bool {
-    read_bool_env_var(ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS, false)
+    read_bool_env_var(ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS_ENV_VAR, false)
 }
 
 pub fn enable_inlining(default: bool) -> bool {
-    read_bool_env_var(ELASTIC_APM_PROFILER_ENABLE_INLINING, default)
+    read_bool_env_var(ELASTIC_APM_PROFILER_ENABLE_INLINING_ENV_VAR, default)
 }
 
 fn read_log_targets_from_env_var() -> HashSet<String> {
@@ -120,7 +121,7 @@ fn read_bool_env_var(key: &str, default: bool) -> bool {
             "true" | "1" => true,
             "false" | "0" => false,
             _ => {
-                log::info!(
+                log::warn!(
                     "Unknown value for {}: {}. Setting to {}",
                     key,
                     enabled,
@@ -286,12 +287,14 @@ pub fn initialize_logging(process_name: &str) -> Handle {
 }
 
 /// Loads the integrations by reading the yml file pointed to
-/// by [ELASTIC_APM_PROFILER_INTEGRATIONS] environment variable
+/// by [ELASTIC_APM_PROFILER_INTEGRATIONS] environment variable, filtering
+/// integrations by [ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR] environment variable,
+/// if present
 pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
-    let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS).map_err(|e| {
+    let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR).map_err(|e| {
         log::warn!(
-            "Problem reading {} environment variable: {}. profiler is disabled.",
-            ELASTIC_APM_PROFILER_INTEGRATIONS,
+            "problem reading {} environment variable: {}. profiler is disabled.",
+            ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR,
             e.to_string()
         );
         E_FAIL
@@ -299,7 +302,7 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
 
     let file = File::open(&path).map_err(|e| {
         log::warn!(
-            "Problem reading integrations file {}: {}. profiler is disabled.",
+            "problem reading integrations file {}: {}. profiler is disabled.",
             &path,
             e.to_string()
         );
@@ -307,14 +310,28 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
     })?;
 
     let reader = BufReader::new(file);
-    let integrations = serde_yaml::from_reader(reader).map_err(|e| {
+    let mut integrations: Vec<Integration> = serde_yaml::from_reader(reader).map_err(|e| {
         log::warn!(
-            "Problem reading integrations file {}: {}. profiler is disabled.",
+            "problem reading integrations file {}: {}. profiler is disabled.",
             &path,
             e.to_string()
         );
         E_FAIL
     })?;
+
+    log::trace!("loaded {} integration(s) from {}", integrations.len(), &path);
+
+    // Now filter integrations
+    match std::env::var(ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR) {
+        Ok(val) => {
+            let exclude_integrations = val.split(';');
+            for exclude_integration in exclude_integrations {
+                log::trace!("exclude integrations that match {}", exclude_integration);
+                integrations.retain(|i| i.name.to_lowercase() != exclude_integration.to_lowercase());
+            }
+        }
+        Err(_) => ()
+    };
 
     Ok(integrations)
 }

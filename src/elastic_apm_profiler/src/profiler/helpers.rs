@@ -24,6 +24,7 @@ use crate::{
 };
 use com::sys::HRESULT;
 use num_traits::FromPrimitive;
+use crate::profiler::types::{IntegrationMethod, Integration};
 
 pub(crate) fn return_type_is_value_type_or_generic(
     metadata_import: &IMetaDataImport2,
@@ -635,4 +636,31 @@ pub fn find_type_def_by_name(
         );
         None
     }
+}
+
+/// Flattens integrations into relevant integration methods
+pub fn flatten_integrations(integrations: Vec<Integration>, calltarget_enabled: bool) -> Vec<IntegrationMethod> {
+    integrations
+        .into_iter()
+        .flat_map(|i| {
+            let name = i.name.clone();
+            i.method_replacements.into_iter().filter_map(move |method_replacement| {
+                if let Some(wrapper_method) = method_replacement.wrapper() {
+                    let is_calltarget = &wrapper_method.action == "CallTargetModification";
+                    if (calltarget_enabled && is_calltarget)
+                        || (!calltarget_enabled && !is_calltarget)
+                    {
+                        Some(IntegrationMethod {
+                            name: name.clone(),
+                            method_replacement,
+                        })
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+        })
+        .collect()
 }

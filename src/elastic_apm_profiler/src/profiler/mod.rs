@@ -43,6 +43,7 @@ use std::{
 };
 use types::{AssemblyMetaData, FunctionInfo, Version};
 use widestring::{U16CStr, U16CString};
+use crate::profiler::helpers::flatten_integrations;
 
 mod calltarget_tokens;
 pub mod env;
@@ -478,7 +479,11 @@ impl Profiler {
             unknown.AddRef();
         }
 
-        let process_path = std::env::current_exe().unwrap();
+        let process_path = std::env::current_exe().map_err(|e| {
+            // logging hasn't yet been initialized so unable to log
+            E_FAIL
+        })?;
+
         let logger =
             env::initialize_logging(process_path.file_stem().unwrap().to_string_lossy().as_ref());
         if log::log_enabled!(Level::Debug) {
@@ -506,31 +511,11 @@ impl Profiler {
             self.rejit_handler.replace(Some(rejit_handler));
         }
 
-        let mut integration_methods: Vec<IntegrationMethod> = integrations
-            .iter()
-            .flat_map(|i| {
-                i.method_replacements.iter().filter_map(move |m| {
-                    if let Some(wrapper_method) = m.wrapper() {
-                        let is_calltarget = &wrapper_method.action == "CallTargetModification";
-                        if (calltarget_enabled && is_calltarget)
-                            || (!calltarget_enabled && !is_calltarget)
-                        {
-                            Some(IntegrationMethod {
-                                name: i.name.clone(),
-                                method_replacement: m.clone(),
-                            })
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                })
-            })
-            .collect();
+        let mut integration_methods =
+            flatten_integrations(integrations, calltarget_enabled);
 
         if integration_methods.is_empty() {
-            log::warn!("Initialize: No integrations loaded. Profiler disabled.");
+            log::warn!("Initialize: no integrations. Profiler disabled.");
             return Err(E_FAIL);
         } else {
             log::debug!(
@@ -567,7 +552,7 @@ impl Profiler {
         }
 
         if env::disable_optimizations() {
-            log::info!("Initialize: Optimizations are disabled");
+            log::info!("Initialize: optimizations are disabled");
             event_mask |= COR_PRF_MONITOR::COR_PRF_DISABLE_OPTIMIZATIONS;
         }
 
