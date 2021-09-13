@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Elastic.Apm.Helpers
@@ -28,8 +29,9 @@ namespace Elastic.Apm.Helpers
 		}
 
 		// Credit: https://stackoverflow.com/a/444818/973581
-		internal static bool ContainsOrdinalIgnoreCase(this string thisObj, string subStr) =>
-			thisObj.IndexOf(subStr, StringComparison.OrdinalIgnoreCase) >= 0;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool ContainsOrdinalIgnoreCase(this string s, string value) =>
+			s.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
 
 		internal static string ToLog(this string thisObj) => "`" + thisObj + "'";
 
