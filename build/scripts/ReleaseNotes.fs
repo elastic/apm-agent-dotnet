@@ -80,14 +80,16 @@ module ReleaseNotes =
         
     let private filterByPullRequests (issueNumberRegex: Regex) (issues:IReadOnlyList<Issue>): List<GitHubItem> =
         let extractRelatedIssues(issue: Issue) =
-            let matches = issueNumberRegex.Matches(issue.Body)
-            if matches.Count = 0 then list.Empty
-            else         
-                matches
-                |> Seq.cast<Match>
-                |> Seq.filter(fun m -> m.Success)
-                |> Seq.map(fun m -> m.Groups.["num"].Value |> int)
-                |> Seq.toList
+            if String.isNullOrEmpty issue.Body then list.Empty 
+            else
+                let matches = issueNumberRegex.Matches(issue.Body)
+                if matches.Count = 0 then list.Empty
+                else         
+                    matches
+                    |> Seq.cast<Match>
+                    |> Seq.filter(fun m -> m.Success)
+                    |> Seq.map(fun m -> m.Groups.["num"].Value |> int)
+                    |> Seq.toList
         
         let collectedIssues = List<GitHubItem>()
         let items = List<GitHubItem>()
