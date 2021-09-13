@@ -24,6 +24,26 @@ endif::[]
 === .NET Agent version 1.x
 
 
+[[release-notes-1.11.1]]
+==== 1.11.1
+
+[float]
+===== Features
+- {pull}1354[#1354] Serialize to writer directly
+- {pull}1356[#1356] Better logging in PayloadSenderV2 on task cancellation
+- {pull}1358[#1358] Propagate Trace context in exit spans (issues: {issue}1350[#1350], {issue}1344[#1344])
+- {pull}1374[#1374] Get Command and Key for StackExchange.Redis spans (issue: {issue}1364[#1364])
+- {pull}1474[#1474] Add CosmosDB integration to NetCoreAll
+- {pull}1368[#1368] Use 10K limit for CaptureBody similar to the Java agent (issue: {issue}1359[#1359])
+
+[float]
+===== Bug fixes
+- {pull}1362[#1362] Unset parentId if TraceContextIgnoreSampledFalse is active
+- {pull}1367[#1367] Make sure BreakdownMetricsProvider prints 1K warning only once per collection (issue: {issue}1361[#1361])
+- {pull}1471[#1471] Sanitize Central config request URI and headers in logs (issue: {issue}1376[#1376])
+- {pull}1472[#1472] Honor Transaction.Outcome set by public API in auto instrumentation (issue: {issue}1349[#1349])
+- {pull}1481[#1481] Use Kubernetes pod id determined from cgroup file
+
 [[release-notes-1.11.0]]
 ==== 1.11.0
 
