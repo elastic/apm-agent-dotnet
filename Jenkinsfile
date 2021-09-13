@@ -56,6 +56,11 @@ pipeline {
                       }
                     }
                   }
+                  post {
+                    success {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
+                    }
+                  }
                 }
                 stage('Test') {
                   steps {
@@ -94,7 +99,12 @@ pipeline {
                 stage('Build') {
                   steps {
                     dir("${BASE_DIR}"){
-                      bat(label: 'Build', script: 'cargo make build')
+                      bat(label: 'Build', script: '.\\build.bat profiler-zip')
+                    }
+                  }
+                  post {
+                    success {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
                     }
                   }
                 }

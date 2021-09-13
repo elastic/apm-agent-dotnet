@@ -19,12 +19,12 @@
     <PackageReference Include="Bullseye" Version="3.5.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20427.1" />
     
-    <PackageReference Include="Fake.Core.Environment" Version="5.15.0" />
-    <PackageReference Include="Fake.Core.SemVer" Version="5.15.0" />
-    <PackageReference Include="Fake.DotNet.MsBuild" Version="5.15.0" />
-    <PackageReference Include="Fake.IO.FileSystem" Version="5.15.0" />
-    <PackageReference Include="Fake.IO.Zip" Version="5.15.0" />
-    <PackageReference Include="Fake.Tools.Git" Version="5.15.0" />
+    <PackageReference Include="Fake.Core.Environment" Version="5.20.4" />
+    <PackageReference Include="Fake.Core.SemVer" Version="5.20.4" />
+    <PackageReference Include="Fake.DotNet.MsBuild" Version="5.20.4" />
+    <PackageReference Include="Fake.IO.FileSystem" Version="5.20.4" />
+    <PackageReference Include="Fake.IO.Zip" Version="5.20.4" />
+    <PackageReference Include="Fake.Tools.Git" Version="5.20.4" />
     
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
 

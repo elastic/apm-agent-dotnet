@@ -2,4 +2,4 @@
 
 set -euxo pipefail
 
-cargo make build
+./build.sh profiler-zip
