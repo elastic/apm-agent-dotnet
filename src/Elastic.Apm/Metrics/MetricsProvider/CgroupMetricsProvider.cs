@@ -43,6 +43,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly bool _collectMemLimitBytes;
 		private readonly bool _collectMemUsageBytes;
 		private readonly bool _collectStatsInactiveFileBytes;
+		private readonly bool _ignoreOs;
 		private readonly IApmLogger _logger;
 
 		/// <summary>
@@ -61,12 +62,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// <param name="mountInfo">the <see cref="ProcSelfMountinfo" /> file</param>
 		/// <param name="logger">the logger</param>
 		/// <param name="disabledMetrics">List of disabled metrics</param>
+		/// <param name="ignoreOs">
+		/// Ignores the OS. If <code>true</code> then it tries to read CGroup metrics regardless of the
+		/// current OS
+		/// </param>
 		/// <remarks>
 		/// 	Used for testing
 		/// </remarks>
-		internal CgroupMetricsProvider(string procSelfCGroup, string mountInfo, IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics
+		internal CgroupMetricsProvider(string procSelfCGroup, string mountInfo, IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics,
+			bool ignoreOs = false
 		)
 		{
+			_ignoreOs = ignoreOs;
 			_collectMemLimitBytes = IsSystemProcessCgroupMemoryMemLimitBytesEnabled(disabledMetrics);
 			_collectMemUsageBytes = IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics);
 			_collectStatsInactiveFileBytes = IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
@@ -83,7 +90,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private CgroupFiles FindCGroupFiles(string procSelfCGroup, string mountInfo)
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !_ignoreOs)
 			{
 				_logger.Trace()
 					?.Log("{MetricsProviderName} detected a non Linux OS, therefore"

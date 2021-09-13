@@ -45,7 +45,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			using (tempFile)
 			{
-				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
+				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>(), ignoreOs: true);
 
 				var samples = provider.GetSamples().ToList();
 
@@ -146,7 +146,7 @@ namespace Elastic.Apm.Tests.Metrics
 			var tempFile = TempFile.CreateWithContents(
 				$"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - {cgroup} rw,seclabel,memory\n");
 
-			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
+			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>(), true);
 		}
 	}
 }
