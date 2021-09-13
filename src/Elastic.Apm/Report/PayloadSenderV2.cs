@@ -104,7 +104,7 @@ namespace Elastic.Apm.Report
 					+ ", FlushInterval: {FlushInterval}"
 					+ ", MaxBatchEventCount: {MaxBatchEventCount}"
 					+ ", MaxQueueEventCount: {MaxQueueEventCount}"
-					, _intakeV2EventsAbsoluteUrl, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
+					, _intakeV2EventsAbsoluteUrl.Sanitize(), _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
@@ -314,7 +314,7 @@ namespace Elastic.Apm.Report
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
 					var response = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
-						.ConfigureAwait(false);
+			.ConfigureAwait(false);
 
 					if (response is null || !response.IsSuccessStatusCode)
 					{
@@ -323,9 +323,7 @@ namespace Elastic.Apm.Report
 								+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
 								+ " APM Server response: status code: {ApmServerResponseStatusCode}"
 								+ ", content: \n{ApmServerResponseContent}"
-								, Http.Sanitize(_intakeV2EventsAbsoluteUrl, out var sanitizedServerUrl)
-									? sanitizedServerUrl
-									: _intakeV2EventsAbsoluteUrl.ToString()
+								, _intakeV2EventsAbsoluteUrl.Sanitize()
 								, response?.StatusCode,
 								response is null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 					}
@@ -345,9 +343,7 @@ namespace Elastic.Apm.Report
 					?.Log(
 						"Cancellation requested. Following events were not transferred successfully to the server ({ApmServerUrl}):"
 							+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
-						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedServerUrl)
-							? sanitizedServerUrl
-							: HttpClient.BaseAddress.ToString()
+						, HttpClient.BaseAddress.Sanitize()
 						, string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems));
 
 				// throw to allow Workloop to handle
@@ -360,9 +356,7 @@ namespace Elastic.Apm.Report
 						e,
 						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):"
 							+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
-						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedServerUrl)
-							? sanitizedServerUrl
-							: HttpClient.BaseAddress.ToString()
+						, HttpClient.BaseAddress.Sanitize()
 						, string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems)
 					);
 			}

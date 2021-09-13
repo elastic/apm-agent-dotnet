@@ -33,6 +33,46 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		public CentralConfigFetcherTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		[Fact]
+		public void Should_Sanitize_HttpRequestMessage_In_Log()
+		{
+			var testLogger = new TestLogger(LogLevel.Trace);
+			var secretToken = "secretToken";
+			var serverUrl = "http://username:password@localhost:8200";
+
+			var configSnapshotFromReader = new MockConfigSnapshot(testLogger, logLevel: "Trace", serverUrl: serverUrl, secretToken: secretToken);
+			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
+			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
+
+			var waitHandle = new ManualResetEvent(false);
+			var handler = new MockHttpMessageHandler();
+			var configUrl = BackendCommUtils.ApmServerEndpoints
+				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
+
+			handler.When(configUrl.AbsoluteUri)
+				.Respond(_ =>
+				{
+					waitHandle.Set();
+					return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+				});
+
+			var centralConfigFetcher = new CentralConfigFetcher(testLogger, configStore, service, handler);
+			waitHandle.WaitOne();
+
+			var count = 0;
+
+			while (!testLogger.Log.Contains("Exception was thrown while fetching configuration from APM Server and parsing it.")
+				&& count < 10)
+			{
+				Thread.Sleep(500);
+				count++;
+			}
+
+			testLogger.Log
+				.Should().Contain($"Authorization: {Consts.Redacted}").And.NotContain(secretToken)
+				.And.NotContain(serverUrl);
+		}
+
+		[Fact]
 		public void Should_Update_Logger_That_Is_ILogLevelSwitchable()
 		{
 			var logLevel = LogLevel.Trace;
@@ -197,7 +237,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
 				centralConfigFetcher: new CentralConfigFetcher(LoggerBase, configStore, service, handler),
 				payloadSender: new PayloadSenderV2(LoggerBase, configSnapshotFromReader, service,
-					new SystemInfoHelper(LoggerBase).ParseSystemInfo(null), MockApmServerInfo.Version710))))
+					new SystemInfoHelper(LoggerBase).GetSystemInfo(null), MockApmServerInfo.Version710))))
 			{
 				lastCentralConfigFetcher = (CentralConfigFetcher)agent.CentralConfigFetcher;
 				lastCentralConfigFetcher.IsRunning.Should().BeTrue();
@@ -242,7 +282,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 					LoggerBase,
 					configSnapshotFromReader,
 					service,
-					new SystemInfoHelper(LoggerBase).ParseSystemInfo(null),
+					new SystemInfoHelper(LoggerBase).GetSystemInfo(null),
 					MockApmServerInfo.Version710);
 
 				var components = new TestAgentComponents(LoggerBase, centralConfigFetcher: centralConfigFetcher, payloadSender: payloadSender);

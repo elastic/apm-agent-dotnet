@@ -14,6 +14,7 @@ by referencing one or more of these packages.
 * <<setup-ef6>>
 * <<setup-sqlclient>>
 * <<setup-stackexchange-redis>>
+* <<setup-azure-cosmosdb>>
 * <<setup-azure-servicebus>>
 * <<setup-azure-storage>>
 * <<setup-mongo-db>>
@@ -69,6 +70,11 @@ A package containing {nuget}/System.Data.SqlClient[System.Data.SqlClient] and {n
 {nuget}/Elastic.Apm.StackExchange.Redis[**Elastic.Apm.StackExchange.Redis**]::
 
 A package containing instrumentation to capture spans for commands sent to redis with {nuget}/StackExchange.Redis/[StackExchange.Redis] package.
+
+{nuget}/Elastic.Apm.Azure.CosmosDb[**Elastic.Apm.Azure.CosmosDb**]::
+
+A package containing instrumentation to capture spans for Azure Cosmos DB with
+{nuget}/Microsoft.Azure.Cosmos[Microsoft.Azure.Cosmos], {nuget}/Microsoft.Azure.DocumentDb[Microsoft.Azure.DocumentDb], and {nuget}/Microsoft.Azure.DocumentDb.Core[Microsoft.Azure.DocumentDb.Core] packages.
 
 {nuget}/Elastic.Apm.Azure.ServiceBus[**Elastic.Apm.Azure.ServiceBus**]::
 
@@ -171,6 +177,22 @@ connection.UseElasticApm();
 
 A callback is registered with the `IConnectionMultiplexer` to provide a profiling session for each transaction and span that captures redis commands
 sent with `IConnectionMultiplexer`.
+
+[[setup-azure-cosmosdb]]
+=== Azure Cosmos DB
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for Azure Cosmos DB by referencing https://www.nuget.org/packages/Elastic.Apm.Azure.CosmosDb[`Elastic.Apm.Azure.CosmosDb`]
+package and subscribing to diagnostic events.
+
+[source, csharp]
+----
+Agent.Subscribe(new AzureCosmosDbDiagnosticsSubscriber());
+----
+
+Diagnostic events from `Microsoft.Azure.Cosmos`, `Microsoft.Azure.DocumentDb`, and `Microsoft.Azure.DocumentDb.Core` are captured as DB spans.
 
 [[setup-azure-servicebus]]
 === Azure Service Bus

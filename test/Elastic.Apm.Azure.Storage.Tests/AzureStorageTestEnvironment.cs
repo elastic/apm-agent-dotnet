@@ -45,13 +45,10 @@ namespace Elastic.Apm.Azure.Storage.Tests
 
 			_terraform = new TerraformResources(terraformResourceDirectory, credentials, messageSink);
 
-			var machineName = Environment.MachineName.ToLowerInvariant();
-			if (machineName.Length > 66)
-				machineName = machineName.Substring(0, 66);
-
+			var resourceGroupName = AzureResources.CreateResourceGroupName("storage-test");
 			_variables = new Dictionary<string, string>
 			{
-				["resource_group"] = $"dotnet-{machineName}-storage-test",
+				["resource_group"] = resourceGroupName,
 				["storage_account_name"] = "dotnet" + Guid.NewGuid().ToString("N").Substring(0, 18),
 			};
 

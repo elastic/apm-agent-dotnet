@@ -264,6 +264,18 @@ namespace SampleAspNetCoreApp.Controllers
 		/// <returns>HTTP200 if the parameter is available in the method (aka not <code>null</code>), HTTP500 otherwise </returns>
 		[HttpPost("api/Home/Send")]
 		public IActionResult Send([FromBody] BaseReportFilter<SendMessageFilter> filter) => filter == null ? StatusCode(500) : Ok();
+
+		/// <summary>
+		/// A test case to make sure that setting <see cref="IExecutionSegment.Outcome"/> manually is not overwritten by auto instrumentation.
+		/// </summary>
+		/// <returns></returns>
+		[HttpGet]
+		public ActionResult SampleWithManuallySettingOutcome()
+		{
+			Agent.Tracer.CurrentTransaction.Outcome = Outcome.Failure;
+
+			return Ok();
+		}
 	}
 
 	public class BaseReportFilter<T>

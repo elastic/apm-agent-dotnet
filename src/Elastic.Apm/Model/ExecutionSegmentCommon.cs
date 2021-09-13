@@ -162,8 +162,13 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
-			if(executionSegment != null)
-				executionSegment.Outcome = Outcome.Failure;
+			if (executionSegment != null)
+			{
+				if (executionSegment is Transaction realTransaction)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					executionSegment.Outcome = Outcome.Failure;
+			}
 
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
 			var debugMessage = $"{nameof(ExecutionSegmentCommon)}.{nameof(CaptureException)}";
@@ -262,8 +267,13 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
-			if(executionSegment != null)
-				executionSegment.Outcome = Outcome.Failure;
+			if (executionSegment != null)
+			{
+				if (executionSegment is Transaction realTransaction)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					executionSegment.Outcome = Outcome.Failure;
+			}
 
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
@@ -322,8 +332,13 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
-			if(executionSegment != null)
-				executionSegment.Outcome = Outcome.Failure;
+			if (executionSegment != null)
+			{
+				if (executionSegment is Transaction realTransaction)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					executionSegment.Outcome = Outcome.Failure;
+			}
 
 			var error = new Error(errorLog, enclosingTransaction, parentId ?? executionSegment?.Id, logger, labels)
 			{

@@ -43,7 +43,7 @@ namespace Elastic.Apm
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
-				var system = systemInfoHelper.ParseSystemInfo(ConfigurationReader.HostName);
+				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
 				ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
@@ -52,7 +52,7 @@ namespace Elastic.Apm
 				PayloadSender = payloadSender
 					?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo,
 						isEnabled: ConfigurationReader.Enabled);
-				
+
 				if (ConfigurationReader.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 

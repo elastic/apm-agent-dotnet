@@ -46,19 +46,19 @@ namespace Elastic.Apm.BackendComm
 			/// service.name and service.environment are URL encoded in the returned URL.</param>
 			internal static Uri BuildGetConfigAbsoluteUrl(Uri baseUrl, Service service)
 			{
-				var strBuilder = new StringBuilder("config/v1/agents");
+				var builder = new StringBuilder("config/v1/agents");
 				var prefix = '?';
 
 				if (service.Name != null)
 				{
-					strBuilder.Append(prefix).Append($"service.name={UrlEncode(service.Name)}");
+					builder.Append(prefix).Append("service.name=").Append(UrlEncode(service.Name));
 					prefix = '&';
 				}
 
 				if (service.Environment != null)
-					strBuilder.Append(prefix).Append($"service.environment={UrlEncode(service.Environment)}");
+					builder.Append(prefix).Append("service.environment=").Append(UrlEncode(service.Environment));
 
-				return CombineAbsoluteAndRelativeUrls(baseUrl, /* relativeUri: */ strBuilder.ToString());
+				return CombineAbsoluteAndRelativeUrls(baseUrl, builder.ToString());
 			}
 
 			/// <summary>
@@ -190,7 +190,7 @@ namespace Elastic.Apm.BackendComm
 
 			logger.Debug()
 				?.Log("Building HTTP client with BaseAddress: {ApmServerUrl} for {dbgCallerDesc}..."
-					, serverUrlBase, dbgCallerDesc);
+					, serverUrlBase.Sanitize(), dbgCallerDesc);
 			var httpClient =
 				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(config, loggerArg)) { BaseAddress = serverUrlBase };
 			httpClient.DefaultRequestHeaders.UserAgent.Add(
