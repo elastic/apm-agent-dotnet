@@ -10,7 +10,24 @@
 The agent can automatically instrument .NET Framework, .NET Core, and .NET applications using the .NET CLR Profiling API.
 The Profiling APIs provide a way to instrument an application or dependency code without code changes.
 
-This approach instruments the following
+This approach works with the following
+
+|===
+| 2.+^|**Operating system**
+|Architecture |Windows |Linux
+|x64 
+|.NET Framework 4.6.1+
+
+.NET Core 2.1+
+
+.NET 5
+
+|.NET Core 2.1+
+
+.NET 5
+|===
+
+and instruments the following assemblies
 
 include::integrations.asciidoc[]
 
@@ -80,7 +97,7 @@ in application startup. The profiler monitors methods of interest and injects co
 [float]
 === Instrumenting containers and services
 
-Using global environment variables causes the Elastic profiler auto instumentation to be loaded for **any** .NET process started on the
+Using global environment variables causes the Elastic profiler auto instrumentation to be loaded for **any** .NET process started on the
 host. Often, the environment variables should be set only for specific services or containers. The following sections demonstrate how to configure common containers and services.
 
 [float]
@@ -187,7 +204,8 @@ $environment = @{
   COR_PROFILER = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}"
   COR_PROFILER_PATH = "<unzipped directory>\elastic_apm_profiler.dll" <2>
   ELASTIC_APM_PROFILER_HOME = "<unzipped directory>"
-  ELASTIC_APM_PROFILER_INTEGRATIONS = "<unzipped directory>\integrations.yml"  
+  ELASTIC_APM_PROFILER_INTEGRATIONS = "<unzipped directory>\integrations.yml"
+  COMPlus_LoaderOptimization = "1" <3>
 }
 
 $environment.Keys | ForEach-Object {
@@ -197,6 +215,10 @@ $environment.Keys | ForEach-Object {
 <1> `<application-pool>` is the name of the Application Pool your application uses
 <2> `<unzipped directory>` is the directory to which the zip file
 was unzipped
+<3> Forces assemblies **not** to be loaded domain-neutral. There is currently a limitation
+where Profiler auto-instrumentation cannot instrument assemblies when they are loaded
+domain-neutral. This limitation is expected to be removed in future, but for now, can be worked
+around by setting this environment variable. See the https://docs.microsoft.com/en-us/dotnet/framework/app-domains/application-domains#the-complus_loaderoptimization-environment-variable[Microsoft documentation for further details].
 
 .{dot}NET Core
 [source,powershell]
@@ -208,7 +230,7 @@ $environment = @{
   CORECLR_PROFILER = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}"
   CORECLR_PROFILER_PATH = "<unzipped directory>\elastic_apm_profiler.dll" <2>
   ELASTIC_APM_PROFILER_HOME = "<unzipped directory>"
-  ELASTIC_APM_PROFILER_INTEGRATIONS = "<unzipped directory>\integrations.yml"  
+  ELASTIC_APM_PROFILER_INTEGRATIONS = "<unzipped directory>\integrations.yml"
 }
 
 $environment.Keys | ForEach-Object {
@@ -237,7 +259,7 @@ net start w3svc
 [float]
 ==== systemd / systemctl
 
-Environment variables can be added to specific service srun with systemd
+Environment variables can be added to specific services run with systemd
 by creating an environment.env file containing the following
 
 [source,sh]
@@ -292,7 +314,7 @@ table above.
 
 A semi-colon separated list of process names to exclude from auto-instrumentation.
 For example, `dotnet.exe;powershell.exe`. Can be used in scenarios where profiler
-environment variables have a global scope that would end up auto-instrumnenting
+environment variables have a global scope that would end up auto-instrumenting
 applications that should not be.
 
 `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES`::
@@ -314,7 +336,7 @@ The log level at which the profiler should log. Valid values are
 
 The default value is `warn`. More verbose log levels like `trace` and `debug` can
 affect the runtime performance of profiler auto instrumentation, so are recommended
-only for diagnostics purposes.
+_only_ for diagnostics purposes.
 
 `ELASTIC_APM_PROFILER_LOG_DIR`::
 
