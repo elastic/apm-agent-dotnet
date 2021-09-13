@@ -297,7 +297,7 @@ namespace Elastic.Apm.Model
 		{
 			var currentExecutionSegment = agent.GetCurrentExecutionSegment();
 
-			if (currentExecutionSegment == null)
+			if (currentExecutionSegment is null)
 				return null;
 
 			return currentExecutionSegment switch
