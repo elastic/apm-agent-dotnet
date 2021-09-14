@@ -276,6 +276,8 @@ module Build =
             Paths.Src "Elastic.Apm.Profiler.Managed/integrations.yml"
             "target/release/elastic_apm_profiler.dll"
             "target/release/libelastic_apm_profiler.so"
+            Paths.Src "elastic_apm_profiler/NOTICE"
+            Paths.Src "elastic_apm_profiler/LICENSE"
         }
         |> Seq.map FileInfo
         |> Seq.filter (fun file -> file.Exists)
