@@ -1,53 +1,67 @@
 :star: *
 
+
 |===
-|Integration |Assembly |Supported assembly version range
-| AdoNet
-| System.Data
-| 4.0.0 - 4.{star}.{star}
+|**Integration** |**Description** |**NuGet package version(s)** |**Assembly version(s)**
 
 | AdoNet
-| System.Data.Common
-| 4.0.0 - 5.{star}.{star}
+| Captures DB spans with `DbCommand` ADO.NET provider
+| part of .NET
+| System.Data 4.0.0 - 4.{star}.{star}
+
+| AdoNet
+| Captures DB spans with `DbCommand` ADO.NET provider
+| part of .NET
+| System.Data.Common 4.0.0 - 5.{star}.{star}
 
 | AspNet
-| System.Web
-| 4.0.0 - 4.{star}.{star}
+| Registers `ElasticApmModule` for ASP.NET Full Framework integration
+| part of .NET Framework
+| System.Web 4.0.0 - 4.{star}.{star}
 
 | MySqlCommand
-| MySql.Data
-| 6.7.0 - 8.{star}.{star}
+| Captures DB spans with `MySqlCommand` ADO.NET provider
+| {nuget}/MySql.Data[MySql.Data 6.7.0 - 8.{star}.{star}]
+| MySql.Data 6.7.0 - 8.{star}.{star}
 
 | NpgsqlCommand
-| Npgsql
-| 4.0.0 - 5.{star}.{star}
+| Captures DB spans with `NpgsqlCommand` ADO.NET provider
+| {nuget}/Npgsql[Npgsql 4.0.0 - 5.{star}.{star}]
+| Npgsql 4.0.0 - 5.{star}.{star}
 
 | OracleCommand
-| Oracle.ManagedDataAccess
-| 4.122.0 - 4.122.{star}
+| Captures DB spans with `OracleCommand` ADO.NET provider
+| {nuget}/Oracle.ManagedDataAccess[Oracle.ManagedDataAccess 4.122.0 - 4.122.{star}]
+| Oracle.ManagedDataAccess 4.122.0 - 4.122.{star}
 
 | OracleCommand
-| Oracle.ManagedDataAccess
-| 2.0.0 - 2.{star}.{star}
+| Captures DB spans with `OracleCommand` ADO.NET provider
+| {nuget}/Oracle.ManagedDataAccess.Core[Oracle.ManagedDataAccess.Core 2.0.0 - 2.{star}.{star}]
+| Oracle.ManagedDataAccess 2.0.0 - 2.{star}.{star}
 
 | SqlCommand
-| System.Data
-| 4.0.0 - 4.{star}.{star}
+| Captures DB spans with `SqlCommand` ADO.NET provider
+| part of .NET
+| System.Data 4.0.0 - 4.{star}.{star}
 
 | SqlCommand
-| System.Data.SqlClient
-| 4.0.0 - 4.{star}.{star}
+| Captures DB spans with `SqlCommand` ADO.NET provider
+| {nuget}/System.Data.SqlClient[System.Data.SqlClient 4.0.0 - 4.{star}.{star}]
+| System.Data.SqlClient 4.0.0 - 4.{star}.{star}
 
 | SqlCommand
-| Microsoft.Data.SqlClient
-| 1.0.0 - 2.{star}.{star}
+| Captures DB spans with `SqlCommand` ADO.NET provider
+| {nuget}/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient 1.0.0 - 2.{star}.{star}]
+| Microsoft.Data.SqlClient 1.0.0 - 2.{star}.{star}
 
 | SqliteCommand
-| Microsoft.Data.Sqlite
-| 2.0.0 - 5.{star}.{star}
+| Captures DB spans with `SqliteCommand` ADO.NET provider
+| {nuget}/Microsoft.Data.Sqlite[Microsoft.Data.Sqlite 2.0.0 - 5.{star}.{star}]
+| Microsoft.Data.Sqlite 2.0.0 - 5.{star}.{star}
 
 | SqliteCommand
-| System.Data.SQLite
-| 1.0.0 - 2.{star}.{star}
+| Captures DB spans with `SQLiteCommand` ADO.NET provider
+| {nuget}/System.Data.SQLite[System.Data.SQLite 1.0.0 - 2.{star}.{star}]
+| System.Data.SQLite 1.0.0 - 2.{star}.{star}
 
 |===

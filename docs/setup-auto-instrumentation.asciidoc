@@ -4,6 +4,28 @@
 [[setup-auto-instrumentation]]
 === Profiler Auto instrumentation
 
+Thank you for trying out the private beta of the Elastic APM .NET Profiler auto instrumentation.
+Below are instructions to help configure auto instrumentation for a number of common deployment
+environments. Currently, the common ADO.NET providers and ASP.NET Full Framework integration have
+been implemented. We are seeking feedback on what integrations to target next; https://docs.google.com/forms/d/1DQd9ZPZXFxvppqsKFmij8mw98lzUF9Vo_r_FnuM3W-o[please fill out
+the Google form] to let us know what is important to you.
+
+[IMPORTANT]
+--
+If you are adding Profiler auto instrumentation to a project that references any of the Elastic.Apm*
+NuGet packages, **please update these packages to version 1.11.1 first**.
+
+Profiler auto instrumentation applies **all integrations** defined in the table below, by default.
+This may conflict with existing Elastic.Apm integrations that have been configured with NuGet packages,
+causing multiple spans to be captured. You have two different choices for how to approach this
+
+. Remove the NuGet package reference and configuration and use the Profiler auto instrumentation. This may
+be preferable for cases such as .NET Framework SqlClient integration, where the Profiler auto instrumentation
+can capture the command text of queries.
+. Disable specific Profiler auto instrumentation integrations using the `ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS`
+environment variable. See <<profiler-auto-instrumentation-environment-variables>> for more details.
+--
+
 [float]
 ==== Quick start
 
@@ -290,6 +312,7 @@ systemctl reload-or-restart <service>
 ----
 
 [float]
+[[profiler-auto-instrumentation-environment-variables]]
 === Profiler environment variables
 
 The profiler auto instrumentation has its own set of environment variables to manage
