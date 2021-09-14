@@ -70,10 +70,9 @@ The version number of NuGet packages referenced by a project instrumented with a
 must be the same as the version number of profiler zip file used.
 --
 
-Steps:
+General steps:
 
-. Download the `elastic-apm-dotnet-auto-instrumentation-<version>.zip` file from the https://github.com/elastic/apm-agent-dotnet/releases[Releases] page of the .NET APM Agent GitHub repository, where `<version>` is the version number to download. You can find the file under Assets.
-. Unzip the zip file into a folder on the host that is hosting the application to instrument.
+. Unzip the provided zip file into a folder on the host that is hosting the application to instrument.
 . Configure the following environment variables
 +
 .{dot}NET Framework
@@ -86,7 +85,7 @@ set ELASTIC_APM_PROFILER_HOME = "<unzipped directory>"
 set ELASTIC_APM_PROFILER_INTEGRATIONS = "<unzipped directory>\integrations.yml"
 ----
 <1> `<unzipped directory>` is the directory to which the zip file
-was unzipped in step 2.
+was unzipped in step 1.
 +
 .{dot}NET Core / .NET 5 on Windows
 [source,sh]
@@ -98,7 +97,7 @@ set ELASTIC_APM_PROFILER_HOME = "<unzipped directory>"
 set ELASTIC_APM_PROFILER_INTEGRATIONS = "<unzipped directory>\integrations.yml"
 ----
 <1> `<unzipped directory>` is the directory to which the zip file
-was unzipped in step 2.
+was unzipped in step 1.
 +
 .{dot}NET Core / .NET 5 on Linux
 [source,sh]
@@ -110,7 +109,7 @@ export ELASTIC_APM_PROFILER_HOME="<unzipped directory>"
 export ELASTIC_APM_PROFILER_INTEGRATIONS="<unzipped directory>/integrations.yml"
 ----
 <1> `<unzipped directory>` is the directory to which the zip file
-was unzipped in step 2.
+was unzipped in step 1.
 . Start your application in a context where the set environment variables are visible.
 
 With this setup, the .NET runtime loads Elastic's CLR profiler into the .NET process, which loads and instantiates the APM agent early 
