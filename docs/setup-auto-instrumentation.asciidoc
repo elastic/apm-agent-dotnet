@@ -124,34 +124,9 @@ host. Often, the environment variables should be set only for specific services 
 [float]
 ==== Docker containers
 
-A build image containing the files for profiler auto instrumentation
-can be used as part of a https://docs.docker.com/develop/develop-images/multistage-build/[multi-stage build]
-
-[source,sh]
-----
-ARG AGENT_VERSION=1.11.1
-
-FROM alpine:latest AS build
-ARG AGENT_VERSION
-WORKDIR /source
-
-# install unzip
-RUN apt-get -y update && apt-get -yq install unzip
-
-# pull down the zip file based on ${AGENT_VERSION} ARG and unzip
-RUN curl -L -o ElasticApmAgent_${AGENT_VERSION}.zip https://github.com/elastic/apm-agent-dotnet/releases/download/${AGENT_VERSION}/elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION}.zip && \ 
-    unzip elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION}.zip -d /elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION}
-
-----
-
-The files can then be copied into a subsequent stage
-
-[source,sh]
-----
-COPY --from=build /elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION} /elastic-apm-dotnet-auto-instrumentation
-----
-
-Environment variables can be added to a Dockerfile to configure profiler auto instrumentation
+Environment variables can be added to a Dockerfile to configure profiler auto instrumentation,
+and the https://docs.docker.com/storage/volumes/[unzipped directory can be mounted as a volume]. 
+The example below mounts the unzipped directory to `/elastic-apm-dotnet-auto-instrumentation`
 
 [source,sh]
 ----
