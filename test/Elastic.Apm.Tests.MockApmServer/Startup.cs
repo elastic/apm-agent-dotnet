@@ -23,8 +23,9 @@ namespace Elastic.Apm.Tests.MockApmServer
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+#if !NET5_0
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
+#endif
 			var contentRootDir = _configuration.GetValue<string>(WebHostDefaults.ContentRootKey);
 
 			var specBranch = "7.x";
@@ -37,10 +38,17 @@ namespace Elastic.Apm.Tests.MockApmServer
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+#if NET5_0
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+#else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+#endif
 		{
 			app.UseDeveloperExceptionPage();
+
+#if !NET5_0
 			app.UseMvc();
+#endif
 		}
 	}
 }

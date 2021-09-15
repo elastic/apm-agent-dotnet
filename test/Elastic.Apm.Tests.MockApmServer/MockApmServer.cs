@@ -192,7 +192,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 				{
 					services.AddMvc()
 						.AddApplicationPart(typeof(MockApmServer).Assembly)
+#if !NET5_0
 						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+#else
+						;
+#endif
 
 					// Add this instance of MockApmServer as injected dependency for controllers
 					services.AddSingleton(this);

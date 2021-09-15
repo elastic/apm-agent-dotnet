@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;net50</TargetFrameworks>
     <RootNamespace>Elastic.Apm.Tests.MockApmServer</RootNamespace>
     <AssemblyName>Elastic.Apm.Tests.MockApmServer</AssemblyName>
     <IsTestProject>false</IsTestProject>
@@ -11,8 +11,8 @@
     <InternalsVisibleTo Include="Elastic.Apm.StartupHook.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
-  
-  <ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
     <PackageReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
