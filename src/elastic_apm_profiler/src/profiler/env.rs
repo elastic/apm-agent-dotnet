@@ -21,7 +21,13 @@ use log4rs::{
     Config, Handle,
 };
 use once_cell::sync::Lazy;
-use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
+use std::{
+    collections::HashSet,
+    fs::File,
+    io::BufReader,
+    path::PathBuf,
+    str::FromStr,
+};
 
 const APP_POOL_ID_ENV_VAR: &str = "APP_POOL_ID";
 const DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR: &str = "DOTNET_CLI_TELEMETRY_PROFILE";
@@ -37,6 +43,7 @@ const ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES";
 const ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES";
+const ELASTIC_APM_PROFILER_HOME_ENV_VAR: &str = "ELASTIC_APM_PROFILER_HOME";
 const ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
 const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
 const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
@@ -205,7 +212,7 @@ fn read_bool_env_var(key: &str, default: bool) -> bool {
             }
         },
         Err(e) => {
-            log::info!(
+            log::debug!(
                 "Problem reading {}: {}. Setting to {}",
                 key,
                 e.to_string(),
@@ -247,7 +254,7 @@ fn get_profiler_dir() -> String {
 
 /// Gets the default log directory on Windows
 #[cfg(target_os = "windows")]
-pub fn get_default_log_dir() -> PathBuf {
+fn get_default_log_dir() -> PathBuf {
     // ideally we would use the windows function SHGetKnownFolderPath to get
     // the CommonApplicationData special folder. However, this requires a few package dependencies
     // like winapi that would increase the size of the profiler binary. Instead,
@@ -255,24 +262,29 @@ pub fn get_default_log_dir() -> PathBuf {
     match std::env::var("PROGRAMDATA") {
         Ok(path) => {
             let mut path_buf = PathBuf::from(path);
-            path_buf = path_buf
-                .join("elastic")
-                .join("apm-agent-dotnet")
-                .join("logs");
+            path_buf.push("elastic");
+            path_buf.push("apm-agent-dotnet");
+            path_buf.push("logs");
             path_buf
         }
-        Err(_) => {
-            let mut path_buf = PathBuf::from(get_profiler_dir());
-            path_buf = path_buf.join("logs");
-            path_buf
-        }
+        Err(_) => get_home_log_dir()
     }
 }
 
 /// Gets the path to the profiler file on non windows
 #[cfg(not(target_os = "windows"))]
-pub fn get_default_log_dir() -> PathBuf {
+fn get_default_log_dir() -> PathBuf {
     PathBuf::from_str("/var/log/elastic/apm-agent-dotnet").unwrap()
+}
+
+fn get_home_log_dir() -> PathBuf {
+    let mut path_buf = match std::env::var(ELASTIC_APM_PROFILER_HOME_ENV_VAR) {
+        Ok(val) => PathBuf::from(val),
+        Err(_) => PathBuf::from(get_profiler_dir())
+    };
+
+    path_buf.push("logs");
+    path_buf
 }
 
 fn get_log_dir() -> PathBuf {
@@ -303,20 +315,29 @@ pub fn initialize_logging(process_name: &str) -> Handle {
         let pid = std::process::id();
         let mut log_dir = get_log_dir();
         let mut valid_log_dir = true;
-        if log_dir.exists() && !log_dir.is_dir() {
-            log_dir = get_default_log_dir();
-        }
 
-        if !log_dir.exists() {
-            // try to create the log directory ahead of time so that we can determine if it's a valid
-            // directory. if the directory can't be created, try the default log directory before
-            // bailing and not setting up the file logger.
-            if let Err(_) = std::fs::create_dir_all(&log_dir) {
-                if log_dir != get_default_log_dir() {
-                    log_dir = get_default_log_dir();
-                    if let Err(_) = std::fs::create_dir_all(&log_dir) {
+        // try to create the log directory ahead of time so that we can determine if it's a valid
+        // directory. if the directory can't be created, try the default log directory or home directory
+        // before bailing and not setting up the file logger.
+        if let Err(_) = std::fs::create_dir_all(&log_dir) {
+            let default_log_dir = get_default_log_dir();
+            if log_dir != default_log_dir {
+                log_dir = default_log_dir;
+                if let Err(_) = std::fs::create_dir_all(&log_dir) {
+                    let home_log_dir = get_home_log_dir();
+                    if log_dir != home_log_dir {
+                        log_dir = home_log_dir;
+                        if let Err(e) = std::fs::create_dir_all(&log_dir) {
+                            valid_log_dir = false;
+                        }
+                    } else {
                         valid_log_dir = false;
                     }
+                }
+            } else {
+                log_dir = get_home_log_dir();
+                if let Err(e) = std::fs::create_dir_all(&log_dir) {
+                    valid_log_dir = false;
                 }
             }
         }
@@ -365,14 +386,33 @@ pub fn initialize_logging(process_name: &str) -> Handle {
 /// integrations by [ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR] environment variable,
 /// if present
 pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
-    let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR).map_err(|e| {
-        log::warn!(
-            "problem reading {} environment variable: {}. profiler is disabled.",
-            ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR,
-            e.to_string()
-        );
-        E_FAIL
-    })?;
+    let path = match std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR) {
+        Ok(val) => val,
+        Err(e) => {
+            log::debug!(
+                "problem reading {} environment variable: {}. trying integrations.yml in directory of {} environment variable value",
+                ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR,
+                e.to_string(),
+                ELASTIC_APM_PROFILER_HOME_ENV_VAR
+            );
+
+            match std::env::var(ELASTIC_APM_PROFILER_HOME_ENV_VAR) {
+                Ok(val) => {
+                    let mut path_buf = PathBuf::from(val);
+                    path_buf.push("integrations.yml");
+                    path_buf.to_string_lossy().to_string()
+                }
+                Err(e) => {
+                    log::warn!(
+                        "problem reading {} environment variable: {}. profiler disabled",
+                        ELASTIC_APM_PROFILER_HOME_ENV_VAR,
+                        e.to_string(),
+                    );
+                    return Err(E_FAIL);
+                }
+            }
+        }
+    };
 
     let file = File::open(&path).map_err(|e| {
         log::warn!(

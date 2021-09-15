@@ -297,33 +297,35 @@ the instrumentation
 
 `ELASTIC_APM_PROFILER_HOME`::
 
-The home directory of the profiler auto instrumentation
+The home directory of the profiler auto instrumentation.
 
-`ELASTIC_APM_PROFILER_INTEGRATIONS`::
+`ELASTIC_APM_PROFILER_INTEGRATIONS` _(optional)_::
 
 The path to the integrations.yml file that determines which methods to target for
-auto instrumentation.
+auto instrumentation. If not specified, the profiler will assume an
+integrations.yml exists in the home directory specified by `ELASTIC_APM_PROFILER_HOME`
+environment variable.
 
-`ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS`::
+`ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS` _(optional)_::
 
 A semi-colon separated list of integrations to exclude from auto-instrumentation.
 Valid values are those defined in the `Integration` column in the integrations
 table above.
 
-`ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES`::
+`ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES` _(optional)_::
 
 A semi-colon separated list of process names to exclude from auto-instrumentation.
 For example, `dotnet.exe;powershell.exe`. Can be used in scenarios where profiler
 environment variables have a global scope that would end up auto-instrumenting
 applications that should not be.
 
-`ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES`::
+`ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` _(optional)_::
 
 A semi-colon separated list of APM service names to exclude from auto-instrumentation.
 Values defined are checked against the value of `ELASTIC_APM_SERVICE_NAME` environment
 variable.
 
-`ELASTIC_APM_PROFILER_LOG`::
+`ELASTIC_APM_PROFILER_LOG` _(optional)_::
 
 The log level at which the profiler should log. Valid values are
 
@@ -338,7 +340,7 @@ The default value is `warn`. More verbose log levels like `trace` and `debug` ca
 affect the runtime performance of profiler auto instrumentation, so are recommended
 _only_ for diagnostics purposes.
 
-`ELASTIC_APM_PROFILER_LOG_DIR`::
+`ELASTIC_APM_PROFILER_LOG_DIR` _(optional)_::
 
 The directory in which to write profiler log files. If unset, defaults to
 
@@ -346,4 +348,5 @@ The directory in which to write profiler log files. If unset, defaults to
 * `/var/log/elastic/apm-agent-dotnet` on Linux
 
 If the default directory cannot be written to for some reason, the profiler
-will try to write log files to `${ELASTIC_APM_PROFILER_HOME}/logs`.
+will try to write log files to a `logs` directory in the home directory specified 
+by `ELASTIC_APM_PROFILER_HOME` environment variable.
