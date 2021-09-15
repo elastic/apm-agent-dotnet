@@ -57,15 +57,13 @@ namespace Elastic.Apm.Api
 
 	public class Socket
 	{
-		public bool Encrypted { get; set; }
-
 		[JsonProperty("remote_address")]
 		public string RemoteAddress { get; set; }
 
 		internal Socket DeepCopy() => (Socket)MemberwiseClone();
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(Socket)) { { "Encrypted", Encrypted }, { "RemoteAddress", RemoteAddress } }.ToString();
+			new ToStringBuilder(nameof(Socket)) { { "RemoteAddress", RemoteAddress } }.ToString();
 	}
 
 	public class Url

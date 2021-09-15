@@ -147,9 +147,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 				transaction.Context.Request.Headers.Should().ContainKeys(headerKey);
 				transaction.Context.Request.Headers[headerKey].Should().Be(headerValue);
 			}
-
-			//test transaction.context.request.encrypted
-			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
 		}
 
 		/// <summary>
@@ -303,9 +300,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 				transaction.Context.Request.Headers.Should().ContainKeys(headerKey);
 				transaction.Context.Request.Headers[headerKey].Should().Be(headerValue);
 			}
-
-			//test transaction.context.request.encrypted
-			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
 		}
 
 		/// <summary>
