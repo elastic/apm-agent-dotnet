@@ -227,7 +227,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			transaction.Context.Request = new Request(request.HttpMethod, url)
 			{
-				Socket = new Socket { Encrypted = request.IsSecureConnection, RemoteAddress = request.UserHostAddress },
+				Socket = new Socket { RemoteAddress = request.UserHostAddress },
 				HttpVersion = GetHttpVersion(request.ServerVariables["SERVER_PROTOCOL"]),
 				Headers = _isCaptureHeadersEnabled
 					? ConvertHeaders(request.Unvalidated.Headers, (transaction as Transaction)?.ConfigSnapshot)
