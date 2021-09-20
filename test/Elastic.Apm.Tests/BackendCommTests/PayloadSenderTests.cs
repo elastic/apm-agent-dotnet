@@ -57,7 +57,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var secretToken = "secretToken";
 			var serverUrl = "http://username:password@localhost:8200";
 
-			var config = new MockConfigurationSnapshot(testLogger, logLevel: "Trace", serverUrl: serverUrl, secretToken: secretToken, flushInterval: "0");
+			var config = new MockConfiguration(testLogger, logLevel: "Trace", serverUrl: serverUrl, secretToken: secretToken, flushInterval: "0");
 			var service = Service.GetDefaultService(config, testLogger);
 			var waitHandle = new ManualResetEvent(false);
 			var handler = new RichardSzalay.MockHttp.MockHttpMessageHandler();
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			});
 
 			var noopLogger = new NoopLogger();
-			var mockConfig = new MockConfigurationSnapshot(_logger, secretToken: secretToken, maxBatchEventCount: "1");
+			var mockConfig = new MockConfiguration(_logger, secretToken: secretToken, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
 
@@ -140,7 +140,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			});
 
 			var noopLogger = new NoopLogger();
-			var mockConfig = new MockConfigurationSnapshot(_logger, secretToken: secretToken, apiKey: apiKey, maxBatchEventCount: "1");
+			var mockConfig = new MockConfiguration(_logger, secretToken: secretToken, apiKey: apiKey, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
 
@@ -171,8 +171,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			});
 
 			var logger = new NoopLogger();
-			var service = Service.GetDefaultService(new MockConfigurationSnapshot(logger), logger);
-			var payloadSender = new PayloadSenderV2(logger, new MockConfigurationSnapshot(logger, flushInterval: "1s"),
+			var service = Service.GetDefaultService(new MockConfiguration(logger), logger);
+			var payloadSender = new PayloadSenderV2(logger, new MockConfiguration(logger, flushInterval: "1s"),
 				service, new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
@@ -460,7 +460,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 		private void CreateSutEnvAndTest(Action<ApmAgent, PayloadSenderV2> doAction)
 		{
-			var configReader = new MockConfigurationSnapshot(_logger);
+			var configReader = new MockConfiguration(_logger);
 			var mockHttpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 			var service = Service.GetDefaultService(configReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), MockApmServerInfo.Version710, mockHttpMessageHandler
@@ -480,8 +480,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			internal int? MaxBatchEventCount { get; set; }
 			internal int? MaxQueueEventCount { get; set; }
 
-			internal MockConfigurationSnapshot BuildConfig(IApmLogger logger) =>
-				new MockConfigurationSnapshot(logger
+			internal MockConfiguration BuildConfig(IApmLogger logger) =>
+				new MockConfiguration(logger
 					, flushInterval: FlushInterval.HasValue ? $"{FlushInterval.Value.TotalMilliseconds}ms" : null
 					, maxBatchEventCount: MaxBatchEventCount?.ToString()
 					, maxQueueEventCount: MaxQueueEventCount?.ToString());

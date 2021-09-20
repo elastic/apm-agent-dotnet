@@ -39,7 +39,7 @@ namespace Elastic.Apm.Report
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
 		internal readonly Api.System System;
-		private readonly IConfigurationSnapshot _configurationSnapshot;
+		private readonly IConfiguration _configuration;
 
 		private readonly BatchBlock<object> _eventQueue;
 		private readonly TimeSpan _flushInterval;
@@ -54,7 +54,7 @@ namespace Elastic.Apm.Report
 
 		public PayloadSenderV2(
 			IApmLogger logger,
-			IConfigurationSnapshot configuration,
+			IConfiguration configuration,
 			Service service,
 			Api.System system,
 			IApmServerInfo apmServerInfo,
@@ -70,7 +70,7 @@ namespace Elastic.Apm.Report
 
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer();
-			_configurationSnapshot = configuration;
+			_configuration = configuration;
 
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(configuration.ServerUrl);
 
@@ -206,7 +206,7 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configurationSnapshot, HttpClient).ConfigureAwait(false);
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient).ConfigureAwait(false);
 				_getApmServerVersion = true;
 			}
 

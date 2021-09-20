@@ -40,7 +40,7 @@ namespace Elastic.Apm.Api
 		/// A snapshot of configuration from when the transaction started. A snapshot contains values
 		/// from initial configuration combined with dynamic values from central configuration, if enabled.
 		/// </summary>
-		public IConfigurationSnapshot ConfigurationSnapshot { get; }
+		public IConfiguration Configuration { get; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.

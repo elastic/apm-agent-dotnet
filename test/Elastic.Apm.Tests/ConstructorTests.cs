@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests
 			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
 		}
 
-		private class LogConfiguration : IConfigurationSnapshot, IConfigurationSnapshotDescription
+		private class LogConfiguration : IConfiguration, IConfigurationSnapshotDescription
 		{
 			public LogConfiguration(LogLevel level) => LogLevel = level;
 

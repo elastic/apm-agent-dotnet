@@ -77,7 +77,7 @@ namespace Elastic.Apm.Model
 		/// <param name="sampler">The sampler implementation which makes the sampling decision</param>
 		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
 		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
-		/// <param name="configurationSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
+		/// <param name="configuration">The current configuration snapshot which contains the up-do-date config setting values</param>
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
@@ -98,7 +98,7 @@ namespace Elastic.Apm.Model
 			Sampler sampler,
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
-			IConfigurationSnapshot configurationSnapshot,
+			IConfiguration configuration,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider,
@@ -106,7 +106,7 @@ namespace Elastic.Apm.Model
 			long? timestamp = null
 		)
 		{
-			ConfigurationSnapshot = configurationSnapshot;
+			Configuration = configuration;
 			Timestamp = timestamp ?? TimeUtils.TimestampNow();
 
 			_logger = logger?.Scoped(nameof(Transaction));
@@ -232,7 +232,7 @@ namespace Elastic.Apm.Model
 
 				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
-				if (configurationSnapshot.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
+				if (configuration.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
 					|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
@@ -293,7 +293,7 @@ namespace Elastic.Apm.Model
 		/// and its spans is controlled by this configuration snapshot.
 		/// </summary>
 		[JsonIgnore]
-		public IConfigurationSnapshot ConfigurationSnapshot { get; }
+		public IConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
@@ -555,7 +555,7 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if (ConfigurationSnapshot.Enabled && ConfigurationSnapshot.Recording)
+			if (Configuration.Enabled && Configuration.Recording)
 				return StartSpanInternal(name, type, subType, action);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
@@ -587,7 +587,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_sender,
 				this,
-				ConfigurationSnapshot,
+				Configuration,
 				this,
 				_apmServerInfo,
 				culprit,
@@ -604,7 +604,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				ConfigurationSnapshot,
+				Configuration,
 				this,
 				_apmServerInfo,
 				parentId,
@@ -709,7 +709,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				ConfigurationSnapshot,
+				Configuration,
 				this,
 				null,
 				_apmServerInfo,

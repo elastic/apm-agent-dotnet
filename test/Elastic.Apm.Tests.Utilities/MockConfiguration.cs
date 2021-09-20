@@ -12,10 +12,10 @@ using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Tests.Utilities
 {
-	public class MockConfigurationSnapshot : AbstractConfigurationReader, IConfigurationSnapshot, IConfigurationSnapshotDescription
+	public class MockConfiguration : AbstractConfigurationReader, IConfiguration, IConfigurationSnapshotDescription
 	{
 		public const string Origin = "unit test configuration";
-		private const string ThisClassName = nameof(MockConfigurationSnapshot);
+		private const string ThisClassName = nameof(MockConfiguration);
 		private readonly string _apiKey;
 		private readonly string _applicationNamespaces;
 		private readonly string _captureBody;
@@ -54,7 +54,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
 
-		public MockConfigurationSnapshot(IApmLogger logger = null,
+		public MockConfiguration(IApmLogger logger = null,
 			string logLevel = null,
 			string serverUrls = null,
 			string serviceName = null,
@@ -148,7 +148,7 @@ namespace Elastic.Apm.Tests.Utilities
 		public bool CentralConfig => ParseCentralConfig(Kv(EnvVarNames.CentralConfig, _centralConfig, Origin));
 		public string CloudProvider => ParseCloudProvider(Kv(EnvVarNames.CloudProvider, _cloudProvider, Origin));
 
-		public string Description => _description ?? nameof(MockConfigurationSnapshot);
+		public string Description => _description ?? nameof(MockConfiguration);
 
 		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
 			ParseDisableMetrics(Kv(EnvVarNames.DisableMetrics, _disableMetrics, Origin));

@@ -39,7 +39,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var secretToken = "secretToken";
 			var serverUrl = "http://username:password@localhost:8200";
 
-			var configSnapshotFromReader = new MockConfigurationSnapshot(testLogger, logLevel: "Trace", serverUrl: serverUrl, secretToken: secretToken);
+			var configSnapshotFromReader = new MockConfiguration(testLogger, logLevel: "Trace", serverUrl: serverUrl, secretToken: secretToken);
 			var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
@@ -78,7 +78,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var logLevel = LogLevel.Trace;
 			var testLogger = new ConsoleLogger(logLevel);
 
-			var configSnapshotFromReader = new MockConfigurationSnapshot(testLogger, logLevel: "Trace");
+			var configSnapshotFromReader = new MockConfiguration(testLogger, logLevel: "Trace");
 			var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
@@ -139,7 +139,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			var testLogger = new UnswitchableLogger(new LogLevelSwitch(LogLevel.Trace));
 
-			var configSnapshotFromReader = new MockConfigurationSnapshot(testLogger, logLevel: "Trace");
+			var configSnapshotFromReader = new MockConfiguration(testLogger, logLevel: "Trace");
 			var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
@@ -175,7 +175,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		[Fact]
 		public void Should_Update_IgnoreMessageQueues_Configuration()
 		{
-			var configSnapshotFromReader = new MockConfigurationSnapshot(LoggerBase, ignoreMessageQueues: "");
+			var configSnapshotFromReader = new MockConfiguration(LoggerBase, ignoreMessageQueues: "");
 			var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
 
 			configStore.CurrentSnapshot.IgnoreMessageQueues.Should().BeEmpty();

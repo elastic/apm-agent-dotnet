@@ -83,7 +83,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore(bool useOnlyDiagnosticSource)
 		{
 			var capturedPayload = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfigurationSnapshot(
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(
 				captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
 				// ReSharper disable once RedundantArgumentDefaultValue
 				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes),

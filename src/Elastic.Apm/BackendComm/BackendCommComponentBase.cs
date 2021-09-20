@@ -29,7 +29,7 @@ namespace Elastic.Apm.BackendComm
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		internal BackendCommComponentBase(bool isEnabled, IApmLogger logger, string dbgDerivedClassName, Service service
-			, IConfigurationSnapshot configuration, HttpMessageHandler httpMessageHandler = null
+			, IConfiguration configuration, HttpMessageHandler httpMessageHandler = null
 		)
 		{
 			_dbgName = $"{ThisClassName} ({dbgDerivedClassName})";

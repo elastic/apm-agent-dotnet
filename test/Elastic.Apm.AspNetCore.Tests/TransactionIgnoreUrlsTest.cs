@@ -31,7 +31,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfigurationSnapshot(_logger, transactionIgnoreUrls: "*simplepage"),
+				new MockConfiguration(_logger, transactionIgnoreUrls: "*simplepage"),
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
@@ -67,7 +67,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task ChangeTransactionIgnoreUrlsAfterStart(bool useDiagnosticSourceOnly)
 		{
 			// Start with default config
-			var startConfigSnapshot = new MockConfigurationSnapshot(new NoopLogger());
+			var startConfigSnapshot = new MockConfiguration(new NoopLogger());
 			_capturedPayload = new MockPayloadSender();
 
 			var agentComponents = new TestAgentComponents(
@@ -86,7 +86,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Url.Full.ToLower().Should().Contain("simplepage");
 
 			//change config to ignore urls with SimplePage
-			var updateConfigSnapshot = new MockConfigurationSnapshot(
+			var updateConfigSnapshot = new MockConfiguration(
 				new NoopLogger()
 				, transactionIgnoreUrls: "*SimplePage*"
 			);
@@ -100,7 +100,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Transactions.Should().ContainSingle();
 
 			//update config again
-			updateConfigSnapshot = new MockConfigurationSnapshot(
+			updateConfigSnapshot = new MockConfiguration(
 				new NoopLogger()
 				, transactionIgnoreUrls: "FooBar"
 			);

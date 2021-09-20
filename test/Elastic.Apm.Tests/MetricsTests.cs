@@ -61,7 +61,7 @@ namespace Elastic.Apm.Tests
 		public void CollectAllMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new ConfigurationStore(new MockConfigurationSnapshot(_logger), _logger)))
+			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new ConfigurationStore(new MockConfiguration(_logger), _logger)))
 				mc.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();
@@ -108,7 +108,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
 			using (var mc = new MetricsCollector(testLogger, mockPayloadSender,
-				new ConfigurationStore(new MockConfigurationSnapshot(disableMetrics: "*"), testLogger)))
+				new ConfigurationStore(new MockConfiguration(disableMetrics: "*"), testLogger)))
 			{
 				mc.MetricsProviders.Clear();
 				var providerWithException = new MetricsProviderWithException();
@@ -157,7 +157,7 @@ namespace Elastic.Apm.Tests
 			//
 
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug");
+			var configReader = new MockConfiguration(logger, metricsInterval: "1s", logLevel: "Debug");
 			using var agentComponents = new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader);
 			using (var agent = new ApmAgent(agentComponents))
 			{
@@ -181,7 +181,7 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
+			var configReader = new MockConfiguration(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
 			using var agentComponents = new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader);
 			using var agent = new ApmAgent(agentComponents);
 
@@ -191,13 +191,13 @@ namespace Elastic.Apm.Tests
 
 			//start recording
 			agent.ConfigurationStore.CurrentSnapshot =
-				new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "true");
+				new MockConfiguration(logger, metricsInterval: "1s", logLevel: "Debug", recording: "true");
 
 			await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
 
 			//stop recording
 			agent.ConfigurationStore.CurrentSnapshot =
-				new MockConfigurationSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
+				new MockConfiguration(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
 			payloadSender.Metrics.Should().NotBeEmpty();
 
 			await Task.Delay(500); //make sure collection on the MetricCollector is finished
@@ -232,7 +232,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender,
-				new ConfigurationStore(new MockConfigurationSnapshot(logger, "Information"), _logger));
+				new ConfigurationStore(new MockConfiguration(logger, "Information"), _logger));
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 
 			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
@@ -264,7 +264,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender,
-				new ConfigurationStore(new MockConfigurationSnapshot(logger, "Information"), _logger));
+				new ConfigurationStore(new MockConfiguration(logger, "Information"), _logger));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 

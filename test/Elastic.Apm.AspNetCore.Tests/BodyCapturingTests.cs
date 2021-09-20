@@ -58,7 +58,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task ComplexDataSendCaptureBody()
 		{
-			var sutEnv = StartSutEnv(new MockConfigurationSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
 
 			// build test data, which we send to the sample app
 			var data = new BaseReportFilter<SendMessageFilter>
@@ -89,7 +89,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Not_Error_When_Large_File()
 		{
-			var sutEnv = StartSutEnv(new MockConfigurationSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
 
 			using (var tempFile = new TempFile())
 			{
@@ -123,7 +123,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Stream()
 		{
-			var sutEnv = StartSutEnv(new MockConfigurationSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
 
 			var json = JsonConvert.SerializeObject(new { key1 = "value1" });
 			var count = Encoding.UTF8.GetByteCount(json);
@@ -147,7 +147,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Stream_Up_To_MaxLength()
 		{
-			var sutEnv = StartSutEnv(new MockConfigurationSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
 
 			var jObject = new JObject();
 			var charLength = 0;
@@ -185,7 +185,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Form()
 		{
-			var sutEnv = StartSutEnv(new MockConfigurationSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
 
 			var formValues = new List<KeyValuePair<string, string>>
 			{
@@ -209,7 +209,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Form_Up_To_MaxLength()
 		{
-			var sutEnv = StartSutEnv(new MockConfigurationSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
 
 			var charLength = 0;
 			var formValues = new List<KeyValuePair<string, string>>();
@@ -241,7 +241,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task ApmMiddleware_ShouldSkipCapturing_WhenInvalidContentType()
 		{
 			// Arrange
-			var sutEnv = StartSutEnv(new MockConfigurationSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
+			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
 
 			// build test data, which we send to the sample app
 			var data = new BaseReportFilter<SendMessageFilter>
@@ -296,7 +296,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[MemberData(nameof(OptionsChangedAfterStartTestVariants))]
 		public async Task Options_changed_after_start(int startCfgVariantIndex, OptionsTestVariant startCfgVariant)
 		{
-			var startConfigSnapshot = new MockConfigurationSnapshot(new NoopLogger()
+			var startConfigSnapshot = new MockConfiguration(new NoopLogger()
 				, captureBody: startCfgVariant.CaptureBody
 				, captureBodyContentTypes: startCfgVariant.CaptureBodyContentTypes
 				, transactionSampleRate: startCfgVariant.IsSampled ? "1" : "0");
@@ -325,7 +325,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			await BuildOptionsTestVariants()
 				.ForEachIndexed(async (updateCfgVariant, updateCfgVariantIndex) =>
 				{
-					var updateConfigSnapshot = new MockConfigurationSnapshot(
+					var updateConfigSnapshot = new MockConfiguration(
 						new NoopLogger()
 						, captureBody: updateCfgVariant.CaptureBody
 						, captureBodyContentTypes: updateCfgVariant.CaptureBodyContentTypes
@@ -415,7 +415,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 		}
 
-		private SutEnv StartSutEnv(IConfigurationSnapshot startConfiguration = null)
+		private SutEnv StartSutEnv(IConfiguration startConfiguration = null)
 		{
 			if (_sutEnv != null) return _sutEnv;
 
@@ -447,7 +447,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 			private readonly Task _taskForSampleApp;
 
-			internal SutEnv(IConfigurationSnapshot startConfiguration = null)
+			internal SutEnv(IConfiguration startConfiguration = null)
 			{
 				Agent = new ApmAgent(new TestAgentComponents(new NoopLogger(), startConfiguration, MockPayloadSender));
 

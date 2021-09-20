@@ -19,19 +19,19 @@ namespace Elastic.Apm.Benchmarks
 		[GlobalSetup(Target = nameof(SimpleTransactionsWith1SpanWithStackTrace))]
 		public void SetupWithStackTraceForAllSpans()
 			=> _agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(),
-				configurationReader: new MockConfigurationSnapshot(spanFramesMinDurationInMilliseconds: "-1ms")));
+				configurationReader: new MockConfiguration(spanFramesMinDurationInMilliseconds: "-1ms")));
 
 		[GlobalSetup(Target = nameof(SimpleTransactionsWith1SpanWithoutStackTrace))]
 		public void SetupWithTurnedOffStackTrace()
 			=> _agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(),
-				configurationReader: new MockConfigurationSnapshot(spanFramesMinDurationInMilliseconds: "0ms")));
+				configurationReader: new MockConfiguration(spanFramesMinDurationInMilliseconds: "0ms")));
 
 		[GlobalSetup(Target = nameof(Simple100Transaction10Spans))]
 		public void DefaultAgentSetup()
 		{
 			var noopLogger = new NoopLogger();
 			_agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
-				configurationReader: new MockConfigurationSnapshot(noopLogger)));
+				configurationReader: new MockConfiguration(noopLogger)));
 		}
 
 		[GlobalSetup(Target = nameof(DebugLogSimpleTransaction10Spans))]
@@ -39,7 +39,7 @@ namespace Elastic.Apm.Benchmarks
 		{
 			var testLogger = new PerfTestLogger(LogLevel.Debug);
 			_agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: testLogger,
-				configurationReader: new MockConfigurationSnapshot(testLogger, "Debug")));
+				configurationReader: new MockConfiguration(testLogger, "Debug")));
 		}
 
 		[Benchmark]

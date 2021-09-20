@@ -51,7 +51,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 		private static Service BuildService(string serviceName, string envName)
 		{
-			var service = Service.GetDefaultService(new MockConfigurationSnapshot(), new NoopLogger());
+			var service = Service.GetDefaultService(new MockConfiguration(), new NoopLogger());
 			service.Environment = envName;
 			service.Name = serviceName;
 			return service;

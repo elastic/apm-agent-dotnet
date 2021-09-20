@@ -629,7 +629,7 @@ namespace Elastic.Apm.Tests
 			using var agent = new ApmAgent(
 				new AgentComponents(
 					new NoopLogger(),
-					new MockConfigurationSnapshot(metricsInterval: "1s", disableMetrics: "span.self_time"),
+					new MockConfiguration(metricsInterval: "1s", disableMetrics: "span.self_time"),
 					payloadSender,
 					null, //metricsCollector will be set in AgentComponents.ctor
 					new CurrentExecutionSegmentsContainer(),
@@ -721,7 +721,7 @@ namespace Elastic.Apm.Tests
 
 			var agentComponents = new AgentComponents(
 				logger,
-				new MockConfigurationSnapshot(metricsInterval: "1s"),
+				new MockConfiguration(metricsInterval: "1s"),
 				new NoopPayloadSender(),
 				new FakeMetricsCollector(), //metricsCollector will be set in AgentComponents.ctor
 				new CurrentExecutionSegmentsContainer(),

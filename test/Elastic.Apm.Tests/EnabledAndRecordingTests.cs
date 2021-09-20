@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests
 		public void Subscribers_Not_Subscribed_When_Agent_Disabled()
 		{
 			var payloadSender = new NoopPayloadSender();
-			var configReader = new MockConfigurationSnapshot(enabled: "false");
+			var configReader = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
 
 			var subscriber = new Mock<IDiagnosticsSubscriber>();
@@ -37,7 +37,7 @@ namespace Elastic.Apm.Tests
 		public void AgentDisabledBasicTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(enabled: "false");
+			var configReader = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
 			agent.Tracer.CurrentTransaction.Should().BeNull();
 			var transaction = agent.Tracer.StartTransaction("TestTransaction", "Test");
@@ -62,7 +62,7 @@ namespace Elastic.Apm.Tests
 		public void AgentDisabledTransactionWithLambda()
 		{
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(enabled: "false");
+			var configReader = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
 			var codeExecuted = false;
 			agent.Tracer.CaptureTransaction("TestTransaction", "Test", transaction =>
@@ -90,7 +90,7 @@ namespace Elastic.Apm.Tests
 		public void AgentDisabledBasicTransactionWithSpans()
 		{
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(enabled: "false");
+			var configReader = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
 			var transaction = agent.Tracer.StartTransaction("TestTransaction", "Test");
 			transaction.Should().NotBeOfType<Transaction>();
@@ -125,7 +125,7 @@ namespace Elastic.Apm.Tests
 		public void AgentDisabledTransactionWithLambdaAndSpans()
 		{
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(enabled: "false");
+			var configReader = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
 
 			var block1Ran = false;
@@ -169,7 +169,7 @@ namespace Elastic.Apm.Tests
 		public void CurrentTransactionAndSpanWithDisabledAgent()
 		{
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(enabled: "false");
+			var configReader = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
 
 			var transaction = agent.Tracer.StartTransaction("foo", "bar");
@@ -204,7 +204,7 @@ namespace Elastic.Apm.Tests
 		public void AgentDisabledCaptureErrors()
 		{
 			var payloadSender = new MockPayloadSender();
-			var configReader = new MockConfigurationSnapshot(enabled: "false");
+			var configReader = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
 
 			agent.Tracer.CaptureTransaction("foo", "bar", transaction =>
@@ -232,7 +232,7 @@ namespace Elastic.Apm.Tests
 		public void CaptureTransactionAndSpansWithEnabledOnFalse()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfigSnapshot = new MockConfigurationSnapshot(enabled: "false");
+			var mockConfigSnapshot = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, configuration: mockConfigSnapshot));
 
 			CreateTransactionsAndSpans(agent);
@@ -252,7 +252,7 @@ namespace Elastic.Apm.Tests
 		public void CaptureTransactionAndSpansWithRecordingOnFalse()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfigSnapshot = new MockConfigurationSnapshot(recording: "false");
+			var mockConfigSnapshot = new MockConfiguration(recording: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, configuration: mockConfigSnapshot));
 
 			CreateTransactionsAndSpans(agent);
@@ -272,7 +272,7 @@ namespace Elastic.Apm.Tests
 		public void CustomAndLabelDontThrowNullRef()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfigSnapshot = new MockConfigurationSnapshot(enabled: "false");
+			var mockConfigSnapshot = new MockConfiguration(enabled: "false");
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, configuration: mockConfigSnapshot));
 
 			var transaction = agent.Tracer.StartTransaction("foo", "bar");

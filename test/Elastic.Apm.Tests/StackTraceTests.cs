@@ -411,7 +411,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfigurationSnapshot(stackTraceLimit: "2"),
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(stackTraceLimit: "2"),
 				payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
@@ -440,7 +440,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(
-				configuration: new MockConfigurationSnapshot(stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
+				configuration: new MockConfiguration(stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
 				payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
@@ -518,7 +518,7 @@ namespace Elastic.Apm.Tests
 
 			using (var agent =
 				new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					configuration: new MockConfigurationSnapshot(new NoopLogger(), stackTraceLimit: stackTraceLimit,
+					configuration: new MockConfiguration(new NoopLogger(), stackTraceLimit: stackTraceLimit,
 						spanFramesMinDurationInMilliseconds: spanFramesMinDuration))))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t

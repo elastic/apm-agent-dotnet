@@ -319,14 +319,14 @@ namespace Elastic.Apm.Model
 		/// <param name="payloadSender"></param>
 		/// <param name="logger"></param>
 		/// <param name="executionSegment"></param>
-		/// <param name="configurationSnapshot"></param>
+		/// <param name="configuration"></param>
 		/// <param name="enclosingTransaction"></param>
 		/// <param name="parentId"></param>
 		/// <param name="serverInfo"></param>
 		/// <param name="exception"></param>
 		/// <param name="labels"></param>
 		internal static void CaptureErrorLog(ErrorLog errorLog, IPayloadSender payloadSender, IApmLogger logger,
-			IExecutionSegment executionSegment, IConfigurationSnapshot configurationSnapshot, Transaction enclosingTransaction, string parentId,
+			IExecutionSegment executionSegment, IConfiguration configuration, Transaction enclosingTransaction, string parentId,
 			IApmServerInfo serverInfo,
 			Exception exception = null,
 			Dictionary<string, Label> labels = null
@@ -353,7 +353,7 @@ namespace Elastic.Apm.Model
 				{
 					error.Exception.StackTrace
 						= StacktraceHelper
-							.GenerateApmStackTrace(exception, logger, $"Exception callstack for {nameof(CaptureErrorLog)}", configurationSnapshot,
+							.GenerateApmStackTrace(exception, logger, $"Exception callstack for {nameof(CaptureErrorLog)}", configuration,
 								serverInfo);
 				}
 			}

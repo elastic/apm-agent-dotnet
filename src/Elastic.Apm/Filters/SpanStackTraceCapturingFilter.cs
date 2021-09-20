@@ -47,7 +47,7 @@ namespace Elastic.Apm.Filters
 
 			span.StackTrace = StacktraceHelper.GenerateApmStackTrace(trace,
 				_logger,
-				span.ConfigurationSnapshot, _apmServerInfo, $"Span `{span.Name}'");
+				span.Configuration, _apmServerInfo, $"Span `{span.Name}'");
 
 			return span;
 		}

@@ -150,8 +150,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private void CreateAgent(bool useDiagnosticSourceOnly, string sanitizeFieldNames = null)
 		{
 			var configSnapshot = sanitizeFieldNames == null
-				? new MockConfigurationSnapshot(_logger, captureBody: "all")
-				: new MockConfigurationSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
+				? new MockConfiguration(_logger, captureBody: "all")
+				: new MockConfiguration(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
 
 			_capturedPayload = new MockPayloadSender();
 
@@ -205,7 +205,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task ChangeSanitizeFieldNamesAfterStart(bool useDiagnosticSourceOnly)
 		{
-			var startConfigSnapshot = new MockConfigurationSnapshot(new NoopLogger());
+			var startConfigSnapshot = new MockConfiguration(new NoopLogger());
 			_capturedPayload = new MockPayloadSender();
 
 			var agentComponents = new TestAgentComponents(
@@ -230,7 +230,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Clear();
 
 			//change config to sanitize headers with "foo"
-			var updateConfigSnapshot = new MockConfigurationSnapshot(
+			var updateConfigSnapshot = new MockConfiguration(
 				new NoopLogger()
 				, sanitizeFieldNames: "foo"
 			);

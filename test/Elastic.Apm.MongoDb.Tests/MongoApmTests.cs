@@ -26,7 +26,7 @@ namespace Elastic.Apm.MongoDb.Tests
 			_payloadSender = new MockPayloadSender();
 
 			var config = new TestAgentComponents(configuration:
-				new MockConfigurationSnapshot(transactionSampleRate: "1.0", transactionMaxSpans: "50"),
+				new MockConfiguration(transactionSampleRate: "1.0", transactionMaxSpans: "50"),
 				payloadSender: _payloadSender);
 
 			_agent = new ApmAgent(config);

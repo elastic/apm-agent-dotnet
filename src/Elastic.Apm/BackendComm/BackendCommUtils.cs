@@ -112,7 +112,7 @@ namespace Elastic.Apm.BackendComm
 				servicePoint.ConnectionLimit = 20;
 			});
 
-		private static HttpClientHandler CreateHttpClientHandler(IConfigurationSnapshot configuration, IApmLogger logger)
+		private static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
 		{
 			Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback = null;
 
@@ -179,7 +179,7 @@ namespace Elastic.Apm.BackendComm
 			return new HttpClientHandler { ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback };
 		}
 
-		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfigurationSnapshot configuration, Service service, string dbgCallerDesc
+		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfiguration configuration, Service service, string dbgCallerDesc
 			, HttpMessageHandler httpMessageHandler = null
 		)
 		{

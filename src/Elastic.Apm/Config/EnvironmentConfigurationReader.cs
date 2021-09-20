@@ -9,7 +9,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigurationSnapshot, IConfigurationSnapshotDescription
+	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfiguration, IConfigurationSnapshotDescription
 	{
 		internal const string Origin = "environment variables";
 		private const string ThisClassName = nameof(EnvironmentConfigurationReader);

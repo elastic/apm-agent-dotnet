@@ -11,7 +11,7 @@ namespace Elastic.Apm.Config
 	/// A snapshot of agent configuration containing values
 	/// initial configuration combined with dynamic values from central configuration, if enabled.
 	/// </summary>
-	public interface IConfigurationSnapshot : IConfigurationReader
+	public interface IConfiguration : IConfigurationReader
 	{
 	}
 
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Config
 	internal static class ConfigurationSnapshotExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Description(this IConfigurationSnapshot snapshot) =>
+		public static string Description(this IConfiguration snapshot) =>
 			snapshot is IConfigurationSnapshotDescription snapshotWithDescription
 				? snapshotWithDescription.Description
 				: null;

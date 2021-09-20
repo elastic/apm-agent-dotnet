@@ -295,7 +295,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
 			var sender = _client.CreateSender(scope.QueueName);
-			_agent.ConfigurationStore.CurrentSnapshot = new MockConfigurationSnapshot(ignoreMessageQueues: scope.QueueName);
+			_agent.ConfigurationStore.CurrentSnapshot = new MockConfiguration(ignoreMessageQueues: scope.QueueName);
 
 			await _agent.Tracer.CaptureTransaction("Send AzureServiceBus Message", "message", async () =>
 			{

@@ -35,13 +35,13 @@ namespace Elastic.Apm.Model
 			string name,
 			string type,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			IConfigurationSnapshot configurationSnapshot)
+			IConfiguration configuration)
 		{
 			Name = name;
 			Type = type;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
-			ConfigurationSnapshot = configurationSnapshot;
+			Configuration = configuration;
 		}
 
 		public Context Context =>
@@ -49,7 +49,7 @@ namespace Elastic.Apm.Model
 
 		public Dictionary<string, string> Custom => _custom.Value;
 
-		public IConfigurationSnapshot ConfigurationSnapshot { get; }
+		public IConfiguration Configuration { get; }
 
 		public double? Duration { get; set; }
 

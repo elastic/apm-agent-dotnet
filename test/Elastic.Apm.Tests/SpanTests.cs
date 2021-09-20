@@ -18,7 +18,7 @@ namespace Elastic.Apm.Tests
 			// Arrange
 			var payloadSender = new MockPayloadSender();
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(configuration: new MockConfigurationSnapshot(transactionMaxSpans: "0"), payloadSender: payloadSender)))
+				new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionMaxSpans: "0"), payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
 				{
@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests
 			// Arrange
 			var payloadSender = new MockPayloadSender();
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(configuration: new MockConfigurationSnapshot(transactionMaxSpans: "0"), payloadSender: payloadSender)))
+				new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionMaxSpans: "0"), payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
 				{
@@ -62,7 +62,7 @@ namespace Elastic.Apm.Tests
 			// Arrange
 			var payloadSender = new MockPayloadSender();
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(configuration: new MockConfigurationSnapshot(transactionSampleRate: "0"), payloadSender: payloadSender)))
+				new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionSampleRate: "0"), payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
 				{
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Tests
 			// Arrange
 			var payloadSender = new MockPayloadSender();
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(configuration: new MockConfigurationSnapshot(transactionSampleRate: "0"), payloadSender: payloadSender)))
+				new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionSampleRate: "0"), payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
 				{
@@ -106,7 +106,7 @@ namespace Elastic.Apm.Tests
 			// Arrange
 			var payloadSender = new MockPayloadSender();
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(configuration: new MockConfigurationSnapshot(transactionSampleRate: "0"), payloadSender: payloadSender)))
+				new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionSampleRate: "0"), payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction("transaction", "type");
 

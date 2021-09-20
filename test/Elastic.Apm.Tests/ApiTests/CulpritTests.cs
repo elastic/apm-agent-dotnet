@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void ShouldNotReturnNotIncludedNamespaces()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigurationSnapshot(applicationNamespaces: "System.");
+			var config = new MockConfiguration(applicationNamespaces: "System.");
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
@@ -62,7 +62,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void ShouldReturnIncludedNamespaces()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigurationSnapshot(applicationNamespaces: "MyApp1, Elastic.Apm.Tests., MyApp2");
+			var config = new MockConfiguration(applicationNamespaces: "MyApp1, Elastic.Apm.Tests., MyApp2");
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
@@ -87,7 +87,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void GetCulpritWithLibraryFrames()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigurationSnapshot(excludedNamespaces: "LibraryNamespace");
+			var config = new MockConfiguration(excludedNamespaces: "LibraryNamespace");
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
@@ -112,7 +112,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void GetCulpritWithLibraryFramesWithMultipleNamespaces()
 		{
 			var payloadSender = new MockPayloadSender();
-			var config = new MockConfigurationSnapshot(excludedNamespaces: "MyLib1, LibraryNamespace, MyLib2");
+			var config = new MockConfiguration(excludedNamespaces: "MyLib1, LibraryNamespace, MyLib2");
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: config)))
 			{
 				try
