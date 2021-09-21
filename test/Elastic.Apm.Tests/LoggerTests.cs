@@ -348,7 +348,7 @@ namespace Elastic.Apm.Tests
 			var userName = "abc";
 			var pw = "def";
 			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Warning);
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8234", maxBatchEventCount: "0",
+			var configReader = new MockConfiguration(serverUrls: $"http://{userName}:{pw}@localhost:8234", maxBatchEventCount: "0",
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
@@ -378,7 +378,7 @@ namespace Elastic.Apm.Tests
 
 			var uri = new Uri(localServer.Uri);
 
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@{uri.Authority}", maxBatchEventCount: "0",
+			var configReader = new MockConfiguration(serverUrls: $"http://{userName}:{pw}@{uri.Authority}", maxBatchEventCount: "0",
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
@@ -394,7 +394,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Initializes a <see cref="CentralConfigFetcher" /> with a server url which contains basic authentication.
+		/// Initializes a <see cref="CentralConfigurationFetcher" /> with a server url which contains basic authentication.
 		/// The test makes sure that the user name and password from basic auth. is not printed in the logs on error level.
 		/// </summary>
 		[Fact]
@@ -404,12 +404,12 @@ namespace Elastic.Apm.Tests
 			var pw = "def";
 
 			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Error);
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8123", maxBatchEventCount: "0",
+			var configReader = new MockConfiguration(serverUrls: $"http://{userName}:{pw}@localhost:8123", maxBatchEventCount: "0",
 				flushInterval: "0");
 
-			var configStore = new ConfigStore(configReader, inMemoryLogger);
+			var configStore = new ConfigurationStore(configReader, inMemoryLogger);
 			using var centralConfigFetcher =
-				new CentralConfigFetcher(inMemoryLogger, configStore, Service.GetDefaultService(configReader, inMemoryLogger));
+				new CentralConfigurationFetcher(inMemoryLogger, configStore, Service.GetDefaultService(configReader, inMemoryLogger));
 
 			inMemoryLogger.Lines.Should().HaveCount(1);
 			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));

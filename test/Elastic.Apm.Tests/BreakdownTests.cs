@@ -629,11 +629,11 @@ namespace Elastic.Apm.Tests
 			using var agent = new ApmAgent(
 				new AgentComponents(
 					new NoopLogger(),
-					new MockConfigSnapshot(metricsInterval: "1s", disableMetrics: "span.self_time"),
+					new MockConfiguration(metricsInterval: "1s", disableMetrics: "span.self_time"),
 					payloadSender,
 					null, //metricsCollector will be set in AgentComponents.ctor
 					new CurrentExecutionSegmentsContainer(),
-					new NoopCentralConfigFetcher(),
+					new NoopCentralConfigurationFetcher(),
 					new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty))));
 
 			agent.Tracer.CaptureTransaction("Foo", "Bar", _ =>
@@ -721,11 +721,11 @@ namespace Elastic.Apm.Tests
 
 			var agentComponents = new AgentComponents(
 				logger,
-				new MockConfigSnapshot(metricsInterval: "1s"),
+				new MockConfiguration(metricsInterval: "1s"),
 				new NoopPayloadSender(),
 				new FakeMetricsCollector(), //metricsCollector will be set in AgentComponents.ctor
 				new CurrentExecutionSegmentsContainer(),
-				new NoopCentralConfigFetcher(),
+				new NoopCentralConfigurationFetcher(),
 				new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty)),
 				breakdownMetricsProvider);
 

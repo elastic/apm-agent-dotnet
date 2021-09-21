@@ -41,7 +41,7 @@ namespace Elastic.Apm.Feature.Tests.FeatureContexts
 			});
 
 			var logger = new NoopLogger();
-			var mockConfig = new MockConfigSnapshot(logger, secretToken: _secretToken, apiKey: _apiKey, flushInterval: "1s");
+			var mockConfig = new MockConfiguration(logger, secretToken: _secretToken, apiKey: _apiKey, flushInterval: "1s");
 			var payloadSender = new PayloadSenderV2(logger, mockConfig,
 				Api.Service.GetDefaultService(mockConfig, logger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ nameof(ApiKeyFeatureContext));
 

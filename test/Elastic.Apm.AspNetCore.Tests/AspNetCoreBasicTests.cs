@@ -50,7 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload = new MockPayloadSender();
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
+				new MockConfiguration(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
 				_capturedPayload,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
@@ -161,7 +161,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfigSnapshot(_logger, enabled: "false"), _capturedPayload));
+				new MockConfiguration(_logger, enabled: "false"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
@@ -181,7 +181,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task HomeIndexTransactionWithToggleRecording(bool withDiagnosticSourceOnly)
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
-				_logger, new MockConfigSnapshot(recording: "false"), _capturedPayload));
+				_logger, new MockConfiguration(recording: "false"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
@@ -196,7 +196,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
 
 			//flip recording to true
-			_agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(recording: "true");
+			_agent.ConfigurationStore.CurrentSnapshot = new MockConfiguration(recording: "true");
 
 			response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();

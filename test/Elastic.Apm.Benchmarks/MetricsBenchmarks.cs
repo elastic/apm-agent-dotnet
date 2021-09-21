@@ -23,7 +23,7 @@ namespace Elastic.Apm.Benchmarks
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			_metricsCollector = new MetricsCollector(noopLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(noopLogger), noopLogger));
+			_metricsCollector = new MetricsCollector(noopLogger, mockPayloadSender, new ConfigurationStore(new MockConfiguration(noopLogger), noopLogger));
 		}
 
 		[GlobalCleanup(Target = nameof(CollectAllMetrics2X))]

@@ -17,8 +17,8 @@ namespace Elastic.Apm.Tests
 		public void SpansSentOnlyForSampledTransaction(bool isSampled)
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfig = new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0");
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
+			var mockConfig = new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0");
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: mockConfig, payloadSender: mockPayloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
@@ -48,10 +48,10 @@ namespace Elastic.Apm.Tests
 		{
 			// Arrange
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfig = new MockConfigSnapshot(transactionMaxSpans: "0");
+			var mockConfig = new MockConfiguration(transactionMaxSpans: "0");
 
 			// Act
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: mockConfig, payloadSender: mockPayloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
@@ -74,10 +74,10 @@ namespace Elastic.Apm.Tests
 			const int spansCount = 10;
 			const int maxSpansCount = 5;
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfig = new MockConfigSnapshot(transactionMaxSpans: maxSpansCount.ToString());
+			var mockConfig = new MockConfiguration(transactionMaxSpans: maxSpansCount.ToString());
 
 			// Act
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: mockConfig, payloadSender: mockPayloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
@@ -101,10 +101,10 @@ namespace Elastic.Apm.Tests
 			const int spansCount = 10;
 			const int maxSpansCount = 2;
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfig = new MockConfigSnapshot(transactionMaxSpans: maxSpansCount.ToString());
+			var mockConfig = new MockConfiguration(transactionMaxSpans: maxSpansCount.ToString());
 
 			// Act
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: mockConfig, payloadSender: mockPayloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
@@ -130,11 +130,11 @@ namespace Elastic.Apm.Tests
 		{
 			// Arrange
 			var mockPayloadSender = new MockPayloadSender();
-			var mockConfig = new MockConfigSnapshot(transactionMaxSpans: "-1");
+			var mockConfig = new MockConfiguration(transactionMaxSpans: "-1");
 			var spansCount = 1000;
 
 			// Act
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: mockConfig, payloadSender: mockPayloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>

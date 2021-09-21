@@ -23,11 +23,11 @@ namespace Elastic.Apm.AspNetCore
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
-		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, ITracer tracer, IConfigSnapshot configSnapshot)
+		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, ITracer tracer, IConfiguration configuration)
 		{
 			try
 			{
-				if (WildcardMatcher.IsAnyMatch(configSnapshot?.TransactionIgnoreUrls, context.Request.Path))
+				if (WildcardMatcher.IsAnyMatch(configuration?.TransactionIgnoreUrls, context.Request.Path))
 				{
 					logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", context.Request.Path);
 					return null;
@@ -110,7 +110,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					Socket = new Socket { RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
-					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
+					Headers = GetHeaders(context.Request.Headers, transaction.Configuration)
 				};
 
 				transaction.CollectRequestBody(false, context.Request, logger);
@@ -124,10 +124,10 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfigSnapshot configSnapshot) =>
-			configSnapshot.CaptureHeaders && headers != null
+		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfiguration configuration) =>
+			configuration.CaptureHeaders && headers != null
 				? headers.ToDictionary(header => header.Key,
-					header => WildcardMatcher.IsAnyMatch(configSnapshot.SanitizeFieldNames, header.Key)
+					header => WildcardMatcher.IsAnyMatch(configuration.SanitizeFieldNames, header.Key)
 						? Apm.Consts.Redacted
 						: header.Value.ToString())
 				: null;
@@ -284,7 +284,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					Finished = context.Response.HasStarted, //TODO ?
 					StatusCode = context.Response.StatusCode,
-					Headers = GetHeaders(context.Response.Headers, transaction.ConfigSnapshot)
+					Headers = GetHeaders(context.Response.Headers, transaction.Configuration)
 				};
 
 				logger?.Trace()?.Log("Filling transaction.Context.Response, StatusCode: {statuscode}", transaction.Context.Response.StatusCode);
