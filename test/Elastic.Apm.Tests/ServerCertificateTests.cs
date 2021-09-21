@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 // depends on Mock APM server project TargetFramework
-#if NETCOREAPP2_1
+#if NET5_0
 
 using System;
 using System.IO;
