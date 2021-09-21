@@ -187,17 +187,9 @@ namespace Elastic.Apm.Tests.MockApmServer
 		internal void ClearState() => ReceivedData.Clear();
 
 		private IWebHostBuilder CreateWebHostBuilder() =>
-			WebHost.CreateDefaultBuilder(new string[0])
+			WebHost.CreateDefaultBuilder(Array.Empty<string>())
 				.ConfigureServices(services =>
 				{
-					services.AddMvc()
-						.AddApplicationPart(typeof(MockApmServer).Assembly)
-#if !NET5_0
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-#else
-						;
-#endif
-
 					// Add this instance of MockApmServer as injected dependency for controllers
 					services.AddSingleton(this);
 				})
