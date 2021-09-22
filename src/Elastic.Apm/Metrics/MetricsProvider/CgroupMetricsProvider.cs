@@ -78,6 +78,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_collectMemUsageBytes = IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics);
 			_collectStatsInactiveFileBytes = IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
 			_logger = logger.Scoped(nameof(CgroupMetricsProvider));
+
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !_ignoreOs)
+			{
+				_logger.Trace()
+					?.Log("{MetricsProviderName} detected a non Linux OS, therefore"
+						+ " Cgroup metrics will not be reported", nameof(CgroupMetricsProvider));
+				return;
+			}
 			_cGroupFiles = FindCGroupFiles(procSelfCGroup, mountInfo);
 
 			IsMetricAlreadyCaptured = true;
@@ -90,14 +98,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private CgroupFiles FindCGroupFiles(string procSelfCGroup, string mountInfo)
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !_ignoreOs)
-			{
-				_logger.Trace()
-					?.Log("{MetricsProviderName} detected a non Linux OS, therefore"
-						+ " Cgroup metrics will not be reported", nameof(CgroupMetricsProvider));
-				return null;
-			}
-
 			if (!File.Exists(procSelfCGroup))
 			{
 				_logger.Debug()?.Log("{File} does not exist. Cgroup metrics will not be reported", procSelfCGroup);
