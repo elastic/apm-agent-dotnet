@@ -79,17 +79,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_collectStatsInactiveFileBytes = IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
 			_logger = logger.Scoped(nameof(CgroupMetricsProvider));
 
-			_cGroupFiles = FindCGroupFiles(procSelfCGroup, mountInfo);
-
-			IsMetricAlreadyCaptured = true;
-
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !_ignoreOs)
 			{
 				_logger.Trace()
 					?.Log("{MetricsProviderName} detected a non Linux OS, therefore"
 						+ " Cgroup metrics will not be reported", nameof(CgroupMetricsProvider));
+
 				return;
 			}
+
+			_cGroupFiles = FindCGroupFiles(procSelfCGroup, mountInfo);
+			IsMetricAlreadyCaptured = true;
 		}
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
