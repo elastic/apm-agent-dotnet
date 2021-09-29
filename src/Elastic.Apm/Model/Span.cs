@@ -82,8 +82,8 @@ namespace Elastic.Apm.Model
 			{
 				SampleRate = enclosingTransaction.SampleRate;
 				// Started and dropped spans should be counted only for sampled transactions
-				if (enclosingTransaction.SpanCount.IncrementTotal() > ConfigSnapshot.TransactionMaxSpans
-					&& ConfigSnapshot.TransactionMaxSpans >= 0)
+				if (enclosingTransaction.SpanCount.IncrementTotal() > Configuration.TransactionMaxSpans
+					&& Configuration.TransactionMaxSpans >= 0)
 				{
 					_isDropped = true;
 					enclosingTransaction.SpanCount.IncrementDropped();
@@ -98,7 +98,7 @@ namespace Elastic.Apm.Model
 					// System.Net.Http.HttpRequestOut.Stop
 					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
 					// capture the stacktrace is .Start
-					if (captureStackTraceOnStart && ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0)
+					if (captureStackTraceOnStart && Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0)
 						RawStackTrace = new StackTrace(true);
 				}
 			}
@@ -131,7 +131,7 @@ namespace Elastic.Apm.Model
 		public string Action { get; set; }
 
 		[JsonIgnore]
-		internal IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
+		internal IConfiguration Configuration => _enclosingTransaction.Configuration;
 
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
@@ -271,7 +271,7 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
+			if (Configuration.Enabled && Configuration.Recording)
 				return StartSpanInternal(name, type, subType, action);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
@@ -369,9 +369,9 @@ namespace Elastic.Apm.Model
 
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
-					&& (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
-						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0))
+				if (Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
+					&& (Duration >= Configuration.SpanFramesMinDurationInMilliseconds
+						|| Configuration.SpanFramesMinDurationInMilliseconds < 0))
 					RawStackTrace = new StackTrace(true);
 
 				_payloadSender.QueueSpan(this);
@@ -389,7 +389,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_payloadSender,
 				this,
-				ConfigSnapshot,
+				Configuration,
 				_enclosingTransaction,
 				_apmServerInfo,
 				culprit,
@@ -430,7 +430,7 @@ namespace Elastic.Apm.Model
 				_payloadSender,
 				_logger,
 				this,
-				ConfigSnapshot,
+				Configuration,
 				_enclosingTransaction,
 				_apmServerInfo,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
@@ -538,7 +538,7 @@ namespace Elastic.Apm.Model
 				_payloadSender,
 				_logger,
 				this,
-				ConfigSnapshot,
+				Configuration,
 				_enclosingTransaction,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
 				_apmServerInfo,

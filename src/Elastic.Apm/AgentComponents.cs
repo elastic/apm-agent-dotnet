@@ -30,7 +30,7 @@ namespace Elastic.Apm
 			IPayloadSender payloadSender,
 			IMetricsCollector metricsCollector,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			ICentralConfigFetcher centralConfigFetcher,
+			ICentralConfigurationFetcher centralConfigurationFetcher,
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider = null
 		)
@@ -45,31 +45,31 @@ namespace Elastic.Apm
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
-				ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
+				ConfigurationStore = new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 
 				PayloadSender = payloadSender
-					?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo,
+					?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system, ApmServerInfo,
 						isEnabled: ConfigurationReader.Enabled);
 
 				if (ConfigurationReader.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
-				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
-
 				HttpTraceConfiguration = new HttpTraceConfiguration();
+
+				// initialize the tracer before central configuration or metric collection is started
+				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
+					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 
 				if (ConfigurationReader.Enabled)
 				{
-					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
-					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider);
+					CentralConfigurationFetcher = centralConfigurationFetcher ?? new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
+					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationStore, breakdownMetricsProvider);
 					MetricsCollector.StartCollecting();
 				}
 				else
 					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
-
 			}
 			catch (Exception e)
 			{
@@ -77,9 +77,9 @@ namespace Elastic.Apm
 			}
 		}
 
-		internal ICentralConfigFetcher CentralConfigFetcher { get; }
+		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
 
-		internal IConfigStore ConfigStore { get; }
+		internal IConfigurationStore ConfigurationStore { get; }
 
 		public IConfigurationReader ConfigurationReader { get; }
 
@@ -110,7 +110,7 @@ namespace Elastic.Apm
 
 			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
 
-			CentralConfigFetcher?.Dispose();
+			CentralConfigurationFetcher?.Dispose();
 		}
 	}
 }
