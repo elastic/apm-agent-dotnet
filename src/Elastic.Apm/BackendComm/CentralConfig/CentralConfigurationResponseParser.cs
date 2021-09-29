@@ -14,14 +14,14 @@ using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal class CentralConfigResponseParser : ICentralConfigResponseParser
+	internal class CentralConfigurationResponseParser : ICentralConfigurationResponseParser
 	{
 		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
 		private readonly IApmLogger _logger;
 
-		internal CentralConfigResponseParser(IApmLogger logger) => _logger = logger?.Scoped(nameof(CentralConfigResponseParser));
+		internal CentralConfigurationResponseParser(IApmLogger logger) => _logger = logger?.Scoped(nameof(CentralConfigurationResponseParser));
 
-		public (CentralConfigReader, CentralConfigFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
+		public (CentralConfigurationReader, CentralConfigurationFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
 			string httpResponseBody
 		)
 		{
@@ -39,21 +39,21 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				if (!InterpretResponseStatusCode(httpResponse, waitInfo)) return (null, waitInfo);
 
 				if (httpResponse?.Headers?.ETag == null)
-					throw new CentralConfigFetcher.FailedToFetchConfigException("Response from APM Server doesn't have ETag header", waitInfo);
+					throw new CentralConfigurationFetcher.FailedToFetchConfigException("Response from APM Server doesn't have ETag header", waitInfo);
 
 				var keyValues = JsonConvert.DeserializeObject<IDictionary<string, string>>(httpResponseBody);
 				var centralConfigReader = ParseConfigPayload(httpResponse, new CentralConfigPayload(keyValues));
 
 				return (centralConfigReader, waitInfo);
 			}
-			catch (Exception ex) when (!(ex is CentralConfigFetcher.FailedToFetchConfigException))
+			catch (Exception ex) when (!(ex is CentralConfigurationFetcher.FailedToFetchConfigException))
 			{
-				throw new CentralConfigFetcher.FailedToFetchConfigException("Exception was thrown while parsing response from APM Server", waitInfo,
+				throw new CentralConfigurationFetcher.FailedToFetchConfigException("Exception was thrown while parsing response from APM Server", waitInfo,
 					cause: ex);
 			}
 		}
 
-		private CentralConfigReader ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
+		private CentralConfigurationReader ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
 		{
 			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
 			{
@@ -66,23 +66,23 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			var eTag = httpResponse.Headers.ETag.ToString();
 
-			return new CentralConfigReader(_logger, configPayload, eTag);
+			return new CentralConfigurationReader(_logger, configPayload, eTag);
 		}
 
-		private static CentralConfigFetcher.WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)
+		private static CentralConfigurationFetcher.WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)
 		{
 			if (httpResponse.Headers?.CacheControl?.MaxAge != null)
 			{
-				return new CentralConfigFetcher.WaitInfoS(httpResponse.Headers.CacheControl.MaxAge.Value,
+				return new CentralConfigurationFetcher.WaitInfoS(httpResponse.Headers.CacheControl.MaxAge.Value,
 					"Wait time is taken from max-age directive in Cache-Control header in APM Server's response");
 			}
 
-			return new CentralConfigFetcher.WaitInfoS(WaitTimeIfNoCacheControlMaxAge,
+			return new CentralConfigurationFetcher.WaitInfoS(WaitTimeIfNoCacheControlMaxAge,
 				"Default wait time is used because there's no valid Cache-Control header with max-age directive in APM Server's response."
 				+ Environment.NewLine + "+-> Response:" + Environment.NewLine + TextUtils.Indent(httpResponse.ToString()));
 		}
 
-		private bool InterpretResponseStatusCode(HttpResponseMessage httpResponse, CentralConfigFetcher.WaitInfoS waitInfo)
+		private bool InterpretResponseStatusCode(HttpResponseMessage httpResponse, CentralConfigurationFetcher.WaitInfoS waitInfo)
 		{
 			if (httpResponse.IsSuccessStatusCode) return true;
 
@@ -130,7 +130,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					break;
 			}
 
-			throw new CentralConfigFetcher.FailedToFetchConfigException(message, waitInfo, severity);
+			throw new CentralConfigurationFetcher.FailedToFetchConfigException(message, waitInfo, severity);
 		}
 
 		internal class CentralConfigPayload

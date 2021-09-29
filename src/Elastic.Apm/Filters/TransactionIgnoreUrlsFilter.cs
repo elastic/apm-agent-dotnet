@@ -22,7 +22,7 @@ namespace Elastic.Apm.Filters
 				if (!realTransaction.IsContextCreated)
 					return transaction;
 
-				return WildcardMatcher.IsAnyMatch(realTransaction.ConfigSnapshot.TransactionIgnoreUrls, transaction.Context?.Request?.Url?.PathName)
+				return WildcardMatcher.IsAnyMatch(realTransaction.Configuration.TransactionIgnoreUrls, transaction.Context?.Request?.Url?.PathName)
 					? null
 					: transaction;
 			}

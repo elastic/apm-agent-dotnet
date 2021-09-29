@@ -184,7 +184,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 		{
 			if (name != null && _realAgent != null)
 			{
-				var matcher = WildcardMatcher.AnyMatch(_realAgent.ConfigStore.CurrentSnapshot.IgnoreMessageQueues, name);
+				var matcher = WildcardMatcher.AnyMatch(_realAgent.ConfigurationStore.CurrentSnapshot.IgnoreMessageQueues, name);
 				if (matcher != null)
 				{
 					Logger.Debug()?.Log(

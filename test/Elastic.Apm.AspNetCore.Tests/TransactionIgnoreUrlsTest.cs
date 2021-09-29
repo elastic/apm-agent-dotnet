@@ -31,7 +31,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfigSnapshot(_logger, transactionIgnoreUrls: "*simplepage"),
+				new MockConfiguration(_logger, transactionIgnoreUrls: "*simplepage"),
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
@@ -67,7 +67,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task ChangeTransactionIgnoreUrlsAfterStart(bool useDiagnosticSourceOnly)
 		{
 			// Start with default config
-			var startConfigSnapshot = new MockConfigSnapshot(new NoopLogger());
+			var startConfigSnapshot = new MockConfiguration(new NoopLogger());
 			_capturedPayload = new MockPayloadSender();
 
 			var agentComponents = new TestAgentComponents(
@@ -86,11 +86,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Url.Full.ToLower().Should().Contain("simplepage");
 
 			//change config to ignore urls with SimplePage
-			var updateConfigSnapshot = new MockConfigSnapshot(
+			var updateConfigSnapshot = new MockConfiguration(
 				new NoopLogger()
 				, transactionIgnoreUrls: "*SimplePage*"
 			);
-			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+			_agent.ConfigurationStore.CurrentSnapshot = updateConfigSnapshot;
 
 			await _client.GetAsync("/Home/SimplePage");
 
@@ -100,11 +100,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Transactions.Should().ContainSingle();
 
 			//update config again
-			updateConfigSnapshot = new MockConfigSnapshot(
+			updateConfigSnapshot = new MockConfiguration(
 				new NoopLogger()
 				, transactionIgnoreUrls: "FooBar"
 			);
-			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+			_agent.ConfigurationStore.CurrentSnapshot = updateConfigSnapshot;
 
 			await _client.GetAsync("/Home/SimplePage");
 

@@ -23,9 +23,9 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// </summary>
 		/// <param name="request">The request</param>
 		/// <param name="logger">The logger</param>
-		/// <param name="configSnapshot">The configuration snapshot</param>
+		/// <param name="configuration">The configuration snapshot</param>
 		/// <returns></returns>
-		public static string ExtractRequestBody(this HttpRequest request, IApmLogger logger, IConfigSnapshot configSnapshot)
+		public static string ExtractRequestBody(this HttpRequest request, IApmLogger logger, IConfiguration configuration)
 		{
 			string body = null;
 			var longerThanMaxLength = false;
@@ -48,7 +48,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 							sb.Append(item.Key);
 							sb.Append("=");
 
-							if (WildcardMatcher.IsAnyMatch(configSnapshot.SanitizeFieldNames, item.Key))
+							if (WildcardMatcher.IsAnyMatch(configuration.SanitizeFieldNames, item.Key))
 								sb.Append(Elastic.Apm.Consts.Redacted);
 							else
 								sb.Append(item.Value);

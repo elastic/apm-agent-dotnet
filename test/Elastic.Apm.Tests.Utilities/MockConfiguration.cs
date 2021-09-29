@@ -12,10 +12,10 @@ using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Tests.Utilities
 {
-	public class MockConfigSnapshot : AbstractConfigurationReader, IConfigSnapshot
+	public class MockConfiguration : AbstractConfigurationReader, IConfiguration, IConfigurationSnapshotDescription
 	{
 		public const string Origin = "unit test configuration";
-		private const string ThisClassName = nameof(MockConfigSnapshot);
+		private const string ThisClassName = nameof(MockConfiguration);
 		private readonly string _apiKey;
 		private readonly string _applicationNamespaces;
 		private readonly string _captureBody;
@@ -23,7 +23,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _captureHeaders;
 		private readonly string _centralConfig;
 		private readonly string _cloudProvider;
-		private readonly string _dbgDescription;
+		private readonly string _description;
 		private readonly string _disableMetrics;
 		private readonly string _enabled;
 		private readonly string _environment;
@@ -54,7 +54,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
 
-		public MockConfigSnapshot(IApmLogger logger = null,
+		public MockConfiguration(IApmLogger logger = null,
 			string logLevel = null,
 			string serverUrls = null,
 			string serviceName = null,
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string apiKey = null,
 			string captureHeaders = null,
 			string centralConfig = null,
-			string dbgDescription = null,
+			string description = null,
 			string transactionSampleRate = null,
 			string transactionMaxSpans = null,
 			string metricsInterval = null,
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_apiKey = apiKey;
 			_captureHeaders = captureHeaders;
 			_centralConfig = centralConfig;
-			_dbgDescription = dbgDescription;
+			_description = description;
 			_transactionSampleRate = transactionSampleRate;
 			_transactionMaxSpans = transactionMaxSpans;
 			_metricsInterval = metricsInterval;
@@ -148,7 +148,7 @@ namespace Elastic.Apm.Tests.Utilities
 		public bool CentralConfig => ParseCentralConfig(Kv(EnvVarNames.CentralConfig, _centralConfig, Origin));
 		public string CloudProvider => ParseCloudProvider(Kv(EnvVarNames.CloudProvider, _cloudProvider, Origin));
 
-		public string DbgDescription => _dbgDescription ?? nameof(MockConfigSnapshot);
+		public string Description => _description ?? nameof(MockConfiguration);
 
 		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
 			ParseDisableMetrics(Kv(EnvVarNames.DisableMetrics, _disableMetrics, Origin));
