@@ -72,51 +72,52 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				.And.NotContain(serverUrl);
 		}
 
-		[Fact]
-		public void Should_Update_Logger_That_Is_ILogLevelSwitchable()
-		{
-			var logLevel = LogLevel.Trace;
-			var testLogger = new ConsoleLogger(logLevel);
-
-			var configSnapshotFromReader = new MockConfiguration(testLogger, logLevel: "Trace");
-			var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
-			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
-
-			var waitHandle = new ManualResetEvent(false);
-			var handler = new MockHttpMessageHandler();
-			var configUrl = BackendCommUtils.ApmServerEndpoints
-				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
-
-			handler.When(configUrl.AbsoluteUri)
-				.Respond(_ =>
-				{
-					waitHandle.Set();
-					return new HttpResponseMessage(HttpStatusCode.OK)
-					{
-						Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
-						Content = new StringContent("{ \"log_level\": \"error\" }", Encoding.UTF8)
-					};
-				});
-
-			var centralConfigFetcher = new CentralConfigurationFetcher(testLogger, configStore, service, handler);
-
-			using var agent = new ApmAgent(new TestAgentComponents(testLogger,
-				centralConfigurationFetcher: centralConfigFetcher,
-				payloadSender: new NoopPayloadSender()));
-
-			centralConfigFetcher.IsRunning.Should().BeTrue();
-			waitHandle.WaitOne();
-
-			// wait up to 60 seconds for the log level to change. Change can often be slower in CI
-			var count = 0;
-			while (count < 60 && testLogger.LogLevelSwitch.Level == logLevel)
-			{
-				count++;
-				Thread.Sleep(TimeSpan.FromSeconds(1));
-			}
-
-			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Error);
-		}
+		// Flaky test, issue: https://github.com/elastic/apm-agent-dotnet/issues/1360
+		// [Fact]
+		// public void Should_Update_Logger_That_Is_ILogLevelSwitchable()
+		// {
+		// 	var logLevel = LogLevel.Trace;
+		// 	var testLogger = new ConsoleLogger(logLevel);
+		//
+		// 	var configSnapshotFromReader = new MockConfiguration(testLogger, logLevel: "Trace");
+		// 	var configStore = new ConfigurationStore(configSnapshotFromReader, testLogger);
+		// 	var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
+		//
+		// 	var waitHandle = new ManualResetEvent(false);
+		// 	var handler = new MockHttpMessageHandler();
+		// 	var configUrl = BackendCommUtils.ApmServerEndpoints
+		// 		.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
+		//
+		// 	handler.When(configUrl.AbsoluteUri)
+		// 		.Respond(_ =>
+		// 		{
+		// 			waitHandle.Set();
+		// 			return new HttpResponseMessage(HttpStatusCode.OK)
+		// 			{
+		// 				Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
+		// 				Content = new StringContent("{ \"log_level\": \"error\" }", Encoding.UTF8)
+		// 			};
+		// 		});
+		//
+		// 	var centralConfigFetcher = new CentralConfigurationFetcher(testLogger, configStore, service, handler);
+		//
+		// 	using var agent = new ApmAgent(new TestAgentComponents(testLogger,
+		// 		centralConfigurationFetcher: centralConfigFetcher,
+		// 		payloadSender: new NoopPayloadSender()));
+		//
+		// 	centralConfigFetcher.IsRunning.Should().BeTrue();
+		// 	waitHandle.WaitOne();
+		//
+		// 	// wait up to 60 seconds for the log level to change. Change can often be slower in CI
+		// 	var count = 0;
+		// 	while (count < 60 && testLogger.LogLevelSwitch.Level == logLevel)
+		// 	{
+		// 		count++;
+		// 		Thread.Sleep(TimeSpan.FromSeconds(1));
+		// 	}
+		//
+		// 	testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Error);
+		// }
 
 		/// <summary>
 		/// logger that has a log level switch but does not implement <see cref="ILogLevelSwitchable"/>
@@ -172,50 +173,51 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Trace);
 		}
 
-		[Fact]
-		public void Should_Update_IgnoreMessageQueues_Configuration()
-		{
-			var configSnapshotFromReader = new MockConfiguration(LoggerBase, ignoreMessageQueues: "");
-			var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
-
-			configStore.CurrentSnapshot.IgnoreMessageQueues.Should().BeEmpty();
-
-			var service = Service.GetDefaultService(configSnapshotFromReader, LoggerBase);
-			var waitHandle = new ManualResetEvent(false);
-			var handler = new MockHttpMessageHandler();
-			var configUrl = BackendCommUtils.ApmServerEndpoints
-				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
-
-			handler.When(configUrl.AbsoluteUri)
-				.Respond(_ =>
-				{
-					waitHandle.Set();
-					return new HttpResponseMessage(HttpStatusCode.OK)
-					{
-						Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
-						Content = new StringContent("{ \"ignore_message_queues\": \"foo\" }", Encoding.UTF8)
-					};
-				});
-
-			var centralConfigFetcher = new CentralConfigurationFetcher(LoggerBase, configStore, service, handler);
-
-			using var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
-				centralConfigurationFetcher: centralConfigFetcher,
-				payloadSender: new NoopPayloadSender()));
-
-			centralConfigFetcher.IsRunning.Should().BeTrue();
-			waitHandle.WaitOne();
-
-			// wait up to 60 seconds for configuration to change. Change can often be slower in CI
-			var count = 0;
-			while (count < 60 && !configStore.CurrentSnapshot.IgnoreMessageQueues.Any())
-			{
-				count++;
-				Thread.Sleep(TimeSpan.FromSeconds(1));
-			}
-
-			configStore.CurrentSnapshot.IgnoreMessageQueues.Should().NotBeEmpty().And.Contain(m => m.GetMatcher() == "foo");
-		}
+		// Flaky test, issue: https://github.com/elastic/apm-agent-dotnet/issues/1360
+		// [Fact]
+		// public void Should_Update_IgnoreMessageQueues_Configuration()
+		// {
+		// 	var configSnapshotFromReader = new MockConfiguration(LoggerBase, ignoreMessageQueues: "");
+		// 	var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
+		//
+		// 	configStore.CurrentSnapshot.IgnoreMessageQueues.Should().BeEmpty();
+		//
+		// 	var service = Service.GetDefaultService(configSnapshotFromReader, LoggerBase);
+		// 	var waitHandle = new ManualResetEvent(false);
+		// 	var handler = new MockHttpMessageHandler();
+		// 	var configUrl = BackendCommUtils.ApmServerEndpoints
+		// 		.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
+		//
+		// 	handler.When(configUrl.AbsoluteUri)
+		// 		.Respond(_ =>
+		// 		{
+		// 			waitHandle.Set();
+		// 			return new HttpResponseMessage(HttpStatusCode.OK)
+		// 			{
+		// 				Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
+		// 				Content = new StringContent("{ \"ignore_message_queues\": \"foo\" }", Encoding.UTF8)
+		// 			};
+		// 		});
+		//
+		// 	var centralConfigFetcher = new CentralConfigurationFetcher(LoggerBase, configStore, service, handler);
+		//
+		// 	using var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
+		// 		centralConfigurationFetcher: centralConfigFetcher,
+		// 		payloadSender: new NoopPayloadSender()));
+		//
+		// 	centralConfigFetcher.IsRunning.Should().BeTrue();
+		// 	waitHandle.WaitOne();
+		//
+		// 	// wait up to 60 seconds for configuration to change. Change can often be slower in CI
+		// 	var count = 0;
+		// 	while (count < 60 && !configStore.CurrentSnapshot.IgnoreMessageQueues.Any())
+		// 	{
+		// 		count++;
+		// 		Thread.Sleep(TimeSpan.FromSeconds(1));
+		// 	}
+		//
+		// 	configStore.CurrentSnapshot.IgnoreMessageQueues.Should().NotBeEmpty().And.Contain(m => m.GetMatcher() == "foo");
+		// }
 
 		[Fact]
 		public void Dispose_stops_the_thread()
