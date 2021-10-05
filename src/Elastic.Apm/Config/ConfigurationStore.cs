@@ -6,22 +6,22 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class ConfigStore : IConfigStore
+	internal class ConfigurationStore : IConfigurationStore
 	{
-		private const string ThisClassName = nameof(ConfigStore);
+		private const string ThisClassName = nameof(ConfigurationStore);
 		private readonly object _lock = new object();
 
 		private readonly IApmLogger _logger;
 
-		internal ConfigStore(IConfigSnapshot initialSnapshot, IApmLogger logger)
+		internal ConfigurationStore(IConfiguration initialSnapshot, IApmLogger logger)
 		{
 			_logger = logger.Scoped(ThisClassName);
 			_currentSnapshot = initialSnapshot;
 		}
 
-		private volatile IConfigSnapshot _currentSnapshot;
+		private volatile IConfiguration _currentSnapshot;
 
-		public IConfigSnapshot CurrentSnapshot
+		public IConfiguration CurrentSnapshot
 		{
 			get => _currentSnapshot;
 
@@ -33,7 +33,7 @@ namespace Elastic.Apm.Config
 					_currentSnapshot = value;
 					_logger.Info()
 						?.Log("Replaced current snapshot. Old: {ConfigSnapshotDescription}. New: {ConfigSnapshotDescription}."
-							, oldSnapshot.DbgDescription, _currentSnapshot.DbgDescription);
+							, oldSnapshot.Description(), _currentSnapshot.Description());
 				}
 			}
 		}

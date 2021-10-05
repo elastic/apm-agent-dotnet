@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 // depends on Mock APM server project TargetFramework
-#if NETCOREAPP2_1
+#if NET5_0
 
 using System;
 using System.IO;
@@ -51,7 +51,7 @@ namespace Elastic.Apm.Tests
 			var serverCert = new X509Certificate2(certPath, "password");
 			File.WriteAllBytes(tempFile.Path, serverCert.Export(X509ContentType.Cert));
 
-			var configuration = new MockConfigSnapshot(
+			var configuration = new MockConfiguration(
 				serverUrl: $"https://localhost:{_port}",
 				serverCert: tempFile.Path,
 				disableMetrics: "*",
@@ -74,7 +74,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void VerifyServerCert_Should_Allow_Https_To_Apm_Server()
 		{
-			var configuration = new MockConfigSnapshot(
+			var configuration = new MockConfiguration(
 				serverUrl: $"https://localhost:{_port}",
 				verifyServerCert: "false",
 				disableMetrics: "*",

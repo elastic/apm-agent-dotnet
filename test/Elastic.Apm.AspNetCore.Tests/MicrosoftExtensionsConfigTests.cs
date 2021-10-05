@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SampleAspNetCoreApp;
 using Xunit;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {

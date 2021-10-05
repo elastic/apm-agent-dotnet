@@ -31,7 +31,7 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer, _agent.ConfigStore.CurrentSnapshot);
+			var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer, _agent.ConfigurationStore.CurrentSnapshot);
 
 			Transaction transaction = null;
 			if (createdTransaction is Transaction t)

@@ -5,11 +5,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Model
 {
@@ -27,18 +31,26 @@ namespace Elastic.Apm.Model
 
 		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
 
-		public NoopTransaction(string name, string type, ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer)
+		public NoopTransaction(
+			string name,
+			string type,
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IConfiguration configuration)
 		{
 			Name = name;
 			Type = type;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
+			Configuration = configuration;
 		}
 
 		public Context Context =>
 			ReusableContextInstance;
 
 		public Dictionary<string, string> Custom => _custom.Value;
+
+		public IConfiguration Configuration { get; }
+
 		public double? Duration { get; set; }
 
 		[MaxLength]

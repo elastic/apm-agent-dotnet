@@ -526,7 +526,7 @@ namespace Elastic.Apm.Tests.ApiTests
 								new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic", Protocol = "HTTP" })
 							{
 								HttpVersion = "2.0",
-								Socket = new Socket { Encrypted = true, RemoteAddress = "127.0.0.1" },
+								Socket = new Socket { RemoteAddress = "127.0.0.1" },
 								Body = "123"
 							};
 					});
@@ -536,7 +536,6 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Context.Request.Url.Protocol.Should().Be("HTTP");
 
 			payloadSender.FirstTransaction.Context.Request.HttpVersion.Should().Be("2.0");
-			payloadSender.FirstTransaction.Context.Request.Socket.Encrypted.Should().BeTrue();
 			payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("https://elastic.co");
 			payloadSender.FirstTransaction.Context.Request.Url.Raw.Should().Be("https://elastic.co");
 			payloadSender.FirstTransaction.Context.Request.Socket.RemoteAddress.Should().Be("127.0.0.1");

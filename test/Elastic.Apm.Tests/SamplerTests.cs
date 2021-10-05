@@ -62,7 +62,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			using var agent =
 				new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender,
-					config: new MockConfigSnapshot(transactionSampleRate: rate.ToString(CultureInfo.InvariantCulture))));
+					configuration: new MockConfiguration(transactionSampleRate: rate.ToString(CultureInfo.InvariantCulture))));
 			agent.Tracer.CaptureTransaction("TestTransaction", "test", t =>
 			{
 				var transaction = t as Transaction;
@@ -106,7 +106,7 @@ namespace Elastic.Apm.Tests
 			var noopLogger = new NoopLogger();
 			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
 			var noopPayloadSender = new NoopPayloadSender();
-			var configurationReader = new MockConfigSnapshot(noopLogger);
+			var configurationReader = new MockConfiguration(noopLogger);
 			var sampler = new Sampler(rate);
 
 			total.Repeat(i =>

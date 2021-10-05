@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace Elastic.Apm.AspNetCore
 {
@@ -35,7 +36,7 @@ namespace Elastic.Apm.AspNetCore
 		/// <param name="configuration">
 		/// You can optionally pass the IConfiguration of your application to the Elastic APM Agent. By
 		/// doing this the agent will read agent related configurations through this IConfiguration instance.
-		/// If no <see cref="IConfiguration" /> is passed to the agent then it will read configs from environment variables.
+		/// If no <see cref="Microsoft.Extensions.Configuration.IConfiguration" /> is passed to the agent then it will read configs from environment variables.
 		/// </param>
 		/// <param name="subscribers">
 		/// Specify which diagnostic source subscribers you want to connect. The
