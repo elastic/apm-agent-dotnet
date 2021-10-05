@@ -177,7 +177,7 @@ namespace Elastic.Apm.Tests
 				waitHandle.Set();
 			});
 
-			var config = new MockConfigSnapshot(transactionSampleRate: "0", serverUrl: localServer.Uri, flushInterval: "0");
+			var config = new MockConfiguration(transactionSampleRate: "0", serverUrl: localServer.Uri, flushInterval: "0");
 			var logger = new InMemoryBlockingLogger(LogLevel.Warning);
 			var payloadSender = new PayloadSenderV2(logger, config,
 				Service.GetDefaultService(config, logger), new Api.System(),MockApmServerInfo.Version710);
