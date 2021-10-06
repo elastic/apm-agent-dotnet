@@ -327,7 +327,7 @@ namespace Elastic.Apm.Model
 		public Dictionary<string, string> Custom => Context.Custom;
 
 		[JsonProperty("dropped_spans_stats")]
-		public List<DroppedSpanStats> DroppedSpanStats => _droppedSpanStatsMap?.Values.ToList();
+		public IEnumerable<DroppedSpanStats> DroppedSpanStats => _droppedSpanStatsMap?.Values.ToList();
 
 		/// <inheritdoc />
 		/// <summary>

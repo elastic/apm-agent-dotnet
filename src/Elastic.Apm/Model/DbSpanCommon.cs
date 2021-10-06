@@ -46,17 +46,12 @@ namespace Elastic.Apm.Model
 				capturedSpan.Subtype = spanSubtype;
 				capturedSpan.Action = GetSpanAction(dbCommand.CommandType);
 
-				if (capturedSpan.ShouldBeSentToApmServer)
+				capturedSpan.Context.Db = new Database
 				{
-					capturedSpan.Context.Db = new Database
-					{
-						Statement = GetDbSpanName(dbCommand),
-						Instance = dbCommand.Connection.Database,
-						Type = Database.TypeSql
-					};
+					Statement = GetDbSpanName(dbCommand), Instance = dbCommand.Connection.Database, Type = Database.TypeSql
+				};
 
-					capturedSpan.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, defaultPort);
-				}
+				capturedSpan.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, defaultPort);
 
 				capturedSpan.Outcome = outcome;
 			}

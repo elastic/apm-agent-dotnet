@@ -191,12 +191,6 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			PropagateTraceContext(request, transaction, span);
 
-			if (span is Span realSpan)
-			{
-				if (!realSpan.ShouldBeSentToApmServer)
-					return;
-			}
-
 			span.Context.Http = new Http { Method = method };
 			span.Context.Http.SetUrl(requestUrl);
 		}
