@@ -362,17 +362,20 @@ namespace Elastic.Apm.Model
 			else
 				_enclosingTransaction.SpanTimings.TryAdd(new SpanTimerKey(Type, Subtype), new SpanTimer(SelfDuration));
 
+			try
+			{
+				DeduceDestination();
+			}
+			catch (Exception e)
+			{
+				_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
+			}
+
+			if (_isDropped && Context?.Destination?.Service?.Resource != null && Duration.HasValue)
+				_enclosingTransaction.UpdateDroppedSpanStats(Context.Destination.Service.Resource, _outcome, Duration.Value);
+
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
-				try
-				{
-					DeduceDestination();
-				}
-				catch (Exception e)
-				{
-					_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
-				}
-
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
