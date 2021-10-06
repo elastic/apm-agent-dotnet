@@ -94,7 +94,7 @@ namespace Elastic.Apm.Helpers
 		{
 			try
 			{
-				return Dns.GetHostName();
+				return Environment.MachineName;
 			}
 			catch (Exception e)
 			{
