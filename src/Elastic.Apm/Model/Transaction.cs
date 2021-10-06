@@ -37,7 +37,6 @@ namespace Elastic.Apm.Model
 		/// have this activity as its parent and the TraceId will flow to all Activity instances.
 		/// </summary>
 		private readonly Activity _activity;
-
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
@@ -66,7 +65,7 @@ namespace Elastic.Apm.Model
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type, long? timestamp = null)
-			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationStore.CurrentSnapshot,
 				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, null, timestamp: timestamp) { }
 
 		/// <summary>
@@ -78,7 +77,7 @@ namespace Elastic.Apm.Model
 		/// <param name="sampler">The sampler implementation which makes the sampling decision</param>
 		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
 		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
-		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
+		/// <param name="configuration">The current configuration snapshot which contains the up-do-date config setting values</param>
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
@@ -99,7 +98,7 @@ namespace Elastic.Apm.Model
 			Sampler sampler,
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
-			IConfigSnapshot configSnapshot,
+			IConfiguration configuration,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider,
@@ -107,7 +106,7 @@ namespace Elastic.Apm.Model
 			long? timestamp = null
 		)
 		{
-			ConfigSnapshot = configSnapshot;
+			Configuration = configuration;
 			Timestamp = timestamp ?? TimeUtils.TimestampNow();
 
 			_logger = logger?.Scoped(nameof(Transaction));
@@ -233,7 +232,7 @@ namespace Elastic.Apm.Model
 
 				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
-				if (configSnapshot.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
+				if (configuration.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
 					|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
@@ -285,6 +284,22 @@ namespace Elastic.Apm.Model
 		private bool _isEnded;
 
 		private string _name;
+		internal ChildDurationTimer ChildDurationTimer { get; } = new();
+
+		/// <summary>
+		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
+		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
+		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
+		/// and its spans is controlled by this configuration snapshot.
+		/// </summary>
+		[JsonIgnore]
+		public IConfiguration Configuration { get; }
+
+		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// <seealso cref="ShouldSerializeContext" />
+		/// </summary>
+		public Context Context => _context.Value;
 
 		/// <summary>
 		/// In general if there is an error on the span, the outcome will be <code> Outcome.Failure </code> otherwise it'll be
@@ -298,23 +313,18 @@ namespace Elastic.Apm.Model
 		private Outcome _outcome;
 
 		private bool _outcomeChangedThroughApi;
-		internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
 		/// <summary>
-		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
-		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
-		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
-		/// and its spans is controlled by this configuration snapshot.
+		/// Changes the <see cref="Outcome"/> by checking the <see cref="_outcomeChangedThroughApi"/> flag.
+		/// This method is intended for all auto instrumentation usages where the <see cref="Outcome"/> property needs to be set.
+		/// Setting outcome via the <see cref="Outcome"/> property is intended for users who use the public API.
 		/// </summary>
-		[JsonIgnore]
-		internal IConfigSnapshot ConfigSnapshot { get; }
-
-
-		/// <summary>
-		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
-		/// <seealso cref="ShouldSerializeContext" />
-		/// </summary>
-		public Context Context => _context.Value;
+		/// <param name="outcome">The outcome of the transaction will be set to this value if it wasn't change to the public API previously</param>
+		internal void SetOutcome(Outcome outcome)
+		{
+			if (!_outcomeChangedThroughApi)
+				_outcome = outcome;
+		}
 
 		[JsonIgnore]
 		public Dictionary<string, string> Custom => Context.Custom;
@@ -545,7 +555,7 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
+			if (Configuration.Enabled && Configuration.Recording)
 				return StartSpanInternal(name, type, subType, action);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
@@ -577,7 +587,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_sender,
 				this,
-				ConfigSnapshot,
+				Configuration,
 				this,
 				_apmServerInfo,
 				culprit,
@@ -594,7 +604,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				ConfigSnapshot,
+				Configuration,
 				this,
 				_apmServerInfo,
 				parentId,
@@ -699,7 +709,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				ConfigSnapshot,
+				Configuration,
 				this,
 				null,
 				_apmServerInfo,

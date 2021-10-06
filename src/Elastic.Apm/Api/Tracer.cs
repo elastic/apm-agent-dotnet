@@ -21,7 +21,7 @@ namespace Elastic.Apm.Api
 	internal class Tracer : ITracer
 	{
 		private readonly IApmServerInfo _apmServerInfo;
-		private readonly IConfigSnapshotProvider _configProvider;
+		private readonly IConfigurationSnapshotProvider _configurationProvider;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
@@ -31,7 +31,7 @@ namespace Elastic.Apm.Api
 			IApmLogger logger,
 			Service service,
 			IPayloadSender payloadSender,
-			IConfigSnapshotProvider configProvider,
+			IConfigurationSnapshotProvider configurationProvider,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider
@@ -40,7 +40,7 @@ namespace Elastic.Apm.Api
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
-			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
+			_configurationProvider = configurationProvider.ThrowIfArgumentNull(nameof(configurationProvider));
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 			DbSpanCommon = new DbSpanCommon(logger);
 			_apmServerInfo = apmServerInfo;
@@ -59,10 +59,10 @@ namespace Elastic.Apm.Api
 			bool ignoreActivity = false
 		)
 		{
-			if (_configProvider.CurrentSnapshot.Enabled && _configProvider.CurrentSnapshot.Recording)
+			if (_configurationProvider.CurrentSnapshot.Enabled && _configurationProvider.CurrentSnapshot.Recording)
 				return StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
 
-			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
+			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer, _configurationProvider.CurrentSnapshot);
 		}
 
 		internal Transaction StartTransactionInternal(string name, string type,
@@ -74,7 +74,7 @@ namespace Elastic.Apm.Api
 			bool ignoreActivity = false, long? timestamp = null
 		)
 		{
-			var currentConfig = _configProvider.CurrentSnapshot;
+			var currentConfig = _configurationProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
 				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, _breakdownMetricsProvider, ignoreActivity, timestamp)
 			{
@@ -240,7 +240,7 @@ namespace Elastic.Apm.Api
 				_sender,
 				_logger,
 				currentExecutionSegment,
-				_configProvider.CurrentSnapshot,
+				_configurationProvider.CurrentSnapshot,
 				currentTransaction as Transaction,
 				_apmServerInfo,
 				parentId,
@@ -262,7 +262,7 @@ namespace Elastic.Apm.Api
 				_logger,
 				_sender,
 				currentExecutionSegment,
-				_configProvider.CurrentSnapshot,
+				_configurationProvider.CurrentSnapshot,
 				currentTransaction as Transaction,
 				_apmServerInfo,
 				culprit,
@@ -284,7 +284,7 @@ namespace Elastic.Apm.Api
 				_sender,
 				_logger,
 				currentExecutionSegment,
-				_configProvider.CurrentSnapshot,
+				_configurationProvider.CurrentSnapshot,
 				currentTransaction as Transaction,
 				null, //we don't pass specific parent id - it's either the current execution segments id, or null
 				_apmServerInfo,

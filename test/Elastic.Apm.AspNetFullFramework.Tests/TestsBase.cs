@@ -731,8 +731,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private static void FullFwAssertValid(Socket socket)
 		{
 			socket.Should().NotBeNull();
-
-			socket.Encrypted.Should().BeFalse();
 			socket.RemoteAddress.Should().BeOneOf("::1", "127.0.0.1");
 		}
 

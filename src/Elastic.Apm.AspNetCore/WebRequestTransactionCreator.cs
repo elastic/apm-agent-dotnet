@@ -23,11 +23,11 @@ namespace Elastic.Apm.AspNetCore
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
-		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, ITracer tracer, IConfigSnapshot configSnapshot)
+		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, ITracer tracer, IConfiguration configuration)
 		{
 			try
 			{
-				if (WildcardMatcher.IsAnyMatch(configSnapshot?.TransactionIgnoreUrls, context.Request.Path))
+				if (WildcardMatcher.IsAnyMatch(configuration?.TransactionIgnoreUrls, context.Request.Path))
 				{
 					logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", context.Request.Path);
 					return null;
@@ -108,9 +108,9 @@ namespace Elastic.Apm.AspNetCore
 
 				transaction.Context.Request = new Request(context.Request.Method, url)
 				{
-					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
+					Socket = new Socket { RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
-					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
+					Headers = GetHeaders(context.Request.Headers, transaction.Configuration)
 				};
 
 				transaction.CollectRequestBody(false, context.Request, logger);
@@ -124,10 +124,10 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfigSnapshot configSnapshot) =>
-			configSnapshot.CaptureHeaders && headers != null
+		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfiguration configuration) =>
+			configuration.CaptureHeaders && headers != null
 				? headers.ToDictionary(header => header.Key,
-					header => WildcardMatcher.IsAnyMatch(configSnapshot.SanitizeFieldNames, header.Key)
+					header => WildcardMatcher.IsAnyMatch(configuration.SanitizeFieldNames, header.Key)
 						? Apm.Consts.Redacted
 						: header.Value.ToString())
 				: null;
@@ -218,7 +218,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					transaction.Name = grpcCallInfo.methodname;
 					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
-					transaction.Outcome = GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result);
+					transaction.SetOutcome(GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result));
 				}
 
 				if (transaction.IsSampled)
@@ -239,10 +239,13 @@ namespace Elastic.Apm.AspNetCore
 
 		internal static void SetOutcomeForHttpResult(ITransaction transaction, int HttpReturnCode)
 		{
-			if (HttpReturnCode >= 500 || HttpReturnCode < 100)
-				transaction.Outcome = Outcome.Failure;
-			else
-				transaction.Outcome = Outcome.Success;
+			if (transaction is Transaction realTransaction)
+			{
+				if (HttpReturnCode >= 500 || HttpReturnCode < 100)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					realTransaction.SetOutcome(Outcome.Success);
+			}
 		}
 
 		/// <summary>
@@ -281,7 +284,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					Finished = context.Response.HasStarted, //TODO ?
 					StatusCode = context.Response.StatusCode,
-					Headers = GetHeaders(context.Response.Headers, transaction.ConfigSnapshot)
+					Headers = GetHeaders(context.Response.Headers, transaction.Configuration)
 				};
 
 				logger?.Trace()?.Log("Filling transaction.Context.Response, StatusCode: {statuscode}", transaction.Context.Response.StatusCode);

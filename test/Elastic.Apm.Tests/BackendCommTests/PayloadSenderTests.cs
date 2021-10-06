@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -22,6 +23,9 @@ using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
+using MockHttpMessageHandler = Elastic.Apm.Tests.Utilities.MockHttpMessageHandler;
+using RichardSzalay.MockHttp;
+using System = Elastic.Apm.Api.System;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {
@@ -45,6 +49,45 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		public static IEnumerable<object[]> TestArgsVariantsWithVeryLongFlushInterval =>
 			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval).Select(t => new object[] { t });
 
+
+		[Fact]
+		public void Should_Sanitize_HttpRequestMessage_In_Log()
+		{
+			var testLogger = new TestLogger(LogLevel.Trace);
+			var secretToken = "secretToken";
+			var serverUrl = "http://username:password@localhost:8200";
+
+			var config = new MockConfiguration(testLogger, logLevel: "Trace", serverUrl: serverUrl, secretToken: secretToken, flushInterval: "0");
+			var service = Service.GetDefaultService(config, testLogger);
+			var waitHandle = new ManualResetEvent(false);
+			var handler = new RichardSzalay.MockHttp.MockHttpMessageHandler();
+			var configUrl = BackendCommUtils.ApmServerEndpoints
+				.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl);
+
+			handler.When(configUrl.AbsoluteUri)
+				.Respond(_ =>
+				{
+					waitHandle.Set();
+					return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+				});
+
+			var payloadSender = new PayloadSenderV2(testLogger, config, service, new Api.System(), MockApmServerInfo.Version710, handler);
+			using var agent = new ApmAgent(new TestAgentComponents(LoggerBase, config, payloadSender));
+			agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
+
+			waitHandle.WaitOne();
+
+			var count = 0;
+			while (!testLogger.Log.Contains("Failed sending event.")
+				&& count < 10)
+			{
+				Thread.Sleep(500);
+				count++;
+			}
+
+			testLogger.Log.Should().NotContain(secretToken)
+				.And.Contain("http://[REDACTED]:[REDACTED]@localhost:8200").And.NotContain(serverUrl);
+		}
 		[Fact]
 		public async Task SecretToken_ShouldBeSent_WhenApiKeyIsNotSpecified()
 		{
@@ -62,7 +105,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			});
 
 			var noopLogger = new NoopLogger();
-			var mockConfig = new MockConfigSnapshot(_logger, secretToken: secretToken, maxBatchEventCount: "1");
+			var mockConfig = new MockConfiguration(_logger, secretToken: secretToken, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
 
@@ -97,7 +140,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			});
 
 			var noopLogger = new NoopLogger();
-			var mockConfig = new MockConfigSnapshot(_logger, secretToken: secretToken, apiKey: apiKey, maxBatchEventCount: "1");
+			var mockConfig = new MockConfiguration(_logger, secretToken: secretToken, apiKey: apiKey, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
 
@@ -128,8 +171,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			});
 
 			var logger = new NoopLogger();
-			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
-			var payloadSender = new PayloadSenderV2(logger, new MockConfigSnapshot(logger, flushInterval: "1s"),
+			var service = Service.GetDefaultService(new MockConfiguration(logger), logger);
+			var payloadSender = new PayloadSenderV2(logger, new MockConfiguration(logger, flushInterval: "1s"),
 				service, new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
@@ -138,19 +181,21 @@ namespace Elastic.Apm.Tests.BackendCommTests
 				await isRequestFinished.Task;
 			}
 
-			userAgentHeader
+			var headerValues = userAgentHeader.ToList();
+
+			headerValues
 				.Should()
 				.NotBeEmpty()
 				.And.HaveCount(3);
 
-			userAgentHeader.First().Product.Name.Should().Be($"elasticapm-{Consts.AgentName}");
-			userAgentHeader.First().Product.Version.Should().NotBeEmpty();
+			headerValues[0].Product.Name.Should().Be($"elasticapm-{Consts.AgentName}");
+			headerValues[0].Product.Version.Should().NotBeEmpty();
 
-			userAgentHeader.Skip(1).First().Product.Name.Should().Be("System.Net.Http");
-			userAgentHeader.Skip(1).First().Product.Version.Should().NotBeEmpty();
+			headerValues[1].Product.Name.Should().Be("System.Net.Http");
+			headerValues[1].Product.Version.Should().NotBeEmpty();
 
-			userAgentHeader.Skip(2).First().Product.Name.Should().NotBeEmpty();
-			userAgentHeader.Skip(2).First().Product.Version.Should().NotBeEmpty();
+			headerValues[2].Product.Name.Should().NotBeEmpty();
+			headerValues[2].Product.Version.Should().NotBeEmpty();
 		}
 
 		private static IEnumerable<TestArgs> TestArgsVariantsWithoutIndex()
@@ -415,7 +460,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 		private void CreateSutEnvAndTest(Action<ApmAgent, PayloadSenderV2> doAction)
 		{
-			var configReader = new MockConfigSnapshot(_logger);
+			var configReader = new MockConfiguration(_logger);
 			var mockHttpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 			var service = Service.GetDefaultService(configReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), MockApmServerInfo.Version710, mockHttpMessageHandler
@@ -435,8 +480,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			internal int? MaxBatchEventCount { get; set; }
 			internal int? MaxQueueEventCount { get; set; }
 
-			internal MockConfigSnapshot BuildConfig(IApmLogger logger) =>
-				new MockConfigSnapshot(logger
+			internal MockConfiguration BuildConfig(IApmLogger logger) =>
+				new MockConfiguration(logger
 					, flushInterval: FlushInterval.HasValue ? $"{FlushInterval.Value.TotalMilliseconds}ms" : null
 					, maxBatchEventCount: MaxBatchEventCount?.ToString()
 					, maxQueueEventCount: MaxQueueEventCount?.ToString());

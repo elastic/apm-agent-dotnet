@@ -50,7 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload = new MockPayloadSender();
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
+				new MockConfiguration(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
 				_capturedPayload,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
@@ -147,9 +147,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 				transaction.Context.Request.Headers.Should().ContainKeys(headerKey);
 				transaction.Context.Request.Headers[headerKey].Should().Be(headerValue);
 			}
-
-			//test transaction.context.request.encrypted
-			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
 		}
 
 		/// <summary>
@@ -164,7 +161,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfigSnapshot(_logger, enabled: "false"), _capturedPayload));
+				new MockConfiguration(_logger, enabled: "false"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
@@ -184,7 +181,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task HomeIndexTransactionWithToggleRecording(bool withDiagnosticSourceOnly)
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
-				_logger, new MockConfigSnapshot(recording: "false"), _capturedPayload));
+				_logger, new MockConfiguration(recording: "false"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
@@ -199,7 +196,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
 
 			//flip recording to true
-			_agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(recording: "true");
+			_agent.ConfigurationStore.CurrentSnapshot = new MockConfiguration(recording: "true");
 
 			response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -303,9 +300,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 				transaction.Context.Request.Headers.Should().ContainKeys(headerKey);
 				transaction.Context.Request.Headers[headerKey].Should().Be(headerValue);
 			}
-
-			//test transaction.context.request.encrypted
-			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
 		}
 
 		/// <summary>
@@ -508,6 +502,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Sum(disposable => CountAspNetCoreErrorDiagnosticsSubscriber(disposable, field));
 
 			count.Should().Be(1, "One AspNetCoreErrorDiagnosticListener is registered");
+		}
+
+		/// <summary>
+		/// An HTTP call to an action method which manually sets <see cref="IExecutionSegment.Outcome"/>.
+		/// Makes sure auto instrumentation does not overwrite the outcome.
+		/// </summary>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task ManualTransactionOutcomeTest(bool withDiagnosticSourceOnly)
+		{
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
+
+			await _client.GetAsync("/Home/SampleWithManuallySettingOutcome");
+
+			_capturedPayload.WaitForTransactions();
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Outcome.Should().Be(Outcome.Failure);
 		}
 
 		private static IEnumerable<IDisposable> UnwrapCompositeDisposable(IEnumerable<IDisposable> disposables, FieldInfo disposablesField)

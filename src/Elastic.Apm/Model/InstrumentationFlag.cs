@@ -25,5 +25,10 @@ namespace Elastic.Apm.Model
 		AspNetClassic = 1 << 5,
 		Azure = 1 << 6,
 		Elasticsearch = 1 << 7,
+		Postgres = 1 << 8,
+		Oracle = 1 << 9,
+		MySql = 1 << 10,
+		Sqlite = 1 << 11,
+		AdoNet = 1 << 12,
 	}
 }

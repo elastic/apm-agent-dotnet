@@ -57,15 +57,13 @@ namespace Elastic.Apm.Api
 
 	public class Socket
 	{
-		public bool Encrypted { get; set; }
-
 		[JsonProperty("remote_address")]
 		public string RemoteAddress { get; set; }
 
 		internal Socket DeepCopy() => (Socket)MemberwiseClone();
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(Socket)) { { "Encrypted", Encrypted }, { "RemoteAddress", RemoteAddress } }.ToString();
+			new ToStringBuilder(nameof(Socket)) { { "RemoteAddress", RemoteAddress } }.ToString();
 	}
 
 	public class Url
@@ -77,7 +75,7 @@ namespace Elastic.Apm.Api
 		public string Full
 		{
 			get => _full;
-			set => _full = Http.Sanitize(value, out var newValue) ? newValue : value;
+			set => _full = Sanitization.TrySanitizeUrl(value, out var newValue, out _) ? newValue : value;
 		}
 
 		[MaxLength]
@@ -95,7 +93,7 @@ namespace Elastic.Apm.Api
 		public string Raw
 		{
 			get => _raw;
-			set => _raw = Http.Sanitize(value, out var newValue) ? newValue : value;
+			set => _raw = Sanitization.TrySanitizeUrl(value, out var newValue, out _) ? newValue : value;
 		}
 
 		/// <summary>

@@ -302,8 +302,8 @@ namespace Elastic.Apm.Tests
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should()
 					.Be(uriBuilder.Uri.ToString()
-						.Replace("TestUser", "[REDACTED]")
-						.Replace("TestPassword", "[REDACTED]"));
+						.Replace("TestUser", Consts.Redacted)
+						.Replace("TestPassword", Consts.Redacted));
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
@@ -615,7 +615,7 @@ namespace Elastic.Apm.Tests
 
 				// looking for lines with "localhost:8082" and asserting that those contain [REDACTED].
 				foreach (var lineWithHttpLog in logger.Lines.Where(n => n.Contains($"{uriBuilder.Host}:{uriBuilder.Port}")))
-					lineWithHttpLog.Should().Contain("[REDACTED]");
+					lineWithHttpLog.Should().Contain(Consts.Redacted);
 			}
 		}
 
@@ -763,7 +763,7 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger(LogLevel.Trace);
 
 			// ServiceVersion is set, otherwise in the xUnit context it'd log a warning, since it can be auto discovered
-			using var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(serviceVersion: "1.0")))
+			using var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfiguration(serviceVersion: "1.0")))
 				.Subscribe(new HttpDiagnosticsSubscriber());
 
 			// No active transaction, just an HTTP request with an active agent
@@ -862,7 +862,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			var agentComponents = new TestAgentComponents(payloadSender: payloadSender,
-				config: new MockConfigSnapshot(logLevel: "Debug", stackTraceLimit: "-1",
+				configuration: new MockConfiguration(logLevel: "Debug", stackTraceLimit: "-1",
 					spanFramesMinDurationInMilliseconds: "-1ms"));
 
 			var agent = new ApmAgent(agentComponents);

@@ -5,6 +5,7 @@
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Microsoft.Extensions.Configuration;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace Elastic.Apm.Extensions.Hosting.Config
 {

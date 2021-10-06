@@ -33,10 +33,10 @@ namespace Elastic.Apm
 
 		internal ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
 
-		internal ICentralConfigFetcher CentralConfigFetcher => Components.CentralConfigFetcher;
+		internal ICentralConfigurationFetcher CentralConfigurationFetcher => Components.CentralConfigurationFetcher;
 
 		internal AgentComponents Components { get; }
-		internal IConfigStore ConfigStore => Components.ConfigStore;
+		internal IConfigurationStore ConfigurationStore => Components.ConfigurationStore;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;

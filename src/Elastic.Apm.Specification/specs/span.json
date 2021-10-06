@@ -166,9 +166,6 @@
             }
           }
         },
-        "experimental": {
-          "description": "Experimental information is only processed when APM Server is started in development mode and should only be used by APM agent developers implementing new, unreleased features. The format is unspecified."
-        },
         "http": {
           "description": "HTTP contains contextual information when the span concerns an HTTP request.",
           "type": [
@@ -323,6 +320,13 @@
                   "maxLength": 1024
                 }
               }
+            },
+            "routing_key": {
+              "description": "RoutingKey holds the optional routing key of the received message as set on the queuing system, such as in RabbitMQ.",
+              "type": [
+                "null",
+                "string"
+              ]
             }
           }
         },
@@ -450,6 +454,36 @@
                 }
               }
             },
+            "origin": {
+              "description": "Origin contains the self-nested field groups for service.",
+              "type": [
+                "null",
+                "object"
+              ],
+              "properties": {
+                "id": {
+                  "description": "Immutable id of the service emitting this event.",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "name": {
+                  "description": "Immutable name of the service emitting this event.",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "version": {
+                  "description": "The version of the service the data was collected from.",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                }
+              }
+            },
             "runtime": {
               "description": "Runtime holds information about the language runtime running the monitored service",
               "type": [
@@ -474,6 +508,13 @@
                   "maxLength": 1024
                 }
               }
+            },
+            "string": {
+              "description": "ID holds a unique identifier for the service.",
+              "type": [
+                "null",
+                "string"
+              ]
             },
             "version": {
               "description": "Version of the monitored service.",

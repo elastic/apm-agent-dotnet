@@ -12,13 +12,13 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal class CentralConfigReader : AbstractConfigurationReader
+	internal class CentralConfigurationReader : AbstractConfigurationReader
 	{
-		private const string ThisClassName = nameof(CentralConfigFetcher) + "." + nameof(CentralConfigReader);
+		private const string ThisClassName = nameof(CentralConfigurationFetcher) + "." + nameof(CentralConfigurationReader);
 
-		private readonly CentralConfigResponseParser.CentralConfigPayload _configPayload;
+		private readonly CentralConfigurationResponseParser.CentralConfigPayload _configPayload;
 
-		public CentralConfigReader(IApmLogger logger, CentralConfigResponseParser.CentralConfigPayload configPayload, string eTag) : base(logger,
+		public CentralConfigurationReader(IApmLogger logger, CentralConfigurationResponseParser.CentralConfigPayload configPayload, string eTag) : base(logger,
 			ThisClassName)
 		{
 			_configPayload = configPayload;
@@ -55,26 +55,26 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private void UpdateConfigurationValues()
 		{
-			CaptureBody = GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureBodyKey, ParseCaptureBody);
-			CaptureBodyContentTypes = GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey,
+			CaptureBody = GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyKey, ParseCaptureBody);
+			CaptureBodyContentTypes = GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey,
 				ParseCaptureBodyContentTypes);
-			TransactionMaxSpans = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionMaxSpansKey,
+			TransactionMaxSpans = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TransactionMaxSpansKey,
 				ParseTransactionMaxSpans);
-			TransactionSampleRate = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionSampleRateKey,
+			TransactionSampleRate = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TransactionSampleRateKey,
 				ParseTransactionSampleRate);
-			CaptureHeaders = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
-			LogLevel = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.LogLevelKey, ParseLogLevel);
+			CaptureHeaders = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
+			LogLevel = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.LogLevelKey, ParseLogLevel);
 			SpanFramesMinDurationInMilliseconds =
-				GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SpanFramesMinDurationKey,
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanFramesMinDurationKey,
 					ParseSpanFramesMinDurationInMilliseconds);
-			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
-			Recording = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.Recording, ParseRecording);
+			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
+			Recording = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.Recording, ParseRecording);
 			SanitizeFieldNames =
-				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNamesImpl);
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNamesImpl);
 			TransactionIgnoreUrls =
-				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrlsImpl);
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrlsImpl);
 			IgnoreMessageQueues =
-				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueuesImpl);
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueuesImpl);
 		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>

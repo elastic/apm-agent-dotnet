@@ -162,8 +162,13 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
-			if(executionSegment != null)
-				executionSegment.Outcome = Outcome.Failure;
+			if (executionSegment != null)
+			{
+				if (executionSegment is Transaction realTransaction)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					executionSegment.Outcome = Outcome.Failure;
+			}
 
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
 			var debugMessage = $"{nameof(ExecutionSegmentCommon)}.{nameof(CaptureException)}";
@@ -262,8 +267,13 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
-			if(executionSegment != null)
-				executionSegment.Outcome = Outcome.Failure;
+			if (executionSegment != null)
+			{
+				if (executionSegment is Transaction realTransaction)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					executionSegment.Outcome = Outcome.Failure;
+			}
 
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
@@ -287,7 +297,7 @@ namespace Elastic.Apm.Model
 		{
 			var currentExecutionSegment = agent.GetCurrentExecutionSegment();
 
-			if (currentExecutionSegment == null)
+			if (currentExecutionSegment is null)
 				return null;
 
 			return currentExecutionSegment switch
@@ -309,21 +319,26 @@ namespace Elastic.Apm.Model
 		/// <param name="payloadSender"></param>
 		/// <param name="logger"></param>
 		/// <param name="executionSegment"></param>
-		/// <param name="configSnapshot"></param>
+		/// <param name="configuration"></param>
 		/// <param name="enclosingTransaction"></param>
 		/// <param name="parentId"></param>
 		/// <param name="serverInfo"></param>
 		/// <param name="exception"></param>
 		/// <param name="labels"></param>
 		internal static void CaptureErrorLog(ErrorLog errorLog, IPayloadSender payloadSender, IApmLogger logger,
-			IExecutionSegment executionSegment, IConfigSnapshot configSnapshot, Transaction enclosingTransaction, string parentId,
+			IExecutionSegment executionSegment, IConfiguration configuration, Transaction enclosingTransaction, string parentId,
 			IApmServerInfo serverInfo,
 			Exception exception = null,
 			Dictionary<string, Label> labels = null
 		)
 		{
-			if(executionSegment != null)
-				executionSegment.Outcome = Outcome.Failure;
+			if (executionSegment != null)
+			{
+				if (executionSegment is Transaction realTransaction)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					executionSegment.Outcome = Outcome.Failure;
+			}
 
 			var error = new Error(errorLog, enclosingTransaction, parentId ?? executionSegment?.Id, logger, labels)
 			{
@@ -338,7 +353,7 @@ namespace Elastic.Apm.Model
 				{
 					error.Exception.StackTrace
 						= StacktraceHelper
-							.GenerateApmStackTrace(exception, logger, $"Exception callstack for {nameof(CaptureErrorLog)}", configSnapshot,
+							.GenerateApmStackTrace(exception, logger, $"Exception callstack for {nameof(CaptureErrorLog)}", configuration,
 								serverInfo);
 				}
 			}

@@ -15,18 +15,18 @@ namespace Elastic.Apm.Tests.Utilities
 		/// <inheritdoc />
 		public TestAgentComponents(
 			IApmLogger logger = null,
-			IConfigSnapshot config = null,
+			IConfiguration configuration = null,
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
-			ICentralConfigFetcher centralConfigFetcher = null,
+			ICentralConfigurationFetcher centralConfigurationFetcher = null,
 			IApmServerInfo apmServerInfo = null
 		) : base(
 			logger ?? new NoopLogger(),
-			config ?? new MockConfigSnapshot(logger ?? new NoopLogger()),
+			configuration ?? new MockConfiguration(logger ?? new NoopLogger()),
 			payloadSender ?? new MockPayloadSender(),
 			new FakeMetricsCollector(),
 			currentExecutionSegmentsContainer,
-			centralConfigFetcher ?? new NoopCentralConfigFetcher(),
+			centralConfigurationFetcher ?? new NoopCentralConfigurationFetcher(),
 			apmServerInfo ?? MockApmServerInfo.Version710
 		)
 		{ }

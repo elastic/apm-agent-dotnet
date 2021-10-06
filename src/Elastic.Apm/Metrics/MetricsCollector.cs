@@ -35,7 +35,7 @@ namespace Elastic.Apm.Metrics
 		/// </summary>
 		internal readonly List<IMetricsProvider> MetricsProviders;
 
-		private readonly IConfigSnapshotProvider _configSnapshotProvider;
+		private readonly IConfigurationSnapshotProvider _configurationSnapshotProvider;
 
 		private readonly AgentSpinLock _isCollectionInProgress = new AgentSpinLock();
 
@@ -45,15 +45,15 @@ namespace Elastic.Apm.Metrics
 
 		private readonly Timer _timer;
 
-		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider,
+		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigurationSnapshotProvider configurationSnapshotProvider,
 			params IMetricsProvider[] metricsProvider
 		)
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
-			_configSnapshotProvider = configSnapshotProvider;
+			_configurationSnapshotProvider = configurationSnapshotProvider;
 
-			var currentConfigSnapshot = configSnapshotProvider.CurrentSnapshot;
+			var currentConfigSnapshot = configurationSnapshotProvider.CurrentSnapshot;
 
 			var interval = currentConfigSnapshot.MetricsIntervalInMilliseconds;
 
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Metrics
 			}
 
 			MetricsProviders = new List<IMetricsProvider>();
-			var disabledMetrics = configSnapshotProvider.CurrentSnapshot.DisableMetrics;
+			var disabledMetrics = configurationSnapshotProvider.CurrentSnapshot.DisableMetrics;
 
 			if (metricsProvider != null)
 			{
@@ -113,7 +113,7 @@ namespace Elastic.Apm.Metrics
 				return;
 			}
 
-			if (!_configSnapshotProvider.CurrentSnapshot.Recording)
+			if (!_configurationSnapshotProvider.CurrentSnapshot.Recording)
 			{
 				//We only handle the Recording=false here. If Enabled=false, then the MetricsCollector is not started at all.
 				_logger.Trace()?.Log("Skip collecting metrics - Recording is set to false");

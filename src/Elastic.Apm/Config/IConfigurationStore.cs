@@ -4,8 +4,8 @@
 
 namespace Elastic.Apm.Config
 {
-	internal interface IConfigSnapshotProvider
+	internal interface IConfigurationStore : IConfigurationSnapshotProvider
 	{
-		IConfigSnapshot CurrentSnapshot { get; }
+		new IConfiguration CurrentSnapshot { get; set; }
 	}
 }

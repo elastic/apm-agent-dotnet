@@ -43,7 +43,7 @@ namespace Elastic.Apm.Docker.Tests
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, cGroupContent);
 
-			var systemInfo = systemInfoHelper.ParseSystemInfo(null);
+			var systemInfo = systemInfoHelper.GetSystemInfo(null);
 			systemInfo.Should().NotBeNull();
 			systemInfo.Container.Should().NotBeNull();
 			systemInfo.Container.Id.Should().Be(expectedContainerId);
@@ -57,7 +57,7 @@ namespace Elastic.Apm.Docker.Tests
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, "asdf:invalid-dockerid:243543");
 
-			var systemInfo = systemInfoHelper.ParseSystemInfo(null);
+			var systemInfo = systemInfoHelper.GetSystemInfo(null);
 
 			systemInfo.Container.Should().BeNull();
 		}
