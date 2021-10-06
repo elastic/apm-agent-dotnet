@@ -6,7 +6,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -162,6 +165,32 @@ namespace Elastic.Apm.Tests
 			var secondCause = capturedException.Cause[1];
 			secondCause.Message.Should().Be("Inner inner exception");
 			secondCause.Type.Should().Be("System.Exception");
+		}
+
+		[Fact]
+		public void ErrorContextSanitizerFilterDoesNotThrowWhenTransactionNotSampled()
+		{
+			var waitHandle = new ManualResetEventSlim();
+			using var localServer = LocalServer.Create(context =>
+			{
+				context.Response.StatusCode = 200;
+				waitHandle.Set();
+			});
+
+			var config = new MockConfiguration(transactionSampleRate: "0", serverUrl: localServer.Uri, flushInterval: "0");
+			var logger = new InMemoryBlockingLogger(LogLevel.Warning);
+			var payloadSender = new PayloadSenderV2(logger, config,
+				Service.GetDefaultService(config, logger), new Api.System(),MockApmServerInfo.Version710);
+
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, configurationReader: config));
+			agent.Tracer.CaptureTransaction("Test", "Test", t =>
+			{
+				t.CaptureException(new Exception("boom!"));
+			});
+
+			waitHandle.Wait();
+
+			logger.Lines.Should().NotContain(line => line.Contains("Exception during execution of the filter on transaction"));
 		}
 	}
 }
