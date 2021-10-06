@@ -152,7 +152,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				httpResponse?.Dispose();
 			}
 
-			_logger.Info()?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
+			_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
 					, waitInfo.Interval.ToHms(), waitInfo.Reason, _dbgIterationsCount);
 			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CancellationTokenSource.Token).ConfigureAwait(false);
 		}
