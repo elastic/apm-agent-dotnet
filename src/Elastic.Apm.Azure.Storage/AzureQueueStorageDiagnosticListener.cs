@@ -148,16 +148,15 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			// Newer versions of the Queue storage library fire two QueueClient.ReceiveMessage.Start events.
-			// In order to avoid creating two transactions, check if the parent activity is an APM transaction and if it is,
-			// check its parent activity to see if it is the same operation as this one. If it is, don't create a transaction
-			// for it.
-			Logger.Trace()?.Log($"current activity: {activity.Id}, parent: {activity.Parent?.Id}");
 
 			// if we're already processing this activity, ignore it.
 			if (_processingSegments.ContainsKey(activity.Id))
 				return;
 
+			// Newer versions of the Queue storage library fire two QueueClient.ReceiveMessage.Start events.
+			// In order to avoid creating two transactions, check if the parent activity is an APM transaction and if it is,
+			// check its parent activity to see if it is the same operation as this one. If it is, don't create a transaction
+			// for it.
 			var parentActivity = activity.Parent;
 			if (parentActivity != null &&
 				parentActivity.OperationName == Transaction.ApmTransactionActivityName)
@@ -236,17 +235,14 @@ namespace Elastic.Apm.Azure.Storage
 			if (segment is ISpan span && span.Context.Destination is null)
 			{
 				var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-				if (QueueUrl.TryCreate(urlTag, out var queueUrl))
+				if (QueueUrl.TryCreate(urlTag, out var queueUrl) && !string.IsNullOrEmpty(queueUrl.QueueName))
 				{
-					if (!string.IsNullOrEmpty(queueUrl.QueueName))
-					{
-						span.Name += $" to {queueUrl.QueueName}";
+					// if destination wasn't set in the Start, we didn't get a chance to see if this
+					// is a queue that should be ignored, so check now.
+					if (MatchesIgnoreMessageQueues(queueUrl.QueueName))
+						return;
 
-						// if destination wasn't set in the Start, we didn't get a chance to see if this
-						// is a queue that should be ignored, so check now.
-						if (MatchesIgnoreMessageQueues(queueUrl.QueueName))
-							return;
-					}
+					span.Name += $" to {queueUrl.QueueName}";
 
 					SetDestination(span, queueUrl.FullyQualifiedNamespace, queueUrl.QueueName);
 				}
@@ -305,7 +301,8 @@ namespace Elastic.Apm.Azure.Storage
 					SetDestination(span, queueUrl.FullyQualifiedNamespace, queueUrl.QueueName);
 				}
 			}
-			else if (segment is ITransaction transaction && !transaction.Name.Contains("RECEIVE from "))
+			else if (segment is ITransaction transaction
+				&& !transaction.Name.StartsWith($"{AzureQueueStorage.SpanName} RECEIVE from ", StringComparison.Ordinal))
 			{
 				var urlTag = activity.Parent?.Tags.FirstOrDefault(t => t.Key == "url").Value;
 				if (QueueUrl.TryCreate(urlTag, out var queueUrl) && !string.IsNullOrEmpty(queueUrl.QueueName))
@@ -331,6 +328,13 @@ namespace Elastic.Apm.Azure.Storage
 		/// </summary>
 		private class QueueUrl : StorageUrl
 		{
+			private QueueUrl(Uri url) : base(url) =>
+				QueueName = url.Segments.Length > 1
+					? url.Segments[1].TrimEnd('/')
+					: null;
+
+			public string QueueName { get; }
+
 			public static bool TryCreate(string url, out QueueUrl queueUrl)
 			{
 				if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
@@ -342,13 +346,6 @@ namespace Elastic.Apm.Azure.Storage
 				queueUrl = null;
 				return false;
 			}
-
-			private QueueUrl(Uri url) : base(url) =>
-				QueueName = url.Segments.Length > 1
-					? url.Segments[1].TrimEnd('/')
-					: null;
-
-			public string QueueName { get; }
 		}
 	}
 }
