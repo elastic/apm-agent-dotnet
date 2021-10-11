@@ -137,7 +137,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var downloadResponse = await client.DownloadToAsync(stream);
 			});
 
-			AssertSpan("Download", $"{scope.ContainerName}/{blobName}");
+			AssertSpan("Download", $"{scope.ContainerName}/{blobName}", count: 2);
 		}
 
 		[AzureCredentialsFact]

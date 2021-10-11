@@ -22,8 +22,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		private readonly MockPayloadSender _sender;
 		private readonly ApmAgent _agent;
 		private readonly IDisposable _subscription;
-		private readonly ITestOutputHelper _output
-			;
+		private readonly ITestOutputHelper _output;
 
 		public AzureQueueStorageDiagnosticListenerTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
 		{
@@ -81,10 +80,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		private void AssertTransaction(string action, string queueName)
 		{
 			if (!_sender.WaitForTransactions())
-			{
-				_sender.SignalEndTransactions();
 				throw new Exception($"No transaction received within timeout. (already received {_sender.Transactions.Count} transactions)");
-			}
 
 			_sender.Transactions.Should().HaveCount(1);
 			var transaction = _sender.FirstTransaction;

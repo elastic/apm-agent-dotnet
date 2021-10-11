@@ -68,7 +68,9 @@ namespace Elastic.Apm.Azure.Storage
 		/// For other Azure SDK versions and methods, only a single activity might be started. This is the majority case and we will start a
 		/// span when this single activity is started. This ends up with the following Activity chain:
 		///
-		///
+		/// Azure SDK activity (the activity we're interested in and want to set url tag on)
+		/// Apm Transaction activity
+		/// Azure.Core.Http.Request activity (which contains the http.url tag with the url)
 		/// </summary>
 		/// <param name="activity"></param>
 		/// <returns></returns>
