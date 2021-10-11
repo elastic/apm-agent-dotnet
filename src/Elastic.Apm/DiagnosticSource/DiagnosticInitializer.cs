@@ -54,7 +54,8 @@ namespace Elastic.Apm.DiagnosticSource
 				{
 					if (value.Name == listener.Name)
 					{
-						_sourceSubscription = value.Subscribe(listener);
+						_sourceSubscription ??= new CompositeDisposable();
+						((CompositeDisposable)_sourceSubscription).Add(value.Subscribe(listener));
 						_logger.Debug()
 							?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
 								listener.GetType().FullName, value.Name);
