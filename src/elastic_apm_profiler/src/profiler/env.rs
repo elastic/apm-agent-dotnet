@@ -31,6 +31,7 @@ use std::{
 
 const APP_POOL_ID_ENV_VAR: &str = "APP_POOL_ID";
 const DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR: &str = "DOTNET_CLI_TELEMETRY_PROFILE";
+const COMPLUS_LOADEROPTIMIZATION: &str = "COMPLUS_LOADEROPTIMIZATION";
 
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
@@ -102,13 +103,20 @@ pub fn check_if_running_in_azure_app_service() -> Result<(), HRESULT> {
 pub fn get_env_vars() -> String {
     std::env::vars()
         .filter_map(|(k, v)| {
-            if k.starts_with("ELASTIC_")
-                || k.starts_with("CORECLR_")
-                || k.starts_with("COR_")
-                || &k == APP_POOL_ID_ENV_VAR
-                || &k == DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR
+            let key = k.to_uppercase();
+            if key.starts_with("ELASTIC_")
+                || key.starts_with("CORECLR_")
+                || key.starts_with("COR_")
+                || &key == APP_POOL_ID_ENV_VAR
+                || &key == DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR
+                || &key == COMPLUS_LOADEROPTIMIZATION
             {
-                Some(format!("  {}=\"{}\"", k, v))
+                let value = if key.contains("SECRET") || key.contains("API_KEY") {
+                    "[REDACTED]"
+                } else {
+                    &v
+                };
+                Some(format!("  {}=\"{}\"", k, value))
             } else {
                 None
             }
