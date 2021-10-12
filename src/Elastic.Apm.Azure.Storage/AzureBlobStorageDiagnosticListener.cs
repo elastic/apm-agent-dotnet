@@ -62,6 +62,8 @@ namespace Elastic.Apm.Azure.Storage
 						break;
 					case "BlobContainerClient.GetBlobs.Start":
 					case "BlobContainerClient.GetBlobsByHierarchy.Start":
+					case "ContainerClient.ListBlobsFlatSegment.Start":
+					case "ContainerClient.ListBlobsHierarchySegment":
 						OnStart(kv, "ListBlobs");
 						break;
 					case "BlockBlobClient.Upload.Start":
