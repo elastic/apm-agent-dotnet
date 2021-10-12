@@ -844,7 +844,7 @@ impl Profiler {
                 return Ok(());
             }
 
-            for pattern in SKIP_ASSEMBLY_PREFIXES.iter() {
+            for pattern in SKIP_ASSEMBLY_PREFIXES {
                 if assembly_name.starts_with(pattern) {
                     log::debug!(
                         "ModuleLoadFinished: skipping module {} {} because it matches skip pattern {}",
@@ -856,7 +856,7 @@ impl Profiler {
                 }
             }
 
-            for skip in SKIP_ASSEMBLIES.iter() {
+            for skip in SKIP_ASSEMBLIES {
                 if assembly_name == skip {
                     log::debug!(
                         "ModuleLoadFinished: skipping module {} {} because it matches skip {}",

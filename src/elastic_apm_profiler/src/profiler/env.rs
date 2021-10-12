@@ -21,13 +21,7 @@ use log4rs::{
     Config, Handle,
 };
 use once_cell::sync::Lazy;
-use std::{
-    collections::HashSet,
-    fs::File,
-    io::BufReader,
-    path::PathBuf,
-    str::FromStr,
-};
+use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
 
 const APP_POOL_ID_ENV_VAR: &str = "APP_POOL_ID";
 const DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR: &str = "DOTNET_CLI_TELEMETRY_PROFILE";
@@ -275,7 +269,7 @@ fn get_default_log_dir() -> PathBuf {
             path_buf.push("logs");
             path_buf
         }
-        Err(_) => get_home_log_dir()
+        Err(_) => get_home_log_dir(),
     }
 }
 
@@ -288,7 +282,7 @@ fn get_default_log_dir() -> PathBuf {
 fn get_home_log_dir() -> PathBuf {
     let mut path_buf = match std::env::var(ELASTIC_APM_PROFILER_HOME_ENV_VAR) {
         Ok(val) => PathBuf::from(val),
-        Err(_) => PathBuf::from(get_profiler_dir())
+        Err(_) => PathBuf::from(get_profiler_dir()),
     };
 
     path_buf.push("logs");

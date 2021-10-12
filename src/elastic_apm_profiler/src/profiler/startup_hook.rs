@@ -60,16 +60,20 @@ fn generate_void_il_startup_method(
     module_id: ModuleID,
     module_metadata: &ModuleMetadata,
 ) -> Result<mdMethodDef, HRESULT> {
-    let mscorlib_ref = helpers::create_assembly_ref_to_mscorlib(&module_metadata.assembly_emit)?;
+    let corlib_ref = helpers::create_assembly_ref_to_corlib(
+        &module_metadata.assembly_emit,
+        &module_metadata.cor_assembly_property,
+    )?;
 
     log::trace!(
-        "generate_void_il_startup_method: created mscorlib ref {}",
-        mscorlib_ref
+        "generate_void_il_startup_method: created corlib ref {} to {}",
+        corlib_ref,
+        &module_metadata.cor_assembly_property.name,
     );
 
     let object_type_ref = module_metadata
         .emit
-        .define_type_ref_by_name(mscorlib_ref, "System.Object")
+        .define_type_ref_by_name(corlib_ref, "System.Object")
         .map_err(|e| {
             log::warn!("error defining type ref by name for System.Object. {:X}", e);
             e
@@ -155,7 +159,7 @@ fn generate_void_il_startup_method(
 
     let interlocked_type_ref = module_metadata
         .emit
-        .define_type_ref_by_name(mscorlib_ref, "System.Threading.Interlocked")
+        .define_type_ref_by_name(corlib_ref, "System.Threading.Interlocked")
         .map_err(|e| {
             log::warn!(
                 "error defining type ref by name for System.Threading.Interlocked. {:X}",
@@ -263,11 +267,11 @@ fn generate_void_il_startup_method(
         e
     })?;
 
-    let byte_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.Byte").map_err(|e| {
+    let byte_type_ref = module_metadata.emit.define_type_ref_by_name(corlib_ref, "System.Byte").map_err(|e| {
         log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.Byte");
         e
     })?;
-    let marshal_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.Runtime.InteropServices.Marshal").map_err(|e| {
+    let marshal_type_ref = module_metadata.emit.define_type_ref_by_name(corlib_ref, "System.Runtime.InteropServices.Marshal").map_err(|e| {
         log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.Runtime.InteropServices.Marshal");
         e
     })?;
@@ -291,53 +295,30 @@ fn generate_void_il_startup_method(
             e
         })?;
 
-    let system_reflection_assembly_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.Reflection.Assembly").map_err(|e| {
+    let system_reflection_assembly_type_ref = module_metadata.emit.define_type_ref_by_name(corlib_ref, "System.Reflection.Assembly").map_err(|e| {
         log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.Reflection.Assembly");
         e
     })?;
 
-    let system_appdomain_type_ref = module_metadata.emit.define_type_ref_by_name(mscorlib_ref, "System.AppDomain").map_err(|e| {
-        log::warn!("generate_void_il_startup_method: failed to define type ref by name for System.AppDomain");
-        e
-    })?;
-
-    let mut appdomain_get_current_domain_signature: Vec<COR_SIGNATURE> = vec![
+    let mut assembly_load_signature: Vec<COR_SIGNATURE> = vec![
         CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT.bits(),
-        0,
-        CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
-    ];
-    appdomain_get_current_domain_signature
-        .append(&mut compress_token(system_appdomain_type_ref).unwrap());
-
-    let appdomain_get_current_domain_member_ref = module_metadata
-        .emit
-        .define_member_ref(
-            system_appdomain_type_ref,
-            "get_CurrentDomain",
-            &appdomain_get_current_domain_signature,
-        )
-        .map_err(|e| {
-            log::warn!(
-                "generate_void_il_startup_method: failed to define member ref get_CurrentDomain"
-            );
-            e
-        })?;
-
-    let mut appdomain_load_signature = vec![
-        CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS.bits(),
         2,
         CorElementType::ELEMENT_TYPE_CLASS as COR_SIGNATURE,
     ];
-    appdomain_load_signature
+    assembly_load_signature
         .append(&mut compress_token(system_reflection_assembly_type_ref).unwrap());
-    appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE);
-    appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE);
-    appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE);
-    appdomain_load_signature.push(CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE);
+    assembly_load_signature.push(CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE);
+    assembly_load_signature.push(CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE);
+    assembly_load_signature.push(CorElementType::ELEMENT_TYPE_SZARRAY as COR_SIGNATURE);
+    assembly_load_signature.push(CorElementType::ELEMENT_TYPE_U1 as COR_SIGNATURE);
 
-    let appdomain_load_member_ref = module_metadata
+    let assembly_load_member_ref = module_metadata
         .emit
-        .define_member_ref(system_appdomain_type_ref, "Load", &appdomain_load_signature)
+        .define_member_ref(
+            system_reflection_assembly_type_ref,
+            "Load",
+            &assembly_load_signature,
+        )
         .map_err(|e| {
             log::warn!("generate_void_il_startup_method: failed to define member ref Load");
             e
@@ -425,11 +406,10 @@ fn generate_void_il_startup_method(
         Instruction::ldc_i4_0(),
         Instruction::ldloc_3(),
         Instruction::call(marshal_copy_member_ref),
-        // Step 4) Call System.Reflection.Assembly System.AppDomain.CurrentDomain.Load(byte[], byte[]))
-        Instruction::call(appdomain_get_current_domain_member_ref),
+        // Step 4) Call System.Reflection.Assembly System.Reflection.Assembly.Load(byte[], byte[]))
         Instruction::ldloc_s(4),
         Instruction::ldloc_s(5),
-        Instruction::callvirt(appdomain_load_member_ref),
+        Instruction::call(assembly_load_member_ref),
         Instruction::stloc_s(6),
         // Step 5) Call instance method Assembly.CreateInstance("Elastic.Apm.Profiler.Managed.Loader.Startup")
         Instruction::ldloc_s(6),

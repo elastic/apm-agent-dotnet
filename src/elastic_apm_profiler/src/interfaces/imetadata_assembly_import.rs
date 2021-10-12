@@ -154,6 +154,10 @@ impl IMetaDataAssemblyImport {
         // NOTE: null_mut() default values on ASSEMBLYMETADATA will not populated.
         // This is not an issue now, but would be if AssemblyMetaData were to expose these values
         let mut assembly_metadata = ASSEMBLYMETADATA::default();
+
+        let mut sz_locale: *mut WCHAR = ptr::null_mut();
+        assembly_metadata.szLocale = (&mut sz_locale as *mut *mut WCHAR) as *mut WCHAR;
+
         let mut assembly_flags = MaybeUninit::uninit();
         let mut hash_algorithm = MaybeUninit::uninit();
         let mut public_key = MaybeUninit::uninit();
@@ -195,8 +199,18 @@ impl IMetaDataAssemblyImport {
                     CorAssemblyFlags::from_bits(a).unwrap()
                 };
 
+                let locale = unsafe {
+                    U16CString::from_ptr(
+                        assembly_metadata.szLocale,
+                        assembly_metadata.cbLocale as usize,
+                    )
+                    .unwrap()
+                    .to_string_lossy()
+                };
+
                 Ok(AssemblyMetaData {
                     name,
+                    locale,
                     assembly_token,
                     public_key: PublicKey::new(public_key, hash_algorithm),
                     version: Version::new(
@@ -289,6 +303,9 @@ impl IMetaDataAssemblyImport {
         // NOTE: null_mut() default values on ASSEMBLYMETADATA will not populated.
         // This is not an issue now, but would be if AssemblyMetaData were to expose these values
         let mut assembly_metadata = ASSEMBLYMETADATA::default();
+        let mut sz_locale: *mut WCHAR = ptr::null_mut();
+        assembly_metadata.szLocale = (&mut sz_locale as *mut *mut WCHAR) as *mut WCHAR;
+
         let mut public_key_length = 0;
         let mut assembly_flags = 0;
 
@@ -327,8 +344,18 @@ impl IMetaDataAssemblyImport {
 
         let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
 
+        let locale = unsafe {
+            U16CString::from_ptr(
+                assembly_metadata.szLocale,
+                assembly_metadata.cbLocale as usize,
+            )
+            .unwrap()
+            .to_string_lossy()
+        };
+
         Ok(AssemblyMetaData {
             name,
+            locale,
             assembly_token: assembly_ref,
             public_key: PublicKey::new(public_key, 32772),
             version: Version::new(

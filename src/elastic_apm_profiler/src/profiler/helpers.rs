@@ -14,24 +14,29 @@ use crate::{
     },
     ffi::{
         mdAssemblyRef, mdToken, mdTokenNil, mdTypeDef, mdTypeDefNil, type_from_token,
-        CorAssemblyFlags, CorElementType, CorTokenType, ASSEMBLYMETADATA,
+        CorElementType, CorTokenType, ASSEMBLYMETADATA,
     },
     interfaces::{IMetaDataAssemblyEmit, IMetaDataEmit2, IMetaDataImport2},
     profiler::{
         sig::parse_type,
-        types::{FunctionInfo, Integration, IntegrationMethod, MethodSignature, ModuleMetadata},
+        types::{
+            AssemblyMetaData, FunctionInfo, Integration, IntegrationMethod, MethodSignature,
+            ModuleMetadata,
+        },
     },
 };
 use com::sys::HRESULT;
 use num_traits::FromPrimitive;
 
 pub(crate) fn return_type_is_value_type_or_generic(
-    metadata_import: &IMetaDataImport2,
-    metadata_emit: &IMetaDataEmit2,
-    assembly_emit: &IMetaDataAssemblyEmit,
+    module_metadata: &ModuleMetadata,
     target_function_token: mdToken,
     target_function_signature: &MethodSignature,
 ) -> Option<mdToken> {
+    let metadata_import = &module_metadata.import;
+    let metadata_emit = &module_metadata.emit;
+    let assembly_emit = &module_metadata.assembly_emit;
+    let cor_assembly = &module_metadata.cor_assembly_property;
     let generic_count = target_function_signature.type_arguments_len();
     let mut method_def_sig_index = target_function_signature.index_of_return_type();
     let signature = target_function_signature.bytes();
@@ -138,8 +143,6 @@ pub(crate) fn return_type_is_value_type_or_generic(
                             }
                         }
                         _ => {
-                            log::trace!("hit NONE");
-                            // TODO: logging
                             return None;
                         }
                     }
@@ -209,6 +212,7 @@ pub(crate) fn return_type_is_value_type_or_generic(
                                     &spec_signature[current_idx..],
                                     metadata_emit,
                                     assembly_emit,
+                                    cor_assembly,
                                 ),
                             };
                         } else {
@@ -216,6 +220,7 @@ pub(crate) fn return_type_is_value_type_or_generic(
                                 &spec_signature[current_idx..],
                                 metadata_emit,
                                 assembly_emit,
+                                cor_assembly,
                             );
                         }
                     }
@@ -237,6 +242,7 @@ pub(crate) fn return_type_is_value_type_or_generic(
         &signature[method_def_sig_index..],
         metadata_emit,
         assembly_emit,
+        cor_assembly,
     )
 }
 
@@ -244,6 +250,7 @@ fn return_type_token_for_value_type_element_type(
     signature: &[u8],
     metadata_emit: &IMetaDataEmit2,
     assembly_emit: &IMetaDataAssemblyEmit,
+    cor_assembly: &AssemblyMetaData,
 ) -> Option<mdToken> {
     log::trace!(
         "return_type_token_for_value_type_element_type, signature: {:?}",
@@ -292,14 +299,15 @@ fn return_type_token_for_value_type_element_type(
             return None;
         }
 
-        let mscorlib_ref = create_assembly_ref_to_mscorlib(assembly_emit);
-        if mscorlib_ref.is_err() {
-            log::warn!("failed to define AssemblyRef to mscorlib");
-            return None;
-        }
+        let corlib_ref = match create_assembly_ref_to_corlib(assembly_emit, cor_assembly) {
+            Ok(r) => r,
+            Err(_) => {
+                log::warn!("failed to define AssemblyRef to {}", &cor_assembly.name);
+                return None;
+            }
+        };
 
-        let mscorlib_ref = mscorlib_ref.unwrap();
-        let type_ref = metadata_emit.define_type_ref_by_name(mscorlib_ref, &managed_type_name);
+        let type_ref = metadata_emit.define_type_ref_by_name(corlib_ref, &managed_type_name);
         if type_ref.is_err() {
             log::warn!(
                 "unable to create type ref for managed_type_name={}",
@@ -314,14 +322,15 @@ fn return_type_token_for_value_type_element_type(
     }
 }
 
-pub fn create_assembly_ref_to_mscorlib(
+pub fn create_assembly_ref_to_corlib(
     assembly_emit: &IMetaDataAssemblyEmit,
+    cor_assembly: &AssemblyMetaData,
 ) -> Result<mdAssemblyRef, HRESULT> {
     let assembly_metadata = ASSEMBLYMETADATA {
-        usMajorVersion: 4,
-        usMinorVersion: 0,
-        usBuildNumber: 0,
-        usRevisionNumber: 0,
+        usMajorVersion: cor_assembly.version.major,
+        usMinorVersion: cor_assembly.version.minor,
+        usBuildNumber: cor_assembly.version.build,
+        usRevisionNumber: cor_assembly.version.revision,
         szLocale: std::ptr::null_mut(),
         cbLocale: 0,
         rProcessor: std::ptr::null_mut(),
@@ -330,13 +339,12 @@ pub fn create_assembly_ref_to_mscorlib(
         ulOS: 0,
     };
 
-    let public_key: &[u8; 8] = &[0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89];
     assembly_emit.define_assembly_ref(
-        public_key,
-        "mscorlib",
+        cor_assembly.public_key.bytes(),
+        &cor_assembly.name,
         &assembly_metadata,
         &[],
-        CorAssemblyFlags::empty(),
+        cor_assembly.assembly_flags,
     )
 }
 

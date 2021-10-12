@@ -64,13 +64,13 @@ cargo expand --manifest-path src/elastic_apm_profiler/Cargo.toml --color never >
 
 [tasks.set-profiler-env]
 private = true
-env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/debug/libelastic_apm_profiler.so" }
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/release/libelastic_apm_profiler.so" }
 
 [tasks.set-profiler-env.mac]
-env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/debug/libelastic_apm_profiler.dylib" }
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/release/libelastic_apm_profiler.dylib" }
 
 [tasks.set-profiler-env.windows]
-env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}\\target\\debug\\elastic_apm_profiler.dll" }
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}\\target\\release\\elastic_apm_profiler.dll" }
 
 [tasks.run-dotnet]
 command = "dotnet"

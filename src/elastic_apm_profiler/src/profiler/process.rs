@@ -455,9 +455,7 @@ pub fn process_replacement_calls(
 
             if wrapper_method_signature.return_type_is_object() {
                 if let Some(type_token) = return_type_is_value_type_or_generic(
-                    &module_metadata.import,
-                    &module_metadata.emit,
-                    &module_metadata.assembly_emit,
+                    &module_metadata,
                     target.id,
                     &target.signature,
                 ) {

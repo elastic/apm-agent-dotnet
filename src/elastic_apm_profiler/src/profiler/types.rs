@@ -1410,6 +1410,7 @@ pub struct WrapperMethodRef {
 #[derive(Debug, Clone)]
 pub struct AssemblyMetaData {
     pub name: String,
+    pub locale: String,
     pub assembly_token: mdAssembly,
     pub public_key: PublicKey,
     pub version: Version,
