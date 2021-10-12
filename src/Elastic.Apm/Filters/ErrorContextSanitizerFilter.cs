@@ -18,12 +18,24 @@ namespace Elastic.Apm.Filters
 	{
 		public IError Filter(IError error)
 		{
-			if (error is Error realError && realError.Context?.Request?.Headers != null && realError.Configuration != null)
+			if (error is Error realError && realError.Configuration != null)
 			{
-				foreach (var key in realError.Context.Request.Headers.Keys.ToList())
+				if (realError.Context?.Request?.Headers != null)
 				{
-					if (WildcardMatcher.IsAnyMatch(realError.Configuration.SanitizeFieldNames, key))
-						realError.Context.Request.Headers[key] = Consts.Redacted;
+					foreach (var key in realError.Context.Request.Headers.Keys.ToList())
+					{
+						if (WildcardMatcher.IsAnyMatch(realError.Configuration.SanitizeFieldNames, key))
+							realError.Context.Request.Headers[key] = Consts.Redacted;
+					}
+				}
+
+				if (realError.Context?.Message?.Headers != null)
+				{
+					foreach (var key in realError.Context.Message.Headers.Keys.ToList())
+					{
+						if (WildcardMatcher.IsAnyMatch(realError.Configuration.SanitizeFieldNames, key))
+							realError.Context.Message.Headers[key] = Consts.Redacted;
+					}
 				}
 			}
 
