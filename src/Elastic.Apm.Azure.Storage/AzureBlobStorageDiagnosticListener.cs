@@ -26,8 +26,8 @@ namespace Elastic.Apm.Azure.Storage
 	/// </summary>
 	internal class AzureBlobStorageDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
-			new ConcurrentDictionary<string, IExecutionSegment>();
+		private readonly ConcurrentDictionary<string, ISpan> _processingSegments =
+			new ConcurrentDictionary<string, ISpan>();
 
 		public AzureBlobStorageDiagnosticListener(IApmAgent agent) : base(agent) { }
 
@@ -62,6 +62,8 @@ namespace Elastic.Apm.Azure.Storage
 						break;
 					case "BlobContainerClient.GetBlobs.Start":
 					case "BlobContainerClient.GetBlobsByHierarchy.Start":
+					case "ContainerClient.ListBlobsFlatSegment.Start":
+					case "ContainerClient.ListBlobsHierarchySegment":
 						OnStart(kv, "ListBlobs");
 						break;
 					case "BlockBlobClient.Upload.Start":
@@ -198,24 +200,15 @@ namespace Elastic.Apm.Azure.Storage
 			}
 
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			var blobUrl = new BlobUrl(urlTag);
-
-			var spanName = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
+			var spanName = BlobUrl.TryCreate(urlTag, out var blobUrl)
+				? $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}"
+				: $"{AzureBlobStorage.SpanName} {action}";
 
 			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureBlobStorage.SubType, action);
 			if (span is Span realSpan)
 				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
 
-			span.Context.Destination = new Destination
-			{
-				Address = blobUrl.FullyQualifiedNamespace,
-				Service = new Destination.DestinationService
-				{
-					Name = AzureBlobStorage.SubType,
-					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.StorageAccountName}",
-					Type = ApiConstants.TypeStorage
-				}
-			};
+			if (blobUrl != null) SetDestination(span, blobUrl);
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
@@ -228,6 +221,18 @@ namespace Elastic.Apm.Azure.Storage
 			}
 		}
 
+		private static void SetDestination(ISpan span, BlobUrl blobUrl) =>
+			span.Context.Destination = new Destination
+			{
+				Address = blobUrl.FullyQualifiedNamespace,
+				Service = new Destination.DestinationService
+				{
+					Name = AzureBlobStorage.SubType,
+					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.StorageAccountName}",
+					Type = ApiConstants.TypeStorage
+				}
+			};
+
 		private void OnStop()
 		{
 			var activity = Activity.Current;
@@ -237,7 +242,7 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			if (!_processingSegments.TryRemove(activity.Id, out var segment))
+			if (!_processingSegments.TryRemove(activity.Id, out var span))
 			{
 				Logger.Trace()?.Log(
 					"Could not find segment for activity {ActivityId} in tracked segments",
@@ -245,8 +250,18 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			segment.Outcome = Outcome.Success;
-			segment.End();
+			if (span.Context.Destination is null)
+			{
+				var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (BlobUrl.TryCreate(urlTag, out var blobUrl))
+				{
+					span.Name += $" {blobUrl.ResourceName}";
+					SetDestination(span, blobUrl);
+				}
+			}
+
+			span.Outcome = Outcome.Success;
+			span.End();
 		}
 
 		private void OnException(KeyValuePair<string, object> kv)
@@ -258,7 +273,7 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			if (!_processingSegments.TryRemove(activity.Id, out var segment))
+			if (!_processingSegments.TryRemove(activity.Id, out var span))
 			{
 				Logger.Trace()?.Log(
 					"Could not find segment for activity {ActivityId} in tracked segments",
@@ -266,11 +281,21 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			if (kv.Value is Exception e)
-				segment.CaptureException(e);
+			if (span.Context.Destination is null)
+			{
+				var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (BlobUrl.TryCreate(urlTag, out var blobUrl))
+				{
+					span.Name += $" {blobUrl.ResourceName}";
+					SetDestination(span, blobUrl);
+				}
+			}
 
-			segment.Outcome = Outcome.Failure;
-			segment.End();
+			if (kv.Value is Exception e)
+				span.CaptureException(e);
+
+			span.Outcome = Outcome.Failure;
+			span.End();
 		}
 	}
 }

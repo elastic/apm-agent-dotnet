@@ -26,8 +26,8 @@ namespace Elastic.Apm.Azure.Storage
 	/// </summary>
 	internal class AzureFileShareStorageDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
-			new ConcurrentDictionary<string, IExecutionSegment>();
+		private readonly ConcurrentDictionary<string, ISpan> _processingSegments =
+			new ConcurrentDictionary<string, ISpan>();
 
 		public AzureFileShareStorageDiagnosticListener(IApmAgent agent) : base(agent) { }
 
@@ -99,23 +99,16 @@ namespace Elastic.Apm.Azure.Storage
 			}
 
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			var fileShareUrl = new FileShareUrl(new Uri(urlTag));
-			var spanName = $"{AzureFileStorage.SpanName} {action} {fileShareUrl.ResourceName}";
+			var spanName = FileShareUrl.TryCreate(urlTag, out var fileShareUrl)
+				? $"{AzureFileStorage.SpanName} {action} {fileShareUrl.ResourceName}"
+				: $"{AzureFileStorage.SpanName} {action}";
 
 			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureFileStorage.SubType, action);
 			if (span is Span realSpan)
 				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
 
-			span.Context.Destination = new Destination
-			{
-				Address = fileShareUrl.FullyQualifiedNamespace,
-				Service = new Destination.DestinationService
-				{
-					Name = AzureFileStorage.SubType,
-					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}",
-					Type = ApiConstants.TypeStorage
-				}
-			};
+			if (fileShareUrl != null)
+				SetDestination(span, fileShareUrl);
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
@@ -128,6 +121,18 @@ namespace Elastic.Apm.Azure.Storage
 			}
 		}
 
+		private static void SetDestination(ISpan span, FileShareUrl fileShareUrl) =>
+			span.Context.Destination = new Destination
+			{
+				Address = fileShareUrl.FullyQualifiedNamespace,
+				Service = new Destination.DestinationService
+				{
+					Name = AzureFileStorage.SubType,
+					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}",
+					Type = ApiConstants.TypeStorage
+				}
+			};
+
 		private void OnStop()
 		{
 			var activity = Activity.Current;
@@ -137,7 +142,7 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			if (!_processingSegments.TryRemove(activity.Id, out var segment))
+			if (!_processingSegments.TryRemove(activity.Id, out var span))
 			{
 				Logger.Trace()
 					?.Log(
@@ -146,8 +151,18 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			segment.Outcome = Outcome.Success;
-			segment.End();
+			if (span.Context.Destination is null)
+			{
+				var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (FileShareUrl.TryCreate(urlTag, out var fileShareUrl))
+				{
+					span.Name += $" {fileShareUrl.ResourceName}";
+					SetDestination(span, fileShareUrl);
+				}
+			}
+
+			span.Outcome = Outcome.Success;
+			span.End();
 		}
 
 		private void OnException(KeyValuePair<string, object> kv)
@@ -159,7 +174,7 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			if (!_processingSegments.TryRemove(activity.Id, out var segment))
+			if (!_processingSegments.TryRemove(activity.Id, out var span))
 			{
 				Logger.Trace()
 					?.Log(
@@ -168,18 +183,21 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
+			if (span.Context.Destination is null)
+			{
+				var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (FileShareUrl.TryCreate(urlTag, out var fileShareUrl))
+				{
+					span.Name += $" {fileShareUrl.ResourceName}";
+					SetDestination(span, fileShareUrl);
+				}
+			}
+
 			if (kv.Value is Exception e)
-				segment.CaptureException(e);
+				span.CaptureException(e);
 
-			segment.Outcome = Outcome.Failure;
-			segment.End();
-		}
-
-		private class FileShareUrl : StorageUrl
-		{
-			public FileShareUrl(Uri url) : base(url) => ResourceName = url.AbsolutePath.TrimStart('/');
-
-			public string ResourceName { get; }
+			span.Outcome = Outcome.Failure;
+			span.End();
 		}
 	}
 }
