@@ -158,11 +158,13 @@ namespace Elastic.Apm.Azure.ServiceBus
 			{
 				var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
 				transaction.Context.Service = new Service(null, null) { Framework = _framework };
+				transaction.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
 				segment = transaction;
 			}
 			else
 			{
 				var span = ApmAgent.GetCurrentExecutionSegment().StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action);
+				span.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
 				segment = span;
 			}
 
