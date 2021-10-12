@@ -32,14 +32,6 @@ namespace Elastic.Apm.Azure.Storage
 				.AllListeners
 				.Subscribe(initializer));
 
-			if (agent is ApmAgent realAgent)
-			{
-				realAgent.HttpTraceConfiguration.AddTracer(new FileShareStorageTracer());
-
-				if (!realAgent.HttpTraceConfiguration.Subscribed)
-					retVal.Add(realAgent.Subscribe(new HttpDiagnosticsSubscriber(false)));
-			}
-
 			return retVal;
 		}
 	}
