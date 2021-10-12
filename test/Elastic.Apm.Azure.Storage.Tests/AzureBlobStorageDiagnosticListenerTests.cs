@@ -101,6 +101,35 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			AssertSpan("Upload", $"{scope.ContainerName}/{blobName}");
 		}
 
+		private class UnSeekableStream : MemoryStream
+		{
+			public UnSeekableStream()
+			{
+			}
+			public UnSeekableStream(byte[] buffer) : base(buffer)
+			{
+			}
+
+			public override bool CanSeek => false;
+		}
+
+		[AzureCredentialsFact]
+		public async Task Capture_Span_When_Upload_Block_Blob_With_Unseekable_Stream()
+		{
+			await using var scope = await BlobContainerScope.CreateContainer(Environment.StorageAccountConnectionString);
+
+			var blobName = Guid.NewGuid().ToString();
+			var client = new BlockBlobClient(Environment.StorageAccountConnectionString, scope.ContainerName, blobName);
+
+			await Agent.Tracer.CaptureTransaction("Upload Azure Block Blob", ApiConstants.TypeStorage, async () =>
+			{
+				var stream = new UnSeekableStream(Encoding.UTF8.GetBytes("block blob"));
+				var blobUploadResponse = await client.UploadAsync(stream);
+			});
+
+			AssertSpan("Upload", $"{scope.ContainerName}/{blobName}", count: 3);
+		}
+
 		[AzureCredentialsFact]
 		public async Task Capture_Span_When_Download_Blob()
 		{
