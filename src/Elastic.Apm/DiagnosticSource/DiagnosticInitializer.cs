@@ -12,20 +12,23 @@ namespace Elastic.Apm.DiagnosticSource
 {
 	internal class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
 	{
+		private readonly ApmAgent _agent;
 		private readonly IEnumerable<IDiagnosticListener> _listeners;
 		private readonly IDiagnosticListener _listener;
 		private readonly ScopedLogger _logger;
 		private IDisposable _sourceSubscription;
 
-		internal DiagnosticInitializer(IApmLogger baseLogger, IEnumerable<IDiagnosticListener> listeners)
+		internal DiagnosticInitializer(IApmAgent agent, IEnumerable<IDiagnosticListener> listeners)
 		{
-			_logger = baseLogger.Scoped(nameof(DiagnosticInitializer));
+			_agent = agent as ApmAgent;
+			_logger = agent.Logger.Scoped(nameof(DiagnosticInitializer));
 			_listeners = listeners;
 		}
 
-		internal DiagnosticInitializer(IApmLogger baseLogger, IDiagnosticListener listener)
+		internal DiagnosticInitializer(IApmAgent agent, IDiagnosticListener listener)
 		{
-			_logger = baseLogger.Scoped(nameof(DiagnosticInitializer));
+			_agent = agent as ApmAgent;
+			_logger = agent.Logger.Scoped(nameof(DiagnosticInitializer));
 			_listener = listener;
 		}
 
@@ -41,11 +44,19 @@ namespace Elastic.Apm.DiagnosticSource
 			{
 				if (value.Name == _listener.Name)
 				{
-					_sourceSubscription = value.Subscribe(_listener);
-					_logger.Debug()
-						?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
+					if (_agent is null || _agent.SubscribedListeners.Add(_listener.GetType()))
+					{
+						_sourceSubscription = value.Subscribe(_listener);
+						_logger.Debug()
+							?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
+								_listener.GetType().FullName, value.Name);
+						subscribedAny = true;
+					}
+					else
+					{
+						_logger.Debug()?.Log("{DiagnosticListenerType} already subscribed to `{DiagnosticListenerName}' events source",
 							_listener.GetType().FullName, value.Name);
-					subscribedAny = true;
+					}
 				}
 			}
 			else
@@ -54,12 +65,20 @@ namespace Elastic.Apm.DiagnosticSource
 				{
 					if (value.Name == listener.Name)
 					{
-						_sourceSubscription ??= new CompositeDisposable();
-						((CompositeDisposable)_sourceSubscription).Add(value.Subscribe(listener));
-						_logger.Debug()
-							?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
+						if (_agent is null || _agent.SubscribedListeners.Add(listener.GetType()))
+						{
+							_sourceSubscription ??= new CompositeDisposable();
+							((CompositeDisposable)_sourceSubscription).Add(value.Subscribe(listener));
+							_logger.Debug()
+								?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
+									listener.GetType().FullName, value.Name);
+							subscribedAny = true;
+						}
+						else
+						{
+							_logger.Debug()?.Log("{DiagnosticListenerType} already subscribed to `{DiagnosticListenerName}' events source",
 								listener.GetType().FullName, value.Name);
-						subscribedAny = true;
+						}
 					}
 				}
 			}
