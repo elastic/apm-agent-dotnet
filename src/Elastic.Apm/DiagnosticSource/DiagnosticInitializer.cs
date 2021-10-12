@@ -40,22 +40,24 @@ namespace Elastic.Apm.DiagnosticSource
 		{
 			var subscribedAny = false;
 
+
 			if (_listener != null)
 			{
 				if (value.Name == _listener.Name)
 				{
-					if (_agent is null || _agent.SubscribedListeners.Add(_listener.GetType()))
+					var listenerType = _listener.GetType();
+					if (_agent is null || _agent.SubscribedListeners.Add(listenerType))
 					{
-						_sourceSubscription = value.Subscribe(_listener);
+						_sourceSubscription = new SubscribedListenerDisposable(value.Subscribe(_listener), () => _agent.SubscribedListeners.Remove(listenerType));
 						_logger.Debug()
 							?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
-								_listener.GetType().FullName, value.Name);
+								listenerType.FullName, value.Name);
 						subscribedAny = true;
 					}
 					else
 					{
 						_logger.Debug()?.Log("{DiagnosticListenerType} already subscribed to `{DiagnosticListenerName}' events source",
-							_listener.GetType().FullName, value.Name);
+							listenerType.FullName, value.Name);
 					}
 				}
 			}
@@ -65,19 +67,20 @@ namespace Elastic.Apm.DiagnosticSource
 				{
 					if (value.Name == listener.Name)
 					{
-						if (_agent is null || _agent.SubscribedListeners.Add(listener.GetType()))
+						var listenerType = listener.GetType();
+						if (_agent is null || _agent.SubscribedListeners.Add(listenerType))
 						{
 							_sourceSubscription ??= new CompositeDisposable();
-							((CompositeDisposable)_sourceSubscription).Add(value.Subscribe(listener));
+							((CompositeDisposable)_sourceSubscription).Add(new SubscribedListenerDisposable(value.Subscribe(listener), () => _agent.SubscribedListeners.Remove(listenerType)));
 							_logger.Debug()
 								?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
-									listener.GetType().FullName, value.Name);
+									listenerType.FullName, value.Name);
 							subscribedAny = true;
 						}
 						else
 						{
 							_logger.Debug()?.Log("{DiagnosticListenerType} already subscribed to `{DiagnosticListenerName}' events source",
-								listener.GetType().FullName, value.Name);
+								listenerType.FullName, value.Name);
 						}
 					}
 				}
@@ -96,5 +99,26 @@ namespace Elastic.Apm.DiagnosticSource
 		}
 
 		public void Dispose() => _sourceSubscription?.Dispose();
+	}
+
+	/// <summary>
+	/// Disposes the disposable and removes the type from subscribed listeners
+	/// </summary>
+	internal class SubscribedListenerDisposable : IDisposable
+	{
+		private readonly IDisposable _disposable;
+		private readonly Action _disposeAction;
+
+		public SubscribedListenerDisposable(IDisposable disposable, Action disposeAction)
+		{
+			_disposable = disposable;
+			_disposeAction = disposeAction;
+		}
+
+		public void Dispose()
+		{
+			_disposable.Dispose();
+			_disposeAction.Invoke();
+		}
 	}
 }
