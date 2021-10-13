@@ -20,8 +20,12 @@ namespace Elastic.Apm.Azure.Storage
 		public IDisposable Subscribe(IApmAgent agent)
 		{
 			var retVal = new CompositeDisposable();
+			var initializer = new DiagnosticInitializer(agent.Logger, new IDiagnosticListener[]
+				{
+					new AzureBlobStorageDiagnosticListener(agent),
+					new AzureCoreDiagnosticListener(agent)
+				});
 
-			var initializer = new DiagnosticInitializer(agent.Logger, new AzureBlobStorageDiagnosticListener(agent));
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener
@@ -33,7 +37,7 @@ namespace Elastic.Apm.Azure.Storage
 				realAgent.HttpTraceConfiguration.AddTracer(new MicrosoftAzureBlobStorageTracer());
 
 				if (!realAgent.HttpTraceConfiguration.Subscribed)
-					realAgent.Subscribe(new HttpDiagnosticsSubscriber(false));
+					retVal.Add(realAgent.Subscribe(new HttpDiagnosticsSubscriber(false)));
 			}
 
 			return retVal;

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Elastic.Apm.Tests.MockApmServer</RootNamespace>
     <AssemblyName>Elastic.Apm.Tests.MockApmServer</AssemblyName>
     <IsTestProject>false</IsTestProject>
@@ -13,10 +13,6 @@
     <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
   
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\Elastic.Apm.Specification\Elastic.Apm.Specification.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />

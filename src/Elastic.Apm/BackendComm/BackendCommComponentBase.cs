@@ -29,7 +29,7 @@ namespace Elastic.Apm.BackendComm
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		internal BackendCommComponentBase(bool isEnabled, IApmLogger logger, string dbgDerivedClassName, Service service
-			, IConfigSnapshot config, HttpMessageHandler httpMessageHandler = null
+			, IConfiguration configuration, HttpMessageHandler httpMessageHandler = null
 		)
 		{
 			_dbgName = $"{ThisClassName} ({dbgDerivedClassName})";
@@ -49,7 +49,7 @@ namespace Elastic.Apm.BackendComm
 			_loopStarted = new ManualResetEventSlim();
 			_loopCompleted = new ManualResetEventSlim();
 
-			HttpClient = BackendCommUtils.BuildHttpClient(logger, config, service, _dbgName, httpMessageHandler);
+			HttpClient = BackendCommUtils.BuildHttpClient(logger, configuration, service, _dbgName, httpMessageHandler);
 
 			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{dbgDerivedClassName}", logger);
 		}

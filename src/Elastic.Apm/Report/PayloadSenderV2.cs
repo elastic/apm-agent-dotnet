@@ -39,7 +39,7 @@ namespace Elastic.Apm.Report
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
 		internal readonly Api.System System;
-		private readonly IConfigSnapshot _configSnapshot;
+		private readonly IConfiguration _configuration;
 
 		private readonly BatchBlock<object> _eventQueue;
 		private readonly TimeSpan _flushInterval;
@@ -54,7 +54,7 @@ namespace Elastic.Apm.Report
 
 		public PayloadSenderV2(
 			IApmLogger logger,
-			IConfigSnapshot config,
+			IConfiguration configuration,
 			Service service,
 			Api.System system,
 			IApmServerInfo apmServerInfo,
@@ -63,39 +63,39 @@ namespace Elastic.Apm.Report
 			bool isEnabled = true,
 			IEnvironmentVariables environmentVariables = null
 		)
-			: base(isEnabled, logger, ThisClassName, service, config, httpMessageHandler)
+			: base(isEnabled, logger, ThisClassName, service, configuration, httpMessageHandler)
 		{
 			if (!isEnabled)
 				return;
 
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer();
-			_configSnapshot = config;
+			_configuration = configuration;
 
-			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl);
+			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(configuration.ServerUrl);
 
 			System = system;
 
-			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(config.CloudProvider, _logger, environmentVariables);
+			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(configuration.CloudProvider, _logger, environmentVariables);
 			_apmServerInfo = apmServerInfo;
 			_metadata = new Metadata { Service = service, System = System };
-			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
+			foreach (var globalLabelKeyValue in configuration.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
-			if (config.MaxQueueEventCount < config.MaxBatchEventCount)
+			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
 			{
 				_logger?.Error()
 					?.Log(
 						"MaxQueueEventCount is less than MaxBatchEventCount - using MaxBatchEventCount as MaxQueueEventCount."
 						+ " MaxQueueEventCount: {MaxQueueEventCount}."
 						+ " MaxBatchEventCount: {MaxBatchEventCount}.",
-						config.MaxQueueEventCount, config.MaxBatchEventCount);
+						configuration.MaxQueueEventCount, configuration.MaxBatchEventCount);
 
-				_maxQueueEventCount = config.MaxBatchEventCount;
+				_maxQueueEventCount = configuration.MaxBatchEventCount;
 			}
 			else
-				_maxQueueEventCount = config.MaxQueueEventCount;
+				_maxQueueEventCount = configuration.MaxQueueEventCount;
 
-			_flushInterval = config.FlushInterval;
+			_flushInterval = configuration.FlushInterval;
 
 			_logger?.Debug()
 				?.Log(
@@ -104,9 +104,9 @@ namespace Elastic.Apm.Report
 					+ ", FlushInterval: {FlushInterval}"
 					+ ", MaxBatchEventCount: {MaxBatchEventCount}"
 					+ ", MaxQueueEventCount: {MaxQueueEventCount}"
-					, _intakeV2EventsAbsoluteUrl.Sanitize(), _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
+					, _intakeV2EventsAbsoluteUrl.Sanitize(), _flushInterval.ToHms(), configuration.MaxBatchEventCount, _maxQueueEventCount);
 
-			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
+			_eventQueue = new BatchBlock<object>(configuration.MaxBatchEventCount);
 
 			SetUpFilters(TransactionFilters, SpanFilters, ErrorFilters, apmServerInfo, logger);
 			StartWorkLoop();
@@ -206,7 +206,7 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClient).ConfigureAwait(false);
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient).ConfigureAwait(false);
 				_getApmServerVersion = true;
 			}
 

@@ -94,11 +94,26 @@ namespace Elastic.Apm.Helpers
 		{
 			try
 			{
-				return Dns.GetHostName();
+				return Environment.MachineName;
 			}
 			catch (Exception e)
 			{
-				_logger.Error()?.LogException(e, "Failed to get hostname");
+				_logger.Warning()?.LogException(e, "Failed to get hostname via Dns.GetHostName - revert to environment variables");
+
+				try
+				{
+					// try environment variables
+					var host = (Environment.GetEnvironmentVariable("COMPUTERNAME")
+						?? Environment.GetEnvironmentVariable("HOSTNAME"))
+						?? Environment.GetEnvironmentVariable("HOST");
+
+					if (host == null) _logger.Error()?.Log("Failed to get hostname via environment variables.");
+					return host;
+				}
+				catch (Exception exception)
+				{
+					_logger.Error()?.LogException(exception, "Failed to get hostname.");
+				}
 			}
 
 			return null;

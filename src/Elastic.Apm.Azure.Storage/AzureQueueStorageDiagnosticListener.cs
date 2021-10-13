@@ -97,9 +97,8 @@ namespace Elastic.Apm.Azure.Storage
 			string destinationAddress = null;
 
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			if (!string.IsNullOrEmpty(urlTag) && Uri.TryCreate(urlTag, UriKind.Absolute, out var url))
+			if (QueueUrl.TryCreate(urlTag, out var queueUrl))
 			{
-				var queueUrl = new QueueUrl(url);
 				queueName = queueUrl.QueueName;
 				destinationAddress = queueUrl.FullyQualifiedNamespace;
 			}
@@ -115,16 +114,8 @@ namespace Elastic.Apm.Azure.Storage
 			if (span is Span realSpan)
 				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
 
-			span.Context.Destination = new Destination
-			{
-				Address = destinationAddress,
-				Service = new Destination.DestinationService
-				{
-					Name = AzureQueueStorage.SubType,
-					Resource = queueName is null ? AzureQueueStorage.SubType : $"{AzureQueueStorage.SubType}/{queueName}",
-					Type = ApiConstants.TypeMessaging
-				}
-			};
+			if (queueUrl != null)
+				SetDestination(span, destinationAddress, queueName);
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
@@ -137,6 +128,18 @@ namespace Elastic.Apm.Azure.Storage
 			}
 		}
 
+		private static void SetDestination(ISpan span, string destinationAddress, string queueName) =>
+			span.Context.Destination = new Destination
+			{
+				Address = destinationAddress,
+				Service = new Destination.DestinationService
+				{
+					Name = AzureQueueStorage.SubType,
+					Resource = queueName is null ? AzureQueueStorage.SubType : $"{AzureQueueStorage.SubType}/{queueName}",
+					Type = ApiConstants.TypeMessaging
+				}
+			};
+
 		private void OnReceiveStart(KeyValuePair<string, object> kv)
 		{
 			if (!(kv.Value is Activity activity))
@@ -145,9 +148,27 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
+
+			// if we're already processing this activity, ignore it.
+			if (_processingSegments.ContainsKey(activity.Id))
+				return;
+
+			// Newer versions of the Queue storage library fire two QueueClient.ReceiveMessage.Start events.
+			// In order to avoid creating two transactions, check if the parent activity is an APM transaction and if it is,
+			// check its parent activity to see if it is the same operation as this one. If it is, don't create a transaction
+			// for it.
+			var parentActivity = activity.Parent;
+			if (parentActivity != null &&
+				parentActivity.OperationName == Transaction.ApmTransactionActivityName)
+			{
+				parentActivity = parentActivity.Parent;
+				if (parentActivity != null && parentActivity.OperationName == activity.OperationName)
+					return;
+			}
+
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			var queueName = !string.IsNullOrEmpty(urlTag) && Uri.TryCreate(urlTag, UriKind.Absolute, out var url)
-				? new QueueUrl(url).QueueName
+			var queueName = QueueUrl.TryCreate(urlTag, out var queueUrl)
+				? queueUrl.QueueName
 				: null;
 
 			if (MatchesIgnoreMessageQueues(queueName))
@@ -178,7 +199,7 @@ namespace Elastic.Apm.Azure.Storage
 		{
 			if (name != null && _realAgent != null)
 			{
-				var matcher = WildcardMatcher.AnyMatch(_realAgent.ConfigStore.CurrentSnapshot.IgnoreMessageQueues, name);
+				var matcher = WildcardMatcher.AnyMatch(_realAgent.ConfigurationStore.CurrentSnapshot.IgnoreMessageQueues, name);
 				if (matcher != null)
 				{
 					Logger.Debug()
@@ -211,6 +232,35 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
+			if (segment is ISpan span && span.Context.Destination is null)
+			{
+				var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (QueueUrl.TryCreate(urlTag, out var queueUrl) && !string.IsNullOrEmpty(queueUrl.QueueName))
+				{
+					// if destination wasn't set in the Start, we didn't get a chance to see if this
+					// is a queue that should be ignored, so check now.
+					if (MatchesIgnoreMessageQueues(queueUrl.QueueName))
+						return;
+
+					span.Name += $" to {queueUrl.QueueName}";
+
+					SetDestination(span, queueUrl.FullyQualifiedNamespace, queueUrl.QueueName);
+				}
+			}
+			else if (segment is ITransaction transaction && !transaction.Name.Contains("RECEIVE from "))
+			{
+				var urlTag = activity.Parent?.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (QueueUrl.TryCreate(urlTag, out var queueUrl) && !string.IsNullOrEmpty(queueUrl.QueueName))
+				{
+					// if destination wasn't set in the Start, we didn't get a chance to see if this
+					// is a queue that should be ignored, so check now.
+					if (MatchesIgnoreMessageQueues(queueUrl.QueueName))
+						return;
+
+					transaction.Name += $" from {queueUrl.QueueName}";
+				}
+			}
+
 			segment.Outcome = Outcome.Success;
 			segment.End();
 		}
@@ -233,6 +283,39 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
+			if (segment is ISpan span && span.Context.Destination is null)
+			{
+				var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (QueueUrl.TryCreate(urlTag, out var queueUrl))
+				{
+					if (!string.IsNullOrEmpty(queueUrl.QueueName))
+					{
+						span.Name += $" to {queueUrl.QueueName}";
+
+						// if destination wasn't set in the Start, we didn't get a chance to see if this
+						// is a queue that should be ignored, so check now.
+						if (MatchesIgnoreMessageQueues(queueUrl.QueueName))
+							return;
+					}
+
+					SetDestination(span, queueUrl.FullyQualifiedNamespace, queueUrl.QueueName);
+				}
+			}
+			else if (segment is ITransaction transaction
+				&& !transaction.Name.StartsWith($"{AzureQueueStorage.SpanName} RECEIVE from ", StringComparison.Ordinal))
+			{
+				var urlTag = activity.Parent?.Tags.FirstOrDefault(t => t.Key == "url").Value;
+				if (QueueUrl.TryCreate(urlTag, out var queueUrl) && !string.IsNullOrEmpty(queueUrl.QueueName))
+				{
+					// if destination wasn't set in the Start, we didn't get a chance to see if this
+					// is a queue that should be ignored, so check now.
+					if (MatchesIgnoreMessageQueues(queueUrl.QueueName))
+						return;
+
+					transaction.Name += $" from {queueUrl.QueueName}";
+				}
+			}
+
 			if (kv.Value is Exception e)
 				segment.CaptureException(e);
 
@@ -245,12 +328,24 @@ namespace Elastic.Apm.Azure.Storage
 		/// </summary>
 		private class QueueUrl : StorageUrl
 		{
-			public QueueUrl(Uri url) : base(url) =>
+			private QueueUrl(Uri url) : base(url) =>
 				QueueName = url.Segments.Length > 1
 					? url.Segments[1].TrimEnd('/')
 					: null;
 
 			public string QueueName { get; }
+
+			public static bool TryCreate(string url, out QueueUrl queueUrl)
+			{
+				if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+				{
+					queueUrl = new QueueUrl(uri);
+					return true;
+				}
+
+				queueUrl = null;
+				return false;
+			}
 		}
 	}
 }

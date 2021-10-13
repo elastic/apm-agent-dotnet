@@ -41,7 +41,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
 					{
 						var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, Logger, ApmAgent.Tracer,
-							(ApmAgent as ApmAgent)?.ConfigStore.CurrentSnapshot);
+							(ApmAgent as ApmAgent)?.ConfigurationStore.CurrentSnapshot);
 
 						Transaction transaction = null;
 						if (createdTransaction is Transaction t)

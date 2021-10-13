@@ -13,7 +13,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Storage.Tests
 {
-	public abstract class BlobStorageTestsBase
+	public abstract class BlobStorageTestsBase : IDisposable
 	{
 		private readonly MockPayloadSender _sender;
 		protected IApmAgent Agent { get; }
@@ -49,5 +49,6 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			destination.Service.Type.Should().Be(ApiConstants.TypeStorage);
 		}
 
+		public void Dispose() => ((ApmAgent)Agent).Dispose();
 	}
 }

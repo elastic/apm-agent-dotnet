@@ -616,7 +616,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var expectedSpansCount = isSampled ? 1 : 0;
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-				config: new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0"))))
+				configuration: new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
@@ -659,7 +659,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var expectedSpansCount = isSampled ? 1 : 0;
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-				config: new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0"))))
+				configuration: new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
@@ -715,8 +715,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
-			var mockConfig = new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0");
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: payloadSender)))
+			var mockConfig = new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0");
+			using (var agent = new ApmAgent(new TestAgentComponents(configuration: mockConfig, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
@@ -33,15 +34,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string SystemProcessCgroupMemoryMemLimitBytes = "system.process.cgroup.memory.mem.limit.bytes";
 		internal const string SystemProcessCgroupMemoryMemUsageBytes = "system.process.cgroup.memory.mem.usage.bytes";
 		internal const string SystemProcessCgroupMemoryStatsInactiveFileBytes = "system.process.cgroup.memory.stats.inactive_file.bytes";
-		internal static readonly Regex Cgroup1MountPoint = new Regex("^\\d+? \\d+? .+? .+? (.*?) .*cgroup.*memory.*");
-		internal static readonly Regex Cgroup2MountPoint = new Regex("^\\d+? \\d+? .+? .+? (.*?) .*cgroup2.*cgroup.*");
+		internal static readonly Regex Cgroup1MountPoint = new("^\\d+? \\d+? .+? .+? (.*?) .*cgroup.*memory.*");
+		internal static readonly Regex Cgroup2MountPoint = new("^\\d+? \\d+? .+? .+? (.*?) .*cgroup2.*cgroup.*");
 
-		internal static readonly Regex MemoryCgroup = new Regex("^\\d+:memory:.*");
+		internal static readonly Regex MemoryCgroup = new("^\\d+:memory:.*");
 
 		private readonly CgroupFiles _cGroupFiles;
 		private readonly bool _collectMemLimitBytes;
 		private readonly bool _collectMemUsageBytes;
 		private readonly bool _collectStatsInactiveFileBytes;
+		private readonly bool _ignoreOs;
 		private readonly IApmLogger _logger;
 
 		/// <summary>
@@ -60,18 +62,33 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// <param name="mountInfo">the <see cref="ProcSelfMountinfo" /> file</param>
 		/// <param name="logger">the logger</param>
 		/// <param name="disabledMetrics">List of disabled metrics</param>
+		/// <param name="ignoreOs">
+		/// Ignores the OS. If <code>true</code> then it tries to read CGroup metrics regardless of the
+		/// current OS
+		/// </param>
 		/// <remarks>
 		/// 	Used for testing
 		/// </remarks>
-		internal CgroupMetricsProvider(string procSelfCGroup, string mountInfo, IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics
+		internal CgroupMetricsProvider(string procSelfCGroup, string mountInfo, IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics,
+			bool ignoreOs = false
 		)
 		{
+			_ignoreOs = ignoreOs;
 			_collectMemLimitBytes = IsSystemProcessCgroupMemoryMemLimitBytesEnabled(disabledMetrics);
 			_collectMemUsageBytes = IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics);
 			_collectStatsInactiveFileBytes = IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
 			_logger = logger.Scoped(nameof(CgroupMetricsProvider));
-			_cGroupFiles = FindCGroupFiles(procSelfCGroup, mountInfo);
 
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !_ignoreOs)
+			{
+				_logger.Trace()
+					?.Log("{MetricsProviderName} detected a non Linux OS, therefore"
+						+ " Cgroup metrics will not be reported", nameof(CgroupMetricsProvider));
+
+				return;
+			}
+
+			_cGroupFiles = FindCGroupFiles(procSelfCGroup, mountInfo);
 			IsMetricAlreadyCaptured = true;
 		}
 
@@ -253,7 +270,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (_collectMemLimitBytes)
 				GetMemoryMemLimitBytes(samples);
 
-			return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
+			return new List<MetricSet> { new(TimeUtils.TimestampNow(), samples) };
 		}
 
 		// ReSharper disable once SuggestBaseTypeForParameter

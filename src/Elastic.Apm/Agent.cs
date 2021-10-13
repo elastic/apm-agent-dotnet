@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -32,10 +33,10 @@ namespace Elastic.Apm
 
 		internal ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
 
-		internal ICentralConfigFetcher CentralConfigFetcher => Components.CentralConfigFetcher;
+		internal ICentralConfigurationFetcher CentralConfigurationFetcher => Components.CentralConfigurationFetcher;
 
 		internal AgentComponents Components { get; }
-		internal IConfigStore ConfigStore => Components.ConfigStore;
+		internal IConfigurationStore ConfigurationStore => Components.ConfigurationStore;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;

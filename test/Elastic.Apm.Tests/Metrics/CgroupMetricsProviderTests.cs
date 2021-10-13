@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -43,7 +45,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			using (tempFile)
 			{
-				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
+				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>(), ignoreOs: true);
 
 				var samples = provider.GetSamples().ToList();
 
@@ -110,6 +112,30 @@ namespace Elastic.Apm.Tests.Metrics
 		}
 
 		/// <summary>
+		/// Makes sure that CGroup metrics collection exits with a log on non Linux OSs and only collects data on Linux.
+		/// </summary>
+		[Fact]
+		public void OsTest()
+		{
+			var logger = new InMemoryBlockingLogger(LogLevel.Trace);
+			var cgroupMetricsProvider = new CgroupMetricsProvider(logger, new List<WildcardMatcher>());
+
+			var samples = cgroupMetricsProvider.GetSamples();
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				samples.Should().NotBeNullOrEmpty();
+				logger.Lines.Where(line => line.Contains("detected a non Linux OS, therefore Cgroup metrics will not be reported")).Should().BeNullOrEmpty();
+			}
+			else
+			{
+				samples.Should().BeNullOrEmpty();
+				logger.Lines.Where(line => line.Contains("detected a non Linux OS, therefore Cgroup metrics will not be reported")).Should().NotBeNullOrEmpty();
+			}
+
+		}
+
+		/// <summary>
 		/// Converts a test path into a path to a physical test file on disk
 		/// </summary>
 		private string GetTestFilePath(string linuxPath) => Path.GetFullPath(Path.Combine(_projectRoot, "TestResources" + linuxPath));
@@ -120,7 +146,7 @@ namespace Elastic.Apm.Tests.Metrics
 			var tempFile = TempFile.CreateWithContents(
 				$"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - {cgroup} rw,seclabel,memory\n");
 
-			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>());
+			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>(), true);
 		}
 	}
 }

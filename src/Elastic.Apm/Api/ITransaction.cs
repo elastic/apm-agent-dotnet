@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Api
 {
@@ -34,6 +35,12 @@ namespace Elastic.Apm.Api
 		/// Unlike <see cref="IExecutionSegment.Labels" /> the data in this property is not trimmed.
 		/// </summary>
 		Dictionary<string, string> Custom { get; }
+
+		/// <summary>
+		/// A snapshot of configuration from when the transaction started. A snapshot contains values
+		/// from initial configuration combined with dynamic values from central configuration, if enabled.
+		/// </summary>
+		public IConfiguration Configuration { get; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.

@@ -28,7 +28,7 @@
         repo: apm-agent-dotnet-auto-instrumentation
         repo-owner: elastic
         credentials-id: 2a9602aa-ab9f-4e52-baf3-b71ca88469c7-UserAndToken
-        head-filter-regex: '^(master|PR-.*|[1-9]\.[1-9]{1,3})$'
+        head-filter-regex: '^(master|PR-.*|[1-9]\.[1-9]{1,3}\.?[0-9]{1,3}?(-beta\d?)?)$'
         ssh-checkout:
           credentials: f6c7695a-671e-4f4f-a331-acdce44ff9ba
         build-strategies:
