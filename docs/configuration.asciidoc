@@ -444,7 +444,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 [options="header"]
 |============
 | Default | Type
-| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | List<string>
+| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | Comma separated string
 |============
 
 [float]
@@ -698,7 +698,7 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 [options="header"]
 |============
 | Default                 | Type
-| <none>                  | List<string>
+| <none>                  | Comma separated string
 |============
 
 [options="header"]
@@ -803,7 +803,7 @@ This setting can be changed after the agent starts.
 [options="header"]
 |============
 | Default                 | Type
-| `application/x-www-form-urlencoded*, text/*, application/json*, application/xml*`                  | List<string>
+| `application/x-www-form-urlencoded*, text/*, application/json*, application/xml*`                  | Comma separated string
 |============
 
 [float]
@@ -837,7 +837,10 @@ NOTE: Setting this to `false` reduces memory allocations, network bandwidth, and
 
 This is used to restrict requests to certain URLs from being instrumented.
 
-This property should be set to a list containing one or more strings.
+This property should be set to a comma separated string containing one or more paths.
+
+For example, in order to ignore the URLs `/foo` and `/bar`, set the configuration value to `"/foo,/bar"`.
+
 When an incoming HTTP request is detected, its request path will be tested against each element in this list.
 For example, adding `/home/index` to this list would match and remove instrumentation from the following URLs:
 
@@ -848,12 +851,15 @@ http://localhost/home/index
 http://whatever.com/home/index?value1=123
 ----
 
+In other words, the matching always happens based on the request path—hosts and query strings are ignored.
+
 This option supports the wildcard `*`, which matches zero or more characters.
-Examples: `/foo/*/bar/*/baz*`, `*foo*`.
+Examples: `"/foo/*/bar/*/baz*`, `*foo*"`.
 Matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
 
 NOTE: All errors that are captured during a request to an ignored URL are still sent to the APM Server regardless of this setting.
+
 
 [options="header"]
 |============
@@ -864,8 +870,10 @@ NOTE: All errors that are captured during a request to an ignored URL are still 
 [options="header"]
 |============
 | Default                                                                                                                    | Type
-| `/VAADIN/*, /heartbeat*, /favicon.ico", *.js", *.css", *.jpg", *.jpeg", *.png", *.gif", *.webp", *.svg", *.woff", *.woff2` | List<string>
+| `/VAADIN/*, /heartbeat*, /favicon.ico, *.js, *.css, *.jpg, *.jpeg, *.png, *.gif, *.webp, *.svg, *.woff, *.woff2` | Comma separated string
 |============
+
+NOTE: Changing this configuration will overwrite the default value.
 
 [float]
 [[config-use-elastic-apm-traceparent-header]]
