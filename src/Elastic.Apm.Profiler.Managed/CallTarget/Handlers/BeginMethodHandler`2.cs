@@ -46,6 +46,6 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static CallTargetState Invoke(TTarget instance, TArg1 arg1, TArg2 arg2) =>
-			new CallTargetState(Agent.Tracer.CurrentExecutionSegment(), _invokeDelegate(instance, arg1, arg2));
+			new CallTargetState(Agent.IsConfigured ? Agent.Tracer.CurrentExecutionSegment() : null, _invokeDelegate(instance, arg1, arg2));
 	}
 }

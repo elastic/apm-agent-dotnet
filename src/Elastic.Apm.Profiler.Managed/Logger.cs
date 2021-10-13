@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace Elastic.Apm.Profiler.Managed.Loader
+namespace Elastic.Apm.Profiler.Managed
 {
 	// match the log levels of the profiler logger
 	internal enum LogLevel
@@ -94,7 +94,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 				return null;
 
 			var process = Process.GetCurrentProcess();
-			return Path.Combine(logDirectory, $"Elastic.Apm.Profiler.Managed.Loader_{process.ProcessName}_{process.Id}.log");
+			return Path.Combine(logDirectory, $"Elastic.Apm.Profiler.Managed_{process.ProcessName}_{process.Id}.log");
 		}
 
 		private static LogLevel GetLogLevel(LogLevel defaultLevel)

@@ -2,7 +2,7 @@
 
     <PropertyGroup>
       <!-- needed because of MockApmServer version -->
-      <TargetFramework>netcoreapp2.1</TargetFramework>
+      <TargetFramework>net5.0</TargetFramework>
       <IsPackable>false</IsPackable>
       <!-- Don't run Roslyn analyzers as part of build. The StyleCop analyzers conflict with editorconfig -->
       <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -21,7 +21,6 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       </PackageReference>
       <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
-      <PackageReference Include="Microsoft.AspNetCore.App" />
       <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
     </ItemGroup>
 

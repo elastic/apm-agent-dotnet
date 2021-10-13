@@ -18,7 +18,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
     /// </summary>
     public readonly struct CallTargetState
     {
-        private readonly IExecutionSegment _previousScope;
+        private readonly IExecutionSegment _previousSegment;
         private readonly IExecutionSegment _segment;
         private readonly object _state;
         private readonly DateTimeOffset? _startTime;
@@ -29,7 +29,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
         /// <param name="segment">Scope instance</param>
         public CallTargetState(IExecutionSegment segment)
         {
-            _previousScope = null;
+            _previousSegment = null;
             _segment = segment;
             _state = null;
             _startTime = null;
@@ -42,7 +42,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
         /// <param name="state">Object state instance</param>
         public CallTargetState(IExecutionSegment segment, object state)
         {
-            _previousScope = null;
+            _previousSegment = null;
             _segment = segment;
             _state = state;
             _startTime = null;
@@ -56,22 +56,22 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
         /// <param name="startTime">The intended start time of the scope, intended for scopes created in the OnMethodEnd handler</param>
         public CallTargetState(IExecutionSegment segment, object state, DateTimeOffset? startTime)
         {
-            _previousScope = null;
+            _previousSegment = null;
             _segment = segment;
             _state = state;
             _startTime = startTime;
         }
 
-        internal CallTargetState(IExecutionSegment previousScope, CallTargetState state)
+        internal CallTargetState(IExecutionSegment previousSegment, CallTargetState state)
         {
-            _previousScope = previousScope;
+            _previousSegment = previousSegment;
             _segment = state._segment;
             _state = state._state;
             _startTime = state._startTime;
         }
 
         /// <summary>
-        /// Gets the CallTarget BeginMethod scope
+        /// Gets the CallTarget BeginMethod segment
         /// </summary>
         public IExecutionSegment Segment => _segment;
 
@@ -85,7 +85,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
         /// </summary>
         public DateTimeOffset? StartTime => _startTime;
 
-        internal IExecutionSegment PreviousScope => _previousScope;
+        internal IExecutionSegment PreviousSegment => _previousSegment;
 
         /// <summary>
         /// Gets the default call target state (used by the native side to initialize the locals)
@@ -98,6 +98,6 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
         /// ToString override
         /// </summary>
         /// <returns>String value</returns>
-        public override string ToString() => $"{typeof(CallTargetState).FullName}({_previousScope}, {_segment}, {_state})";
+        public override string ToString() => $"{typeof(CallTargetState).FullName}({_previousSegment}, {_segment}, {_state})";
 	}
 }

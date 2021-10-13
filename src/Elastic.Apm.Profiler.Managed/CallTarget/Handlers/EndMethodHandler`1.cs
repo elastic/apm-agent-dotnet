@@ -11,6 +11,7 @@ using System;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations;
 
 #pragma warning disable SA1649 // File name must match first type name
@@ -80,10 +81,18 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 
                 // Restore previous scope if there is a continuation
                 // This is used to mimic the ExecutionContext copy from the StateMachine
-                // if (((IDatadogTracer)Tracer.Instance).ScopeManager is IScopeRawAccess rawAccess)
-                // {
-                //     rawAccess.Active = state.PreviousScope;
-                // }
+                if (Agent.IsConfigured)
+				{
+					switch (state.PreviousSegment)
+					{
+						case ITransaction transaction:
+							Agent.Components.TracerInternal.CurrentExecutionSegmentsContainer.CurrentTransaction = transaction;
+							break;
+						case ISpan span:
+							Agent.Components.TracerInternal.CurrentExecutionSegmentsContainer.CurrentSpan = span;
+							break;
+					}
+				}
             }
 
             if (_invokeDelegate != null)

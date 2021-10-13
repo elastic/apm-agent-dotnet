@@ -23,8 +23,6 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
         /// </summary>
         private const int MaxFailures = 50;
 
-		private static readonly IApmLogger Log = Agent.Instance.Logger.Scoped(nameof(ModuleLookup));
-
         private static ManualResetEventSlim _populationResetEvent = new ManualResetEventSlim(initialState: true);
         private static ConcurrentDictionary<Guid, Module> _modules = new ConcurrentDictionary<Guid, Module>();
 
@@ -56,7 +54,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
                 // For some unforeseeable reason we have failed on a lot of AppDomain lookups
                 if (!_shortCircuitLogicHasLogged)
                 {
-                    Log.Warning()?.Log("Elastic APM is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
+                    Logger.Log(LogLevel.Warn, "Elastic APM is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
                 }
 
                 return null;
@@ -72,7 +70,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
             catch (Exception ex)
             {
                 _failures++;
-                Log.Error()?.LogException(ex, "Error when populating modules.");
+                Logger.Log(LogLevel.Error, ex, "Error when populating modules.");
             }
             finally
             {
