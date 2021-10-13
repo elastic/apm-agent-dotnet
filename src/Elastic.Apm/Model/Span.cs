@@ -465,7 +465,7 @@ namespace Elastic.Apm.Model
 				if (Context.Destination.Service != null)
 					return;
 
-				Context.Destination.Service = new Destination.DestinationService { Type = Type };
+				Context.Destination.Service = new Destination.DestinationService();
 
 				if (_context.Value.Http != null)
 				{
@@ -482,7 +482,6 @@ namespace Elastic.Apm.Model
 				{
 					// Once messaging is added, for messaging, we'll additionally need to add the queue name here
 					Context.Destination.Service.Resource = Subtype;
-					Context.Destination.Service.Name = Subtype;
 				}
 			}
 

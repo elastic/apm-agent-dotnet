@@ -54,10 +54,6 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Port.Should().Be(9200);
 
 				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Service.Should().NotBeNull();
-				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Service.Type.Should().Be(ApiConstants.TypeDb);
-				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch)
-					.Context.Destination.Service.Name.Should()
-					.Be(ApiConstants.SubtypeElasticsearch);
 				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch)
 					.Context.Destination.Service.Resource.Should()
 					.Be(ApiConstants.SubtypeElasticsearch);
