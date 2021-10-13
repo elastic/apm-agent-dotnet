@@ -54,7 +54,7 @@ namespace Elastic.Apm.Elasticsearch
 				.StartSpan(
 					name,
 					ApiConstants.TypeDb,
-					ApiConstants.SubtypeElasticsearch);
+					ApiConstants.SubtypeElasticsearch, isExitSpan: true);
 
 			span.InstrumentationFlag = InstrumentationFlag.Elasticsearch;
 			span.Action = name;

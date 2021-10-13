@@ -103,12 +103,21 @@ namespace Elastic.Apm.Azure.Storage
 				? $"{AzureFileStorage.SpanName} {action} {fileShareUrl.ResourceName}"
 				: $"{AzureFileStorage.SpanName} {action}";
 
-			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureFileStorage.SubType, action);
+			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureFileStorage.SubType, action, true);
 			if (span is Span realSpan)
 				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
 
 			if (fileShareUrl != null)
 				SetDestination(span, fileShareUrl);
+
+			span.Context.Destination = new Destination
+			{
+				Address = fileShareUrl.FullyQualifiedNamespace,
+				Service = new Destination.DestinationService
+				{
+					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}",
+				}
+			};
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
@@ -127,9 +136,7 @@ namespace Elastic.Apm.Azure.Storage
 				Address = fileShareUrl.FullyQualifiedNamespace,
 				Service = new Destination.DestinationService
 				{
-					Name = AzureFileStorage.SubType,
-					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}",
-					Type = ApiConstants.TypeStorage
+					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}"
 				}
 			};
 

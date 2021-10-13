@@ -193,7 +193,7 @@ namespace Elastic.Apm.StackExchange.Redis
 
 				// TODO: clear the raw stacktrace as it won't be representative of the call stack at
 				// the point at which the call to redis happens, and therefore misleading to include
-			}, ApiConstants.SubTypeRedis, "query");
+			}, ApiConstants.SubTypeRedis, "query", true);
 		}
 
 		private static string GetCommand(IProfiledCommand profiledCommand) =>

@@ -24,15 +24,16 @@ namespace Elastic.Apm.DiagnosticListeners
 		where TResponse : class
 	{
 		private const string EventExceptionPropertyName = "Exception";
-		private const string EventResponsePropertyName = "Response";
 		protected const string EventRequestPropertyName = "Request";
-		private readonly ApmAgent _realAgent;
-		private readonly HttpTraceConfiguration _configuration;
+		private const string EventResponsePropertyName = "Response";
 
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
-		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
+		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new();
+
+		private readonly HttpTraceConfiguration _configuration;
+		private readonly ApmAgent _realAgent;
 
 		protected HttpDiagnosticListenerImplBase(IApmAgent agent) : base(agent)
 		{
@@ -48,9 +49,9 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract bool RequestHeadersContain(TRequest request, string headerName);
 
-		protected abstract int ResponseGetStatusCode(TResponse response);
-
 		protected abstract bool RequestTryGetHeader(TRequest request, string headerName, out string value);
+
+		protected abstract int ResponseGetStatusCode(TResponse response);
 
 		protected abstract string ExceptionEventKey { get; }
 
@@ -171,7 +172,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				if (_configuration?.CaptureSpan ?? false)
 				{
 					span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
-						ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
+						ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true, true);
 
 					if (span is null)
 					{
@@ -181,7 +182,8 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 				else
 				{
-					Logger.Trace()?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as not to known service", requestUrl.Sanitize());
+					Logger.Trace()
+						?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as not to known service", requestUrl.Sanitize());
 					return;
 				}
 			}
