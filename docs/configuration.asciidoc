@@ -444,7 +444,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 [options="header"]
 |============
 | Default | Type
-| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | List<string>
+| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | Comma separated string
 |============
 
 [float]
@@ -698,7 +698,7 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 [options="header"]
 |============
 | Default                 | Type
-| <none>                  | List<string>
+| <none>                  | Comma separated string
 |============
 
 [options="header"]
@@ -803,7 +803,7 @@ This setting can be changed after the agent starts.
 [options="header"]
 |============
 | Default                 | Type
-| `application/x-www-form-urlencoded*, text/*, application/json*, application/xml*`                  | List<string>
+| `application/x-www-form-urlencoded*, text/*, application/json*, application/xml*`                  | Comma separated string
 |============
 
 [float]
@@ -870,7 +870,7 @@ NOTE: All errors that are captured during a request to an ignored URL are still 
 [options="header"]
 |============
 | Default                                                                                                                    | Type
-| `/VAADIN/*, /heartbeat*, /favicon.ico, *.js, *.css, *.jpg, *.jpeg, *.png, *.gif, *.webp, *.svg, *.woff, *.woff2` | List<string>
+| `/VAADIN/*, /heartbeat*, /favicon.ico, *.js, *.css, *.jpg, *.jpeg, *.png, *.gif, *.webp, *.svg, *.woff, *.woff2` | Comma separated string
 |============
 
 NOTE: Changing this configuration will overwrite the default value.
