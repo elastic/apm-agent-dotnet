@@ -839,7 +839,7 @@ This is used to restrict requests to certain URLs from being instrumented.
 
 This property should be set to a comma separated string containing one or more paths.
 
-For example in order to ignore URLs `/foo` and `/bar` you can set this configuration to `"/foo,/bar"`.
+For example, in order to ignore the URLs `/foo` and `/bar`, set the configuration value to `"/foo,/bar"`.
 
 When an incoming HTTP request is detected, its request path will be tested against each element in this list.
 For example, adding `/home/index` to this list would match and remove instrumentation from the following URLs:
@@ -851,7 +851,7 @@ http://localhost/home/index
 http://whatever.com/home/index?value1=123
 ----
 
-In other words, the matching always happens based on the request path, ignoring host or query string.
+In other words, the matching always happens based on the request path—hosts and query strings are ignored.
 
 This option supports the wildcard `*`, which matches zero or more characters.
 Examples: `"/foo/*/bar/*/baz*`, `*foo*"`.
