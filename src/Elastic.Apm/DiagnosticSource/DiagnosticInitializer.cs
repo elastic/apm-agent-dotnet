@@ -71,7 +71,9 @@ namespace Elastic.Apm.DiagnosticSource
 						if (_agent is null || _agent.SubscribedListeners.Add(listenerType))
 						{
 							_sourceSubscription ??= new CompositeDisposable();
-							((CompositeDisposable)_sourceSubscription).Add(new SubscribedListenerDisposable(value.Subscribe(listener), () => _agent.SubscribedListeners.Remove(listenerType)));
+							((CompositeDisposable)_sourceSubscription).Add(
+								new SubscribedListenerDisposable(value.Subscribe(listener),
+								() => _agent.SubscribedListeners.Remove(listenerType)));
 							_logger.Debug()
 								?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
 									listenerType.FullName, value.Name);

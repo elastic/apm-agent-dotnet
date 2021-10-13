@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -60,6 +59,24 @@ namespace Elastic.Apm.Tests.DiagnosticSource
 				logger.Lines.Should().Contain(line => line.Contains($"Subscribed {typeof(TestListener).FullName} to `Test' events source"));
 				logger.Lines.Should().Contain(line => line.Contains($"already subscribed to `Test' events source"));
 				agent.SubscribedListeners.Should().HaveCount(1).And.Contain(typeof(TestListener));
+			}
+		}
+
+		[Fact]
+		public void DisposeSubscriptionShouldRemoveFromSubscribedListeners()
+		{
+			using (var listener = new DiagnosticListener("Test"))
+			{
+				var logger = new InMemoryBlockingLogger(LogLevel.Debug);
+				using var agent = new ApmAgent(new TestAgentComponents(logger: logger));
+
+				using (agent.Subscribe(new TestSubscriber()))
+				{
+					logger.Lines.Should().Contain(line => line.Contains($"Subscribed {typeof(TestListener).FullName} to `Test' events source"));
+					agent.SubscribedListeners.Should().HaveCount(1).And.Contain(typeof(TestListener));
+				}
+
+				agent.SubscribedListeners.Should().BeEmpty();
 			}
 		}
 	}
