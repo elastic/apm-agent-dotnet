@@ -34,7 +34,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		[InlineData("net461")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
-			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);

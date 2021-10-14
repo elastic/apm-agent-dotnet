@@ -27,7 +27,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 		[Fact]
 		public async Task ShouldNotInstrumentExcludedIntegrations()
 		{
-			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(ShouldNotInstrumentExcludedIntegrations));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
@@ -72,7 +72,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 		[InlineData("net461", "SqliteSample.exe")]
 		public async Task ShouldNotInstrumentExcludedProcess(string targetFramework, string excludeProcess)
 		{
-			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(ShouldNotInstrumentExcludedProcess));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
@@ -115,7 +115,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 		[Fact]
 		public async Task ShouldNotInstrumentExcludedServiceName()
 		{
-			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(ShouldNotInstrumentExcludedServiceName));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
@@ -162,7 +162,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 		[InlineData("APP_POOL_ID", "~apppool")]
 		public async Task ShouldNotInstrumentAzureAppServiceInfrastructureOrReservedProcess(string key, string value)
 		{
-			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(ShouldNotInstrumentExcludedServiceName));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
