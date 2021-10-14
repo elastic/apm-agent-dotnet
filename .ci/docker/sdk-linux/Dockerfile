@@ -7,6 +7,8 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${DOTNET_R
 RUN curl -s -O -L https://dotnet.microsoft.com/download/dotnet-core/scripts/v1/dotnet-install.sh
 
 # Install .Net SDKs
+RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "2.1.505"
+RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "3.0.103"
 RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "3.1.100"
 
 # Install docker

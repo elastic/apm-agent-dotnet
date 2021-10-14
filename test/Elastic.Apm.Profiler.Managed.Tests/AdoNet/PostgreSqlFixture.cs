@@ -4,9 +4,9 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading.Tasks;
-using Elastic.Apm.Tests.Utilities;
-using TestContainers.Core.Builders;
-using TestContainers.Core.Containers;
+using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Containers.Configurations.Databases;
+using DotNet.Testcontainers.Containers.Modules.Databases;
 using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
@@ -18,30 +18,31 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 	public class PostgreSqlFixture : IAsyncLifetime
 	{
-		private readonly PostgreSqlContainer _container;
+		private readonly PostgreSqlTestcontainer _container;
 		private const string PostgresUserName = "postgres";
 		private const string PostgresPassword = "mysecretpassword";
+		private const string PostgresDatabase = "db";
 
 		public PostgreSqlFixture()
 		{
-			var postgresBuilder = new DatabaseContainerBuilder<PostgreSqlContainer>()
-				.Begin()
-				.WithImage(PostgreSqlContainer.IMAGE)
-				.WithUserName(PostgresUserName)
-				.WithPassword(PostgresPassword)
-				.WithEnv(("POSTGRES_PASSWORD", PostgresPassword))
-				.WithPortBindings((PostgreSqlContainer.POSTGRESQL_PORT, LocalPort.GetAvailablePort()));
+			var postgresBuilder = new TestcontainersBuilder<PostgreSqlTestcontainer>()
+				.WithDatabase(new PostgreSqlTestcontainerConfiguration
+				{
+					Database = PostgresDatabase,
+					Username = PostgresUserName,
+					Password = PostgresPassword
+				});
 
 			_container = postgresBuilder.Build();
 		}
 
 		public async Task InitializeAsync()
 		{
-			await _container.Start();
+			await _container.StartAsync();
 			ConnectionString = _container.ConnectionString;
 		}
 
-		public async Task DisposeAsync() => await _container.Stop();
+		public async Task DisposeAsync() => await _container.DisposeAsync();
 
 		public string ConnectionString { get; private set; }
 	}

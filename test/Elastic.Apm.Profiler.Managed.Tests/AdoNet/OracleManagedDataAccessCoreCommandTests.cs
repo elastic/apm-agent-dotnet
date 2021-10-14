@@ -39,15 +39,15 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			// TODO: remove
-			//port = 8200;
-
 			using (var profiledApplication = new ProfiledApplication("OracleManagedDataAccessCoreSample"))
 			{
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 					["ORACLE_CONNECTION_STRING"] = _fixture.ConnectionString,
+					["ELASTIC_APM_DISABLE_METRICS"] = "*",
+					// to fix ORA-01882 Timezone region not found on CI.
+					["TZ"] = "GMT"
 				};
 
 				profiledApplication.Start(
@@ -59,18 +59,25 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			}
 
 			apmServer.ReceivedData.Transactions.Should().HaveCount(2);
-			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
+
+			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans + AdoNetTestData.OracleProviderExpectedSpans);
+
+			var testSpans = apmServer.ReceivedData.Spans
+				.Where(s => !s.Name.StartsWith(AdoNetTestData.OracleProviderSpanNameStart))
+				.ToList();
+
+			testSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
 
 			var genericTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunAllAsync<TDbCommand>");
 			genericTransaction.Should().NotBeNull();
 
-			var genericSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == genericTransaction.Id).ToList();
+			var genericSpans = testSpans.Where(s => s.TransactionId == genericTransaction.Id).ToList();
 			genericSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunAllAsyncSpans);
 
 			var baseTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunBaseTypesAsync");
 			baseTransaction.Should().NotBeNull();
 
-			var baseSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == baseTransaction.Id).ToList();
+			var baseSpans = testSpans.Where(s => s.TransactionId == baseTransaction.Id).ToList();
 			baseSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunBaseTypesAsyncSpans);
 
 			await apmServer.StopAsync();

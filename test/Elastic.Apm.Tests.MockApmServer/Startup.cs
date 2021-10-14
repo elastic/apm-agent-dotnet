@@ -25,7 +25,6 @@ namespace Elastic.Apm.Tests.MockApmServer
 			services.AddMvc().AddApplicationPart(typeof(MockApmServer).Assembly);
 			services.AddControllers();
 
-
 			var contentRootDir = _configuration.GetValue<string>(WebHostDefaults.ContentRootKey);
 			var specBranch = "7.x";
 			var validator = new Validator(specBranch, Path.Combine(contentRootDir, Guid.NewGuid().ToString("N"), "specs"));

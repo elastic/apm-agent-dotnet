@@ -31,12 +31,12 @@ pipeline {
             deleteDir()
             gitCheckout(basedir: "${BASE_DIR}", githubNotifyFirstTimeContributor: true)
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
-              dir("${BASE_DIR}"){
-                // Skip all the stages for PRs with changes in the docs only
+            dir("${BASE_DIR}"){
+              // Skip all the stages for PRs with changes in the docs only
               setEnvVar('ONLY_DOCS', isGitRegionMatch(patterns: [ '^docs/.*' ], shouldMatchAll: true))
-              }
             }
           }
+        }
         stage('Parallel'){
           when {
             beforeAgent true
@@ -48,36 +48,36 @@ pipeline {
               stages{
                 stage('Build') {
                   steps {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
+                    deleteDir()
+                    unstash 'source'
+                    dir("${BASE_DIR}"){
+                      dotnet(){
                         sh(label: 'Build', script: '.ci/linux/build.sh')
-                          }
-                        }
-                      }
-                  post {
-                    success {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
                       }
                     }
                   }
+                  post {
+                    success {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
+                    }
+                  }
+                }
                 stage('Test') {
                   steps {
-                        dir("${BASE_DIR}"){
-                          dotnet(){
+                    dir("${BASE_DIR}"){
+                      dotnet(){
                         sh label: 'Test', script: '.ci/linux/test.sh'
-                          }
-                        }
                       }
+                    }
+                  }
                   post {
                     always {
                       junit(allowEmptyResults: true, keepLongStdio: true, testResults: "${BASE_DIR}/test_results/junit-*.xml")
                     }
-                    }
                   }
                 }
               }
+            }
             stage('Windows'){
               agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }
@@ -91,43 +91,43 @@ pipeline {
                   steps {
                     cleanDir("${WORKSPACE}/*")
                     unstash 'source'
-                      dir("${BASE_DIR}"){
+                    dir("${BASE_DIR}"){
                       powershell(label: 'Install tools', script: ".ci\\windows\\tools.ps1")
-                      }
                     }
                   }
+                }
                 stage('Build') {
                   steps {
-                      dir("${BASE_DIR}"){
+                    dir("${BASE_DIR}"){
                       bat(label: 'Build', script: '.\\build.bat profiler-zip')
-                      }
                     }
+                  }
                   post {
                     success {
                       archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
                     }
-                    }
                   }
+                }
                 stage('Test') {
                   steps {
-                      dir("${BASE_DIR}"){
-                      bat(label: 'Build', script: 'cargo make test')
-                        }
-                        }
+                    dir("${BASE_DIR}"){
+                      bat(label: 'Test', script: '.ci\\windows\\test.bat')
+                    }
+                  }
                   post {
                     always {
                       junit(allowEmptyResults: true, keepLongStdio: true, testResults: "${BASE_DIR}/test_results/junit-*.xml")
                     }
-                    }
                   }
                 }
-                        }
-                      }
-                    }
-                  }
-                    }
-                    }
-                  }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 def dotnet(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-auto-instrumentation-sdk-linux:latest'
@@ -137,11 +137,11 @@ def dotnet(Closure body){
     // CARGO_HOME env variable is set explicilty in the docker image, let's override it
     // to permission access when running the docker container with a differen user.
     withEnv(["CARGO_HOME=${homePath}"]) {
-        body()
-      }
+      body()
     }
   }
+}
 
 def cleanDir(path){
   powershell label: "Clean ${path}", script: "Remove-Item -Recurse -Force ${path}"
-        }
+}

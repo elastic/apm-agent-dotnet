@@ -4,9 +4,9 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading.Tasks;
-using Elastic.Apm.Tests.Utilities;
-using TestContainers.Core.Builders;
-using TestContainers.Core.Containers;
+using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Containers.Configurations.Databases;
+using DotNet.Testcontainers.Containers.Modules.Databases;
 using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
@@ -18,32 +18,31 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 	public class MySqlFixture : IAsyncLifetime
 	{
-		private readonly MySqlContainer _container;
+		private readonly MySqlTestcontainer _container;
 		private const string MySqlPassword = "Password123";
 		private const string MySqlDatabaseName = "db";
+		private const string MySqlUsername = "mysql";
 
 		public MySqlFixture()
 		{
-			var builder = new DatabaseContainerBuilder<MySqlContainer>()
-				.Begin()
-				.WithImage($"{MySqlContainer.IMAGE}:5.7")
-				.WithDatabaseName(MySqlDatabaseName)
-				.WithEnv(
-					("MYSQL_ROOT_PASSWORD", MySqlPassword),
-					("MYSQL_DATABASE", MySqlDatabaseName))
-				.WithPortBindings((MySqlContainer.MYSQL_PORT, LocalPort.GetAvailablePort()));
+			var builder = new TestcontainersBuilder<MySqlTestcontainer>()
+				.WithDatabase(new MySqlTestcontainerConfiguration
+				{
+					Database = MySqlDatabaseName,
+					Username = MySqlUsername,
+					Password = MySqlPassword
+				});
 
 			_container = builder.Build();
 		}
 
 		public async Task InitializeAsync()
 		{
-			await _container.Start();
-			// TestContainers does not include the db in the connection string...
-			ConnectionString = $"{_container.ConnectionString}database={MySqlDatabaseName};";
+			await _container.StartAsync();
+			ConnectionString = _container.ConnectionString;
 		}
 
-		public async Task DisposeAsync() => await _container.Stop();
+		public async Task DisposeAsync() => await _container.DisposeAsync();
 
 		public string ConnectionString { get; private set; }
 	}

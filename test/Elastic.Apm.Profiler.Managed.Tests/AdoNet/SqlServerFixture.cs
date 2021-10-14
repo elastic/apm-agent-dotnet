@@ -3,16 +3,10 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
-using System.Data.SqlClient;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
-using Elastic.Apm.Tests.Utilities;
-using Oracle.ManagedDataAccess.Client;
-using Polly;
-using TestContainers.Core.Builders;
-using TestContainers.Core.Containers;
+using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Containers.Configurations.Databases;
+using DotNet.Testcontainers.Containers.Modules.Databases;
 using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
@@ -22,66 +16,29 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 	{
 	}
 
-	public class SqlServerContainer : Container
-	{
-		public const string IMAGE = "mcr.microsoft.com/mssql/server:2017-CU14-ubuntu";
-
-		public const int SQL_PORT = 1433;
-
-		public const string UserName = "sa";
-		public const string Password = "StrongPassword(!)!!!1";
-
-		protected override async Task WaitUntilContainerStarted()
-		{
-			await base.WaitUntilContainerStarted();
-
-			var result = await Policy
-				.TimeoutAsync(TimeSpan.FromMinutes(4))
-				.WrapAsync(Policy
-					.Handle<Exception>()
-					.WaitAndRetryForeverAsync(
-						iteration => TimeSpan.FromSeconds(10)))
-				.ExecuteAndCaptureAsync(async () =>
-				{
-					using var connection = new SqlConnection(ConnectionString);
-					await connection.OpenAsync();
-					using var cmd = new SqlCommand("SELECT 1", connection);
-					var reader = await cmd.ExecuteScalarAsync();
-				});
-
-			if (result.Outcome == OutcomeType.Failure)
-				throw new Exception(result.FinalException.Message);
-		}
-
-		public string ConnectionString =>
-			$"Server={GetDockerHostIpAddress()},{GetMappedPort(SQL_PORT)};Database=master;User Id={UserName};Password={Password};";
-	}
-
 	public class SqlServerFixture : IAsyncLifetime
 	{
-		private readonly SqlServerContainer _container;
+		private readonly MsSqlTestcontainer _container;
+
 		public SqlServerFixture()
 		{
-			var builder = new GenericContainerBuilder<SqlServerContainer>()
-				.Begin()
-				.WithImage(SqlServerContainer.IMAGE)
-				.WithEnv(
-					("SA_PASSWORD", SqlServerContainer.Password),
-					("ACCEPT_EULA", "Y"))
-				.WithPortBindings((SqlServerContainer.SQL_PORT, LocalPort.GetAvailablePort()));
+			var containerBuilder = new TestcontainersBuilder<MsSqlTestcontainer>()
+				.WithDatabase(new MsSqlTestcontainerConfiguration
+				{
+					Password = "StrongPassword(!)!!!1"
+				});
 
-
-			_container = builder.Build();
+			_container = containerBuilder.Build();
 		}
+
+		public string ConnectionString { get; private set; }
 
 		public async Task InitializeAsync()
 		{
-			await _container.Start();
+			await _container.StartAsync();
 			ConnectionString = _container.ConnectionString;
 		}
 
-		public async Task DisposeAsync() => await _container.Stop();
-
-		public string ConnectionString { get; private set; }
+		public async Task DisposeAsync() => await _container.DisposeAsync();
 	}
 }

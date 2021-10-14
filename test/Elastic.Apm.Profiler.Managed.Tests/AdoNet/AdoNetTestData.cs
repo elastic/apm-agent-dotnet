@@ -15,6 +15,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		public const int DbRunnerExpectedRunAllAsyncSpans = 111;
 		public const int DbRunnerExpectedRunBaseTypesAsyncSpans = 68;
 
+		// frequent commands are executed to retrieve session parameters. we should ignore these
+		public const int OracleProviderExpectedSpans = 63;
+		public const string OracleProviderSpanNameStart = "DECLARE  err_code VARCHAR2(2000);  err_msg VARCHAR2(2000);";
+
 		public IEnumerator<object[]> GetEnumerator()
 		{
 			// TODO: Add x64/x86 options. macOS and Linux do not support x86

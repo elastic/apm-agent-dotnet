@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Cloud;
 using Elastic.Apm.Logging;
@@ -67,9 +68,19 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			await apmServer.StopAsync();
 		}
 
+		public static IEnumerable<object[]> TargetFrameworks()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				yield return new object[] { "net5.0", "dotnet.exe" };
+				yield return new object[] { "net461", "SqliteSample.exe" };
+			}
+			else
+				yield return new object[] { "net5.0", "dotnet" };
+		}
+
 		[Theory]
-		[InlineData("net5.0", "dotnet.exe")]
-		[InlineData("net461", "SqliteSample.exe")]
+		[MemberData(nameof(TargetFrameworks))]
 		public async Task ShouldNotInstrumentExcludedProcess(string targetFramework, string excludeProcess)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);

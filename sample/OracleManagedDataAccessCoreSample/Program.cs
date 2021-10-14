@@ -19,7 +19,7 @@ namespace OracleManagedDataAccessCoreSample
 		{
 			var cancellationTokenSource = new CancellationTokenSource();
 			var connectionType = typeof(OracleConnection);
-			var guid = Guid.NewGuid().ToString("N");
+			var guid = Guid.NewGuid().ToString("N").Substring(0, 8);
 
 			Console.WriteLine($"Run commands ({guid})");
 

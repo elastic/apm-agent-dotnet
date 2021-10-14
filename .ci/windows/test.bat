@@ -2,18 +2,20 @@
 :: This script runs the tests and stored them in an xml file defined in the
 :: LogFilePath property
 ::
-dotnet test -c Release --no-build ^
+cargo make test
+
+dotnet test -c Release test\Elastic.Apm.Profiler.Managed.Tests\Elastic.Apm.Profiler.Managed.Tests.csproj ^
  --verbosity normal ^
- --results-directory target ^
- --diag target\diag.log ^
- --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" ^
+ --results-directory test_results ^
+ --diag test_results\diag.log ^
+ --logger:"junit;LogFilePath=.\..\..\test_results\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" ^
  --collect:"XPlat Code Coverage" ^
  --settings coverlet.runsettings ^
  --blame-hang ^
  --blame-hang-timeout 5m ^
  /p:CollectCoverage=true ^
  /p:CoverletOutputFormat=cobertura ^
- /p:CoverletOutput=target/Coverage/ ^
+ /p:CoverletOutput=test_results/Coverage/ ^
  /p:Threshold=0 ^
  /p:ThresholdType=branch ^
  /p:ThresholdStat=total

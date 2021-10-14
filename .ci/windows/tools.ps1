@@ -3,6 +3,8 @@
 #
 
 Write-Host "Install .Net SDKs"
+choco install dotnetcore-sdk -m -y --no-progress -r --version 2.1.505
+choco install dotnetcore-sdk -m -y --no-progress -r --version 3.0.103
 choco install dotnetcore-sdk -m -y --no-progress -r --version 3.1.100
 choco install dotnet-sdk -m -y --no-progress -r --version 5.0.100
 
