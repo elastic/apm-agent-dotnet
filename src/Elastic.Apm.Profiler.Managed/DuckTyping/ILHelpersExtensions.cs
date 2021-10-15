@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="ILHelpersExtensions.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -25,29 +26,27 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         internal static DynamicMethod GetDynamicMethodForIndex(int index)
         {
             lock (_dynamicMethods)
-            {
-                return _dynamicMethods[index];
-            }
-        }
+				return _dynamicMethods[index];
+		}
 
         internal static void CreateDelegateTypeFor(TypeBuilder proxyType, DynamicMethod dynamicMethod, out Type delType, out MethodInfo invokeMethod)
         {
-            var modBuilder = (ModuleBuilder)proxyType.Module;
-            var delegateType = modBuilder.DefineType($"{dynamicMethod.Name}Delegate_" + Guid.NewGuid().ToString("N"), TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass, typeof(MulticastDelegate));
+			var modBuilder = (ModuleBuilder)proxyType.Module;
+			var delegateType = modBuilder.DefineType($"{dynamicMethod.Name}Delegate_" + Guid.NewGuid().ToString("N"), TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass, typeof(MulticastDelegate));
 
             // Delegate .ctor
-            var constructorBuilder = delegateType.DefineConstructor(MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public, CallingConventions.Standard, new Type[] { typeof(object), typeof(IntPtr) });
+			var constructorBuilder = delegateType.DefineConstructor(MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public, CallingConventions.Standard, new Type[] { typeof(object), typeof(IntPtr) });
             constructorBuilder.SetImplementationFlags(MethodImplAttributes.Runtime | MethodImplAttributes.Managed);
 
             // Define the Invoke method for the delegate
-            var parameters = dynamicMethod.GetParameters();
-            var paramTypes = new Type[parameters.Length];
+			var parameters = dynamicMethod.GetParameters();
+			var paramTypes = new Type[parameters.Length];
             for (var i = 0; i < parameters.Length; i++)
             {
                 paramTypes[i] = parameters[i].ParameterType;
             }
 
-            var methodBuilder = delegateType.DefineMethod("Invoke", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, dynamicMethod.ReturnType, paramTypes);
+			var methodBuilder = delegateType.DefineMethod("Invoke", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, dynamicMethod.ReturnType, paramTypes);
             for (var i = 0; i < parameters.Length; i++)
             {
                 methodBuilder.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
@@ -319,7 +318,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                          *      return ([expectedType])value;
                          * }
                          */
-                        var lblIsExpected = il.DefineLabel();
+						var lblIsExpected = il.DefineLabel();
 
                         il.Emit(OpCodes.Dup);
                         il.Emit(OpCodes.Isinst, expectedType);
@@ -378,7 +377,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             }
 
             // We fill the DelegateCache<> for that custom type with the delegate instance
-            var fillDelegateMethodInfo = typeof(DuckType.DelegateCache<>).MakeGenericType(delegateType).GetMethod("FillDelegate", BindingFlags.NonPublic | BindingFlags.Static);
+			var fillDelegateMethodInfo = typeof(Elastic.Apm.Profiler.Managed.DuckTyping.DuckType.DelegateCache<>).MakeGenericType(delegateType).GetMethod("FillDelegate", BindingFlags.NonPublic | BindingFlags.Static);
             fillDelegateMethodInfo.Invoke(null, new object[] { index });
 
             // We get the delegate instance and load it in to the stack before the parameters (at the begining of the IL body)

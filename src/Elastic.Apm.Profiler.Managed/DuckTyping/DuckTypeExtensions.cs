@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="DuckTypeExtensions.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -17,9 +18,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
     /// </summary>
     public static class DuckTypeExtensions
     {
-        //private static readonly IDatadogLogger Log = DatadogLogging.GetLoggerFor(typeof(DuckType));
-
-        /// <summary>
+		/// <summary>
         /// Gets the duck type instance for the object implementing a base class or interface T
         /// </summary>
         /// <param name="instance">Object instance</param>
@@ -29,7 +28,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         public static T DuckCast<T>(this object instance)
             => DuckType.Create<T>(instance);
 
-        /// <summary>
+		/// <summary>
         /// Gets the duck type instance for the object implementing a base class or interface T
         /// </summary>
         /// <param name="instance">Object instance</param>
@@ -39,7 +38,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         public static object DuckCast(this object instance, Type targetType)
             => DuckType.Create(targetType, instance);
 
-        /// <summary>
+		/// <summary>
         /// Tries to ducktype the object implementing a base class or interface T
         /// </summary>
         /// <typeparam name="T">Target type</typeparam>
@@ -50,11 +49,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         public static bool TryDuckCast<T>(this object instance, out T value)
         {
             if (instance is null)
-            {
-                DuckTypeTargetObjectInstanceIsNull.Throw();
-            }
+				DuckTypeTargetObjectInstanceIsNull.Throw();
 
-            if (DuckType.CreateCache<T>.IsVisible)
+			if (DuckType.CreateCache<T>.IsVisible)
             {
                 var proxyResult = DuckType.CreateCache<T>.GetProxy(instance.GetType());
                 if (proxyResult.Success)
@@ -68,7 +65,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             return false;
         }
 
-        /// <summary>
+		/// <summary>
         /// Tries to ducktype the object implementing a base class or interface T
         /// </summary>
         /// <param name="instance">Object instance</param>
@@ -79,11 +76,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         public static bool TryDuckCast(this object instance, Type targetType, out object value)
         {
             if (instance is null)
-            {
-                DuckTypeTargetObjectInstanceIsNull.Throw();
-            }
+				DuckTypeTargetObjectInstanceIsNull.Throw();
 
-            if (targetType != null && (targetType.IsPublic || targetType.IsNestedPublic))
+			if (targetType != null && (targetType.IsPublic || targetType.IsNestedPublic))
             {
                 var proxyResult = DuckType.GetOrCreateProxyType(targetType, instance.GetType());
                 if (proxyResult.Success)
@@ -97,7 +92,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             return false;
         }
 
-        /// <summary>
+		/// <summary>
         /// Gets the duck type instance for the object implementing a base class or interface T
         /// </summary>
         /// <param name="instance">Object instance</param>
@@ -108,23 +103,19 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             where T : class
         {
             if (instance is null)
-            {
-                DuckTypeTargetObjectInstanceIsNull.Throw();
-            }
+				DuckTypeTargetObjectInstanceIsNull.Throw();
 
-            if (DuckType.CreateCache<T>.IsVisible)
+			if (DuckType.CreateCache<T>.IsVisible)
             {
                 var proxyResult = DuckType.CreateCache<T>.GetProxy(instance.GetType());
                 if (proxyResult.Success)
-                {
-                    return proxyResult.CreateInstance<T>(instance);
-                }
-            }
+					return proxyResult.CreateInstance<T>(instance);
+			}
 
             return null;
         }
 
-        /// <summary>
+		/// <summary>
         /// Gets the duck type instance for the object implementing a base class or interface T
         /// </summary>
         /// <param name="instance">Object instance</param>
@@ -134,23 +125,19 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         public static object DuckAs(this object instance, Type targetType)
         {
             if (instance is null)
-            {
-                DuckTypeTargetObjectInstanceIsNull.Throw();
-            }
+				DuckTypeTargetObjectInstanceIsNull.Throw();
 
-            if (targetType != null && (targetType.IsPublic || targetType.IsNestedPublic))
+			if (targetType != null && (targetType.IsPublic || targetType.IsNestedPublic))
             {
                 var proxyResult = DuckType.GetOrCreateProxyType(targetType, instance.GetType());
                 if (proxyResult.Success)
-                {
-                    return proxyResult.CreateInstance(instance);
-                }
-            }
+					return proxyResult.CreateInstance(instance);
+			}
 
             return null;
         }
 
-        /// <summary>
+		/// <summary>
         /// Gets if a proxy can be created
         /// </summary>
         /// <param name="instance">Instance object</param>
@@ -160,19 +147,15 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         public static bool DuckIs<T>(this object instance)
         {
             if (instance is null)
-            {
-                DuckTypeTargetObjectInstanceIsNull.Throw();
-            }
+				DuckTypeTargetObjectInstanceIsNull.Throw();
 
-            if (DuckType.CreateCache<T>.IsVisible)
-            {
-                return DuckType.CanCreate<T>(instance);
-            }
+			if (DuckType.CreateCache<T>.IsVisible)
+				return DuckType.CanCreate<T>(instance);
 
-            return false;
+			return false;
         }
 
-        /// <summary>
+		/// <summary>
         /// Gets if a proxy can be created
         /// </summary>
         /// <param name="instance">Instance object</param>
@@ -182,16 +165,12 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         public static bool DuckIs(this object instance, Type targetType)
         {
             if (instance is null)
-            {
-                DuckTypeTargetObjectInstanceIsNull.Throw();
-            }
+				DuckTypeTargetObjectInstanceIsNull.Throw();
 
-            if (targetType != null && (targetType.IsPublic || targetType.IsNestedPublic))
-            {
-                return DuckType.CanCreate(targetType, instance);
-            }
+			if (targetType != null && (targetType.IsPublic || targetType.IsNestedPublic))
+				return DuckType.CanCreate(targetType, instance);
 
-            return false;
+			return false;
         }
-    }
+	}
 }

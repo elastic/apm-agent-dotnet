@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="DuckType.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -134,36 +135,36 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     EnsureTypeVisibility(moduleBuilder, targetType);
                     EnsureTypeVisibility(moduleBuilder, proxyDefinitionType);
 
-                    var assembly = string.Empty;
+					var assembly = string.Empty;
                     if (targetType.Assembly != null)
                     {
                         // Include target assembly name and public token.
-                        var asmName = targetType.Assembly.GetName();
+						var asmName = targetType.Assembly.GetName();
                         assembly = asmName.Name;
-                        var pbToken = asmName.GetPublicKeyToken();
+						var pbToken = asmName.GetPublicKeyToken();
                         assembly += "__" + BitConverter.ToString(pbToken).Replace("-", string.Empty);
                         assembly = assembly.Replace(".", "_").Replace("+", "__");
                     }
 
                     // Create a valid type name that can be used as a member of a class. (BenchmarkDotNet fails if is an invalid name)
-                    var proxyTypeName = $"{assembly}.{targetType.FullName.Replace(".", "_").Replace("+", "__")}.{proxyDefinitionType.FullName.Replace(".", "_").Replace("+", "__")}_{++_typeCount}";
+					var proxyTypeName = $"{assembly}.{targetType.FullName.Replace(".", "_").Replace("+", "__")}.{proxyDefinitionType.FullName.Replace(".", "_").Replace("+", "__")}_{++_typeCount}";
 
                     // Create Type
-                    var proxyTypeBuilder = moduleBuilder.DefineType(
+					var proxyTypeBuilder = moduleBuilder.DefineType(
                         proxyTypeName,
                         typeAttributes,
                         parentType,
                         interfaceTypes);
 
                     // Create IDuckType and IDuckTypeSetter implementations
-                    var instanceField = CreateIDuckTypeImplementation(proxyTypeBuilder, targetType);
+					var instanceField = CreateIDuckTypeImplementation(proxyTypeBuilder, targetType);
 
                     // Define .ctor to store the instance field
-                    var ctorBuilder = proxyTypeBuilder.DefineConstructor(
+					var ctorBuilder = proxyTypeBuilder.DefineConstructor(
                         MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
                         CallingConventions.Standard,
                         new[] { instanceField.FieldType });
-                    var ctorIL = ctorBuilder.GetILGenerator();
+					var ctorIL = ctorBuilder.GetILGenerator();
                     ctorIL.Emit(OpCodes.Ldarg_0);
                     ctorIL.Emit(OpCodes.Ldarg_1);
                     ctorIL.Emit(OpCodes.Stfld, instanceField);
@@ -175,7 +176,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                         CreatePropertiesFromStruct(proxyTypeBuilder, proxyDefinitionType, targetType, instanceField);
 
                         // Create Type
-                        var proxyType = proxyTypeBuilder.CreateTypeInfo().AsType();
+						var proxyType = proxyTypeBuilder.CreateTypeInfo().AsType();
                         return new CreateTypeResult(proxyDefinitionType, proxyType, targetType, CreateStructCopyMethod(moduleBuilder, proxyDefinitionType, proxyType, targetType), null);
                     }
                     else
@@ -187,7 +188,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                         CreateMethods(proxyTypeBuilder, proxyDefinitionType, targetType, instanceField);
 
                         // Create Type
-                        var proxyType = proxyTypeBuilder.CreateTypeInfo().AsType();
+						var proxyType = proxyTypeBuilder.CreateTypeInfo().AsType();
                         return new CreateTypeResult(proxyDefinitionType, proxyType, targetType, GetCreateProxyInstanceDelegate(moduleBuilder, proxyDefinitionType, proxyType, targetType), null);
                     }
                 }
@@ -200,21 +201,21 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
         private static FieldInfo CreateIDuckTypeImplementation(TypeBuilder proxyTypeBuilder, Type targetType)
         {
-            var instanceType = targetType;
+			var instanceType = targetType;
             if (!UseDirectAccessTo(proxyTypeBuilder, targetType))
             {
                 instanceType = typeof(object);
             }
 
-            var instanceField = proxyTypeBuilder.DefineField("_currentInstance", instanceType, FieldAttributes.Private | FieldAttributes.InitOnly);
+			var instanceField = proxyTypeBuilder.DefineField("_currentInstance", instanceType, FieldAttributes.Private | FieldAttributes.InitOnly);
 
-            var propInstance = proxyTypeBuilder.DefineProperty("Instance", PropertyAttributes.None, typeof(object), null);
-            var getPropInstance = proxyTypeBuilder.DefineMethod(
+			var propInstance = proxyTypeBuilder.DefineProperty("Instance", PropertyAttributes.None, typeof(object), null);
+			var getPropInstance = proxyTypeBuilder.DefineMethod(
                 "get_Instance",
                 MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
                 typeof(object),
                 Type.EmptyTypes);
-            var il = getPropInstance.GetILGenerator();
+			var il = getPropInstance.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, instanceField);
             if (instanceType.IsValueType)
@@ -225,8 +226,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             il.Emit(OpCodes.Ret);
             propInstance.SetGetMethod(getPropInstance);
 
-            var propType = proxyTypeBuilder.DefineProperty("Type", PropertyAttributes.None, typeof(Type), null);
-            var getPropType = proxyTypeBuilder.DefineMethod(
+			var propType = proxyTypeBuilder.DefineProperty("Type", PropertyAttributes.None, typeof(Type), null);
+			var getPropType = proxyTypeBuilder.DefineMethod(
                 "get_Type",
                 MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
                 typeof(Type),
@@ -242,8 +243,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
         private static List<PropertyInfo> GetProperties(Type proxyDefinitionType)
         {
-            var selectedProperties = new List<PropertyInfo>(proxyDefinitionType.IsInterface ? proxyDefinitionType.GetProperties() : GetBaseProperties(proxyDefinitionType));
-            var implementedInterfaces = proxyDefinitionType.GetInterfaces();
+			var selectedProperties = new List<PropertyInfo>(proxyDefinitionType.IsInterface ? proxyDefinitionType.GetProperties() : GetBaseProperties(proxyDefinitionType));
+			var implementedInterfaces = proxyDefinitionType.GetInterfaces();
             foreach (var imInterface in implementedInterfaces)
             {
                 if (imInterface == typeof(IDuckType))
@@ -251,7 +252,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     continue;
                 }
 
-                var newProps = imInterface.GetProperties().Where(p => selectedProperties.All(i => i.Name != p.Name));
+				var newProps = imInterface.GetProperties().Where(p => selectedProperties.All(i => i.Name != p.Name));
                 selectedProperties.AddRange(newProps);
             }
 
@@ -262,17 +263,21 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 foreach (var prop in baseType.GetProperties())
                 {
                     if (prop.CanRead && (prop.GetMethod.IsAbstract || prop.GetMethod.IsVirtual))
-						yield return prop;
-					else if (prop.CanWrite && (prop.SetMethod.IsAbstract || prop.SetMethod.IsVirtual))
-						yield return prop;
-				}
+                    {
+                        yield return prop;
+                    }
+                    else if (prop.CanWrite && (prop.SetMethod.IsAbstract || prop.SetMethod.IsVirtual))
+                    {
+                        yield return prop;
+                    }
+                }
             }
         }
 
         private static void CreateProperties(TypeBuilder proxyTypeBuilder, Type proxyDefinitionType, Type targetType, FieldInfo instanceField)
         {
             // Gets all properties to be implemented
-            var proxyTypeProperties = GetProperties(proxyDefinitionType);
+			var proxyTypeProperties = GetProperties(proxyDefinitionType);
 
             foreach (var proxyProperty in proxyTypeProperties)
             {
@@ -290,7 +295,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     propertyBuilder = proxyTypeBuilder.DefineProperty(proxyProperty.Name, PropertyAttributes.None, proxyProperty.PropertyType, null);
                 }
 
-                var duckAttribute = proxyProperty.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
+				var duckAttribute = proxyProperty.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
                 duckAttribute.Name ??= proxyProperty.Name;
 
                 switch (duckAttribute.Kind)
@@ -346,7 +351,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                         break;
 
                     case DuckKind.Field:
-                        var targetField = targetType.GetField(duckAttribute.Name, duckAttribute.BindingFlags);
+						var targetField = targetType.GetField(duckAttribute.Name, duckAttribute.BindingFlags);
                         if (targetField is null)
                         {
                             break;
@@ -415,13 +420,13 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
                 PropertyBuilder propertyBuilder = null;
 
-                var duckAttribute = proxyFieldInfo.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
+				var duckAttribute = proxyFieldInfo.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
                 duckAttribute.Name ??= proxyFieldInfo.Name;
 
                 switch (duckAttribute.Kind)
                 {
                     case DuckKind.Property:
-                        var targetProperty = targetType.GetProperty(duckAttribute.Name, duckAttribute.BindingFlags);
+						var targetProperty = targetType.GetProperty(duckAttribute.Name, duckAttribute.BindingFlags);
                         if (targetProperty is null)
                         {
                             break;
@@ -438,7 +443,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                         break;
 
                     case DuckKind.Field:
-                        var targetField = targetType.GetField(duckAttribute.Name, duckAttribute.BindingFlags);
+						var targetField = targetType.GetField(duckAttribute.Name, duckAttribute.BindingFlags);
                         if (targetField is null)
                         {
                             break;
@@ -458,15 +463,15 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
         private static Delegate GetCreateProxyInstanceDelegate(ModuleBuilder moduleBuilder, Type proxyDefinitionType, Type proxyType, Type targetType)
         {
-            var ctor = proxyType.GetConstructors()[0];
+			var ctor = proxyType.GetConstructors()[0];
 
-            var createProxyMethod = new DynamicMethod(
+			var createProxyMethod = new DynamicMethod(
                 $"CreateProxyInstance<{proxyType.Name}>",
                 proxyDefinitionType,
                 new[] { typeof(object) },
                 typeof(DuckType).Module,
                 true);
-            var il = createProxyMethod.GetILGenerator();
+			var il = createProxyMethod.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             if (UseDirectAccessTo(moduleBuilder, targetType))
             {
@@ -488,25 +493,25 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             }
 
             il.Emit(OpCodes.Ret);
-            var delegateType = typeof(CreateProxyInstance<>).MakeGenericType(proxyDefinitionType);
+			var delegateType = typeof(CreateProxyInstance<>).MakeGenericType(proxyDefinitionType);
             return createProxyMethod.CreateDelegate(delegateType);
         }
 
         private static Delegate CreateStructCopyMethod(ModuleBuilder moduleBuilder, Type proxyDefinitionType, Type proxyType, Type targetType)
         {
-            var ctor = proxyType.GetConstructors()[0];
+			var ctor = proxyType.GetConstructors()[0];
 
-            var createStructMethod = new DynamicMethod(
+			var createStructMethod = new DynamicMethod(
                 $"CreateStructInstance<{proxyType.Name}>",
                 proxyDefinitionType,
                 new[] { typeof(object) },
-                typeof(DuckType).Module,
+                typeof(Elastic.Apm.Profiler.Managed.DuckTyping.DuckType).Module,
                 true);
-            var il = createStructMethod.GetILGenerator();
+			var il = createStructMethod.GetILGenerator();
 
             // First we declare the locals
-            var proxyLocal = il.DeclareLocal(proxyType);
-            var structLocal = il.DeclareLocal(proxyDefinitionType);
+			var proxyLocal = il.DeclareLocal(proxyType);
+			var structLocal = il.DeclareLocal(proxyDefinitionType);
 
             // We create an instance of the proxy type
             il.Emit(OpCodes.Ldloca_S, proxyLocal.LocalIndex);
@@ -514,10 +519,14 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             if (UseDirectAccessTo(moduleBuilder, targetType))
             {
                 if (targetType.IsValueType)
-					il.Emit(OpCodes.Unbox_Any, targetType);
-				else
-					il.Emit(OpCodes.Castclass, targetType);
-			}
+                {
+                    il.Emit(OpCodes.Unbox_Any, targetType);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Castclass, targetType);
+                }
+            }
 
             il.Emit(OpCodes.Call, ctor);
 
@@ -540,7 +549,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     continue;
                 }
 
-                var prop = proxyType.GetProperty(finfo.Name);
+				var prop = proxyType.GetProperty(finfo.Name);
                 il.Emit(OpCodes.Ldloca_S, structLocal.LocalIndex);
                 il.Emit(OpCodes.Ldloca_S, proxyLocal.LocalIndex);
                 il.EmitCall(OpCodes.Call, prop.GetMethod, null);
@@ -551,7 +560,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             il.WriteLoadLocal(structLocal.LocalIndex);
             il.Emit(OpCodes.Ret);
 
-            var delegateType = typeof(CreateProxyInstance<>).MakeGenericType(proxyDefinitionType);
+			var delegateType = typeof(CreateProxyInstance<>).MakeGenericType(proxyDefinitionType);
             return createStructMethod.CreateDelegate(delegateType);
         }
 
@@ -591,7 +600,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 Success = proxyType != null && exceptionInfo == null;
                 if (exceptionInfo != null)
                 {
-                    var methodInfo = typeof(CreateTypeResult).GetMethod(nameof(ThrowOnError), BindingFlags.NonPublic | BindingFlags.Instance);
+					var methodInfo = typeof(CreateTypeResult).GetMethod(nameof(ThrowOnError), BindingFlags.NonPublic | BindingFlags.Instance);
                     _activator = methodInfo
                         .MakeGenericMethod(proxyTypeDefinition)
                         .CreateDelegate(
@@ -667,21 +676,17 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             public static CreateTypeResult GetProxy(Type targetType)
             {
                 // We set a fast path for the first proxy type for a proxy definition. (It's likely to have a proxy definition just for one target type)
-                var fastPath = _fastPath;
+				var fastPath = _fastPath;
                 if (fastPath.TargetType == targetType)
-                {
-                    return fastPath;
-                }
+					return fastPath;
 
-                var result = GetProxySlow(targetType);
+				var result = GetProxySlow(targetType);
 
                 fastPath = _fastPath;
                 if (fastPath.TargetType is null)
-                {
-                    _fastPath = result;
-                }
+					_fastPath = result;
 
-                return result;
+				return result;
             }
 
             /// <summary>
@@ -693,11 +698,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             public static T Create(object instance)
             {
                 if (instance is null)
-                {
-                    return default;
-                }
+					return default;
 
-                return GetProxy(instance.GetType()).CreateInstance<T>(instance);
+				return GetProxy(instance.GetType()).CreateInstance<T>(instance);
             }
 
             /// <summary>
@@ -709,15 +712,22 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             public static bool CanCreate(object instance)
             {
                 if (instance is null)
-                {
-                    return false;
-                }
+					return false;
 
-                return GetProxy(instance.GetType()).CanCreate();
+				return GetProxy(instance.GetType()).CanCreate();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static CreateTypeResult GetProxySlow(Type targetType) => GetOrCreateProxyType(Type, targetType);
-		}
+            private static CreateTypeResult GetProxySlow(Type targetType)
+            {
+#if NET45
+                if (!Type.IsValueType && !IsVisible)
+                {
+                    DuckTypeTypeIsNotPublicException.Throw(Type, nameof(Type));
+                }
+#endif
+                return GetOrCreateProxyType(Type, targetType);
+            }
+        }
     }
 }

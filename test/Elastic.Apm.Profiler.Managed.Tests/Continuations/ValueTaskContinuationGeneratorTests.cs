@@ -15,7 +15,7 @@ using Elastic.Apm.Profiler.Managed.CallTarget;
 using Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations;
 using Xunit;
 
-namespace Datadog.Trace.Tests.CallTarget
+namespace Elastic.Apm.Profiler.Managed.Tests.Continuations
 {
     public class ValueTaskContinuationGeneratorTests
     {

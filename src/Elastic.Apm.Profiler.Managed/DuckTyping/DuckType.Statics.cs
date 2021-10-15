@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="DuckType.Statics.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 
 namespace Elastic.Apm.Profiler.Managed.DuckTyping
 {
@@ -34,7 +36,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly object _locker = new object();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly ConcurrentDictionary<TypesTuple, Lazy<CreateTypeResult>> DuckTypeCache = new ConcurrentDictionary<TypesTuple, Lazy<CreateTypeResult>>();
+        private static readonly ConcurrentDictionary<TypesTuple, Lazy<CreateTypeResult>> DuckTypeCache = new ConcurrentDictionary<TypesTuple, Lazy<DuckType.CreateTypeResult>>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly PropertyInfo DuckTypeInstancePropertyInfo = typeof(IDuckType).GetProperty(nameof(IDuckType.Instance));
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

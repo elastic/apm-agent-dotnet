@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="DuckType.Utilities.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -36,7 +37,14 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             {
                 DuckTypeTargetObjectInstanceIsNull.Throw();
             }
-		}
+
+#if NET45
+            if (!proxyType.IsPublic && !proxyType.IsNestedPublic)
+            {
+                DuckTypeTypeIsNotPublicException.Throw(proxyType, nameof(proxyType));
+            }
+#endif
+        }
 
         /// <summary>
         /// Ensures the visibility access to the type
@@ -45,18 +53,40 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         /// <param name="type">Type to gain internals visibility</param>
         private static void EnsureTypeVisibility(ModuleBuilder builder, Type type)
         {
-            var name = type.Assembly.GetName().Name;
-            lock (_ignoresAccessChecksToAssembliesSetDictionary)
-            {
-                if (!_ignoresAccessChecksToAssembliesSetDictionary.TryGetValue(builder, out var hashSet))
-                {
-                    hashSet = new HashSet<string>();
-                    _ignoresAccessChecksToAssembliesSetDictionary[builder] = hashSet;
-                }
+            EnsureAssemblyNameVisibility(builder, type.Assembly.GetName().Name);
 
-                if (hashSet.Add(name))
+            if (type.IsGenericType && !type.IsGenericTypeDefinition)
+            {
+                foreach (var t in type.GetGenericArguments())
                 {
-                    ((AssemblyBuilder)builder.Assembly).SetCustomAttribute(new CustomAttributeBuilder(_ignoresAccessChecksToAttributeCtor, new object[] { name }));
+                    if (!t.IsVisible)
+						EnsureAssemblyNameVisibility(builder, t.Assembly.GetName().Name);
+				}
+            }
+
+            while (type.IsNested)
+            {
+                if (!type.IsNestedPublic)
+					EnsureAssemblyNameVisibility(builder, type.Assembly.GetName().Name);
+
+				// this should be null for non-nested types.
+                type = type.DeclaringType;
+            }
+
+            static void EnsureAssemblyNameVisibility(ModuleBuilder builder, string assemblyName)
+            {
+                lock (_ignoresAccessChecksToAssembliesSetDictionary)
+                {
+                    if (!_ignoresAccessChecksToAssembliesSetDictionary.TryGetValue(builder, out var hashSet))
+                    {
+                        hashSet = new HashSet<string>();
+                        _ignoresAccessChecksToAssembliesSetDictionary[builder] = hashSet;
+                    }
+
+                    if (hashSet.Add(assemblyName))
+                    {
+                        ((AssemblyBuilder)builder.Assembly).SetCustomAttribute(new CustomAttributeBuilder(_ignoresAccessChecksToAttributeCtor, new object[] { assemblyName }));
+                    }
                 }
             }
         }
@@ -85,11 +115,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         private static bool UseDirectAccessTo(ModuleBuilder builder, Type targetType)
         {
 			if (builder == null)
-            {
-                return targetType.IsPublic || targetType.IsNestedPublic;
-            }
+				return targetType.IsPublic || targetType.IsNestedPublic;
 
-            EnsureTypeVisibility(builder, targetType);
+			EnsureTypeVisibility(builder, targetType);
             return true;
 		}
 
@@ -99,15 +127,13 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         /// <param name="builder">Type builder</param>
         /// <param name="targetType">Target type</param>
         /// <returns>true for direct method; otherwise, false.</returns>
-        private static bool UseDirectAccessTo(TypeBuilder builder, Type targetType) =>
-			UseDirectAccessTo((ModuleBuilder)builder?.Module, targetType);
+        private static bool UseDirectAccessTo(TypeBuilder builder, Type targetType) => UseDirectAccessTo((ModuleBuilder)builder?.Module, targetType);
 
 		/// <summary>
         /// Gets if the direct access method should be used or the inderect method (dynamic method)
         /// </summary>
         /// <param name="targetType">Target type</param>
         /// <returns>true for direct method; otherwise, false.</returns>
-        private static bool UseDirectAccessTo(Type targetType) =>
-			UseDirectAccessTo((ModuleBuilder)null, targetType);
+        private static bool UseDirectAccessTo(Type targetType) => UseDirectAccessTo((ModuleBuilder)null, targetType);
 	}
 }

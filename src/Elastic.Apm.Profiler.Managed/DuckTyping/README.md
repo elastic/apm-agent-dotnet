@@ -118,6 +118,20 @@ public class DuckAttribute : Attribute
 }
 
 /// <summary>
+/// Duck attribute where the underlying member is a field
+/// </summary>
+public class DuckFieldAttribute : DuckAttribute
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DuckFieldAttribute"/> class.
+    /// </summary>
+    public DuckFieldAttribute()
+    {
+        Kind = DuckKind.Field;
+    }
+}
+
+/// <summary>
 /// Duck kind
 /// </summary>
 public enum DuckKind
@@ -147,10 +161,10 @@ public interface IMyProxy
     // *** Field binding
     // ***
 
-    [Duck(Name = "_sampleStaticField", Kind = DuckKind.Field)]
+    [DuckField(Name = "_sampleStaticField")]
     string MyStaticField { get; }
 
-    [Duck(Name = "_normalField", Kind = DuckKind.Field)]
+    [DuckField(Name = "_normalField")]
     int NormalFieldWithGetterAndSetter { get; set; }
 
 

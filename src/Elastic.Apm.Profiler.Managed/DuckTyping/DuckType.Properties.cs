@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="DuckType.Properties.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -23,9 +24,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         private static MethodBuilder GetPropertyGetMethod(TypeBuilder proxyTypeBuilder, Type targetType, MemberInfo proxyMember, PropertyInfo targetProperty, FieldInfo instanceField)
         {
             var proxyMemberName = proxyMember.Name;
-            var proxyMemberReturnType = typeof(object);
-            var proxyParameterTypes = Type.EmptyTypes;
-            var targetParametersTypes = GetPropertyGetParametersTypes(proxyTypeBuilder, targetProperty, true).ToArray();
+			var proxyMemberReturnType = typeof(object);
+			var proxyParameterTypes = Type.EmptyTypes;
+			var targetParametersTypes = GetPropertyGetParametersTypes(proxyTypeBuilder, targetProperty, true).ToArray();
 
             if (proxyMember is PropertyInfo proxyProperty)
             {
@@ -46,15 +47,15 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 }
             }
 
-            var proxyMethod = proxyTypeBuilder.DefineMethod(
+			var proxyMethod = proxyTypeBuilder.DefineMethod(
                 "get_" + proxyMemberName,
                 MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 proxyMemberReturnType,
                 proxyParameterTypes);
 
-            var il = new LazyILGenerator(proxyMethod.GetILGenerator());
-            var targetMethod = targetProperty.GetMethod;
-            var returnType = targetProperty.PropertyType;
+			var il = new LazyILGenerator(proxyMethod.GetILGenerator());
+			var targetMethod = targetProperty.GetMethod;
+			var returnType = targetProperty.PropertyType;
 
             // Load the instance if needed
             if (!targetMethod.IsStatic)
@@ -66,8 +67,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             // Load the indexer keys to the stack
             for (var pIndex = 0; pIndex < proxyParameterTypes.Length; pIndex++)
             {
-                var proxyParamType = proxyParameterTypes[pIndex];
-                var targetParamType = targetParametersTypes[pIndex];
+				var proxyParamType = proxyParameterTypes[pIndex];
+				var targetParamType = targetParametersTypes[pIndex];
 
                 // Check if the type can be converted of if we need to enable duck chaining
                 if (NeedsDuckChaining(targetParamType, proxyParamType))
@@ -114,16 +115,16 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 // If the instance is not public we need to create a Dynamic method to overpass the visibility checks
                 // we can't access non public types so we have to cast to object type (in the instance object and the return type).
 
-                var dynMethodName = $"_getNonPublicProperty_{targetProperty.DeclaringType.Name}_{targetProperty.Name}";
+				var dynMethodName = $"_getNonPublicProperty_{targetProperty.DeclaringType.Name}_{targetProperty.Name}";
                 returnType = UseDirectAccessTo(proxyTypeBuilder, targetProperty.PropertyType) ? targetProperty.PropertyType : typeof(object);
 
                 // We create the dynamic method
-                var targetParameters = GetPropertyGetParametersTypes(proxyTypeBuilder, targetProperty, false, !targetMethod.IsStatic).ToArray();
-                var dynParameters = targetMethod.IsStatic ? targetParametersTypes : (new[] { typeof(object) }).Concat(targetParametersTypes).ToArray();
-                var dynMethod = new DynamicMethod(dynMethodName, returnType, dynParameters, proxyTypeBuilder.Module, true);
+				var targetParameters = GetPropertyGetParametersTypes(proxyTypeBuilder, targetProperty, false, !targetMethod.IsStatic).ToArray();
+				var dynParameters = targetMethod.IsStatic ? targetParametersTypes : (new[] { typeof(object) }).Concat(targetParametersTypes).ToArray();
+				var dynMethod = new DynamicMethod(dynMethodName, returnType, dynParameters, proxyTypeBuilder.Module, true);
 
                 // Emit the dynamic method body
-                var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
+				var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
 
                 if (!targetMethod.IsStatic)
                 {
@@ -155,7 +156,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 }
 
                 // We call DuckType.CreateCache<>.Create()
-                var getProxyMethodInfo = typeof(CreateCache<>)
+				var getProxyMethodInfo = typeof(CreateCache<>)
                     .MakeGenericType(proxyMemberReturnType).GetMethod("Create");
 
                 il.Emit(OpCodes.Call, getProxyMethodInfo);
@@ -175,8 +176,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         private static MethodBuilder GetPropertySetMethod(TypeBuilder proxyTypeBuilder, Type targetType, MemberInfo proxyMember, PropertyInfo targetProperty, FieldInfo instanceField)
         {
             string proxyMemberName = null;
-            var proxyParameterTypes = Type.EmptyTypes;
-            var targetParametersTypes = GetPropertySetParametersTypes(proxyTypeBuilder, targetProperty, true).ToArray();
+			var proxyParameterTypes = Type.EmptyTypes;
+			var targetParametersTypes = GetPropertySetParametersTypes(proxyTypeBuilder, targetProperty, true).ToArray();
 
             if (proxyMember is PropertyInfo proxyProperty)
             {
@@ -197,14 +198,14 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 }
             }
 
-            var proxyMethod = proxyTypeBuilder.DefineMethod(
+			var proxyMethod = proxyTypeBuilder.DefineMethod(
                 "set_" + proxyMemberName,
                 MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 typeof(void),
                 proxyParameterTypes);
 
-            var il = new LazyILGenerator(proxyMethod.GetILGenerator());
-            var targetMethod = targetProperty.SetMethod;
+			var il = new LazyILGenerator(proxyMethod.GetILGenerator());
+			var targetMethod = targetProperty.SetMethod;
 
             // Load the instance if needed
             if (!targetMethod.IsStatic)
@@ -216,8 +217,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             // Load the indexer keys and set value to the stack
             for (var pIndex = 0; pIndex < proxyParameterTypes.Length; pIndex++)
             {
-                var proxyParamType = proxyParameterTypes[pIndex];
-                var targetParamType = targetParametersTypes[pIndex];
+				var proxyParamType = proxyParameterTypes[pIndex];
+				var targetParamType = targetParametersTypes[pIndex];
 
                 // Check if the type can be converted of if we need to enable duck chaining
                 if (NeedsDuckChaining(targetParamType, proxyParamType))
@@ -232,11 +233,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     targetParamType = typeof(object);
                 }
                 else
-                {
-                    il.WriteLoadArgument(pIndex, false);
-                }
+					il.WriteLoadArgument(pIndex, false);
 
-                // If the target parameter type is public or if it's by ref we have to actually use the original target type.
+				// If the target parameter type is public or if it's by ref we have to actually use the original target type.
                 targetParamType = UseDirectAccessTo(proxyTypeBuilder, targetParamType) || targetParamType.IsByRef ? targetParamType : typeof(object);
                 il.WriteTypeConversion(proxyParamType, targetParamType);
 
@@ -264,15 +263,15 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 // If the instance is not public we need to create a Dynamic method to overpass the visibility checks
                 // we can't access non public types so we have to cast to object type (in the instance object and the return type).
 
-                var dynMethodName = $"_setNonPublicProperty+{targetProperty.DeclaringType.Name}.{targetProperty.Name}";
+				var dynMethodName = $"_setNonPublicProperty+{targetProperty.DeclaringType.Name}.{targetProperty.Name}";
 
                 // We create the dynamic method
-                var targetParameters = GetPropertySetParametersTypes(proxyTypeBuilder, targetProperty, false, !targetMethod.IsStatic).ToArray();
-                var dynParameters = targetMethod.IsStatic ? targetParametersTypes : (new[] { typeof(object) }).Concat(targetParametersTypes).ToArray();
-                var dynMethod = new DynamicMethod(dynMethodName, typeof(void), dynParameters, proxyTypeBuilder.Module, true);
+				var targetParameters = GetPropertySetParametersTypes(proxyTypeBuilder, targetProperty, false, !targetMethod.IsStatic).ToArray();
+				var dynParameters = targetMethod.IsStatic ? targetParametersTypes : (new[] { typeof(object) }).Concat(targetParametersTypes).ToArray();
+				var dynMethod = new DynamicMethod(dynMethodName, typeof(void), dynParameters, proxyTypeBuilder.Module, true);
 
                 // Emit the dynamic method body
-                var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
+				var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
 
                 if (!targetMethod.IsStatic)
                 {
@@ -302,44 +301,30 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         private static IEnumerable<Type> GetPropertyGetParametersTypes(TypeBuilder typeBuilder, PropertyInfo property, bool originalTypes, bool isDynamicSignature = false)
         {
             if (isDynamicSignature)
-            {
-                yield return typeof(object);
-            }
+				yield return typeof(object);
 
-            var idxParams = property.GetIndexParameters();
+			var idxParams = property.GetIndexParameters();
             foreach (var parameter in idxParams)
             {
                 if (originalTypes || UseDirectAccessTo(typeBuilder, parameter.ParameterType))
-                {
-                    yield return parameter.ParameterType;
-                }
-                else
-                {
-                    yield return typeof(object);
-                }
-            }
+					yield return parameter.ParameterType;
+				else
+					yield return typeof(object);
+			}
         }
 
         private static IEnumerable<Type> GetPropertySetParametersTypes(TypeBuilder typeBuilder, PropertyInfo property, bool originalTypes, bool isDynamicSignature = false)
         {
             if (isDynamicSignature)
-            {
-                yield return typeof(object);
-            }
+				yield return typeof(object);
 
-            foreach (var indexType in GetPropertyGetParametersTypes(typeBuilder, property, originalTypes))
-            {
-                yield return indexType;
-            }
+			foreach (var indexType in GetPropertyGetParametersTypes(typeBuilder, property, originalTypes))
+				yield return indexType;
 
-            if (originalTypes || UseDirectAccessTo(typeBuilder, property.PropertyType))
-            {
-                yield return property.PropertyType;
-            }
-            else
-            {
-                yield return typeof(object);
-            }
-        }
+			if (originalTypes || UseDirectAccessTo(typeBuilder, property.PropertyType))
+				yield return property.PropertyType;
+			else
+				yield return typeof(object);
+		}
     }
 }

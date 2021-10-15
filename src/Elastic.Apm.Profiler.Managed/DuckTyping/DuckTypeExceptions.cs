@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="DuckTypeExceptions.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -192,7 +193,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         }
 
         [DebuggerHidden]
-        internal static void Throw(MethodInfo proxyMethod, ParameterInfo targetParameterInfo) => throw new DuckTypeProxyMethodParameterIsMissingException(proxyMethod, targetParameterInfo);
+        internal static void Throw(MethodInfo proxyMethod, ParameterInfo targetParameterInfo) =>
+			throw new DuckTypeProxyMethodParameterIsMissingException(proxyMethod, targetParameterInfo);
 	}
 
     /// <summary>
@@ -206,7 +208,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         }
 
         [DebuggerHidden]
-        internal static void Throw(MethodInfo proxyMethod, MethodInfo targetMethod) => throw new DuckTypeProxyAndTargetMethodParameterSignatureMismatchException(proxyMethod, targetMethod);
+        internal static void Throw(MethodInfo proxyMethod, MethodInfo targetMethod) =>
+			throw new DuckTypeProxyAndTargetMethodParameterSignatureMismatchException(proxyMethod, targetMethod);
 	}
 
     /// <summary>
@@ -220,7 +223,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         }
 
         [DebuggerHidden]
-        internal static void Throw(MethodInfo proxyMethod) => throw new DuckTypeProxyMethodsWithGenericParametersNotSupportedInNonPublicInstancesException(proxyMethod);
+        internal static void Throw(MethodInfo proxyMethod) =>
+			throw new DuckTypeProxyMethodsWithGenericParametersNotSupportedInNonPublicInstancesException(proxyMethod);
 	}
 
     /// <summary>
@@ -234,6 +238,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         }
 
         [DebuggerHidden]
-        internal static void Throw(MethodInfo proxyMethod, MethodInfo targetMethod, MethodInfo targetMethod2) => throw new DuckTypeTargetMethodAmbiguousMatchException(proxyMethod, targetMethod, targetMethod2);
+        internal static void Throw(MethodInfo proxyMethod, MethodInfo targetMethod, MethodInfo targetMethod2) =>
+			throw new DuckTypeTargetMethodAmbiguousMatchException(proxyMethod, targetMethod, targetMethod2);
 	}
 }

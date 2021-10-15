@@ -1,6 +1,7 @@
-// Licensed to Elasticsearch B.V under the Apache 2.0 License.
-// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 //
 // <copyright file="DuckType.Methods.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
@@ -22,27 +23,23 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
     {
         private static List<MethodInfo> GetMethods(Type baseType)
         {
-            var selectedMethods = new List<MethodInfo>(GetBaseMethods(baseType));
+			var selectedMethods = new List<MethodInfo>(GetBaseMethods(baseType));
             // If the base type is an interface we must make sure we implement all methods, including from other interfaces
             if (baseType.IsInterface)
             {
-                var implementedInterfaces = baseType.GetInterfaces();
+				var implementedInterfaces = baseType.GetInterfaces();
                 foreach (var imInterface in implementedInterfaces)
                 {
                     if (imInterface == typeof(IDuckType))
-                    {
-                        continue;
-                    }
+						continue;
 
-                    foreach (var interfaceMethod in imInterface.GetMethods())
+					foreach (var interfaceMethod in imInterface.GetMethods())
                     {
                         if (interfaceMethod.IsSpecialName)
-                        {
-                            continue;
-                        }
+							continue;
 
-                        var interfaceMethodName = interfaceMethod.ToString();
-                        var methodAlreadySelected = false;
+						var interfaceMethodName = interfaceMethod.ToString();
+						var methodAlreadySelected = false;
                         foreach (var currentMethod in selectedMethods)
                         {
                             if (currentMethod.ToString() == interfaceMethodName)
@@ -54,12 +51,10 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
                         if (!methodAlreadySelected)
                         {
-                            var prevMethod = baseType.GetMethod(interfaceMethod.Name, DuckAttribute.DefaultFlags, null, interfaceMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
+							var prevMethod = baseType.GetMethod(interfaceMethod.Name, DuckAttribute.DefaultFlags, null, interfaceMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
                             if (prevMethod == null || prevMethod.GetCustomAttribute<DuckIgnoreAttribute>() is null)
-                            {
-                                selectedMethods.Add(interfaceMethod);
-                            }
-                        }
+								selectedMethods.Add(interfaceMethod);
+						}
                     }
                 }
             }
@@ -75,24 +70,18 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     // You can still proxy those methods if they are defined in an interface, or if you add the DuckInclude attribute.
                     if (method.DeclaringType == typeof(object))
                     {
-                        var include = method.GetCustomAttribute<DuckIncludeAttribute>(true) is not null;
+						var include = method.GetCustomAttribute<DuckIncludeAttribute>(true) is not null;
 
                         if (!include)
-                        {
-                            continue;
-                        }
-                    }
+							continue;
+					}
 
                     if (method.IsSpecialName || method.IsFinal || method.IsPrivate)
-                    {
-                        continue;
-                    }
+						continue;
 
-                    if (baseType.IsInterface || method.IsAbstract || method.IsVirtual)
-                    {
-                        yield return method;
-                    }
-                }
+					if (baseType.IsInterface || method.IsAbstract || method.IsVirtual)
+						yield return method;
+				}
             }
         }
 
@@ -105,87 +94,73 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             foreach (var method in targetMethodsDefinitions)
             {
                 if (method.GetCustomAttribute<DuckIncludeAttribute>(true) is not null)
-                {
-                    proxyMethodsDefinitions.Add(method);
-                }
-            }
+					proxyMethodsDefinitions.Add(method);
+			}
 
             foreach (var proxyMethodDefinition in proxyMethodsDefinitions)
             {
                 // Ignore the method marked with `DuckIgnore` attribute
                 if (proxyMethodDefinition.GetCustomAttribute<DuckIgnoreAttribute>(true) is not null)
-                {
-                    continue;
-                }
+					continue;
 
-                // Extract the method parameters types
-                var proxyMethodDefinitionParameters = proxyMethodDefinition.GetParameters();
-                var proxyMethodDefinitionParametersTypes = proxyMethodDefinitionParameters.Select(p => p.ParameterType).ToArray();
+				// Extract the method parameters types
+				var proxyMethodDefinitionParameters = proxyMethodDefinition.GetParameters();
+				var proxyMethodDefinitionParametersTypes = proxyMethodDefinitionParameters.Select(p => p.ParameterType).ToArray();
 
                 // We select the target method to call
-                var targetMethod = SelectTargetMethod(targetType, proxyMethodDefinition, proxyMethodDefinitionParameters, proxyMethodDefinitionParametersTypes);
+				var targetMethod = SelectTargetMethod(targetType, proxyMethodDefinition, proxyMethodDefinitionParameters, proxyMethodDefinitionParametersTypes);
 
                 // If the target method couldn't be found and the proxy method doesn't have an implementation already (ex: abstract and virtual classes) we throw.
                 if (targetMethod is null && proxyMethodDefinition.IsVirtual)
-                {
-                    DuckTypeTargetMethodNotFoundException.Throw(proxyMethodDefinition);
-                }
+					DuckTypeTargetMethodNotFoundException.Throw(proxyMethodDefinition);
 
-                // Check if target method is a reverse method
-                var isReverse = targetMethod.GetCustomAttribute<DuckReverseMethodAttribute>(true) is not null;
+				// Check if target method is a reverse method
+				var isReverse = targetMethod.GetCustomAttribute<DuckReverseMethodAttribute>(true) is not null;
 
                 // Gets the proxy method definition generic arguments
-                var proxyMethodDefinitionGenericArguments = proxyMethodDefinition.GetGenericArguments();
-                var proxyMethodDefinitionGenericArgumentsNames = proxyMethodDefinitionGenericArguments.Select(a => a.Name).ToArray();
+				var proxyMethodDefinitionGenericArguments = proxyMethodDefinition.GetGenericArguments();
+				var proxyMethodDefinitionGenericArgumentsNames = proxyMethodDefinitionGenericArguments.Select(a => a.Name).ToArray();
 
                 // Checks if the target method is a generic method while the proxy method is non generic (checks if the Duck attribute contains the generic parameters)
-                var targetMethodGenericArguments = targetMethod.GetGenericArguments();
+				var targetMethodGenericArguments = targetMethod.GetGenericArguments();
                 if (proxyMethodDefinitionGenericArguments.Length == 0 && targetMethodGenericArguments.Length > 0)
                 {
-                    var proxyDuckAttribute = proxyMethodDefinition.GetCustomAttribute<DuckAttribute>();
+					var proxyDuckAttribute = proxyMethodDefinition.GetCustomAttribute<DuckAttribute>();
                     if (proxyDuckAttribute is null)
-                    {
-                        DuckTypeTargetMethodNotFoundException.Throw(proxyMethodDefinition);
-                    }
+						DuckTypeTargetMethodNotFoundException.Throw(proxyMethodDefinition);
 
-                    if (proxyDuckAttribute.GenericParameterTypeNames?.Length != targetMethodGenericArguments.Length)
-                    {
-                        DuckTypeTargetMethodNotFoundException.Throw(proxyMethodDefinition);
-                    }
+					if (proxyDuckAttribute.GenericParameterTypeNames?.Length != targetMethodGenericArguments.Length)
+						DuckTypeTargetMethodNotFoundException.Throw(proxyMethodDefinition);
 
-                    targetMethod = targetMethod.MakeGenericMethod(proxyDuckAttribute.GenericParameterTypeNames.Select(name => Type.GetType(name)).ToArray());
+					targetMethod = targetMethod.MakeGenericMethod(proxyDuckAttribute.GenericParameterTypeNames.Select(name => Type.GetType(name)).ToArray());
                 }
 
                 // Gets target method parameters
-                var targetMethodParameters = targetMethod.GetParameters();
-                var targetMethodParametersTypes = targetMethodParameters.Select(p => p.ParameterType).ToArray();
+				var targetMethodParameters = targetMethod.GetParameters();
+				var targetMethodParametersTypes = targetMethodParameters.Select(p => p.ParameterType).ToArray();
 
                 // Make sure we have the right methods attributes.
-                var proxyMethodAttributes = MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig;
+				var proxyMethodAttributes = MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig;
 
                 // Create the proxy method implementation
-                var proxyMethodParametersBuilders = new ParameterBuilder[proxyMethodDefinitionParameters.Length];
-                var proxyMethod = proxyTypeBuilder.DefineMethod(proxyMethodDefinition.Name, proxyMethodAttributes, proxyMethodDefinition.ReturnType, proxyMethodDefinitionParametersTypes);
+				var proxyMethodParametersBuilders = new ParameterBuilder[proxyMethodDefinitionParameters.Length];
+				var proxyMethod = proxyTypeBuilder.DefineMethod(proxyMethodDefinition.Name, proxyMethodAttributes, proxyMethodDefinition.ReturnType, proxyMethodDefinitionParametersTypes);
                 if (proxyMethodDefinitionGenericArgumentsNames.Length > 0)
-                {
-                    _ = proxyMethod.DefineGenericParameters(proxyMethodDefinitionGenericArgumentsNames);
-                }
+					_ = proxyMethod.DefineGenericParameters(proxyMethodDefinitionGenericArgumentsNames);
 
-                // Define the proxy method implementation parameters for optional parameters with default values
+				// Define the proxy method implementation parameters for optional parameters with default values
                 for (var j = 0; j < proxyMethodDefinitionParameters.Length; j++)
                 {
-                    var pmDefParameter = proxyMethodDefinitionParameters[j];
-                    var pmImpParameter = proxyMethod.DefineParameter(j, pmDefParameter.Attributes, pmDefParameter.Name);
+					var pmDefParameter = proxyMethodDefinitionParameters[j];
+					var pmImpParameter = proxyMethod.DefineParameter(j, pmDefParameter.Attributes, pmDefParameter.Name);
                     if (pmDefParameter.HasDefaultValue)
-                    {
-                        pmImpParameter.SetConstant(pmDefParameter.RawDefaultValue);
-                    }
+						pmImpParameter.SetConstant(pmDefParameter.RawDefaultValue);
 
-                    proxyMethodParametersBuilders[j] = pmImpParameter;
+					proxyMethodParametersBuilders[j] = pmImpParameter;
                 }
 
-                var il = new LazyILGenerator(proxyMethod.GetILGenerator());
-                var returnType = targetMethod.ReturnType;
+				var il = new LazyILGenerator(proxyMethod.GetILGenerator());
+				var returnType = targetMethod.ReturnType;
                 List<OutputAndRefParameterData> outputAndRefParameters = null;
 
                 // Load the instance if needed
@@ -196,11 +171,11 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 }
 
                 // Load all the arguments / parameters
-                var maxParamLength = Math.Max(proxyMethodDefinitionParameters.Length, targetMethodParameters.Length);
+				var maxParamLength = Math.Max(proxyMethodDefinitionParameters.Length, targetMethodParameters.Length);
                 for (var idx = 0; idx < maxParamLength; idx++)
                 {
-                    var proxyParamInfo = idx < proxyMethodDefinitionParameters.Length ? proxyMethodDefinitionParameters[idx] : null;
-                    var targetParamInfo = targetMethodParameters[idx];
+					var proxyParamInfo = idx < proxyMethodDefinitionParameters.Length ? proxyMethodDefinitionParameters[idx] : null;
+					var targetParamInfo = targetMethodParameters[idx];
 
                     if (proxyParamInfo is null)
                     {
@@ -219,8 +194,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                             DuckTypeProxyAndTargetMethodParameterSignatureMismatchException.Throw(proxyMethodDefinition, targetMethod);
                         }
 
-                        var proxyParamType = proxyParamInfo.ParameterType;
-                        var targetParamType = targetParamInfo.ParameterType;
+						var proxyParamType = proxyParamInfo.ParameterType;
+						var targetParamType = targetParamInfo.ParameterType;
 
                         if (proxyParamType.IsByRef != targetParamType.IsByRef)
                         {
@@ -236,15 +211,13 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                             // and then try to set the output parameter of the proxy method by converting the value (a base class or a duck typing)
                             if (proxyParamType != targetParamType)
                             {
-                                var localTargetArg = il.DeclareLocal(targetParamType.GetElementType());
+								var localTargetArg = il.DeclareLocal(targetParamType.GetElementType());
 
                                 // We need to store the output parameter data to set the proxy parameter value after we call the target method
                                 if (outputAndRefParameters is null)
-                                {
-                                    outputAndRefParameters = new List<OutputAndRefParameterData>();
-                                }
+									outputAndRefParameters = new List<OutputAndRefParameterData>();
 
-                                outputAndRefParameters.Add(new OutputAndRefParameterData(localTargetArg.LocalIndex, targetParamType, idx, proxyParamType));
+								outputAndRefParameters.Add(new OutputAndRefParameterData(localTargetArg.LocalIndex, targetParamType, idx, proxyParamType));
 
                                 // Load the local var ref (to be used in the target method param as output)
                                 il.Emit(OpCodes.Ldloca_S, localTargetArg.LocalIndex);
@@ -262,8 +235,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                             // by converting the value (a base class or a duck typing)
                             if (proxyParamType != targetParamType)
                             {
-                                var proxyParamTypeElementType = proxyParamType.GetElementType();
-                                var targetParamTypeElementType = targetParamType.GetElementType();
+								var proxyParamTypeElementType = proxyParamType.GetElementType();
+								var targetParamTypeElementType = targetParamType.GetElementType();
 
                                 if (!UseDirectAccessTo(proxyTypeBuilder, targetParamTypeElementType))
                                 {
@@ -271,15 +244,13 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                                     targetParamTypeElementType = typeof(object);
                                 }
 
-                                var localTargetArg = il.DeclareLocal(targetParamTypeElementType);
+								var localTargetArg = il.DeclareLocal(targetParamTypeElementType);
 
                                 // We need to store the ref parameter data to set the proxy parameter value after we call the target method
                                 if (outputAndRefParameters is null)
-                                {
-                                    outputAndRefParameters = new List<OutputAndRefParameterData>();
-                                }
+									outputAndRefParameters = new List<OutputAndRefParameterData>();
 
-                                outputAndRefParameters.Add(new OutputAndRefParameterData(localTargetArg.LocalIndex, targetParamType, idx, proxyParamType));
+								outputAndRefParameters.Add(new OutputAndRefParameterData(localTargetArg.LocalIndex, targetParamType, idx, proxyParamType));
 
                                 // Load the argument (ref)
                                 il.WriteLoadArgument(idx, false);
@@ -291,8 +262,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                                 if (NeedsDuckChaining(targetParamTypeElementType, proxyParamTypeElementType))
                                 {
                                     // First we check if the value is null before trying to get the instance value
-                                    var lblCallGetInstance = il.DefineLabel();
-                                    var lblAfterGetInstance = il.DefineLabel();
+									var lblCallGetInstance = il.DefineLabel();
+									var lblAfterGetInstance = il.DefineLabel();
 
                                     il.Emit(OpCodes.Dup);
                                     il.Emit(OpCodes.Brtrue_S, lblCallGetInstance);
@@ -318,10 +289,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                                 il.Emit(OpCodes.Ldloca_S, localTargetArg.LocalIndex);
                             }
                             else
-                            {
-                                il.WriteLoadArgument(idx, false);
-                            }
-                        }
+								il.WriteLoadArgument(idx, false);
+						}
                         else if (!isReverse)
                         {
                             // Check if the type can be converted of if we need to enable duck chaining
@@ -335,11 +304,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                                 il.EmitCall(OpCodes.Callvirt, DuckTypeInstancePropertyInfo.GetMethod, null);
                             }
                             else
-                            {
-                                il.WriteLoadArgument(idx, false);
-                            }
+								il.WriteLoadArgument(idx, false);
 
-                            // If the target parameter type is public or if it's by ref we have to actually use the original target type.
+							// If the target parameter type is public or if it's by ref we have to actually use the original target type.
                             targetParamType = UseDirectAccessTo(proxyTypeBuilder, targetParamType) ? targetParamType : typeof(object);
                             il.WriteSafeTypeConversion(proxyParamType, targetParamType);
 
@@ -352,22 +319,18 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                                 // Load the argument (our proxy type) and cast it as Duck type (the original type)
                                 il.WriteLoadArgument(idx, false);
                                 if (UseDirectAccessTo(proxyTypeBuilder, proxyParamType) && proxyParamType.IsValueType)
-                                {
-                                    il.Emit(OpCodes.Box, proxyParamType);
-                                }
+									il.Emit(OpCodes.Box, proxyParamType);
 
-                                // We call DuckType.CreateCache<>.Create(object instance)
-                                var getProxyMethodInfo = typeof(CreateCache<>)
+								// We call DuckType.CreateCache<>.Create(object instance)
+								var getProxyMethodInfo = typeof(CreateCache<>)
                                     .MakeGenericType(targetParamType).GetMethod("Create");
 
                                 il.Emit(OpCodes.Call, getProxyMethodInfo);
                             }
                             else
-                            {
-                                il.WriteLoadArgument(idx, false);
-                            }
+								il.WriteLoadArgument(idx, false);
 
-                            // If the target parameter type is public or if it's by ref we have to actually use the original target type.
+							// If the target parameter type is public or if it's by ref we have to actually use the original target type.
                             targetParamType = UseDirectAccessTo(proxyTypeBuilder, targetParamType) ? targetParamType : typeof(object);
                             il.WriteSafeTypeConversion(proxyParamType, targetParamType);
 
@@ -388,7 +351,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     }
 
                     // Method call
-                    if (targetMethod.IsPublic)
+                    // A generic method cannot be called using calli (throws System.InvalidOperationException)
+                    if (targetMethod.IsPublic || targetMethod.IsGenericMethod)
                     {
                         // We can emit a normal call if we have a public instance with a public target method.
                         il.EmitCall(targetMethod.IsStatic || targetMethod.DeclaringType.IsValueType ? OpCodes.Call : OpCodes.Callvirt, targetMethod, null);
@@ -410,24 +374,22 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     // If the instance is not public we need to create a Dynamic method to overpass the visibility checks
                     // we can't access non public types so we have to cast to object type (in the instance object and the return type).
 
-                    var dynMethodName = $"_callMethod_{targetMethod.DeclaringType.Name}_{targetMethod.Name}";
+					var dynMethodName = $"_callMethod_{targetMethod.DeclaringType.Name}_{targetMethod.Name}";
                     returnType = UseDirectAccessTo(proxyTypeBuilder, targetMethod.ReturnType) && !targetMethod.ReturnType.IsGenericParameter ? targetMethod.ReturnType : typeof(object);
 
                     // We create the dynamic method
-                    var originalTargetParameters = targetMethod.GetParameters().Select(p => p.ParameterType).ToArray();
-                    var targetParameters = targetMethod.IsStatic ? originalTargetParameters : (new[] { typeof(object) }).Concat(originalTargetParameters).ToArray();
-                    var dynParameters = targetMethod.IsStatic ? targetMethodParametersTypes : (new[] { typeof(object) }).Concat(targetMethodParametersTypes).ToArray();
-                    var dynMethod = new DynamicMethod(dynMethodName, returnType, dynParameters, proxyTypeBuilder.Module, true);
+					var originalTargetParameters = targetMethod.GetParameters().Select(p => p.ParameterType).ToArray();
+					var targetParameters = targetMethod.IsStatic ? originalTargetParameters : (new[] { typeof(object) }).Concat(originalTargetParameters).ToArray();
+					var dynParameters = targetMethod.IsStatic ? targetMethodParametersTypes : (new[] { typeof(object) }).Concat(targetMethodParametersTypes).ToArray();
+					var dynMethod = new DynamicMethod(dynMethodName, returnType, dynParameters, proxyTypeBuilder.Module, true);
 
                     // Emit the dynamic method body
-                    var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
+					var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
 
                     if (!targetMethod.IsStatic)
-                    {
-                        dynIL.LoadInstanceArgument(typeof(object), targetMethod.DeclaringType);
-                    }
+						dynIL.LoadInstanceArgument(typeof(object), targetMethod.DeclaringType);
 
-                    for (var idx = targetMethod.IsStatic ? 0 : 1; idx < dynParameters.Length; idx++)
+					for (var idx = targetMethod.IsStatic ? 0 : 1; idx < dynParameters.Length; idx++)
                     {
                         dynIL.WriteLoadArgument(idx, true);
                         dynIL.WriteSafeTypeConversion(dynParameters[idx], targetParameters[idx]);
@@ -435,10 +397,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
                     // Check if we can emit a normal Call/CallVirt to the target method
                     if (!targetMethod.ContainsGenericParameters)
-                    {
-                        dynIL.EmitCall(targetMethod.IsStatic || targetMethod.DeclaringType.IsValueType ? OpCodes.Call : OpCodes.Callvirt, targetMethod, null);
-                    }
-                    else
+						dynIL.EmitCall(targetMethod.IsStatic || targetMethod.DeclaringType.IsValueType ? OpCodes.Call : OpCodes.Callvirt, targetMethod, null);
+					else
                     {
                         // We can't emit a call to a method with generics from a DynamicMethod
                         // Instead we emit a Calli with the function pointer.
@@ -458,8 +418,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 {
                     foreach (var outOrRefParameter in outputAndRefParameters)
                     {
-                        var proxyArgumentType = outOrRefParameter.ProxyArgumentType.GetElementType();
-                        var localType = outOrRefParameter.LocalType.GetElementType();
+						var proxyArgumentType = outOrRefParameter.ProxyArgumentType.GetElementType();
+						var localType = outOrRefParameter.LocalType.GetElementType();
 
                         // We load the argument to be set
                         il.WriteLoadArgument(outOrRefParameter.ProxyArgumentIndex, false);
@@ -471,22 +431,18 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                         if (NeedsDuckChaining(localType, proxyArgumentType))
                         {
                             if (localType.IsValueType)
-                            {
-                                il.Emit(OpCodes.Box, localType);
-                            }
+								il.Emit(OpCodes.Box, localType);
 
-                            // We call DuckType.CreateCache<>.Create()
-                            var getProxyMethodInfo = typeof(CreateCache<>)
+							// We call DuckType.CreateCache<>.Create()
+							var getProxyMethodInfo = typeof(CreateCache<>)
                                 .MakeGenericType(proxyArgumentType).GetMethod("Create");
 
                             il.Emit(OpCodes.Call, getProxyMethodInfo);
                         }
                         else
-                        {
-                            il.WriteSafeTypeConversion(localType, proxyArgumentType);
-                        }
+							il.WriteSafeTypeConversion(localType, proxyArgumentType);
 
-                        // We store the value
+						// We store the value
                         il.Emit(OpCodes.Stind_Ref);
                     }
                 }
@@ -499,12 +455,10 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     if (NeedsDuckChaining(targetMethod.ReturnType, proxyMethodDefinition.ReturnType))
                     {
                         if (UseDirectAccessTo(proxyTypeBuilder, targetMethod.ReturnType) && targetMethod.ReturnType.IsValueType)
-                        {
-                            il.Emit(OpCodes.Box, targetMethod.ReturnType);
-                        }
+							il.Emit(OpCodes.Box, targetMethod.ReturnType);
 
-                        // We call DuckType.CreateCache<>.Create()
-                        var getProxyMethodInfo = typeof(CreateCache<>)
+						// We call DuckType.CreateCache<>.Create()
+						var getProxyMethodInfo = typeof(CreateCache<>)
                             .MakeGenericType(proxyMethodDefinition.ReturnType).GetMethod("Create");
 
                         il.Emit(OpCodes.Call, getProxyMethodInfo);
@@ -524,7 +478,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
         private static MethodInfo SelectTargetMethod(Type targetType, MethodInfo proxyMethod, ParameterInfo[] proxyMethodParameters, Type[] proxyMethodParametersTypes)
         {
-            var proxyMethodDuckAttribute = proxyMethod.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
+			var proxyMethodDuckAttribute = proxyMethod.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
             proxyMethodDuckAttribute.Name ??= proxyMethod.Name;
 
             MethodInfo targetMethod = null;
@@ -532,14 +486,12 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             // Check if the duck attribute has the parameter type names to use for selecting the target method, in case of not found an exception is thrown.
             if (proxyMethodDuckAttribute.ParameterTypeNames != null)
             {
-                var parameterTypes = proxyMethodDuckAttribute.ParameterTypeNames.Select(pName => Type.GetType(pName, true)).ToArray();
+				var parameterTypes = proxyMethodDuckAttribute.ParameterTypeNames.Select(pName => Type.GetType(pName, true)).ToArray();
                 targetMethod = targetType.GetMethod(proxyMethodDuckAttribute.Name, proxyMethodDuckAttribute.BindingFlags, null, parameterTypes, null);
                 if (targetMethod is null)
-                {
-                    DuckTypeTargetMethodNotFoundException.Throw(proxyMethod);
-                }
+					DuckTypeTargetMethodNotFoundException.Throw(proxyMethod);
 
-                return targetMethod;
+				return targetMethod;
             }
 
             // If the duck attribute doesn't specify the parameters to use, we do the best effor to find a target method without any ambiguity.
@@ -547,34 +499,53 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
             // First we try with the current proxy parameter types
             targetMethod = targetType.GetMethod(proxyMethodDuckAttribute.Name, proxyMethodDuckAttribute.BindingFlags, null, proxyMethodParametersTypes, null);
             if (targetMethod != null)
-            {
-                return targetMethod;
-            }
+				return targetMethod;
 
-            // If the method wasn't found could be because a DuckType interface is being use in the parameters or in the return value.
+			// If the method wasn't found could be because a DuckType interface is being use in the parameters or in the return value.
             // Also this can happen if the proxy parameters type uses a base object (ex: System.Object) instead the type.
             // In this case we try to find a method that we can match, in case of ambiguity (> 1 method found) we throw an exception.
 
-            var allTargetMethods = targetType.GetMethods(DuckAttribute.DefaultFlags);
+			var allTargetMethods = targetType.GetMethods(DuckAttribute.DefaultFlags);
             foreach (var candidateMethod in allTargetMethods)
             {
-                // We omit target methods with different names.
-                if (candidateMethod.Name != proxyMethodDuckAttribute.Name)
+				var name = proxyMethodDuckAttribute.Name;
+				var useRelaxedNameComparison = false;
+
+                // If there is an explicit interface type name we add it to the name
+                if (!string.IsNullOrEmpty(proxyMethodDuckAttribute.ExplicitInterfaceTypeName))
                 {
-                    continue;
+					var interfaceTypeName = proxyMethodDuckAttribute.ExplicitInterfaceTypeName;
+
+                    if (interfaceTypeName == "*")
+                    {
+                        // If a wildcard is use, then we relax the name comparison so it can be an implicit or explicity implementation
+                        useRelaxedNameComparison = true;
+                    }
+                    else
+                    {
+                        // Nested types are separated with a "." on explicit implementation.
+                        interfaceTypeName = interfaceTypeName.Replace("+", ".");
+
+                        name = interfaceTypeName + "." + name;
+                    }
                 }
 
+                // We omit target methods with different names.
+                if (candidateMethod.Name != name)
+                {
+                    if (!useRelaxedNameComparison || !candidateMethod.Name.EndsWith("." + name))
+						continue;
+				}
+
                 // Check if the candidate method is a reverse mapped method
-                var reverseMethodAttribute = candidateMethod.GetCustomAttribute<DuckReverseMethodAttribute>(true);
+				var reverseMethodAttribute = candidateMethod.GetCustomAttribute<DuckReverseMethodAttribute>(true);
                 if (reverseMethodAttribute?.Arguments is not null)
                 {
-                    var arguments = reverseMethodAttribute.Arguments;
+					var arguments = reverseMethodAttribute.Arguments;
                     if (arguments.Length != proxyMethodParametersTypes.Length)
-                    {
-                        continue;
-                    }
+						continue;
 
-                    var match = true;
+					var match = true;
                     for (var i = 0; i < arguments.Length; i++)
                     {
                         if (arguments[i] != proxyMethodParametersTypes[i].FullName && arguments[i] != proxyMethodParametersTypes[i].Name)
@@ -585,12 +556,10 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     }
 
                     if (match)
-                    {
-                        return candidateMethod;
-                    }
-                }
+						return candidateMethod;
+				}
 
-                var candidateParameters = candidateMethod.GetParameters();
+				var candidateParameters = candidateMethod.GetParameters();
 
                 // The proxy must have the same or less parameters than the candidate ( less is due to possible optional parameters in the candidate ).
                 if (proxyMethodParameters.Length > candidateParameters.Length)
@@ -599,14 +568,14 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 }
 
                 // We compare the target method candidate parameter by parameter.
-                var skip = false;
+				var skip = false;
                 for (var i = 0; i < proxyMethodParametersTypes.Length; i++)
                 {
-                    var proxyParam = proxyMethodParameters[i];
-                    var candidateParam = candidateParameters[i];
+					var proxyParam = proxyMethodParameters[i];
+					var candidateParam = candidateParameters[i];
 
-                    var proxyParamType = proxyParam.ParameterType;
-                    var candidateParamType = candidateParam.ParameterType;
+					var proxyParamType = proxyParam.ParameterType;
+					var candidateParamType = candidateParam.ParameterType;
 
                     // both needs to have the same parameter direction
                     if (proxyParam.IsOut != candidateParam.IsOut)
@@ -628,11 +597,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
                     // We can't compare generic parameters
                     if (candidateParamType.IsGenericParameter)
-                    {
-                        continue;
-                    }
+						continue;
 
-                    // If the proxy parameter type is a value type (no ducktyping neither a base class) both types must match
+					// If the proxy parameter type is a value type (no ducktyping neither a base class) both types must match
                     if (proxyParamType.IsValueType && !proxyParamType.IsEnum && proxyParamType != candidateParamType)
                     {
                         skip = true;
@@ -644,18 +611,74 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                     {
                         if (!candidateParamType.IsAssignableFrom(proxyParamType))
                         {
-                            skip = true;
-                            break;
+                            // Check if the parameter type contains generic types before skipping
+                            if (!candidateParamType.IsGenericType || !proxyParamType.IsGenericType)
+                            {
+                                skip = true;
+                                break;
+                            }
+
+                            // if the string representation of the generic parameter types is not the same we need to analyze the
+                            // GenericTypeArguments array before skipping it
+                            if (candidateParamType.ToString() != proxyParamType.ToString())
+                            {
+                                if (candidateParamType.GenericTypeArguments.Length != proxyParamType.GenericTypeArguments.Length)
+                                {
+                                    skip = true;
+                                    break;
+                                }
+
+                                for (var paramIndex = 0; paramIndex < candidateParamType.GenericTypeArguments.Length; paramIndex++)
+                                {
+									var candidateParamTypeGenericType = candidateParamType.GenericTypeArguments[paramIndex];
+									var proxyParamTypeGenericType = proxyParamType.GenericTypeArguments[paramIndex];
+
+                                    // Both need to have the same element type or byref type signature.
+                                    if (proxyParamTypeGenericType.IsByRef != candidateParamTypeGenericType.IsByRef)
+                                    {
+                                        skip = true;
+                                        break;
+                                    }
+
+                                    // If the parameters are by ref we unwrap them to have the actual type
+                                    proxyParamTypeGenericType = proxyParamTypeGenericType.IsByRef ? proxyParamTypeGenericType.GetElementType() : proxyParamTypeGenericType;
+                                    candidateParamTypeGenericType = candidateParamTypeGenericType.IsByRef ? candidateParamTypeGenericType.GetElementType() : candidateParamTypeGenericType;
+
+                                    // We can't compare generic parameters
+                                    if (candidateParamTypeGenericType.IsGenericParameter)
+										continue;
+
+									// If the proxy parameter type is a value type (no ducktyping neither a base class) both types must match
+                                    if (proxyParamTypeGenericType.IsValueType && !proxyParamTypeGenericType.IsEnum && proxyParamTypeGenericType != candidateParamTypeGenericType)
+                                    {
+                                        skip = true;
+                                        break;
+                                    }
+
+                                    // If the proxy parameter is a class and not is an abstract class (only interface and abstract class can be used as ducktype base type)
+                                    if (proxyParamTypeGenericType.IsClass && !proxyParamTypeGenericType.IsAbstract && proxyParamTypeGenericType != typeof(object))
+                                    {
+                                        if (!candidateParamTypeGenericType.IsAssignableFrom(proxyParamTypeGenericType))
+                                        {
+                                            skip = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (skip)
+                                {
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
 
                 if (skip)
-                {
-                    continue;
-                }
+					continue;
 
-                // The target method may have optional parameters with default values so we have to skip those
+				// The target method may have optional parameters with default values so we have to skip those
                 for (var i = proxyMethodParametersTypes.Length; i < candidateParameters.Length; i++)
                 {
                     if (!candidateParameters[i].IsOptional)
@@ -666,19 +689,13 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
                 }
 
                 if (skip)
-                {
-                    continue;
-                }
+					continue;
 
-                if (targetMethod is null)
-                {
-                    targetMethod = candidateMethod;
-                }
-                else
-                {
-                    DuckTypeTargetMethodAmbiguousMatchException.Throw(proxyMethod, targetMethod, candidateMethod);
-                }
-            }
+				if (targetMethod is null)
+					targetMethod = candidateMethod;
+				else
+					DuckTypeTargetMethodAmbiguousMatchException.Throw(proxyMethod, targetMethod, candidateMethod);
+			}
 
             return targetMethod;
         }
@@ -687,11 +704,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
         {
             // If both types are generics, we expect that the generic parameter are the same type (passthrough)
             if (actualType.IsGenericParameter && expectedType.IsGenericParameter)
-            {
-                return;
-            }
+				return;
 
-            il.WriteTypeConversion(actualType, expectedType);
+			il.WriteTypeConversion(actualType, expectedType);
         }
 
         private readonly struct OutputAndRefParameterData
