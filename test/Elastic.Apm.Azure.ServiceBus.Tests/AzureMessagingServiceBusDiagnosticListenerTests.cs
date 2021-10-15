@@ -64,6 +64,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Name.Should().Be(ServiceBus.SubType);
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.QueueName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			span.Context.Message.Should().NotBeNull();
+			span.Context.Message.Queue.Should().NotBeNull();
+			span.Context.Message.Queue.Name.Should().Be(scope.QueueName);
 		}
 
 		[AzureCredentialsFact]
@@ -93,6 +97,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Name.Should().Be(ServiceBus.SubType);
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.TopicName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			span.Context.Message.Should().NotBeNull();
+			span.Context.Message.Queue.Should().NotBeNull();
+			span.Context.Message.Queue.Name.Should().Be(scope.TopicName);
 		}
 
 		[AzureCredentialsFact]
@@ -124,6 +132,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Name.Should().Be(ServiceBus.SubType);
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.QueueName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			span.Context.Message.Should().NotBeNull();
+			span.Context.Message.Queue.Should().NotBeNull();
+			span.Context.Message.Queue.Name.Should().Be(scope.QueueName);
 		}
 
 		[AzureCredentialsFact]
@@ -155,6 +167,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Name.Should().Be(ServiceBus.SubType);
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.TopicName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			span.Context.Message.Should().NotBeNull();
+			span.Context.Message.Queue.Should().NotBeNull();
+			span.Context.Message.Queue.Name.Should().Be(scope.TopicName);
 		}
 
 		[AzureCredentialsFact]
@@ -182,6 +198,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			span.Type.Should().Be(ApiConstants.TypeMessaging);
 			span.Subtype.Should().Be(ServiceBus.SubType);
+
+			span.Context.Message.Should().NotBeNull();
+			span.Context.Message.Queue.Should().NotBeNull();
+			span.Context.Message.Queue.Name.Should().Be(scope.QueueName);
 		}
 
 		[AzureCredentialsFact]
@@ -204,6 +224,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			transaction.Context.Message.Should().NotBeNull();
+			transaction.Context.Message.Queue.Should().NotBeNull();
+			transaction.Context.Message.Queue.Name.Should().Be(scope.QueueName);
 		}
 
 		[AzureCredentialsFact]
@@ -224,9 +248,13 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			_sender.Transactions.Should().HaveCount(1);
 			var transaction = _sender.FirstTransaction;
-
-			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
+			var subscription = $"{scope.TopicName}/Subscriptions/{scope.SubscriptionName}";
+			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {subscription}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			transaction.Context.Message.Should().NotBeNull();
+			transaction.Context.Message.Queue.Should().NotBeNull();
+			transaction.Context.Message.Queue.Name.Should().Be(subscription);
 		}
 
 		[AzureCredentialsFact]
@@ -242,8 +270,6 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			var message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
 			await receiver.DeferMessageAsync(message).ConfigureAwait(false);
-
-
 			await receiver.ReceiveDeferredMessageAsync(message.SequenceNumber).ConfigureAwait(false);
 
 			if (!_sender.WaitForTransactions(TimeSpan.FromMinutes(2), count: 2))
@@ -254,6 +280,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var transaction = _sender.FirstTransaction;
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			transaction.Context.Message.Should().NotBeNull();
+			transaction.Context.Message.Queue.Should().NotBeNull();
+			transaction.Context.Message.Queue.Name.Should().Be(scope.QueueName);
 
 			var secondTransaction = _sender.Transactions[1];
 			secondTransaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVEDEFERRED from {scope.QueueName}");
@@ -282,8 +312,13 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(2);
 
 			var transaction = _sender.FirstTransaction;
-			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
+			var subscription = $"{scope.TopicName}/Subscriptions/{scope.SubscriptionName}";
+			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {subscription}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
+
+			transaction.Context.Message.Should().NotBeNull();
+			transaction.Context.Message.Queue.Should().NotBeNull();
+			transaction.Context.Message.Queue.Name.Should().Be(subscription);
 
 			var secondTransaction = _sender.Transactions[1];
 			secondTransaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVEDEFERRED from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
@@ -353,6 +388,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			foreach (var transaction in processTransactions)
 			{
+				transaction.Context.Message.Should().NotBeNull();
+				transaction.Context.Message.Queue.Should().NotBeNull();
+				transaction.Context.Message.Queue.Name.Should().Be(scope.QueueName);
+
 				var spans = _sender.Spans.Where(s => s.TransactionId == transaction.Id).ToList();
 				spans.Should().HaveCount(1);
 			}
@@ -409,6 +448,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			foreach (var transaction in processTransactions)
 			{
+				transaction.Context.Message.Should().NotBeNull();
+				transaction.Context.Message.Queue.Should().NotBeNull();
+				transaction.Context.Message.Queue.Name.Should().Be(scope.QueueName);
+
 				var spans = _sender.Spans.Where(s => s.TransactionId == transaction.Id).ToList();
 				spans.Should().HaveCount(1);
 			}

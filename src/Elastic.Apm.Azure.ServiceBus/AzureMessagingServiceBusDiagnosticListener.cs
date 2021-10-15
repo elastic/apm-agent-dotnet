@@ -112,6 +112,9 @@ namespace Elastic.Apm.Azure.ServiceBus
 			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
 			transaction.Context.Service = new Service(null, null) { Framework = _framework };
 
+			if (queueName != null)
+				transaction.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
+
 			// transaction creation will create an activity, so use this as the key.
 			var activityId = Activity.Current.Id;
 
@@ -158,13 +161,15 @@ namespace Elastic.Apm.Azure.ServiceBus
 			{
 				var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
 				transaction.Context.Service = new Service(null, null) { Framework = _framework };
-				transaction.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
+				if (queueName != null)
+					transaction.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
 				segment = transaction;
 			}
 			else
 			{
 				var span = ApmAgent.GetCurrentExecutionSegment().StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action);
-				span.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
+				if (queueName != null)
+					span.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
 				segment = span;
 			}
 
@@ -250,6 +255,9 @@ namespace Elastic.Apm.Azure.ServiceBus
 					Type = ApiConstants.TypeMessaging
 				}
 			};
+
+			if (queueName != null)
+				span.Context.Message = new Message { Queue = new MessageQueue { Name = queueName } };
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
