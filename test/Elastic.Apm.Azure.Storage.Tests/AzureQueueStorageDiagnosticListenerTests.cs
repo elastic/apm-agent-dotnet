@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Azure;
@@ -13,20 +16,23 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.Azure.Storage.Tests
 {
 	[Collection("AzureStorage")]
-	public class AzureQueueStorageDiagnosticListenerTests
+	public class AzureQueueStorageDiagnosticListenerTests : IDisposable
 	{
 		private readonly AzureStorageTestEnvironment _environment;
 		private readonly MockPayloadSender _sender;
 		private readonly ApmAgent _agent;
+		private readonly IDisposable _subscription;
+		private readonly ITestOutputHelper _output;
 
 		public AzureQueueStorageDiagnosticListenerTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
 		{
 			_environment = environment;
+			_output = output;
 
 			var logger = new XUnitLogger(LogLevel.Trace, output);
 			_sender = new MockPayloadSender(logger);
 			_agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: _sender));
-			_agent.Subscribe(new AzureQueueStorageDiagnosticsSubscriber());
+			_subscription = _agent.Subscribe(new AzureQueueStorageDiagnosticsSubscriber());
 		}
 
 		[AzureCredentialsFact]
@@ -74,7 +80,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		private void AssertTransaction(string action, string queueName)
 		{
 			if (!_sender.WaitForTransactions())
-				throw new Exception("No transaction received in timeout");
+				throw new Exception($"No transaction received within timeout. (already received {_sender.Transactions.Count} transactions)");
 
 			_sender.Transactions.Should().HaveCount(1);
 			var transaction = _sender.FirstTransaction;
@@ -102,6 +108,12 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			destination.Service.Name.Should().Be(AzureQueueStorage.SubType);
 			destination.Service.Resource.Should().Be($"{AzureQueueStorage.SubType}/{queueName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
+		}
+
+		public void Dispose()
+		{
+			_subscription.Dispose();
+			_agent.Dispose();
 		}
 	}
 }

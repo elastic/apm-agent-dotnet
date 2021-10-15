@@ -24,7 +24,7 @@ namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
-		private static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
+		internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
 		internal readonly TraceState _traceState;
 

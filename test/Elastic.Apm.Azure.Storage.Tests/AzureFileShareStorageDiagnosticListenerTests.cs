@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.Azure.Storage.Tests
 {
 	[Collection("AzureStorage")]
-	public class AzureFileShareStorageDiagnosticListenerTests
+	public class AzureFileShareStorageDiagnosticListenerTests : IDisposable
 	{
 		private readonly AzureStorageTestEnvironment _environment;
 		private readonly MockPayloadSender _sender;
@@ -181,5 +181,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			destination.Service.Resource.Should().Be($"{AzureFileStorage.SubType}/{_environment.StorageAccountConnectionStringProperties.AccountName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeStorage);
 		}
+
+		public void Dispose() => _agent?.Dispose();
 	}
 }

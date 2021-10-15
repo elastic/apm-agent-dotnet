@@ -9,11 +9,19 @@ namespace Elastic.Apm.Azure.Storage
 {
 	internal class BlobUrl : StorageUrl
 	{
-		public BlobUrl(Uri url) : base(url) => ResourceName = url.AbsolutePath.TrimStart('/');
-
-		public BlobUrl(string url) : this(new Uri(url))
+		public static bool TryCreate(string url, out BlobUrl blobUrl)
 		{
+			if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+			{
+				blobUrl = new BlobUrl(uri);
+				return true;
+			}
+
+			blobUrl = null;
+			return false;
 		}
+
+		public BlobUrl(Uri url) : base(url) => ResourceName = url.AbsolutePath.TrimStart('/');
 
 		public string ResourceName { get; }
 	}
