@@ -27,7 +27,7 @@ namespace Elastic.Apm.Metrics
 		public SpanInfo Span { get; set; }
 	}
 
-	internal class TransactionInfo
+	public class TransactionInfo
 	{
 		[MaxLength]
 		public string Name { get; set; }
@@ -35,7 +35,7 @@ namespace Elastic.Apm.Metrics
 		public string Type { get; set; }
 	}
 
-	internal class SpanInfo
+	public class SpanInfo
 	{
 		[MaxLength]
 		public string Type { get; set; }
