@@ -288,7 +288,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Internal dictionary to keep track of and look up dropped span stats.
 		/// </summary>
-		private Dictionary<(string, Outcome), DroppedSpanStats> _droppedSpanStatsMap;
+		private Dictionary<DroppedSpanStatsKey, DroppedSpanStats> _droppedSpanStatsMap;
 
 		private bool _isEnded;
 
@@ -453,19 +453,19 @@ namespace Elastic.Apm.Model
 
 		internal void UpdateDroppedSpanStats(string destinationServiceResource, Outcome outcome, double duration)
 		{
-			_droppedSpanStatsMap ??= new Dictionary<(string, Outcome), DroppedSpanStats>();
+			_droppedSpanStatsMap ??= new Dictionary<DroppedSpanStatsKey, DroppedSpanStats>();
 
 			if (_droppedSpanStatsMap.Keys.Count >= 128)
 				return;
 
-			if (_droppedSpanStatsMap.ContainsKey((destinationServiceResource, outcome)))
+			if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(destinationServiceResource, outcome), out var item))
 			{
-				_droppedSpanStatsMap[(destinationServiceResource, outcome)].DurationCount++;
-				_droppedSpanStatsMap[(destinationServiceResource, outcome)].DurationSumUs += duration;
+				item.DurationCount++;
+				item.DurationSumUs += duration;
 			}
 			else
 			{
-				_droppedSpanStatsMap.Add((destinationServiceResource, outcome),
+				_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(destinationServiceResource, outcome),
 					new DroppedSpanStats(destinationServiceResource, outcome, duration));
 			}
 		}
@@ -769,5 +769,19 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value)
 			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+
+		private struct DroppedSpanStatsKey
+		{
+			// ReSharper disable once NotAccessedField.Local
+			private string _destinationServiceResource;
+			// ReSharper disable once NotAccessedField.Local
+			private Outcome _outcome;
+
+			public DroppedSpanStatsKey(string destinationServiceResource, Outcome outcome)
+			{
+				_destinationServiceResource = destinationServiceResource;
+				_outcome = outcome;
+			}
+		}
 	}
 }
