@@ -114,7 +114,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 			}
 
-			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
+			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5OrNewer)
 				_eventListener = new GcEventListener(this, logger);
 		}
 
