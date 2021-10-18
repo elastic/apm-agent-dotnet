@@ -18,7 +18,12 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ ProcessTotalCpuTimeProvider.ProcessCpuTotalPct, new MetricTypeMetadata(VerifyProcessTotalCpu) },
 			{ ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory, new MetricTypeMetadata(VerifyProcessVirtualMemory) },
 			{ ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory, new MetricTypeMetadata(VerifyProcessWorkingSetMemory) },
-			{ SystemTotalCpuProvider.SystemCpuTotalPct, new MetricTypeMetadata(VerifySystemTotalCpu, true) }
+			{ SystemTotalCpuProvider.SystemCpuTotalPct, new MetricTypeMetadata(VerifySystemTotalCpu, true) },
+			{ BreakdownMetricsProvider.SpanSelfTimeCount, new MetricTypeMetadata(Verify) },
+			{ BreakdownMetricsProvider.SpanSelfTimeSumUs, new MetricTypeMetadata(Verify) },
+			{ BreakdownMetricsProvider.TransactionDurationCount, new MetricTypeMetadata(Verify) },
+			{ BreakdownMetricsProvider.TransactionDurationSumUs, new MetricTypeMetadata(Verify) },
+			{ BreakdownMetricsProvider.TransactionBreakdownCount, new MetricTypeMetadata(Verify) },
 		};
 
 		internal static void AssertValid(MetricSetDto metricSet)
@@ -35,6 +40,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 				MetricMetadataPerType[metricSample.Key].VerifyAction(metricSample.Value.Value);
 			}
 		}
+
+		private static void Verify(double value) => value.Should().BeGreaterOrEqualTo(0);
 
 		private static void VerifyFreeMemory(double value) => value.Should().BeGreaterThan(0);
 
