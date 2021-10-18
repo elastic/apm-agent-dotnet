@@ -79,8 +79,6 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Name == $"/{Greeter.Descriptor.FullName}/{nameof(client.SayHello)}"
 					&& span.Context.Destination.Address == "localhost"
 					&& span.Context.Destination.Port == SampleAppHostBuilder.SampleAppPort
-					&& span.Context.Destination.Service.Type == "external"
-					&& span.Context.Destination.Service.Name == SampleAppHostBuilder.SampleAppUrl
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 
@@ -144,8 +142,6 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Name == $"/{Greeter.Descriptor.FullName}/{nameof(client.ThrowAnException)}"
 					&& span.Context.Destination.Address == "localhost"
 					&& span.Context.Destination.Port == SampleAppHostBuilder.SampleAppPort
-					&& span.Context.Destination.Service.Type == "external"
-					&& span.Context.Destination.Service.Name == SampleAppHostBuilder.SampleAppUrl
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 
