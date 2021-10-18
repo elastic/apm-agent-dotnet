@@ -12,7 +12,9 @@ namespace Elastic.Apm.Tests
 	{
 		public NetCoreAndNet5Fact()
 		{
-			if (!(RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix) || RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNet5Prefix)))
+			if (!(RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix)
+				|| (RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNetPrefix) &&
+					RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix))))
 			{
 				Skip =
 					$"{nameof(NetCoreAndNet5Fact)} tests only run on .NET Core and .NET 5 - test was executed on {RuntimeInformation.FrameworkDescription} - therefore test will be skipped";

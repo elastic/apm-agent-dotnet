@@ -35,8 +35,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 				case { } str when str.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 					break;
-				case { } str when str.StartsWith(PlatformDetection.DotNet5Prefix, StringComparison.OrdinalIgnoreCase):
-					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNet5Name);
+				case { } str when str.StartsWith(PlatformDetection.DotNetPrefix, StringComparison.OrdinalIgnoreCase):
+					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().StartWith(Runtime.DotNetName);
 					break;
 			}
 		}
