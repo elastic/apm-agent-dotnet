@@ -91,7 +91,17 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		public string StorageAccountConnectionString { get; }
 
 
-		public void Dispose() => _terraform?.Destroy(_variables);
+		public void Dispose()
+		{
+			try
+			{
+				_terraform?.Destroy(_variables);
+			}
+			catch
+			{
+				// ignore if there's a problem destroying. The exception will be logged, and in CI, we'll let the cleanup tasks handle
+			}
+		}
 	}
 
 	public class StorageAccountProperties
