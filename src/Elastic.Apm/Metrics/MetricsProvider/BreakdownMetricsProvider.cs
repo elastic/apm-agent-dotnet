@@ -15,7 +15,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class BreakdownMetricsProvider : IMetricsProvider
 	{
 		internal const string SpanSelfTime = "span.self_time";
+		internal const string SpanSelfTimeCount = SpanSelfTime + ".count";
+		internal const string SpanSelfTimeSumUs = SpanSelfTime + ".sum.us";
 		internal const int MetricLimit = 1000;
+		internal const string TransactionDurationCount = "transaction.duration.count";
+		internal const string TransactionDurationSumUs = "transaction.duration.sum.us";
+		internal const string TransactionBreakdownCount = "transaction.breakdown.count";
 
 		private readonly List<MetricSet> _itemsToSend = new();
 		private readonly IApmLogger _logger;
@@ -57,7 +62,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						new MetricSet(timestampNow,
 							new List<MetricSample>
 							{
-								new($"{SpanSelfTime}.count", item.Value.Count), new($"{SpanSelfTime}.sum.us", item.Value.TotalDuration * 1000)
+								new(SpanSelfTimeCount, item.Value.Count),
+								new(SpanSelfTimeSumUs, item.Value.TotalDuration * 1000)
 							})
 						{
 							Span = new SpanInfo { Type = item.Key.Type, SubType = item.Key.SubType },
@@ -83,9 +89,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					new MetricSet(timestampNow,
 						new List<MetricSample>
 						{
-							new("transaction.duration.count", _transactionCount),
-							new("transaction.duration.sum.us", transaction.Duration!.Value * 1000),
-							new("transaction.breakdown.count", _transactionCount),
+							new(TransactionDurationCount, _transactionCount),
+							new(TransactionDurationSumUs, transaction.Duration!.Value * 1000),
+							new(TransactionBreakdownCount, _transactionCount),
 						}) { Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type } };
 
 				if (_itemsToSend.Count < MetricLimit)

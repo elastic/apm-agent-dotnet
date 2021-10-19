@@ -28,6 +28,11 @@ namespace Elastic.Apm.Api
 		public Dictionary<string, string> Labels => InternalLabels.Value;
 
 		/// <summary>
+		/// Holds details related to message receiving and publishing if the captured event integrates with a messaging system
+		/// </summary>
+		public Message Message { get; set; }
+
+		/// <summary>
 		/// If a log record was generated as a result of a http request, the http interface can be used to collect this
 		/// information.
 		/// This property is by default null! You have to assign a <see cref="Request" /> instance to this property in order to use
