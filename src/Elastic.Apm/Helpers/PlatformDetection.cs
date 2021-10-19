@@ -62,7 +62,7 @@ namespace Elastic.Apm.Helpers
 			if (IsDotNetFullFramework)
 				name = Runtime.DotNetFullFrameworkName;
 			else if (IsDotNet5OrNewer)
-				name = ".NET " + RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0];
+				name = Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}";
 			else if (IsDotNetCore)
 				name = Runtime.DotNetCoreName;
 			else if (IsMono)

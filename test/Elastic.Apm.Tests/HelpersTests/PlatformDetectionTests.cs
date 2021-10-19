@@ -35,8 +35,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 				case { } str when str.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 					break;
-				case { } str when str.StartsWith(PlatformDetection.DotNetPrefix, StringComparison.OrdinalIgnoreCase):
-					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().StartWith(Runtime.DotNetName);
+				case { } str when str.StartsWith(PlatformDetection.DotNetPrefix, StringComparison.OrdinalIgnoreCase)
+					&& !str.StartsWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
+					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}");
 					break;
 			}
 		}
