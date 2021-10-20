@@ -37,6 +37,9 @@ namespace Elastic.Apm.Helpers
 			RuntimeInformation.FrameworkDescription.StartsWith(DotNetPrefix, StringComparison.OrdinalIgnoreCase) &&
 			RuntimeInformation.FrameworkDescription.Length >= 6
 			&& int.TryParse(RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0], out _);
+
+		internal static readonly string DotNetRuntimeDescription = RuntimeInformation.FrameworkDescription;
+
 		internal static string GetDotNetRuntimeVersionFromDescription(string frameworkDescription, IApmLogger loggerArg, string expectedPrefix)
 		{
 			var logger = loggerArg.Scoped(nameof(PlatformDetection));
