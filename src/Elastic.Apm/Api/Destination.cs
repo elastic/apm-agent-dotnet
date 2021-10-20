@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using Elastic.Apm.Api.Constraints;
 
 namespace Elastic.Apm.Api
@@ -72,6 +73,7 @@ namespace Elastic.Apm.Api
 			/// Identifier for the destination service (e.g. 'http://elastic.co', 'elasticsearch', 'rabbitmq')"
 			/// </summary>
 			[MaxLength]
+			[Obsolete("This field will be removed in future versions")]
 			public string Name { get; set; }
 
 			/// <summary>
@@ -85,6 +87,7 @@ namespace Elastic.Apm.Api
 			/// Type of the destination service (e.g. 'db', 'elasticsearch'). Should typically be the same as span.type.
 			/// </summary>
 			[MaxLength]
+			[Obsolete("This field will be removed in future versions")]
 			public string Type { get; set; }
 		}
 

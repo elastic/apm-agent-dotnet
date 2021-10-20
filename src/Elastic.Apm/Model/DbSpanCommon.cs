@@ -30,7 +30,7 @@ namespace Elastic.Apm.Model
 		{
 			var spanName = GetDbSpanName(dbCommand);
 			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, subType, instrumentationFlag,
-				captureStackTraceOnStart);
+				captureStackTraceOnStart, true);
 		}
 
 		internal static string GetDbSpanName(IDbCommand dbCommand) =>

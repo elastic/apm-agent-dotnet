@@ -94,7 +94,7 @@ namespace Elastic.Apm.SqlClient
 				: database;
 
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_apmAgent, spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql,
-				InstrumentationFlag.SqlClient);
+				InstrumentationFlag.SqlClient, isExitSpan: true);
 
 			if (span == null) return;
 

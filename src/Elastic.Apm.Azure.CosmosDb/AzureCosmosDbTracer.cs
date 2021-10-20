@@ -128,7 +128,7 @@ namespace Elastic.Apm.Azure.CosmosDb
 				? $"Cosmos DB {operationName}"
 				: "Cosmos DB";
 
-			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, ApiConstants.SubTypeCosmosDb);
+			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, ApiConstants.SubTypeCosmosDb, isExitSpan: true);
 
 			if (span != null)
 			{
