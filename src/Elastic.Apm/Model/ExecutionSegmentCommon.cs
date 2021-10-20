@@ -306,7 +306,7 @@ namespace Elastic.Apm.Model
 					captureStackTraceOnStart: captureStackTraceOnStart, isExitSpan: isExitSpan),
 				Transaction transaction => transaction.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag,
 					captureStackTraceOnStart: captureStackTraceOnStart, isExitSpan: isExitSpan),
-				ISpan iSpan => iSpan.StartSpan(spanName, spanType, subType),
+				ISpan iSpan => iSpan.StartSpan(spanName, spanType, subType, isExitSpan: isExitSpan),
 				ITransaction iTransaction => iTransaction.StartSpan(spanName, spanType, subType),
 				_ => null
 			};
