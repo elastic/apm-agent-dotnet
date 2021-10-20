@@ -110,15 +110,6 @@ namespace Elastic.Apm.Azure.Storage
 			if (fileShareUrl != null)
 				SetDestination(span, fileShareUrl);
 
-			span.Context.Destination = new Destination
-			{
-				Address = fileShareUrl.FullyQualifiedNamespace,
-				Service = new Destination.DestinationService
-				{
-					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}",
-				}
-			};
-
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
 				Logger.Trace()
@@ -134,10 +125,7 @@ namespace Elastic.Apm.Azure.Storage
 			span.Context.Destination = new Destination
 			{
 				Address = fileShareUrl.FullyQualifiedNamespace,
-				Service = new Destination.DestinationService
-				{
-					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}"
-				}
+				Service = new Destination.DestinationService { Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}" }
 			};
 
 		private void OnStop()
