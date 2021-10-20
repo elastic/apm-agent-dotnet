@@ -50,6 +50,8 @@ namespace Elastic.Apm.Model
 
 		public SpanContext Context => ReusableContextInstance;
 
+		public bool IsExitSpan { get; }
+
 		public double? Duration { get; set; }
 
 		[MaxLength]

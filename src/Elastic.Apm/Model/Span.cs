@@ -11,10 +11,10 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -23,8 +23,8 @@ namespace Elastic.Apm.Model
 	{
 		private readonly IApmServerInfo _apmServerInfo;
 
-		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
-		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
+		private readonly ChildDurationTimer _childDurationTimer = new();
+		private readonly Lazy<SpanContext> _context = new();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
 
@@ -32,7 +32,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
-		private readonly bool _isExitSpan;
 
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
@@ -71,7 +70,7 @@ namespace Elastic.Apm.Model
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
 			_apmServerInfo = apmServerInfo;
-			_isExitSpan = isExitSpan;
+			IsExitSpan = isExitSpan;
 			Name = name;
 			Type = type;
 
@@ -156,6 +155,8 @@ namespace Elastic.Apm.Model
 
 		internal InstrumentationFlag InstrumentationFlag { get; set; }
 
+		public bool IsExitSpan { get; }
+
 		[JsonIgnore]
 		public bool IsSampled => _enclosingTransaction.IsSampled;
 
@@ -183,7 +184,7 @@ namespace Elastic.Apm.Model
 		}
 
 		[JsonIgnore]
-		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
+		public DistributedTracingData OutgoingDistributedTracingData => new(
 			TraceId,
 			// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
 			// and not span ID as it does for sampled case.
@@ -450,7 +451,7 @@ namespace Elastic.Apm.Model
 
 		private void DeduceDestination()
 		{
-			if (!_isExitSpan)
+			if (!IsExitSpan)
 				return;
 
 			if (Context.Http != null)
@@ -468,7 +469,7 @@ namespace Elastic.Apm.Model
 			// Fills Context.Destination.Service
 			void FillDestinationService()
 			{
-				if (!_isExitSpan)
+				if (!IsExitSpan)
 					return;
 
 				if (!string.IsNullOrEmpty(_context.Value?.Destination?.Service?.Resource))

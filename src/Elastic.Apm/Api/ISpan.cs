@@ -24,6 +24,11 @@ namespace Elastic.Apm.Api
 		SpanContext Context { get; }
 
 		/// <summary>
+		/// Indicates that this span is an exit span.
+		/// </summary>
+		public bool IsExitSpan { get; }
+
+		/// <summary>
 		/// The stack trace which was captured for the given span.
 		/// </summary>
 		List<CapturedStackFrame> StackTrace { get; }

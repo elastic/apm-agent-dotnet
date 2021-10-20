@@ -135,16 +135,10 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan)
+			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan && currentSpan.IsExitSpan)
 			{
-				// if the current span is an exit span, don't create a span for the current request
-				// but still propagate trace context
-				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure
-					|| currentSpan.InstrumentationFlag == InstrumentationFlag.Elasticsearch)
-				{
-					PropagateTraceContext(request, transaction, currentSpan);
-					return;
-				}
+				PropagateTraceContext(request, transaction, currentSpan);
+				return;
 			}
 
 			var method = RequestGetMethod(request);
