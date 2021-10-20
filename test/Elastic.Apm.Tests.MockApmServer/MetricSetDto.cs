@@ -14,7 +14,7 @@ using Elastic.Apm.Metrics;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	[Specification("docs/spec/v2/metricset.json")]
+	[Specification("metricset.json")]
 	internal class MetricSetDto : ITimestampedDto
 	{
 		public Dictionary<string, MetricSampleDto> Samples { get; set; }
