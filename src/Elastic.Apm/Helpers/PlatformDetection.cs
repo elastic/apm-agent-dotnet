@@ -29,15 +29,14 @@ namespace Elastic.Apm.Helpers
 		internal static readonly bool IsMono =
 			RuntimeInformation.FrameworkDescription.StartsWith(MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
 
-		internal static readonly bool IsDotNet5OrNewer =
+		/// <summary>
+		/// Indicates if the runtime is .NET 5 or a newer version.
+		/// Specifically looks for ".NET [X]" format.
+		/// </summary>
+		internal static readonly bool IsDotNet =
 			RuntimeInformation.FrameworkDescription.StartsWith(DotNetPrefix, StringComparison.OrdinalIgnoreCase) &&
-			!RuntimeInformation.FrameworkDescription.StartsWith(DotNetFullFrameworkDescriptionPrefix, StringComparison.OrdinalIgnoreCase) &&
-			!RuntimeInformation.FrameworkDescription.StartsWith(DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
-
-
-		internal static readonly string DotNetRuntimeDescription = RuntimeInformation.FrameworkDescription;
-
-
+			RuntimeInformation.FrameworkDescription.Length >= 6
+			&& int.TryParse(RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0], out _);
 		internal static string GetDotNetRuntimeVersionFromDescription(string frameworkDescription, IApmLogger loggerArg, string expectedPrefix)
 		{
 			var logger = loggerArg.Scoped(nameof(PlatformDetection));
@@ -61,7 +60,7 @@ namespace Elastic.Apm.Helpers
 			string name;
 			if (IsDotNetFullFramework)
 				name = Runtime.DotNetFullFrameworkName;
-			else if (IsDotNet5OrNewer)
+			else if (IsDotNet)
 				name = Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}";
 			else if (IsDotNetCore)
 				name = Runtime.DotNetCoreName;
@@ -80,8 +79,8 @@ namespace Elastic.Apm.Helpers
 			{
 				if (IsDotNetFullFramework)
 					version = typeof(object).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-				else if (IsDotNet5OrNewer)
-					version = GetNet5OrNewerVersion();
+				else if (IsDotNet)
+					version = GetNetVersion();
 				else if (IsDotNetCore)
 					version = GetDotNetCoreRuntimeVersion(logger);
 				else if (IsMono)
@@ -108,7 +107,7 @@ namespace Elastic.Apm.Helpers
 		private static string GetMonoVersion()
 			=> RuntimeInformation.FrameworkDescription.Substring(5);
 
-		private static string GetNet5OrNewerVersion()
+		private static string GetNetVersion()
 			=> RuntimeInformation.FrameworkDescription.Substring(5);
 
 		private static string GetDotNetCoreRuntimeVersion(IApmLogger logger)
