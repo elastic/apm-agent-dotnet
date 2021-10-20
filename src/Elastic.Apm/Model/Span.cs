@@ -496,12 +496,13 @@ namespace Elastic.Apm.Model
 					else
 						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 				}
-				// No Context.Message in the .NET Agent yet, but once we add it, we need to fill it:
-				// else if (Context.message)
-				// 	if (context.message.queue?.name)
-				// 		"${subtype ?: type}/${context.message.queue.name}"
-				// 	else
-				// 		subtype ?: type
+				else if (Context.Message != null)
+				{
+					if (!string.IsNullOrEmpty(Context.Message.Queue?.Name))
+						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Message.Queue.Name;
+					else
+						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+				}
 				else
 					Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 			}
