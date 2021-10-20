@@ -454,7 +454,7 @@ namespace Elastic.Apm.Model
 			if (!IsExitSpan)
 				return;
 
-			if (Context.Http != null)
+			if (Context.Http != null && Context.Destination != null)
 			{
 				var destination = DeduceHttpDestination();
 				if (destination == null)

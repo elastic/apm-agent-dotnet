@@ -72,7 +72,7 @@ namespace Elastic.Apm.Grpc.Tests
 			//Make sure all spans are collected
 			Thread.Sleep(500);
 
-			payloadSender.Spans.Should().HaveCountGreaterThan(1);
+			payloadSender.Spans.Should().HaveCountGreaterOrEqualTo(1);
 			payloadSender.Spans.Should()
 				.Contain(span => span.Subtype == ApiConstants.SubTypeGrpc
 					&& span.Outcome == Outcome.Success
