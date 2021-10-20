@@ -155,6 +155,7 @@ namespace Elastic.Apm.Model
 
 		internal InstrumentationFlag InstrumentationFlag { get; set; }
 
+		[JsonIgnore]
 		public bool IsExitSpan { get; }
 
 		[JsonIgnore]
