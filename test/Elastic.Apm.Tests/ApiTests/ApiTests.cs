@@ -861,7 +861,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction("test TX name", "test TX type",
 					tx =>
 					{
-						tx.CaptureSpan("test span name", "test_span_type", span => { span.Context.Http = new Http { Method = "PUT", Url = "://" }; });
+						tx.CaptureSpan("test span name", "test_span_type", span => { span.Context.Http = new Http { Method = "PUT", Url = "://" }; },
+							isExitSpan: true);
 					});
 			}
 
