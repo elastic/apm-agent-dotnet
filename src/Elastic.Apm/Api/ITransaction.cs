@@ -17,7 +17,7 @@ namespace Elastic.Apm.Api
 	/// This interface is the public contract for a transaction. It is not intended to be used by a consumer of the agent to
 	/// provide different transaction implementations.
 	/// </remarks>
-	[Specification("docs/spec/v2/transaction.json")]
+	[Specification("transaction.json")]
 	public interface ITransaction : IExecutionSegment
 	{
 		/// <summary>

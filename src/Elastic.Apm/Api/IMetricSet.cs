@@ -11,7 +11,7 @@ namespace Elastic.Apm.Api
 	/// <summary>
 	/// Data captured by the agent representing a metric occurring in a monitored service
 	/// </summary>
-	[Specification("docs/spec/v2/metricset.json")]
+	[Specification("metricset.json")]
 	public interface IMetricSet
 	{
 		/// <summary>

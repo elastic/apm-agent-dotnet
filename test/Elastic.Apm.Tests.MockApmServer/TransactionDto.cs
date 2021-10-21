@@ -12,7 +12,7 @@ using FluentAssertions;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	[Specification("docs/spec/v2/transaction.json")]
+	[Specification("transaction.json")]
 	internal class TransactionDto : ITimedDto
 	{
 		public ContextDto Context { get; set; }

@@ -12,7 +12,7 @@ using FluentAssertions;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	[Specification("docs/spec/v2/error.json")]
+	[Specification("error.json")]
 	internal class ErrorDto : ITimestampedDto
 	{
 		public ContextDto Context { get; set; }
