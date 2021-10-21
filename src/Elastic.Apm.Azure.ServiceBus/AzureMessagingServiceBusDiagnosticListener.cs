@@ -167,9 +167,11 @@ namespace Elastic.Apm.Azure.ServiceBus
 			}
 			else
 			{
-				var span = ApmAgent.GetCurrentExecutionSegment().StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action);
+				var span = ApmAgent.GetCurrentExecutionSegment().StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action, isExitSpan: true);
+
 				if (queueName != null)
 					span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+
 				segment = span;
 			}
 

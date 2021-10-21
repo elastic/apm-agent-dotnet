@@ -705,13 +705,13 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				WaitHelpers.SleepMinimum();
 				t.CaptureSpan("SampleSpan1", "SampleSpanType",
-					span => { span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET", StatusCode = 200 }; });
+					span => { span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET", StatusCode = 200 }; }, isExitSpan: true);
 
 				t.CaptureSpan("SampleSpan2", "SampleSpanType",
 					span =>
 					{
 						span.Context.Db = new Database { Statement = "Select * from MyTable", Type = Database.TypeSql, Instance = "MyInstance" };
-					});
+					}, isExitSpan: true);
 			});
 
 			payloadSender.Spans[0].Name.Should().Be("SampleSpan1");

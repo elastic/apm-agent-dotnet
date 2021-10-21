@@ -11,10 +11,10 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -23,8 +23,8 @@ namespace Elastic.Apm.Model
 	{
 		private readonly IApmServerInfo _apmServerInfo;
 
-		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
-		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
+		private readonly ChildDurationTimer _childDurationTimer = new();
+		private readonly Lazy<SpanContext> _context = new();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
 
@@ -56,7 +56,8 @@ namespace Elastic.Apm.Model
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
 			bool captureStackTraceOnStart = false,
-			long? timestamp = null
+			long? timestamp = null,
+			bool isExitSpan = false
 		)
 		{
 			InstrumentationFlag = instrumentationFlag;
@@ -69,6 +70,7 @@ namespace Elastic.Apm.Model
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
 			_apmServerInfo = apmServerInfo;
+			IsExitSpan = isExitSpan;
 			Name = name;
 			Type = type;
 
@@ -154,6 +156,9 @@ namespace Elastic.Apm.Model
 		internal InstrumentationFlag InstrumentationFlag { get; set; }
 
 		[JsonIgnore]
+		public bool IsExitSpan { get; }
+
+		[JsonIgnore]
 		public bool IsSampled => _enclosingTransaction.IsSampled;
 
 		[JsonIgnore]
@@ -180,7 +185,7 @@ namespace Elastic.Apm.Model
 		}
 
 		[JsonIgnore]
-		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
+		public DistributedTracingData OutgoingDistributedTracingData => new(
 			TraceId,
 			// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
 			// and not span ID as it does for sampled case.
@@ -269,20 +274,21 @@ namespace Elastic.Apm.Model
 		}
 
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false)
 		{
 			if (Configuration.Enabled && Configuration.Recording)
-				return StartSpanInternal(name, type, subType, action);
+				return StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
+			bool isExitSpan = false
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
@@ -398,29 +404,36 @@ namespace Elastic.Apm.Model
 				labels
 			);
 
-		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
+		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), capturedAction);
 
-		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
+		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), capturedAction);
 
-		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureError(
@@ -439,7 +452,7 @@ namespace Elastic.Apm.Model
 
 		private void DeduceDestination()
 		{
-			if (!_context.IsValueCreated)
+			if (!IsExitSpan)
 				return;
 
 			if (Context.Http != null)
@@ -457,33 +470,42 @@ namespace Elastic.Apm.Model
 			// Fills Context.Destination.Service
 			void FillDestinationService()
 			{
-				// Context.Destination must be set by the instrumentation part - otherwise we won't fill Context.Destination.Service
-				if (Context.Destination == null)
+				if (!IsExitSpan)
 					return;
 
-				// Context.Destination.Service can be set by the instrumentation part - only fill it if needed.
+				if (!string.IsNullOrEmpty(_context.Value?.Destination?.Service?.Resource))
+					return;
+
+				Context.Destination ??= new Destination();
+
 				if (Context.Destination.Service != null)
-					return;
+					Context.Destination.Service = new Destination.DestinationService();
 
-				Context.Destination.Service = new Destination.DestinationService { Type = Type };
+				Context.Destination.Service = new Destination.DestinationService();
 
-				if (_context.Value.Http != null)
+				if (Context.Db != null)
 				{
-					if (!_context.Value.Http.OriginalUrl.IsAbsoluteUri)
-					{
-						// Can't fill Destination.Service - we just set it to null and return
-						Context.Destination.Service = null;
-						return;
-					}
-
-					Context.Destination.Service = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this);
+					if (Context.Db.Instance != null)
+						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Db.Instance;
+					else
+						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+				}
+				else if (Context.Http?.Url != null)
+				{
+					if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
+						Context.Destination.Service = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this);
+					else
+						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+				}
+				else if (Context.Message != null)
+				{
+					if (!string.IsNullOrEmpty(Context.Message.Queue?.Name))
+						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Message.Queue.Name;
+					else
+						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 				}
 				else
-				{
-					// Once messaging is added, for messaging, we'll additionally need to add the queue name here
-					Context.Destination.Service.Resource = Subtype;
-					Context.Destination.Service.Name = Subtype;
-				}
+					Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 			}
 
 			void CopyMissingProperties(Destination src)

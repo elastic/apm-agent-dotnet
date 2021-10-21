@@ -292,7 +292,7 @@ namespace Elastic.Apm.Model
 		}
 
 		internal static ISpan StartSpanOnCurrentExecutionSegment(IApmAgent agent, string spanName, string spanType, string subType = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, bool isExitSpan = false
 		)
 		{
 			var currentExecutionSegment = agent.GetCurrentExecutionSegment();
@@ -303,10 +303,10 @@ namespace Elastic.Apm.Model
 			return currentExecutionSegment switch
 			{
 				Span span => span.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag,
-					captureStackTraceOnStart: captureStackTraceOnStart),
+					captureStackTraceOnStart: captureStackTraceOnStart, isExitSpan: isExitSpan),
 				Transaction transaction => transaction.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag,
-					captureStackTraceOnStart: captureStackTraceOnStart),
-				ISpan iSpan => iSpan.StartSpan(spanName, spanType, subType),
+					captureStackTraceOnStart: captureStackTraceOnStart, isExitSpan: isExitSpan),
+				ISpan iSpan => iSpan.StartSpan(spanName, spanType, subType, isExitSpan: isExitSpan),
 				ITransaction iTransaction => iTransaction.StartSpan(spanName, spanType, subType),
 				_ => null
 			};

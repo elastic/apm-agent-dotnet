@@ -23,16 +23,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		{
 			services.AddMvc().AddApplicationPart(typeof(MockApmServer).Assembly);
 			services.AddControllers();
-
-
-			var contentRootDir = _configuration.GetValue<string>(WebHostDefaults.ContentRootKey);
-			var specBranch = "7.x";
-			var validator = new Validator(specBranch, Path.Combine(contentRootDir, "specs"));
-			// not ideal to wait on async inside sync startup configuration, but do for now.
-			// Force the specs to work with to be downloaded now, to avoid race conditions with
-			// downloading for the first time.
-			validator.DownloadAsync(specBranch, true).Wait();
-			services.AddSingleton(validator);
+			services.AddSingleton(new Validator());
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

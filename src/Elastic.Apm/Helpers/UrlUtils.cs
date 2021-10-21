@@ -37,7 +37,7 @@ namespace Elastic.Apm.Helpers
 		{
 			var port = url.IsDefaultPort ? string.Empty : $":{url.Port}";
 			var scheme = $"{url.Scheme}://";
-			return new Destination.DestinationService { Type = span.Type, Name = scheme + url.Host + port, Resource = $"{url.Host}:{url.Port}" };
+			return new Destination.DestinationService { Resource = $"{url.Host}:{url.Port}" };
 		}
 	}
 }

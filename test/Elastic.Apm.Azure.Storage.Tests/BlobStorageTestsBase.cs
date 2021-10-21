@@ -44,9 +44,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be(Environment.StorageAccountConnectionStringProperties.BlobFullyQualifiedNamespace);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
 			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{Environment.StorageAccountConnectionStringProperties.AccountName}");
-			destination.Service.Type.Should().Be(ApiConstants.TypeStorage);
 		}
 
 		public void Dispose() => ((ApmAgent)Agent).Dispose();
