@@ -8,7 +8,7 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Model
 {
-	[Specification("docs/spec/v2/metadata.json")]
+	[Specification("metadata.json")]
 	internal class Metadata
 	{
 		/// <inheritdoc cref="Api.Cloud"/>

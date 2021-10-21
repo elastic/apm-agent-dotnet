@@ -798,22 +798,22 @@ namespace Elastic.Apm.Tests.ApiTests
 					{
 						span.Context.Destination = new Destination { Address = manualAddress };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
-					});
+					}, isExitSpan: true);
 					tx.CaptureSpan("manually set destination port", "test_span_type", span =>
 					{
 						span.Context.Destination = new Destination { Port = manualPort };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
-					});
+					}, isExitSpan: true);
 					tx.CaptureSpan("manually set destination address to null", "test_span_type", span =>
 					{
 						span.Context.Destination = new Destination { Address = null };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
-					});
+					}, isExitSpan: true);
 					tx.CaptureSpan("manually set destination port to null", "test_span_type", span =>
 					{
 						span.Context.Destination = new Destination { Port = null };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
-					});
+					}, isExitSpan: true);
 				});
 			}
 
@@ -861,7 +861,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction("test TX name", "test TX type",
 					tx =>
 					{
-						tx.CaptureSpan("test span name", "test_span_type", span => { span.Context.Http = new Http { Method = "PUT", Url = "://" }; });
+						tx.CaptureSpan("test span name", "test_span_type", span => { span.Context.Http = new Http { Method = "PUT", Url = "://" }; },
+							isExitSpan: true);
 					});
 			}
 

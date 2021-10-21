@@ -47,37 +47,38 @@ namespace Elastic.Apm.Specification
 			"System.UInt64",
 		};
 
+		private static readonly string RootDirectory;
 		private static readonly Regex SpecPathRegex =
-			new Regex("^.*?/(?<path>docs/spec/.*?\\.json)$", RegexOptions.ExplicitCapture);
+			new Regex("^.*?/docs/spec/v2/(?<path>.*?\\.json)$", RegexOptions.ExplicitCapture);
 
 		private readonly string _directory;
 
-		/// <summary>
-		/// The branch in the GitHub repository
-		/// </summary>
-		public string Branch { get; }
-
-		/// <summary>
-		/// The name of the GitHub repository
-		/// </summary>
-		public string Repository { get; }
-
-		/// <summary>
-		/// The owner of the GitHub repository
-		/// </summary>
-		public string Owner { get; }
-
-		public Validator(string owner, string repository, string branch, string directory)
+		static Validator()
 		{
-			if (string.IsNullOrWhiteSpace(owner))
-				throw new ArgumentException("must have a value", nameof(owner));
+			var solutionFileName = "ElasticApmAgent.sln";
+			var currentDirectory = Directory.GetCurrentDirectory();
+			var candidateDirectory = new DirectoryInfo(currentDirectory);
+			do
+			{
+				if (File.Exists(Path.Combine(candidateDirectory.FullName, solutionFileName)))
+				{
+					RootDirectory = candidateDirectory.FullName;
+					break;
+				}
 
-			if (string.IsNullOrWhiteSpace(repository))
-				throw new ArgumentException("must have a value", nameof(repository));
+				candidateDirectory = candidateDirectory.Parent;
+			} while (candidateDirectory != null);
 
-			if (string.IsNullOrWhiteSpace(branch))
-				throw new ArgumentException("must have a value", nameof(branch));
+			if (RootDirectory is null)
+				throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
+		}
 
+		public Validator() : this(Path.Combine(RootDirectory, "src", "Elastic.Apm.Specification", "specs"))
+		{
+		}
+
+		public Validator(string directory)
+		{
 			if (string.IsNullOrWhiteSpace(directory))
 				throw new ArgumentException("must have a value", nameof(directory));
 
@@ -89,98 +90,75 @@ namespace Elastic.Apm.Specification
 			{
 				throw new ArgumentException("must be a valid path", nameof(directory), e);
 			}
-
-			Owner = owner;
-			Repository = repository;
-			Branch = branch;
 		}
 
-		public Validator(string branch, string directory) : this("elastic", "apm-server", branch, directory)
-		{
-		}
-
-		/// <summary>
-		/// Downloads the APM server specifications for a given branch
-		/// </summary>
-		/// <param name="branch"></param>
-		/// <param name="overwrite">If <c>true</c>, overwrite existing files.</param>
-		/// <returns>A task that can be awaited</returns>
-		/// <exception cref="Exception">
-		/// Exception deleting current directory, or creating new directory.
-		/// </exception>
-		public async Task DownloadAsync(string branch, bool overwrite)
-		{
-			var branchDirectory = Path.Combine(_directory, Owner, Repository, branch);
-
-			// assume that if the branch already exists, it contains the specs
-			if (Directory.Exists(branchDirectory))
-			{
-				if (!overwrite)
-					return;
-
+		public static async Task DownloadAsync(string branch, string destination)
+        {
+			if (Directory.Exists(destination))
+            {
 				try
-				{
-					Directory.Delete(branchDirectory, true);
-				}
-				catch (Exception e)
-				{
-					throw new Exception($"Exception deleting directory '{branchDirectory}', {e.Message}", e);
-				}
-			}
+                {
+                    Directory.Delete(destination, true);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"Exception deleting directory '{destination}', {e.Message}", e);
+                }
+            }
 
-			using var client = new HttpClient();
+            using var client = new HttpClient();
 #if !NETSTANDARD
-			// force use of TLS 1.2 on older Full Framework, in order to call GitHub API
-			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            // force use of TLS 1.2 on older Full Framework, in order to call GitHub API
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 #endif
 
-			client.DefaultRequestHeaders.UserAgent.Clear();
-			client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("apm-agent-dotnet", "1"));
+            client.DefaultRequestHeaders.UserAgent.Clear();
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("apm-agent-dotnet", "1"));
 
-			// use the GitHub api to download the tar.gz and extract the specs from the stream.
-			// This is considerably faster than downloading many small files.
-			var response = await client.GetAsync($"https://api.github.com/repos/{Owner}/{Repository}/tarball/{branch}")
-				.ConfigureAwait(false);
+            // use the GitHub api to download the tar.gz and extract the specs from the stream.
+            // This is considerably faster than downloading many small files.
+            var response = await client.GetAsync($"https://api.github.com/repos/elastic/apm-server/tarball/{branch}")
+                .ConfigureAwait(false);
 
-			using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-			using var gzipStream = new GZipStream(stream, CompressionMode.Decompress);
-			using var tarStream = new TarInputStream(gzipStream, Encoding.UTF8);
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var gzipStream = new GZipStream(stream, CompressionMode.Decompress);
+            using var tarStream = new TarInputStream(gzipStream, Encoding.UTF8);
 
-			while (true)
-			{
-				var entry = tarStream.GetNextEntry();
-				if (entry == null) break;
+            while (true)
+            {
+                var entry = tarStream.GetNextEntry();
+                if (entry == null) break;
 
-				if (entry.TarHeader.TypeFlag == TarHeader.LF_LINK || entry.TarHeader.TypeFlag == TarHeader.LF_SYMLINK)
-					continue;
+                if (entry.TarHeader.TypeFlag == TarHeader.LF_LINK || entry.TarHeader.TypeFlag == TarHeader.LF_SYMLINK)
+                    continue;
 
-				var name = entry.Name;
-				var match = SpecPathRegex.Match(name);
+                var name = entry.Name;
+                var match = SpecPathRegex.Match(name);
 
-				// only interested in the spec files
-				if (!match.Success)
-					continue;
+                // only interested in the spec files
+                if (!match.Success)
+                    continue;
 
-				name = match.Groups["path"].Value;
-				name = name.Replace('/', Path.DirectorySeparatorChar);
+                name = match.Groups["path"].Value;
+                name = name.Replace('/', Path.DirectorySeparatorChar);
 
-				var destFile = Path.Combine(branchDirectory, name);
-				var parentDirectory = Path.GetDirectoryName(destFile);
+                var destFile = Path.Combine(destination, name);
+                var parentDirectory = Path.GetDirectoryName(destFile);
 
-				try
-				{
-					// ReSharper disable once AssignNullToNotNullAttribute
-					Directory.CreateDirectory(parentDirectory);
-				}
-				catch (Exception e)
-				{
-					throw new Exception($"Exception creating directory '{parentDirectory}', {e.Message}", e);
-				}
+                try
+                {
+                    // ReSharper disable once AssignNullToNotNullAttribute
+                    Directory.CreateDirectory(parentDirectory);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"Exception creating directory '{parentDirectory}', {e.Message}", e);
+                }
 
-				using var fileStream = File.Create(destFile);
-				tarStream.CopyEntryContents(fileStream);
-			}
-		}
+                using var fileStream = File.Create(destFile);
+                tarStream.CopyEntryContents(fileStream);
+            }
+        }
 
 		/// <summary>
 		/// Loads the schema for the given specification id. Downloads the schema if it not already downloaded.
@@ -194,10 +172,7 @@ namespace Elastic.Apm.Specification
 		/// </exception>
 		public async Task<JsonSchema> LoadSchemaAsync(string specificationId)
 		{
-			var branchDirectory = Path.Combine(_directory, Owner, Repository, Branch);
-			await DownloadAsync(branchDirectory, false).ConfigureAwait(false);
-
-			var path = Path.Combine(branchDirectory, specificationId);
+			var path = Path.Combine(_directory, specificationId);
 
 			if (!File.Exists(path))
 				throw new FileNotFoundException($"'{specificationId}' does not exist at {path}", path);
@@ -264,7 +239,6 @@ namespace Elastic.Apm.Specification
 
 		private async Task<TypeValidationResult> ValidateAsync(Type type, string specificationId, Validation validation)
 		{
-			await DownloadAsync(Branch, false);
 			var schema = await LoadSchemaAsync(specificationId).ConfigureAwait(false);
 			var result = new TypeValidationResult(type, specificationId, validation);
 

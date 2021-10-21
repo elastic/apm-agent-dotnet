@@ -19,7 +19,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 	/// <summary>
 	/// Creates spans for diagnostic events from Microsoft.Azure.ServiceBus
 	/// </summary>
-	internal class MicrosoftAzureServiceBusDiagnosticListener: DiagnosticListenerBase
+	internal class MicrosoftAzureServiceBusDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ApmAgent _realAgent;
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
-			var queueName = cachedProperties.Fetch(kv.Value,"Entity") as string;
+			var queueName = cachedProperties.Fetch(kv.Value, "Entity") as string;
 			if (MatchesIgnoreMessageQueues(queueName))
 				return;
 
@@ -116,16 +116,20 @@ namespace Elastic.Apm.Azure.ServiceBus
 			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
 			transaction.Context.Service = new Service(null, null) { Framework = _framework };
 
+			if (queueName != null)
+				transaction.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+
 			// transaction creation will create an activity, so use this as the key.
 			var activityId = Activity.Current.Id;
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
 			{
-				Logger.Trace()?.Log(
-					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
-					action,
-					transaction.Id,
-					activityId);
+				Logger.Trace()
+					?.Log(
+						"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
+						action,
+						transaction.Id,
+						activityId);
 			}
 		}
 
@@ -137,7 +141,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
-			var queueName = cachedProperties.Fetch(kv.Value,"Entity") as string;
+			var queueName = cachedProperties.Fetch(kv.Value, "Entity") as string;
 			if (MatchesIgnoreMessageQueues(queueName))
 				return;
 
@@ -150,11 +154,18 @@ namespace Elastic.Apm.Azure.ServiceBus
 			{
 				var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
 				transaction.Context.Service = new Service(null, null) { Framework = _framework };
+				if (queueName != null)
+					transaction.Context.Message = new Message { Queue = new Queue { Name = queueName } };
 				segment = transaction;
 			}
 			else
 			{
-				var span = ApmAgent.GetCurrentExecutionSegment().StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action);
+				var span = ApmAgent.GetCurrentExecutionSegment()
+					.StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action, true);
+
+				if (queueName != null)
+					span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+
 				segment = span;
 			}
 
@@ -163,12 +174,13 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 			if (!_processingSegments.TryAdd(activityId, segment))
 			{
-				Logger.Trace()?.Log(
-					"Could not add {Action} {SegmentName} {TransactionId} for activity {ActivityId} to tracked segments",
-					action,
-					segment is ITransaction ? "transaction" : "span",
-					segment.Id,
-					activityId);
+				Logger.Trace()
+					?.Log(
+						"Could not add {Action} {SegmentName} {TransactionId} for activity {ActivityId} to tracked segments",
+						action,
+						segment is ITransaction ? "transaction" : "span",
+						segment.Id,
+						activityId);
 			}
 		}
 
@@ -179,10 +191,11 @@ namespace Elastic.Apm.Azure.ServiceBus
 				var matcher = WildcardMatcher.AnyMatch(_realAgent.ConfigurationStore.CurrentSnapshot.IgnoreMessageQueues, name);
 				if (matcher != null)
 				{
-					Logger.Debug()?.Log(
-						"Not tracing message from {QueueName} because it matched IgnoreMessageQueues pattern {Matcher}",
-						name,
-						matcher.GetMatcher());
+					Logger.Debug()
+						?.Log(
+							"Not tracing message from {QueueName} because it matched IgnoreMessageQueues pattern {Matcher}",
+							name,
+							matcher.GetMatcher());
 					return true;
 				}
 			}
@@ -206,7 +219,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			}
 
 			var activity = Activity.Current;
-			var queueName = cachedProperties.Fetch(kv.Value,"Entity") as string;
+			var queueName = cachedProperties.Fetch(kv.Value, "Entity") as string;
 			var destinationAddress = cachedProperties.Fetch(kv.Value, "Endpoint") as Uri;
 
 			if (MatchesIgnoreMessageQueues(queueName))
@@ -229,13 +242,17 @@ namespace Elastic.Apm.Azure.ServiceBus
 				}
 			};
 
+			if (queueName != null)
+				span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
-				Logger.Trace()?.Log(
-					"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked segments",
-					action,
-					span.Id,
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked segments",
+						action,
+						span.Id,
+						activity.Id);
 			}
 		}
 
@@ -250,9 +267,10 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()?.Log(
-					"Could not find segment for activity {ActivityId} in tracked segments",
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not find segment for activity {ActivityId} in tracked segments",
+						activity.Id);
 				return;
 			}
 
@@ -280,9 +298,10 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()?.Log(
-					"Could not find segment for activity {ActivityId} in tracked segments",
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not find segment for activity {ActivityId} in tracked segments",
+						activity.Id);
 				return;
 			}
 

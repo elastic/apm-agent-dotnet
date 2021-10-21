@@ -20,12 +20,24 @@ namespace Elastic.Apm.Filters
 		{
 			if (transaction is Transaction realTransaction)
 			{
-				if (realTransaction.IsContextCreated && realTransaction.Context.Request?.Headers != null)
+				if (realTransaction.IsContextCreated)
 				{
-					foreach (var key in realTransaction.Context?.Request?.Headers?.Keys.ToList())
+					if (realTransaction.Context.Request?.Headers != null)
 					{
-						if (WildcardMatcher.IsAnyMatch(realTransaction.Configuration.SanitizeFieldNames, key))
-							realTransaction.Context.Request.Headers[key] = Consts.Redacted;
+						foreach (var key in realTransaction.Context.Request.Headers.Keys.ToList())
+						{
+							if (WildcardMatcher.IsAnyMatch(realTransaction.Configuration.SanitizeFieldNames, key))
+								realTransaction.Context.Request.Headers[key] = Consts.Redacted;
+						}
+					}
+
+					if (realTransaction.Context.Message?.Headers != null)
+					{
+						foreach (var key in realTransaction.Context.Message.Headers.Keys.ToList())
+						{
+							if (WildcardMatcher.IsAnyMatch(realTransaction.Configuration.SanitizeFieldNames, key))
+								realTransaction.Context.Message.Headers[key] = Consts.Redacted;
+						}
 					}
 				}
 			}

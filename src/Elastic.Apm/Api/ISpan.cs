@@ -9,7 +9,7 @@ namespace Elastic.Apm.Api
 	/// <summary>
 	/// An event captured by an agent occurring in a monitored service
 	/// </summary>
-	[Specification("docs/spec/v2/span.json")]
+	[Specification("span.json")]
 	public interface ISpan : IExecutionSegment
 	{
 		/// <summary>
@@ -22,6 +22,11 @@ namespace Elastic.Apm.Api
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
 		/// </summary>
 		SpanContext Context { get; }
+
+		/// <summary>
+		/// Indicates that this span is an exit span.
+		/// </summary>
+		public bool IsExitSpan { get; }
 
 		/// <summary>
 		/// The stack trace which was captured for the given span.

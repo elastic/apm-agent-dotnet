@@ -17,6 +17,7 @@ namespace Elastic.Apm.Api
 		public Database Db { get; set; }
 		public Destination Destination { get; set; }
 		public Http Http { get; set; }
+		public Message Message { get; set; }
 
 		/// <summary>
 		/// <seealso cref="ShouldSerializeLabels" />

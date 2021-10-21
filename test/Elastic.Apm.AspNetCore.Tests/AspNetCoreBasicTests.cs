@@ -342,19 +342,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Service.Should().NotBeNull();
 
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
-				.Context.Destination.Service.Name.ToLower()
-				.Should()
-				.Be("https://api.github.com");
-
-			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
 				.Context.Destination.Service.Resource.ToLower()
 				.Should()
 				.Be("api.github.com:443");
-
-			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
-				.Context.Destination.Service.Type.ToLower()
-				.Should()
-				.Be(ApiConstants.TypeExternal);
 		}
 
 		/// <summary>

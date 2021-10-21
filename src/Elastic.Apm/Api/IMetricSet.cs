@@ -4,13 +4,14 @@
 
 using System.Collections.Generic;
 using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Metrics;
 
 namespace Elastic.Apm.Api
 {
 	/// <summary>
 	/// Data captured by the agent representing a metric occurring in a monitored service
 	/// </summary>
-	[Specification("docs/spec/v2/metricset.json")]
+	[Specification("metricset.json")]
 	public interface IMetricSet
 	{
 		/// <summary>
@@ -23,5 +24,15 @@ namespace Elastic.Apm.Api
 		/// Number of milliseconds in unix time
 		/// </summary>
 		long Timestamp { get; set; }
+
+		/// <summary>
+		/// Selected information about the correlated transaction
+		/// </summary>
+		TransactionInfo Transaction { get; set; }
+
+		/// <summary>
+		/// Selected information about the correlated span
+		/// </summary>
+		SpanInfo Span { get; set; }
 	}
 }

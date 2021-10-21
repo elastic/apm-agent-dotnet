@@ -72,15 +72,13 @@ namespace Elastic.Apm.Grpc.Tests
 			//Make sure all spans are collected
 			Thread.Sleep(500);
 
-			payloadSender.Spans.Should().HaveCountGreaterThan(1);
+			payloadSender.Spans.Should().HaveCountGreaterOrEqualTo(1);
 			payloadSender.Spans.Should()
 				.Contain(span => span.Subtype == ApiConstants.SubTypeGrpc
 					&& span.Outcome == Outcome.Success
 					&& span.Name == $"/{Greeter.Descriptor.FullName}/{nameof(client.SayHello)}"
 					&& span.Context.Destination.Address == "localhost"
 					&& span.Context.Destination.Port == SampleAppHostBuilder.SampleAppPort
-					&& span.Context.Destination.Service.Type == "external"
-					&& span.Context.Destination.Service.Name == SampleAppHostBuilder.SampleAppUrl
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 
@@ -137,15 +135,13 @@ namespace Elastic.Apm.Grpc.Tests
 			//Make sure all spans are collected
 			Thread.Sleep(500);
 
-			payloadSender.Spans.Should().HaveCountGreaterThan(1);
+			payloadSender.Spans.Should().HaveCountGreaterOrEqualTo(1);
 			payloadSender.Spans.Should()
 				.Contain(span => span.Subtype == ApiConstants.SubTypeGrpc
 					&& span.Outcome == Outcome.Failure
 					&& span.Name == $"/{Greeter.Descriptor.FullName}/{nameof(client.ThrowAnException)}"
 					&& span.Context.Destination.Address == "localhost"
 					&& span.Context.Destination.Port == SampleAppHostBuilder.SampleAppPort
-					&& span.Context.Destination.Service.Type == "external"
-					&& span.Context.Destination.Service.Name == SampleAppHostBuilder.SampleAppUrl
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 

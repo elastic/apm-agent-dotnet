@@ -41,13 +41,7 @@ namespace Elastic.Apm.Tests
 					where type.IsClass && specInterfaces.Any(i => i.IsAssignableFrom(type))
 					select type).ToList();
 
-			var specBranch = "master";
-
-			_validator = new Validator(specBranch, downloadDir);
-
-			// force tests to always get the latest spec on the branch
-			_validator.DownloadAsync(specBranch, true).Wait();
-
+			_validator = new Validator();
 			_output = output;
 		}
 

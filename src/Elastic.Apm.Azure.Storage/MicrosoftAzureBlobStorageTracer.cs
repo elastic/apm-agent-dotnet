@@ -110,16 +110,14 @@ namespace Elastic.Apm.Azure.Storage
 
 			var name = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, name,
-				ApiConstants.TypeStorage, AzureBlobStorage.SubType, InstrumentationFlag.Azure, true);
+				ApiConstants.TypeStorage, AzureBlobStorage.SubType, InstrumentationFlag.Azure, true, true);
 			span.Action = action;
 			span.Context.Destination = new Destination
 			{
 				Address = blobUrl.FullyQualifiedNamespace,
 				Service = new Destination.DestinationService
 				{
-					Name = AzureBlobStorage.SubType,
 					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.StorageAccountName}",
-					Type = ApiConstants.TypeStorage
 				}
 			};
 

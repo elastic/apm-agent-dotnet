@@ -44,7 +44,7 @@ namespace Elastic.Apm.GrpcClient
 							grpcMethodName = "unknown";
 
 						Logger.Trace()?.Log("Starting span for gRPC call, method:{methodName}", grpcMethodName);
-						var newSpan = currentTransaction.StartSpan(grpcMethodName, ApiConstants.TypeExternal, ApiConstants.SubTypeGrpc);
+						var newSpan = currentTransaction.StartSpan(grpcMethodName, ApiConstants.TypeExternal, ApiConstants.SubTypeGrpc, isExitSpan: true);
 						ProcessingRequests.TryAdd(requestObject, newSpan);
 					}
 				}

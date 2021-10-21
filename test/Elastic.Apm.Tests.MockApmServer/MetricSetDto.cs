@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Metrics;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ClassNeverInstantiated.Global
@@ -13,12 +14,16 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	[Specification("docs/spec/v2/metricset.json")]
+	[Specification("metricset.json")]
 	internal class MetricSetDto : ITimestampedDto
 	{
 		public Dictionary<string, MetricSampleDto> Samples { get; set; }
 
 		public long Timestamp { get; set; }
+
+		public TransactionInfo Transaction { get; set; }
+
+		public SpanInfo Span { get; set; }
 
 		public override string ToString()
 		{

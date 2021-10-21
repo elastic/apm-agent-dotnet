@@ -110,7 +110,7 @@ namespace Elastic.Apm.Azure.Storage
 				? $"{AzureQueueStorage.SpanName} SEND"
 				: $"{AzureQueueStorage.SpanName} SEND to {queueName}";
 
-			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeMessaging, AzureQueueStorage.SubType, "send");
+			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeMessaging, AzureQueueStorage.SubType, "send", true);
 			if (span is Span realSpan)
 				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
 

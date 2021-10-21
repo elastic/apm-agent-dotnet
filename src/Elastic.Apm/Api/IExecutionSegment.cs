@@ -125,7 +125,8 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
-		void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null);
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -138,7 +139,8 @@ namespace Elastic.Apm.Api
 		/// <param name="capturedAction">The <see cref="Action" /> that points to the code that you want to capture as a span.</param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
-		void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null);
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -155,10 +157,11 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
 		/// <returns>
 		/// The result of the <paramref name="func" />.
 		/// </returns>
-		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null);
+		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -175,10 +178,11 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
 		/// <returns>
 		/// The result of the <paramref name="func" />.
 		/// </returns>
-		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null);
+		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -191,8 +195,9 @@ namespace Elastic.Apm.Api
 		/// <param name="func">The <see cref="Func{Task}" /> that points to the async code that you want to capture as a span.</param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
 		/// <returns>The <see cref="Task" /> that you can await on.</returns>
-		Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null);
+		Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -208,8 +213,9 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
 		/// <returns>The <see cref="Task" /> that you can await on.</returns>
-		Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null);
+		Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -225,9 +231,10 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
 		/// <typeparam name="T">The return type of the <see cref="Task{T}" /> that you want to capture as span.</typeparam>
 		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
-		Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null);
+		Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -244,9 +251,10 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
 		/// <typeparam name="T">The return type of the <see cref="Task{T}" /> that you want to capture as span.</typeparam>
 		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
-		Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null);
+		Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// Ends the item and schedules it to be reported to the APM Server.
@@ -329,8 +337,9 @@ namespace Elastic.Apm.Api
 		/// <param name="type">The type of the span.</param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
+		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
 		/// <returns>Returns the newly created and active span.</returns>
-		ISpan StartSpan(string name, string type, string subType = null, string action = null);
+		ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false);
 
 		/// <summary>
 		/// Returns the value of a label.
