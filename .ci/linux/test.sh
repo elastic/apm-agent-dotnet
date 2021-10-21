@@ -20,7 +20,7 @@ dotnet test -c Release ElasticApmAgent.sln \
 	--collect:"XPlat Code Coverage" \
 	--settings coverlet.runsettings \
 	--blame-hang \
-	--blame-hang-timeout 5m \
+	--blame-hang-timeout 10m \
 	/p:CollectCoverage=true \
 	/p:CoverletOutputFormat=cobertura \
 	/p:CoverletOutput=target/Coverage/ \

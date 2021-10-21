@@ -134,9 +134,7 @@ namespace Elastic.Apm.Azure.Storage
 				Address = destinationAddress,
 				Service = new Destination.DestinationService
 				{
-					Name = AzureQueueStorage.SubType,
 					Resource = queueName is null ? AzureQueueStorage.SubType : $"{AzureQueueStorage.SubType}/{queueName}",
-					Type = ApiConstants.TypeMessaging
 				}
 			};
 

@@ -21,6 +21,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public Response Response { get; set; }
 
+		public Message Message { get; set; }
+
 		public User User { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(ContextDto))
