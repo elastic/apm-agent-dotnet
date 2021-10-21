@@ -473,14 +473,10 @@ namespace Elastic.Apm.Model
 				if (!IsExitSpan)
 					return;
 
-				if (!string.IsNullOrEmpty(_context.Value?.Destination?.Service?.Resource))
+				if (_context.IsValueCreated && !string.IsNullOrEmpty(_context.Value.Destination?.Service?.Resource))
 					return;
 
 				Context.Destination ??= new Destination();
-
-				if (Context.Destination.Service != null)
-					Context.Destination.Service = new Destination.DestinationService();
-
 				Context.Destination.Service = new Destination.DestinationService();
 
 				if (Context.Db != null)

@@ -22,6 +22,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public Http Http { get; set; }
 
+		public Message Message { get; set; }
+
 		[JsonProperty("tags")]
 		public LabelsDictionary Labels { get; set; }
 
