@@ -232,13 +232,9 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			span.Type.Should().Be(ApiConstants.TypeDb);
 			span.Subtype.Should().Be(ApiConstants.SubTypeCosmosDb);
 
+			span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubTypeCosmosDb);
 			if (db != null)
-			{
 				span.Context.Db.Instance.Should().Be(db);
-				span.Context.Destination.Service.Resource.Should().Be($"{ApiConstants.SubTypeCosmosDb}:{db}");
-			}
-			else
-				span.Context.Destination.Service.Resource.Should().Be($"{ApiConstants.SubTypeCosmosDb}");
 		}
 	}
 }
