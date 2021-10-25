@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
     
     <PropertyGroup>
-        <RootNamespace>Elastic.Apm.Profiler.Managed.Loader</RootNamespace>
-        <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net461;netcoreapp2.0</TargetFrameworks>
-        <TargetFramework Condition="'$(OS)' != 'Windows_NT'">netcoreapp2.0</TargetFramework>
-        <CheckEolTargetFramework>false</CheckEolTargetFramework>
+      <RootNamespace>Elastic.Apm.Profiler.Managed.Loader</RootNamespace>
+      <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net461;netcoreapp2.0</TargetFrameworks>
+      <TargetFramework Condition="'$(OS)' != 'Windows_NT'">netcoreapp2.0</TargetFramework>
+      <CheckEolTargetFramework>false</CheckEolTargetFramework>
+      <IsPackable>false</IsPackable>
     </PropertyGroup>
   
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
