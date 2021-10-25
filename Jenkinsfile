@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent { label 'linux && immutable' }
+  agent { label 'linux && immutable && docker' }
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
@@ -291,12 +291,13 @@ pipeline {
               }
             }
             stage('Windows .NET Core'){
-              agent { label 'windows-2019-immutable' }
+              agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }
               environment {
                 HOME = "${env.WORKSPACE}"
                 DOTNET_ROOT = "C:\\Program Files\\dotnet"
-                PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                CARGO_MAKE_HOME = "C:\\tools\\cargo"
+                PATH = "${PATH};${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;${env.CARGO_MAKE_HOME};${env.USERPROFILE}\\.cargo\\bin"
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
               stages{
