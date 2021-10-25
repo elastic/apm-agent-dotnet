@@ -6,6 +6,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
@@ -33,7 +34,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				yield return new object[] { "netcoreapp2.1" };
 			}
 
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (TestEnvironment.IsWindows)
 				yield return new object[] { "net461" };
 		}
 

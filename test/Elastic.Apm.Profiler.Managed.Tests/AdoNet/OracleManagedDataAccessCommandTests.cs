@@ -34,7 +34,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		[InlineData("net461")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (!TestEnvironment.IsWindows)
 				return;
 
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);

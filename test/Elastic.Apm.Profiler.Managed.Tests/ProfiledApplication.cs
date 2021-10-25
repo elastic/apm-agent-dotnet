@@ -34,9 +34,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 				throw new DirectoryNotFoundException($"project could not be found at {_projectDirectory}");
 
 			string profilerFile;
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (TestEnvironment.IsWindows)
 				profilerFile = "elastic_apm_profiler.dll";
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			else if (TestEnvironment.IsLinux)
 				profilerFile = "libelastic_apm_profiler.so";
 			else
 				profilerFile = "libelastic_apm_profiler.dylib";

@@ -70,7 +70,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SystemCpu()
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (!TestEnvironment.IsLinux && !TestEnvironment.IsWindows)
 				return;
 
 			using var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());

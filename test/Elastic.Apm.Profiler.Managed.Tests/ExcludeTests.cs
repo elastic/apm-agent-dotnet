@@ -70,7 +70,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 
 		public static IEnumerable<object[]> TargetFrameworks()
 		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (TestEnvironment.IsWindows)
 			{
 				yield return new object[] { "net5.0", "dotnet.exe" };
 				yield return new object[] { "net461", "SqliteSample.exe" };
