@@ -85,7 +85,7 @@ module Main =
             
             Targets.Target("restore", ["netcore-sln"], Build.Restore)
            
-            Targets.Target("build", ["restore"; "clean"; "version"; "build-profiler"], Build.Build)
+            Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
             Targets.Target("build-profiler", ["restore"; "clean"; "version"; "clean-profiler"], Build.BuildProfiler)
                         
