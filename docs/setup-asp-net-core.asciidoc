@@ -1,0 +1,52 @@
+:nuget: https://www.nuget.org/packages
+:dot: .
+
+[[setup-asp-net-core]]
+=== ASP.NET Core
+
+[float]
+==== Quick start
+
+[NOTE]
+--
+We suggest using the approach described in the <<setup-dotnet-net-core, .NET Core setup instructions>>, 
+to register the agent on `IHostBuilder`, as opposed to using `IApplicationBuilder` as described below.
+
+We keep the `IApplicationBuilder` introduced here only for backwards compatibility.
+--
+
+For ASP.NET Core, once you reference the {nuget}/Elastic.Apm.NetCoreAll[`Elastic.Apm.NetCoreAll`] package, you can enable auto instrumentation by calling the `UseAllElasticApm()` extension method:
+
+[source,csharp]
+----
+using Elastic.Apm.NetCoreAll;
+
+public class Startup
+{
+  public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+  {
+    app.UseAllElasticApm(Configuration);
+    //…rest of the method
+  }
+  //…rest of the class
+}
+----
+
+The `app.UseAllElasticApm(...)` line **must** be the first line in the `Configure` method, otherwise the agent won't be able to properly measure the timing of your requests, and complete requests may potentially be missed by the agent.
+
+With this you enable every agent component including ASP.NET Core tracing, monitoring of outgoing HTTP request, Entity Framework Core database tracing, etc.
+
+In case you only reference the {nuget}/Elastic.Apm.AspNetCore[`Elastic.Apm.AspNetCore`] package, you won't find the `UseAllElasticApm`. Instead you need to use the `UseElasticApm()` method from the `Elastic.Apm.AspNetCore` namespace. This method turns on ASP.NET Core tracing, and gives you the opportunity to manually turn on other components. By default it will only trace ASP.NET Core requests - No HTTP request tracing, database call tracing or any other tracing component will be turned on.
+
+In case you would like to turn on specific tracing components you can pass those to the `UseElasticApm` method.
+
+For example:
+
+[source,csharp]
+----
+app.UseElasticApm(Configuration,
+	new HttpDiagnosticsSubscriber(),  /* Enable tracing of outgoing HTTP requests */
+	new EfCoreDiagnosticsSubscriber()); /* Enable tracing of database calls through EF Core*/
+----
+
+In case you only want to use the <<public-api>>, you don't need to do any initialization, you can simply start using the API and the agent will send the data to the APM Server.

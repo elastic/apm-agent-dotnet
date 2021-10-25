@@ -16,6 +16,7 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO
+open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.SystemHelper
 open Fake.SystemHelper
@@ -144,10 +145,14 @@ module Build =
         dotnet "build" Paths.SolutionNetCore
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
+        
+    /// Builds the CLR profiler and supporting .NET managed assemblies
+    let BuildProfiler () =
+        dotnet "build" (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
+        Cargo.Exec [ "make"; "build-release"; ]
                               
     /// Publishes all projects with framework versions
-    let Publish targets =
-        
+    let Publish targets =        
         let projs =
             match targets with
             | Some t -> t
@@ -186,12 +191,20 @@ module Build =
         Shell.cleanDir Paths.BuildOutputFolder
         dotnet "clean" Paths.SolutionNetCore       
         if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
+        
+    let CleanProfiler () =
+        Cargo.Exec ["make"; "clean"]       
 
     /// Restores all packages for the solution
     let Restore () =
         DotNet.Exec ["restore" ; Paths.SolutionNetCore; "-v"; "q"]
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
             
+    let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
+        source.GetFiles()
+        |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
+        |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
+        
     /// Creates versioned ElasticApmAgent.zip file    
     let AgentZip (canary:bool) =        
         let name = "ElasticApmAgent"      
@@ -204,31 +217,25 @@ module Build =
         let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
 
-        // all files of interest are top level files in the source directory
-        let copy (destination: DirectoryInfo) (source: DirectoryInfo) =        
-            source.GetFiles()
-            |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
-            |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
-            
         // copy startup hook to root of agent directory
         !! (Paths.BuildOutput "ElasticApmAgentStartupHook/netcoreapp2.2")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copy agentDir)
+        |> Seq.iter (copyDllsAndPdbs agentDir)
             
         // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
         !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
         ++ (Paths.BuildOutput "Elastic.Apm/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copy (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major)))
+        |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major)))
                  
         // assemblies compiled against older version of System.Diagnostics.DiagnosticSource 
         !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major))
         ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copy (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
+        |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
             
         // include version in the zip file name    
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
@@ -244,3 +251,45 @@ module Build =
         
         Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
                       "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
+        
+    let ProfilerIntegrations () =
+        DotNet.Exec ["run"; "--project"; Paths.SrcProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
+                     "-i"; Paths.Src "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
+                     "-o"; Paths.Src "Elastic.Apm.Profiler.Managed"; "-f"; "yml"]
+        
+    /// Creates versioned elastic_apm_profiler.zip file containing all components needed for profiler auto-instrumentation  
+    let ProfilerZip (canary:bool) =
+        let name = "elastic_apm_profiler"      
+        let versionedName =
+            let os =
+                if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then "win-x64"
+                else "linux-x64"      
+            if canary then
+                sprintf "%s_%s-%s-%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString()) os versionSuffix
+            else
+                sprintf "%s_%s-%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString()) os
+                
+        let profilerDir = Paths.BuildOutput name |> DirectoryInfo                    
+        profilerDir.Create()
+        
+        seq {
+            Paths.Src "Elastic.Apm.Profiler.Managed/integrations.yml"
+            "target/release/elastic_apm_profiler.dll"
+            "target/release/libelastic_apm_profiler.so"
+            Paths.Src "elastic_apm_profiler/NOTICE"
+            "LICENSE"
+        }
+        |> Seq.map FileInfo
+        |> Seq.filter (fun file -> file.Exists)
+        |> Seq.iter (fun file -> file.CopyTo(Path.combine profilerDir.FullName file.Name, true) |> ignore)
+            
+        Directory.GetDirectories((Paths.BuildOutput "Elastic.Apm.Profiler.Managed"), "*", SearchOption.TopDirectoryOnly)
+        |> Seq.map DirectoryInfo
+        |> Seq.iter (fun sourceDir -> copyDllsAndPdbs (profilerDir.CreateSubdirectory(sourceDir.Name)) sourceDir)
+        
+        // include version in the zip file name    
+        ZipFile.CreateFromDirectory(profilerDir.FullName, Paths.BuildOutput versionedName + ".zip")
+        
+        
+        
+        

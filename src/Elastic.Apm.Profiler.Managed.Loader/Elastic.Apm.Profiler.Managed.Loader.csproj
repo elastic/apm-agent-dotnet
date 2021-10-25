@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    
+    <PropertyGroup>
+        <RootNamespace>Elastic.Apm.Profiler.Managed.Loader</RootNamespace>
+        <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net461;netcoreapp2.0</TargetFrameworks>
+        <TargetFramework Condition="'$(OS)' != 'Windows_NT'">netcoreapp2.0</TargetFramework>
+        <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    </PropertyGroup>
+  
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DebugType>portable</DebugType>
+    </PropertyGroup>
+
+    <!-- delete everything but the dlls and pdbs when building in release configuration. The bin directory contents
+         are embedded in the profiler binary, so don't embed unneccessary files -->
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Release' ">
+      <ItemGroup>
+        <FilesToDelete 
+          Include="$(OutDir)\**\*.*" 
+          Exclude="$(OutDir)\**\Elastic.Apm.Profiler.Managed.Loader.dll;$(OutDir)\**\Elastic.Apm.Profiler.Managed.Loader.pdb" />
+      </ItemGroup>
+      
+      <Delete Files="@(FilesToDelete)"/>
+    </Target>
+
+</Project>

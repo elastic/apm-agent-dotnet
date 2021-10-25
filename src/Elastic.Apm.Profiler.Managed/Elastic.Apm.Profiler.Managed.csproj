@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net461;netstandard2.0;netcoreapp3.1</TargetFrameworks>
+    </PropertyGroup>
+    
+    <ItemGroup Condition="'$(TargetFramework)' != 'net461'">
+        <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+        <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    </ItemGroup>
+  
+    <!-- ASP.NET integration -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+      <ProjectReference Include="..\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" />
+      <Reference Include="System.Web" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Elastic.Apm.Profiler.Managed.Core\Elastic.Apm.Profiler.Managed.Core.csproj" />
+      <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed.Tests" Key="$(ExposedPublicKey)" />
+    </ItemGroup>
+
+</Project>

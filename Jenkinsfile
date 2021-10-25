@@ -147,6 +147,50 @@ pipeline {
                     }
                   }
                 }
+                stage('Startup Hook Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test startup hooks - Linux', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        dotnet(){
+                          sh label: 'Build', script: './build.sh agent-zip'
+                          sh label: 'Test & coverage', script: '.ci/linux/test-startuphooks.sh'
+                        }
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                stage('Profiler Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test profiler - Linux', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        dotnet(){
+                          sh label: 'Build', script: './build.sh profiler-zip'
+                          sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
+                        }
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
               }
             }
             stage('Windows .NET Framework'){
@@ -279,11 +323,19 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          whenTrue(isPR()) {
+                            bat(label: 'Package', script: './build.bat profiler-zip')
+                          }
                         }
                       }
                     }
                   }
                   post {
+                    success {
+                      whenTrue(isPR()) {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
+                      }
+                    }
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
                         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
@@ -326,9 +378,32 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                         retry(3) {
-                          bat label: 'Build', script: '.ci/windows/zip.bat'
+                          bat label: 'Build', script: './build.bat agent-zip'
                         }
-                        bat label: 'Test & coverage', script: '.ci/windows/test-zip.bat'
+                        bat label: 'Test & coverage', script: '.ci/windows/test-startuphooks.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                stage('Profiler Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test profiler - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        retry(3) {
+                          bat label: 'Build', script: './build.bat profiler-zip'
+                        }
+                        bat label: 'Test & coverage', script: '.ci/windows/test-profiler.bat'
                       }
                     }
                   }

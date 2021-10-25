@@ -19,11 +19,23 @@ RUN apt update \
  && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
  && apt -qq update \
  && apt-get -qq install -y docker-ce docker-ce-cli containerd.io \
-    --no-install-recommends \
- && rm -rf /var/lib/apt/lists/*
+    --no-install-recommends
  
 # Install terraform
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
  && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
  && apt-get update \
- && apt-get install terraform
+ && apt-get -qq install -y terraform
+
+# Install rust
+ENV RUSTUP_HOME='/cargo'
+ENV CARGO_HOME='/cargo'
+ENV PATH="/cargo/bin:${PATH}"
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN rustup default 1.54.0
+
+# Install cargo make
+RUN apt-get -qq install -y build-essential libssl-dev pkg-config \
+    --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/*
+RUN cargo install --force cargo-make

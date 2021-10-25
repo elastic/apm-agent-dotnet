@@ -1,0 +1,117 @@
+:nuget: https://www.nuget.org/packages
+:dot: .
+
+[[setup-dotnet-net-core]]
+=== .NET Core
+
+[float]
+==== Quick start
+
+On .NET Core, the agent can be registered on the `IHostBuilder`. This applies to both ASP.NET Core and to other .NET Core applications that depend on `IHostBuilder`, like https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services[background tasks]. In this case, you need to reference the {nuget}/Elastic.Apm.NetCoreAll[`Elastic.Apm.NetCoreAll`] package.
+
+
+[source,csharp]
+----
+using Elastic.Apm.NetCoreAll;
+
+namespace MyApplication
+{
+  public class Program
+  {
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+            .UseAllElasticApm();
+
+    public static void Main(string[] args) => CreateHostBuilder(args).Build().Run();
+  }
+}
+----
+
+With the `UseAllElasticApm()`, the agent with all its components is turned on. On ASP.NET Core, it'll automatically capture incoming requests, database calls through supported technologies, outgoing HTTP requests, and so on.
+
+[float]
+==== Manual instrumentation
+
+The `UseAllElasticApm` will add an `ITracer` to the Dependency Injection system, which can be used in your code to manually instrument your application, using the <<public-api>> 
+
+[source,csharp]
+----
+using Elastic.Apm.Api;
+
+namespace WebApplication.Controllers
+{
+    public class HomeController : Controller
+    {
+        private readonly ITracer _tracer;
+
+        //ITracer injected through Dependency Injection
+        public HomeController(ITracer tracer) => _tracer = tracer;
+
+        public IActionResult Index()
+        {
+            //use ITracer
+            var span = _tracer.CurrentTransaction?.StartSpan("MySampleSpan", "Sample");
+            try
+            {
+                //your code here
+            }
+            catch (Exception e)
+            {
+                span?.CaptureException(e);
+                throw;
+            }
+            finally
+            {
+                span?.End();
+            }
+            return View();
+        }
+    }
+}
+----
+
+Similarly to this ASP.NET Core controller, you can use the same approach with `IHostedService` implementations.
+
+[float]
+==== Instrumentation modules
+
+The `Elastic.Apm.NetCoreAll` package references every agent component that can be automatically configured. This is usually not a problem, but if you want to keep dependencies minimal, you can instead reference the `Elastic.Apm.Extensions.Hosting` package and use the `UseElasticApm` method, instead of `UseAllElasticApm`. With this setup you can control what the agent will listen for.
+
+The following example only turns on outgoing HTTP monitoring (so, for instance, database or Elasticsearch calls won't be automatically captured):
+
+[source,csharp]
+----
+public static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+        .UseElasticApm(new HttpDiagnosticsSubscriber());
+----
+
+
+[float]
+[[zero-code-change-setup]]
+==== Zero code change setup on .NET Core (added[1.7])
+
+If you can't or don't want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core. This feature is supported on .NET Core 3.0 and newer versions.
+
+To configure startup hooks
+
+. Download the `ElasticApmAgent_<version>.zip` file from the https://github.com/elastic/apm-agent-dotnet/releases[Releases] page of the .NET APM Agent GitHub repository. You can find the file under Assets.
+. Unzip the zip file into a folder.
+. Set the `DOTNET_STARTUP_HOOKS` environment variable to point to the `ElasticApmAgentStartupHook.dll` file in the unzipped folder
++
+[source,sh]
+----
+set DOTNET_STARTUP_HOOKS=<path-to-agent>\ElasticApmAgentStartupHook.dll <1>
+----
+<1> `<path-to-agent>` is the unzipped directory from step 2.
+
+. Start your .NET Core application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
+
+With this setup the agent will be injected into the application during startup and it will start every auto instrumentation feature. On ASP.NET Core (including gRPC), incoming requests will be automatically captured. 
+
+[NOTE]
+--
+Agent configuration can be controlled through environment variables with the startup hook feature.
+--
