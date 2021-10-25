@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 # Install visualstudio2019 and workloads needed to build ASP.NET and .NET Core apps
 Invoke-WebRequest -UseBasicParsing `
-    -Uri "https://download.visualstudio.microsoft.com/download/pr/cb1d5164-e767-4886-8955-2df3a7c816a8/b9ff67da6d68d6a653a612fd401283cc213b4ec4bae349dd3d9199659a7d9354/vs_BuildTools.exe" `
+    -Uri "https://download.visualstudio.microsoft.com/download/pr/5a50b8ac-2c22-47f1-ba60-70d4257a78fa/a4dd4b97c2b8f1280a8ce66bf9e7522e93896ba617212e5ca16be5cdf7b17f1c/vs_BuildTools.exe" `
     -OutFile "C:\tools\vs_BuildTools.exe"
 
 Start-Process "C:\tools\vs_BuildTools.exe" -ArgumentList "--add", "Microsoft.VisualStudio.Component.NuGet", `

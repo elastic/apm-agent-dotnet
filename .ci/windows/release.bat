@@ -1,4 +1,0 @@
-::
-:: Builds profiler
-::
-
