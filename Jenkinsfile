@@ -330,8 +330,8 @@ pipeline {
                         dir("${BASE_DIR}"){
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           whenTrue(isPR()) {
-                            bat(label: 'Package', script: './build.bat agent-zip')
-                            bat(label: 'Package', script: './build.bat profiler-zip')
+                            bat(label: 'Build agent', script: './build.bat agent-zip')
+                            bat(label: 'Build profiler', script: './build.bat profiler-zip')
                           }
                         }
                       }
