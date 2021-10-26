@@ -89,6 +89,9 @@ const SKIP_ASSEMBLIES: [&str; 7] = [
     "ISymWrapper",
 ];
 
+/// The git hash defined on build
+static GIT_HASH: &str = env!("GIT_HASH");
+
 /// The profiler package version
 static PROFILER_PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -498,8 +501,9 @@ impl Profiler {
         let logger = env::initialize_logging(&process_name);
 
         log::trace!(
-            "Initialize: started. profiler package version {}",
-            PROFILER_PACKAGE_VERSION
+            "Initialize: started. profiler package version {} (commit: {})",
+            PROFILER_PACKAGE_VERSION,
+            GIT_HASH
         );
 
         if log::log_enabled!(Level::Debug) {
