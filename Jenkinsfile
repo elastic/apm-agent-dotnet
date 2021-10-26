@@ -99,12 +99,16 @@ pipeline {
                         dotnet(){
                           sh '.ci/linux/build.sh'
                           whenTrue(isPR()) {
-                              sh(label: 'Package', script: '.ci/linux/release.sh true')
-                            }
+                            // build nuget packages and profiler
+                            sh(label: 'Package', script: '.ci/linux/release.sh true')
+                            sh label: 'Rustup', script: 'rustup default 1.54.0'
+                            sh label: 'Cargo make', script: 'cargo install --force cargo-make'
+                            sh(label: 'Build profiler', script: './build.bat profiler-zip')
                           }
                         }
                       }
                     }
+                  }
                   post {
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
@@ -115,8 +119,8 @@ pipeline {
                         archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
                       }
                     }
-                    }
                   }
+                }
                 /**
                 Execute unit tests.
                 */
@@ -248,8 +252,6 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
-                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
                         bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
                       }
                     }
@@ -274,7 +276,6 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
                         bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
                       }
                     }
