@@ -176,12 +176,13 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                            sh label: 'Build', script: './build.sh profiler-zip'
-                            sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
-                          }
+                          sh label: 'Rustup', script: 'rustup default 1.54.0'
+                          sh label: 'Build', script: './build.sh profiler-zip'
+                          sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
                         }
                       }
                     }
+                  }
                   post {
                     always {
                       reportTests()
