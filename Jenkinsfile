@@ -634,9 +634,8 @@ def dotnet(Closure body){
 }
 
 def rust(Closure body){
-  def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
   withEnv([
-    "HOME=${homePath}",
+    "RUSTUP_INIT_SKIP_PATH_CHECK=yes",
     "RUSTUP_HOME=/cargo",
     "CARGO_HOME=/cargo",
     "PATH=/cargo/bin:${PATH}"
