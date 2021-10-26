@@ -1,6 +1,6 @@
 cargo make test
 
-dotnet test -c Release test\Elastic.Apm.Profiler.Managed.Tests\Elastic.Apm.Profiler.Managed.Tests.csproj --no-build ^
+dotnet test -c Release test\Elastic.Apm.Profiler.Managed.Tests\Elastic.Apm.Profiler.Managed.Tests.csproj ^
  --verbosity normal ^
  --results-directory target ^
  --diag target\diag-profiler.log ^
