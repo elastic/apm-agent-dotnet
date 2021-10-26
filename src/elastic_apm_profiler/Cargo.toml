@@ -11,7 +11,7 @@ license = "Apache-2.0"
 [dependencies]
 bitflags = "1.2.1"
 c_vec = "2.0.0"
-com = { git = "https://github.com/russcam/com-rs.git", branch = "master", features = ["production"] }
+com = { version = "0.6.0", features = ["production"] }
 hex = "0.4.3"
 log = "0.4.14"
 log4rs = { version = "1.0.0", default_features = false, features = ["console_appender", "rolling_file_appender", "compound_policy", "size_trigger", "fixed_window_roller"] }
