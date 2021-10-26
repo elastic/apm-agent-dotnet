@@ -55,10 +55,17 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 
 		private void Publish(string targetFramework)
 		{
+			var targetFrameworkPublishDirectory = Path.Combine(_publishDirectory, targetFramework);
+
+			// if we're running on CI and the publish directory already exists for the
+			// target framework, skip publishing again.
+			if (TestEnvironment.IsCi && Directory.Exists(targetFrameworkPublishDirectory))
+				return;
+
 			var processInfo = new ProcessStartInfo
 			{
 				FileName = "dotnet",
-				Arguments = $"publish -c Release -f {targetFramework} -o {Path.Combine(_publishDirectory, targetFramework)}",
+				Arguments = $"publish -c Release -f {targetFramework} -o {targetFrameworkPublishDirectory}",
 				WorkingDirectory = _projectDirectory
 			};
 
