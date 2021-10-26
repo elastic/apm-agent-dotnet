@@ -99,27 +99,24 @@ pipeline {
                         dotnet(){
                           sh '.ci/linux/build.sh'
                           whenTrue(isPR()) {
-                            rust(){
-                              sh(label: 'Build profiler', script: './build.sh profiler-zip')
                               sh(label: 'Package', script: '.ci/linux/release.sh true')
                             }
                           }
                         }
                       }
                     }
-                  }
                   post {
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
                     success {
                       whenTrue(isPR()) {
                         archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
                       }
                     }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                     }
                   }
-                }
                 /**
                 Execute unit tests.
                 */
@@ -179,14 +176,12 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          rust(){
                             sh label: 'Build', script: './build.sh profiler-zip'
                             sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
                           }
                         }
                       }
                     }
-                  }
                   post {
                     always {
                       reportTests()
@@ -630,28 +625,6 @@ def dotnet(Closure body){
         body()
       }
     }
-  }
-}
-
-def rust(Closure body){
-
-  def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
-  withEnv([
-    "HOME=${homePath}",
-    "RUSTUP_INIT_SKIP_PATH_CHECK=yes",
-    "RUSTUP_HOME=${homePath}/cargo",
-    "CARGO_HOME=${homePath}/cargo",
-    "PATH+RUST=${homePath}/cargo/bin"
-    ]){
-    sh(label: 'Install rust', script: """
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    rustup default 1.54.0
-
-    apt-get -qq install -y build-essential libssl-dev pkg-config --no-install-recommends \
-     && rm -rf /var/lib/apt/lists/*
-    cargo install --force cargo-make
-    """)
-    body()
   }
 }
 
