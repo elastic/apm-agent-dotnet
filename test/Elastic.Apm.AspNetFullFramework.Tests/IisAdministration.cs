@@ -267,16 +267,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				var sqliteInteropDll = new FileInfo(Path.Combine(appBinPath, processorArch, "SQLite.Interop.dll"));
 				if (sqliteInteropDll.Exists)
 				{
-					// Getting file security details may require elevated privileges, depending on where the repository is cloned.
-					// Running the IDE (or cmd line) in Administrator mode should resolve
-					var accessControl = sqliteInteropDll.GetAccessControl(AccessControlSections.All);
-					var account = new NTAccount("IIS_IUSRS");
-					accessControl.AddAccessRule(new FileSystemAccessRule(
-						account,
-						FileSystemRights.ReadAndExecute,
-						AccessControlType.Allow));
+					if (OperatingSystem.IsWindows())
+					{
+						// Getting file security details may require elevated privileges, depending on where the repository is cloned.
+						// Running the IDE (or cmd line) in Administrator mode should resolve
+						var accessControl = sqliteInteropDll.GetAccessControl(AccessControlSections.All);
+						var account = new NTAccount("IIS_IUSRS");
+						accessControl.AddAccessRule(new FileSystemAccessRule(
+							account,
+							FileSystemRights.ReadAndExecute,
+							AccessControlType.Allow));
 
-					sqliteInteropDll.SetAccessControl(accessControl);
+						sqliteInteropDll.SetAccessControl(accessControl);
+					}
 				}
 			}
 		}
