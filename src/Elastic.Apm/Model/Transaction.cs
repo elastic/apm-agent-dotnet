@@ -109,7 +109,8 @@ namespace Elastic.Apm.Model
 			BreakdownMetricsProvider breakdownMetricsProvider,
 			bool ignoreActivity = false,
 			long? timestamp = null,
-			string id = null
+			string id = null,
+			string traceId = null
 		)
 		{
 			Configuration = configuration;
@@ -184,13 +185,17 @@ namespace Elastic.Apm.Model
 					if (id == null)
 						Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 					else
-					{
 						Id = id;
-					}
+
 					IsSampled = sampler.DecideIfToSample(idBytes);
 
-					idBytes = new byte[16];
-					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					if (traceId == null)
+					{
+						idBytes = new byte[16];
+						TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					}
+					else
+						TraceId = traceId;
 
 					if (IsSampled)
 					{
@@ -344,6 +349,8 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
+
+		public OTel Otel { get; set; }
 
 		/// <summary>
 		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
@@ -614,12 +621,12 @@ namespace Elastic.Apm.Model
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null, string id = null,
 			bool isExitSpan = false
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
-				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, isExitSpan: isExitSpan);
+				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,  isExitSpan: isExitSpan);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))

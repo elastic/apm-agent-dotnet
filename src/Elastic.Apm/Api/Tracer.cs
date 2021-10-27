@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -66,12 +67,12 @@ namespace Elastic.Apm.Api
 		}
 
 		internal Transaction StartTransactionInternal(string name, string type,
-			long? timestamp = null, bool ignoreActivity = false, string id = null
+			long? timestamp = null, bool ignoreActivity = false, string id = null, string traceId = null, DistributedTracingData distributedTracingData = null
 		)
-			=> StartTransactionInternal(name, type, null, ignoreActivity, timestamp, id);
+			=> StartTransactionInternal(name, type, distributedTracingData, ignoreActivity, timestamp, id, traceId);
 
 		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null,
-			bool ignoreActivity = false, long? timestamp = null, string id = null
+			bool ignoreActivity = false, long? timestamp = null, string id = null, string traceId = null
 		)
 		{
 			var currentConfig = _configurationProvider.CurrentSnapshot;

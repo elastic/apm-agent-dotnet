@@ -179,6 +179,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaSample", "sample\Kafka
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqSample", "sample\RabbitMqSample\RabbitMqSample.csproj", "{1D6B0C67-42C8-4AB4-A795-B6FF8EF7196E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTelemetrySample", "sample\OpenTelemetrySample\OpenTelemetrySample.csproj", "{3D31589A-CA44-4D6D-9944-26CE9640A283}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -469,6 +471,10 @@ Global
 		{CC7E2527-6EE3-428D-8C1D-465FDD8B487B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC7E2527-6EE3-428D-8C1D-465FDD8B487B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC7E2527-6EE3-428D-8C1D-465FDD8B487B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D31589A-CA44-4D6D-9944-26CE9640A283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D31589A-CA44-4D6D-9944-26CE9640A283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D31589A-CA44-4D6D-9944-26CE9640A283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D31589A-CA44-4D6D-9944-26CE9640A283}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -545,6 +551,7 @@ Global
 		{2B23487A-B340-4F5C-A49B-9B829F437A5A} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{1D6B0C67-42C8-4AB4-A795-B6FF8EF7196E} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{CC7E2527-6EE3-428D-8C1D-465FDD8B487B} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{3D31589A-CA44-4D6D-9944-26CE9640A283} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
