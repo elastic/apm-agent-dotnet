@@ -13,6 +13,7 @@ open Fake.IO
 open ProcNet
 open Fake.Core
 open Fake.IO.Globbing.Operators
+open TestEnvironment
 
 module Main =  
     let excludeBullsEyeOptions = Set.ofList [
@@ -77,9 +78,19 @@ module Main =
 
             Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
             
-            Targets.Target("clean", Build.Clean)
+            Targets.Target("clean", fun _ ->
+                if isCI then
+                    printfn "skipping clean as running on CI"
+                else
+                    Build.Clean()
+            )
             
-            Targets.Target("clean-profiler", Build.CleanProfiler)
+            Targets.Target("clean-profiler", fun _ ->
+                if isCI then
+                    printfn "skipping clean-profiler as running on CI"
+                else
+                    Build.CleanProfiler()
+            )
             
             Targets.Target("netcore-sln", Build.GenerateNetCoreSln)
             

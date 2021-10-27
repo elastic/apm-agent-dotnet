@@ -20,18 +20,15 @@ open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.SystemHelper
 open Fake.SystemHelper
+open TestEnvironment
 open Tooling
 
 module Build =
     
-    let private isCI = Environment.hasEnvironVar "BUILD_ID"
-    
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
     
     let mutable private currentDiagnosticSourceVersion = None
-    
-    let private isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-    
+        
     let private aspNetFullFramework = Paths.SrcProjFile "Elastic.Apm.AspNetFullFramework"
     
     let private allSrcProjects = !! "src/**/*.csproj"

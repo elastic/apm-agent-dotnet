@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="TestEnvironment.fs" />
     <Compile Include="Paths.fs" />
     <Compile Include="Versioning.fs" />
     <Compile Include="Tooling.fs" />
