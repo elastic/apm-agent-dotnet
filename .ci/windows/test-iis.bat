@@ -9,6 +9,8 @@ icacls %cd% /t /q /grant "IIS_IUSRS:(OI)(CI)(IO)(RX)"
 REM enable permissions for the anonymous access group
 icacls %cd% /t /q /grant "IUSR:(OI)(CI)(IO)(RX)"
 
+dotnet build -c Release test\Elastic.Apm.AspNetFullFramework.Tests
+
 dotnet test -c Release test\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
  --verbosity normal ^
  --results-directory target ^
