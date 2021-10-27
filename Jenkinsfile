@@ -252,7 +252,6 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        powershell label: 'Install tools', script: '.ci\\windows\\tools.ps1'
                         bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
                       }
                     }
@@ -277,6 +276,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        powershell label: 'Install tools', script: '.ci\\windows\\tools.ps1'
                         bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
                       }
                     }
