@@ -46,7 +46,7 @@ namespace Elastic.Apm.DiagnosticSource
 				if (value.Name == _listener.Name)
 				{
 					var listenerType = _listener.GetType();
-					if (_agent is null || _agent.SubscribedListeners.Add(listenerType))
+					if (_agent is null || _agent.SubscribedListeners.Add(listenerType) || _listener.AllowDuplicates)
 					{
 						_sourceSubscription = new SubscribedListenerDisposable(value.Subscribe(_listener), () => _agent.SubscribedListeners.Remove(listenerType));
 						_logger.Debug()
@@ -68,7 +68,7 @@ namespace Elastic.Apm.DiagnosticSource
 					if (value.Name == listener.Name)
 					{
 						var listenerType = listener.GetType();
-						if (_agent is null || _agent.SubscribedListeners.Add(listenerType))
+						if (_agent is null || _agent.SubscribedListeners.Add(listenerType) || listener.AllowDuplicates)
 						{
 							_sourceSubscription ??= new CompositeDisposable();
 							((CompositeDisposable)_sourceSubscription).Add(

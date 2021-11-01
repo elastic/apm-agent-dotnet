@@ -25,6 +25,7 @@ namespace Elastic.Apm.SqlClient.Tests
 
 		private readonly MockPayloadSender _payloadSender;
 		private readonly ITestOutputHelper _testOutputHelper;
+		private readonly IDisposable _subscription;
 
 		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, SqlServerFixture sqlClientListenerFixture)
 		{
@@ -38,7 +39,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			_apmAgent = new ApmAgent(new TestAgentComponents(
 				new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
 				payloadSender: _payloadSender));
-			_apmAgent.Subscribe(new SqlClientDiagnosticSubscriber());
+			_subscription = _apmAgent.Subscribe(new SqlClientDiagnosticSubscriber());
 		}
 
 		public static IEnumerable<object[]> Connections
@@ -82,6 +83,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			});
 
 			// Assert
+			_payloadSender.WaitForSpans();
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(0);
 
@@ -142,6 +144,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			});
 
 			// Assert
+			_payloadSender.WaitForSpans();
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(1);
 
@@ -170,6 +173,10 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubtypeMssql);
 		}
 
-		public void Dispose() => _apmAgent?.Dispose();
+		public void Dispose()
+		{
+			_subscription.Dispose();
+			_apmAgent.Dispose();
+		}
 	}
 }
