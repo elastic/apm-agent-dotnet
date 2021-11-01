@@ -186,16 +186,19 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			headerValues
 				.Should()
 				.NotBeEmpty()
-				.And.HaveCount(3);
+				.And.HaveCount(4);
 
-			headerValues[0].Product.Name.Should().Be($"elasticapm-{Consts.AgentName}");
+			headerValues[0].Product.Name.Should().Be($"apm-agent-{Consts.AgentName}");
 			headerValues[0].Product.Version.Should().NotBeEmpty();
 
-			headerValues[1].Product.Name.Should().Be("System.Net.Http");
-			headerValues[1].Product.Version.Should().NotBeEmpty();
+			// (<service name> <service version>)
+			headerValues[1].Comment.Should().StartWith("(").And.EndWith(")");
 
-			headerValues[2].Product.Name.Should().NotBeEmpty();
+			headerValues[2].Product.Name.Should().Be("System.Net.Http");
 			headerValues[2].Product.Version.Should().NotBeEmpty();
+
+			headerValues[3].Product.Name.Should().NotBeEmpty();
+			headerValues[3].Product.Version.Should().NotBeEmpty();
 		}
 
 		private static IEnumerable<TestArgs> TestArgsVariantsWithoutIndex()
