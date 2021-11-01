@@ -10,7 +10,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -52,12 +51,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 				catch (Exception e)
 				{
-					if (e is SecurityException)
+					if (e is UnauthorizedAccessException)
 					{
 						_logger.Error()
 							?.LogException(e, "Error instantiating '{CategoryName}' performance counter."
-								+ "- please make sure the current user has permissions to read performance counters. E.g. make sure the current user is member of "
-								+ "the 'Performance Monitor Users' group", categoryName);
+								+ " Process does not have permissions to read performance counters."
+								+ " See https://www.elastic.co/guide/en/apm/agent/dotnet/current/metrics.html#metrics-system to see how to configure.", categoryName);
 					}
 					else
 					{
@@ -65,6 +64,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							?.LogException(e, "Error instantiating '{CategoryName}' performance counter", categoryName);
 					}
 
+					_logger.Warning()?.Log("System metrics won't be collected");
 					_processorTimePerfCounter?.Dispose();
 					_processorTimePerfCounter = null;
 				}
