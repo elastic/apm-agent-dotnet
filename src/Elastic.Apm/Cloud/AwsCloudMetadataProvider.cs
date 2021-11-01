@@ -84,7 +84,7 @@ namespace Elastic.Apm.Cloud
 			{
 				_logger.Trace()?.LogException(
 					e,
-					"Unable to get {Provider} cloud metadata. The application is likely not running in {Provider}", Provider);
+					"Unable to get {Provider} cloud metadata. The application is likely not running in {Provider}", Provider, Provider);
 				return null;
 			}
 		}
