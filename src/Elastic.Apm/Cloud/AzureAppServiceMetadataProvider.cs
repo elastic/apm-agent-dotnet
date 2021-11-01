@@ -63,9 +63,10 @@ namespace Elastic.Apm.Cloud
 				if (!string.IsNullOrEmpty(value)) return false;
 
 				_logger.Trace()?.Log(
-					"Unable to get {Provider} cloud metadata as no {EnvironmentVariable} environment variable. The application is likely not running in {Provider}",
+					"Unable to get {Provider} cloud metadata as no {EnvironmentVariable} environment variable exists. The application is likely not running in {Provider}",
 					Provider,
-					key);
+					key,
+					Provider);
 
 				return true;
 			}
