@@ -19,6 +19,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 
 		public EfCoreDiagnosticListener(IApmAgent agent) : base(agent) => _agent = agent as ApmAgent;
 
+		public override bool AllowDuplicates => true;
+
 		public override string Name => "Microsoft.EntityFrameworkCore";
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)

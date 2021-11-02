@@ -475,23 +475,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			builder.CreateClient();
 
 			_agent.Disposables.Should().NotBeNull();
-
-			var disposablesField = typeof(CompositeDisposable).GetField("_disposables", BindingFlags.Instance | BindingFlags.NonPublic);
-			disposablesField.Should().NotBeNull("private readonly _disposables field is not null");
-
-			var disposables = disposablesField.GetValue(_agent.Disposables) as List<IDisposable>;
-			disposables.Should().NotBeNull("_disposables should be a List<IDisposable>");
-
-			var field = typeof(DiagnosticInitializer).GetField("_listeners", BindingFlags.Instance | BindingFlags.NonPublic);
-			if (field is null)
-				field = typeof(DiagnosticInitializer).GetField("_listener", BindingFlags.Instance | BindingFlags.NonPublic);
-
-			field.Should().NotBeNull("_listeners or _listener should not be null");
-
-			var count = UnwrapCompositeDisposable(disposables, disposablesField)
-				.Sum(disposable => CountAspNetCoreErrorDiagnosticsSubscriber(disposable, field));
-
-			count.Should().Be(1, "One AspNetCoreErrorDiagnosticListener is registered");
+			_agent.SubscribedListeners.Should().Contain(typeof(AspNetCoreErrorDiagnosticListener));
 		}
 
 		/// <summary>
@@ -510,35 +494,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Outcome.Should().Be(Outcome.Failure);
-		}
-
-		private static IEnumerable<IDisposable> UnwrapCompositeDisposable(IEnumerable<IDisposable> disposables, FieldInfo disposablesField)
-		{
-			foreach (var disposable in disposables)
-			{
-				if (disposable is CompositeDisposable)
-				{
-					var innerDisposables = disposablesField.GetValue(disposable) as List<IDisposable>;
-					foreach (var innerDisposable in UnwrapCompositeDisposable(innerDisposables, disposablesField))
-						yield return innerDisposable;
-				}
-				else
-					yield return disposable;
-			}
-		}
-
-		private static int CountAspNetCoreErrorDiagnosticsSubscriber(IDisposable disposable, FieldInfo field)
-		{
-			if (disposable is DiagnosticInitializer diagnosticInitializer)
-			{
-				var value = field.GetValue(diagnosticInitializer);
-				if (value is IEnumerable<IDiagnosticListener> listeners)
-					return listeners.Count(l => l is AspNetCoreErrorDiagnosticListener);
-
-				return 1;
-			}
-
-			return 0;
 		}
 
 		public override void Dispose()
