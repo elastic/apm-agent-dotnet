@@ -40,6 +40,8 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public abstract string Name { get; }
 
+		public virtual bool AllowDuplicates { get; }
+
 		public virtual void OnCompleted() { }
 
 		public virtual void OnError(Exception error) { }

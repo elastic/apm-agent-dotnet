@@ -23,6 +23,8 @@ namespace Elastic.Apm.Azure.Storage
 
 		public string Name => "Azure.Core";
 
+		public bool AllowDuplicates { get; }
+
 		public void OnCompleted() { }
 
 		public void OnError(Exception error) { }

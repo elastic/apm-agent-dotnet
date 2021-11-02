@@ -20,7 +20,7 @@ namespace Elastic.Apm.Azure.Storage
 		public IDisposable Subscribe(IApmAgent agent)
 		{
 			var retVal = new CompositeDisposable();
-			var initializer = new DiagnosticInitializer(agent.Logger, new IDiagnosticListener[]
+			var initializer = new DiagnosticInitializer(agent, new IDiagnosticListener[]
 				{
 					new AzureQueueStorageDiagnosticListener(agent),
 					new AzureCoreDiagnosticListener(agent)
