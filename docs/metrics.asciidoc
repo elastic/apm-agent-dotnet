@@ -24,7 +24,7 @@ As of APM version 6.6, these metrics will be visualized in the APM app.
 
 [IMPORTANT]
 --
-System metrics are collected using Performance Counters on Windows. The account under which a traced
+System CPU usage metric is collected using Performance Counters on Windows. The account under which a traced
 application runs must be part of the **Performance Monitor Users** group to be able to access
 performance counter values.
 
@@ -39,7 +39,7 @@ net localgroup "Performance Monitor Users" "<Account Name>" /add <1>
 For applications running in IIS, 
 https://docs.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities[IIS application pool identities use _virtual_ accounts]
 with a name following the convention `IIS APPPOOL\<Application pool name>`. An individual application pool identity
-can be added to the **Performance Monitor Users** group.
+can be added to the **Performance Monitor Users** group using the `net localgroup` command above.
 --
 
 For more system metrics, consider installing {metricbeat-ref}/index.html[metricbeat] on your hosts.
