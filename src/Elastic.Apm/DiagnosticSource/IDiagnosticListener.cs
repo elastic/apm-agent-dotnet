@@ -18,5 +18,12 @@ namespace Elastic.Apm.DiagnosticSource
 		/// </summary>
 		/// <value>The name.</value>
 		string Name { get; }
+
+		/// <summary>
+		/// Allow duplicate diagnostic listeners of the same type to be registered. There may be
+		/// more than one diagnostic listener (source) with the same name for which events
+		/// should be listened.
+		/// </summary>
+		bool AllowDuplicates { get; }
 	}
 }

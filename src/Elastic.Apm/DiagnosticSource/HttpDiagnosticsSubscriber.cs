@@ -41,7 +41,7 @@ namespace Elastic.Apm.DiagnosticSource
 				configuration.Subscribed = true;
 			}
 
-			var initializer = new DiagnosticInitializer(agent.Logger, HttpDiagnosticListener.New(agent));
+			var initializer = new DiagnosticInitializer(agent, HttpDiagnosticListener.New(agent));
 
 			retVal.Add(initializer);
 

@@ -44,6 +44,7 @@ namespace Elastic.Apm
 		public ITracer Tracer => Components.Tracer;
 		internal Tracer TracerInternal => Components.TracerInternal;
 		internal HttpTraceConfiguration HttpTraceConfiguration => Components.HttpTraceConfiguration;
+		internal HashSet<Type> SubscribedListeners => Components.SubscribedListeners;
 
 		public void Dispose()
 		{
