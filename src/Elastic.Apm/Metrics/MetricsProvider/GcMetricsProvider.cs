@@ -198,7 +198,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_gen3Size = (ulong)a.GenerationSize3;
 		}
 
-		private void RuntimeGCEnd(TraceProcess a, TraceGC gc)
+		private void RuntimeGCEnd(TraceProcess _, TraceGC gc)
 		{
 			if (!_isMetricAlreadyCaptured)
 			{
