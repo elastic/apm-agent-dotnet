@@ -23,7 +23,7 @@ namespace Elastic.Apm.Elasticsearch
 			if (!agentComponents.ConfigurationReader.Enabled)
 				return composite;
 
-			var subscriber = new DiagnosticInitializer(agentComponents.Logger, new IDiagnosticListener[]
+			var subscriber = new DiagnosticInitializer(agentComponents, new IDiagnosticListener[]
 			{
 				new AuditDiagnosticsListener(agentComponents),
 				new RequestPipelineDiagnosticsListener(agentComponents),
