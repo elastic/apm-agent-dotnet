@@ -44,7 +44,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly bool _collectGcGen2Size;
 		private readonly bool _collectGcGen3Size;
 		private readonly bool _collectGcTime;
-		private readonly int _currentProcessId;
 
 		private readonly GcEventListener _eventListener;
 		private readonly object _lock = new object();
@@ -52,47 +51,61 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly TraceEventSession _traceEventSession;
 		private readonly Task _traceEventSessionTask;
 
-		public GcMetricsProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics
-		)
+		private uint _gcCount;
+		private long _gcTimeInTicks;
+		private ulong _gen0Size;
+		private ulong _gen1Size;
+		private ulong _gen2Size;
+		private ulong _gen3Size;
+
+		private volatile bool _isMetricAlreadyCaptured;
+
+		public GcMetricsProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics)
 		{
-			_collectGcCount = IsGcCountNameEnabled(disabledMetrics);
-			_collectGcTime = IsGcTimeName(disabledMetrics);
-			_collectGcGen0Size = IsGcGen0SizeName(disabledMetrics);
-			_collectGcGen1Size = IsGcGen1SizeName(disabledMetrics);
-			_collectGcGen2Size = IsGcGen2SizeName(disabledMetrics);
-			_collectGcGen3Size = IsGcGen3SizeName(disabledMetrics);
+			_collectGcCount = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcCountName);
+			_collectGcTime = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcTimeName);
+			_collectGcGen0Size = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen0SizeName);
+			_collectGcGen1Size = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen1SizeName);
+			_collectGcGen2Size = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen2SizeName);
+			_collectGcGen3Size = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen3SizeName);
+
+			if (!IsEnabled(disabledMetrics))
+				return;
+
 			_logger = logger.Scoped(DbgName);
 
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
+				// if the OS doesn't support filtering, the processes and runtimes tracked by the trace event session source can grow
+				// unbounded, leading to the application consuming ever more memory.
+				if (!TraceEventProviderOptions.FilteringSupported)
+				{
+					_logger.Info()?.Log("TraceEventSession does not support filtering on this operating system. GC metrics won't be collected");
+					return;
+				}
+
 				try
 				{
 					TraceEventSessionName = SessionNamePrefix + Guid.NewGuid();
 					_traceEventSession = new TraceEventSession(TraceEventSessionName);
-					_currentProcessId = Process.GetCurrentProcess().Id;
-
 					_traceEventSession.Source.NeedLoadedDotNetRuntimes();
 					_traceEventSession.EnableProvider(
 						ClrTraceEventParser.ProviderGuid,
 						TraceEventLevel.Informational,
-						(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
+						(ulong)ClrTraceEventParser.Keywords.GC, // garbage collector details
+						new TraceEventProviderOptions { ProcessIDFilter = new List<int>(1) { Process.GetCurrentProcess().Id } }
 					);
 
+					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
 					_traceEventSession.Source.AddCallbackOnProcessStart(process =>
 					{
 						process.AddCallbackOnDotNetRuntimeLoad(runtime =>
 						{
-							_traceLoadedDotNetRuntime = runtime;
 							runtime.GCEnd += RuntimeGCEnd;
 						});
 					});
 
-					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
-
-					_traceEventSessionTask = Task.Run(() =>
-					{
-						_traceEventSession.Source.Process();
-					});
+					_traceEventSessionTask = Task.Run(() => _traceEventSession.Source.Process());
 				}
 				catch (Exception e)
 				{
@@ -104,16 +117,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				_eventListener = new GcEventListener(this, logger);
 		}
-
-		private uint _gcCount;
-		private long _gcTimeInTicks;
-		private ulong _gen0Size;
-		private ulong _gen1Size;
-		private ulong _gen2Size;
-		private ulong _gen3Size;
-
-		private volatile bool _isMetricAlreadyCaptured;
-		private TraceLoadedDotNetRuntime _traceLoadedDotNetRuntime;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => nameof(GcMetricsProvider);
@@ -133,31 +136,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// </summary>
 		internal string TraceEventSessionName { get; }
 
-		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => IsGcCountNameEnabled(disabledMetrics) ||
-			IsGcTimeName(disabledMetrics) || IsGcGen0SizeName(disabledMetrics) || IsGcGen1SizeName(disabledMetrics)
-			|| IsGcGen2SizeName(disabledMetrics) || IsGcGen3SizeName(disabledMetrics);
-
-		private bool IsGcCountNameEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcCountName);
-
-		private bool IsGcTimeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcTimeName);
-
-		private bool IsGcGen0SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen0SizeName);
-
-		private bool IsGcGen1SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen1SizeName);
-
-		private bool IsGcGen2SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen2SizeName);
-
-		private bool IsGcGen3SizeName(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen3SizeName);
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
+			_collectGcCount || _collectGcTime || _collectGcGen0Size || _collectGcGen1Size || _collectGcGen2Size || _collectGcGen3Size;
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
-			var gcTimeInMs = Interlocked.Read(ref _gcTimeInTicks) / 10_000.0;
-			Interlocked.Exchange(ref _gcTimeInTicks, 0);
-
+			var gcTimeInMs = Interlocked.Exchange(ref _gcTimeInTicks, 0) / 10_000.0;
 			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0 || gcTimeInMs > 0)
 			{
-				var samples = new List<MetricSample>(5);
-
+				var samples = new List<MetricSample>(6);
 				if (_collectGcCount)
 					samples.Add(new MetricSample(GcCountName, _gcCount));
 				if (_collectGcTime)
@@ -171,12 +158,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (_collectGcGen3Size)
 					samples.Add(new MetricSample(GcGen3SizeName, _gen3Size));
 
-				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
+				_logger.Trace()
+					?.Log(
+						"Collected gc metrics values: gcCount: {gcCount}, gen0Size: {gen0Size},  gen1Size: {gen1Size}, gen2Size: {gen2Size}, gen1Size: {gen3Size}, gcTime: {gcTime}",
+						_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size, gcTimeInMs);
+
+				return new List<MetricSet> { new(TimeUtils.TimestampNow(), samples) };
 			}
-			_logger.Trace()
-				?.Log(
-					"Collected gc metrics values: gcCount: {gcCount}, gen0Size: {gen0Size},  gen1Size: {gen1Size}, gen2Size: {gen2Size}, gen1Size: {gen3Size}, gcTime: {gcTime}",
-					_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size, gcTimeInMs);
+
 			return null;
 		}
 
@@ -186,9 +175,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (_traceEventSession != null)
 			{
 				_traceEventSession.Source.Clr.GCHeapStats -= ClrOnGCHeapStats;
-				if (_traceLoadedDotNetRuntime != null)
-					_traceLoadedDotNetRuntime.GCEnd -= RuntimeGCEnd;
-
 				_traceEventSession.Stop(true);
 				_traceEventSession.Source.Dispose();
 				_traceEventSession.Dispose();
@@ -201,32 +187,26 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private void ClrOnGCHeapStats(GCHeapStatsTraceData a)
 		{
-			if (a.ProcessID == _currentProcessId)
+			if (!_isMetricAlreadyCaptured)
 			{
-				if (!_isMetricAlreadyCaptured)
-				{
-					lock (_lock)
-						_isMetricAlreadyCaptured = true;
-				}
-				_gen0Size = (ulong)a.GenerationSize0;
-				_gen1Size = (ulong)a.GenerationSize1;
-				_gen2Size = (ulong)a.GenerationSize2;
-				_gen3Size = (ulong)a.GenerationSize3;
+				lock (_lock)
+					_isMetricAlreadyCaptured = true;
 			}
+			_gen0Size = (ulong)a.GenerationSize0;
+			_gen1Size = (ulong)a.GenerationSize1;
+			_gen2Size = (ulong)a.GenerationSize2;
+			_gen3Size = (ulong)a.GenerationSize3;
 		}
 
-		private void RuntimeGCEnd(TraceProcess traceProcess, TraceGC gc)
+		private void RuntimeGCEnd(TraceProcess _, TraceGC gc)
 		{
-			if (traceProcess.ProcessID == _currentProcessId)
+			if (!_isMetricAlreadyCaptured)
 			{
-				if (!_isMetricAlreadyCaptured)
-				{
-					lock (_lock)
-						_isMetricAlreadyCaptured = true;
-				}
-				_gcTimeInTicks = (long)gc.DurationMSec * 10_000;
-				_gcCount = (uint)gc.Number;
+				lock (_lock)
+					_isMetricAlreadyCaptured = true;
 			}
+			_gcTimeInTicks = (long)gc.DurationMSec * 10_000;
+			_gcCount = (uint)gc.Number;
 		}
 
 		/// <summary>
