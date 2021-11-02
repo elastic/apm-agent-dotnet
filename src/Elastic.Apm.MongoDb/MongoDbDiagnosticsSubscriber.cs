@@ -28,8 +28,7 @@ namespace Elastic.Apm.MongoDb
 			if (!components.ConfigurationReader.Enabled)
 				return retVal;
 
-			var initializer = new DiagnosticInitializer(components.Logger,
-				new[] { new MongoDiagnosticListener(components) });
+			var initializer = new DiagnosticInitializer(components, new MongoDiagnosticListener(components));
 
 			retVal.Add(initializer);
 

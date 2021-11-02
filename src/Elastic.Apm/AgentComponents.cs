@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -57,6 +58,7 @@ namespace Elastic.Apm
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
 				HttpTraceConfiguration = new HttpTraceConfiguration();
+				SubscribedListeners = new HashSet<Type>();
 
 				// initialize the tracer before central configuration or metric collection is started
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
@@ -92,6 +94,8 @@ namespace Elastic.Apm
 		internal IApmServerInfo ApmServerInfo { get; }
 
 		internal HttpTraceConfiguration HttpTraceConfiguration { get; }
+
+		internal HashSet<Type> SubscribedListeners { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent

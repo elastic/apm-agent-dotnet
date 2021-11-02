@@ -27,6 +27,8 @@ namespace Elastic.Apm.SqlClient
 
 		public SqlClientDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) => _agent = apmAgent as ApmAgent;
 
+		public override bool AllowDuplicates => true;
+
 		public override string Name => "SqlClientDiagnosticListener";
 
 		// prefix - Microsoft.Data.SqlClient. or System.Data.SqlClient.
