@@ -453,20 +453,31 @@ namespace Elastic.Apm.Model
 
 		internal void UpdateDroppedSpanStats(string destinationServiceResource, Outcome outcome, double duration)
 		{
-			_droppedSpanStatsMap ??= new Dictionary<DroppedSpanStatsKey, DroppedSpanStats>();
-
-			if (_droppedSpanStatsMap.Keys.Count >= 128)
-				return;
-
-			if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(destinationServiceResource, outcome), out var item))
+			if (_droppedSpanStatsMap == null)
 			{
-				item.DurationCount++;
-				item.DurationSumUs += duration;
+				_droppedSpanStatsMap = new Dictionary<DroppedSpanStatsKey, DroppedSpanStats>
+				{
+					{
+						new DroppedSpanStatsKey(destinationServiceResource, outcome),
+						new DroppedSpanStats(destinationServiceResource, outcome, duration)
+					}
+				};
 			}
 			else
 			{
-				_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(destinationServiceResource, outcome),
-					new DroppedSpanStats(destinationServiceResource, outcome, duration));
+				if (_droppedSpanStatsMap.Count >= 128)
+					return;
+
+				if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(destinationServiceResource, outcome), out var item))
+				{
+					item.DurationCount++;
+					item.DurationSumUs += duration;
+				}
+				else
+				{
+					_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(destinationServiceResource, outcome),
+						new DroppedSpanStats(destinationServiceResource, outcome, duration));
+				}
 			}
 		}
 
@@ -770,18 +781,36 @@ namespace Elastic.Apm.Model
 		public void SetLabel(string key, decimal value)
 			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
 
-		private struct DroppedSpanStatsKey
+		private readonly struct DroppedSpanStatsKey : IEquatable<DroppedSpanStatsKey>
 		{
 			// ReSharper disable once NotAccessedField.Local
-			private string _destinationServiceResource;
+			private readonly string _destinationServiceResource;
+
 			// ReSharper disable once NotAccessedField.Local
-			private Outcome _outcome;
+			private readonly Outcome _outcome;
 
 			public DroppedSpanStatsKey(string destinationServiceResource, Outcome outcome)
 			{
 				_destinationServiceResource = destinationServiceResource;
 				_outcome = outcome;
 			}
+
+			public bool Equals(DroppedSpanStatsKey other) =>
+				_destinationServiceResource == other._destinationServiceResource && _outcome == other._outcome;
+
+			public override bool Equals(object obj) => obj is DroppedSpanStatsKey other && Equals(other);
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					return ((_destinationServiceResource != null ? _destinationServiceResource.GetHashCode() : 0) * 397) ^ (int)_outcome;
+				}
+			}
+
+			public static bool operator ==(DroppedSpanStatsKey left, DroppedSpanStatsKey right) => left.Equals(right);
+
+			public static bool operator !=(DroppedSpanStatsKey left, DroppedSpanStatsKey right) => !left.Equals(right);
 		}
 	}
 }
