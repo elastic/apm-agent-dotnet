@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Runtime.InteropServices;
-using Elastic.Apm.Helpers;
+using Elastic.Apm.Api;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -12,9 +12,9 @@ namespace Elastic.Apm.Tests
 	{
 		public NetCoreAndNetFact()
 		{
-			if (!(RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix)
-				|| (RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNetPrefix) &&
-					!RuntimeInformation.FrameworkDescription.StartsWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix))))
+			if (!(RuntimeInformation.FrameworkDescription.StartsWith(Runtime.DotNetCoreName)
+				|| (RuntimeInformation.FrameworkDescription.StartsWith(Runtime.DotNetName) &&
+					!RuntimeInformation.FrameworkDescription.StartsWith(Runtime.DotNetFullFrameworkName))))
 			{
 				Skip =
 					$"{nameof(NetCoreAndNetFact)} tests only run on .NET Core and .NET 5 - test was executed on {RuntimeInformation.FrameworkDescription} - therefore test will be skipped";
