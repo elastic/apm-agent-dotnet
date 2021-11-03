@@ -22,6 +22,26 @@ The metrics will be stored in the `apm-*` index and have the `processor.event` p
 
 As of APM version 6.6, these metrics will be visualized in the APM app.
 
+[IMPORTANT]
+--
+System CPU usage metric is collected using Performance Counters on Windows. The account under which a traced
+application runs must be part of the **Performance Monitor Users** group to be able to access
+performance counter values.
+
+An account can be added to the **Performance Monitor Users** group from the command line
+
+[source,sh]
+----
+net localgroup "Performance Monitor Users" "<Account Name>" /add <1>
+----
+<1> `<Account Name>` is the account under which the traced application runs
+
+For applications running in IIS, 
+https://docs.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities[IIS application pool identities use _virtual_ accounts]
+with a name following the convention `IIS APPPOOL\<Application pool name>`. An individual application pool identity
+can be added to the **Performance Monitor Users** group using the `net localgroup` command above.
+--
+
 For more system metrics, consider installing {metricbeat-ref}/index.html[metricbeat] on your hosts.
 
 *`system.cpu.total.norm.pct`*::
