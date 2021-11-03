@@ -30,7 +30,7 @@ namespace Elastic.Apm.Tests
 				transaction.CaptureSpan("fooSpan", "test", () => { });
 
 				//This span will be dropped
-				var span1 = transaction.StartSpan("foo", "bar");
+				var span1 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 				span1.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = "https://foo.bar" };
 				span1.Duration = 100;
 				span1.End();
@@ -60,30 +60,30 @@ namespace Elastic.Apm.Tests
 				transaction.CaptureSpan("fooSpan", "test", () => { });
 
 				//Next spans will be dropped
-				var span1 = transaction.StartSpan("foo", "bar");
+				var span1 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 				span1.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = "https://foo.bar" };
 				span1.Duration = 100;
 				span1.End();
 
-				var span2 = transaction.StartSpan("foo", "bar");
+				var span2 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 				span2.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = "https://foo.bar" };
 				span2.Duration = 150;
 				span2.End();
 
-				var span3 = transaction.StartSpan("foo", "bar");
+				var span3 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 				span3.Context.Http = new Http { Method = "GET", StatusCode = 400, Url = "https://foo.bar" };
 				span3.Outcome = Outcome.Failure;
 				span3.Duration = 50;
 				span3.End();
 
-				var span4 = transaction.StartSpan("foo", "bar");
+				var span4 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 				span4.Context.Http = new Http { Method = "GET", StatusCode = 400, Url = "https://foo2.bar" };
 				span4.Duration = 15;
 				span4.End();
 
 				for (var i = 0; i < 50; i++)
 				{
-					var span5 = transaction.StartSpan("foo", "bar");
+					var span5 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 					span5.Context.Destination = new Destination { Service = new Destination.DestinationService { Resource = "mysql" } };
 					span5.Context.Db = new Database { Instance = "instance1", Type = "mysql", Statement = "Select Foo From Bar" };
 					span5.Duration = 50;
@@ -132,7 +132,7 @@ namespace Elastic.Apm.Tests
 				//Next spans will be dropped
 				for (var i = 0; i < 500; i++)
 				{
-					var span1 = transaction.StartSpan("foo", "bar");
+					var span1 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 					span1.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = $"https://foo{i}.bar" };
 					span1.Duration = 100;
 					span1.End();
