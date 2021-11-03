@@ -13,30 +13,25 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class PlatformDetection
 	{
-		internal const string DotNetPrefix = ".NET ";
-		internal const string DotNetCoreDescriptionPrefix = ".NET Core";
-		internal const string DotNetFullFrameworkDescriptionPrefix = ".NET Framework";
-		internal const string MonoDescriptionPrefix = "Mono";
-
 		internal static readonly bool IsDotNetFullFramework =
 			// Taken from https://github.com/dotnet/corefx/blob/master/src/CoreFx.Private.TestUtilities/src/System/PlatformDetection.cs#L24
-			RuntimeInformation.FrameworkDescription.StartsWith(DotNetFullFrameworkDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
+			RuntimeInformation.FrameworkDescription.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase);
 
 		internal static readonly bool IsDotNetCore =
 			// https://github.com/dotnet/corefx/blob/master/src/CoreFx.Private.TestUtilities/src/System/PlatformDetection.cs#L25
-			RuntimeInformation.FrameworkDescription.StartsWith(DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
+			RuntimeInformation.FrameworkDescription.StartsWith(Runtime.DotNetCoreName, StringComparison.OrdinalIgnoreCase);
 
 		internal static readonly bool IsMono =
-			RuntimeInformation.FrameworkDescription.StartsWith(MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
+			RuntimeInformation.FrameworkDescription.StartsWith(Runtime.MonoName, StringComparison.OrdinalIgnoreCase);
 
 		/// <summary>
 		/// Indicates if the runtime is .NET 5 or a newer version.
 		/// Specifically looks for ".NET [X]" format.
 		/// </summary>
 		internal static readonly bool IsDotNet =
-			RuntimeInformation.FrameworkDescription.StartsWith(DotNetPrefix, StringComparison.OrdinalIgnoreCase) &&
+			RuntimeInformation.FrameworkDescription.StartsWith($"{Runtime.DotNetName} ", StringComparison.OrdinalIgnoreCase) &&
 			RuntimeInformation.FrameworkDescription.Length >= 6
-			&& int.TryParse(RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0], out _);
+			&& char.IsDigit(RuntimeInformation.FrameworkDescription[5]);
 
 		internal static readonly string DotNetRuntimeDescription = RuntimeInformation.FrameworkDescription;
 
@@ -130,7 +125,7 @@ namespace Elastic.Apm.Helpers
 			var environmentVersion = Environment.Version.ToString();
 			var frameworkDescription = RuntimeInformation.FrameworkDescription;
 			var frameworkDescriptionVersion =
-				GetDotNetRuntimeVersionFromDescription(frameworkDescription, logger, DotNetCoreDescriptionPrefix);
+				GetDotNetRuntimeVersionFromDescription(frameworkDescription, logger, Runtime.DotNetCoreName);
 			if (frameworkDescriptionVersion != null)
 			{
 				if (frameworkDescriptionVersion.StartsWith(environmentVersion))
