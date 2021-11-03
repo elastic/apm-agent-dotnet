@@ -30,31 +30,53 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
+				var categoryName = "Processor";
 				try
 				{
-					_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+					try
+					{
+						_processorTimePerfCounter = new PerformanceCounter(categoryName, "% Processor Time", "_Total");
+					}
+					catch (InvalidOperationException e)
+					{
+						_logger.Debug()?.LogException(e, "Error instantiating '{CategoryName}' performance counter.", categoryName);
+						_processorTimePerfCounter?.Dispose();
+						// If the Processor performance counter category does not exist, try Processor Information.
+						categoryName = "Processor Information";
+						_processorTimePerfCounter = new PerformanceCounter(categoryName, "% Processor Time", "_Total");
+					}
+
 					//The perf. counter API returns 0 the for the 1. call (probably because there is no delta in the 1. call) - so we just call it here first
 					_processorTimePerfCounter.NextValue();
 				}
 				catch (Exception e)
 				{
-					_logger.Error()
-						?.LogException(e, "Failed instantiating PerformanceCounter "
-							+ "- please make sure the current user has permissions to read performance counters. E.g. make sure the current user is member of "
-							+ "the 'Performance Monitor Users' group");
+					if (e is UnauthorizedAccessException)
+					{
+						_logger.Error()
+							?.LogException(e, "Error instantiating '{CategoryName}' performance counter."
+								+ " Process does not have permissions to read performance counters."
+								+ " See https://www.elastic.co/guide/en/apm/agent/dotnet/current/metrics.html#metrics-system to see how to configure.", categoryName);
+					}
+					else
+					{
+						_logger.Error()
+							?.LogException(e, "Error instantiating '{CategoryName}' performance counter", categoryName);
+					}
 
+					_logger.Warning()?.Log("System metrics won't be collected");
 					_processorTimePerfCounter?.Dispose();
 					_processorTimePerfCounter = null;
 				}
 			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				var (success, idle, total) = ReadProcStat();
+				if (!success) return;
 
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return;
-
-			var (success, idle, total) = ReadProcStat();
-			if (!success) return;
-
-			_prevIdleTime = idle;
-			_prevTotalTime = total;
+				_prevIdleTime = idle;
+				_prevTotalTime = total;
+			}
 		}
 
 		internal SystemTotalCpuProvider(IApmLogger logger, StreamReader procStatStreamReader)
