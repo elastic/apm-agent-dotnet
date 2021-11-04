@@ -88,12 +88,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					metadata.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
 					var sampleAppDotNetRuntimeDescription =
 						sampleAppResponse.Headers.GetValues(HomeController.DotNetRuntimeDescriptionHttpHeaderName).Single();
-					sampleAppDotNetRuntimeDescription.Should().StartWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix);
+					sampleAppDotNetRuntimeDescription.Should().StartWith(Runtime.DotNetFullFrameworkName);
 					metadata.Service.Runtime.Version.Should()
 						.Be(PlatformDetection.GetDotNetRuntimeVersionFromDescription(
 							sampleAppDotNetRuntimeDescription,
-							_logger,
-							PlatformDetection.DotNetFullFrameworkDescriptionPrefix));
+							_logger, Runtime.DotNetFullFrameworkName));
 				}
 			});
 		}

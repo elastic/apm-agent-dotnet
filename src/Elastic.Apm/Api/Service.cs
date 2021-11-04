@@ -114,7 +114,7 @@ namespace Elastic.Apm.Api
 	/// </summary>
 	public class Runtime
 	{
-		internal const string DotNet5Name = ".NET 5";
+		internal const string DotNetName = ".NET";
 		internal const string DotNetCoreName = ".NET Core";
 		internal const string DotNetFullFrameworkName = ".NET Framework";
 		internal const string MonoName = "Mono";
