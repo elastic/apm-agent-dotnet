@@ -78,8 +78,7 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 
 		private static AzureCredentials LoadCredentials()
 		{
-			var runningInCi = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_ID"));
-			if (runningInCi)
+			if (TestEnvironment.IsCi)
 			{
 				var credentialsFile = Path.Combine(SolutionPaths.Root, ".credentials.json");
 				if (!File.Exists(credentialsFile))
@@ -115,10 +114,10 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 			{
 				// run azure CLI using cmd on Windows so that %~dp0 in az.cmd expands to
 				// the path containing the cmd file.
-				var binary = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+				var binary = TestEnvironment.IsWindows
 					? "cmd"
 					: "az";
-				var args = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+				var args = TestEnvironment.IsWindows
 					? new[] { "/c", "az", "account", "show" }
 					: new[] { "account", "show" };
 

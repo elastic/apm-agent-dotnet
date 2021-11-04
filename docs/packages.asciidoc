@@ -1,0 +1,297 @@
+:nuget: https://www.nuget.org/packages
+:dot: .
+
+[[packages]]
+== NuGet packages
+
+Agent instrumentations are released as a set of NuGet packages available on https://nuget.org[nuget.org]. 
+You can add the Agent and specific instrumentations to your .NET application 
+by referencing one or more of these packages.
+
+[float]
+== Get started
+
+* <<setup-ef6>>
+* <<setup-sqlclient>>
+* <<setup-stackexchange-redis>>
+* <<setup-azure-cosmosdb>>
+* <<setup-azure-servicebus>>
+* <<setup-azure-storage>>
+* <<setup-mongo-db>>
+
+[float]
+== Packages
+
+The following NuGet packages are available:
+
+{nuget}/Elastic.Apm[**Elastic.Apm**]::
+
+The core agent package, containing the <<public-api>> of the agent. It also contains every tracing component to trace classes that are part of .NET Standard 2.0, which includes the monitoring part for `HttpClient`. Every other Elastic APM package references this package.
+
+{nuget}/Elastic.Apm.NetCoreAll[**Elastic.Apm.NetCoreAll**]::
+
+A meta package that references all other Elastic APM .NET agent package that can automatically 
+configure instrumentation.
++
+If you plan to monitor a typical ASP.NET Core application that depends on the {nuget}/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package, you should reference this package.
++
+In order to avoid adding unnecessary dependencies in applications that aren’t dependent on the {nuget}/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package, we also offer some other packages - those are all referenced by the `Elastic.Apm.NetCoreAll` package.
+
+{nuget}/Elastic.Apm.Extensions.Hosting[**Elastic.Apm.Extensions.Hosting**] (added[1.6.0-beta])::
+
+A package for agent registration integration with `Microsoft.Extensions.Hosting.IHostBuilder` registration.
+
+[[setup-asp-net]]
+{nuget}/Elastic.Apm.AspNetCore[**Elastic.Apm.AspNetCore**]::
+
+A package for instrumenting ASP.NET Core applications. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package only instruments ASP.NET Core by default, whereas
+`Elastic.Apm.NetCoreAll` instruments all components that can be automatically configured, such as
+Entity Framework Core, HTTP calls with `HttpClient`, database calls to SQL Server with `SqlClient`, etc.
+Additional instrumentations can be added when using `Elastic.Apm.AspNetCore` by referencing the
+respective NuGet packages and including their configuration code in agent setup.
+
+{nuget}/Elastic.Apm.AspNetFullFramework[**Elastic.Apm.AspNetFullFramework**]::
+
+A package containing ASP.NET .NET Framework instrumentation.
+
+{nuget}/Elastic.Apm.EntityFrameworkCore[**Elastic.Apm.EntityFrameworkCore**]::
+
+A package containing Entity Framework Core instrumentation.
+
+{nuget}/Elastic.Apm.EntityFramework6[**Elastic.Apm.EntityFramework6**]::
+
+A package containing an interceptor to automatically create spans for database operations 
+executed by Entity Framework 6 on behalf of the application.
+
+{nuget}/Elastic.Apm.SqlClient[**Elastic.Apm.SqlClient**]::
+
+A package containing {nuget}/System.Data.SqlClient[System.Data.SqlClient] and {nuget}/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient] instrumentation.
+
+{nuget}/Elastic.Apm.StackExchange.Redis[**Elastic.Apm.StackExchange.Redis**]::
+
+A package containing instrumentation to capture spans for commands sent to redis with {nuget}/StackExchange.Redis/[StackExchange.Redis] package.
+
+{nuget}/Elastic.Apm.Azure.CosmosDb[**Elastic.Apm.Azure.CosmosDb**]::
+
+A package containing instrumentation to capture spans for Azure Cosmos DB with
+{nuget}/Microsoft.Azure.Cosmos[Microsoft.Azure.Cosmos], {nuget}/Microsoft.Azure.DocumentDb[Microsoft.Azure.DocumentDb], and {nuget}/Microsoft.Azure.DocumentDb.Core[Microsoft.Azure.DocumentDb.Core] packages.
+
+{nuget}/Elastic.Apm.Azure.ServiceBus[**Elastic.Apm.Azure.ServiceBus**]::
+
+A package containing instrumentation to capture transactions and spans for messages sent and received from Azure Service Bus with {nuget}/Microsoft.Azure.ServiceBus/[Microsoft.Azure.ServiceBus] and {nuget}/Azure.Messaging.ServiceBus/[Azure.Messaging.ServiceBus] packages.
+
+
+{nuget}/Elastic.Apm.Azure.Storage[**Elastic.Apm.Azure.Storage**]::
+
+A package containing instrumentation to capture spans for interaction with Azure Storage with {nuget}/azure.storage.queues/[Azure.Storage.Queues], {nuget}/azure.storage.blobs/[Azure.Storage.Blobs] and {nuget}/azure.storage.files.shares/[Azure.Storage.Files.Shares] packages.
+
+
+{nuget}/Elastic.Apm.MongoDb[**Elastic.Apm.MongoDb**]::
+
+A package containing support for {nuget}/MongoDB.Driver/[MongoDB.Driver].
+
+
+[[setup-ef6]]
+=== Entity Framework 6
+
+[float]
+==== Quick start
+
+You can enable auto instrumentation for Entity Framework 6 by referencing the {nuget}/Elastic.Apm.EntityFramework6[`Elastic.Apm.EntityFramework6`] package
+and including the `Ef6Interceptor` interceptor in your application's `web.config`:
+
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <entityFramework>
+        <interceptors>
+            <interceptor type="Elastic.Apm.EntityFramework6.Ef6Interceptor, Elastic.Apm.EntityFramework6" />
+        </interceptors>
+    </entityFramework>
+</configuration>
+----
+
+As an alternative to registering the interceptor via the configuration, you can register it in the application code:
+
+[source,csharp]
+----
+DbInterception.Add(new Elastic.Apm.EntityFramework6.Ef6Interceptor());
+----
+
+For example, in an ASP.NET application, you can place the above call in the `Application_Start` method.
+
+NOTE: Be careful not to execute `DbInterception.Add` for the same interceptor more than once,
+or you'll get additional interceptor instances.
+For example, if you add `Ef6Interceptor` interceptor twice, you'll see two spans for every SQL query.
+
+[[setup-sqlclient]]
+=== SqlClient
+
+[float]
+==== Quick start
+
+You can enable auto instrumentation for `System.Data.SqlClient` or `Microsoft.Data.SqlClient` by referencing {nuget}/Elastic.Apm.SqlClient[`Elastic.Apm.SqlClient`] package
+and passing `SqlClientDiagnosticSubscriber` to the `UseElasticApm` method in case of ASP.NET Core as it shown in example:
+
+[source,csharp]
+----
+app.UseElasticApm(Configuration,
+	new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
+----
+
+or passing `SqlClientDiagnosticSubscriber` to the `Subscribe` method and make sure that the code is called only once, otherwise the same database call could be captured multiple times:
+
+[source,csharp]
+----
+// you need add custom code to be sure that Subscribe called only once and in a thread-safe manner
+if (Agent.IsConfigured) Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
+----
+
+[NOTE]
+--
+Auto instrumentation  for `System.Data.SqlClient` is available for both .NET Core and .NET Framework applications, however, support of .NET Framework has one limitation:
+command text cannot be captured. 
+
+Auto instrumentation for `Microsoft.Data.SqlClient` is available only for .NET Core at the moment.
+
+As an alternative to using the `Elastic.Apm.SqlClient` package to instrument database calls, see <<setup-auto-instrumentation>>.
+--
+
+[[setup-stackexchange-redis]]
+=== StackExchange.Redis
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for `StackExchange.Redis` by referencing {nuget}/Elastic.Apm.StackExchange.Redis[`Elastic.Apm.StackExchange.Redis`] package
+and calling the `UseElasticApm()` extension method defined in `Elastic.Apm.StackExchange.Redis`, on `IConnectionMultiplexer`
+
+[source,csharp]
+----
+// using Elastic.Apm.StackExchange.Redis;
+
+var connection = await ConnectionMultiplexer.ConnectAsync("<redis connection>");
+connection.UseElasticApm();
+----
+
+A callback is registered with the `IConnectionMultiplexer` to provide a profiling session for each transaction and span that captures redis commands
+sent with `IConnectionMultiplexer`.
+
+[[setup-azure-cosmosdb]]
+=== Azure Cosmos DB
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for Azure Cosmos DB by referencing https://www.nuget.org/packages/Elastic.Apm.Azure.CosmosDb[`Elastic.Apm.Azure.CosmosDb`]
+package and subscribing to diagnostic events.
+
+[source, csharp]
+----
+Agent.Subscribe(new AzureCosmosDbDiagnosticsSubscriber());
+----
+
+Diagnostic events from `Microsoft.Azure.Cosmos`, `Microsoft.Azure.DocumentDb`, and `Microsoft.Azure.DocumentDb.Core` are captured as DB spans.
+
+[[setup-azure-servicebus]]
+=== Azure Service Bus
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for Azure Service Bus by referencing {nuget}/Elastic.Apm.Azure.ServiceBus[`Elastic.Apm.Azure.ServiceBus`] package and subscribing to diagnostic events
+using one of the subscribers:
+
+. If the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, the subscribers will be automatically subscribed with the agent, and no further action is required.
+. If you're using `Microsoft.Azure.ServiceBus`, subscribe `MicrosoftAzureServiceBusDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new MicrosoftAzureServiceBusDiagnosticsSubscriber());
+----
+. If you're using `Azure.Messaging.ServiceBus`, subscribe `AzureMessagingServiceBusDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureMessagingServiceBusDiagnosticsSubscriber());
+----
+
+A new transaction is created when
+
+* one or more messages are received from a queue or topic subscription.
+* a message is receive deferred from a queue or topic subscription.
+
+A new span is created when there is a current transaction, and when
+
+* one or more messages are sent to a queue or topic.
+* one or more messages are scheduled to a queue or a topic.
+
+[[setup-azure-storage]]
+=== Azure Storage
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for Azure Storage by referencing {nuget}/Elastic.Apm.Azure.Storage[`Elastic.Apm.Azure.Storage`] package and subscribing to diagnostic events using one of the subscribers:
+
+. If the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, the subscribers will be automatically subscribed with the agent, and no further action is required.
+. If you're using `Azure.Storage.Blobs`, subscribe `AzureBlobStorageDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureBlobStorageDiagnosticsSubscriber());
+----
+. If you're using `Azure.Storage.Queues`, subscribe `AzureQueueStorageDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureQueueStorageDiagnosticsSubscriber());
+----
+. If you're using `Azure.Storage.Files.Shares`, subscribe `AzureFileShareStorageDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureFileShareStorageDiagnosticsSubscriber());
+----
+
+For Azure Queue storage, 
+
+* A new transaction is created when one or more messages are received from a queue
+* A new span is created when there is a current transaction, and when a message is sent to a queue
+
+For Azure Blob storage, a new span is created when there is a current transaction and when
+
+* A container is created, enumerated, or deleted
+* A page blob is created, uploaded, downloaded, or deleted
+* A block blob is created, copied, uploaded, downloaded or deleted
+
+For Azure File Share storage, a new span is crated when there is a current transaction and when
+
+* A share is created or deleted
+* A directory is created or deleted
+* A file is created, uploaded, or deleted.
+
+[[setup-mongo-db]]
+=== MongoDB.Driver
+
+[float]
+==== Quick start
+
+A prerequisite for auto instrumentation with [`MongoDb.Driver`] is to configure the `MongoClient` with `MongoDbEventSubscriber`:
+
+[source,csharp]
+----
+var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
+
+settings.ClusterConfigurator = builder => builder.Subscribe(new MongoDbEventSubscriber());
+var mongoClient = new MongoClient(settings);
+----
+
+Once the above configuration is in place, and if the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, it will automatically capture calls to MongoDB on every active transaction.
+Otherwise, you can manually activate auto instrumentation from the `Elastic.Apm.MongoDb` package by calling
+
+[source,csharp]
+----
+Agent.Subscribe(new MongoDbDiagnosticsSubscriber());
+----

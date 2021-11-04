@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent { label 'linux && immutable' }
+  agent { label 'linux && immutable && docker' }
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
@@ -99,7 +99,11 @@ pipeline {
                         dotnet(){
                           sh '.ci/linux/build.sh'
                           whenTrue(isPR()) {
+                            // build nuget packages and profiler
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
+                            sh label: 'Rustup', script: 'rustup default 1.54.0'
+                            sh label: 'Cargo make', script: 'cargo install --force cargo-make'
+                            sh(label: 'Build profiler', script: './build.sh profiler-zip')
                           }
                         }
                       }
@@ -147,10 +151,56 @@ pipeline {
                     }
                   }
                 }
+                stage('Startup Hook Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test startup hooks - Linux', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        dotnet(){
+                          sh label: 'Build', script: './build.sh agent-zip'
+                          sh label: 'Test & coverage', script: '.ci/linux/test-startuphooks.sh'
+                        }
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                stage('Profiler Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test profiler - Linux', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        dotnet(){
+                          sh label: 'Rustup', script: 'rustup default 1.54.0'
+                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
+                          sh label: 'Build', script: './build.sh profiler-zip'
+                          sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
+                        }
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
               }
             }
             stage('Windows .NET Framework'){
-              agent { label 'windows-2019-immutable' }
+              agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }
               environment {
                 HOME = "${env.WORKSPACE}"
@@ -202,8 +252,6 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
-                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
                         bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
                       }
                     }
@@ -247,12 +295,13 @@ pipeline {
               }
             }
             stage('Windows .NET Core'){
-              agent { label 'windows-2019-immutable' }
+              agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }
               environment {
                 HOME = "${env.WORKSPACE}"
                 DOTNET_ROOT = "C:\\Program Files\\dotnet"
-                PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                CARGO_MAKE_HOME = "C:\\tools\\cargo"
+                PATH = "${PATH};${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;${env.CARGO_MAKE_HOME};${env.USERPROFILE}\\.cargo\\bin"
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
               stages{
@@ -279,11 +328,20 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          whenTrue(isPR()) {
+                            bat(label: 'Build agent', script: './build.bat agent-zip')
+                            bat(label: 'Build profiler', script: './build.bat profiler-zip')
+                          }
                         }
                       }
                     }
                   }
                   post {
+                    success {
+                      whenTrue(isPR()) {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
+                      }
+                    }
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
                         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
@@ -326,9 +384,32 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                         retry(3) {
-                          bat label: 'Build', script: '.ci/windows/zip.bat'
+                          bat label: 'Build', script: './build.bat agent-zip'
                         }
-                        bat label: 'Test & coverage', script: '.ci/windows/test-zip.bat'
+                        bat label: 'Test & coverage', script: '.ci/windows/test-startuphooks.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                stage('Profiler Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test profiler - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        retry(3) {
+                          bat label: 'Build', script: './build.bat profiler-zip'
+                        }
+                        bat label: 'Test & coverage', script: '.ci/windows/test-profiler.bat'
                       }
                     }
                   }
@@ -541,7 +622,7 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '2.1.505'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.0.103'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.1.100'
-    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.203'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.100'
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       withTerraform(){
