@@ -65,6 +65,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 			{
 				var spans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == consumeTransaction.Id);
 				spans.Should().HaveCount(1);
+				consumeTransaction.Context.Message.Queue.Should().NotBeNull();
+				consumeTransaction.Context.Message.Queue.Name.Should().NotBeNullOrEmpty();
+				consumeTransaction.ParentId.Should().NotBeNull();
 			}
 
 			var produceTransactions = transactions.Where(t => !t.Name.StartsWith("Kafka RECEIVE")).ToList();
