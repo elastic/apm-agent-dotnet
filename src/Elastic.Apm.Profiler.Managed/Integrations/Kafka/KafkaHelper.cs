@@ -78,7 +78,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 
                     try
 					{
-						var traceParent = string.Join(",", headers.GetValues(TraceContext.TraceParentHeaderName));
+						var traceParent = string.Join(",", headers.GetValues(TraceContext.TraceParentBinaryHeaderName));
 						var traceState = headers.GetValues(TraceContext.TraceStateHeaderName).FirstOrDefault();
 						distributedTracingData = TraceContext.TryExtractTracingData(traceParent, traceState);
                     }
@@ -154,8 +154,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
                 message.Headers ??= CachedMessageHeadersHelper<TTopicPartitionMarker>.CreateHeaders();
 				var adapter = new KafkaHeadersCollectionAdapter(message.Headers, agent.Logger);
 				var distributedTracingData = segment.OutgoingDistributedTracingData;
-
-				adapter.Set(TraceContext.TraceParentHeaderName, distributedTracingData.SerializeToString());
+				adapter.Set(TraceContext.TraceParentBinaryHeaderName, distributedTracingData.SerializeToString());
 				adapter.Set(TraceContext.TraceStateHeaderName, distributedTracingData.TraceState.ToTextHeader());
 			}
             catch (Exception ex)
