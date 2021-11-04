@@ -5,7 +5,6 @@
 using System;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -26,17 +25,18 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			switch (RuntimeInformation.FrameworkDescription)
 			{
-				case { } str when str.StartsWith(PlatformDetection.MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
+				case { } str when str.StartsWith(Runtime.MonoName, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.MonoName);
 					break;
-				case { } str when str.StartsWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
+				case { } str when str.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
 					break;
-				case { } str when str.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
+				case { } str when str.StartsWith(Runtime.DotNetCoreName, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 					break;
-				case { } str when str.StartsWith(PlatformDetection.DotNet5Prefix, StringComparison.OrdinalIgnoreCase):
-					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNet5Name);
+				case { } str when str.StartsWith(Runtime.DotNetName, StringComparison.OrdinalIgnoreCase)
+					&& !str.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase):
+					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}");
 					break;
 			}
 		}
