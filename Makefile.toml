@@ -1,0 +1,131 @@
+# Licensed to Elasticsearch B.V under
+# one or more agreements.
+# Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+# See the LICENSE file in the project root for more information
+
+[config]
+default_to_workspace = false
+
+[env]
+DOTNET_VERSION = "net5.0"
+DOTNET_CONFIG = "Debug"
+CORECLR_ENABLE_PROFILING = { value = "1", condition = { env_not_set = ["CORECLR_ENABLE_PROFILING"] } }
+CORECLR_PROFILER = { value = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}", condition = { env_not_set = ["CORECLR_PROFILER"] } }
+ELASTIC_APM_PROFILER_HOME = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elastic.Apm.Profiler.Managed/bin/Release", condition = { env_not_set = ["ELASTIC_APM_PROFILER_HOME"] } }
+ELASTIC_APM_PROFILER_INTEGRATIONS = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elastic.Apm.Profiler.Managed/integrations.yml", condition = { env_not_set = ["ELASTIC_APM_PROFILER_INTEGRATIONS"] } }
+ELASTIC_APM_PROFILER_CALLTARGET_ENABLED = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_CALLTARGET_ENABLED"] } }
+ELASTIC_APM_PROFILER_LOG = { value = "debug", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG"] } }
+ELASTIC_APM_PROFILER_LOG_IL = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_IL"] } }
+ELASTIC_APM_PROFILER_LOG_DIR = { value = "logs", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_DIR"] } }
+ELASTIC_APM_PROFILER_LOG_TARGETS = { value = "file;stdout", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_TARGETS"] } }
+SAMPLE_APP = { value = "KafkaSample", condition = { env_not_set = ["SAMPLE_APP"] } }
+
+[tasks.build-loader]
+description = "Builds Managed Profiler .NET loader"
+command = "dotnet"
+args = ["build", "-c", "Release", "./src/Elastic.Apm.Profiler.Managed.Loader/Elastic.Apm.Profiler.Managed.Loader.csproj"]
+
+[tasks.build]
+description = "Builds CLR Profiler"
+# loader assembly is embedded in the profiler
+dependencies = ["build-loader"]
+
+[tasks.build-release]
+description = "Builds CLR Profiler for release"
+# loader assembly is embedded in the profiler
+dependencies = ["build-loader"]
+
+[tasks.build-integrations]
+description = "Builds Managed Profiler .NET integrations"
+command = "dotnet"
+args = ["build", "-c", "Release", "./src/Elastic.Apm.Profiler.Managed/Elastic.Apm.Profiler.Managed.csproj"]
+
+[tasks.build-example]
+description = "Builds Example .NET project to instrument"
+command = "dotnet"
+args = ["build", "-c", "${DOTNET_CONFIG}", "./sample/${SAMPLE_APP}/${SAMPLE_APP}.csproj"]
+
+[tasks.generate-integrations]
+description = "Generates integrations.yml file"
+command = "dotnet"
+args = [
+    "run",
+    "--project", "./src/Elastic.Apm.Profiler.IntegrationsGenerator/Elastic.Apm.Profiler.IntegrationsGenerator.csproj",
+    "--",
+    "-i", "./src/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
+    "-o", "./src/Elastic.Apm.Profiler.Managed",
+    "-f", "yml"]
+dependencies = ["build-integrations"]
+
+[tasks.expand]
+clear = true
+script = '''
+cargo expand --manifest-path src/elastic_apm_profiler/Cargo.toml --color never > expanded.rs
+'''
+
+[tasks.set-profiler-env]
+private = true
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/release/libelastic_apm_profiler.so" }
+
+[tasks.set-profiler-env.mac]
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/release/libelastic_apm_profiler.dylib" }
+
+[tasks.set-profiler-env.windows]
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}\\target\\release\\elastic_apm_profiler.dll" }
+
+[tasks.run-dotnet]
+command = "dotnet"
+args = ["${CARGO_MAKE_WORKING_DIRECTORY}/sample/${SAMPLE_APP}/bin/${DOTNET_CONFIG}/${DOTNET_VERSION}/${SAMPLE_APP}.dll"]
+dependencies = ["set-profiler-env"]
+
+[tasks.test-example]
+clear = true
+dependencies = ["build-release", "generate-integrations", "build-example", "run-dotnet"]
+
+[tasks.test-local]
+private = true
+condition = { env_false = [ "CARGO_MAKE_CI" ] }
+command = "cargo"
+args = ["test"]
+
+[tasks.test-ci]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["cargo test -- -Z unstable-options --format json | tee test_results/results.json"]
+dependencies = ["create-test-results-dir"]
+
+[tasks.test-ci.windows]
+private = true
+script_runner = "powershell"
+script_extension = "ps1"
+script = ["cargo test -- -Z unstable-options --format json | Tee-Object -FilePath 'test_results/results.json'"]
+
+[tasks.create-test-results-dir]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["[ -d test_results ] || mkdir -p test_results"]
+
+[tasks.create-test-results-dir.windows]
+script_runner = "powershell"
+script_extension = "ps1"
+script = ["if (!(Test-Path test_results)) { New-Item test_results -Type Directory }"]
+
+[tasks.install-cargo2junit]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["cargo install cargo2junit"]
+
+[tasks.convert-test-results-junit]
+private = true
+condition = { env_true = [ "CARGO_MAKE_CI" ] }
+script = ["cat test_results/results.json | cargo2junit > test_results/junit-cargo.xml"]
+dependencies = ["install-cargo2junit", "create-test-results-dir"]
+
+[tasks.convert-test-results-junit.windows]
+script_runner = "powershell"
+script_extension = "ps1"
+script = ["Get-Content test_results/results.json | cargo2junit | Out-File -encoding utf8 -filepath test_results/junit-cargo.xml"]
+
+[tasks.test]
+clear = true
+dependencies = ["generate-integrations", "test-local", "test-ci", "convert-test-results-junit"]

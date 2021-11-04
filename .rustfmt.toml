@@ -1,0 +1,4 @@
+reorder_imports = true
+
+# requires nightly rustfmt
+imports_granularity = "Crate"

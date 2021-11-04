@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.Benchmarks.Helpers
 {
@@ -22,7 +23,7 @@ namespace Elastic.Apm.Benchmarks.Helpers
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				CreateNoWindow = true,
-				FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "git.exe" : "git",
+				FileName = TestEnvironment.IsWindows ? "git.exe" : "git",
 				WorkingDirectory = Environment.CurrentDirectory
 			};
 

@@ -13,6 +13,7 @@ open Fake.IO
 open ProcNet
 open Fake.Core
 open Fake.IO.Globbing.Operators
+open TestEnvironment
 
 module Main =  
     let excludeBullsEyeOptions = Set.ofList [
@@ -77,7 +78,19 @@ module Main =
 
             Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
             
-            Targets.Target("clean", Build.Clean)
+            Targets.Target("clean", fun _ ->
+                if isCI then
+                    printfn "skipping clean as running on CI"
+                else
+                    Build.Clean()
+            )
+            
+            Targets.Target("clean-profiler", fun _ ->
+                if isCI then
+                    printfn "skipping clean-profiler as running on CI"
+                else
+                    Build.CleanProfiler()
+            )
             
             Targets.Target("netcore-sln", Build.GenerateNetCoreSln)
             
@@ -85,9 +98,19 @@ module Main =
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
-            Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
+            Targets.Target("build-profiler", ["restore"; "clean"; "version"; "clean-profiler"], Build.BuildProfiler)
+                        
+            Targets.Target("profiler-integrations", ["build-profiler"], Build.ProfilerIntegrations)
             
-            Targets.Target("pack", ["agent-zip"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
+            Targets.Target("profiler-zip", ["profiler-integrations"], fun _ ->
+                let projs = !! (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
+                Build.Publish (Some projs)
+                Build.ProfilerZip (cmdLine.ValueForOption<bool>("canary"))
+            )
+            
+            Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
+                  
+            Targets.Target("pack", ["agent-zip", "profiler-zip"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
             
             Targets.Target("agent-zip", ["build"], fun _ ->
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm")

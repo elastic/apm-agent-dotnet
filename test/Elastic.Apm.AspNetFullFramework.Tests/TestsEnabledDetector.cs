@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static string DetectReasonWhyTestsAreSkipped()
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return $"{ReasonPrefix} OS is not Windows. {ReasonSuffix}";
+			if (!TestEnvironment.IsWindows) return $"{ReasonPrefix} OS is not Windows. {ReasonSuffix}";
 
 			if (!CheckIisVersion(out var reason))
 				return $"{ReasonPrefix} {reason}. {ReasonSuffix}";

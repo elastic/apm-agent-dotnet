@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+      <!-- needed because of MockApmServer version -->
+      <TargetFramework>net5.0</TargetFramework>
+      <IsPackable>false</IsPackable>
+      <!-- Don't run Roslyn analyzers as part of build. The StyleCop analyzers conflict with editorconfig -->
+      <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+      <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
+      <RunAnalyzers>false</RunAnalyzers>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.120" />
+      <PackageReference Include="Proc" Version="0.6.2" />
+      <PackageReference Include="DotNet.Testcontainers" Version="1.6.0-beta.2020" />
+      <PackageReference Include="StrongNamer" Version="0.2.5" />
+      <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+      <PackageReference Include="xunit" Version="2.4.1" />
+      <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      </PackageReference>
+      <ProjectReference Include="..\..\src\Elastic.Apm.Profiler.Managed\Elastic.Apm.Profiler.Managed.csproj" />
+      <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
+      <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+    </ItemGroup>
+
+</Project>

@@ -5,12 +5,15 @@
 
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Elastic.Apm.Tests.Utilities
 {
 	public static class SolutionPaths
 	{
 		private static readonly Lazy<string> _root = new Lazy<string>(FindSolutionRoot);
+
+		private static readonly Lazy<string> _agentZip = new Lazy<string>(FindVersionedAgentZip);
 		private static string FindSolutionRoot()
 		{
 			var solutionFileName = "ElasticApmAgent.sln";
@@ -27,9 +30,29 @@ namespace Elastic.Apm.Tests.Utilities
 			throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
 		}
 
-		/// <summary>
-		/// The full path to the solution root
-		/// </summary>
+		private static string FindVersionedAgentZip()
+		{
+			var buildOutputDir = Path.Combine(Root, "build/output");
+			if (!Directory.Exists(buildOutputDir))
+			{
+				throw new DirectoryNotFoundException(
+					$"build output directory does not exist at {buildOutputDir}. "
+					+ $"Run the build script in the solution root with agent-zip target to build");
+			}
+
+			var agentZip = Directory.EnumerateFiles(buildOutputDir, "ElasticApmAgent_*.zip", SearchOption.TopDirectoryOnly)
+				.FirstOrDefault();
+
+			if (agentZip is null)
+			{
+				throw new FileNotFoundException($"ElasticApmAgent_*.zip file not found in {buildOutputDir}. "
+					+ $"Run the build script in the solution root with agent-zip target to build");
+			}
+
+			return agentZip;
+		}
+
 		public static string Root => _root.Value;
+		public static string AgentZip => _agentZip.Value;
 	}
 }

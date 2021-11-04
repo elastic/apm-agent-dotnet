@@ -18,6 +18,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		public Service Service { get; set; }
 		public Api.System System { get; set; }
+		public Api.Cloud Cloud { get; set; }
 		public Dictionary<string, string> Labels { get; set; }
 
 		public override string ToString() =>
@@ -25,7 +26,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{
 				{ nameof(Service), Service },
 				{ nameof(System), System },
-				{ nameof(Labels), AbstractConfigurationReader.ToLogString(Labels) }
+				{ nameof(Labels), AbstractConfigurationReader.ToLogString(Labels) },
+				{ nameof(Cloud), Cloud },
 			}.ToString();
 
 		public void AssertValid()
