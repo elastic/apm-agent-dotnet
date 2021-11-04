@@ -13,27 +13,27 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class PlatformDetection
 	{
-		internal const string DotNet5Prefix = ".NET 5";
-		internal const string DotNetCoreDescriptionPrefix = ".NET Core";
-		internal const string DotNetFullFrameworkDescriptionPrefix = ".NET Framework";
-		internal const string MonoDescriptionPrefix = "Mono";
-
 		internal static readonly bool IsDotNetFullFramework =
 			// Taken from https://github.com/dotnet/corefx/blob/master/src/CoreFx.Private.TestUtilities/src/System/PlatformDetection.cs#L24
-			RuntimeInformation.FrameworkDescription.StartsWith(DotNetFullFrameworkDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
+			RuntimeInformation.FrameworkDescription.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase);
 
 		internal static readonly bool IsDotNetCore =
 			// https://github.com/dotnet/corefx/blob/master/src/CoreFx.Private.TestUtilities/src/System/PlatformDetection.cs#L25
-			RuntimeInformation.FrameworkDescription.StartsWith(DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
+			RuntimeInformation.FrameworkDescription.StartsWith(Runtime.DotNetCoreName, StringComparison.OrdinalIgnoreCase);
 
 		internal static readonly bool IsMono =
-			RuntimeInformation.FrameworkDescription.StartsWith(MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
+			RuntimeInformation.FrameworkDescription.StartsWith(Runtime.MonoName, StringComparison.OrdinalIgnoreCase);
 
-		internal static readonly bool IsDotNet5 =
-			RuntimeInformation.FrameworkDescription.StartsWith(DotNet5Prefix, StringComparison.OrdinalIgnoreCase);
+		/// <summary>
+		/// Indicates if the runtime is .NET 5 or a newer version.
+		/// Specifically looks for ".NET [X]" format.
+		/// </summary>
+		internal static readonly bool IsDotNet =
+			RuntimeInformation.FrameworkDescription.StartsWith($"{Runtime.DotNetName} ", StringComparison.OrdinalIgnoreCase) &&
+			RuntimeInformation.FrameworkDescription.Length >= 6
+			&& char.IsDigit(RuntimeInformation.FrameworkDescription[5]);
 
 		internal static readonly string DotNetRuntimeDescription = RuntimeInformation.FrameworkDescription;
-
 
 		internal static string GetDotNetRuntimeVersionFromDescription(string frameworkDescription, IApmLogger loggerArg, string expectedPrefix)
 		{
@@ -58,8 +58,8 @@ namespace Elastic.Apm.Helpers
 			string name;
 			if (IsDotNetFullFramework)
 				name = Runtime.DotNetFullFrameworkName;
-			else if (IsDotNet5)
-				name = Runtime.DotNet5Name;
+			else if (IsDotNet)
+				name = Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}";
 			else if (IsDotNetCore)
 				name = Runtime.DotNetCoreName;
 			else if (IsMono)
@@ -77,8 +77,8 @@ namespace Elastic.Apm.Helpers
 			{
 				if (IsDotNetFullFramework)
 					version = typeof(object).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-				else if (IsDotNet5)
-					version = GetNet5Version();
+				else if (IsDotNet)
+					version = GetNetVersion();
 				else if (IsDotNetCore)
 					version = GetDotNetCoreRuntimeVersion(logger);
 				else if (IsMono)
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Helpers
 		private static string GetMonoVersion()
 			=> RuntimeInformation.FrameworkDescription.Substring(5);
 
-		private static string GetNet5Version()
+		private static string GetNetVersion()
 			=> RuntimeInformation.FrameworkDescription.Substring(5);
 
 		private static string GetDotNetCoreRuntimeVersion(IApmLogger logger)
@@ -125,7 +125,7 @@ namespace Elastic.Apm.Helpers
 			var environmentVersion = Environment.Version.ToString();
 			var frameworkDescription = RuntimeInformation.FrameworkDescription;
 			var frameworkDescriptionVersion =
-				GetDotNetRuntimeVersionFromDescription(frameworkDescription, logger, DotNetCoreDescriptionPrefix);
+				GetDotNetRuntimeVersionFromDescription(frameworkDescription, logger, Runtime.DotNetCoreName);
 			if (frameworkDescriptionVersion != null)
 			{
 				if (frameworkDescriptionVersion.StartsWith(environmentVersion))
@@ -157,7 +157,7 @@ namespace Elastic.Apm.Helpers
 			// C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.0.0-preview6-27804-01\System.Private.CoreLib.dll
 
 			var systemAssemblyFileLocation = typeof(object).Assembly.Location;
-			var result = Directory.GetParent(systemAssemblyFileLocation).Name;
+			var result = Directory.GetParent(systemAssemblyFileLocation)?.Name;
 			logger.Debug()
 				?.Log("Falling back on using System assembly file location (`{SystemAssemblyFileLocation}')" +
 					" - returning (`{DotNetFrameworkRuntimeVersion}')", systemAssemblyFileLocation, result);
