@@ -4,18 +4,23 @@
 [[setup-auto-instrumentation]]
 === Profiler Auto instrumentation
 
+beta::[]
+
 [float]
 ==== Quick start
 
-The agent can automatically instrument .NET Framework, .NET Core, and .NET applications using the .NET CLR Profiling API.
+The agent can automatically instrument .NET Framework, .NET Core, and .NET applications using the 
+https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/profiling-overview#the-profiling-api[.NET CLR Profiling APIs].
 The Profiling APIs provide a way to instrument an application or dependency code without code changes.
 
 This approach works with the following
 
 |===
 | 2.+^|**Operating system**
-|Architecture |Windows |Linux
+|**Architecture** |**Windows** |**Linux**
+
 |x64 
+
 |.NET Framework 4.6.1+
 
 .NET Core 2.1+
@@ -118,8 +123,8 @@ WORKDIR /source
 RUN apt-get -y update && apt-get -yq install unzip
 
 # pull down the zip file based on ${AGENT_VERSION} ARG and unzip
-RUN curl -L -o ElasticApmAgent_${AGENT_VERSION}.zip https://github.com/elastic/apm-agent-dotnet/releases/download/${AGENT_VERSION}/elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION}.zip && \ 
-    unzip elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION}.zip -d /elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION}
+RUN curl -L -o elastic_apm_profiler_${AGENT_VERSION}.zip https://github.com/elastic/apm-agent-dotnet/releases/download/${AGENT_VERSION}/elastic_apm_profiler_${AGENT_VERSION}.zip && \ 
+    unzip elastic_apm_profiler_${AGENT_VERSION}.zip -d /elastic_apm_profiler_${AGENT_VERSION}
 
 ----
 
@@ -127,7 +132,7 @@ The files can then be copied into a subsequent stage
 
 [source,sh]
 ----
-COPY --from=build /elastic-apm-dotnet-auto-instrumentation-${AGENT_VERSION} /elastic-apm-dotnet-auto-instrumentation
+COPY --from=build /elastic_apm_profiler_${AGENT_VERSION} /elastic_apm_profiler
 ----
 
 Environment variables can be added to a Dockerfile to configure profiler auto instrumentation
@@ -136,9 +141,9 @@ Environment variables can be added to a Dockerfile to configure profiler auto in
 ----
 ENV CORECLR_ENABLE_PROFILING=1
 ENV CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
-ENV CORECLR_PROFILER_PATH=/elastic-apm-dotnet-auto-instrumentation/libelastic_apm_profiler.so
-ENV ELASTIC_APM_PROFILER_HOME=/elastic-apm-dotnet-auto-instrumentation
-ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic-apm-dotnet-auto-instrumentation/integrations.yml
+ENV CORECLR_PROFILER_PATH=/elastic_apm_profiler/libelastic_apm_profiler.so
+ENV ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
+ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic_apm_profiler/integrations.yml
 
 ENTRYPOINT ["dotnet", "your-application.dll"]
 ----
