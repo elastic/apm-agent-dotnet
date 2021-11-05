@@ -111,15 +111,20 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 				.AppendLine(":star: *")
 				.AppendLine()
 				.AppendLine("|===")
-				.AppendLine("|Integration |Assembly |Supported assembly version range");
+				.AppendLine("|**Integration name** |**Assembly** |**Supported assembly version range**");
 
 			foreach (var integration in integrations)
 			{
-				foreach (var integrationMethod in
-					integration.MethodReplacements.GroupBy(m => (m.Target.Assembly, m.Target.MinimumVersion, m.Target.MaximumVersion)))
+				var integrationMethods =
+					integration.MethodReplacements
+						.GroupBy(m => (m.Target.Assembly, m.Target.MinimumVersion, m.Target.MaximumVersion))
+						.ToList();
+
+				builder.AppendLine($".{integrationMethods.Count}+| {integration.Name}");
+
+				foreach (var integrationMethod in integrationMethods)
 				{
-					builder.AppendLine($"| {integration.Name}")
-						.AppendLine($"| {integrationMethod.Key.Assembly}")
+					builder.AppendLine($"| {integrationMethod.Key.Assembly}")
 						.AppendLine($"| {integrationMethod.Key.MinimumVersion.Replace("*", "{star}")} - "
 							+ $"{integrationMethod.Key.MaximumVersion.Replace("*", "{star}")}")
 						.AppendLine();
