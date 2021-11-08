@@ -466,9 +466,10 @@ namespace Elastic.Apm.Model
 			if (!IsExitSpan)
 				return;
 
-			if (!_context.IsValueCreated && string.IsNullOrEmpty(ServiceResource))
+			if (!_context.IsValueCreated)
 			{
-				ServiceResource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+				if(string.IsNullOrEmpty(ServiceResource))
+					ServiceResource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 				return;
 			}
 
