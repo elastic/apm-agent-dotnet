@@ -260,8 +260,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		{
 			thisObj.Should().NotBeNull();
 
-			thisObj.Address.Should().NotBeNullOrEmpty();
-			thisObj.Address.AssertValid();
+			thisObj.Address?.AssertValid();
 			thisObj.Port?.Should().BeGreaterOrEqualTo(0);
 		}
 

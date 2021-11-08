@@ -66,16 +66,16 @@ namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 			spans.Where(s => s.TransactionId == ignoreTransaction.Id).Should().BeEmpty();
 
 			var publishAndGetTransaction = transactions.Single(t => t.Name == "PublishAndGet");
-			spans.Where(s => s.TransactionId == publishAndGetTransaction.Id).Should().HaveCount(3);
+			spans.Where(s => s.TransactionId == publishAndGetTransaction.Id).Should().HaveCount(3, "PublishAndGet");
 
 			var publishAndGetDefaultTransaction = transactions.Single(t => t.Name == "PublishAndGetDefault");
-			spans.Where(s => s.TransactionId == publishAndGetDefaultTransaction.Id).Should().HaveCount(3);
+			spans.Where(s => s.TransactionId == publishAndGetDefaultTransaction.Id).Should().HaveCount(3, "PublishAndGetDefault");
 
 			var senderTransactions = transactions.Where(t => t.Name == "PublishToConsumer").ToList();
-			senderTransactions.Should().HaveCount(3);
+			senderTransactions.Should().HaveCount(3, "PublishToConsumer");
 
 			var consumeTransactions = transactions.Where(t => t.Name.StartsWith("RabbitMQ RECEIVE from")).ToList();
-			consumeTransactions.Should().HaveCount(3);
+			consumeTransactions.Should().HaveCount(3, "RabbitMQ RECEIVE from");
 
 			foreach (var senderTransaction in senderTransactions)
 			{
