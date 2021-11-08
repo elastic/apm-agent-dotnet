@@ -19,16 +19,10 @@ namespace Elastic.Apm.Benchmarks
 				configurationReader: new MockConfiguration(transactionMaxSpans: "1")));
 
 		[Benchmark]
-		public void Test10Spans()
-		{
-			var noopLogger = new NoopLogger();
-			_agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
-				configurationReader: new MockConfiguration(noopLogger)));
-
-			_agent.Tracer.CaptureTransaction("foo", "bar", t =>
-			{
-				for (var i = 0; i < 10; i++) t.CaptureSpan("foo", "bar", () => { });
-			});
-		}
+		public void Test10Spans() => _agent.Tracer.CaptureTransaction("foo", "bar", t =>
+									 {
+										 for (var i = 0; i < 10; i++)
+											 t.CaptureSpan("foo", "bar", () => { });
+									 });
 	}
 }
