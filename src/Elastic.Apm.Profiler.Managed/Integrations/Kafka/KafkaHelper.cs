@@ -21,8 +21,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
     internal static class KafkaHelper
     {
 		private static bool HeadersInjectionEnabled = true;
+		private const double MaxAge = long.MaxValue;
 
-        internal static ISpan CreateProducerSpan(IApmAgent agent, ITopicPartition topicPartition, bool isTombstone, bool finishOnClose)
+		internal static ISpan CreateProducerSpan(IApmAgent agent, ITopicPartition topicPartition, bool isTombstone, bool finishOnClose)
         {
             ISpan span = null;
 
@@ -67,18 +68,16 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 
             try
             {
-				var currentTransaction = agent.Tracer.CurrentTransaction;
-				if (currentTransaction is not null)
+				if (agent.Tracer.CurrentTransaction is not null)
 					return null;
 
                 DistributedTracingData distributedTracingData = null;
 				if (message?.Headers != null)
                 {
                     var headers = new KafkaHeadersCollectionAdapter(message.Headers, agent.Logger);
-
-                    try
+					try
 					{
-						var traceParent = string.Join(",", headers.GetValues(TraceContext.TraceParentHeaderName));
+						var traceParent = string.Join(",", headers.GetValues(TraceContext.TraceParentBinaryHeaderName));
 						var traceState = headers.GetValues(TraceContext.TraceStateHeaderName).FirstOrDefault();
 						distributedTracingData = TraceContext.TryExtractTracingData(traceParent, traceState);
                     }
@@ -100,12 +99,16 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 				if (offset is not null)
 					transaction.SetLabel("offset", offset.ToString());
 
+				// record only queue topic name and age on context for now. capture body and headers in future
+				transaction.Context.Message = new Message { Queue = new Queue { Name = topic } };
 				if (transaction is Transaction realTransaction && message is not null && message.Timestamp.Type != 0)
 				{
 					var consumeTime = TimeUtils.ToDateTime(realTransaction.Timestamp);
                     var produceTime = message.Timestamp.UtcDateTime;
 
-					// TODO: set transaction.Context.Message to Math.Max(0, (consumeTime - produceTime).TotalMilliseconds
+					var age = Math.Max(0, (consumeTime - produceTime).TotalMilliseconds);
+					if (age > 0 && age < MaxAge)
+						transaction.Context.Message.Age = new Age { Ms = (long)age };
 				}
 
                 if (message is not null && message.Value is null)
@@ -136,7 +139,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         }
 
 		/// <summary>
-		/// Try to inject the prop
+		/// Try to inject the trace context into the Kafka message headers
 		/// </summary>
 		/// <param name="agent">The agent</param>
 		/// <param name="segment">The outgoing distributed tracing data to propagate</param>
@@ -154,8 +157,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
                 message.Headers ??= CachedMessageHeadersHelper<TTopicPartitionMarker>.CreateHeaders();
 				var adapter = new KafkaHeadersCollectionAdapter(message.Headers, agent.Logger);
 				var distributedTracingData = segment.OutgoingDistributedTracingData;
-
-				adapter.Set(TraceContext.TraceParentHeaderName, distributedTracingData.SerializeToString());
+				adapter.Set(TraceContext.TraceParentBinaryHeaderName, distributedTracingData.SerializeToString());
 				adapter.Set(TraceContext.TraceStateHeaderName, distributedTracingData.TraceState.ToTextHeader());
 			}
             catch (Exception ex)
