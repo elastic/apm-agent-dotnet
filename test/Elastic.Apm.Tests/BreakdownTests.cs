@@ -23,7 +23,6 @@ namespace Elastic.Apm.Tests
 		//                                  total self type
 		// ██████████████████████████████    30   30 transaction
 		//          10        20        30
-		// {"metricset":{"timestamp":1556893458478000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458478000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":30}}}}
 		[Fact]
 		public void AcceptanceTest01()
@@ -39,15 +38,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(2);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(1);
 
 			metrics.Should()
 				.Contain(
@@ -63,7 +54,6 @@ namespace Elastic.Apm.Tests
 		// ██████████░░░░░░░░░░██████████    30   20 transaction
 		// └─────────██████████              10   10 db.mysql
 		//          10        20        30
-		// {"metricset":{"timestamp":1556893458387000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458387000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		// {"metricset":{"timestamp":1556893458387000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":20}}}}
 
@@ -88,15 +78,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(3);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(2);
 
 			metrics.Should()
 				.Contain(
@@ -122,7 +104,6 @@ namespace Elastic.Apm.Tests
 		// ██████████░░░░░░░░░░██████████    30   20 transaction
 		// └─────────██████████              10   10 app
 		//          10        20        30
-		//{"metricset":{"timestamp":1556893458471000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		//{"metricset":{"timestamp":1556893458471000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":30}}}}
 		[Fact]
 		public void AcceptanceTest03()
@@ -145,15 +126,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(2);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(1);
 
 			metrics.Should()
 				.Contain(
@@ -170,7 +143,6 @@ namespace Elastic.Apm.Tests
 		// ├─────────██████████              10   10 db.mysql
 		// └─────────██████████              10   10 db.mysql
 		//          10        20        30
-		// {"metricset":{"timestamp":1556893458375000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458375000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458375000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{" ":{"value":1},"span.self_time.sum.us":{"value":20}}}}
 
@@ -198,15 +170,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(3);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(2);
 
 			metrics.Should()
 				.Contain(
@@ -233,7 +197,6 @@ namespace Elastic.Apm.Tests
 		// ├─────────██████████              10   10 db.mysql
 		// └──────────────██████████         10   10 db.mysql
 		//          10        20        30
-		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":15}}}}
 		[Fact]
@@ -260,15 +223,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(3);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(2);
 
 			metrics.Should()
 				.Contain(
@@ -295,7 +250,6 @@ namespace Elastic.Apm.Tests
 		// ├────██████████                   10   10 db.mysql
 		// └──────────────██████████         10   10 db.mysql
 		//          10        20        30
-		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		[Fact]
@@ -322,15 +276,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(3);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(2);
 
 			metrics.Should()
 				.Contain(
@@ -357,7 +303,6 @@ namespace Elastic.Apm.Tests
 		// ├─────────█████                    5    5 db.mysql
 		// └───────────────────█████          5    5 db.mysql
 		//          10        20        30
-		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":10}}}}
 		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":20}}}}
 		[Fact]
@@ -384,15 +329,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(3);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(2);
 
 			metrics.Should()
 				.Contain(
@@ -420,7 +357,6 @@ namespace Elastic.Apm.Tests
 		//           └────██████████         10   10 db.mysql
 		//         10        20        30
 		//
-		// {"metricset":{"timestamp":1556893458398000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458398000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		// {"metricset":{"timestamp":1556893458398000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":25}}}}
 		[Fact]
@@ -448,15 +384,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(3);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 30))
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(2);
 
 			metrics.Should()
 				.Contain(
@@ -484,7 +412,6 @@ namespace Elastic.Apm.Tests
 		//           └─────────██████████    10   10 db.mysql
 		//          10        20        30
 		//
-		// {"metricset":{"timestamp":1556893458444000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":20},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458444000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		[Fact]
 		public void AcceptanceTest09()
@@ -510,15 +437,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(2);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(1);
 
 			metrics.Should()
 				.Contain(
@@ -534,7 +453,6 @@ namespace Elastic.Apm.Tests
 		// ██████████░░░░░░░░░░              20   10 transaction
 		// └─────────████████████████████    20   20 db.mysql
 		//          10        20        30
-		// {"metricset":{"timestamp":1556893458409000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":20},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458409000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		[Fact]
 		public void AcceptanceTest10()
@@ -555,15 +473,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(2);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(1);
 
 			metrics.Should()
 				.Contain(
@@ -580,7 +490,6 @@ namespace Elastic.Apm.Tests
 		// └───────────────────██████████    10   10 db.mysql
 		//         10        20        30
 		//
-		// {"metricset":{"timestamp":1556893458434000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":10},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458434000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		[Fact]
 		public void AcceptanceTest11()
@@ -602,15 +511,7 @@ namespace Elastic.Apm.Tests
 
 			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
 			metrics.Should().NotBeNullOrEmpty();
-			metrics.Count().Should().Be(2);
-			metrics.Should()
-				.Contain(
-					n => n.Transaction.Name.Equals("test")
-						&& n.Transaction.Type.Equals("request")
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
-				);
+			metrics.Length.Should().Be(1);
 
 			metrics.Should()
 				.Contain(
@@ -712,7 +613,7 @@ namespace Elastic.Apm.Tests
 				.Be(2);
 		}
 
-		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 1000;
+		private static bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 1000;
 
 		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent(IApmLogger logger = null)
 		{
