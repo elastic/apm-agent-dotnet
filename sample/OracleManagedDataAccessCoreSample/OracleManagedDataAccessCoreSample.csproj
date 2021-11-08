@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OracleManagedDataAccessCoreVersion Condition="'$(OracleManagedDataAccessCoreVersion)'==''">2.19.120</OracleManagedDataAccessCoreVersion>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net461;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1;net5.0;</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="$(OracleManagedDataAccessCoreVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm.AdoNet\Elastic.Apm.AdoNet.csproj" />
+  </ItemGroup>
+
+</Project>

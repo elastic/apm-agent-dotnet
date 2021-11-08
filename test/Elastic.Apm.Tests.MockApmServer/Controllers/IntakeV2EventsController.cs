@@ -53,26 +53,22 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 
 		private async Task<IActionResult> PostImpl()
 		{
-			_logger.Debug()
-				?.Log("Received request with content length: {ContentLength}."
-					+ " Current thread: {ThreadDesc}."
-					, Request.ContentLength, DbgUtils.CurrentThreadDesc);
-
-			int numberOfObjects;
-
 			try
 			{
-				numberOfObjects = await ParsePayload();
+				_logger.Debug()
+					?.Log("Received request with content length: {ContentLength}."
+						+ " Current thread: {ThreadDesc}."
+						, Request.ContentLength, DbgUtils.CurrentThreadDesc);
+
+				var numberOfObjects = await ParsePayload();
+				_logger.Debug()?.Log("Successfully parsed {numberOfObjects} objects", numberOfObjects);
+				return Ok($"Successfully processed request with Content-Length: {Request.ContentLength} and number of objects: {numberOfObjects}");
 			}
-			catch (ArgumentException ex)
+			catch (Exception ex)
 			{
 				_mockApmServer.AddInvalidPayload(ex.ToString());
 				return BadRequest(ex.ToString());
 			}
-
-			_logger.Debug()?.Log("Successfully parsed {numberOfObjects} objects", numberOfObjects);
-
-			return Ok($"Successfully processed request with Content-Length: {Request.ContentLength} and number of objects: {numberOfObjects}");
 		}
 
 		private async Task<int> ParsePayload()
@@ -103,7 +99,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task ParsePayloadLineAndAddToReceivedData(string line)
 		{
 			var foundDto = false;
-			var deserializedPayload = JsonConvert.DeserializeObject<PayloadLineDto>(
+			var payload = JsonConvert.DeserializeObject<PayloadLineDto>(
 				line,
 				new JsonSerializerSettings
 				{
@@ -113,14 +109,10 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						_logger.Error()
 							?.Log("Failed to parse payload line as JSON. Error: {PayloadParsingErrorMessage}, line: `{PayloadLine}'",
 								errorEventArgs.ErrorContext.Error.Message, line);
-						throw new ArgumentException(errorEventArgs.ErrorContext.Error.Message);
 					}
 				});
 
-			PayloadLineDto payload = null;
-			if (deserializedPayload != null)
-				payload = (PayloadLineDto)deserializedPayload;
-			else
+			if (payload is null)
 				throw new ArgumentException("Deserialization failed");
 
 			await HandleParsed(nameof(payload.Error), payload.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);

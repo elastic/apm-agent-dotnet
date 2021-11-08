@@ -1,0 +1,1573 @@
+- name: AdoNet
+  method_replacements:
+  - target:
+      assembly: System.Data
+      type: System.Data.Common.DbCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.Common
+      type: System.Data.Common.DbCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.Common.DbCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.Common
+      type: System.Data.Common.DbCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.Common.DbCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.Common
+      type: System.Data.Common.DbCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+- name: AspNet
+  method_replacements:
+  - target:
+      assembly: System.Web
+      type: System.Web.Compilation.BuildManager
+      method: InvokePreStartInitMethodsCore
+      signature_types:
+      - System.Void
+      - System.Collections.Generic.ICollection`1[System.Reflection.MethodInfo]
+      - System.Func`1[System.IDisposable]
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AspNet.ElasticApmModuleIntegration
+      action: CallTargetModification
+- name: Kafka
+  method_replacements:
+  - target:
+      assembly: Confluent.Kafka
+      type: Confluent.Kafka.Consumer`2
+      method: Close
+      signature_types:
+      - System.Void
+      minimum_version: 1.4.0
+      maximum_version: 1.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerCloseIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Confluent.Kafka
+      type: Confluent.Kafka.Consumer`2
+      method: Consume
+      signature_types:
+      - Confluent.Kafka.ConsumeResult`2[!0,!1]
+      - System.Int32
+      minimum_version: 1.4.0
+      maximum_version: 1.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerConsumeIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Confluent.Kafka
+      type: Confluent.Kafka.Consumer`2
+      method: Dispose
+      signature_types:
+      - System.Void
+      minimum_version: 1.4.0
+      maximum_version: 1.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerDisposeIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Confluent.Kafka
+      type: Confluent.Kafka.Consumer`2
+      method: Unsubscribe
+      signature_types:
+      - System.Void
+      minimum_version: 1.4.0
+      maximum_version: 1.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerUnsubscribeIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Confluent.Kafka
+      type: Confluent.Kafka.Producer`2
+      method: ProduceAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1[Confluent.Kafka.DeliveryReport`2[!0,!1]]
+      - Confluent.Kafka.TopicPartition
+      - Confluent.Kafka.Message`2[!0,!1]
+      - System.Threading.CancellationToken
+      minimum_version: 1.4.0
+      maximum_version: 1.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaProduceAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Confluent.Kafka
+      type: Confluent.Kafka.Producer`2+TypedDeliveryHandlerShim_Action
+      method: .ctor
+      signature_types:
+      - System.Void
+      - System.String
+      - '!0'
+      - '!1'
+      - System.Action`1[Confluent.Kafka.DeliveryReport`2[!0,!1]]
+      minimum_version: 1.4.0
+      maximum_version: 1.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaProduceSyncDeliveryHandlerIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Confluent.Kafka
+      type: Confluent.Kafka.Producer`2
+      method: Produce
+      signature_types:
+      - System.Void
+      - Confluent.Kafka.TopicPartition
+      - Confluent.Kafka.Message`2[!0,!1]
+      - System.Action`1[Confluent.Kafka.DeliveryReport`2[!0,!1]]
+      minimum_version: 1.4.0
+      maximum_version: 1.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaProduceSyncIntegration
+      action: CallTargetModification
+- name: MySqlCommand
+  method_replacements:
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<MySql.Data.MySqlClient.MySqlDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteReader
+      signature_types:
+      - MySql.Data.MySqlClient.MySqlDataReader
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<MySql.Data.MySqlClient.MySqlDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteReader
+      signature_types:
+      - MySql.Data.MySqlClient.MySqlDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: MySql.Data
+      type: MySql.Data.MySqlClient.MySqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 6.7.0
+      maximum_version: 8.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+- name: NpgsqlCommand
+  method_replacements:
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Npgsql.NpgsqlDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteReader
+      signature_types:
+      - Npgsql.NpgsqlDataReader
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Npgsql.NpgsqlDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteReader
+      signature_types:
+      - Npgsql.NpgsqlDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+- name: OracleCommand
+  method_replacements:
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReader
+      signature_types:
+      - Oracle.ManagedDataAccess.Client.OracleDataReader
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReader
+      signature_types:
+      - Oracle.ManagedDataAccess.Client.OracleDataReader
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Oracle.ManagedDataAccess.Client.OracleDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReader
+      signature_types:
+      - Oracle.ManagedDataAccess.Client.OracleDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteReader
+      signature_types:
+      - Oracle.ManagedDataAccess.Client.OracleDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 4.122.0
+      maximum_version: 4.122.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Oracle.ManagedDataAccess
+      type: Oracle.ManagedDataAccess.Client.OracleCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+- name: SqlCommand
+  method_replacements:
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Microsoft.Data.SqlClient.SqlDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SqlClient.SqlDataReader
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SqlClient.SqlDataReader
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteReader
+      signature_types:
+      - Microsoft.Data.SqlClient.SqlDataReader
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SqlClient.SqlDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Microsoft.Data.SqlClient.SqlDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SqlClient.SqlDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SqlClient.SqlDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteReader
+      signature_types:
+      - Microsoft.Data.SqlClient.SqlDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SqlClient
+      type: System.Data.SqlClient.SqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 4.0.0
+      maximum_version: 4.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.SqlClient
+      type: Microsoft.Data.SqlClient.SqlCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+- name: SqliteCommand
+  method_replacements:
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteNonQueryAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Int32
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SQLite.SQLiteDataReader>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteReader
+      signature_types:
+      - Microsoft.Data.Sqlite.SqliteDataReader
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SQLite.SQLiteDataReader
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.SQLite.SQLiteDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteDbDataReaderAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Data.Common.DbDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteReader
+      signature_types:
+      - Microsoft.Data.Sqlite.SqliteDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteReader
+      signature_types:
+      - System.Data.SQLite.SQLiteDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteDbDataReader
+      signature_types:
+      - System.Data.Common.DbDataReader
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteScalarAsync
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Object>
+      - System.Threading.CancellationToken
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Microsoft.Data.Sqlite
+      type: Microsoft.Data.Sqlite.SqliteCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 2.0.0
+      maximum_version: 5.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+  - target:
+      assembly: System.Data.SQLite
+      type: System.Data.SQLite.SQLiteCommand
+      method: ExecuteScalar
+      signature_types:
+      - System.Object
+      - System.Data.CommandBehavior
+      minimum_version: 1.0.0
+      maximum_version: 2.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification

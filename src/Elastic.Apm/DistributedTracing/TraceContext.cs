@@ -26,6 +26,7 @@ namespace Elastic.Apm.DistributedTracing
 		private const int SpanIdLength = 16;
 		private const int TraceIdLength = 32;
 		internal const string TraceParentHeaderName = "traceparent";
+		internal const string TraceParentBinaryHeaderName = "elasticapmtraceparent";
 		internal const string TraceParentHeaderNamePrefixed = "elastic-apm-traceparent";
 		internal const string TraceStateHeaderName = "tracestate";
 		private const int VersionAndTraceIdAndSpanIdLength = 53;

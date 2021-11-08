@@ -1,0 +1,30 @@
+[package]
+name = "elastic_apm_profiler"
+version = "1.11.1-alpha.2"
+edition = "2018"
+authors = ["Elastic and Contributors"]
+description = "Elastic APM .NET agent CLR profiler"
+repository = "https://github.com/elastic/apm-agent-dotnet"
+keywords = ["elasticsearch", "elastic", "apm", "dotnet"]
+license = "Apache-2.0"
+
+[dependencies]
+bitflags = "1.2.1"
+c_vec = "2.0.0"
+com = { version = "0.6.0", features = ["production"] }
+hex = "0.4.3"
+log = "0.4.14"
+log4rs = { version = "1.0.0", default_features = false, features = ["console_appender", "rolling_file_appender", "compound_policy", "size_trigger", "fixed_window_roller"] }
+num-derive = "0.3"
+num-traits = "0.2"
+once_cell = "1.8.0"
+rust-crypto = "^0.2"
+rust-embed = { version = "5.9.0", features = ["compression", "debug-embed"] }
+serde = { version = "1.0.126", features = ["derive"] }
+serde_yaml = "0.8.17"
+widestring = "0.4.2"
+
+[lib]
+crate-type = ["cdylib"]
+
+

@@ -12,10 +12,54 @@ feedback and ideas are always welcome.
 
 ## Prerequisites
 
-In order to build the source code of the .NET APM Agent you need
- * .NET Core 2.1 or later
+### .NET source
 
-You can use any IDE that supports .NET Core development and you can use any OS that is supported by .NET Core.
+In order to build the .NET source code, you'll need
+ * [.NET 5.0 or later](https://dotnet.microsoft.com/download/dotnet/5.0)
+ * **If** you're running on Windows **and** also wish to build projects that target .NET Framework,
+you'll need a minimum of .NET Framework 4.6.1 installed.
+
+You can use any IDE that supports .NET development, and you can use any OS that is supported by .NET.
+
+### Rust source
+
+In order to build the CLR profiler source code, you'll need
+ * [Rust 1.54 or later](https://www.rust-lang.org/tools/install)
+ * [Cargo make](https://github.com/sagiegurari/cargo-make#installation)
+
+You can use any IDE that supports Rust development; we typically use [CLion](https://www.jetbrains.com/clion/)
+with the [Rust plugin](https://plugins.jetbrains.com/plugin/8182-rust/docs),
+or [VS Code](https://code.visualstudio.com/)
+with the [Rust extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust).
+
+## Work flow
+
+The solution contains a build project for performing build tasks, which can be invoked
+with the `build.bat` or `build.sh` scripts in the solution root.
+
+To see the list of targets
+
+Windows
+```shell
+.\build.bat --list-targets
+```
+
+Linux
+```shell
+./build.sh --list-targets
+```
+
+To perform a build of projects (the default task)
+
+Windows
+```shell
+.\build.bat
+```
+
+Linux
+```shell
+./build.sh
+```
 
 ## Code contributions (please read this before your first PR)
 

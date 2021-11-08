@@ -11,4 +11,7 @@ dotnet sln remove test/Elastic.Apm.MongoDb.Tests/Elastic.Apm.MongoDb.Tests.cspro
 :: Remove startup hooks tests, which are tested separately- require agent zip to be built
 dotnet sln remove test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj
 
+:: Remove profiler tests, which are tested separately- require profiler to be built
+dotnet sln remove test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj
+
 dotnet build -c Release --verbosity detailed
