@@ -143,5 +143,34 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should().HaveCount(128);
 		}
+
+		/// <summary>
+		/// Testing with custom spans without touching Span.Context
+		/// </summary>
+		[Fact]
+		public void SimpleDroppedSpans()
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(transactionMaxSpans: "1"))))
+			{
+				var transaction = agent.Tracer.StartTransaction("foo", "test");
+				//This is the span which won't be dropped
+				transaction.CaptureSpan("fooSpan", "test", () => { });
+
+				//Next spans will be dropped
+				for (var i = 0; i < 500; i++)
+				{
+					var span = transaction.StartSpan("foo", "bar", isExitSpan: true);
+					span.End();
+				}
+
+				transaction.End();
+			}
+			payloadSender.FirstTransaction.DroppedSpanStats.Should().HaveCount(1);
+
+			payloadSender.FirstTransaction.DroppedSpanStats.First().DestinationServiceResource.Should().Be("bar");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(500);
+		}
 	}
 }

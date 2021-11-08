@@ -191,6 +191,15 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			PropagateTraceContext(request, transaction, span);
 
+			if (span is Span realSpan)
+			{
+				if (!realSpan.ShouldBeSentToApmServer)
+				{
+					realSpan.ServiceResource =  UrlUtils.ExtractService(requestUrl, realSpan);
+					return;
+				}
+			}
+
 			span.Context.Http = new Http { Method = method };
 			span.Context.Http.SetUrl(requestUrl);
 		}

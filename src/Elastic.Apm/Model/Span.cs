@@ -132,6 +132,14 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Action { get; set; }
 
+		/// <summary>
+		/// Stores Context.Destination.Service.Resource on the top level.
+		/// With this field, we can set Resource for dropped spans without instantiating Context.
+		/// Only set for dropped spans.
+		/// </summary>
+		[JsonIgnore]
+		public string ServiceResource { get; set; }
+
 		[JsonIgnore]
 		internal IConfiguration Configuration => _enclosingTransaction.Configuration;
 
@@ -371,8 +379,8 @@ namespace Elastic.Apm.Model
 				_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
 			}
 
-			if (_isDropped && Context?.Destination?.Service?.Resource != null && Duration.HasValue)
-				_enclosingTransaction.UpdateDroppedSpanStats(Context.Destination.Service.Resource, _outcome, Duration.Value);
+			if (_isDropped && (!string.IsNullOrEmpty(ServiceResource) || (_context.IsValueCreated &&  Context?.Destination?.Service?.Resource != null)))
+				_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration.Value);
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
@@ -458,6 +466,12 @@ namespace Elastic.Apm.Model
 			if (!IsExitSpan)
 				return;
 
+			if (!_context.IsValueCreated && string.IsNullOrEmpty(ServiceResource))
+			{
+				ServiceResource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+				return;
+			}
+
 			if (Context.Http != null)
 			{
 				var destination = DeduceHttpDestination();
@@ -492,7 +506,7 @@ namespace Elastic.Apm.Model
 				else if (Context.Http?.Url != null)
 				{
 					if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
-						Context.Destination.Service = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this);
+						Context.Destination.Service = new() { Resource = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this) };
 					else
 						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 				}
