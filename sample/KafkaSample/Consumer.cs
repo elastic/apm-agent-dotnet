@@ -150,7 +150,7 @@ namespace KafkaSample
             Console.WriteLine($"{_consumerName}: Consuming {kafkaMessage.Key}, {consumeResult.TopicPartitionOffset}");
 
             var headers = kafkaMessage.Headers;
-            var traceParent = headers.TryGetLastBytes("traceparent", out var traceParentHeader)
+            var traceParent = headers.TryGetLastBytes("elasticapmtraceparent", out var traceParentHeader)
 				? Encoding.UTF8.GetString(traceParentHeader)
 				: null;
 
@@ -161,8 +161,7 @@ namespace KafkaSample
             if (traceParent is null || traceState is null)
             {
                 // For kafka brokers < 0.11.0, we can't inject custom headers, so context will not be propagated
-                var errorMessage = $"Error extracting trace context for {kafkaMessage.Key}, {consumeResult.TopicPartitionOffset}";
-                Console.WriteLine(errorMessage);
+				Console.WriteLine($"Error extracting trace context for {kafkaMessage.Key}, {consumeResult.TopicPartitionOffset}");
             }
             else
 				Console.WriteLine($"Successfully extracted trace context from message: {traceParent}, {traceState}");
