@@ -48,10 +48,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				received.Transactions.Count.Should().Be(1);
 				var transaction = received.Transactions.Single();
-
-				transaction.SpanCount.Started.Should().Be(500);
-				transaction.SpanCount.Dropped.Should().Be(501);
-				received.Spans.Count.Should().Be(500);
 			});
 		}
 
