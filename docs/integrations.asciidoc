@@ -34,6 +34,10 @@
 | Oracle.ManagedDataAccess
 | 2.0.0 - 2.{star}.{star}
 
+| RabbitMQ
+| RabbitMQ.Client
+| 3.6.9 - 6.{star}.{star}
+
 | SqlCommand
 | System.Data
 | 4.0.0 - 4.{star}.{star}

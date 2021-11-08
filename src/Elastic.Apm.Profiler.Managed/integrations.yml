@@ -819,6 +819,58 @@
       assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
+- name: RabbitMQ
+  method_replacements:
+  - target:
+      assembly: RabbitMQ.Client
+      type: RabbitMQ.Client.Events.EventingBasicConsumer
+      method: HandleBasicDeliver
+      signature_types:
+      - System.Void
+      - System.String
+      - System.UInt64
+      - System.Boolean
+      - System.String
+      - System.String
+      - RabbitMQ.Client.IBasicProperties
+      - _
+      minimum_version: 3.6.9
+      maximum_version: 6.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.RabbitMq.BasicDeliverIntegration
+      action: CallTargetModification
+  - target:
+      assembly: RabbitMQ.Client
+      type: RabbitMQ.Client.Impl.ModelBase
+      method: BasicGet
+      signature_types:
+      - RabbitMQ.Client.BasicGetResult
+      - System.String
+      - System.Boolean
+      minimum_version: 3.6.9
+      maximum_version: 6.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.RabbitMq.BasicGetIntegration
+      action: CallTargetModification
+  - target:
+      assembly: RabbitMQ.Client
+      type: RabbitMQ.Client.Framing.Impl.Model
+      method: _Private_BasicPublish
+      signature_types:
+      - System.Void
+      - System.String
+      - System.String
+      - System.Boolean
+      - RabbitMQ.Client.IBasicProperties
+      - _
+      minimum_version: 3.6.9
+      maximum_version: 6.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.RabbitMq.BasicPublishIntegration
+      action: CallTargetModification
 - name: SqlCommand
   method_replacements:
   - target:
