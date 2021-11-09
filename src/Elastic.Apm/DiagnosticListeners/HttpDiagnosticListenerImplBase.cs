@@ -194,7 +194,10 @@ namespace Elastic.Apm.DiagnosticListeners
 			if (span is Span realSpan)
 			{
 				if (!realSpan.ShouldBeSentToApmServer)
+				{
+					realSpan.ServiceResource =  UrlUtils.ExtractService(requestUrl, realSpan);
 					return;
+				}
 			}
 
 			span.Context.Http = new Http { Method = method };

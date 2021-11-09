@@ -107,16 +107,16 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 				return JsonBadRequest(new { success = false, message = "Invalid samples" });
 
 			var sampleData = model.Select(m => new SampleData { Name = m.Name });
+
+			var aggregatedModel = new SampleData { Name = model.Aggregate("", (current, next) => current + ", " + next.Name) };
 			int changes;
 
 			using (var context = new SampleDataDbContext())
-			using (var transaction = context.Database.BeginTransaction())
 			{
 				context.Configuration.AutoDetectChangesEnabled = false;
 				context.Configuration.ValidateOnSaveEnabled = false;
-				context.Set<SampleData>().AddRange(sampleData);
+				context.Set<SampleData>().Add(aggregatedModel);
 				changes = await context.SaveChangesAsync();
-				transaction.Commit();
 			}
 
 			return Json(new { success = true, changes });
