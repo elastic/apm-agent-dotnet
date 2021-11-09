@@ -55,7 +55,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private CentralConfigurationReader ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
 		{
-			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
+			if (configPayload.UnknownKeys != null && configPayload.UnknownKeys.Any())
 			{
 				_logger.Info()
 					?.Log("Central configuration response contains keys that are not in the list of options"

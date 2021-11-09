@@ -27,6 +27,6 @@ namespace Elastic.Apm.Model
 		/// See
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
-		public bool ShouldSerializeLabels() => !Labels.IsEmpty();
+		public bool ShouldSerializeLabels() => Labels.Count > 0;
 	}
 }

@@ -40,9 +40,5 @@ namespace Elastic.Apm.Helpers
 			GenerateRandomBytes(bytes);
 			return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
 		}
-
-		internal static string GenerateRandomBytesAsString(int numberOfBytes) => GenerateRandomBytesAsString(new byte[numberOfBytes]);
-
-		internal static double GenerateRandomDoubleBetween0And1() => GetInstance().NextDouble();
 	}
 }

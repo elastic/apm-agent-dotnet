@@ -65,56 +65,5 @@ namespace Elastic.Apm.Tests.HelpersTests
 				return MethodImpl();
 			}
 		}
-
-		[Theory]
-		[MemberData(nameof(DoSwallowingExceptionsVariantsToTest))]
-		public void DoSwallowingExceptionsExceptCancellation_test(string exitMsgFmt, Action action)
-		{
-			var mockLogger = new TestLogger(LogLevel.Trace);
-			var sideEffect = 0;
-
-			Action actionToTest = () => ExceptionUtils.DoSwallowingExceptionsExceptCancellation(mockLogger, () =>
-			{
-				++sideEffect;
-				action();
-			});
-
-			if (exitMsgFmt == ExceptionUtils.MethodExitingCancelledMsgFmt)
-				actionToTest.Should().Throw<OperationCanceledException>();
-			else
-				actionToTest();
-
-			sideEffect.Should().Be(1);
-			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
-			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
-			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
-			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
-		}
-
-		[Theory]
-		[MemberData(nameof(DoSwallowingExceptionsVariantsToTest))]
-		public async Task DoSwallowingExceptionsExceptCancellation_async_test(string exitMsgFmt, Action action)
-		{
-			var mockLogger = new TestLogger(LogLevel.Trace);
-			var sideEffect = 0;
-
-			Func<Task> asyncActionToTest = () => ExceptionUtils.DoSwallowingExceptionsExceptCancellation(mockLogger, async () =>
-			{
-				await Task.Yield();
-				++sideEffect;
-				action();
-			});
-
-			if (exitMsgFmt == ExceptionUtils.MethodExitingCancelledMsgFmt)
-				await asyncActionToTest.Should().ThrowAsync<OperationCanceledException>();
-			else
-				await asyncActionToTest();
-
-			sideEffect.Should().Be(1);
-			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
-			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
-			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
-			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
-		}
 	}
 }
