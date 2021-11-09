@@ -252,9 +252,11 @@ namespace Elastic.Apm.Azure.ServiceBus
 				Address = destinationAddress,
 				Service = new Destination.DestinationService
 				{
+#pragma warning disable 618
 					Name = ServiceBus.SubType,
+					Type = ApiConstants.TypeMessaging,
+#pragma warning restore 618
 					Resource = queueName is null ? ServiceBus.SubType : $"{ServiceBus.SubType}/{queueName}",
-					Type = ApiConstants.TypeMessaging
 				}
 			};
 
