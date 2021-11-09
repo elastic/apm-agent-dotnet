@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OracleManagedDataAccessVersion Condition="'$(OracleManagedDataAccessVersion)'==''">19.12.0</OracleManagedDataAccessVersion>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="$(OracleManagedDataAccessVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm.AdoNet\Elastic.Apm.AdoNet.csproj" />
+  </ItemGroup>
+
+</Project>

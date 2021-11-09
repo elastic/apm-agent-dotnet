@@ -1,0 +1,52 @@
+:star: *
+
+|===
+|**Integration name** |**Assembly** |**Supported assembly version range**
+.2+| AdoNet
+| System.Data
+| 4.0.0 - 4.{star}.{star}
+
+| System.Data.Common
+| 4.0.0 - 5.{star}.{star}
+
+.1+| AspNet
+| System.Web
+| 4.0.0 - 4.{star}.{star}
+
+.1+| Kafka
+| Confluent.Kafka
+| 1.4.0 - 1.{star}.{star}
+
+.1+| MySqlCommand
+| MySql.Data
+| 6.7.0 - 8.{star}.{star}
+
+.1+| NpgsqlCommand
+| Npgsql
+| 4.0.0 - 5.{star}.{star}
+
+.2+| OracleCommand
+| Oracle.ManagedDataAccess
+| 4.122.0 - 4.122.{star}
+
+| Oracle.ManagedDataAccess
+| 2.0.0 - 2.{star}.{star}
+
+.3+| SqlCommand
+| System.Data
+| 4.0.0 - 4.{star}.{star}
+
+| System.Data.SqlClient
+| 4.0.0 - 4.{star}.{star}
+
+| Microsoft.Data.SqlClient
+| 1.0.0 - 2.{star}.{star}
+
+.2+| SqliteCommand
+| Microsoft.Data.Sqlite
+| 2.0.0 - 5.{star}.{star}
+
+| System.Data.SQLite
+| 1.0.0 - 2.{star}.{star}
+
+|===

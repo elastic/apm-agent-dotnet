@@ -336,7 +336,6 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
   </PropertyGroup>
-  
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" Condition="'$(OS)' == 'WINDOWS_NT'" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')" />

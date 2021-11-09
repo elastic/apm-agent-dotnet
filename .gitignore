@@ -354,3 +354,9 @@ terraform.tfstate.backup
 
 # This file is generated on build
 src/Elastic.Apm.MongoDb/LICENSE
+
+# Rust files
+target/
+Cargo.lock
+expanded.rs
+

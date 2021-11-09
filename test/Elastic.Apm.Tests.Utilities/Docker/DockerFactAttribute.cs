@@ -20,6 +20,12 @@ namespace Elastic.Apm.Tests.Utilities.Docker
 		{
 			try
 			{
+				if (TestEnvironment.IsCi && TestEnvironment.IsWindows)
+				{
+					_skip = "not running tests that require docker in CI on Windows";
+					return;
+				}
+
 				var result = Proc.Start(new StartArguments("docker", "--version"));
 				if (result.ExitCode != 0)
 					_skip = "docker not installed";
