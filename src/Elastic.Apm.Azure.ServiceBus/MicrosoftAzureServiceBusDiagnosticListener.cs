@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -236,11 +236,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				Address = destinationAddress?.AbsoluteUri,
 				Service = new Destination.DestinationService
 				{
-#pragma warning disable 618
-					Name = ServiceBus.SubType,
-					Type = ApiConstants.TypeMessaging,
-#pragma warning restore 618
-					Resource = queueName is null ? ServiceBus.SubType : $"{ServiceBus.SubType}/{queueName}",
+					Resource = queueName is null ? ServiceBus.SubType : $"{ServiceBus.SubType}/{queueName}"
 				}
 			};
 

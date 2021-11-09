@@ -9,6 +9,7 @@ using TechTalk.SpecFlow;
 namespace Elastic.Apm.Feature.Tests
 {
 	[Binding]
+	[Scope(Feature = "API Key.")]
 	public class ApiKeySteps
 	{
 		private readonly ApiKeyFeatureContext _apiKeyFeatureContext;

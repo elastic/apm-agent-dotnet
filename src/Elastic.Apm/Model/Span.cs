@@ -132,6 +132,14 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Action { get; set; }
 
+		/// <summary>
+		/// Stores Context.Destination.Service.Resource on the top level.
+		/// With this field, we can set Resource for dropped spans without instantiating Context.
+		/// Only set for dropped spans.
+		/// </summary>
+		[JsonIgnore]
+		public string ServiceResource { get; set; }
+
 		[JsonIgnore]
 		internal IConfiguration Configuration => _enclosingTransaction.Configuration;
 
@@ -362,17 +370,20 @@ namespace Elastic.Apm.Model
 			else
 				_enclosingTransaction.SpanTimings.TryAdd(new SpanTimerKey(Type, Subtype), new SpanTimer(SelfDuration));
 
+			try
+			{
+				DeduceDestination();
+			}
+			catch (Exception e)
+			{
+				_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
+			}
+
+			if (_isDropped && (!string.IsNullOrEmpty(ServiceResource) || (_context.IsValueCreated &&  Context?.Destination?.Service?.Resource != null)))
+				_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration.Value);
+
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
-				try
-				{
-					DeduceDestination();
-				}
-				catch (Exception e)
-				{
-					_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
-				}
-
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
@@ -455,6 +466,13 @@ namespace Elastic.Apm.Model
 			if (!IsExitSpan)
 				return;
 
+			if (!_context.IsValueCreated)
+			{
+				if(string.IsNullOrEmpty(ServiceResource))
+					ServiceResource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+				return;
+			}
+
 			if (Context.Http != null)
 			{
 				var destination = DeduceHttpDestination();
@@ -489,7 +507,7 @@ namespace Elastic.Apm.Model
 				else if (Context.Http?.Url != null)
 				{
 					if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
-						Context.Destination.Service = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this);
+						Context.Destination.Service = new() { Resource = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this) };
 					else
 						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 				}

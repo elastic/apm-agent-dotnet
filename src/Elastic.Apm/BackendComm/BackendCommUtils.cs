@@ -193,8 +193,7 @@ namespace Elastic.Apm.BackendComm
 					, serverUrlBase.Sanitize(), dbgCallerDesc);
 			var httpClient =
 				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(configuration, loggerArg)) { BaseAddress = serverUrlBase };
-			httpClient.DefaultRequestHeaders.UserAgent.Add(
-				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service.Agent.Version)));
+			httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd(GetUserAgent(service));
 			httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",
 				AdaptUserAgentValue(typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version)));
 
@@ -213,10 +212,20 @@ namespace Elastic.Apm.BackendComm
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
-			string AdaptUserAgentValue(string value)
-			{
-				return Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
-			}
 		}
+
+		private static string GetUserAgent(Service service)
+		{
+			var value = $"apm-agent-{Consts.AgentName}/{AdaptUserAgentValue(service.Agent.Version)}";
+			if (!string.IsNullOrEmpty(service.Name))
+			{
+				value += !string.IsNullOrEmpty(service.Version)
+					? $" ({AdaptUserAgentValue(service.Name)} {AdaptUserAgentValue(service.Version)})"
+					: $" ({AdaptUserAgentValue(service.Name)})";
+			}
+			return value;
+		}
+
+		private static string AdaptUserAgentValue(string value) => Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
 	}
 }

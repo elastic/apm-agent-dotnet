@@ -62,10 +62,6 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
-#pragma warning disable 618
-			destination.Service.Name.Should().Be(ServiceBus.SubType);
-			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
-#pragma warning restore 618
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.QueueName}");
 
 			span.Context.Message.Should().NotBeNull();
@@ -97,10 +93,6 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
-#pragma warning disable 618
-			destination.Service.Name.Should().Be(ServiceBus.SubType);
-			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
-#pragma warning restore 618
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.TopicName}");
 
 			span.Context.Message.Should().NotBeNull();
@@ -134,10 +126,6 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
-#pragma warning disable 618
-			destination.Service.Name.Should().Be(ServiceBus.SubType);
-			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
-#pragma warning restore 618
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.QueueName}");
 
 			span.Context.Message.Should().NotBeNull();
@@ -171,10 +159,6 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
-#pragma warning disable 618
-			destination.Service.Name.Should().Be(ServiceBus.SubType);
-			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
-#pragma warning restore 618
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.TopicName}");
 
 			span.Context.Message.Should().NotBeNull();
