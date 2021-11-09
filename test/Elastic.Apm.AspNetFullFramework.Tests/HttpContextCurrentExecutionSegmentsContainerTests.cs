@@ -72,13 +72,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				var firstTransaction = transactions.First();
 				firstTransaction.Name.Should().EndWith("Bulk");
-				firstTransaction.SpanCount.Started.Should().Be(100);
+				firstTransaction.SpanCount.Started.Should().Be(1);
 
 				var secondTransaction = transactions.Last();
 				secondTransaction.Name.Should().EndWith("Generate");
 				secondTransaction.SpanCount.Started.Should().Be(3);
 
-				received.Spans.Count.Should().Be(103);
+				received.Spans.Count.Should().Be(4);
 			});
 		}
 
