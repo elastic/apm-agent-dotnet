@@ -18,9 +18,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string SpanSelfTimeCount = SpanSelfTime + ".count";
 		internal const string SpanSelfTimeSumUs = SpanSelfTime + ".sum.us";
 		internal const int MetricLimit = 1000;
-		internal const string TransactionDurationCount = "transaction.duration.count";
-		internal const string TransactionDurationSumUs = "transaction.duration.sum.us";
-		internal const string TransactionBreakdownCount = "transaction.breakdown.count";
 
 		private readonly List<MetricSet> _itemsToSend = new();
 		private readonly IApmLogger _logger;
@@ -79,29 +76,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						_logger.Warning()
 							?.Log(
 								"The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until "
-								+ "the current set is sent to APM Server.",
-								MetricLimit);
-						_loggedWarning = true;
-					}
-				}
-
-				var transactionMetric =
-					new MetricSet(timestampNow,
-						new List<MetricSample>
-						{
-							new(TransactionDurationCount, _transactionCount),
-							new(TransactionDurationSumUs, transaction.Duration!.Value * 1000),
-							new(TransactionBreakdownCount, _transactionCount),
-						}) { Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type } };
-
-				if (_itemsToSend.Count < MetricLimit)
-					_itemsToSend.Add(transactionMetric);
-				else
-				{
-					if (!_loggedWarning)
-					{
-						_logger.Warning()
-							?.Log("The limit of {MetricLimit} metricsets has been reached, no new metricsets will be created until "
 								+ "the current set is sent to APM Server.",
 								MetricLimit);
 						_loggedWarning = true;

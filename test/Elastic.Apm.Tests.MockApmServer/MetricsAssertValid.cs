@@ -21,9 +21,6 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ SystemTotalCpuProvider.SystemCpuTotalPct, new MetricTypeMetadata(VerifySystemTotalCpu, true) },
 			{ BreakdownMetricsProvider.SpanSelfTimeCount, new MetricTypeMetadata(Verify) },
 			{ BreakdownMetricsProvider.SpanSelfTimeSumUs, new MetricTypeMetadata(Verify) },
-			{ BreakdownMetricsProvider.TransactionDurationCount, new MetricTypeMetadata(Verify) },
-			{ BreakdownMetricsProvider.TransactionDurationSumUs, new MetricTypeMetadata(Verify) },
-			{ BreakdownMetricsProvider.TransactionBreakdownCount, new MetricTypeMetadata(Verify) },
 		};
 
 		internal static void AssertValid(MetricSetDto metricSet)
