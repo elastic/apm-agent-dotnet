@@ -241,8 +241,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent.Service.Framework.Name.Should().Be("ASP.NET Core");
 
-			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
-			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
+			// test major.minor values only
+			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(2);
+			_agent.Service.Framework.Version.Should().StartWith(aspNetCoreVersion);
 
 #if NET5_0
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 5");
