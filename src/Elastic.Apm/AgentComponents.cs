@@ -73,7 +73,7 @@ namespace Elastic.Apm
 				else
 					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
 
-				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
+				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 
 #if NET5_0

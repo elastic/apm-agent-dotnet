@@ -40,7 +40,7 @@ namespace Elastic.Apm.OpenTelemetry
 		internal Tracer _tracer;
 
 
-		private Action<Activity>? ActivityStarted =>
+		private Action<Activity> ActivityStarted =>
 			activity =>
 			{
 				_logger.Trace()?.Log($"ActivityStarted: name:{activity.DisplayName} id:{activity.Id} traceId:{activity.TraceId}");
@@ -82,7 +82,7 @@ namespace Elastic.Apm.OpenTelemetry
 						newSpan.Otel = new OTel();
 						newSpan.Otel.SpanKind = activity.Kind.ToString();
 
-						ActiveSpans.TryAdd(activity.Id, newSpan);
+						if (activity.Id != null) ActiveSpans.TryAdd(activity.Id, newSpan);
 					}
 				}
 
@@ -95,12 +95,12 @@ namespace Elastic.Apm.OpenTelemetry
 						transaction.Type = ApiConstants.TypeRequest;
 					else if (activity.Kind == ActivityKind.Consumer) transaction.Type = ApiConstants.TypeMessaging;
 
-					ActiveTransactions.TryAdd(activity.Id, transaction);
+					if (activity.Id != null) ActiveTransactions.TryAdd(activity.Id, transaction);
 				}
 			};
 
 
-		private Action<Activity>? ActivityStopped =>
+		private Action<Activity> ActivityStopped =>
 			activity =>
 			{
 				if (activity == null)
@@ -114,7 +114,7 @@ namespace Elastic.Apm.OpenTelemetry
 				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
 					return;
 
-				if (ActiveTransactions.TryRemove(activity.Id, out var transaction))
+				if (activity.Id != null && ActiveTransactions.TryRemove(activity.Id, out var transaction))
 				{
 					transaction.Duration = activity.Duration.TotalMilliseconds;
 
@@ -125,7 +125,7 @@ namespace Elastic.Apm.OpenTelemetry
 					transaction.End();
 				}
 
-				if (ActiveSpans.TryRemove(activity.Id, out var span))
+				if (activity.Id != null && ActiveSpans.TryRemove(activity.Id, out var span))
 				{
 					span.Duration = activity.Duration.TotalMilliseconds;
 
