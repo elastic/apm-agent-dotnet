@@ -330,7 +330,7 @@ environment variable.
 `ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS` _(optional)_::
 
 A semi-colon separated list of integrations to exclude from auto-instrumentation.
-Valid values are those defined in the `Integration` column in the integrations
+Valid values are those defined in the `Integration name` column in the integrations
 table above.
 
 `ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES` _(optional)_::
@@ -343,8 +343,8 @@ applications that should not be.
 `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` _(optional)_::
 
 A semi-colon separated list of APM service names to exclude from auto-instrumentation.
-Values defined are checked against the value of `ELASTIC_APM_SERVICE_NAME` environment
-variable.
+Values defined are checked against the value of <<config-service-name,`ELASTIC_APM_SERVICE_NAME`>>
+environment variable.
 
 `ELASTIC_APM_PROFILER_LOG` _(optional)_::
 

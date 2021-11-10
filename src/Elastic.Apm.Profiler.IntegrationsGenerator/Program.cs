@@ -113,7 +113,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 				.AppendLine(":nuget: https://www.nuget.org/packages")
 				.AppendLine()
 				.AppendLine("|===")
-				.AppendLine("|**Integration name** |**NuGet package version(s)** |**Assembly version(s)** ");
+				.AppendLine("|Integration name |NuGet package version(s) |Assembly version(s) ");
 
 			foreach (var integration in integrations)
 			{
@@ -122,7 +122,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 						.GroupBy(m => (m.Target.Nuget, m.Target.Assembly, m.Target.MinimumVersion, m.Target.MaximumVersion))
 						.ToList();
 
-				builder.AppendLine($".{integrationMethods.Count}+| {integration.Name}");
+				builder.AppendLine($".{integrationMethods.Count}+.^|{integration.Name}");
 
 				foreach (var integrationMethod in integrationMethods)
 				{
@@ -136,8 +136,8 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 						: $"{{nuget}}/{integrationMethod.Key.Assembly}[{integrationMethod.Key.Assembly} {versionRange}]";
 
 					builder
-						.AppendLine($"| {nuget}")
-						.AppendLine($"| {integrationMethod.Key.Assembly} {versionRange}")
+						.AppendLine($"|{nuget}")
+						.AppendLine($"|{integrationMethod.Key.Assembly} {versionRange}")
 						.AppendLine();
 				}
 			}
