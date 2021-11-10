@@ -3,7 +3,7 @@ using Elastic.Apm;
 
 namespace OpenTelemetrySample
 {
-	class Program
+	internal class Program
 	{
 		// ReSharper disable once ArrangeTypeMemberModifiers
 		static void Main(string[] args)
@@ -14,7 +14,6 @@ namespace OpenTelemetrySample
 			new OTSamples().Sample3(Agent.Tracer);
 			new OTSamples().Sample4(Agent.Tracer);
 			new OTSamples().SpanKindSample();
-
 
 			Console.ReadKey();
 		}

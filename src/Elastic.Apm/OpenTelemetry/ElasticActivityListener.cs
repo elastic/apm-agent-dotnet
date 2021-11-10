@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -18,11 +19,25 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener
 	{
-		public ActivityListener listener { get; }
+		internal readonly ConcurrentDictionary<string, Span> ActiveSpans = new();
+		internal readonly ConcurrentDictionary<string, Transaction> ActiveTransactions = new();
+
+		internal ElasticActivityListener(IApmAgent agent, Tracer tracerInternal)
+		{
+			_logger = agent.Logger?.Scoped(nameof(ElasticActivityListener));
+			_tracer = tracerInternal;
+			listener = new ActivityListener
+			{
+				ActivityStarted = ActivityStarted,
+				ActivityStopped = ActivityStopped,
+				ShouldListenTo = _ => true,
+				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+			};
+			ActivitySource.AddActivityListener(listener);
+		}
+
+		private readonly IApmLogger _logger;
 		internal Tracer _tracer;
-		private IApmLogger _logger;
-		internal readonly ConcurrentDictionary<string, Transaction> ActiveTransactions = new ConcurrentDictionary<string, Transaction>();
-		internal readonly ConcurrentDictionary<string, Span> ActiveSpans = new ConcurrentDictionary<string, Span>();
 
 
 		private Action<Activity>? ActivityStarted =>
@@ -36,17 +51,17 @@ namespace Elastic.Apm.OpenTelemetry
 				Transaction transaction = null;
 				if (activity.Context != null && activity.Context.IsRemote && activity.ParentId != null)
 				{
-					var dt = DistributedTracing.TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
+					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
 
 					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
-						timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), ignoreActivity: true, id: activity.SpanId.ToString(),
+						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
 						distributedTracingData: dt);
 				}
 				else if (activity.ParentId == null)
 				{
 					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
-						timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), ignoreActivity: true, id: activity.SpanId.ToString(),
-						traceId: activity.TraceId.ToString());
+						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
+						activity.TraceId.ToString());
 				}
 				else
 				{
@@ -54,7 +69,7 @@ namespace Elastic.Apm.OpenTelemetry
 					if (_tracer.CurrentSpan == null)
 					{
 						newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, "unknown",
-							 timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
+							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
 					}
 					else
 					{
@@ -124,6 +139,8 @@ namespace Elastic.Apm.OpenTelemetry
 				}
 			};
 
+		public ActivityListener listener { get; }
+
 		private void InferSpanTypeAndSubType(Span span, Activity activity)
 		{
 			if (activity.Kind == ActivityKind.Client && activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
@@ -141,25 +158,12 @@ namespace Elastic.Apm.OpenTelemetry
 				span.Type = ApiConstants.TypeExternal;
 				span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
 			}
-			else if (activity.Kind == ActivityKind.Client || activity.Kind == ActivityKind.Consumer && activity.Tags.Any(n => n.Key == "messaging.system"))
+			else if (activity.Kind == ActivityKind.Client
+				|| activity.Kind == ActivityKind.Consumer && activity.Tags.Any(n => n.Key == "messaging.system"))
 			{
 				span.Type = ApiConstants.TypeMessaging;
 				span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
 			}
-		}
-
-		internal ElasticActivityListener(IApmAgent agent, Tracer tracerInternal)
-		{
-			_logger = agent.Logger?.Scoped(nameof(ElasticActivityListener));
-			_tracer = tracerInternal;
-			listener = new ActivityListener()
-			{
-				ActivityStarted = ActivityStarted,
-				ActivityStopped = ActivityStopped,
-				ShouldListenTo = a => true,
-				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-			};
-			ActivitySource.AddActivityListener(listener);
 		}
 	}
 }
