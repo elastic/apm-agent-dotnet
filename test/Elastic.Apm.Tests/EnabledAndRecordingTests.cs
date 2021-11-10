@@ -237,8 +237,9 @@ namespace Elastic.Apm.Tests
 			});
 
 			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
-			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
 		[Fact]
@@ -254,8 +255,9 @@ namespace Elastic.Apm.Tests
 			});
 
 			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
-			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
 		/// <summary>
