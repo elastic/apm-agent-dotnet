@@ -96,6 +96,8 @@ namespace Elastic.Apm.Model
 		/// will be captured, which is typically the desired behaviour. Setting the timestamp to a specific value is typically
 		/// useful for testing.
 		/// </param>
+		/// <param name="id">An optional parameter to pass the id of the transaction</param>
+		/// <param name="traceId">An optional parameter to pass a trace id which will be applied to the transaction</param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
