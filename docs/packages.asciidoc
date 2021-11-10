@@ -66,7 +66,6 @@ A package containing instrumentation to capture spans for Azure Cosmos DB with
 
 A package containing instrumentation to capture transactions and spans for messages sent and received from Azure Service Bus with {nuget}/Microsoft.Azure.ServiceBus/[Microsoft.Azure.ServiceBus] and {nuget}/Azure.Messaging.ServiceBus/[Azure.Messaging.ServiceBus] packages.
 
-
 <<setup-azure-storage, **Elastic.Apm.Azure.Storage**>>::
 
 A package containing instrumentation to capture spans for interaction with Azure Storage with {nuget}/azure.storage.queues/[Azure.Storage.Queues], {nuget}/azure.storage.blobs/[Azure.Storage.Blobs] and {nuget}/azure.storage.files.shares/[Azure.Storage.Files.Shares] packages.
