@@ -27,14 +27,14 @@
 |Npgsql 4.0.0 - 5.{star}.{star}
 
 .2+.^|OracleCommand
-|{nuget}/Oracle.ManagedDataAccess[Oracle.ManagedDataAccess 4.122.0 - 4.122.{star}]
+|{nuget}/Oracle.ManagedDataAccess[Oracle.ManagedDataAccess 12.2.1100 - 21.*.*]
 |Oracle.ManagedDataAccess 4.122.0 - 4.122.{star}
 
 |{nuget}/Oracle.ManagedDataAccess.Core[Oracle.ManagedDataAccess.Core 2.0.0 - 2.{star}.{star}]
 |Oracle.ManagedDataAccess 2.0.0 - 2.{star}.{star}
 
 .3+.^|SqlCommand
-|{nuget}/System.Data[System.Data 4.0.0 - 4.{star}.{star}]
+|part of .NET
 |System.Data 4.0.0 - 4.{star}.{star}
 
 |{nuget}/System.Data.SqlClient[System.Data.SqlClient 4.0.0 - 4.{star}.{star}]

@@ -35,6 +35,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	{
 		public InstrumentOracleManagedDataAccessAttribute()
 		{
+			Nuget = "Oracle.ManagedDataAccess 12.2.1100 - 21.*.*";
 			Assembly = "Oracle.ManagedDataAccess";
 			Type = "Oracle.ManagedDataAccess.Client.OracleCommand";
 			MinimumVersion = "4.122.0";
@@ -84,6 +85,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	{
 		public InstrumentSystemDataSqlAttribute()
 		{
+			Nuget = "part of .NET";
 			Assembly = "System.Data";
 			Type = "System.Data.SqlClient.SqlCommand";
 			MinimumVersion = "4.0.0";

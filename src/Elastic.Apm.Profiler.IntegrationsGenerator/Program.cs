@@ -129,11 +129,26 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 					var versionRange = $"{integrationMethod.Key.MinimumVersion.Replace("*", "{star}")} - "
 						+ $"{integrationMethod.Key.MaximumVersion.Replace("*", "{star}")}";
 
-					var nuget = integrationMethod.Key.Nuget is not null
-						? integrationMethod.Key.Nuget.StartsWith("part of")
-							? integrationMethod.Key.Nuget
-							: $"{{nuget}}/{integrationMethod.Key.Nuget}[{integrationMethod.Key.Nuget} {versionRange}]"
-						: $"{{nuget}}/{integrationMethod.Key.Assembly}[{integrationMethod.Key.Assembly} {versionRange}]";
+					// Nuget property can be:
+					// - null: take the assembly name and combine with version constraints
+					// - start with "part of": take verbatim
+					// - package name: take package name and combine with version constraints
+					// - package name and version: take verbatim
+					string nuget;
+					if (integrationMethod.Key.Nuget is not null)
+					{
+						if (integrationMethod.Key.Nuget.StartsWith("part of"))
+							nuget = integrationMethod.Key.Nuget;
+						else
+						{
+							var nugetParts = integrationMethod.Key.Nuget.Split(' ', 2);
+							nuget = nugetParts.Length == 1
+								? $"{{nuget}}/{integrationMethod.Key.Nuget}[{integrationMethod.Key.Nuget} {versionRange}]"
+								: $"{{nuget}}/{nugetParts[0]}[{nugetParts[0]} {nugetParts[1]}]";
+						}
+					}
+					else
+						nuget = $"{{nuget}}/{integrationMethod.Key.Assembly}[{integrationMethod.Key.Assembly} {versionRange}]";
 
 					builder
 						.AppendLine($"|{nuget}")
