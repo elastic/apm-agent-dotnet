@@ -13,4 +13,4 @@ Start-Process "C:\tools\vs_BuildTools.exe" -ArgumentList "--add", "Microsoft.Vis
     "--add", "Microsoft.VisualStudio.Workload.NetCoreBuildTools;includeRecommended;includeOptional", `
     "--add", "Microsoft.VisualStudio.Workload.MSBuildTools", `
     "--add", "Microsoft.VisualStudio.Workload.WebBuildTools;includeRecommended;includeOptional", `
-    "--quiet", "--norestart", "--nocache" -NoNewWindow -Wait;
+    "--norestart", "--nocache", "--wait" -NoNewWindow -Wait;
