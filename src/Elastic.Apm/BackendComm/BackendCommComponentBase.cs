@@ -85,12 +85,13 @@ namespace Elastic.Apm.BackendComm
 			_loopStarted.Set();
 
 			await ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
-				{
-					while (!CancellationTokenSource.IsCancellationRequested)
-						await WorkLoopIteration().ConfigureAwait(false);
-					// ReSharper disable once FunctionNeverReturns
-				}
-				, dbgCallerMethodName: _dbgName + "." + DbgUtils.CurrentMethodName()).ConfigureAwait(false);
+					{
+						while (!CancellationTokenSource.IsCancellationRequested)
+							await WorkLoopIteration().ConfigureAwait(false);
+						// ReSharper disable once FunctionNeverReturns
+					}
+					, dbgCallerMethodName: _dbgName + "." + DbgUtils.CurrentMethodName())
+				.ConfigureAwait(false);
 
 			_logger.Debug()?.Log("Signaling work loop completed event...");
 			_loopCompleted.Set();
@@ -130,7 +131,8 @@ namespace Elastic.Apm.BackendComm
 
 		protected void ThrowIfDisposed()
 		{
-			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ _dbgName);
+			if (_disposableHelper != null && _disposableHelper.HasStarted)
+				throw new ObjectDisposedException( /* objectName: */ _dbgName);
 		}
 	}
 }
