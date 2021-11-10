@@ -60,6 +60,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 							{
 								Target = new Target
 								{
+									Nuget = item.attribute.Nuget,
 									Assembly = item.attribute.Assembly,
 									Type = item.attribute.Type,
 									Method = item.attribute.Method,
@@ -109,24 +110,34 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 			var builder = new StringBuilder();
 			builder
 				.AppendLine(":star: *")
+				.AppendLine(":nuget: https://www.nuget.org/packages")
 				.AppendLine()
 				.AppendLine("|===")
-				.AppendLine("|**Integration name** |**Assembly** |**Supported assembly version range**");
+				.AppendLine("|**Integration name** |**NuGet package version(s)** |**Assembly version(s)** ");
 
 			foreach (var integration in integrations)
 			{
 				var integrationMethods =
 					integration.MethodReplacements
-						.GroupBy(m => (m.Target.Assembly, m.Target.MinimumVersion, m.Target.MaximumVersion))
+						.GroupBy(m => (m.Target.Nuget, m.Target.Assembly, m.Target.MinimumVersion, m.Target.MaximumVersion))
 						.ToList();
 
 				builder.AppendLine($".{integrationMethods.Count}+| {integration.Name}");
 
 				foreach (var integrationMethod in integrationMethods)
 				{
-					builder.AppendLine($"| {integrationMethod.Key.Assembly}")
-						.AppendLine($"| {integrationMethod.Key.MinimumVersion.Replace("*", "{star}")} - "
-							+ $"{integrationMethod.Key.MaximumVersion.Replace("*", "{star}")}")
+					var versionRange = $"{integrationMethod.Key.MinimumVersion.Replace("*", "{star}")} - "
+						+ $"{integrationMethod.Key.MaximumVersion.Replace("*", "{star}")}";
+
+					var nuget = integrationMethod.Key.Nuget is not null
+						? integrationMethod.Key.Nuget.StartsWith("part of")
+							? integrationMethod.Key.Nuget
+							: $"{{nuget}}/{integrationMethod.Key.Nuget}[{integrationMethod.Key.Nuget} {versionRange}]"
+						: $"{{nuget}}/{integrationMethod.Key.Assembly}[{integrationMethod.Key.Assembly} {versionRange}]";
+
+					builder
+						.AppendLine($"| {nuget}")
+						.AppendLine($"| {integrationMethod.Key.Assembly} {versionRange}")
 						.AppendLine();
 				}
 			}

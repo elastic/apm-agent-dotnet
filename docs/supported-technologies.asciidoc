@@ -28,7 +28,7 @@ the agent will not capture transactions.
 === .NET versions
 
 The agent works on every .NET flavor and version that supports .NET Standard 2.0.
-This means .NET Core 2.0 (or newer) and .NET Framework 4.6.1 (or newer).
+This means .NET Core 2.0 or newer, and .NET Framework 4.6.1 or newer.
 
 [float]
 [[supported-web-frameworks]]
@@ -37,18 +37,22 @@ This means .NET Core 2.0 (or newer) and .NET Framework 4.6.1 (or newer).
 Automatic instrumentation for a web framework means
 a transaction is automatically created for each incoming request and it is named after the registered route.
 
-We support automatic instrumentation for the following web frameworks.
+Automatic instrumentation is supported for the following web frameworks
 
 |===
-|Framework |Supported versions |Supported since agent's version
+|Framework |Supported versions |Integration
 
-|ASP.NET Core
-|2.1 and later
-|1.0
+| ASP.NET Core added[1.0]
+| 2.1+
+| <<setup-asp-net-core, NuGet package>>
 
-|ASP.NET (.NET Framework) on IIS
-|4.6.1 or newer (IIS 7.0 or newer)
-|1.1
+| ASP.NET (.NET Framework) in IIS  added[1.1]
+| 4.6.1+ (IIS 7.0 or newer)
+| <<setup-auto-instrumentation, Profiler auto instrumentation>>
+
+  _or_
+
+  <<setup-asp-dot-net, NuGet package>>
 
 |===
 
@@ -58,49 +62,100 @@ We support automatic instrumentation for the following web frameworks.
 
 The agent supports gRPC on .NET Core both on the client and the server side. Every gRPC call is automatically captured by the agent. 
 
-Streaming is not supported. In practice this means for streaming use-cases the agent does not create transactions and spans automatically.
+Streaming is not supported; for streaming use-cases, the agent does not create transactions and spans automatically.
 
 |===
-|Framework |Supported versions |Supported since agent's version
+|Framework |Supported versions |Integration
 
-|gRPC on .NET Core
-|2.23.2+
-|1.7
+.2+| gRPC added[1.7]
+| Grpc.Net.Client 2.23.2+ _(client side)_
+| <<setup-grpc, NuGet package>>
+| ASP.NET Core 2.1+ _(server side)_
+| <<setup-asp-net-core, NuGet package>>
+
 |===
 
 [float]
 [[supported-data-access-technologies]]
 === Data access technologies
 
-We support automatic instrumentation for the following data access technologies.
+Automatic instrumentation is supported for the following data access technologies
 
 |===
-|Data access technology |Supported versions |Notes |Supported since agent's version
+|Data access technology |Supported versions |Integration
 
-| Entity Framework (EF) Core
-| 2.x+
-| A DB span is automatically created for each access to underlying database performed by Entity Framework Core.
-| 1.0
+.3+| Azure CosmosDB added[1.11]
+| Microsoft.Azure.Cosmos 3.0.0+
+| Microsoft.Azure.DocumentDB.Core 2.4.1+
+| Microsoft.Azure.DocumentDB 2.4.1+
+.3+| <<setup-azure-cosmosdb, NuGet package>>
 
-| Entity Framework (EF) 6
-| 6.2+
-| A DB span is automatically created for each access to underlying database performed by Entity Framework 6.
-| 1.2
+| Entity Framework Core added[1.0]
+| Microsoft.EntityFrameworkCore 2.x+
+| <<setup-ef-core, NuGet package>>
 
-| Elasticsearch (Elasticsearch.Net and NEST)
-| 7.6.0+
-| __If you're using 7.10.1 or 7.11.0, upgrade to at least 7.11.1 which fixes a bug in capture__
-| 1.6
+| Entity Framework 6 added[1.2]
+| EntityFramework 6.2+
+| <<setup-ef6, NuGet package>>
 
-| MongoDb (MongoDB.Driver)
-| 2.4.4+
-| A DB span is automatically created for each profiled call to MongoDB.
-| 1.9
+| Elasticsearch added[1.6]
+| Elasticsearch.Net 7.6.0+
+  NEST 7.6.0+
+| <<setup-elasticsearch, NuGet package>>
 
-| Redis (StackExchange.Redis)
-| 2.0.495+
-| A DB span is automatically created for each profiled redis command performed by StackExchange.Redis 
-| 1.8
+| MySQL added[1.12]
+| see profiler documentation
+| <<setup-auto-instrumentation, Profiler auto instrumentation>>
+
+| MongoDB added[1.9]
+| MongoDB.Driver 2.4.4+
+| <<setup-mongo-db, NuGet package>>
+
+| Oracle added[1.12]
+| see profiler documentation
+| <<setup-auto-instrumentation, Profiler auto instrumentation>>
+
+| PostgreSQL added[1.12]
+| see profiler documentation
+| <<setup-auto-instrumentation, Profiler auto instrumentation>>
+
+| Redis added[1.8]
+| StackExchange.Redis 2.0.495+
+| <<setup-stackexchange-redis, NuGet package>>
+
+.2+| SqlClient
+| System.Data.SqlClient 2.0.495+ added[1.8]
+| <<setup-sqlclient, NuGet package>>
+| see profiler documentation added[1.12]
+| <<setup-auto-instrumentation, Profiler auto instrumentation>>
+
+| SQLite added[1.12]
+| see profiler documentation
+| <<setup-auto-instrumentation, Profiler auto instrumentation>>
+
+|===
+
+[float]
+[[supported-messaging-systems]]
+=== Messaging systems
+
+We support automatic instrumentation for the following messaging systems
+
+|===
+|Messaging system |Supported versions |Integration
+
+.2+| Azure Service Bus added[1.10]
+| Microsoft.Azure.ServiceBus 3.0.0+
+| Azure.Messaging.ServiceBus 7.0.0+
+.2+| <<setup-azure-servicebus, NuGet package>>
+
+| Azure Queue Storage added[1.10]
+| Azure.Storage.Queues 12.6.0+
+| <<setup-azure-storage, NuGet package>>
+
+| Kafka added[1.12]
+| see profiler documentation
+| <<setup-auto-instrumentation, Profiler auto instrumentation>>
 
 |===
 
@@ -110,18 +165,17 @@ We support automatic instrumentation for the following data access technologies.
 
 Automatic instrumentation for networking client-side technology means
 an HTTP span is automatically created for each outgoing HTTP request and tracing headers are propagated. 
-The spans are named after the schema `<method> <host>`, for example `GET elastic.co`.
 
 |===
-|Framework |Supported versions |Supported since agent's version
+|Framework |Supported versions |Integration
 
-|System.Net.Http.HttpClient on .NET Core
-|
-|1.0
+| System.Net.Http.HttpClient added[1.0]
+| _built-in_
+| _built-in_
 
-|System.Net.Http.HttpClient on .NET Framework
-|
-|1.1
+| System.Net.HttpWebRequest added[1.1]
+| _built-in_
+| _built-in_
 
 |===
 
@@ -132,26 +186,23 @@ The spans are named after the schema `<method> <host>`, for example `GET elastic
 Automatic instrumentation for the following cloud services
 
 |===
-| Cloud services | Supported versions | Notes | Supported since agent's version
+|Cloud service |Supported versions |Integration
 
-| Azure Service Bus
-| 3.0.0+ for Microsoft.Azure.ServiceBus,
-  7.0.0+ for Azure.Messaging.ServiceBus
-| A new transaction is created for received and
-receive deferred messages. A new span is created for sent and scheduled messages if there's a current transaction.
-| 1.10
+.3+| Azure CosmosDB added[1.11]
+| Microsoft.Azure.Cosmos 3.0.0+
+| Microsoft.Azure.DocumentDB.Core 2.4.1+
+| Microsoft.Azure.DocumentDB 2.4.1+
+.3+| <<setup-azure-cosmosdb, NuGet package>>
 
-| Azure Storage
-| 12.8.0+ for Azure.Storage.Blobs
-  12.6.0+ for Azure.Storage.Queues and Azure.Storage.Files.Shares
-| 
-| 1.10
+.2+| Azure Service Bus added[1.10]
+| Microsoft.Azure.ServiceBus 3.0.0+
+| Azure.Messaging.ServiceBus 7.0.0+
+.2+| <<setup-azure-servicebus, NuGet package>>
 
-| Azure Cosmos DB
-| 3.0.0+ for Microsoft.Azure.Cosmos
-  2.4.1+ for Microsoft.Azure.DocumentDB.Core
-  2.4.1+ for Microsoft.Azure.DocumentDB
-| 
-| 1.11
+.3+| Azure Storage added[1.10]
+| Azure.Storage.Blobs 12.6.0+
+| Azure.Storage.Queues 12.6.0+
+| Azure.Storage.Files.Shares 12.6.0+
+.3+| <<setup-azure-storage, NuGet package>>
 
 |===

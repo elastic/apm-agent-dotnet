@@ -47,6 +47,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	{
 		public InstrumentOracleManagedDataAccessCoreAttribute()
 		{
+			Nuget = "Oracle.ManagedDataAccess.Core";
 			Assembly = "Oracle.ManagedDataAccess";
 			Type = "Oracle.ManagedDataAccess.Client.OracleCommand";
 			MinimumVersion = "2.0.0";
@@ -119,6 +120,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	{
 		public InstrumentSystemDataAttribute()
 		{
+			Nuget = "part of .NET";
 			Assembly = "System.Data";
 			Type = "System.Data.Common.DbCommand";
 			MinimumVersion = "4.0.0";
@@ -131,6 +133,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	{
 		public InstrumentSystemDataCommonAttribute()
 		{
+			Nuget = "part of .NET";
 			Assembly = "System.Data.Common";
 			Type = "System.Data.Common.DbCommand";
 			MinimumVersion = "4.0.0";
