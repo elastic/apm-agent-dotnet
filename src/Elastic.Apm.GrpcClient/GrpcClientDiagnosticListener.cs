@@ -64,7 +64,7 @@ namespace Elastic.Apm.GrpcClient
 					span.Outcome = GrpcHelper.GrpcClientReturnCodeToOutcome(GrpcHelper.GrpcReturnCodeToString(grpcStatusCode));
 
 				span.Context.Destination = UrlUtils.ExtractDestination(requestObject.RequestUri, Logger);
-				span.Context.Destination.Service = UrlUtils.ExtractService(requestObject.RequestUri, span);
+				span.Context.Destination.Service = new() { Resource = UrlUtils.ExtractService(requestObject.RequestUri, span) };
 
 				span.End();
 			}

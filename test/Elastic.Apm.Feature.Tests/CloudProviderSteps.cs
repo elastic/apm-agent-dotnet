@@ -3,19 +3,14 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RichardSzalay.MockHttp;
 using TechTalk.SpecFlow;
@@ -28,7 +23,7 @@ namespace Elastic.Apm.Feature.Tests
 	[Binding]
 	public class CloudProviderSteps
 	{
-		private static readonly JsonSerializer _serializer = new JsonSerializer();
+
 		private readonly ScenarioContext _scenarioContext;
 
 		public CloudProviderSteps(ScenarioContext scenarioContext) => _scenarioContext = scenarioContext;
@@ -47,13 +42,7 @@ namespace Elastic.Apm.Feature.Tests
 			handler.When(BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl).AbsoluteUri)
 				.Respond(r =>
 				{
-					var json = r.Content.ReadAsStringAsync().Result;
-					if (json.Contains("\"metadata\""))
-					{
-						payloadCollector.Request = ParseJObjects(json);
-						payloadCollector.WaitHandle.Set();
-					}
-
+					payloadCollector.ProcessPayload(r);
 					return new HttpResponseMessage(HttpStatusCode.OK);
 				});
 
@@ -69,10 +58,7 @@ namespace Elastic.Apm.Feature.Tests
 					handler,
 					environmentVariables: environmentVariables);
 
-			var lazyAgent = new Lazy<ApmAgent>(() =>
-				new ApmAgent(new TestAgentComponents(logger, config, payloadSender)));
-
-			_scenarioContext.Set(lazyAgent);
+			_scenarioContext.Set(() => new ApmAgent(new TestAgentComponents(logger, config, payloadSender)));
 		}
 
 		[Given("^the following environment variables are present$")]
@@ -87,17 +73,13 @@ namespace Elastic.Apm.Feature.Tests
 		[When("^cloud metadata is collected$")]
 		public void CollectCloudMetadata()
 		{
-			var lazyAgent = _scenarioContext.Get<Lazy<ApmAgent>>();
 			// create the agent and capture a transaction to send metadata
-			var agent = lazyAgent.Value;
+			var agent = _scenarioContext.Get<ApmAgent>();
 			agent.Tracer.CaptureTransaction("Transaction", "feature", () => { });
 
 			var payloadCollector = _scenarioContext.Get<PayloadCollector>();
 
-			// wait for the wait handle to be signalled
-			var timeout = TimeSpan.FromSeconds(30);
-			if (!payloadCollector.WaitHandle.Wait(timeout))
-				throw new Exception($"Did not receive payload within {timeout}");
+			payloadCollector.Wait();
 		}
 
 		[Then("^cloud metadata is not null$")]
@@ -105,8 +87,8 @@ namespace Elastic.Apm.Feature.Tests
 		{
 			var payloadCollector = _scenarioContext.Get<PayloadCollector>();
 
-			payloadCollector.Request.Should().NotBeNull();
-			var cloudMetadata = payloadCollector.Request[0]["metadata"]["cloud"];
+			payloadCollector.Payloads.Should().NotBeEmpty();
+			var cloudMetadata = payloadCollector.Payloads[0].Body[0]["metadata"]["cloud"];
 			cloudMetadata.Should().NotBeNull();
 		}
 
@@ -115,8 +97,8 @@ namespace Elastic.Apm.Feature.Tests
 		{
 			var payloadCollector = _scenarioContext.Get<PayloadCollector>();
 
-			payloadCollector.Request.Should().NotBeNull();
-			var cloudMetadata = payloadCollector.Request[0]["metadata"]["cloud"];
+			payloadCollector.Payloads.Should().NotBeEmpty();
+			var cloudMetadata = payloadCollector.Payloads[0].Body[0]["metadata"]["cloud"];
 			cloudMetadata.Should().BeNull();
 		}
 
@@ -124,29 +106,10 @@ namespace Elastic.Apm.Feature.Tests
 		public void CloudMetadataKeyEqualsValue(string key, string value)
 		{
 			var payloadCollector = _scenarioContext.Get<PayloadCollector>();
-			var token = payloadCollector.Request[0].SelectToken($"metadata.cloud.{key}");
+			var token = payloadCollector.Payloads[0].Body[0].SelectToken($"metadata.cloud.{key}");
 
 			token.Should().NotBeNull();
 			token.Value<string>().Should().Be(value);
-		}
-
-		private class PayloadCollector
-		{
-			public ManualResetEventSlim WaitHandle { get; }
-
-			public PayloadCollector() => WaitHandle = new ManualResetEventSlim(false);
-
-			public List<JObject> Request { get; set; }
-		}
-
-		private static List<JObject> ParseJObjects(string json)
-		{
-			var jObjects = new List<JObject>();
-			using var stringReader = new StringReader(json);
-			using var jsonReader = new JsonTextReader(stringReader) { SupportMultipleContent = true };
-			while (jsonReader.Read())
-				jObjects.Add(_serializer.Deserialize<JObject>(jsonReader));
-			return jObjects;
 		}
 	}
 }
