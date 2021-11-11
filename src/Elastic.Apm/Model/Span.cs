@@ -229,8 +229,6 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Subtype { get; set; }
 
-		//public decimal Start { get; set; }
-
 		/// <summary>
 		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
 		/// </summary>
