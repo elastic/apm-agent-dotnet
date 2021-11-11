@@ -25,11 +25,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         Assembly = "Confluent.Kafka",
         Type = "Confluent.Kafka.Producer`2",
         Method= "ProduceAsync",
-        ReturnType = KafkaConstants.TaskDeliveryReportTypeName,
-        ParameterTypes = new[] { KafkaConstants.TopicPartitionTypeName, KafkaConstants.MessageTypeName, ClrTypeNames.CancellationToken },
+        ReturnType = KafkaIntegration.TaskDeliveryReportTypeName,
+        ParameterTypes = new[] { KafkaIntegration.TopicPartitionTypeName, KafkaIntegration.MessageTypeName, ClrTypeNames.CancellationToken },
         MinimumVersion = "1.4.0",
         MaximumVersion = "1.*.*",
-        Group = KafkaConstants.IntegrationName)]
+        Group = KafkaIntegration.Name)]
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class KafkaProduceAsyncIntegration
@@ -50,19 +50,16 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         {
 			var agent = Agent.Instance;
 
-			var span = KafkaHelper.CreateProducerSpan(
+			var span = KafkaIntegration.CreateProducerSpan(
                 agent,
                 topicPartition.DuckCast<ITopicPartition>(),
                 isTombstone: message.Value is null,
                 finishOnClose: true);
 
             if (span is not null)
-            {
-                KafkaHelper.TryInjectHeaders<TTopicPartition, TMessage>(agent, span, message);
-                return new CallTargetState(span);
-            }
+				KafkaIntegration.TryInjectHeaders<TTopicPartition, TMessage>(agent, span, message);
 
-            return CallTargetState.GetDefault();
+			return new CallTargetState(span);
         }
 
         /// <summary>
@@ -81,11 +78,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 			var span = state.Segment;
 			if (span is not null)
 			{
-				var outcome = Outcome.Success;
 				IDeliveryResult deliveryResult = null;
 				if (exception is not null)
 				{
-					outcome = Outcome.Failure;
 					span.CaptureException(exception);
 
 					var produceException = exception.DuckAs<IProduceException>();
@@ -101,7 +96,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 					span.SetLabel("offset", deliveryResult.Offset.ToString());
 				}
 
-				span.Outcome = outcome;
 				span.End();
 			}
 			return response;
