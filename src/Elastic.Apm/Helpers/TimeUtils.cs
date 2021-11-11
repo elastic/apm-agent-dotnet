@@ -35,6 +35,8 @@ namespace Elastic.Apm.Helpers
 			return RoundTimeValue((dateTimeToConvert - UnixEpochDateTime).TotalMilliseconds * 1000);
 		}
 
+		internal static long ToTimestamp(DateTimeOffset dateTimeToConvert) => ToTimestamp(dateTimeToConvert.UtcDateTime);
+
 		internal static DateTime ToDateTime(long timestamp) => UnixEpochDateTime + TimeSpan.FromTicks(timestamp * 10);
 
 		internal static string FormatTimestampForLog(long timestamp) => ToDateTime(timestamp).FormatForLog();

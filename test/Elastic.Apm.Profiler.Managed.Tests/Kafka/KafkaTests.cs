@@ -37,6 +37,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
+			var ignoreTopic = "ignore-topic";
 			using (var profiledApplication = new ProfiledApplication("KafkaSample"))
 			{
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
@@ -44,6 +45,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 					["KAFKA_HOST"] = _fixture.BootstrapServers,
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 					["ELASTIC_APM_DISABLE_METRICS"] = "*",
+					["ELASTIC_APM_IGNORE_MESSAGE_QUEUES"] = ignoreTopic
 				};
 
 				profiledApplication.Start(
@@ -54,9 +56,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 					exception => _output.WriteLine($"{exception}"));
 			}
 
-			// 6 * 10 consume transactions, 8 produce transactions
+			// 6 * 10 consume transactions, 14 produce transactions
 			var transactions = apmServer.ReceivedData.Transactions;
-			transactions.Should().HaveCount(68);
+			transactions.Should().HaveCount(74);
 
 			var consumeTransactions = transactions.Where(t => t.Name.StartsWith("Kafka RECEIVE")).ToList();
 			consumeTransactions.Should().HaveCount(60);
@@ -71,12 +73,26 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 			}
 
 			var produceTransactions = transactions.Where(t => !t.Name.StartsWith("Kafka RECEIVE")).ToList();
-			produceTransactions.Should().HaveCount(8);
+			produceTransactions.Should().HaveCount(14);
 
 			foreach (var produceTransaction in produceTransactions)
 			{
-				var spans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == produceTransaction.Id);
-				spans.Should().HaveCount(produceTransaction.Name.Contains("INVALID-TOPIC") ? 1 : 10, produceTransaction.Name);
+				var spans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == produceTransaction.Id).ToList();
+
+				if (produceTransaction.Name.Contains("INVALID-TOPIC"))
+					spans.Should().HaveCount(1);
+				// the produce transaction shouldn't have an auto instrumented publish span as topic is ignored
+				else if (produceTransaction.Name.Contains(ignoreTopic))
+					spans.Should().BeEmpty();
+				else
+					spans.Should().HaveCount(10);
+
+				foreach (var span in spans)
+				{
+					span.Context.Message.Should().NotBeNull();
+					span.Context.Message.Queue.Should().NotBeNull();
+					span.Context.Message.Queue.Name.Should().NotBeNullOrEmpty();
+				}
 			}
 
 			await apmServer.StopAsync();

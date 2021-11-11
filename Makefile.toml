@@ -47,6 +47,11 @@ args = ["build", "-c", "${DOTNET_CONFIG}", "./sample/${SAMPLE_APP}/${SAMPLE_APP}
 
 [tasks.generate-integrations]
 description = "Generates integrations.yml file"
+dependencies = ["build-integrations", "generate-integrations-yml", "generate-integrations-asciidoc"]
+
+[tasks.generate-integrations-yml]
+description = "Generates integrations.yml file"
+private = true
 command = "dotnet"
 args = [
     "run",
@@ -55,6 +60,19 @@ args = [
     "-i", "./src/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
     "-o", "./src/Elastic.Apm.Profiler.Managed",
     "-f", "yml"]
+dependencies = ["build-integrations"]
+
+[tasks.generate-integrations-asciidoc]
+description = "Generates integrations documentation"
+private = true
+command = "dotnet"
+args = [
+    "run",
+    "--project", "./src/Elastic.Apm.Profiler.IntegrationsGenerator/Elastic.Apm.Profiler.IntegrationsGenerator.csproj",
+    "--",
+    "-i", "./src/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
+    "-o", "./docs",
+    "-f", "asciidoc"]
 dependencies = ["build-integrations"]
 
 [tasks.expand]

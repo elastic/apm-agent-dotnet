@@ -49,15 +49,15 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		void Remove(string name);
 	}
 
-    internal struct KafkaHeadersCollectionAdapter : IHeadersCollection
+    internal struct KafkaHeadersCollection : IHeadersCollection
     {
 		private readonly IHeaders _headers;
 		private readonly IApmLogger _logger;
 
-		public KafkaHeadersCollectionAdapter(IHeaders headers, IApmLogger logger)
+		public KafkaHeadersCollection(IHeaders headers, IApmLogger logger)
 		{
 			_headers = headers;
-			_logger = logger.Scoped("KafkaHeadersCollectionAdapter");
+			_logger = logger.Scoped(nameof(KafkaHeadersCollection));
 		}
 
         public IEnumerable<string> GetValues(string name)

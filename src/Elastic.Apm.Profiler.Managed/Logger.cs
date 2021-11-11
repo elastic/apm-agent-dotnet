@@ -54,6 +54,10 @@ namespace Elastic.Apm.Profiler.Managed
 
 		public static void Debug(string message, params object[] args) => Log(LogLevel.Debug, message, args);
 
+		public static void Error(Exception exception, string message, params object[] args) => Log(LogLevel.Error, exception, message, args);
+
+		public static void Error(string message, params object[] args) => Log(LogLevel.Error, message, args);
+
 		public static void Log(LogLevel level, string message, params object[] args)
 		{
 			if (Level > level)
