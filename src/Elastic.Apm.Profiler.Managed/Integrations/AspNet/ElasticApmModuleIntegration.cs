@@ -23,6 +23,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AspNet
     /// System.Web.Compilation.BuildManager.InvokePreStartInitMethodsCore calltarget instrumentation
     /// </summary>
     [Instrument(
+		Nuget = "part of .NET Framework",
         Assembly = "System.Web",
         Type = "System.Web.Compilation.BuildManager",
         Method = "InvokePreStartInitMethodsCore",

@@ -23,6 +23,13 @@ namespace Elastic.Apm.Profiler.Managed.Core
 		public string Assembly { get; set; }
 
 		/// <summary>
+		/// The name of the nuget package containing the assembly to instrument.
+		/// Used for documentation. If unspecified, will use <see cref="Assembly"/> value.
+		/// Values starting with "part of" are specially treated.
+		/// </summary>
+		public string Nuget { get; set; }
+
+		/// <summary>
 		/// The fully qualified name of the type containing the target method to instrument
 		/// </summary>
 		public string Type { get; set; }
