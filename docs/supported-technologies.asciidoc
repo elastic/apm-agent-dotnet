@@ -157,6 +157,10 @@ We support automatic instrumentation for the following messaging systems
 |See profiler documentation
 |<<setup-auto-instrumentation, Profiler auto instrumentation>>
 
+|RabbitMQ added[1.12]
+|See profiler documentation
+|<<setup-auto-instrumentation, Profiler auto instrumentation>>
+
 |===
 
 [float]
