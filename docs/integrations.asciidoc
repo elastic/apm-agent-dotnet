@@ -27,11 +27,15 @@
 |Npgsql 4.0.0 - 5.{star}.{star}
 
 .2+.^|OracleCommand
-|{nuget}/Oracle.ManagedDataAccess[Oracle.ManagedDataAccess 12.2.1100 - 21.*.*]
+|{nuget}/Oracle.ManagedDataAccess[Oracle.ManagedDataAccess 12.2.1100 - 21.{star}.{star}]
 |Oracle.ManagedDataAccess 4.122.0 - 4.122.{star}
 
 |{nuget}/Oracle.ManagedDataAccess.Core[Oracle.ManagedDataAccess.Core 2.0.0 - 2.{star}.{star}]
 |Oracle.ManagedDataAccess 2.0.0 - 2.{star}.{star}
+
+.1+.^|RabbitMQ
+|{nuget}/RabbitMQ.Client[RabbitMQ.Client 3.6.9 - 6.{star}.{star}]
+|RabbitMQ.Client 3.6.9 - 6.{star}.{star}
 
 .3+.^|SqlCommand
 |part of .NET

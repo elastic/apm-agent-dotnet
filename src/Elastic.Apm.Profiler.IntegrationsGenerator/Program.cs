@@ -144,7 +144,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 							var nugetParts = integrationMethod.Key.Nuget.Split(' ', 2);
 							nuget = nugetParts.Length == 1
 								? $"{{nuget}}/{integrationMethod.Key.Nuget}[{integrationMethod.Key.Nuget} {versionRange}]"
-								: $"{{nuget}}/{nugetParts[0]}[{nugetParts[0]} {nugetParts[1]}]";
+								: $"{{nuget}}/{nugetParts[0]}[{nugetParts[0]} {nugetParts[1].Replace("*", "{star}")}]";
 						}
 					}
 					else

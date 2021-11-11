@@ -1,6 +1,6 @@
 [package]
 name = "elastic_apm_profiler"
-version = "1.11.1-alpha.2"
+version = "1.12.0-beta.1"
 edition = "2018"
 authors = ["Elastic and Contributors"]
 description = "Elastic APM .NET agent CLR profiler"

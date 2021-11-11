@@ -86,10 +86,10 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 					switch (state.PreviousSegment)
 					{
 						case ITransaction transaction:
-							Agent.Components.TracerInternal.CurrentExecutionSegmentsContainer.CurrentTransaction = transaction;
+							Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer.CurrentTransaction = transaction;
 							break;
 						case ISpan span:
-							Agent.Components.TracerInternal.CurrentExecutionSegmentsContainer.CurrentSpan = span;
+							Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer.CurrentSpan = span;
 							break;
 					}
 				}

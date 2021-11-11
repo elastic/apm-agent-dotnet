@@ -18,8 +18,16 @@ using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 {
-    internal static class KafkaHelper
+    internal static class KafkaIntegration
     {
+		internal const string TopicPartitionTypeName = "Confluent.Kafka.TopicPartition";
+		internal const string MessageTypeName = "Confluent.Kafka.Message`2[!0,!1]";
+		internal const string ConsumeResultTypeName = "Confluent.Kafka.ConsumeResult`2[!0,!1]";
+		internal const string ActionOfDeliveryReportTypeName = "System.Action`1[Confluent.Kafka.DeliveryReport`2[!0,!1]]";
+		internal const string TaskDeliveryReportTypeName = "System.Threading.Tasks.Task`1[Confluent.Kafka.DeliveryReport`2[!0,!1]]";
+		internal const string Subtype = "kafka";
+		internal const string Name = "Kafka";
+
 		private static bool HeadersInjectionEnabled = true;
 		private const double MaxAge = long.MaxValue;
 
@@ -32,16 +40,33 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 				// no current transaction, don't create a span
 				var currentTransaction = agent.Tracer.CurrentTransaction;
 				if (currentTransaction is null)
-					return null;
+					return span;
 
-				var spanName = string.IsNullOrEmpty(topicPartition?.Topic)
+				var topic = topicPartition?.Topic;
+				var matcher = WildcardMatcher.AnyMatch(currentTransaction.Configuration.IgnoreMessageQueues, topic);
+				if (matcher != null)
+				{
+					agent.Logger.Trace()
+						?.Log(
+							"Not tracing message from {Queue} because it matched IgnoreMessageQueues pattern {Matcher}",
+							topic,
+							matcher.GetMatcher());
+
+					return span;
+				}
+
+				var spanName = string.IsNullOrEmpty(topic)
 					? "Kafka SEND"
-					: $"Kafka SEND to {topicPartition.Topic}";
+					: $"Kafka SEND to {topic}";
 
 				span = agent.GetCurrentExecutionSegment().StartSpan(
 					spanName,
 					ApiConstants.TypeMessaging,
-					KafkaConstants.Subtype);
+					Subtype,
+					isExitSpan: true);
+
+				if (!string.IsNullOrEmpty(topic))
+					span.Context.Message = new Message { Queue = new Queue { Name = topic } };
 
                 if (topicPartition?.Partition is not null && !topicPartition.Partition.IsSpecial)
 					span.SetLabel("partition", topicPartition.Partition.ToString());
@@ -71,10 +96,25 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 				if (agent.Tracer.CurrentTransaction is not null)
 					return null;
 
-                DistributedTracingData distributedTracingData = null;
+				if (agent is ApmAgent apmAgent)
+				{
+					var matcher = WildcardMatcher.AnyMatch(apmAgent.ConfigurationStore.CurrentSnapshot.IgnoreMessageQueues, topic);
+					if (matcher != null)
+					{
+						agent.Logger.Trace()
+							?.Log(
+								"Not tracing message from {Queue} because it matched IgnoreMessageQueues pattern {Matcher}",
+								topic,
+								matcher.GetMatcher());
+
+						return null;
+					}
+				}
+
+				DistributedTracingData distributedTracingData = null;
 				if (message?.Headers != null)
                 {
-                    var headers = new KafkaHeadersCollectionAdapter(message.Headers, agent.Logger);
+                    var headers = new KafkaHeadersCollection(message.Headers, agent.Logger);
 					try
 					{
 						var traceParent = string.Join(",", headers.GetValues(TraceContext.TraceParentBinaryHeaderName));
@@ -99,7 +139,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 				if (offset is not null)
 					transaction.SetLabel("offset", offset.ToString());
 
-				// record only queue topic name and age on context for now. capture body and headers in future
+				// record only queue topic name and age on context for now. capture body and headers potentially in future
 				transaction.Context.Message = new Message { Queue = new Queue { Name = topic } };
 				if (transaction is Transaction realTransaction && message is not null && message.Timestamp.Type != 0)
 				{
@@ -155,7 +195,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 			try
             {
                 message.Headers ??= CachedMessageHeadersHelper<TTopicPartitionMarker>.CreateHeaders();
-				var adapter = new KafkaHeadersCollectionAdapter(message.Headers, agent.Logger);
+				var adapter = new KafkaHeadersCollection(message.Headers, agent.Logger);
 				var distributedTracingData = segment.OutgoingDistributedTracingData;
 				adapter.Set(TraceContext.TraceParentBinaryHeaderName, distributedTracingData.SerializeToString());
 				adapter.Set(TraceContext.TraceStateHeaderName, distributedTracingData.TraceState.ToTextHeader());

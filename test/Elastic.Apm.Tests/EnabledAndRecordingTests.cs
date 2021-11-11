@@ -224,6 +224,42 @@ namespace Elastic.Apm.Tests
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
 
+		[Fact]
+		public void AgentDisabledCaptureErrorsOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			var configReader = new MockConfiguration(enabled: "false");
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
+
+			agent.Tracer.CaptureTransaction("foo", "bar", _ =>
+			{
+				agent.Tracer.CaptureException(new Exception());
+			});
+
+			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
+			payloadSender.Errors.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+		}
+
+		[Fact]
+		public void RecordingFalseCaptureErrorsOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			var configReader = new MockConfiguration(recording: "false");
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: configReader));
+
+			agent.Tracer.CaptureTransaction("foo", "bar", _ =>
+			{
+				agent.Tracer.CaptureException(new Exception());
+			});
+
+			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
+			payloadSender.Errors.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+		}
+
 		/// <summary>
 		/// Creates a transaction and multiple spans and exercises the public API with enabled=false.
 		/// Makes sure nothing is captured.
