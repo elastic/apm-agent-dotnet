@@ -17,11 +17,11 @@ namespace KafkaSample
 {
 	internal class Program
 	{
+		private const string IgnoreTopic = "ignore-topic";
+
 		private static async Task Main(string[] args)
 		{
-			var kafkaHost = Environment.GetEnvironmentVariable("KAFKA_HOST");
-
-			if (string.IsNullOrEmpty(kafkaHost))
+			var kafkaHost = Environment.GetEnvironmentVariable("KAFKA_HOST") ??
 				throw new InvalidOperationException(
 					"KAFKA_HOST environment variable is empty. Kafka host must be specified with KAFKA_HOST environment variable");
 
@@ -29,8 +29,18 @@ namespace KafkaSample
 			var topic = Guid.NewGuid().ToString("N");
 
 			await CreateTopic(config, topic);
-
 			await ConsumeAndProduceMessages(topic, config);
+
+			await ProduceMessagesInvalidTopic(config);
+
+			var ignoreMessageQueues = Environment.GetEnvironmentVariable("ELASTIC_APM_IGNORE_MESSAGE_QUEUES");
+
+			// only run the ignore produce and consume if the agent has been configured with the ignore topic
+			if (!string.IsNullOrEmpty(ignoreMessageQueues) && ignoreMessageQueues.Contains(IgnoreTopic))
+			{
+				await CreateTopic(config, IgnoreTopic);
+				await ConsumeAndProduceMessages(IgnoreTopic, config, 1);
+			}
 
 			// allow time for agent to send APM data
 			await Task.Delay(TimeSpan.FromSeconds(30));
@@ -38,7 +48,7 @@ namespace KafkaSample
 			Console.WriteLine("finished");
 		}
 
-		private static async Task ConsumeAndProduceMessages(string topic, ClientConfig config)
+		private static async Task ConsumeAndProduceMessages(string topic, ClientConfig config, int numberOfMessagesPerProducer = 10)
         {
             var commitPeriod = 3;
 			var cts = new CancellationTokenSource();
@@ -53,7 +63,7 @@ namespace KafkaSample
 
             Console.WriteLine($"Producing messages");
 
-            var messagesProduced = await ProduceMessages(topic, config);
+            var messagesProduced = await ProduceMessages(topic, config, numberOfMessagesPerProducer);
 
             // Wait for all messages to be consumed
             // This assumes that the topic starts empty, and nothing else is producing to the topic
@@ -89,12 +99,26 @@ namespace KafkaSample
                 Task.Delay(TimeSpan.FromSeconds(5)));
         }
 
-        private static async Task<MessagesProduced> ProduceMessages(string topic, ClientConfig config)
-        {
-            // produce messages sync and async
-            const int numberOfMessagesPerProducer = 10;
 
-            // Send valid messages
+		private static async Task ProduceMessagesInvalidTopic(ClientConfig config)
+		{
+			// try to produce invalid messages
+			const string invalidTopic = "INVALID-TOPIC";
+			Producer.Produce(invalidTopic, 1, config, true, false); // failure should be logged by delivery handler
+
+			try
+			{
+				await Producer.ProduceAsync(invalidTopic, 1, config, isTombstone: false);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error producing a message to an unknown topic (expected): {ex}");
+			}
+		}
+
+        private static async Task<MessagesProduced> ProduceMessages(string topic, ClientConfig config, int numberOfMessagesPerProducer)
+        {
+			// Send valid messages
             Producer.Produce(topic, numberOfMessagesPerProducer, config, false, false);
             Producer.Produce(topic, numberOfMessagesPerProducer, config, true, false);
             await Producer.ProduceAsync(topic, numberOfMessagesPerProducer, config, false);
@@ -103,20 +127,6 @@ namespace KafkaSample
             Producer.Produce(topic, numberOfMessagesPerProducer, config, false, true);
             Producer.Produce(topic, numberOfMessagesPerProducer, config, true, true);
             await Producer.ProduceAsync(topic, numberOfMessagesPerProducer, config, true);
-
-            // try to produce invalid messages
-            const string invalidTopic = "INVALID-TOPIC";
-
-            Producer.Produce(invalidTopic, 1, config, true, false); // failure should be logged by delivery handler
-
-            try
-            {
-                await Producer.ProduceAsync(invalidTopic, 1, config, isTombstone: false);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error producing a message to an unknown topic (expected): {ex}");
-            }
 
             return new MessagesProduced
             {

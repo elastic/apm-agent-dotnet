@@ -227,6 +227,9 @@ namespace Elastic.Apm.Api
 			Dictionary<string, Label> labels = null
 		)
 		{
+			if (!_configurationProvider.CurrentSnapshot.Enabled || !_configurationProvider.CurrentSnapshot.Recording)
+				return;
+
 			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
 
 			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
@@ -251,6 +254,9 @@ namespace Elastic.Apm.Api
 			Dictionary<string, Label> labels = default
 		)
 		{
+			if (!_configurationProvider.CurrentSnapshot.Enabled || !_configurationProvider.CurrentSnapshot.Recording)
+				return;
+
 			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
 
 			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
@@ -273,6 +279,9 @@ namespace Elastic.Apm.Api
 
 		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
 		{
+			if (!_configurationProvider.CurrentSnapshot.Enabled || !_configurationProvider.CurrentSnapshot.Recording)
+				return;
+
 			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
 
 			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;

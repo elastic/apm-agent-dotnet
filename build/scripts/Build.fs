@@ -256,15 +256,16 @@ module Build =
         
     /// Creates versioned elastic_apm_profiler.zip file containing all components needed for profiler auto-instrumentation  
     let ProfilerZip (canary:bool) =
-        let name = "elastic_apm_profiler"      
+        let name = "elastic_apm_profiler"
+        let currentAssemblyVersion = Versioning.CurrentVersion.AssemblyVersion
         let versionedName =
             let os =
                 if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then "win-x64"
                 else "linux-x64"      
             if canary then
-                sprintf "%s_%s-%s-%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString()) os versionSuffix
+                sprintf "%s_%s-%s-%s" name (currentAssemblyVersion.ToString()) os versionSuffix
             else
-                sprintf "%s_%s-%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString()) os
+                sprintf "%s_%s-%s" name (currentAssemblyVersion.ToString()) os
                 
         let profilerDir = Paths.BuildOutput name |> DirectoryInfo                    
         profilerDir.Create()
@@ -274,11 +275,17 @@ module Build =
             "target/release/elastic_apm_profiler.dll"
             "target/release/libelastic_apm_profiler.so"
             Paths.Src "elastic_apm_profiler/NOTICE"
+            Paths.Src "elastic_apm_profiler/README"
             "LICENSE"
         }
         |> Seq.map FileInfo
         |> Seq.filter (fun file -> file.Exists)
-        |> Seq.iter (fun file -> file.CopyTo(Path.combine profilerDir.FullName file.Name, true) |> ignore)
+        |> Seq.iter (fun file ->
+            let destination = Path.combine profilerDir.FullName file.Name
+            let newFile = file.CopyTo(destination, true)      
+            if newFile.Name = "README" then
+                File.applyReplace (fun s -> s.Replace("${VERSION}", sprintf "%i.%i" currentAssemblyVersion.Major currentAssemblyVersion.Minor)) newFile.FullName
+        )
             
         Directory.GetDirectories((Paths.BuildOutput "Elastic.Apm.Profiler.Managed"), "*", SearchOption.TopDirectoryOnly)
         |> Seq.map DirectoryInfo

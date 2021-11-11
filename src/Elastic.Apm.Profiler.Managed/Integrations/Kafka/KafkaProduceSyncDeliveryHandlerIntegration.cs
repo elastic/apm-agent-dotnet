@@ -27,10 +27,10 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         Type = "Confluent.Kafka.Producer`2+TypedDeliveryHandlerShim_Action",
         Method = ".ctor",
         ReturnType = ClrTypeNames.Void,
-        ParameterTypes = new[] { ClrTypeNames.String, "!0", "!1", KafkaConstants.ActionOfDeliveryReportTypeName },
+        ParameterTypes = new[] { ClrTypeNames.String, "!0", "!1", KafkaIntegration.ActionOfDeliveryReportTypeName },
         MinimumVersion = "1.4.0",
         MaximumVersion = "1.*.*",
-        Group = KafkaConstants.IntegrationName)]
+        Group = KafkaIntegration.Name)]
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class KafkaProduceSyncDeliveryHandlerIntegration
@@ -64,13 +64,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
                 // The OnMethodBegin and OnMethodEnd of this integration happens between KafkaProduceSyncIntegration.OnMethodBegin
                 // and KafkaProduceSyncIntegration.OnMethodEnd, so the consumer span is active for the duration of this integration
                 var span = agent.Tracer.CurrentSpan;
+				// span may be null when the Produce call is to an ignored topic.
 				if (span is null)
-                {
-                    agent.Logger.Error()?.Log("Unexpected null span for Kafka Producer with delivery handler");
-                    return CallTargetState.GetDefault();
-                }
+					return CallTargetState.GetDefault();
 
-                var newAction = CachedWrapperDelegate<TActionOfDeliveryReport>.CreateWrapper(handler, span);
+				var newAction = CachedWrapperDelegate<TActionOfDeliveryReport>.CreateWrapper(handler, span);
 
                 Action<ITypedDeliveryHandlerShimAction> updateHandlerAction = inst => inst.Handler = newAction;
 
@@ -126,18 +124,15 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         public static Action<TDeliveryReport> WrapAction<TDeliveryReport>(Action<TDeliveryReport> originalHandler, ISpan span) =>
 			value =>
 			{
-				var outcome = Outcome.Success;
-
 				if (value.TryDuckCast<IDeliveryReport>(out var report))
 				{
 					var isError = report?.Error is not null && report.Error.IsError;
 					if (isError)
 					{
-						// Set the error tags manually, as we don't have an exception + stack trace here
+						// Set the error manually, as we don't have an exception + stack trace here
 						// Should we create a stack trace manually?
 						var ex = new Exception(report.Error.ToString());
 						span.CaptureException(ex);
-						outcome = Outcome.Failure;
 					}
 
 					if (report?.Partition is not null)
@@ -155,7 +150,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 				}
 				finally
 				{
-					span.Outcome = outcome;
 					span.End();
 				}
 			};

@@ -27,7 +27,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         ParameterTypes = new string[0],
         MinimumVersion = "1.4.0",
         MaximumVersion = "1.*.*",
-        Group = KafkaConstants.IntegrationName)]
+        Group = KafkaIntegration.Name)]
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class KafkaConsumerDisposeIntegration
@@ -41,7 +41,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         public static CallTargetState OnMethodBegin<TTarget>(TTarget instance)
         {
             // If we are already in a consumer scope, close it.
-            KafkaHelper.CloseConsumerTransaction(Agent.Instance);
+            KafkaIntegration.CloseConsumerTransaction(Agent.Instance);
             return CallTargetState.GetDefault();
         }
 

@@ -25,10 +25,10 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         Type = "Confluent.Kafka.Producer`2",
         Method = "Produce",
         ReturnType = ClrTypeNames.Void,
-        ParameterTypes = new[] { KafkaConstants.TopicPartitionTypeName, KafkaConstants.MessageTypeName, KafkaConstants.ActionOfDeliveryReportTypeName },
+        ParameterTypes = new[] { KafkaIntegration.TopicPartitionTypeName, KafkaIntegration.MessageTypeName, KafkaIntegration.ActionOfDeliveryReportTypeName },
         MinimumVersion = "1.4.0",
         MaximumVersion = "1.*.*",
-        Group = KafkaConstants.IntegrationName)]
+        Group = KafkaIntegration.Name)]
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class KafkaProduceSyncIntegration
@@ -52,19 +52,16 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 
             // manually doing duck cast here so we have access to the _original_ TopicPartition type
             // as a generic parameter, for injecting headers
-			var span = KafkaHelper.CreateProducerSpan(
+			var span = KafkaIntegration.CreateProducerSpan(
                 agent,
                 topicPartition.DuckCast<ITopicPartition>(),
                 isTombstone: message.Value is null,
                 finishOnClose: deliveryHandler is null);
 
             if (span is not null)
-            {
-                KafkaHelper.TryInjectHeaders<TTopicPartition, TMessage>(agent, span, message);
-                return new CallTargetState(span);
-            }
+                KafkaIntegration.TryInjectHeaders<TTopicPartition, TMessage>(agent, span, message);
 
-            return CallTargetState.GetDefault();
+            return new CallTargetState(span);
         }
 
         /// <summary>
@@ -80,14 +77,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 			var span = state.Segment;
 			if (span is not null)
 			{
-				var outcome = Outcome.Success;
 				if (exception is not null)
-				{
-					outcome = Outcome.Failure;
 					span.CaptureException(exception);
-				}
 
-				span.Outcome = outcome;
 				span.End();
 			}
 
