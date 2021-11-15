@@ -23,6 +23,14 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.12.1]]
+==== 1.12.1
+
+[float]
+===== Bug fixes
+- {pull}1564[#1564] Failed sending event error with missing span.context.destination.service.name required field on older APM Servers (issue: {issue}1563[#1563])
+
+
 [[release-notes-1.12.0]]
 ==== 1.12.0
 
