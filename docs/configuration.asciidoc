@@ -109,14 +109,44 @@ In this case, set the agent log level with <<config-log-level,`ElasticApm:LogLev
 }
 ----
 
+[[configuration-for-windows-services]]
+=== Configuration for Windows Services
+
+Configuration for Windows services can be provided by setting environment variables for
+the specific Windows service in the Windows registry. With PowerShell
+
+[source,powershell]
+----
+$environment = [string[]]@(
+  "ELASTIC_APM_SERVER_URL=http://localhost:8200", <1>
+  "ELASTIC_APM_TRANSACTION_SAMPLE_RATE=1",
+  "ELASTIC_APM_ENVIRONMENT=Production",
+  "ELASTIC_APM_SERVICE_NAME=MyWindowsService")
+
+Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\<service-name> -Name Environment -Value $environment <2>
+----
+<1> define the environment variables to use for the Windows service
+<2> `<service-name>` is the name of the Windows service.
+
+The service must then be restarted for the change to take effect
+
+[source,powershell]
+----
+Restart-Service <service-name>
+----
+
 [[configuration-on-asp-net]]
 === Configuration on ASP.NET
 
 When monitoring ASP.NET applications the agent uses two sources of configuration:
-Web.config and environment variables.
-Web.config has precedence over environment variables which means that
+
+* Web.config `<appSettings>` section
+* Environment variables
+
+Web.config takes precedence over environment variables which means that
 the agent tries first to find a configuration option value by its key in Web.config.
-If it's not present, then the agent tries to look for it among environment variables. If it's not present, the agent falls back to the options default value.
+If it's not present, then the agent tries to look for it among environment variables.
+If it's not present, the agent falls back to the options default value.
 
 You can find the key of each configuration option
 in the `IConfiguration or Web.config key` column of the corresponding option's description.
