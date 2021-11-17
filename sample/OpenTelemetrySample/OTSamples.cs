@@ -3,8 +3,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using Elastic.Apm.Api;
@@ -13,7 +11,7 @@ namespace OpenTelemetrySample
 {
 	public class OTSamples
 	{
-		public void Sample1()
+		public static void Sample1()
 		{
 			var src = new ActivitySource("Test");
 
@@ -31,7 +29,7 @@ namespace OpenTelemetrySample
 		///  ---> OTSpan ---> ElasticSpan
 		/// </summary>
 		/// <param name="tracer"></param>
-		public void Sample2(ITracer tracer)
+		public static void Sample2(ITracer tracer)
 		{
 			var src = new ActivitySource("Test");
 
@@ -52,7 +50,7 @@ namespace OpenTelemetrySample
 		///                ---> ElasticSpan
 		/// </summary>
 		/// <param name="tracer"></param>
-		public void Sample3(ITracer tracer)
+		public static void Sample3(ITracer tracer)
 		{
 			var src = new ActivitySource("Test");
 
@@ -75,7 +73,7 @@ namespace OpenTelemetrySample
 		///                ---> ElasticSpan
 		/// </summary>
 		/// <param name="tracer"></param>
-		public void Sample4(ITracer tracer)
+		public static void Sample4(ITracer tracer)
 		{
 			var src = new ActivitySource("Test");
 
@@ -91,13 +89,13 @@ namespace OpenTelemetrySample
 			});
 		}
 
-		public void OneSpanWithAttributes()
+		public static void OneSpanWithAttributes()
 		{
 			var src = new ActivitySource("Test");
 			using (var activity = src.StartActivity("foo", ActivityKind.Server)) activity?.SetTag("foo", "bar");
 		}
 
-		public void TwoSpansWithAttributes()
+		public static void TwoSpansWithAttributes()
 		{
 			var src = new ActivitySource("Test");
 			using (var activity1 = src.StartActivity("foo", ActivityKind.Server))
@@ -107,7 +105,7 @@ namespace OpenTelemetrySample
 			}
 		}
 
-		public void SpanKindSample()
+		public static void SpanKindSample()
 		{
 			var src = new ActivitySource("Test");
 			using (var _ = src.StartActivity("SpanKindSample", ActivityKind.Server))

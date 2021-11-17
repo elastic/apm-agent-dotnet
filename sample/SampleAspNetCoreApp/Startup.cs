@@ -30,13 +30,6 @@ namespace SampleAspNetCoreApp
 		public void ConfigureServices(IServiceCollection services)
 		{
 			ConfigureServicesExceptMvc(services);
-#if  NET5_0
-
-			//
-			// services.AddOpenTelemetryTracing((builder) => builder
-			// 	.AddAspNetCoreInstrumentation());
-			//	.AddHttpClientInstrumentation());
-#endif
 			services.AddMvc();
 		}
 

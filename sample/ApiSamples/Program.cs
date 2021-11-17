@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -10,10 +10,6 @@ using System.Threading;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 
-#if NET5_0
-using OpenTelemetry.Trace;
-#endif
-
 namespace ApiSamples
 {
 	/// <summary>
@@ -23,54 +19,37 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-			Agent.Setup(new AgentComponents());
-#if NET5_0
-			ActivityMixedWithElasticApi();
-			//OpenTelemetryShim();
-			Console.ReadKey();
-#endif
+			if (args.Length == 1) //in case it's started with arguments, parse DistributedTracingData from them
+			{
+				var distributedTracingData = DistributedTracingData.TryDeserializeFromString(args[0]);
 
-		}
+				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {distributedTracingData}");
+				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", distributedTracingData);
 
-		public static void ActivityOnlySample()
-		{
+				try
+				{
+					transaction2.CaptureSpan("TestSpan", "TestSpanType", () => Thread.Sleep(200));
+				}
+				finally
+				{
+					transaction2.End();
+				}
 
-			var foo = new Activity("foo").Start();
-			var bar = new Activity("bar").Start();
+				Thread.Sleep(TimeSpan.FromSeconds(11));
+				WriteLineToConsole("About to exit");
+			}
+			else
+			{
+				WriteLineToConsole("Started");
+				PassDistributedTracingData();
 
-			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+				//WIP: if the process terminates the agent
+				//potentially does not have time to send the transaction to the server.
+				Thread.Sleep(TimeSpan.FromSeconds(11));
 
-
-			bar.Stop();
-			foo.Stop();
-		}
-
-
-#if NET5_0
-		public static void OpenTelemetryShim()
-		{
-			var tracer = TracerProvider.Default.GetTracer("MyTracer", "1");
-			var fooSpan = tracer.StartActiveSpan("fooSpanWithShim");
-
-			var barSpan = tracer.StartActiveSpan("barSpanWithShim");
-			fooSpan.End();
-			barSpan.End();
-		}
-#endif
-
-		public static void ActivityMixedWithElasticApi()
-		{
-			var t = Agent.Tracer.StartTransaction("ElasticTransaction", "test");
-
-			var fooActivity = new Activity("fooActivity").Start();
-
-			var elasticSpan = Agent.Tracer.CurrentSpan.StartSpan("ElasticSpan", "test");
-			var barActivity = new Activity("barActivity").Start();
-
-			barActivity.Stop();
-			elasticSpan.End();
-			fooActivity.Stop();
-			t.End();
+				WriteLineToConsole("About to exit - press any key...");
+				Console.ReadKey();
+			}
 		}
 
 		public static void SampleCustomTransaction()
@@ -285,7 +264,9 @@ namespace ApiSamples
 					{
 						span.Context.Db = new Database
 						{
-							Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, Instance = "MyInstance"
+							Statement = "GET /_all/_search?q=tag:wow",
+							Type = Database.TypeElasticsearch,
+							Instance = "MyInstance"
 						};
 					});
 			});

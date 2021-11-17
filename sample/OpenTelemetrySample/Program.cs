@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Elastic.Apm;
 
 namespace OpenTelemetrySample
@@ -6,14 +6,14 @@ namespace OpenTelemetrySample
 	internal class Program
 	{
 		// ReSharper disable once ArrangeTypeMemberModifiers
-		static void Main(string[] args)
+		private static void Main(string[] args)
 		{
 			Agent.Setup(new AgentComponents());
-			new OTSamples().Sample1();
-			new OTSamples().Sample2(Agent.Tracer);
-			new OTSamples().Sample3(Agent.Tracer);
-			new OTSamples().Sample4(Agent.Tracer);
-			new OTSamples().SpanKindSample();
+			OTSamples.Sample1();
+			OTSamples.Sample2(Agent.Tracer);
+			OTSamples.Sample3(Agent.Tracer);
+			OTSamples.Sample4(Agent.Tracer);
+			OTSamples.SpanKindSample();
 
 			Console.ReadKey();
 		}

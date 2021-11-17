@@ -20,7 +20,7 @@ namespace Elastic.Apm.Tests
 		public void MixApisTest1()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) new OTSamples().Sample2(agent.Tracer);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.Sample2(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample2");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -43,7 +43,7 @@ namespace Elastic.Apm.Tests
 		public void MixApisTest2()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) new OTSamples().Sample3(agent.Tracer);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.Sample3(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample3");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -61,7 +61,7 @@ namespace Elastic.Apm.Tests
 		public void MixApisTest3()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) new OTSamples().Sample4(agent.Tracer);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.Sample4(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample4");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -79,7 +79,7 @@ namespace Elastic.Apm.Tests
 		public void TestOtelFieldsWith1Span()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) new OTSamples().OneSpanWithAttributes();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.OneSpanWithAttributes();
 
 			payloadSender.FirstTransaction.Name.Should().Be("foo");
 			payloadSender.FirstTransaction.Otel.Should().NotBeNull();
@@ -92,7 +92,7 @@ namespace Elastic.Apm.Tests
 		public void TestOtelFieldsWith3Spans()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) new OTSamples().TwoSpansWithAttributes();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.TwoSpansWithAttributes();
 
 			payloadSender.FirstTransaction.Name.Should().Be("foo");
 			payloadSender.FirstTransaction.Otel.Should().NotBeNull();
@@ -111,7 +111,7 @@ namespace Elastic.Apm.Tests
 		public void SpanKindTests()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) new OTSamples().SpanKindSample();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.SpanKindSample();
 
 			payloadSender.FirstSpan.Type.Should().Be(ApiConstants.TypeExternal);
 			payloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
