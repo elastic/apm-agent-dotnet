@@ -15,7 +15,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		public const string ApmTransactionActivityName = "ElasticApm.Transaction";
 
 
-		public static List<string> KnownListenersList => new()
+		public static HashSet<string> KnownListenersList => new()
 		{
 			MicrosoftAspNetCoreHostingHttpRequestIn, SystemNetHttpHttpRequestOut, SystemNetHttpDesktopHttpRequestOut,
 			ApmTransactionActivityName

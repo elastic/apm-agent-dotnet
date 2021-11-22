@@ -28,14 +28,14 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			_logger = agent.Logger?.Scoped(nameof(ElasticActivityListener));
 			_tracer = tracerInternal;
-			listener = new ActivityListener
+			Listener = new ActivityListener
 			{
 				ActivityStarted = ActivityStarted,
 				ActivityStopped = ActivityStopped,
 				ShouldListenTo = _ => true,
 				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
 			};
-			ActivitySource.AddActivityListener(listener);
+			ActivitySource.AddActivityListener(Listener);
 		}
 
 		private readonly IApmLogger _logger;
@@ -116,55 +116,67 @@ namespace Elastic.Apm.OpenTelemetry
 				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
 					return;
 
-				if (activity.Id != null && ActiveTransactions.TryRemove(activity.Id, out var transaction))
+				if (activity.Id != null)
 				{
-					transaction.Duration = activity.Duration.TotalMilliseconds;
+					if (ActiveTransactions.TryRemove(activity.Id, out var transaction))
+					{
+						transaction.Duration = activity.Duration.TotalMilliseconds;
 
-					if (activity.Tags.Any())
-						transaction.Otel.Attributes = new Dictionary<string, string>();
+						if (activity.Tags.Any())
+							transaction.Otel.Attributes = new Dictionary<string, string>();
 
-					foreach (var tag in activity.Tags) transaction.Otel.Attributes.Add(tag.Key, tag.Value);
-					transaction.End();
-				}
+						foreach (var tag in activity.Tags) transaction.Otel.Attributes.Add(tag.Key, tag.Value);
+						transaction.End();
+					}
+					else if (ActiveSpans.TryRemove(activity.Id, out var span))
+					{
+						span.Duration = activity.Duration.TotalMilliseconds;
 
-				if (activity.Id != null && ActiveSpans.TryRemove(activity.Id, out var span))
-				{
-					span.Duration = activity.Duration.TotalMilliseconds;
+						if (activity.Tags.Any())
+							span.Otel.Attributes = new Dictionary<string, string>();
 
-					if (activity.Tags.Any())
-						span.Otel.Attributes = new Dictionary<string, string>();
+						foreach (var tag in activity.Tags) span.Otel.Attributes.Add(tag.Key, tag.Value);
 
-					foreach (var tag in activity.Tags) span.Otel.Attributes.Add(tag.Key, tag.Value);
-
-					InferSpanTypeAndSubType(span, activity);
-					span.End();
+						InferSpanTypeAndSubType(span, activity);
+						span.End();
+					}
 				}
 			};
 
-		public ActivityListener listener { get; }
+		public ActivityListener Listener { get; }
 
 		private void InferSpanTypeAndSubType(Span span, Activity activity)
 		{
-			if (activity.Kind == ActivityKind.Client && activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
+			if (activity.Kind == ActivityKind.Client)
 			{
-				span.Type = ApiConstants.TypeExternal;
-				span.Subtype = ApiConstants.SubtypeHttp;
+				if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
+				{
+					span.Type = ApiConstants.TypeExternal;
+					span.Subtype = ApiConstants.SubtypeHttp;
+				}
+				else if (activity.Tags.Any(n => n.Key == "db.system"))
+				{
+					span.Type = ApiConstants.TypeDb;
+					span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
+				}
+				else if (activity.Tags.Any(n => n.Key == "rpc.system"))
+				{
+					span.Type = ApiConstants.TypeExternal;
+					span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
+				}
+				else if (activity.Kind == ActivityKind.Client)
+				{
+					span.Type = ApiConstants.TypeMessaging;
+					span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+				}
 			}
-			else if (activity.Kind == ActivityKind.Client && activity.Tags.Any(n => n.Key == "db.system"))
+			else if (activity.Kind == ActivityKind.Consumer)
 			{
-				span.Type = ApiConstants.TypeDb;
-				span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
-			}
-			else if (activity.Kind == ActivityKind.Client && activity.Tags.Any(n => n.Key == "rpc.system"))
-			{
-				span.Type = ApiConstants.TypeExternal;
-				span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
-			}
-			else if (activity.Kind == ActivityKind.Client
-				|| activity.Kind == ActivityKind.Consumer && activity.Tags.Any(n => n.Key == "messaging.system"))
-			{
-				span.Type = ApiConstants.TypeMessaging;
-				span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+				if (activity.Tags.Any(n => n.Key == "messaging.system"))
+				{
+					span.Type = ApiConstants.TypeMessaging;
+					span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+				}
 			}
 		}
 	}
