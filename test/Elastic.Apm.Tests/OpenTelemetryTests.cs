@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 #if NET5_0
+using System;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
@@ -13,14 +14,14 @@ using Xunit;
 
 namespace Elastic.Apm.Tests
 {
-
 	public class OpenTelemetryTests
 	{
 		[Fact]
 		public void MixApisTest1()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.Sample2(agent.Tracer);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample2(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample2");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -43,7 +44,8 @@ namespace Elastic.Apm.Tests
 		public void MixApisTest2()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.Sample3(agent.Tracer);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample3(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample3");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -61,7 +63,8 @@ namespace Elastic.Apm.Tests
 		public void MixApisTest3()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.Sample4(agent.Tracer);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample4(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample4");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -79,7 +82,8 @@ namespace Elastic.Apm.Tests
 		public void TestOtelFieldsWith1Span()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.OneSpanWithAttributes();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.OneSpanWithAttributes();
 
 			payloadSender.FirstTransaction.Name.Should().Be("foo");
 			payloadSender.FirstTransaction.Otel.Should().NotBeNull();
@@ -92,7 +96,8 @@ namespace Elastic.Apm.Tests
 		public void TestOtelFieldsWith3Spans()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.TwoSpansWithAttributes();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.TwoSpansWithAttributes();
 
 			payloadSender.FirstTransaction.Name.Should().Be("foo");
 			payloadSender.FirstTransaction.Otel.Should().NotBeNull();
@@ -111,7 +116,8 @@ namespace Elastic.Apm.Tests
 		public void SpanKindTests()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) OTSamples.SpanKindSample();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.SpanKindSample();
 
 			payloadSender.FirstSpan.Type.Should().Be(ApiConstants.TypeExternal);
 			payloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
@@ -124,6 +130,17 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Spans.ElementAt(3).Type.Should().Be(ApiConstants.TypeMessaging);
 			payloadSender.Spans.ElementAt(3).Subtype.Should().Be("rabbitmq");
+		}
+
+		[Fact]
+		public void DisableOTelBridgeTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "false")))) OTSamples.Sample1();
+
+			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
+			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 	}
 }

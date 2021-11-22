@@ -77,7 +77,8 @@ namespace Elastic.Apm
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 
 #if NET5_0
-				new OpenTelemetry.ElasticActivityListener(this, TracerInternal);
+				if(ConfigurationReader.EnableOpenTelemetryBridge)
+					new OpenTelemetry.ElasticActivityListener(this, TracerInternal);
 #endif
 			}
 			catch (Exception e)

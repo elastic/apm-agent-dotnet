@@ -26,6 +26,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _description;
 		private readonly string _disableMetrics;
 		private readonly string _enabled;
+		private readonly string _enableOpenTelemetryBridge;
 		private readonly string _environment;
 		private readonly string _excludedNamespaces;
 		private readonly string _flushInterval;
@@ -66,6 +67,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string captureHeaders = null,
 			string centralConfig = null,
 			string description = null,
+			string enableOpenTelemetryBridge = null,
 			string transactionSampleRate = null,
 			string transactionMaxSpans = null,
 			string metricsInterval = null,
@@ -106,6 +108,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_captureHeaders = captureHeaders;
 			_centralConfig = centralConfig;
 			_description = description;
+			_enableOpenTelemetryBridge = enableOpenTelemetryBridge;
 			_transactionSampleRate = transactionSampleRate;
 			_transactionMaxSpans = transactionMaxSpans;
 			_metricsInterval = metricsInterval;
@@ -226,5 +229,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public bool VerifyServerCert =>
 			ParseVerifyServerCert(Kv(EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));
+
+		public bool EnableOpenTelemetryBridge =>
+			ParseEnableOpenTelemetryBridge(Kv(EnvVarNames.EnableOpenTelemetryBridge, _enableOpenTelemetryBridge, Origin));
 	}
 }

@@ -25,6 +25,7 @@ namespace Elastic.Apm.Config
 			public const bool CaptureHeaders = true;
 			public const bool CentralConfig = true;
 			public const string CloudProvider = SupportedValues.CloudProviderAuto;
+			public const bool EnableOpenTelemetryBridge = false;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
 			public const LogLevel LogLevel = Logging.LogLevel.Error;
 			public const int MaxBatchEventCount = 10;
@@ -119,6 +120,7 @@ namespace Elastic.Apm.Config
 			public const string CloudProvider = Prefix + "CLOUD_PROVIDER";
 			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
 			public const string Enabled = Prefix + "ENABLED";
+			public const string EnableOpenTelemetryBridge = "ENABLEOPENTELEMETRYBRIDGE";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
@@ -164,6 +166,7 @@ namespace Elastic.Apm.Config
 			public const string DisableMetrics = Prefix + nameof(DisableMetrics);
 			public const string Enabled = Prefix + nameof(Enabled);
 			public const string Environment = Prefix + nameof(Environment);
+			public const string EnableOpenTelemetryBridge = nameof(EnableOpenTelemetryBridge);
 			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
 			//This setting is Full Framework only:
