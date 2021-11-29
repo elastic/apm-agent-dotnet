@@ -73,8 +73,8 @@ namespace Elastic.Apm.Api
 			/// Identifier for the destination service (e.g. 'http://elastic.co', 'elasticsearch', 'rabbitmq')"
 			/// </summary>
 			[MaxLength]
-			[Obsolete("This field will be removed in future versions")]
-			public string Name { get; set; }
+			[Obsolete("This field is unused by Elastic APM and will be removed in a future version")]
+			public string Name { get; set; } = string.Empty;
 
 			/// <summary>
 			/// Identifier for the destination service resource being operated on (e.g. 'http://elastic.co:80', 'elasticsearch',
@@ -87,8 +87,8 @@ namespace Elastic.Apm.Api
 			/// Type of the destination service (e.g. 'db', 'elasticsearch'). Should typically be the same as span.type.
 			/// </summary>
 			[MaxLength]
-			[Obsolete("This field will be removed in future versions")]
-			public string Type { get; set; }
+			[Obsolete("This field is unused by Elastic APM and will be removed in a future version")]
+			public string Type { get; set; } = string.Empty;
 		}
 
 		/// <summary>

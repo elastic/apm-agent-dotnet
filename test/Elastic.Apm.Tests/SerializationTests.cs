@@ -463,6 +463,15 @@ namespace Elastic.Apm.Tests
 			detectedHostName.Should().NotBeNull();
 		}
 
+		[Fact]
+		public void SpanContext_Destination_Service_Should_Serialize_Name_And_Type_As_Empty_String_By_Default()
+		{
+			var destinationService = new Destination.DestinationService();
+
+			var json = _payloadItemSerializer.Serialize(destinationService);
+			json.Should().Contain("\"name\":\"\"").And.Contain("\"type\":\"\"");
+		}
+
 		/// <summary>
 		/// A dummy type for tests.
 		/// </summary>

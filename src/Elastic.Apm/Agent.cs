@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -162,8 +163,12 @@ namespace Elastic.Apm
 		public static void Setup(AgentComponents agentComponents)
 		{
 			if (LazyApmAgent.IsValueCreated)
-				agentComponents?.Logger?.Error()?.Log("The singleton APM agent has" +
-					" already been instantiated and can no longer be configured. Reusing existing instance");
+				agentComponents?.Logger?.Error()
+					?.Log("The singleton APM agent has" +
+						" already been instantiated and can no longer be configured. Reusing existing instance");
+
+			agentComponents?.Logger?.Trace()
+				?.Log("Initialization - Agent.Setup called. Callstack: {callstack}", new StackTrace().ToString());
 
 			Components = agentComponents;
 			_isConfigured = true;
