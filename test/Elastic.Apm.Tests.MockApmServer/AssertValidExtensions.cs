@@ -259,9 +259,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 		internal static void AssertValid(this Destination thisObj)
 		{
 			thisObj.Should().NotBeNull();
-
-			thisObj.Address.Should().NotBeNullOrEmpty();
-			thisObj.Address.AssertValid();
+      
+			thisObj.Address?.AssertValid();
 			thisObj.Port?.Should().BeGreaterOrEqualTo(0);
 		}
 

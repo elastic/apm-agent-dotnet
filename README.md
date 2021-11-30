@@ -24,6 +24,7 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 | `Elastic.Apm.MongoDb` | Integration with the MongoDb.Driver driver for MongoDb. | [![NuGet Release][Elastic.Apm.MongoDb-image]][Elastic.Apm.MongoDb-nuget-url] |
 | `Elastic.Apm.Azure.ServiceBus` | Integration with Azure ServiceBus | [![NuGet Release][Elastic.Apm.Azure.ServiceBus-image]][Elastic.Apm.Azure.ServiceBus-nuget-url] |
 | `Elastic.Apm.Azure.Storage` | Integration with Azure Storage | [![NuGet Release][Elastic.Apm.Azure.Storage-image]][Elastic.Apm.Azure.Storage-nuget-url] |
+| `Elastic.Apm.Azure.CosmosDb` | Integration with Azure CosmosDB | [![NuGet Release][Elastic.Apm.Azure.CosmosDb-image]][Elastic.Apm.Azure.CosmosDb-nuget-url] |
 
 ## Documentation
 
@@ -124,3 +125,7 @@ https://img.shields.io/nuget/v/Elastic.Apm.Azure.ServiceBus.svg
 [Elastic.Apm.Azure.Storage-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Azure.Storage/
 [Elastic.Apm.Azure.Storage-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.Azure.Storage.svg
+
+[Elastic.Apm.Azure.CosmosDb-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Azure.CosmosDb/
+[Elastic.Apm.Azure.CosmosDb-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.Azure.CosmosDb.svg

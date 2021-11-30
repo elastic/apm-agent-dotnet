@@ -23,6 +23,48 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.12.1]]
+==== 1.12.1
+
+[float]
+===== Bug fixes
+- {pull}1564[#1564] Failed sending event error with missing span.context.destination.service.name required field on older APM Servers (issue: {issue}1563[#1563])
+
+
+[[release-notes-1.12.0]]
+==== 1.12.0
+
+[float]
+===== Breaking changes
+
+- {pull}1520[#1520] Auto-infer destination.service.resource and adapt public API (issues: {issue}1330[#1330])
++
+`boolean` `isExitSpan` parameter introduced to Start* and Capture* public APIs to denote when a span
+is an exit span.
+
+[float]
+===== Features
+
+- {pull}1511[#1511] Implement Dropped span statistics
+- {pull}1515[#1515] Ignore duplicate Diagnostic listener subscriptions (issue: {issue}1119[#1119])
+- {pull}1518[#1518] Implement User-Agent spec for .NET agent (issue: #1517)
+- {pull}1525[#1525] Add message related properties to transactions and spans (issue: {issue}1512[#1512])
+- {pull}1534[#1534] Add profiler auto instrumentation (issue: {issue}1522[#1522])
+- {pull}1548[#1548] Add profiler auto instrumentation for RabbitMQ (issue: {issue}1223[#1223])
+- {pull}1528[#1528] Platform detection: Handle .NET 6 (issue: {issue}1513[#1513])
+- {pull}1492[#1492] Remove use of Socket.Encrypted to determine secure
+- {pull}1520[#1520] Auto-infer destination.service.resource and adapt public API (issues: {issue}1330[#1330])
+- {pull}1540[#1540] Stop recording transaction metrics (issue: {issue}1523[#1523])
+
+[float]
+===== Bug fixes
+
+- {pull}1484[#1484] Capture spans for new Azure Storage SDKs (issue: {issue}1352[#1352])
+- {pull}1509[#1509] Use Environment.MachineName to get HostName (issue: {issue}1504[#1504])
+- {pull}1510[#1510] Check context is not null when sanitizing error request headers (issue: {issue}1503[#1503])
+- {pull}1536[#1536] Improve Performance counter handling for metrics on Windows (issue: {issue}1505[#1505])
+- {pull}1538[#1538] Collect .NET Framework GC metrics only when filtering supported (issue: {issue}1346[#1346])
+- {pull}1557[#1557] Handle enabled/recording=false configuration when capturing errors
 
 [[release-notes-1.11.1]]
 ==== 1.11.1

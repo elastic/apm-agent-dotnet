@@ -51,15 +51,22 @@ With the `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscriber
 
 In the case of ASP.NET Core, when you turn on the agent with the `UseAllElasticApm` method, the agent will do this automatically.
 
-With a typical console application, you need to do this manually.
+With a typical console application, you need to do this manually by
+calling `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method somewhere in your application, ideally in
+the startup code.
 
 `IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources in order to capture events automatically.
 
 Some examples:
 
-- `HttpDiagnosticsSubscriber`: captures HTTP calls through `HttpClient`
-- `EfCoreDiagnosticsSubscriber`: captures database calls through Entity Framework Core
-- `SqlClientDiagnosticSubscriber`: captures database calls through `SqlClient` 
+* [[setup-http]]`HttpDiagnosticsSubscriber`: captures HTTP calls through `HttpClient` and `HttpWebRequest`
++
+[source,csharp]
+----
+Agent.Subscribe(new HttpDiagnosticsSubscriber());
+----
+* `EfCoreDiagnosticsSubscriber`: captures database calls through Entity Framework Core
+* `SqlClientDiagnosticSubscriber`: captures database calls through `SqlClient` 
 
 [NOTE]
 --

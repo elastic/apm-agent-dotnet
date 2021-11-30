@@ -10,7 +10,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -23,7 +23,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -37,7 +37,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -51,7 +51,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -64,7 +64,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -77,7 +77,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
 - name: AspNet
@@ -93,7 +93,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AspNet.ElasticApmModuleIntegration
       action: CallTargetModification
 - name: Kafka
@@ -107,7 +107,7 @@
       minimum_version: 1.4.0
       maximum_version: 1.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerCloseIntegration
       action: CallTargetModification
   - target:
@@ -120,7 +120,7 @@
       minimum_version: 1.4.0
       maximum_version: 1.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerConsumeIntegration
       action: CallTargetModification
   - target:
@@ -132,7 +132,7 @@
       minimum_version: 1.4.0
       maximum_version: 1.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerDisposeIntegration
       action: CallTargetModification
   - target:
@@ -144,7 +144,7 @@
       minimum_version: 1.4.0
       maximum_version: 1.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaConsumerUnsubscribeIntegration
       action: CallTargetModification
   - target:
@@ -159,7 +159,7 @@
       minimum_version: 1.4.0
       maximum_version: 1.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaProduceAsyncIntegration
       action: CallTargetModification
   - target:
@@ -175,7 +175,7 @@
       minimum_version: 1.4.0
       maximum_version: 1.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaProduceSyncDeliveryHandlerIntegration
       action: CallTargetModification
   - target:
@@ -190,7 +190,7 @@
       minimum_version: 1.4.0
       maximum_version: 1.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.Kafka.KafkaProduceSyncIntegration
       action: CallTargetModification
 - name: MySqlCommand
@@ -205,7 +205,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -217,7 +217,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -230,7 +230,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -243,7 +243,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -255,7 +255,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -269,7 +269,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -283,7 +283,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -296,7 +296,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -309,7 +309,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -322,7 +322,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -334,7 +334,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -347,7 +347,7 @@
       minimum_version: 6.7.0
       maximum_version: 8.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
 - name: NpgsqlCommand
@@ -362,7 +362,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -374,7 +374,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -387,7 +387,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -400,7 +400,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -412,7 +412,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -426,7 +426,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -440,7 +440,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -453,7 +453,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -466,7 +466,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -479,7 +479,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -491,7 +491,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -504,7 +504,7 @@
       minimum_version: 4.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
 - name: OracleCommand
@@ -519,7 +519,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -532,7 +532,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -544,7 +544,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -556,7 +556,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -569,7 +569,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -582,7 +582,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -595,7 +595,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -608,7 +608,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -620,7 +620,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -632,7 +632,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -646,7 +646,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -660,7 +660,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -674,7 +674,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -688,7 +688,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -701,7 +701,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -714,7 +714,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -727,7 +727,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -740,7 +740,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -753,7 +753,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -766,7 +766,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -778,7 +778,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -790,7 +790,7 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -803,7 +803,7 @@
       minimum_version: 4.122.0
       maximum_version: 4.122.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -816,8 +816,60 @@
       minimum_version: 2.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
+      action: CallTargetModification
+- name: RabbitMQ
+  method_replacements:
+  - target:
+      assembly: RabbitMQ.Client
+      type: RabbitMQ.Client.Events.EventingBasicConsumer
+      method: HandleBasicDeliver
+      signature_types:
+      - System.Void
+      - System.String
+      - System.UInt64
+      - System.Boolean
+      - System.String
+      - System.String
+      - RabbitMQ.Client.IBasicProperties
+      - _
+      minimum_version: 3.6.9
+      maximum_version: 6.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.RabbitMq.BasicDeliverIntegration
+      action: CallTargetModification
+  - target:
+      assembly: RabbitMQ.Client
+      type: RabbitMQ.Client.Impl.ModelBase
+      method: BasicGet
+      signature_types:
+      - RabbitMQ.Client.BasicGetResult
+      - System.String
+      - System.Boolean
+      minimum_version: 3.6.9
+      maximum_version: 6.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.RabbitMq.BasicGetIntegration
+      action: CallTargetModification
+  - target:
+      assembly: RabbitMQ.Client
+      type: RabbitMQ.Client.Framing.Impl.Model
+      method: _Private_BasicPublish
+      signature_types:
+      - System.Void
+      - System.String
+      - System.String
+      - System.Boolean
+      - RabbitMQ.Client.IBasicProperties
+      - _
+      minimum_version: 3.6.9
+      maximum_version: 6.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.RabbitMq.BasicPublishIntegration
       action: CallTargetModification
 - name: SqlCommand
   method_replacements:
@@ -831,7 +883,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -844,7 +896,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -857,7 +909,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -869,7 +921,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -881,7 +933,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -893,7 +945,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -906,7 +958,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -919,7 +971,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -932,7 +984,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -945,7 +997,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -958,7 +1010,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -971,7 +1023,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -983,7 +1035,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -995,7 +1047,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -1007,7 +1059,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -1021,7 +1073,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1035,7 +1087,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1049,7 +1101,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1063,7 +1115,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1077,7 +1129,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1091,7 +1143,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1104,7 +1156,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1117,7 +1169,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1130,7 +1182,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1143,7 +1195,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1156,7 +1208,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1169,7 +1221,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1182,7 +1234,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1195,7 +1247,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1208,7 +1260,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1220,7 +1272,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -1232,7 +1284,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -1244,7 +1296,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -1257,7 +1309,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1270,7 +1322,7 @@
       minimum_version: 4.0.0
       maximum_version: 4.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1283,7 +1335,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
 - name: SqliteCommand
@@ -1298,7 +1350,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1311,7 +1363,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1323,7 +1375,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -1335,7 +1387,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
@@ -1348,7 +1400,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1361,7 +1413,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1374,7 +1426,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1387,7 +1439,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1399,7 +1451,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -1411,7 +1463,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
       action: CallTargetModification
   - target:
@@ -1425,7 +1477,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1439,7 +1491,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1453,7 +1505,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1466,7 +1518,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1479,7 +1531,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1492,7 +1544,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1505,7 +1557,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1518,7 +1570,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
       action: CallTargetModification
   - target:
@@ -1530,7 +1582,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -1542,7 +1594,7 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
       action: CallTargetModification
   - target:
@@ -1555,7 +1607,7 @@
       minimum_version: 2.0.0
       maximum_version: 5.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
   - target:
@@ -1568,6 +1620,6 @@
       minimum_version: 1.0.0
       maximum_version: 2.*.*
     wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.11.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.12.1.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification

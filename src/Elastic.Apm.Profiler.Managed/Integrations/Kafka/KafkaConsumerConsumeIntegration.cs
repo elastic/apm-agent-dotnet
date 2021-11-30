@@ -24,11 +24,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         Assembly = "Confluent.Kafka",
         Type = "Confluent.Kafka.Consumer`2",
         Method = "Consume",
-        ReturnType = KafkaConstants.ConsumeResultTypeName,
+        ReturnType = KafkaIntegration.ConsumeResultTypeName,
         ParameterTypes = new[] { ClrTypeNames.Int32 },
         MinimumVersion = "1.4.0",
         MaximumVersion = "1.*.*",
-        Group = KafkaConstants.IntegrationName)]
+        Group = KafkaIntegration.Name)]
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class KafkaConsumerConsumeIntegration
@@ -43,7 +43,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
         public static CallTargetState OnMethodBegin<TTarget>(TTarget instance, int millisecondsTimeout)
         {
             // If we are already in a consumer scope, close it, and start a new one on method exit.
-            KafkaHelper.CloseConsumerTransaction(Agent.Instance);
+            KafkaIntegration.CloseConsumerTransaction(Agent.Instance);
             return CallTargetState.GetDefault();
         }
 
@@ -69,11 +69,9 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 
 			if (consumeResult is not null)
 			{
-				var outcome = Outcome.Success;
-
-                // This creates the transaction and either disposes it immediately
-                // or disposes it on the next call to Consumer.Consume()
-                var transaction = KafkaHelper.CreateConsumerTransaction(
+				// creates a transaction and ends it on the next call to any of
+				// Consumer.Consume(), Consumer.Close() Consumer.Dispose() or Consumer.Unsubscribe() call
+                var transaction = KafkaIntegration.CreateConsumerTransaction(
                     Agent.Instance,
                     consumeResult.Topic,
                     consumeResult.Partition,
@@ -81,18 +79,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
                     consumeResult.Message);
 
 				if (exception is not null)
-				{
-					outcome = Outcome.Failure;
 					transaction.CaptureException(exception);
-				}
-
-				transaction.Outcome = outcome;
-
-				// if (!Agent.Instance.ConfigurationReader.KafkaCreateConsumerScopeEnabled)
-				// {
-				//     // Close and dispose the transaction immediately
-				//     transaction.End();
-				// }
 			}
 
             return new CallTargetReturn<TResponse>(response);
