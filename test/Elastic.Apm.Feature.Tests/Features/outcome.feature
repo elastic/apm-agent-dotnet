@@ -1,56 +1,60 @@
 Feature: Outcome
 
+  Background: An agent with default configuration
+    Given an agent
+
   # ---- user set outcome
 
   Scenario: User set outcome on span has priority over instrumentation
-    Given an agent
-    And an active span
-    And user sets span outcome to 'failure'
-    And span terminates with outcome 'success'
-    Then span outcome is 'failure'
+    Given an active span
+    And the agent sets the span outcome to 'success'
+    And a user sets the span outcome to 'failure'
+    When the span ends
+    Then the span outcome is 'failure'
 
   Scenario: User set outcome on transaction has priority over instrumentation
-    Given an agent
-    And an active transaction
-    And user sets transaction outcome to 'unknown'
-    And transaction terminates with outcome 'failure'
-    Then transaction outcome is 'unknown'
+    Given an active transaction
+    And the agent sets the transaction outcome to 'failure'
+    And a user sets the transaction outcome to 'unknown'
+    When the transaction ends
+    Then the transaction outcome is 'unknown'
 
   # ---- span & transaction outcome from reported errors
 
   Scenario: span with error
-    Given an agent
-    And an active span
-    And span terminates with an error
-    Then span outcome is 'failure'
+    Given an active span
+    And an error is reported to the span
+    When the span ends
+    Then the span outcome is 'failure'
 
   Scenario: span without error
-    Given an agent
-    And an active span
-    And span terminates without error
-    Then span outcome is 'success'
+    Given an active span
+    When the span ends
+    Then the span outcome is 'success'
 
   Scenario: transaction with error
-    Given an agent
-    And an active transaction
-    And transaction terminates with an error
-    Then transaction outcome is 'failure'
+    Given an active transaction
+    And an error is reported to the transaction
+    When the transaction ends
+    Then the transaction outcome is 'failure'
 
   Scenario: transaction without error
-    Given an agent
-    And an active transaction
-    And transaction terminates without error
-    Then transaction outcome is 'success'
+    Given an active transaction
+    When the transaction ends
+    Then the transaction outcome is 'success'
 
   # ---- HTTP
 
   @http
   Scenario Outline: HTTP transaction and span outcome
-    Given an agent
-    And an HTTP transaction with <status> response code
-    Then transaction outcome is "<server>"
-    Given an HTTP span with <status> response code
-    Then span outcome is "<client>"
+    Given an active transaction 
+    And a HTTP call is received that returns <status>
+    When the transaction ends
+    Then the transaction outcome is '<server>'
+    Given an active span 
+    And a HTTP call is made that returns <status>
+    When the span ends
+    Then the span outcome is '<client>'
     Examples:
       | status | client  | server  |
       | 100    | success | success |
@@ -69,11 +73,14 @@ Feature: Outcome
 
   @grpc
   Scenario Outline: gRPC transaction and span outcome
-    Given an agent
-    And a gRPC transaction with '<status>' status
-    Then transaction outcome is "<server>"
-    Given a gRPC span with '<status>' status
-    Then span outcome is "<client>"
+    Given an active transaction
+    And a gRPC call is received that returns '<status>'
+    When the transaction ends
+    Then the transaction outcome is '<server>'
+    Given an active span
+    And a gRPC call is made that returns '<status>'
+    When the span ends
+    Then the span outcome is '<client>'
     Examples:
       | status              | client  | server  |
       | OK                  | success | success |
