@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+#if  NET5_0
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+#endif
 using SampleAspNetCoreApp.Data;
 
 namespace SampleAspNetCoreApp

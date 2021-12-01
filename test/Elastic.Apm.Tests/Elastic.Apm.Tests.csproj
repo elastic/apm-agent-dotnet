@@ -44,6 +44,10 @@
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+    <ProjectReference Include="..\..\sample\OpenTelemetrySample\OpenTelemetrySample.csproj" />
+  </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />

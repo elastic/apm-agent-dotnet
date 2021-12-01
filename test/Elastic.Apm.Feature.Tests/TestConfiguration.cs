@@ -56,5 +56,6 @@ namespace Elastic.Apm.Feature.Tests
 		public double TransactionSampleRate { get; set; } = DefaultValues.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader { get; set; } = DefaultValues.UseElasticTraceparentHeader;
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
+		public bool EnableOpenTelemetryBridge { get; set; }
 	}
 }

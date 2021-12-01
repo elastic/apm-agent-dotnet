@@ -72,6 +72,8 @@ namespace Elastic.Apm.Tests
 
 			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
 
+			public bool EnableOpenTelemetryBridge => ConfigConsts.DefaultValues.EnableOpenTelemetryBridge;
+
 			public bool TraceContextIgnoreSampledFalse => ConfigConsts.DefaultValues.TraceContextIgnoreSampledFalse;
 
 			public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;

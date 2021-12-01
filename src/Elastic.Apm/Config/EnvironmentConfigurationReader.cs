@@ -122,6 +122,7 @@ namespace Elastic.Apm.Config
 		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
 
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
+		public bool EnableOpenTelemetryBridge => ParseEnableOpenTelemetryBridge(Read(ConfigConsts.EnvVarNames.EnableOpenTelemetryBridge));
 
 		public bool TraceContextIgnoreSampledFalse => ParseTraceContextIgnoreSampledFalse(Read(ConfigConsts.EnvVarNames.TraceContextIgnoreSampledFalse));
 		private ConfigurationKeyValue Read(string key) =>

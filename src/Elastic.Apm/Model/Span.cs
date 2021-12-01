@@ -57,12 +57,13 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
 			bool captureStackTraceOnStart = false,
 			long? timestamp = null,
-			bool isExitSpan = false
+			bool isExitSpan = false,
+			string id = null
 		)
 		{
 			InstrumentationFlag = instrumentationFlag;
 			Timestamp = timestamp ?? TimeUtils.TimestampNow();
-			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
+			Id = id ?? RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
 
 			_payloadSender = payloadSender;
@@ -279,8 +280,9 @@ namespace Elastic.Apm.Model
 			return false;
 		}
 
+		public OTel Otel { get; set; }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false)
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null,  bool isExitSpan = false)
 		{
 			if (Configuration.Enabled && Configuration.Recording)
 				return StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan);
@@ -289,12 +291,12 @@ namespace Elastic.Apm.Model
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,  string id = null,
 			bool isExitSpan = false
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp,  isExitSpan, id);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;

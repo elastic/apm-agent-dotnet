@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -169,11 +169,7 @@ namespace ApiSamples
 
 				WriteLineToConsole(
 					$"Spawning callee process and passing outgoing distributed tracing data: {traceParent} to it...");
-				var startInfo = new ProcessStartInfo
-				{
-					FileName = "dotnet",
-					Arguments = $"{assembly} {traceParent}"
-				};
+				var startInfo = new ProcessStartInfo { FileName = "dotnet", Arguments = $"{assembly} {traceParent}" };
 
 				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
 				var calleeProcess = Process.Start(startInfo);
@@ -268,7 +264,9 @@ namespace ApiSamples
 					{
 						span.Context.Db = new Database
 						{
-							Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, Instance = "MyInstance"
+							Statement = "GET /_all/_search?q=tag:wow",
+							Type = Database.TypeElasticsearch,
+							Instance = "MyInstance"
 						};
 					});
 			});
