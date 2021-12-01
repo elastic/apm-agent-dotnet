@@ -76,10 +76,18 @@ namespace Elastic.Apm
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 
-#if NET5_0
-				if(ConfigurationReader.EnableOpenTelemetryBridge)
-					new OpenTelemetry.ElasticActivityListener(this, TracerInternal);
+
+				if (ConfigurationReader.EnableOpenTelemetryBridge)
+				{
+#if NET5_0 || NET6_0
+					if (ApmServerInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
+						new OpenTelemetry.ElasticActivityListener(this, TracerInternal);
+					else
+						Logger.Warning()?.Log("OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer - bridge won't be enabled..");
+#else
+				Logger.Warning()?.Log("OpenTelemetry (Activity) bridge is only supported on .NET5 or newer - bridge won't be enabled.");
 #endif
+				}
 			}
 			catch (Exception e)
 			{
