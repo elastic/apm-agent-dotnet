@@ -79,6 +79,14 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void ServerUrls_Should_Use_ServerUrl_When_UrlWithBasePath_Specified()
+		{
+			var serverUrl = "http://myServer.com/apm";
+			using var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(serverUrl: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
+		}
+
+		[Fact]
 		public void ServerUrls_Should_Log_Error_When_Invalid_Url()
 		{
 			var serverUrl = "InvalidUrl";
