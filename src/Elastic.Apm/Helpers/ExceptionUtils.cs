@@ -69,15 +69,5 @@ namespace Elastic.Apm.Helpers
 						, DbgUtils.CurrentThreadDesc);
 			}
 		}
-
-		internal static void DoSwallowingExceptionsExceptCancellation(IApmLogger logger, Action action
-			, [CallerMemberName] string dbgCallerMethodName = null
-		) =>
-			DoSwallowingExceptions(logger, action, /* shouldSwallowCancellation */ false, dbgCallerMethodName);
-
-		internal static Task DoSwallowingExceptionsExceptCancellation(IApmLogger logger, Func<Task> asyncAction
-			, [CallerMemberName] string dbgCallerMethodName = null
-		) =>
-			DoSwallowingExceptions(logger, asyncAction, /* shouldSwallowCancellation */ false, dbgCallerMethodName);
 	}
 }

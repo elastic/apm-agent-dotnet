@@ -12,10 +12,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Elastic.Apm.Profiler.Managed.DuckTyping;
+// ReSharper disable InconsistentNaming
+// ReSharper disable FieldCanBeMadeReadOnly.Local
+
+#pragma warning disable 414
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 {
-    public class ObscureObject
+	public class ObscureObject
     {
         private static FieldPublicObject fieldPublicObject = new FieldPublicObject();
         private static FieldInternalObject fieldInternalObject = new FieldInternalObject();

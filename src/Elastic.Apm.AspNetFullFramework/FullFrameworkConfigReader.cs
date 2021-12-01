@@ -48,8 +48,13 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			void AppendIfNotNull(string nameToAppend)
 			{
-				const string separator = "_";
-				if (nameToAppend != null) retVal.AppendSeparatedIfNotEmpty(separator, nameToAppend);
+				if (nameToAppend is null)
+					return;
+
+				if (retVal.Length != 0)
+					retVal.Append('_');
+
+				retVal.Append(nameToAppend);
 			}
 		}
 

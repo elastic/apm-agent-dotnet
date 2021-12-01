@@ -15,8 +15,5 @@ namespace Elastic.Apm.Helpers
 				: $"`{Thread.CurrentThread.Name}' (managed ID: {Thread.CurrentThread.ManagedThreadId})";
 
 		internal static string CurrentMethodName([CallerMemberName] string caller = null) => caller;
-
-		internal static string CurrentDbgContext(string className = null, [CallerMemberName] string caller = null) =>
-			className == null ? $"Thread: {CurrentThreadDesc}, {caller}" : $"Thread: {CurrentThreadDesc}, {className}.{caller}";
 	}
 }
