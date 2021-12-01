@@ -1,5 +1,6 @@
 :nuget: https://www.nuget.org/packages
 :dot: .
+:plus: +
 
 [[setup-auto-instrumentation]]
 === Profiler Auto instrumentation
@@ -12,6 +13,12 @@ beta::[]
 The agent can automatically instrument .NET Framework, .NET Core, and .NET applications using the 
 https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/profiling-overview#the-profiling-api[.NET CLR Profiling APIs].
 The Profiling APIs provide a way to instrument an application or dependency code without code changes.
+
+[IMPORTANT]
+--
+The profiler requires the Microsoft C and C{plus}{plus} (MSVC) runtime libraries to be installed, to run on Windows.
+The https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170[Microsoft Visual C{plus}{plus} Redistributable package can be downloaded from Microsoft].
+--
 
 This approach works with the following
 
