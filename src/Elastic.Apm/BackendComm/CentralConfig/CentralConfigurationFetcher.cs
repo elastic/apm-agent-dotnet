@@ -299,6 +299,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
+			public bool EnableOpenTelemetryBridge => _wrapped.EnableOpenTelemetryBridge;
 			public bool TraceContextIgnoreSampledFalse => _wrapped.TraceContextIgnoreSampledFalse;
 		}
 	}

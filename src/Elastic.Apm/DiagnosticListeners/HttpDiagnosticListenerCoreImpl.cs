@@ -17,8 +17,8 @@ namespace Elastic.Apm.DiagnosticListeners
 		protected override string ExceptionEventKey => "System.Net.Http.Exception";
 
 		public override string Name => "HttpHandlerDiagnosticListener";
-		internal override string StartEventKey => "System.Net.Http.HttpRequestOut.Start";
-		internal override string StopEventKey => "System.Net.Http.HttpRequestOut.Stop";
+		internal override string StartEventKey => $"{KnownListeners.SystemNetHttpHttpRequestOut}.Start";
+		internal override string StopEventKey => $"{KnownListeners.SystemNetHttpHttpRequestOut}.Stop";
 
 		protected override Uri RequestGetUri(HttpRequestMessage request) => request.RequestUri;
 
