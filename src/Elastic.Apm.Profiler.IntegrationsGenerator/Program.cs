@@ -113,7 +113,8 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 				.AppendLine(":nuget: https://www.nuget.org/packages")
 				.AppendLine()
 				.AppendLine("|===")
-				.AppendLine("|Integration name |NuGet package version(s) |Assembly version(s) ");
+				.AppendLine("|Integration name |NuGet package version(s) |Assembly version(s) ")
+				.AppendLine();
 
 			foreach (var integration in integrations)
 			{
