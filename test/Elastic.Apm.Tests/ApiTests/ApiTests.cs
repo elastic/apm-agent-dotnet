@@ -746,6 +746,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.WaitForErrors();
 			payloadSender.Errors.Count.Should().Be(1);
+			payloadSender.FirstError.Transaction.Name.Should().Be(TestTransaction);
 			payloadSender.FirstError.Transaction.IsSampled.Should().Be(isSampled);
 			payloadSender.FirstError.Transaction.Type.Should().Be(CustomTransactionTypeForTests);
 			payloadSender.FirstError.TransactionId.Should().Be(capturedTransaction.Id);
