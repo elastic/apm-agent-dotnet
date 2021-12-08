@@ -140,6 +140,7 @@ namespace Elastic.Apm.Model
 			/// <summary>
 			/// Name is the generic designation of a transaction in the scope of a single service, eg: 'GET /users/:id'.
 			/// </summary>
+			[MaxLength]
 			public string Name { get; }
 
 			/// <summary>
