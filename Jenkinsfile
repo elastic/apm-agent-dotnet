@@ -579,8 +579,9 @@ pipeline {
           steps {
             deleteDir()
             dir("${OPBEANS_REPO}"){
-              git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                  url: "git@github.com:elastic/${OPBEANS_REPO}.git"
+              git(credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
+                  url: "git@github.com:elastic/${OPBEANS_REPO}.git",
+                  branch: 'main')
               sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
               // The opbeans pipeline will trigger a release for the master branch
               gitPush()
