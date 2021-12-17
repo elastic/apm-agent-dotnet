@@ -12,7 +12,7 @@ pipeline {
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
     GITHUB_CHECK_ITS_NAME = 'Integration Tests'
-    ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
+    ITS_PIPELINE = 'apm-integration-tests-selector-mbp/main'
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
