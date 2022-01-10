@@ -23,7 +23,7 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
-[[release-notes-1.12.1]]
+[[release-notes-1.13.0]]
 ==== 1.13.0
 
 [float]
