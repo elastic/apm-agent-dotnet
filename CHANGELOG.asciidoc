@@ -24,6 +24,14 @@ endif::[]
 === .NET Agent version 1.x
 
 [[release-notes-1.12.1]]
+==== 1.13.0
+
+[float]
+===== Features
+- {pull}1498[#1498] OpenTelemetry Bridge - integration with `System.Diagnostics.Activity` - Beta (issue: {issue}1521[#1521])
+
+
+[[release-notes-1.12.1]]
 ==== 1.12.1
 
 [float]
