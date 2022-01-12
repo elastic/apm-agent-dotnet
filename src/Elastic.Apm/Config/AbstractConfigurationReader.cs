@@ -622,7 +622,7 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		internal static string AdaptServiceName(string originalName) =>
+		private static string AdaptServiceName(string originalName) =>
 			originalName != null
 				? Regex.Replace(originalName, "[^a-zA-Z0-9 _-]", "_")
 				: null;

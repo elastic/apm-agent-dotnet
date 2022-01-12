@@ -38,7 +38,7 @@ namespace Elastic.Apm.Config
 			public const bool TraceContextIgnoreSampledFalse = false;
 			public const int TransactionMaxSpans = 500;
 			public const double TransactionSampleRate = 1.0;
-			public const string UnknownServiceName = "unknown";
+			public const string UnknownServiceName = "unknown-" + Consts.AgentName + "-service";
 			public const bool UseElasticTraceparentHeader = true;
 			public const bool VerifyServerCert = true;
 
