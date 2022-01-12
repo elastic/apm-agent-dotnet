@@ -164,7 +164,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				status = blobReference.CopyState.Status;
 			} while (status != CopyStatus.Success);
 
-			AssertSpan("Copy", $"{scope.ContainerName}/{destinationBlobName}", count: 2);
+			AssertSpan("Copy", $"{scope.ContainerName}/{destinationBlobName}", count: 1);
 		}
 	}
 }
