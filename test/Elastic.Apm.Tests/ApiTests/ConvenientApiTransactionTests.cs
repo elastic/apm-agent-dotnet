@@ -661,6 +661,34 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 
+		[Fact]
+		public async Task CaptureTransaction_Does_Not_Flow_Activity_When_Returns_Task()
+		{
+			Activity.Current.Should().BeNull();
+
+			using var agent = new ApmAgent(new TestAgentComponents());
+
+			await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+			{
+				var activity = Activity.Current;
+				activity.Should().NotBeNull();
+				activity.Parent.Should().BeNull("No activity when this transaction started");
+
+				await Task.Delay(1_000);
+			});
+
+			await Agent.Tracer.CaptureTransaction("async 2", ApiConstants.TypeDb, async () =>
+			{
+				var activity = Activity.Current;
+				activity.Should().NotBeNull();
+				activity.Parent.Should().BeNull("Activity for transaction from async 1 should not flow to here");
+
+				await Task.Delay(1_000);
+			});
+
+			Activity.Current.Should().BeNull();
+		}
+
 		/// <summary>
 		/// Asserts on 1 transaction with async code
 		/// </summary>

@@ -12,7 +12,7 @@ pipeline {
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
     GITHUB_CHECK_ITS_NAME = 'Integration Tests'
-    ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
+    ITS_PIPELINE = 'apm-integration-tests-selector-mbp/main'
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
@@ -101,7 +101,7 @@ pipeline {
                           whenTrue(isPR()) {
                             // build nuget packages and profiler
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
-                            sh label: 'Rustup', script: 'rustup default 1.54.0'
+                            sh label: 'Rustup', script: 'rustup default 1.56.0'
                             sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                             sh(label: 'Build profiler', script: './build.sh profiler-zip')
                           }
@@ -180,7 +180,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.54.0'
+                          sh label: 'Rustup', script: 'rustup default 1.56.0'
                           sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                           sh label: 'Build', script: './build.sh profiler-zip'
                           sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
@@ -579,8 +579,9 @@ pipeline {
           steps {
             deleteDir()
             dir("${OPBEANS_REPO}"){
-              git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                  url: "git@github.com:elastic/${OPBEANS_REPO}.git"
+              git(credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
+                  url: "git@github.com:elastic/${OPBEANS_REPO}.git",
+                  branch: 'main')
               sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
               // The opbeans pipeline will trigger a release for the master branch
               gitPush()
