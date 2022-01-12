@@ -3,6 +3,7 @@
 
 |===
 |Integration name |NuGet package version(s) |Assembly version(s) 
+
 .2+.^|AdoNet
 |part of .NET
 |System.Data 4.0.0 - 4.{star}.{star}

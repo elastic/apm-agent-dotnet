@@ -166,7 +166,7 @@ namespace Elastic.Apm.Config
 			public const string DisableMetrics = Prefix + nameof(DisableMetrics);
 			public const string Enabled = Prefix + nameof(Enabled);
 			public const string Environment = Prefix + nameof(Environment);
-			public const string EnableOpenTelemetryBridge = nameof(EnableOpenTelemetryBridge);
+			public const string EnableOpenTelemetryBridge = Prefix + nameof(EnableOpenTelemetryBridge);
 			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
 			//This setting is Full Framework only:

@@ -150,40 +150,42 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null)
-		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
-			var task = func();
-			RegisterContinuation(task, transaction);
-			return task;
-		}
+		public Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null) =>
+			Task.Run(() =>
+			{
+				var transaction = StartTransaction(name, type, distributedTracingData);
+				var task = func();
+				RegisterContinuation(task, transaction);
+				return task;
+			});
 
-		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null)
-		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
-			var task = func(transaction);
-			RegisterContinuation(task, transaction);
-			return task;
-		}
+		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null) =>
+			Task.Run(() =>
+			{
+				var transaction = StartTransaction(name, type, distributedTracingData);
+				var task = func(transaction);
+				RegisterContinuation(task, transaction);
+				return task;
+			});
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null)
-		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
-			var task = func();
-			RegisterContinuation(task, transaction);
-
-			return task;
-		}
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null) =>
+			Task.Run(() =>
+			{
+				var transaction = StartTransaction(name, type, distributedTracingData);
+				var task = func();
+				RegisterContinuation(task, transaction);
+				return task;
+			});
 
 		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func,
-			DistributedTracingData distributedTracingData = null
-		)
-		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
-			var task = func(transaction);
-			RegisterContinuation(task, transaction);
-			return task;
-		}
+			DistributedTracingData distributedTracingData = null) =>
+			Task.Run(() =>
+			{
+				var transaction = StartTransaction(name, type, distributedTracingData);
+				var task = func(transaction);
+				RegisterContinuation(task, transaction);
+				return task;
+			});
 
 		/// <summary>
 		/// Registers a continuation on the task.
