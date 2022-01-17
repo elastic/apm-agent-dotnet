@@ -15,8 +15,6 @@ open Buildalyzer
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Fake.IO
-open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.SystemHelper
 open Fake.SystemHelper
@@ -86,20 +84,23 @@ module Build =
                     DisableInternalBinLog = true
                     NoLogo = true
                 }) projectOrSln
-        
-    /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
-    let private getCurrentApmDiagnosticSourceVersion =
-        match currentDiagnosticSourceVersion with
-        | Some v -> v
-        | None ->        
-            let manager = AnalyzerManager();
-            let analyzer = manager.GetProject(Paths.SrcProjFile "Elastic.Apm")          
-            let analyzeResult = analyzer.Build("netstandard2.0").First()        
-            let values = analyzeResult.PackageReferences.["System.Diagnostics.DiagnosticSource"]
-            let version = SemVer.parse values.["Version"]
-            currentDiagnosticSourceVersion <- Some(version)
-            version
-        
+
+    let private getVersion (ver: string) =
+        match ver with
+            | txt when txt.Contains("netcoreapp") || txt.Contains("netstandard") ->
+                let version = SemVer.parse "4.0.0"
+                currentDiagnosticSourceVersion <- Some(version)
+                version
+            | txt when txt.Contains("net5.0") ->
+                let version = SemVer.parse "5.0.0"
+                currentDiagnosticSourceVersion <- Some(version)
+                version
+            | txt when txt.Contains("net6.0") ->
+                let version = SemVer.parse "6.0.0"
+                currentDiagnosticSourceVersion <- Some(version)
+                version
+            | _ -> failwith "Unknown version"
+                              
     let private majorVersions = Dictionary<SemVerInfo, SemVerInfo>()
 
     /// Publishes ElasticApmStartupHook against a 4.x version of System.Diagnostics.DiagnosticSource
@@ -223,9 +224,11 @@ module Build =
         // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
         !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
         ++ (Paths.BuildOutput "Elastic.Apm/netstandard2.0")
+        ++ (Paths.BuildOutput "Elastic.Apm/net6.0")
+        ++ (Paths.BuildOutput "Elastic.Apm/net5.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major)))
+        |> Seq.iter (fun n -> (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" (getVersion n.FullName).Major)) n ))
                  
         // assemblies compiled against older version of System.Diagnostics.DiagnosticSource 
         !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major))
