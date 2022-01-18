@@ -32,7 +32,7 @@ pipeline {
     issueCommentTrigger("(${obltGitHubComments()}|^run benchmark tests)")
   }
   parameters {
-    booleanParam(name: 'Run_As_Master_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on master branch.')
+    booleanParam(name: 'Run_As_Main_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on main branch.')
   }
   stages {
     stage('Initializing'){
@@ -434,7 +434,7 @@ pipeline {
               when {
                 anyOf {
                   changeRequest()
-                  expression { return !params.Run_As_Master_Branch }
+                  expression { return !params.Run_As_Main_Branch }
                 }
               }
               steps {
@@ -457,9 +457,9 @@ pipeline {
                 beforeAgent true
                 allOf {
                   anyOf {
-                    branch 'master'
+                    branch 'main'
                     tag pattern: '\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
-                    expression { return params.Run_As_Master_Branch }
+                    expression { return params.Run_As_Main_Branch }
                     expression { return env.BENCHMARK_UPDATED != "false" }
                     expression { return env.GITHUB_COMMENT?.contains('benchmark tests') }
                   }
@@ -501,8 +501,8 @@ pipeline {
       when {
         beforeAgent true
         anyOf {
-          branch 'master'
-          expression { return params.Run_As_Master_Branch }
+          branch 'main'
+          expression { return params.Run_As_Main_Branch }
         }
       }
       steps {
@@ -583,7 +583,7 @@ pipeline {
                   url: "git@github.com:elastic/${OPBEANS_REPO}.git",
                   branch: 'main')
               sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
-              // The opbeans pipeline will trigger a release for the master branch
+              // The opbeans pipeline will trigger a release for the main branch
               gitPush()
               // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
               gitCreateTag(tag: "v${env.BRANCH_NAME}")

@@ -96,7 +96,7 @@ Once your changes are ready to submit for review:
 3. Rebase your changes
 
     Update your local repository with the most recent code from the main repo,
-    and rebase your branch on top of the latest master branch.
+    and rebase your branch on top of the latest main branch.
     We prefer your initial changes to be squashed into a single commit.
     Later,
     if we ask you to make changes,
@@ -127,7 +127,7 @@ To run all tests, including the integration tests, execute `dotnet test` on ever
 
 ### Workflow
 
-All feature development and most bug fixes hit the master branch first.
+All feature development and most bug fixes hit the main branch first.
 Pull requests should be reviewed by someone with commit access.
 Once approved, the author of the pull request,
 or reviewer if the author does not have commit access,
@@ -209,10 +209,10 @@ In case an agent project depends on a NuGet package, the dependency does not hav
 However if source code from a third party dependency is added to the agent, the following steps must be taken:
 1. Make sure the license of the third party dependency is one that is permitted to be included in the agent, based on Elastic's Open Source Policy
 1. List the dependency in the local `NOTICE` file of the project. Also include the full text of the dependency's license. One exception here is the Apache v2 license text, which does not have to be copied, since the agent itself already has that text as its own license.
-1. List the dependency in the local `LICENSE_LOCAL` file of the project including the the full text of the dependency's license (except Apache v2). This file will be [merged](https://github.com/elastic/apm-agent-dotnet/blob/master/src/Directory.Build.targets#L2) with the root [`LICENSE`](https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE) file.
+1. List the dependency in the local `LICENSE_LOCAL` file of the project including the the full text of the dependency's license (except Apache v2). This file will be [merged](https://github.com/elastic/apm-agent-dotnet/blob/main/src/Directory.Build.targets#L2) with the root [`LICENSE`](https://github.com/elastic/apm-agent-dotnet/blob/main/LICENSE) file.
 1. Make sure in the project's `.csproj` file that the `NOTICE` and the generated `LICENSE` file is packed with the project.
 
-An example of this can be seen in the [`Elastic.Apm.MongoDb`](https://github.com/elastic/apm-agent-dotnet/tree/master/src/Elastic.Apm.MongoDb) project.
+An example of this can be seen in the [`Elastic.Apm.MongoDb`](https://github.com/elastic/apm-agent-dotnet/tree/main/src/Elastic.Apm.MongoDb) project.
 
 ### Adding support for instrumenting new libraries/frameworks/APIs
 

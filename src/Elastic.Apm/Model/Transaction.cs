@@ -266,7 +266,7 @@ namespace Elastic.Apm.Model
 
 				// If there is no tracestate or no valid "es" vendor entry with an "s" (sample rate) attribute, then the agent must
 				// omit sample rate from non-root transactions and their spans.
-				// See https://github.com/elastic/apm/blob/master/specs/agents/tracing-sampling.md#propagation
+				// See https://github.com/elastic/apm/blob/main/specs/agents/tracing-sampling.md#propagation
 				if (_traceState?.SampleRate is null)
 					SampleRate = null;
 				else
@@ -312,7 +312,7 @@ namespace Elastic.Apm.Model
 		/// In general if there is an error on the span, the outcome will be <code> Outcome.Failure </code> otherwise it'll be
 		/// <code> Outcome.Success </code>..
 		/// There are some exceptions to this (see spec:
-		/// https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be
+		/// https://github.com/elastic/apm/blob/main/specs/agents/tracing-spans.md#span-outcome) when it can be
 		/// <code>Outcome.Unknown</code>/>.
 		/// Use <see cref="_outcomeChangedThroughApi" /> to check if it was specifically set to <code>Outcome.Unknown</code>, or if
 		/// it's just the default value.

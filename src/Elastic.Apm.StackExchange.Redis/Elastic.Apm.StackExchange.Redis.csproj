@@ -4,7 +4,7 @@
       <RootNamespace>Elastic.Apm.StackExchange.Redis</RootNamespace>
       <AssemblyName>Elastic.Apm.StackExchange.Redis</AssemblyName>
       <PackageId>Elastic.Apm.StackExchange.Redis</PackageId>
-      <Description>Elastic APM for StackExchange.Redis. This package contains instrumentation for StackExchange.Redis Redis client. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+      <Description>Elastic APM for StackExchange.Redis. This package contains instrumentation for StackExchange.Redis Redis client. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
       <PackageTags>apm, monitoring, elastic, elasticapm, analytics, redis, StackExchange.Redis</PackageTags>
       <TargetFramework>netstandard2.0</TargetFramework>
       <IsPackable>true</IsPackable>
