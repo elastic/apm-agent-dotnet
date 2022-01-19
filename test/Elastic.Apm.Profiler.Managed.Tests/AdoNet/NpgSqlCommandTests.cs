@@ -39,7 +39,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		[InlineData("net461")]
 		[InlineData("netcoreapp3.1")]
 		[InlineData("net5.0")]
-		public async Task CaptureAutoInstrumentedSpansWithNpgsql6(string targetFramework) => await Common(targetFramework, "NpgsqlSample6");
+		public async Task CaptureAutoInstrumentedSpansWithNpgsql6(string targetFramework) => await Common(targetFramework, "Npgsql6Sample");
 
 		private async Task Common(string targetFramework, string sampleName)
 		{
