@@ -32,14 +32,23 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 		[DockerTheory]
 		[ClassData(typeof(AdoNetTestData))]
-		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
+		public async Task CaptureAutoInstrumentedSpansWithNpgsql5(string targetFramework) => await Common(targetFramework, "NpgsqlSample");
+
+		// Npgsql V6 only supports netcoreapp3.1+
+		[DockerTheory]
+		[InlineData("net461")]
+		[InlineData("netcoreapp3.1")]
+		[InlineData("net5.0")]
+		public async Task CaptureAutoInstrumentedSpansWithNpgsql6(string targetFramework) => await Common(targetFramework, "NpgsqlSample6");
+
+		private async Task Common(string targetFramework, string sampleName)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
-			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
+			var apmServer = new MockApmServer(apmLogger, nameof(NpgSqlCommandTests));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			using (var profiledApplication = new ProfiledApplication("NpgsqlSample"))
+			using (var profiledApplication = new ProfiledApplication(sampleName))
 			{
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
 				{

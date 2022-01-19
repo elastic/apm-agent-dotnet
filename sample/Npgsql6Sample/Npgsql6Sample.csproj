@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <NpgsqlVersion Condition="'$(NpgsqlVersion)'==''">5.0.7</NpgsqlVersion>
+        <NpgsqlVersion Condition="'$(NpgsqlVersion)'==''">6.0.0</NpgsqlVersion>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>net461;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1;net5.0;</TargetFrameworks>
+        <TargetFrameworks>net461;netcoreapp3.1;net5.0;</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
