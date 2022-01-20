@@ -283,7 +283,7 @@ Agent.Tracer.CaptureErrorLog(errorLog);
 [[api-transaction]]
 == Transaction API
 //----------------------------
-A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple <<api-span,Spans>> into logical groups, and they are the first <<api-span,Span>> of a service. More information on Transactions and Spans is available in the {apm-overview-ref-v}/apm-data-model.html[APM data model] documentation.
+A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple <<api-span,Spans>> into logical groups, and they are the first <<api-span,Span>> of a service. More information on Transactions and Spans is available in the {apm-guide-ref}/data-model.html[APM data model] documentation.
 
 See <<api-current-transaction>> on how to get a reference of the current transaction.
 
@@ -378,7 +378,7 @@ A flat mapping of user-defined labels with string values.
 If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
 
 TIP: Before using custom labels, ensure you understand the different types of
-{apm-overview-ref-v}/metadata.html[metadata] that are available.
+{apm-guide-ref}/data-model-metadata.html[metadata] that are available.
 
 WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
@@ -686,7 +686,7 @@ Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping o
 If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
 
 TIP: Before using custom labels, ensure you understand the different types of
-{apm-overview-ref-v}/metadata.html[metadata] that are available.
+{apm-guide-ref}/data-model-metadata.html[metadata] that are available.
 
 WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
