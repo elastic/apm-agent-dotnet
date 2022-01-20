@@ -52,6 +52,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 					targetFramework,
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					null,
 					line => _output.WriteLine(line.Line),
 					exception => _output.WriteLine($"{exception}"));
 			}
