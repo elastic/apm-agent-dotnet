@@ -14,7 +14,7 @@ choco install dotnetcore-sdk -m -y --no-progress -r --version 2.2.402
 choco install dotnetcore-sdk -m -y --no-progress -r --version 3.0.103
 choco install dotnetcore-sdk -m -y --no-progress -r --version 3.1.416
 choco install dotnet-sdk -m -y --no-progress -r --version 5.0.100
-choco install dotnet-sdk -m -y --no-progress -r --version 6.0.100
+choco install dotnet-sdk -m -y --no-progress -r --version 6.0.101
 
 # Install NuGet Tool
 choco install nuget.commandline -y --no-progress -r --version 6.0.0
