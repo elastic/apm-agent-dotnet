@@ -38,7 +38,7 @@ The way to collect logs depends on the setup of your application.
 [[collect-logs-core]]
 ==== ASP.NET Core
 
-When the Agent is activated with `UseAllElasticApm` or `UseElasticApm`, it will integrate with the
+If you added the agent to your application as per the <<setup-asp-net-core>> document with the `UseAllElasticApm` or `UseElasticApm` method, it will integrate with the
 https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1[ASP.NET Core logging infrastructure].
 This means the Agent will pick up the configured logging provider and log as any other component logs.
 
