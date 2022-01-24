@@ -14,7 +14,7 @@ injecting trace ID fields into your application's log records. Currently support
 
 If your favorite logging framework is not already supported, there are two other options:
 
-* Open a feature request, or contribute code, for additional support, as described in https://github.com/elastic/apm-agent-dotnet/blob/master/CONTRIBUTING.md[CONTRIBUTING.md].
+* Open a feature request, or contribute code, for additional support, as described in https://github.com/elastic/apm-agent-dotnet/blob/main/CONTRIBUTING.md[CONTRIBUTING.md].
 * Manually inject trace IDs into log records, as described in <<log-correlation-manual>>.
 
 Regardless of how you integrate APM with logging, you can use {filebeat-ref}[Filebeat] to
