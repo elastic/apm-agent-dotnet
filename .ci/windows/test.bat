@@ -2,7 +2,7 @@
 :: This script runs the tests and stored them in an xml file defined in the
 :: LogFilePath property
 ::
-dotnet test -c Release --no-build ^
+dotnet test -c Release ^
  --verbosity normal ^
  --results-directory target ^
  --diag target\diag.log ^
