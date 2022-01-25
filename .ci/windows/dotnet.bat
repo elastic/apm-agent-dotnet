@@ -16,4 +16,6 @@ dotnet sln remove test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.M
 
 dotnet nuget locals all --clear
 
+dotnet nuget add source --name nuget.org https://api.nuget.org/v3/index.json
+
 dotnet build -c Release
