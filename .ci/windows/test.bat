@@ -15,7 +15,7 @@ dotnet sln remove test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tes
 dotnet sln remove test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj
 
 :: TODO: Test only - building this seems to fail
-dotnet sln remove test/Elastic.Apm.StaticImplicitInitialization.Tests.csproj
+dotnet sln remove test/Elastic.Apm.StaticImplicitInitialization.Tests/Elastic.Apm.StaticImplicitInitialization.Tests.csproj
 
 ::
 :: This script runs the tests and stored them in an xml file defined in the
