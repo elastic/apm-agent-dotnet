@@ -53,6 +53,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 					targetFramework,
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					null,
 					line => _output.WriteLine(line.Line),
 					exception => _output.WriteLine($"{exception}"));
 			}
