@@ -358,9 +358,6 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        retry(3) {
-                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                        }
                         withAzureCredentials(path: "${HOME}", credentialsFile: '.credentials.json') {
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         }
@@ -624,6 +621,7 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.0.103'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.1.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.100'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '6.0.100'
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       withTerraform(){
