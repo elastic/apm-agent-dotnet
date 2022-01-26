@@ -56,8 +56,8 @@ namespace Elastic.Apm.SqlClient.Tests
 			_apmAgent.Tracer.CaptureTransaction("transaction", "type", transaction =>
 			{
 				// ReSharper disable once AccessToDisposedClosure
-				var firstItemInDb = context.SampleTable.First();
-				Debug.WriteLine(firstItemInDb.StrField);
+				var firstItemInDb = context.SampleTable.FirstOrDefault();
+				Debug.WriteLine(firstItemInDb?.StrField);
 			});
 
 			_payloadSender.SpansOnFirstTransaction.Should().HaveCount(1);
