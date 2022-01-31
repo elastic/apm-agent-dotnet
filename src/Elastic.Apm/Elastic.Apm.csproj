@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net5.0;net461;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0;net461</TargetFrameworks>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
@@ -55,11 +55,13 @@
     <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
-  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and '$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
-  </ItemGroup>
+<!--  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and '$(TargetFramework)' == 'net6.0'">-->
+<!--    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />-->
+<!--  </ItemGroup>-->
 
-  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and '$(TargetFramework)' != 'net6.0'">
+<!--  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and '$(TargetFramework)' != 'net6.0'">-->
+    
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
   </ItemGroup>
   <!-- DiagnosticSourceVersion MsBuild property can be used to compile the agent against a specific version of
