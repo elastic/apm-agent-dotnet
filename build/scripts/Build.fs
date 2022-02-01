@@ -16,8 +16,6 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
-open Fake.SystemHelper
-open Fake.SystemHelper
 open TestEnvironment
 open Tooling
 
@@ -100,13 +98,9 @@ module Build =
             version
                               
     let private majorVersions = Dictionary<SemVerInfo, SemVerInfo>()
-
-    /// Publishes ElasticApmStartupHook against a 4.x version of System.Diagnostics.DiagnosticSource
-    let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =                
-        let projects =
-            !! (Paths.SrcProjFile "Elastic.Apm")
-            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
-        
+    
+    /// Publishes specific projects with specific DiagnosticSource versions
+    let private publishProjectsWithDiagnosticSourceVersion projects version =
         projects
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
@@ -114,13 +108,13 @@ module Build =
             |> Seq.iter(fun framework ->
                 let output =
                     Path.GetFileNameWithoutExtension proj
-                    |> (fun p -> sprintf "%s_%i.0.0/%s" p oldDiagnosticSourceVersion.Major framework)
+                    |> (fun p -> sprintf "%s_%i.0.0/%s" p version.Major framework)
                     |> Paths.BuildOutput
                     |> Path.GetFullPath
                 
-                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %O..." proj framework oldDiagnosticSourceVersion
+                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %O..." proj framework version
                 DotNet.Exec ["publish" ; proj
-                             sprintf "\"/p:DiagnosticSourceVersion=%O\"" oldDiagnosticSourceVersion
+                             sprintf "\"/p:DiagnosticSourceVersion=%O\"" version
                              "-c"; "Release"
                              "-f"; framework
                              "-v"; "q"
@@ -129,31 +123,20 @@ module Build =
             )
         )
 
-        let projects2 =
+    
+    /// Publishes ElasticApmStartupHook against a 4.x and 6.x version of System.Diagnostics.DiagnosticSource
+    let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =                
+        let projects =
+            !! (Paths.SrcProjFile "Elastic.Apm")
+            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+    
+        publishProjectsWithDiagnosticSourceVersion projects oldDiagnosticSourceVersion
+        
+        let elasticApmProj =
             !! (Paths.SrcProjFile "Elastic.Apm")
             
-        projects2
-        |> Seq.map getAllTargetFrameworks
-        |> Seq.iter (fun (proj, frameworks) ->
-            frameworks
-            |> Seq.iter(fun framework ->
-                let output =
-                    Path.GetFileNameWithoutExtension proj
-                    |> (fun p -> sprintf "%s_%i.0.0/%s" p diagnosticSourceVersion6.Major framework)
-                    |> Paths.BuildOutput
-                    |> Path.GetFullPath
-                
-                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %O..." proj framework diagnosticSourceVersion6
-                DotNet.Exec ["publish" ; proj
-                             sprintf "\"/p:DiagnosticSourceVersion=%O\"" diagnosticSourceVersion6
-                             "-c"; "Release"
-                             "-f"; framework
-                             "-v"; "q"
-                             "-o"; output
-                             "--nologo"; "--force"]
-            )
-        )
-
+        publishProjectsWithDiagnosticSourceVersion elasticApmProj diagnosticSourceVersion6
+     
     /// Generates a new .sln file that contains only .NET Core projects  
     let GenerateNetCoreSln () =
         File.Copy(Paths.Solution, Paths.SolutionNetCore, true)
