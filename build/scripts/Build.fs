@@ -15,17 +15,14 @@ open Buildalyzer
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Fake.IO
-open Fake.IO
 open Fake.IO.Globbing.Operators
-open Fake.SystemHelper
-open Fake.SystemHelper
 open TestEnvironment
 open Tooling
 
 module Build =
     
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
+    let private diagnosticSourceVersion6 = SemVer.parse "6.0.0"
     
     let mutable private currentDiagnosticSourceVersion = None
         
@@ -86,7 +83,7 @@ module Build =
                     DisableInternalBinLog = true
                     NoLogo = true
                 }) projectOrSln
-        
+            
     /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
     let private getCurrentApmDiagnosticSourceVersion =
         match currentDiagnosticSourceVersion with
@@ -99,15 +96,11 @@ module Build =
             let version = SemVer.parse values.["Version"]
             currentDiagnosticSourceVersion <- Some(version)
             version
-        
+                              
     let private majorVersions = Dictionary<SemVerInfo, SemVerInfo>()
-
-    /// Publishes ElasticApmStartupHook against a 4.x version of System.Diagnostics.DiagnosticSource
-    let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =                
-        let projects =
-            !! (Paths.SrcProjFile "Elastic.Apm")
-            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
-        
+    
+    /// Publishes specific projects with specific DiagnosticSource versions
+    let private publishProjectsWithDiagnosticSourceVersion projects version =
         projects
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
@@ -115,13 +108,13 @@ module Build =
             |> Seq.iter(fun framework ->
                 let output =
                     Path.GetFileNameWithoutExtension proj
-                    |> (fun p -> sprintf "%s_%i.0.0/%s" p oldDiagnosticSourceVersion.Major framework)
+                    |> (fun p -> sprintf "%s_%i.0.0/%s" p version.Major framework)
                     |> Paths.BuildOutput
                     |> Path.GetFullPath
                 
-                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %O..." proj framework oldDiagnosticSourceVersion
+                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %O..." proj framework version
                 DotNet.Exec ["publish" ; proj
-                             sprintf "\"/p:DiagnosticSourceVersion=%O\"" oldDiagnosticSourceVersion
+                             sprintf "\"/p:DiagnosticSourceVersion=%O\"" version
                              "-c"; "Release"
                              "-f"; framework
                              "-v"; "q"
@@ -130,6 +123,20 @@ module Build =
             )
         )
 
+    
+    /// Publishes ElasticApmStartupHook against a 4.x and 6.x version of System.Diagnostics.DiagnosticSource
+    let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =                
+        let projects =
+            !! (Paths.SrcProjFile "Elastic.Apm")
+            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+    
+        publishProjectsWithDiagnosticSourceVersion projects oldDiagnosticSourceVersion
+        
+        let elasticApmProj =
+            !! (Paths.SrcProjFile "Elastic.Apm")
+            
+        publishProjectsWithDiagnosticSourceVersion elasticApmProj diagnosticSourceVersion6
+     
     /// Generates a new .sln file that contains only .NET Core projects  
     let GenerateNetCoreSln () =
         File.Copy(Paths.Solution, Paths.SolutionNetCore, true)
@@ -233,6 +240,13 @@ module Build =
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
+        
+        // assemblies compiled against 6.0 version of System.Diagnostics.DiagnosticSource 
+        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major)) //using old version here, because it the netcoreapp2.2 app can't build with diagnosticsource6
+        ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/net6.0" diagnosticSourceVersion6.Major))
+        |> Seq.filter Path.isDirectory
+        |> Seq.map DirectoryInfo
+        |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" diagnosticSourceVersion6.Major)))
             
         // include version in the zip file name    
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
