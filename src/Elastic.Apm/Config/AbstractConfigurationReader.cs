@@ -131,6 +131,41 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+
+		protected double ParseExitSpanMinDuration(ConfigurationKeyValue kv)
+		{
+			string value;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				value = DefaultValues.ExitSpanMinDuration;
+			else
+				value = kv.Value;
+
+			double valueInMilliseconds;
+			try
+			{
+				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
+				{
+					_logger?.Error()
+						?.Log("Failed to parse provided ParseExitSpanMinDuration `{ProvidedExitSpanMinDuration}' - " +
+							"using default: {ExitSpanMinDuration}",
+							value,
+							DefaultValues.ExitSpanMinDuration);
+					return DefaultValues.ExitSpanMinDurationInMilliseconds;
+				}
+			}
+			catch (ArgumentException e)
+			{
+				_logger?.Critical()
+					?.LogException(e,
+						nameof(ArgumentException) + " thrown from ParseExitSpanMinDuration which means a programming bug - " +
+						"using default: {ParseExitSpanMinDuration}",
+						DefaultValues.ExitSpanMinDuration);
+				return DefaultValues.ExitSpanMinDurationInMilliseconds;
+			}
+
+			return valueInMilliseconds;
+		}
+
 		protected IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueues(ConfigurationKeyValue kv) =>
 			_cachedWildcardMatchersIgnoreMessageQueues.IfNotInited?.InitOrGet(() => ParseIgnoreMessageQueuesImpl(kv))
 			?? _cachedWildcardMatchersIgnoreMessageQueues.Value;
@@ -367,7 +402,9 @@ namespace Elastic.Apm.Config
 			if (valueInMilliseconds < Constraints.MinMetricsIntervalInMilliseconds)
 			{
 				_logger?.Error()
-					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - " +
+					?.Log(
+						"Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - "
+						+
 						"metrics collection will be disabled",
 						value,
 						Constraints.MinMetricsIntervalInMilliseconds);
@@ -445,7 +482,8 @@ namespace Elastic.Apm.Config
 				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
 				{
 					_logger?.Error()
-						?.Log("Failed to parse provided SpanCompressionExactMatchMaxDuration `{ProvidedSpanCompressionExactMatchMaxDuration}' - " +
+						?.Log("Failed to parse provided SpanCompressionExactMatchMaxDuration `{ProvidedSpanCompressionExactMatchMaxDuration}' - "
+							+
 							"using default: {DefaultSpanCompressionExactMatchMaxDuration}",
 							value,
 							DefaultValues.SpanCompressionExactMatchMaxDuration);
@@ -549,7 +587,8 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Error()
 					?.Log(
-						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' - using default: {Default" + dbgOptionName
+						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' - using default: {Default"
+						+ dbgOptionName
 						+ "}",
 						kv.Value, defaultValue);
 
@@ -570,15 +609,18 @@ namespace Elastic.Apm.Config
 		}
 
 		protected int ParseMaxBatchEventCount(ConfigurationKeyValue kv) =>
-			_cachedMaxBatchEventCount.IfNotInited?.InitOrGet(() => ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount"))
+			_cachedMaxBatchEventCount.IfNotInited?.InitOrGet(() =>
+				ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount"))
 			?? _cachedMaxBatchEventCount.Value;
 
 		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) =>
-			_cachedMaxQueueEventCount.IfNotInited?.InitOrGet(() => ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount"))
+			_cachedMaxQueueEventCount.IfNotInited?.InitOrGet(() =>
+				ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount"))
 			?? _cachedMaxQueueEventCount.Value;
 
 		protected TimeSpan ParseFlushInterval(ConfigurationKeyValue kv) =>
-			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S, TimeSpan.FromMilliseconds(DefaultValues.FlushIntervalInMilliseconds),
+			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S,
+				TimeSpan.FromMilliseconds(DefaultValues.FlushIntervalInMilliseconds),
 				"FlushInterval");
 
 		private TimeSpan ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(ConfigurationKeyValue kv, TimeSuffix defaultSuffix,

@@ -49,6 +49,7 @@ namespace Elastic.Apm.Tests
 			public bool Enabled { get; }
 			public string Environment { get; }
 			public string ServiceNodeName { get; }
+			public double ExitSpanMinDuration => ConfigConsts.DefaultValues.ExitSpanMinDurationInMilliseconds;
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
 			public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
 			public string HostName { get; }

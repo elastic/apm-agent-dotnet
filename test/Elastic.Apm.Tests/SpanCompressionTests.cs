@@ -44,7 +44,7 @@ namespace Elastic.Apm.Tests
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) Generate10DbCalls(agent, spanName);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) Generate10DbCalls(agent, spanName, true, 2);
 
 			payloadSender.Transactions.Should().HaveCount(1);
 			payloadSender.Spans.Should().HaveCount(10);
@@ -59,7 +59,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "5s"))))
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "15s"))))
 				Generate10DbCalls(agent, null);
 
 			payloadSender.Transactions.Should().HaveCount(1);

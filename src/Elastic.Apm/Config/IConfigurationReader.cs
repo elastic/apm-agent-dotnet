@@ -89,6 +89,16 @@ namespace Elastic.Apm.Config
 		IReadOnlyCollection<string> ExcludedNamespaces { get; }
 
 		/// <summary>
+		/// Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded.
+		/// If the exit span is equal or greater the threshold, it should be kept.
+		/// In some cases exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services,
+		/// such as outgoing HTTP requests, can't be discarded.
+		/// However, external calls that don't propagate context, such as calls to a database, can be discarded using this threshold.
+		/// Additionally, spans that lead to an error can't be discarded.
+		/// </summary>
+		double ExitSpanMinDuration { get; }
+
+		/// <summary>
 		/// The maximal amount of time (in seconds) events are held in queue until there is enough to send a batch.
 		/// It's possible for a batch to contain less then <seealso cref="MaxBatchEventCount" /> events
 		/// if there are events that need to be sent out because they were held for too long.

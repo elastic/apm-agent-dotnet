@@ -29,6 +29,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _enableOpenTelemetryBridge;
 		private readonly string _environment;
 		private readonly string _excludedNamespaces;
+		private readonly string _exitSpanMinDuration;
 		private readonly string _flushInterval;
 		private readonly string _globalLabels;
 		private readonly string _hostName;
@@ -71,6 +72,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string centralConfig = null,
 			string description = null,
 			string enableOpenTelemetryBridge = null,
+			string exitSpanMinDuration = null,
 			string transactionSampleRate = null,
 			string transactionMaxSpans = null,
 			string metricsInterval = null,
@@ -144,6 +146,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_spanCompressionEnabled = spanCompressionEnabled;
 			_spanCompressionExactMatchMaxDuration = spanCompressionExactMatchMaxDuration;
 			_spanCompressionSameKindMaxDuration = spanCompressionSameKindMaxDuration;
+			_exitSpanMinDuration = excludedNamespaces;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -171,6 +174,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(new ConfigurationKeyValue(EnvVarNames.ExcludedNamespaces, _excludedNamespaces, Origin));
+
+		public double ExitSpanMinDuration => ParseExitSpanMinDuration(Kv(EnvVarNames.ExitSpanMinDuration, _exitSpanMinDuration, Origin));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(EnvVarNames.FlushInterval, _flushInterval, Origin));
 

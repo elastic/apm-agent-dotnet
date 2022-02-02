@@ -26,6 +26,8 @@ namespace Elastic.Apm.Config
 			public const bool CentralConfig = true;
 			public const string CloudProvider = SupportedValues.CloudProviderAuto;
 			public const bool EnableOpenTelemetryBridge = false;
+			public const string ExitSpanMinDuration = "1ms";
+			public const int ExitSpanMinDurationInMilliseconds = 1000;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
 			public const LogLevel LogLevel = Logging.LogLevel.Error;
 			public const int MaxBatchEventCount = 10;
@@ -128,6 +130,7 @@ namespace Elastic.Apm.Config
 			public const string EnableOpenTelemetryBridge = "ENABLEOPENTELEMETRYBRIDGE";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
+			public const string ExitSpanMinDuration = Prefix + "EXITS_SPAN_MIN_DURATION";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 
 			//This setting is Full Framework only:
@@ -176,7 +179,7 @@ namespace Elastic.Apm.Config
 			public const string Environment = Prefix + nameof(Environment);
 			public const string EnableOpenTelemetryBridge = Prefix + nameof(EnableOpenTelemetryBridge);
 			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
-
+			public const string ExitSpanMinDuration = Prefix + nameof(ExitSpanMinDuration);
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
 
 			//This setting is Full Framework only:

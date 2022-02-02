@@ -260,6 +260,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string Environment => _wrapped.Environment;
 			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
+			public double ExitSpanMinDuration => _centralConfiguration.ExitSpanMinDuration ?? _wrapped.ExitSpanMinDuration;
 
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 

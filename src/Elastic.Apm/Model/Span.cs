@@ -35,6 +35,13 @@ namespace Elastic.Apm.Model
 
 		private Span _compressionBuffer;
 
+		// Indicates if the context was already propagated outside the span
+		// This typically means that this span was already used for distributed tracing and potentially there is a span outside of the process
+		// which points to this span.
+		private bool _hasPropagatedContext;
+
+		private bool Discardable => IsExitSpan && !_hasPropagatedContext && Outcome == Outcome.Success;
+
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
 		private Span(double duration, string id, string name, string parentId)
@@ -196,13 +203,20 @@ namespace Elastic.Apm.Model
 		}
 
 		[JsonIgnore]
-		public DistributedTracingData OutgoingDistributedTracingData => new(
-			TraceId,
-			// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
-			// and not span ID as it does for sampled case.
-			ShouldBeSentToApmServer ? Id : TransactionId,
-			IsSampled,
-			_enclosingTransaction._traceState);
+		public DistributedTracingData OutgoingDistributedTracingData
+		{
+			get
+			{
+				_hasPropagatedContext = true;
+				return new(
+					TraceId,
+					// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
+					// and not span ID as it does for sampled case.
+					ShouldBeSentToApmServer ? Id : TransactionId,
+					IsSampled,
+					_enclosingTransaction._traceState);
+			}
+		}
 
 		[MaxLength]
 		[JsonProperty("parent_id")]
@@ -405,7 +419,7 @@ namespace Elastic.Apm.Model
 					{
 						if (buffered != null)
 						{
-							_payloadSender.QueueSpan(buffered);
+							QueueSpan(buffered);
 							if (_parentSpan != null)
 								_parentSpan._compressionBuffer = null;
 							_enclosingTransaction.CompressionBuffer = null;
@@ -413,9 +427,9 @@ namespace Elastic.Apm.Model
 
 						//If this is a span which has buffered children, we send the composite.
 						if (_compressionBuffer != null)
-							_payloadSender.QueueSpan(_compressionBuffer);
+							QueueSpan(_compressionBuffer);
 
-						_payloadSender.QueueSpan(this);
+						QueueSpan(this);
 						if (isFirstEndCall)
 							_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 						return;
@@ -430,7 +444,7 @@ namespace Elastic.Apm.Model
 
 					if (!buffered.TryToCompress(this))
 					{
-						_payloadSender.QueueSpan(buffered);
+						QueueSpan(buffered);
 						SetThisToParentsBuffer();
 
 						if (isFirstEndCall)
@@ -438,12 +452,31 @@ namespace Elastic.Apm.Model
 					}
 				}
 				else
-				{
-					_payloadSender.QueueSpan(this);
+					QueueSpan(this);
+			}
 
-					if (isFirstEndCall)
-						_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+			if (isFirstEndCall)
+				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+
+			void QueueSpan(ISpan span)
+			{
+				if (Discardable)
+				{
+					if (Composite != null && Composite.Sum < Configuration.ExitSpanMinDuration)
+					{
+						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+						_logger.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
+						return;
+					}
+					if (Duration < Configuration.ExitSpanMinDuration)
+					{
+						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+						_logger.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
+						return;
+					}
 				}
+
+				_payloadSender.QueueSpan(span);
 			}
 		}
 
@@ -521,7 +554,7 @@ namespace Elastic.Apm.Model
 				_enclosingTransaction.CompressionBuffer = this;
 		}
 
-		public bool IsCompressionEligible() => IsExitSpan && /*TODO !context.hasPropagated && */Outcome is Outcome.Success or Outcome.Unknown;
+		public bool IsCompressionEligible() => IsExitSpan &&  !_hasPropagatedContext && Outcome is Outcome.Success or Outcome.Unknown;
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null

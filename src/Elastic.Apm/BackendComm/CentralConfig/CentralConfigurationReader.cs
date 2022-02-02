@@ -60,6 +60,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal double? SpanCompressionSameKindMaxDuration { get; private set; }
 
+		internal double? ExitSpanMinDuration { get; private set; }
+
 		private void UpdateConfigurationValues()
 		{
 			CaptureBody = GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyKey, ParseCaptureBody);
@@ -85,13 +87,16 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			IgnoreMessageQueues =
 				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueuesImpl);
 			SpanCompressionEnabled =
-				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionEnabled, ParseSpanCompressionEnabled);
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionEnabled,
+					ParseSpanCompressionEnabled);
 			SpanCompressionExactMatchMaxDuration =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionExactMatchMaxDuration,
 					ParseSpanCompressionExactMatchMaxDuration);
 			SpanCompressionSameKindMaxDuration =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionSameKindMaxDuration,
 					ParseSpanCompressionSameKindMaxDuration);
+			ExitSpanMinDuration =
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.ExitSpanMinDuration, ParseExitSpanMinDuration);
 		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>

@@ -33,6 +33,7 @@ namespace Elastic.Apm.Config
 		public bool Enabled => _content.Enabled;
 		public string Environment => _content.Environment;
 		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
+		public double ExitSpanMinDuration => _content.ExitSpanMinDuration;
 		public TimeSpan FlushInterval => _content.FlushInterval;
 		public IReadOnlyDictionary<string, string> GlobalLabels => _content.GlobalLabels;
 		public string HostName => _content.HostName;
