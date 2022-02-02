@@ -64,6 +64,9 @@ namespace Elastic.Apm.Tests
 			public Uri ServerUrl => ConfigConsts.DefaultValues.ServerUri;
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }
+			public bool SpanCompressionEnabled => ConfigConsts.DefaultValues.SpanCompressionEnabled;
+			public double SpanCompressionExactMatchMaxDuration => ConfigConsts.DefaultValues.SpanCompressionExactMatchMaxDurationInMilliseconds;
+			public double SpanCompressionSameKindMaxDuration => ConfigConsts.DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => ConfigConsts.DefaultValues.DisableMetrics;
 			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => ConfigConsts.DefaultValues.IgnoreMessageQueues;
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;

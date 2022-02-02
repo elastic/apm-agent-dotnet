@@ -33,6 +33,8 @@ namespace Elastic.Apm.Model
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
 
+		private Span _compressionBuffer;
+
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
 		private Span(double duration, string id, string name, string parentId)
@@ -213,6 +215,8 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		internal StackTrace RawStackTrace;
 
+		public Composite Composite { get; set; }
+
 		/// <summary>
 		/// Captures the sample rate of the agent when this span was created.
 		/// </summary>
@@ -282,7 +286,7 @@ namespace Elastic.Apm.Model
 
 		public OTel Otel { get; set; }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null,  bool isExitSpan = false)
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false)
 		{
 			if (Configuration.Enabled && Configuration.Recording)
 				return StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan);
@@ -291,12 +295,13 @@ namespace Elastic.Apm.Model
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,  string id = null,
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
+			string id = null,
 			bool isExitSpan = false
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp,  isExitSpan, id);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
@@ -379,8 +384,9 @@ namespace Elastic.Apm.Model
 				_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
 			}
 
-			if (_isDropped && (!string.IsNullOrEmpty(ServiceResource) || (_context.IsValueCreated &&  Context?.Destination?.Service?.Resource != null)))
-				_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration.Value);
+			if (_isDropped && (!string.IsNullOrEmpty(ServiceResource)
+					|| (_context.IsValueCreated && Context?.Destination?.Service?.Resource != null)))
+				_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
@@ -391,12 +397,131 @@ namespace Elastic.Apm.Model
 						|| Configuration.SpanFramesMinDurationInMilliseconds < 0))
 					RawStackTrace = new StackTrace(true);
 
-				_payloadSender.QueueSpan(this);
+				var buffered = _parentSpan?._compressionBuffer ?? _enclosingTransaction.CompressionBuffer;
+
+				if (Configuration.SpanCompressionEnabled)
+				{
+					if (!IsCompressionEligible())
+					{
+						if (buffered != null)
+						{
+							_payloadSender.QueueSpan(buffered);
+							if (_parentSpan != null)
+								_parentSpan._compressionBuffer = null;
+							_enclosingTransaction.CompressionBuffer = null;
+						}
+
+						//If this is a span which has buffered children, we send the composite.
+						if (_compressionBuffer != null)
+							_payloadSender.QueueSpan(_compressionBuffer);
+
+						_payloadSender.QueueSpan(this);
+						if (isFirstEndCall)
+							_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+						return;
+					}
+					if (buffered == null)
+					{
+						SetThisToParentsBuffer();
+						if (isFirstEndCall)
+							_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+						return;
+					}
+
+					if (!buffered.TryToCompress(this))
+					{
+						_payloadSender.QueueSpan(buffered);
+						SetThisToParentsBuffer();
+
+						if (isFirstEndCall)
+							_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+					}
+				}
+				else
+				{
+					_payloadSender.QueueSpan(this);
+
+					if (isFirstEndCall)
+						_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+				}
+			}
+		}
+
+		private bool TryToCompress(Span sibling)
+		{
+			var isAlreadyComposite = Composite != null;
+			var canBeCompressed = isAlreadyComposite ? TryToCompressComposite(sibling) : TryToCompressRegular(sibling);
+			if (!canBeCompressed)
+				return false;
+
+
+			if (!isAlreadyComposite)
+			{
+				Composite.Count = 1;
+				Composite.Sum = Duration!.Value;
 			}
 
-			if (isFirstEndCall)
-				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+			Composite.Count++;
+			Composite.Sum += sibling.Duration!.Value;
+			return true;
 		}
+
+		private bool IsSameKind(Span other) => Type == other.Type
+			&& Subtype == other.Subtype
+			&& _context.IsValueCreated && other._context.IsValueCreated
+			&& Context.Destination.Service.Resource == other.Context.Destination.Service.Resource;
+
+		private bool TryToCompressRegular(Span sibling)
+		{
+			if (!IsSameKind(sibling)) return false;
+
+			Composite = new Composite();
+
+			if (Name == sibling.Name)
+			{
+				if (Duration <= Configuration.SpanCompressionExactMatchMaxDuration
+					&& sibling.Duration <= Configuration.SpanCompressionExactMatchMaxDuration)
+				{
+					Composite.CompressionStrategy = "exact_match";
+					return true;
+				}
+
+				return false;
+			}
+
+			if (Duration <= Configuration.SpanCompressionSameKindMaxDuration && sibling.Duration <= Configuration.SpanCompressionSameKindMaxDuration)
+			{
+				Composite.CompressionStrategy = "same_kind";
+				Name = "Calls to " + Context.Destination.Service.Resource; //TODO check if Context exists
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool TryToCompressComposite(Span sibling)
+		{
+			switch (Composite.CompressionStrategy)
+			{
+				case "exact_match":
+					return IsSameKind(sibling) && Name == sibling.Name && sibling.Duration <= Configuration.SpanCompressionExactMatchMaxDuration;
+
+				case "same_kind":
+					return IsSameKind(sibling) && sibling.Duration <= Configuration.SpanCompressionSameKindMaxDuration;
+			}
+
+			return false;
+		}
+
+		private void SetThisToParentsBuffer()
+		{
+			if (_parentSpan != null)
+				_parentSpan._compressionBuffer = this;
+			else
+				_enclosingTransaction.CompressionBuffer = this;
+		}
+
+		public bool IsCompressionEligible() => IsExitSpan && /*TODO !context.hasPropagated && */Outcome is Outcome.Success or Outcome.Unknown;
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null
@@ -468,7 +593,7 @@ namespace Elastic.Apm.Model
 
 			if (!_context.IsValueCreated)
 			{
-				if(string.IsNullOrEmpty(ServiceResource))
+				if (string.IsNullOrEmpty(ServiceResource))
 					ServiceResource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 				return;
 			}
@@ -600,6 +725,28 @@ namespace Elastic.Apm.Model
 			Count++;
 			TotalDuration += duration;
 		}
+	}
+
+	/// <summary>
+	/// Composite holds details on a group of spans represented by a single one.
+	/// </summary>
+	internal class Composite
+	{
+		/// <summary>
+		/// A string value indicating which compression strategy was used. The valid values are `exact_match` and `same_kind`
+		/// </summary>
+		[JsonProperty("compression_strategy")]
+		public string CompressionStrategy { get; set; }
+
+		/// <summary>
+		/// Count is the number of compressed spans the composite span represents. The minimum count is 2, as a composite span represents at least two spans.
+		/// </summary>
+		public int Count { get; set; }
+
+		/// <summary>
+		/// Sum is the durations of all compressed spans this composite span represents in milliseconds.
+		/// </summary>
+		public double Sum { get; set; }
 	}
 
 	internal class ChildDurationTimer

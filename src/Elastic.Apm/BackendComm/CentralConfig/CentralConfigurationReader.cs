@@ -18,8 +18,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private readonly CentralConfigurationResponseParser.CentralConfigPayload _configPayload;
 
-		public CentralConfigurationReader(IApmLogger logger, CentralConfigurationResponseParser.CentralConfigPayload configPayload, string eTag) : base(logger,
-			ThisClassName)
+		public CentralConfigurationReader(IApmLogger logger, CentralConfigurationResponseParser.CentralConfigPayload configPayload, string eTag) :
+			base(logger,
+				ThisClassName)
 		{
 			_configPayload = configPayload;
 			ETag = eTag;
@@ -53,6 +54,12 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal double? TransactionSampleRate { get; private set; }
 
+		internal bool? SpanCompressionEnabled { get; private set; }
+
+		internal double? SpanCompressionExactMatchMaxDuration { get; private set; }
+
+		internal double? SpanCompressionSameKindMaxDuration { get; private set; }
+
 		private void UpdateConfigurationValues()
 		{
 			CaptureBody = GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyKey, ParseCaptureBody);
@@ -62,12 +69,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				ParseTransactionMaxSpans);
 			TransactionSampleRate = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TransactionSampleRateKey,
 				ParseTransactionSampleRate);
-			CaptureHeaders = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
+			CaptureHeaders =
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
 			LogLevel = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.LogLevelKey, ParseLogLevel);
 			SpanFramesMinDurationInMilliseconds =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanFramesMinDurationKey,
 					ParseSpanFramesMinDurationInMilliseconds);
-			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
+			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.StackTraceLimitKey,
+				ParseStackTraceLimit);
 			Recording = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.Recording, ParseRecording);
 			SanitizeFieldNames =
 				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNamesImpl);
@@ -75,6 +84,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrlsImpl);
 			IgnoreMessageQueues =
 				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueuesImpl);
+			SpanCompressionEnabled =
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionEnabled, ParseSpanCompressionEnabled);
+			SpanCompressionExactMatchMaxDuration =
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionExactMatchMaxDuration,
+					ParseSpanCompressionExactMatchMaxDuration);
+			SpanCompressionSameKindMaxDuration =
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionSameKindMaxDuration,
+					ParseSpanCompressionSameKindMaxDuration);
 		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>

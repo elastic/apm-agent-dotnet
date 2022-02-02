@@ -53,6 +53,9 @@ namespace Elastic.Apm.Config
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;
 		public string ServiceVersion => _content.ServiceVersion;
+		public bool SpanCompressionEnabled => _content.SpanCompressionEnabled;
+		public double SpanCompressionExactMatchMaxDuration => _content.SpanCompressionExactMatchMaxDuration;
+		public double SpanCompressionSameKindMaxDuration => _content.SpanCompressionSameKindMaxDuration;
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
 

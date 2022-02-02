@@ -32,6 +32,11 @@ namespace Elastic.Apm.Config
 			public const int MaxQueueEventCount = 1000;
 			public const string MetricsInterval = "30s";
 			public const double MetricsIntervalInMilliseconds = 30 * 1000;
+			public const bool SpanCompressionEnabled = false;
+			public const string SpanCompressionExactMatchMaxDuration = "5ms";
+			public const double SpanCompressionExactMatchMaxDurationInMilliseconds = 5;
+			public const string SpanCompressionSameKindMaxDuration = "5ms";
+			public const double SpanCompressionSameKindMaxDurationInMilliseconds = 5;
 			public const string SpanFramesMinDuration = "5ms";
 			public const double SpanFramesMinDurationInMilliseconds = 5;
 			public const int StackTraceLimit = 50;
@@ -69,39 +74,39 @@ namespace Elastic.Apm.Config
 			{
 				SanitizeFieldNames = new List<WildcardMatcher>();
 				foreach (var item in new List<string>
-				{
-					"password",
-					"passwd",
-					"pwd",
-					"secret",
-					"*key",
-					"*token*",
-					"*session*",
-					"*credit*",
-					"*card*",
-					"authorization",
-					"set-cookie"
-				})
+						 {
+							 "password",
+							 "passwd",
+							 "pwd",
+							 "secret",
+							 "*key",
+							 "*token*",
+							 "*session*",
+							 "*credit*",
+							 "*card*",
+							 "authorization",
+							 "set-cookie"
+						 })
 					SanitizeFieldNames.Add(WildcardMatcher.ValueOf(item));
 
 				TransactionIgnoreUrls = new List<WildcardMatcher>();
 
 				foreach (var item in new List<string>
-				{
-					"/VAADIN/*",
-					"/heartbeat*",
-					"/favicon.ico",
-					"*.js",
-					"*.css",
-					"*.jpg",
-					"*.jpeg",
-					"*.png",
-					"*.gif",
-					"*.webp",
-					"*.svg",
-					"*.woff",
-					"*.woff2"
-				})
+						 {
+							 "/VAADIN/*",
+							 "/heartbeat*",
+							 "/favicon.ico",
+							 "*.js",
+							 "*.css",
+							 "*.jpg",
+							 "*.jpeg",
+							 "*.png",
+							 "*.gif",
+							 "*.webp",
+							 "*.svg",
+							 "*.woff",
+							 "*.woff2"
+						 })
 					TransactionIgnoreUrls.Add(WildcardMatcher.ValueOf(item));
 			}
 
@@ -143,6 +148,9 @@ namespace Elastic.Apm.Config
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
+			public const string SpanCompressionEnabled = Prefix + "SPAN_COMPRESSION_ENABLED";
+			public const string SpanCompressionExactMatchMaxDuration = Prefix + "SPAN_COMPRESSION_EXACT_MATCH_MAX_DURATION";
+			public const string SpanCompressionSameKindMaxDuration = Prefix + "SPAN_COMPRESSION_SAME_KIND_MAX_DURATION";
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TraceContextIgnoreSampledFalse = Prefix + "TRACE_CONTEXT_IGNORE_SAMPLED_FALSE";
@@ -168,7 +176,9 @@ namespace Elastic.Apm.Config
 			public const string Environment = Prefix + nameof(Environment);
 			public const string EnableOpenTelemetryBridge = Prefix + nameof(EnableOpenTelemetryBridge);
 			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
+
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
+
 			//This setting is Full Framework only:
 			public const string FullFrameworkConfigurationReaderType = Prefix + nameof(FullFrameworkConfigurationReaderType);
 			public const string GlobalLabels = Prefix + nameof(GlobalLabels);
@@ -187,6 +197,9 @@ namespace Elastic.Apm.Config
 			public const string ServiceName = Prefix + nameof(ServiceName);
 			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
 			public const string ServiceVersion = Prefix + nameof(ServiceVersion);
+			public const string SpanCompressionEnabled = Prefix + nameof(SpanCompressionEnabled);
+			public const string SpanCompressionExactMatchMaxDuration = Prefix + nameof(SpanCompressionExactMatchMaxDuration);
+			public const string SpanCompressionSameKindMaxDuration = Prefix + nameof(SpanCompressionSameKindMaxDuration);
 			public const string SpanFramesMinDuration = Prefix + nameof(SpanFramesMinDuration);
 			public const string TraceContextIgnoreSampledFalse = Prefix + nameof(TraceContextIgnoreSampledFalse);
 			public const string StackTraceLimit = Prefix + nameof(StackTraceLimit);
@@ -215,7 +228,11 @@ namespace Elastic.Apm.Config
 
 			public static readonly HashSet<string> CloudProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{
-				CloudProviderAuto, CloudProviderAws, CloudProviderAzure, CloudProviderGcp, CloudProviderNone
+				CloudProviderAuto,
+				CloudProviderAws,
+				CloudProviderAzure,
+				CloudProviderGcp,
+				CloudProviderNone
 			};
 		}
 	}

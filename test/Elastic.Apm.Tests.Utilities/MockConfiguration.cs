@@ -46,6 +46,9 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _serviceName;
 		private readonly string _serviceNodeName;
 		private readonly string _serviceVersion;
+		private readonly string _spanCompressionEnabled;
+		private readonly string _spanCompressionExactMatchMaxDuration;
+		private readonly string _spanCompressionSameKindMaxDuration;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
 		private readonly string _traceContextIgnoreSampledFalse;
@@ -94,7 +97,10 @@ namespace Elastic.Apm.Tests.Utilities
 			string serverUrl = null,
 			string serverCert = null,
 			string ignoreMessageQueues = null,
-			string traceContextIgnoreSampledFalse = null
+			string traceContextIgnoreSampledFalse = null,
+			string spanCompressionEnabled = null,
+			string spanCompressionExactMatchMaxDuration = null,
+			string spanCompressionSameKindMaxDuration = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -135,6 +141,9 @@ namespace Elastic.Apm.Tests.Utilities
 			_serverCert = serverCert;
 			_ignoreMessageQueues = ignoreMessageQueues;
 			_traceContextIgnoreSampledFalse = traceContextIgnoreSampledFalse;
+			_spanCompressionEnabled = spanCompressionEnabled;
+			_spanCompressionExactMatchMaxDuration = spanCompressionExactMatchMaxDuration;
+			_spanCompressionSameKindMaxDuration = spanCompressionSameKindMaxDuration;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -206,6 +215,14 @@ namespace Elastic.Apm.Tests.Utilities
 		public string ServiceName => ParseServiceName(Kv(EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceNodeName => ParseServiceNodeName(Kv(EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(EnvVarNames.ServiceVersion, _serviceVersion, Origin));
+		public bool SpanCompressionEnabled => ParseSpanCompressionEnabled(Kv(EnvVarNames.SpanCompressionEnabled, _spanCompressionEnabled, Origin));
+
+		public double SpanCompressionExactMatchMaxDuration =>
+			ParseSpanCompressionExactMatchMaxDuration(Kv(EnvVarNames.SpanCompressionExactMatchMaxDuration, _spanCompressionExactMatchMaxDuration,
+				Origin));
+
+		public double SpanCompressionSameKindMaxDuration => ParseSpanCompressionSameKindMaxDuration(Kv(EnvVarNames.SpanCompressionSameKindMaxDuration,
+			_spanCompressionSameKindMaxDuration, Origin));
 
 		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Kv(
 			EnvVarNames.SpanFramesMinDuration,

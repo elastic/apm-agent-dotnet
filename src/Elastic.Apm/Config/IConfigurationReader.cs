@@ -245,6 +245,29 @@ namespace Elastic.Apm.Config
 		string ServiceVersion { get; }
 
 		/// <summary>
+		/// Setting this option to true will enable span compression feature.
+		/// Span compression reduces the collection, processing, and storage overhead, and removes clutter from the UI.
+		/// The tradeoff is that some information such as DB statements of all the compressed spans will not be collected.
+		/// </summary>
+		bool SpanCompressionEnabled { get; }
+
+		/// <summary>
+		/// Consecutive spans that are exact match and that are under this threshold will be compressed into a single composite span.
+		/// This option does not apply to composite spans. This reduces the collection, processing, and storage overhead, and removes clutter
+		/// from the UI.
+		/// The tradeoff is that the DB statements of all the compressed spans will not be collected.
+		/// </summary>
+		double SpanCompressionExactMatchMaxDuration { get; }
+
+		/// <summary>
+		/// Consecutive spans to the same destination that are under this threshold will be compressed into a single composite span.
+		/// This option does not apply to composite spans.
+		/// This reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that the DB statements of
+		/// all the compressed spans will not be collected.
+		/// </summary>
+		double SpanCompressionSameKindMaxDuration { get; }
+
+		/// <summary>
 		/// The agent limits stack trace collection to spans with durations equal or longer than the given value
 		/// 0: Disables stack trace collection for spans completely
 		/// negative value: stacktrace will be collected for all spans

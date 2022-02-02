@@ -48,6 +48,9 @@ namespace Elastic.Apm.Feature.Tests
 		public string ServiceName { get; set; }
 		public string ServiceNodeName { get; set; }
 		public string ServiceVersion { get; set; }
+		public bool SpanCompressionEnabled => DefaultValues.SpanCompressionEnabled;
+		public double SpanCompressionExactMatchMaxDuration => DefaultValues.SpanCompressionExactMatchMaxDurationInMilliseconds;
+		public double SpanCompressionSameKindMaxDuration => DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
 		public double SpanFramesMinDurationInMilliseconds { get; set; } = DefaultValues.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit { get; set; } = DefaultValues.StackTraceLimit;
 		public bool TraceContextIgnoreSampledFalse { get; set; } = DefaultValues.TraceContextIgnoreSampledFalse;
