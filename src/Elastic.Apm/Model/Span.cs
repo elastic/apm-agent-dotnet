@@ -458,19 +458,27 @@ namespace Elastic.Apm.Model
 			if (isFirstEndCall)
 				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 
-			void QueueSpan(ISpan span)
+			void QueueSpan(Span span)
 			{
-				if (Discardable)
+				if (span.Composite != null)
 				{
-					if (Composite != null && Composite.Sum < Configuration.ExitSpanMinDuration)
+					var endTimestamp = TimeUtils.TimestampNow();
+					span.Duration = TimeUtils.DurationBetweenTimestamps(span.Timestamp, endTimestamp);
+				}
+
+				if (span.Discardable)
+				{
+					if (span.Composite != null && span.Duration < Configuration.ExitSpanMinDuration)
 					{
-						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
+							Duration!.Value);
 						_logger.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
 						return;
 					}
-					if (Duration < Configuration.ExitSpanMinDuration)
+					if (span.Duration < Configuration.ExitSpanMinDuration)
 					{
-						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
+							Duration!.Value);
 						_logger.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
 						return;
 					}
@@ -554,7 +562,7 @@ namespace Elastic.Apm.Model
 				_enclosingTransaction.CompressionBuffer = this;
 		}
 
-		public bool IsCompressionEligible() => IsExitSpan &&  !_hasPropagatedContext && Outcome is Outcome.Success or Outcome.Unknown;
+		public bool IsCompressionEligible() => IsExitSpan && !_hasPropagatedContext && Outcome is Outcome.Success or Outcome.Unknown;
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null
