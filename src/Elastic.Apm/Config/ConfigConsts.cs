@@ -35,8 +35,8 @@ namespace Elastic.Apm.Config
 			public const string MetricsInterval = "30s";
 			public const double MetricsIntervalInMilliseconds = 30 * 1000;
 			public const bool SpanCompressionEnabled = false;
-			public const string SpanCompressionExactMatchMaxDuration = "5ms";
-			public const double SpanCompressionExactMatchMaxDurationInMilliseconds = 5;
+			public const string SpanCompressionExactMatchMaxDuration = "50ms";
+			public const double SpanCompressionExactMatchMaxDurationInMilliseconds = 50;
 			public const string SpanCompressionSameKindMaxDuration = "5ms";
 			public const double SpanCompressionSameKindMaxDurationInMilliseconds = 5;
 			public const string SpanFramesMinDuration = "5ms";
