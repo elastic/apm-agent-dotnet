@@ -533,7 +533,8 @@ namespace Elastic.Apm.Model
 			if (Duration <= Configuration.SpanCompressionSameKindMaxDuration && sibling.Duration <= Configuration.SpanCompressionSameKindMaxDuration)
 			{
 				Composite.CompressionStrategy = "same_kind";
-				Name = "Calls to " + Context.Destination.Service.Resource; //TODO check if Context exists
+				if(_context.IsValueCreated)
+					Name = "Calls to " + Context.Destination.Service.Resource;
 				return true;
 			}
 

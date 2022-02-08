@@ -163,7 +163,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfiguration(_logger, enabled: "false"), _capturedPayload));
+				new MockConfiguration(_logger, enabled: "false", exitSpanMinDuration:"0"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 

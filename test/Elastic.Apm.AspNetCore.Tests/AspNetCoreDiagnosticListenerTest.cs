@@ -39,7 +39,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
 		{
 			var capturedPayload = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(exitSpanMinDuration:"0"))))
 			{
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
