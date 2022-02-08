@@ -59,8 +59,8 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "15s", spanCompressionExactMatchMaxDuration:"1ms", exitSpanMinDuration:"0"))))
-				Generate10DbCalls(agent, null, true, 5);
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "15s", spanCompressionExactMatchMaxDuration:"100ms", exitSpanMinDuration:"0"))))
+				Generate10DbCalls(agent, null, true, 200);
 
 			payloadSender.Transactions.Should().HaveCount(1);
 			payloadSender.Spans.Should().HaveCount(1);
