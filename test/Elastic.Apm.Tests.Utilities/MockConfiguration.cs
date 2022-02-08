@@ -146,7 +146,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_spanCompressionEnabled = spanCompressionEnabled;
 			_spanCompressionExactMatchMaxDuration = spanCompressionExactMatchMaxDuration;
 			_spanCompressionSameKindMaxDuration = spanCompressionSameKindMaxDuration;
-			_exitSpanMinDuration = excludedNamespaces;
+			_exitSpanMinDuration = exitSpanMinDuration;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));

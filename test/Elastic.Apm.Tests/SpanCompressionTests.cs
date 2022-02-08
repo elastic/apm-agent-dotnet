@@ -79,7 +79,7 @@ namespace Elastic.Apm.Tests
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s"))))
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s", exitSpanMinDuration:"0"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{
@@ -127,7 +127,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s"))))
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s", exitSpanMinDuration: "0"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{

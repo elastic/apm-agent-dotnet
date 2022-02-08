@@ -699,7 +699,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void FillSpanContext()
 		{
 			var payloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0")));
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{

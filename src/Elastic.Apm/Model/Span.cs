@@ -468,14 +468,14 @@ namespace Elastic.Apm.Model
 
 				if (span.Discardable)
 				{
-					if (span.Composite != null && span.Duration < Configuration.ExitSpanMinDuration)
+					if (span.Composite != null && span.Duration < span.Configuration.ExitSpanMinDuration)
 					{
 						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
 							Duration!.Value);
 						_logger.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
 						return;
 					}
-					if (span.Duration < Configuration.ExitSpanMinDuration)
+					if (span.Duration <  span.Configuration.ExitSpanMinDuration)
 					{
 						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
 							Duration!.Value);

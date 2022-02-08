@@ -16,7 +16,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void TestNonExitSpan()
 		{
 			var payloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0")));
 			agent.Tracer.CaptureTransaction("foo", "bar", t =>
 			{
 				t.StartSpan("foo", "bar").End();
@@ -29,7 +29,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SimpleManualExitSpanWithNoContext()
 		{
 			var payloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0")));
 			agent.Tracer.CaptureTransaction("foo", "bar", t =>
 			{
 				t.StartSpan("foo", "bar", isExitSpan: true).End();
@@ -43,7 +43,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SimpleManualExitSpanWithContext()
 		{
 			var payloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0")));
 			agent.Tracer.CaptureTransaction("foo", "bar", t =>
 			{
 				var span = t.StartSpan("foo", "bar", isExitSpan: true);
