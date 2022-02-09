@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
@@ -63,6 +64,8 @@ namespace Elastic.Apm.Api
 				Node = new Node { ConfiguredName = configurationReader.ServiceNodeName }
 			};
 
+			CheckIfProfiler(service);
+
 			//see https://github.com/elastic/apm-agent-dotnet/issues/859
 			try
 			{
@@ -74,6 +77,15 @@ namespace Elastic.Apm.Api
 			}
 
 			return service;
+		}
+
+		/// <summary>
+		/// Checks if the profiler is loaded and if so, it adds a `p` suffix to Agent.Version
+		/// </summary>
+		/// <param name="service"></param>
+		private static void CheckIfProfiler(Service service)
+		{
+			if (AppDomain.CurrentDomain.GetAssemblies().Where(n => n.FullName == "Elastic.Apm.Profiler.Managed").Any()) service.Agent.Version += "p";
 		}
 
 		public class AgentC
