@@ -88,10 +88,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task CustomTransactionNameWithNameUsingRequestInfo(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
-			await httpClient.GetAsync("home/TransactionWithCustomNameUsingRequestInfo");
+			if (httpClient != null)
+			{
+				await httpClient.GetAsync("home/TransactionWithCustomNameUsingRequestInfo");
 
-			_payloadSender.WaitForTransactions();
-			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
+				_payloadSender.WaitForTransactions();
+				_payloadSender?.Transactions?.Should()?.OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
+			}
 		}
 
 		/// <summary>
