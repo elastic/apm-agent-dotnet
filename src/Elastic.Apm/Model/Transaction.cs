@@ -253,7 +253,7 @@ namespace Elastic.Apm.Model
 				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
 				if (configuration.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
-					|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
+						|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
 					_traceState?.SetSampleRate(sampler.Rate);
@@ -599,11 +599,25 @@ namespace Elastic.Apm.Model
 
 			if (CompressionBuffer != null)
 			{
-				_sender.QueueSpan(CompressionBuffer);
+				if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
+				{
+					_logger?.Info()
+						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}", CompressionBuffer.Id);
+				}
+				else
+					_sender.QueueSpan(CompressionBuffer);
+
 				CompressionBuffer = null;
 			}
 
-			_sender.QueueTransaction(this);
+			if (IsSampled || _apmServerInfo?.Version < new ElasticVersion(8, 0, 0, string.Empty))
+				_sender.QueueTransaction(this);
+			else
+			{
+				_logger?.Info()
+					?.Log("Dropping unsampled transaction - unsampled transactions won't be sent on APM Server v8+. TransactionId: {id}", Id);
+			}
+
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
 		}
 
@@ -631,12 +645,14 @@ namespace Elastic.Apm.Model
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null, string id = null,
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
+			string id = null,
 			bool isExitSpan = false
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
-				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,  isExitSpan: isExitSpan);
+				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,
+				isExitSpan: isExitSpan);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))
@@ -681,7 +697,9 @@ namespace Elastic.Apm.Model
 				labels
 			);
 
-		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null, bool isExitSpan = false)
+		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), capturedAction);
 
 		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false)
@@ -696,13 +714,18 @@ namespace Elastic.Apm.Model
 		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
 		internal static string StatusCodeToResult(string protocolName, int statusCode) => $"{protocolName} {statusCode.ToString()[0]}xx";
