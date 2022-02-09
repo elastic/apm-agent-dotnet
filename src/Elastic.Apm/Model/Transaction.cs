@@ -46,6 +46,8 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
+		internal Span CompressionBuffer;
+
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
 		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
@@ -594,6 +596,12 @@ namespace Elastic.Apm.Model
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);
 			Ended = null;
+
+			if (CompressionBuffer != null)
+			{
+				_sender.QueueSpan(CompressionBuffer);
+				CompressionBuffer = null;
+			}
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;

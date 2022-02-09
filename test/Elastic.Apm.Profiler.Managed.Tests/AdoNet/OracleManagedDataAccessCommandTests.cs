@@ -50,7 +50,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 					["ORACLE_CONNECTION_STRING"] = _fixture.ConnectionString,
 					["ELASTIC_APM_DISABLE_METRICS"] = "*",
 					// to fix ORA-01882 Timezone region not found on CI.
-					["TZ"] = "GMT"
+					["TZ"] = "GMT",
+					["ELASTIC_APM_EXIT_SPAN_MIN_DURATION"] = "0",
+					["ELASTIC_APM_SPAN_COMPRESSION_ENABLED"] = "false"
 				};
 
 				profiledApplication.Start(

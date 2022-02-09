@@ -62,6 +62,8 @@ namespace Elastic.Apm.Config
 		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(Read(KeyNames.ExcludedNamespaces, EnvVarNames.ExcludedNamespaces));
 
+		public double ExitSpanMinDuration => ParseExitSpanMinDuration(Read(KeyNames.ExitSpanMinDuration, EnvVarNames.ExitSpanMinDuration));
+
 		public virtual TimeSpan FlushInterval =>
 			ParseFlushInterval(Read(KeyNames.FlushInterval, EnvVarNames.FlushInterval));
 
@@ -130,6 +132,12 @@ namespace Elastic.Apm.Config
 
 		public virtual string ServiceVersion =>
 			ParseServiceVersion(Read(KeyNames.ServiceVersion, EnvVarNames.ServiceVersion));
+
+		public bool SpanCompressionEnabled => ParseSpanCompressionEnabled(Read(KeyNames.SpanCompressionEnabled, EnvVarNames.SpanCompressionEnabled));
+
+		public double SpanCompressionExactMatchMaxDuration => ParseSpanCompressionExactMatchMaxDuration(Read(KeyNames.SpanCompressionExactMatchMaxDuration, EnvVarNames.SpanCompressionExactMatchMaxDuration));
+
+		public double SpanCompressionSameKindMaxDuration => ParseSpanCompressionSameKindMaxDuration(Read(KeyNames.SpanCompressionSameKindMaxDuration, EnvVarNames.SpanCompressionSameKindMaxDuration));
 
 		public virtual double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
