@@ -815,6 +815,7 @@ public class ConvenientApiSpanTests
 		payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 		payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
+		payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
 		payloadSender.WaitForErrors();
 		payloadSender.Errors.Should().NotBeEmpty();
