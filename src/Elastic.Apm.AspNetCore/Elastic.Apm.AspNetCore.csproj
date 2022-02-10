@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Elastic.Apm.AspNetCore</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetCore</RootNamespace>
     <PackageId>Elastic.Apm.AspNetCore</PackageId>
-    <Description>Elastic APM for ASP.NET Core. This package contains auto instrumentation for ASP.NET Core. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+    <Description>Elastic APM for ASP.NET Core. This package contains auto instrumentation for ASP.NET Core. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore</PackageTags>
     <TargetFrameworks>netstandard2.0;netcoreapp3.0;net5.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
@@ -35,7 +35,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
-    <ProjectReference Include="..\Elastic.Apm.OpenTelemetry\Elastic.Apm.OpenTelemetry.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Elastic.Apm.Extensions.Hosting\Elastic.Apm.Extensions.Hosting.csproj" />

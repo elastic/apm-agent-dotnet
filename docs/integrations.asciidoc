@@ -24,8 +24,8 @@
 |MySql.Data 6.7.0 - 8.{star}.{star}
 
 .1+.^|NpgsqlCommand
-|{nuget}/Npgsql[Npgsql 4.0.0 - 5.{star}.{star}]
-|Npgsql 4.0.0 - 5.{star}.{star}
+|{nuget}/Npgsql[Npgsql 4.0.0 - 6.{star}.{star}]
+|Npgsql 4.0.0 - 6.{star}.{star}
 
 .2+.^|OracleCommand
 |{nuget}/Oracle.ManagedDataAccess[Oracle.ManagedDataAccess 12.2.1100 - 21.{star}.{star}]

@@ -30,9 +30,37 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			_output = output;
 		}
 
+		public static IEnumerable<object[]> TestParameters
+		{
+			get
+			{
+				// use the version defined in NpgsqlSample
+				var npgSqlVersion = "5.0.7";
+
+				// TODO: Add x64/x86 options. macOS and Linux do not support x86
+				yield return new object[] { "net5.0", npgSqlVersion };
+				yield return new object[] { "netcoreapp3.1", npgSqlVersion };
+
+				// macOS only supports netcoreapp3.1 and up
+				if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+				{
+					yield return new object[] { "netcoreapp3.0", npgSqlVersion };
+					yield return new object[] { "netcoreapp2.1", npgSqlVersion };
+				}
+
+				if (TestEnvironment.IsWindows)
+					yield return new object[] { "net461", npgSqlVersion };
+
+				npgSqlVersion = "6.0.2";
+
+				yield return new object[] { "net5.0", npgSqlVersion };
+				yield return new object[] { "netcoreapp3.1", npgSqlVersion };
+			}
+		}
+
 		[DockerTheory]
-		[ClassData(typeof(AdoNetTestData))]
-		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
+		[MemberData(nameof(TestParameters))]
+		public async Task CaptureAutoInstrumentedSpans(string targetFramework, string npgsqlVersion)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
@@ -41,17 +69,24 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 			using (var profiledApplication = new ProfiledApplication("NpgsqlSample"))
 			{
-				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
+				var environmentVariables = new Dictionary<string, string>
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 					["POSTGRES_CONNECTION_STRING"] = _fixture.ConnectionString,
 					["ELASTIC_APM_DISABLE_METRICS"] = "*",
+					["ELASTIC_APM_EXIT_SPAN_MIN_DURATION"] = "0",
+					["ELASTIC_APM_SPAN_COMPRESSION_ENABLED"] = "false"
 				};
+
+				var msBuildProperties = npgsqlVersion is null
+					? null
+					: new Dictionary<string, string> { ["NpgsqlVersion"] = npgsqlVersion };
 
 				profiledApplication.Start(
 					targetFramework,
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					msBuildProperties,
 					line => _output.WriteLine(line.Line),
 					exception => _output.WriteLine($"{exception}"));
 			}

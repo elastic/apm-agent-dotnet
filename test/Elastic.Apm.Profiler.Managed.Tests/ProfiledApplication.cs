@@ -7,7 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using Elastic.Apm.Tests.Utilities;
 using ProcNet;
 using ProcNet.Std;
@@ -45,7 +48,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 
 			if (!File.Exists(_profilerPath))
 				throw new FileNotFoundException(
-					$"profiler could not be found at {_profilerPath}. Run `build.[bat|sh] in project root to build it",
+					$"profiler could not be found at {_profilerPath}. Run './build.[bat|sh] build-profiler' in project root to build it",
 					_profilerPath);
 
 			_publishDirectory = Path.Combine("bin", "Publish");
@@ -53,19 +56,17 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 
 		private ObservableProcess _process;
 
-		private void Publish(string targetFramework)
+		private void Publish(string targetFramework, string outputDirectory, string msBuildProperties)
 		{
-			var targetFrameworkPublishDirectory = Path.Combine(_publishDirectory, targetFramework);
-
 			// if we're running on CI and the publish directory already exists for the
 			// target framework, skip publishing again.
-			if (TestEnvironment.IsCi && Directory.Exists(targetFrameworkPublishDirectory))
+			if (TestEnvironment.IsCi && Directory.Exists(outputDirectory))
 				return;
 
 			var processInfo = new ProcessStartInfo
 			{
 				FileName = "dotnet",
-				Arguments = $"publish -c Release -f {targetFramework} -o {targetFrameworkPublishDirectory}",
+				Arguments = $"publish -c Release -f {targetFramework} -o {outputDirectory} {msBuildProperties}",
 				WorkingDirectory = _projectDirectory
 			};
 
@@ -87,6 +88,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 		/// The environment variables to start the sample app with. The profiler
 		/// environment variables will be added.
 		/// </param>
+		/// <param name="msBuildProperties">
+		///	MsBuild properties passed to dotnet publish when compiling the sample app.
+		/// Appended to dotnet publish with the form <code>-p:{key}={value}</code>
+		/// </param>
 		/// <param name="onNext">delegate to call when line is received</param>
 		/// <param name="onException">delegate to call when exception occurs</param>
 		/// <returns></returns>
@@ -94,11 +99,16 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			string targetFramework,
 			TimeSpan timeout,
 			IDictionary<string, string> environmentVariables = null,
+			IDictionary<string, string> msBuildProperties = null,
 			Action<LineOut> onNext = null,
 			Action<Exception> onException = null
 		)
 		{
-			Publish(targetFramework);
+			var properties = CreateMsBuildProperties(msBuildProperties);
+			var outputDirectory = GetPublishOutputDirectory(targetFramework, properties);
+			var workingDirectory = Path.Combine(_projectDirectory, _publishDirectory, outputDirectory);
+
+			Publish(targetFramework, workingDirectory, properties);
 
 			environmentVariables ??= new Dictionary<string, string>();
 			environmentVariables["CORECLR_ENABLE_PROFILING"] = "1";
@@ -121,8 +131,6 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout";
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_IL"] = "true";
 
-			var workingDirectory = Path.Combine(_projectDirectory, _publishDirectory, targetFramework);
-
 			// use the .exe for net461
 			var arguments = targetFramework == "net461"
 				? new StartArguments(Path.Combine(workingDirectory, $"{_projectName}.exe"))
@@ -135,6 +143,25 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			_process.SubscribeLines(onNext ?? (_ => { }), onException ?? (_ => { }));
 			_process.WaitForCompletion(timeout);
 		}
+
+		private static string GetPublishOutputDirectory(string targetFramework, string properties)
+		{
+			if (properties is null)
+				return targetFramework;
+
+			var hash = MD5.HashData(Encoding.UTF8.GetBytes(properties));
+			var builder = new StringBuilder(targetFramework).Append('-');
+
+			foreach (var b in hash)
+				builder.Append(b.ToString("x2"));
+
+			return builder.ToString();
+		}
+
+		private static string CreateMsBuildProperties(IDictionary<string, string> msBuildProperties) =>
+			msBuildProperties is null
+				? null
+				: string.Join(" ", msBuildProperties.Select(kv => $"-p:{kv.Key}={kv.Value}"));
 
 		public void Dispose() => _process?.Dispose();
 	}

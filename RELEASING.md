@@ -28,20 +28,20 @@ For instance, the changelog that was created for the 1.2 release can be found in
 
 ## Releasing a new package
 
-In case you release a package the first time and you rely on the CI to push that to nuget.org, you need to make sure that the [deploy.sh](https://github.com/elastic/apm-agent-dotnet/blob/master/.ci/linux/deploy.sh) script is updated. You need to add the name of the new package into that script.
+In case you release a package the first time and you rely on the CI to push that to nuget.org, you need to make sure that the [deploy.sh](https://github.com/elastic/apm-agent-dotnet/blob/main/.ci/linux/deploy.sh) script is updated. You need to add the name of the new package into that script.
 
 ## Executing the release
 
-After the new changelog and version have been merged to master, the only thing remaining is to run the below commands:
+After the new changelog and version have been merged to main, the only thing remaining is to run the below commands:
 
 
  ```bash
  ## let's assume the origin is your forked repo and upstream the one where the releases are coming from.
- git checkout master
+ git checkout main
 
  ## let's ensure we do use the latest commit, although this requirement could be not neccessary if it's required
  ## to use another git commit rather than the HEAD at that time.
- git reset --hard upstream/master
+ git reset --hard upstream/main
 
  ## <major>, <minor>, <bug> and <suffix> should be replaced accordingly. <suffix> is an optional one.
  git tag <major>.<minor>.<bug>(-<suffix>)?

@@ -28,7 +28,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory)
 		{
-			_agent = new ApmAgent(new TestAgentComponents());
+			_agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(exitSpanMinDuration:"0")));
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 
 			//This registers the middleware without activating any listeners,

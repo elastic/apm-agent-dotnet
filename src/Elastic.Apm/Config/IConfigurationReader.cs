@@ -89,6 +89,16 @@ namespace Elastic.Apm.Config
 		IReadOnlyCollection<string> ExcludedNamespaces { get; }
 
 		/// <summary>
+		/// Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded.
+		/// If the exit span is equal or greater the threshold, it should be kept.
+		/// In some cases exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services,
+		/// such as outgoing HTTP requests, can't be discarded.
+		/// However, external calls that don't propagate context, such as calls to a database, can be discarded using this threshold.
+		/// Additionally, spans that lead to an error can't be discarded.
+		/// </summary>
+		double ExitSpanMinDuration { get; }
+
+		/// <summary>
 		/// The maximal amount of time (in seconds) events are held in queue until there is enough to send a batch.
 		/// It's possible for a batch to contain less then <seealso cref="MaxBatchEventCount" /> events
 		/// if there are events that need to be sent out because they were held for too long.
@@ -243,6 +253,29 @@ namespace Elastic.Apm.Config
 		/// e.g. the output of <code>git rev-parse HEAD</code>.
 		/// </summary>
 		string ServiceVersion { get; }
+
+		/// <summary>
+		/// Setting this option to true will enable span compression feature.
+		/// Span compression reduces the collection, processing, and storage overhead, and removes clutter from the UI.
+		/// The tradeoff is that some information such as DB statements of all the compressed spans will not be collected.
+		/// </summary>
+		bool SpanCompressionEnabled { get; }
+
+		/// <summary>
+		/// Consecutive spans that are exact match and that are under this threshold will be compressed into a single composite span.
+		/// This option does not apply to composite spans. This reduces the collection, processing, and storage overhead, and removes clutter
+		/// from the UI.
+		/// The tradeoff is that the DB statements of all the compressed spans will not be collected.
+		/// </summary>
+		double SpanCompressionExactMatchMaxDuration { get; }
+
+		/// <summary>
+		/// Consecutive spans to the same destination that are under this threshold will be compressed into a single composite span.
+		/// This option does not apply to composite spans.
+		/// This reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that the DB statements of
+		/// all the compressed spans will not be collected.
+		/// </summary>
+		double SpanCompressionSameKindMaxDuration { get; }
 
 		/// <summary>
 		/// The agent limits stack trace collection to spans with durations equal or longer than the given value

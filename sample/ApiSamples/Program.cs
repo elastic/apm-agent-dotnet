@@ -19,6 +19,10 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
+			CompressionSample();
+
+			Console.ReadKey();
+
 			if (args.Length == 1) //in case it's started with arguments, parse DistributedTracingData from them
 			{
 				var distributedTracingData = DistributedTracingData.TryDeserializeFromString(args[0]);
@@ -50,6 +54,37 @@ namespace ApiSamples
 				WriteLineToConsole("About to exit - press any key...");
 				Console.ReadKey();
 			}
+		}
+
+		public static void CompressionSample()
+		{
+			Environment.SetEnvironmentVariable("ELASTIC_APM_SPAN_COMPRESSION_ENABLED", "true");
+			Environment.SetEnvironmentVariable("ELASTIC_APM_SPAN_COMPRESSION_EXACT_MATCH_MAX_DURATION", "1s");
+
+			Agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
+			{
+				t.CaptureSpan("foo1", "bar", span1 =>
+				{
+					for (var i = 0; i < 10; i++)
+					{
+						span1.CaptureSpan("Select * From Table1", ApiConstants.TypeDb, (s) =>
+						{
+							s.Context.Db = new Database() { Type = "mssql", Instance = "01" };
+						}, ApiConstants.SubtypeMssql, isExitSpan: true);
+					}
+
+					span1.CaptureSpan("foo2", "randomSpan", () => { });
+
+
+					for (var i = 0; i < 10; i++)
+					{
+						span1.CaptureSpan("Select * From Table2", ApiConstants.TypeDb, (s2) =>
+						{
+							s2.Context.Db = new Database() { Type = "mssql", Instance = "01" };
+						}, ApiConstants.SubtypeMssql, isExitSpan: true);
+					}
+				});
+			});
 		}
 
 		public static void SampleCustomTransaction()
@@ -264,9 +299,7 @@ namespace ApiSamples
 					{
 						span.Context.Db = new Database
 						{
-							Statement = "GET /_all/_search?q=tag:wow",
-							Type = Database.TypeElasticsearch,
-							Instance = "MyInstance"
+							Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, Instance = "MyInstance"
 						};
 					});
 			});

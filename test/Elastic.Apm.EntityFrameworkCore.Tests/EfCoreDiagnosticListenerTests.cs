@@ -36,7 +36,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			_dbContext.Database.EnsureCreated();
 
 			_payloadSender = new MockPayloadSender();
-			_apmAgent = new ApmAgent(new AgentComponents(payloadSender: _payloadSender));
+			_apmAgent = new ApmAgent(new AgentComponents(payloadSender: _payloadSender, configurationReader: new MockConfiguration(exitSpanMinDuration:"0")));
 			_apmAgent.Subscribe(new EfCoreDiagnosticsSubscriber());
 		}
 

@@ -73,8 +73,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			public string Type { get; set; }
 
+			public string Name { get; set; }
+
 			public override string ToString() => new ToStringBuilder(nameof(ErrorDto))
 			{
+				{ nameof(Name), Name },
 				{ nameof(Type), Type },
 				{ nameof(IsSampled), IsSampled }
 			}.ToString();

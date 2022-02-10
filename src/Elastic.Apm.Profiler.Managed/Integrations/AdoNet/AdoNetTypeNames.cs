@@ -26,7 +26,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			Assembly = "Npgsql";
 			Type = "Npgsql.NpgsqlCommand";
 			MinimumVersion = "4.0.0";
-			MaximumVersion = "5.*.*";
+			MaximumVersion = "6.*.*";
 			Group = "NpgsqlCommand";
 		}
 	}

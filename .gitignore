@@ -360,3 +360,4 @@ target/
 Cargo.lock
 expanded.rs
 
+test/Elastic.Apm.Feature.Tests/SpecFlow/userid
