@@ -13,6 +13,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public static MockApmServerInfo Version716 { get; } = new MockApmServerInfo(new ElasticVersion(7, 16, 0, string.Empty));
 
+		public static MockApmServerInfo Version80 { get; } = new MockApmServerInfo(new ElasticVersion(8, 0, 0, string.Empty));
+
 		public MockApmServerInfo(ElasticVersion version) => Version = version;
 
 		public ElasticVersion Version { get; set; }
