@@ -7,14 +7,14 @@ Feature: Outcome
 
   Scenario: User set outcome on span has priority over instrumentation
     Given an active span
-    And the span outcome is 'success'
+    And the agent sets the span outcome to 'success'
     And a user sets the span outcome to 'failure'
     When the span ends
     Then the span outcome is 'failure'
 
   Scenario: User set outcome on transaction has priority over instrumentation
     Given an active transaction
-    And the transaction outcome is 'failure'
+    And the agent sets the transaction outcome to 'failure'
     And a user sets the transaction outcome to 'unknown'
     When the transaction ends
     Then the transaction outcome is 'unknown'
