@@ -69,12 +69,30 @@ namespace Elastic.Apm.Feature.Tests
 
 			var environmentVariables = new TestEnvironmentVariables();
 			_scenarioContext.Set(environmentVariables);
+
+			var service = Service.GetDefaultService(configuration, new NoopLogger());
+
+			foreach (var row in table.Rows)
+			{
+				switch (row[0])
+				{
+					case "service_name":
+						service.Name = row[1];
+						break;
+					case "service_version":
+						service.Version = row[1];
+						break;
+					default:
+						break;
+				}
+			}
+
 			_scenarioContext.Set(() =>
 			{
 				var payloadSender = new PayloadSenderV2(
 					logger,
 					configuration,
-					Service.GetDefaultService(configuration, new NoopLogger()),
+					service,
 					new Api.System(),
 					MockApmServerInfo.Version710,
 					handler,
