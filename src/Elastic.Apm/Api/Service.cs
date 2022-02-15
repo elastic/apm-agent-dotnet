@@ -87,7 +87,7 @@ namespace Elastic.Apm.Api
 		{
 			if (AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name
 			.Equals("Elastic.Apm.Profiler.Managed", StringComparison.OrdinalIgnoreCase)).Any())
-				service.Agent.Version += "p";
+				service.Agent.Version += "-p";
 		}
 
 		public class AgentC
