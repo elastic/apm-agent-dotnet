@@ -196,21 +196,14 @@ namespace Elastic.Apm.Feature.Tests
 			_scenarioContext.Set(span);
 		}
 
-		[Then(@"the span outcome is '([^']*)'")]
+		[Then(@"the agent sets the span outcome to '([^']*)'")]
 		public void ThenSpanOutcomeIs(string outcome)
 		{
 			var span = _scenarioContext.Get<ISpan>();
 			span.Outcome.ToString().ToLower().Should().Be(outcome);
 		}
 
-		//[Then(@"the transaction outcome is '([^']*)'")]
-		//public void ThenTransactionOutcomeIs(string outcome)
-		//{
-		//	var transaction = _scenarioContext.Get<ITransaction>();
-		//	transaction.Outcome.ToString().ToLower().Should().Be(outcome);
-		//}
-
-		[Then(@"the transaction outcome is '([^']*)'")]
+		[Given(@"the agent sets the transaction outcome to '([^']*)'")]
 		public void ThenTransactionOutcomeIs2(string outcome) => ThenTransactionOutcomeIs(outcome);
 
 
