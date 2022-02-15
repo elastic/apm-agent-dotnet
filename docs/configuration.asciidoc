@@ -498,6 +498,101 @@ Any labels set by the application via the agent's public API will override globa
 
 NOTE: This option requires APM Server 7.2 or later. It will have no effect on older versions.
 
+
+[float]
+[[config-span-compression-enabled]]
+==== `SpanCompressionEnabled` (added[1.14])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Setting this option to true will enable span compression feature. Span compression reduces the collection, processing, and storage overhead, and removes clutter from the UI. 
+The tradeoff is that some information such as DB statements of all the compressed spans will not be collected.
+
+[options="header"]
+|============
+| Environment variable name    | IConfiguration key
+| `ELASTIC_APM_SPAN_COMPRESSION_ENABLED` | `ElasticApm:SpanCompressionEnabled`
+|============
+
+[options="header"]
+|============
+| Default  | Type
+| `true`   | Boolean
+|============
+
+[float]
+[[config-span-compression-exact-match-max-duration]]
+==== `SpanCompressionExactMatchMaxDuration` (added[1.14])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Consecutive spans that are exact match and that are under this threshold will be compressed into a single composite span.
+This option does not apply to composite spans. This reduces the collection, processing, and storage overhead, and removes clutter from the UI.
+The tradeoff is that the DB statements of all the compressed spans will not be collected.
+
+[options="header"]
+|============
+| Environment variable name                           | IConfiguration key
+| `ELASTIC_APM_SPAN_COMPRESSION_EXACT_MATCH_MAX_DURATION` | `ElasticApm:SpanCompressionExactMatchMaxDuration`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `50ms`  | TimeDuration
+|============
+
+
+[float]
+[[config-span-compression-same-kind-max-duration]]
+==== `SpanCompressionSameKindMaxDuration` (added[1.14])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Consecutive spans to the same destination that are under this threshold will be compressed into a single composite span.
+This option does not apply to composite spans.
+This reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that the DB statements of all the compressed spans will not be collected.
+
+[options="header"]
+|============
+| Environment variable name                             | IConfiguration key
+| `ELASTIC_APM_SPAN_COMPRESSION_SAME_KIND_MAX_DURATION` | `ElasticApm:SpanCompressionSameKindMaxDuration`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `5ms`   | TimeDuration
+|============
+
+
+
+[float]
+[[config-exit-span-min-duration]]
+==== `ExitSpanMinDuration` (added[1.14])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded.
+If the exit span is equal or greater the threshold, it should be kept.
+In some cases exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services,
+such as outgoing HTTP requests, can't be discarded.
+However, external calls that don't propagate context, such as calls to a database, can be discarded using this threshold.
+Additionally, spans that lead to an error can't be discarded.
+
+[options="header"]
+|============
+| Environment variable name            | IConfiguration key
+| `ELASTIC_APM_EXIT_SPAN_MIN_DURATION` | `ElasticApm:ExitSpanMinDuration`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `1ms`  | TimeDuration
+|============
+
+
 [[config-reporter]]
 === Reporter configuration options
 
@@ -550,7 +645,7 @@ your communications using HTTPS. Unless you do so, your API Key could be observe
 ==== `ApiKey` (added[1.4])
 
 A base64-encoded string used to ensure that only your agents can send data to your APM server.
-You must have created the API key using the APM server's {apm-server-ref-v}/api-key.html[command line tool].
+You must have created the API key using the APM server's {apm-guide-ref}/api-key.html[command line tool].
 
 NOTE: This feature is fully supported in the APM Server versions >= 7.6.
 
@@ -909,7 +1004,7 @@ NOTE: Changing this configuration will overwrite the default value.
 [[config-use-elastic-apm-traceparent-header]]
 ==== `UseElasticTraceparentHeader` (added[1.3.0])
 
-To enable {apm-overview-ref-v}/distributed-tracing.html[distributed tracing], the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the https://www.w3.org/TR/trace-context-1/[W3C Trace Context] specification.
+To enable {apm-guide-ref}/apm-distributed-tracing.html[distributed tracing], the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the https://www.w3.org/TR/trace-context-1/[W3C Trace Context] specification.
 
 When this setting is `true`, the agent also adds the header `elasticapm-traceparent` for backwards compatibility with older versions of Elastic APM agents. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
 
@@ -1130,6 +1225,7 @@ If your application is called by an {dotnet5} application that does not have an 
 | <<config-enabled,`Enabled`>> | No | Core
 | <<config-environment,`Environment`>> | No | Core
 | <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace
+| <<config-exit-span-min-duration,`ExitSpanMinDuration`>> | Yes | Core, Performance
 | <<config-flush-interval,`FlushInterval`>> | No | Reporter
 | <<config-global-labels,`GlobalLabels`>> | No | Core
 | <<config-ignore-message-queues,`IgnoreMessageQueues`>> | Yes | Messaging, Performance
@@ -1146,6 +1242,9 @@ If your application is called by an {dotnet5} application that does not have an 
 | <<config-service-name,`ServiceName`>> | No | Core
 | <<config-service-node-name, `ServiceNodeName`>> | No | Core
 | <<config-service-version,`ServiceVersion`>> | No | Core
+| <<config-span-compression-enabled,`SpanCompressionEnabled`>> | Yes | Core, Performance
+| <<config-span-compression-exact-match-max-duration,`SpanCompressionExactMatchMaxDuration`>> | Yes | Core, Performance
+| <<config-span-compression-same-kind-max-duration,`SpanCompressionSameKindMaxDuration`>> | Yes | Core, Performance
 | <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
 | <<config-trace-context-ignore-sampled-false,`TraceContextIgnoreSampledFalse`>> | No | Core

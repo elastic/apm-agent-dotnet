@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using Elastic.Apm.Logging;
@@ -18,8 +17,8 @@ namespace Elastic.Apm.DiagnosticListeners
 		protected override string ExceptionEventKey => "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop";
 
 		public override string Name => "System.Net.Http.Desktop";
-		internal override string StartEventKey => "System.Net.Http.Desktop.HttpRequestOut.Start";
-		internal override string StopEventKey => "System.Net.Http.Desktop.HttpRequestOut.Stop";
+		internal override string StartEventKey => $"{KnownListeners.SystemNetHttpDesktopHttpRequestOut}.Start";
+		internal override string StopEventKey => $"{KnownListeners.SystemNetHttpDesktopHttpRequestOut}.Stop";
 
 		protected override Uri RequestGetUri(HttpWebRequest request) => request.RequestUri;
 

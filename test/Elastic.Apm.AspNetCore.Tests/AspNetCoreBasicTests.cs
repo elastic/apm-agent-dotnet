@@ -50,7 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload = new MockPayloadSender();
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfiguration(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
+				new MockConfiguration(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll, exitSpanMinDuration: "0"),
 				_capturedPayload,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
@@ -98,10 +98,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
 #if NET5_0
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 5");
+#elif NET6_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
 #else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 #endif
-			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
+			_agent.Service.Runtime.Version.Should().StartWith(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 			var transaction = _capturedPayload.FirstTransaction;
 			var transactionName = $"{response.RequestMessage.Method} Home/SimplePage";
@@ -125,7 +127,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NET5_0
+#if NET5_0 || NET6_0
 			transaction.Context.Request.HttpVersion.Should().Be("1.1");
 #elif NETCOREAPP3_0 || NETCOREAPP3_1
 			transaction.Context.Request.HttpVersion.Should().Be("2");
@@ -161,7 +163,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfiguration(_logger, enabled: "false"), _capturedPayload));
+				new MockConfiguration(_logger, enabled: "false", exitSpanMinDuration:"0"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
@@ -181,7 +183,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task HomeIndexTransactionWithToggleRecording(bool withDiagnosticSourceOnly)
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
-				_logger, new MockConfiguration(recording: "false"), _capturedPayload));
+				_logger, new MockConfiguration(recording: "false", exitSpanMinDuration: "0"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
@@ -247,11 +249,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 #if NET5_0
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 5");
+#elif NET6_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
 #else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 #endif
 
-			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
+			_agent.Service.Runtime.Version.Should().StartWith(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 
 			_capturedPayload.Transactions.Should().ContainSingle();
@@ -279,7 +283,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NET5_0
+#if NET5_0 || NET6_0
 			transaction.Context.Request.HttpVersion.Should().Be("1.1");
 #elif NETCOREAPP3_0 || NETCOREAPP3_1
 			transaction.Context.Request.HttpVersion.Should().Be("2");

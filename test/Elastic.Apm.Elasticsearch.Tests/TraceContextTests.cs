@@ -32,7 +32,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				context.Response.StatusCode = 200;
 			});
 
-			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: new MockPayloadSender()));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: new MockPayloadSender(), configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled: "false")));
 			using var subscribe = agent.Subscribe(new ElasticsearchDiagnosticsSubscriber(), new HttpDiagnosticsSubscriber());
 
 			var client = new ElasticLowLevelClient(new ConnectionConfiguration(new Uri(localServer.Uri)));

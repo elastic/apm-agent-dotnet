@@ -35,7 +35,7 @@ namespace Elastic.Apm.Model
 			{
 				TraceId = transaction.TraceId;
 				TransactionId = transaction.Id;
-				Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
+				Transaction = new TransactionData(transaction.Name, transaction.IsSampled, transaction.Type);
 				Configuration = transaction.Configuration;
 			}
 
@@ -124,15 +124,28 @@ namespace Elastic.Apm.Model
 		public class TransactionData
 		{
 			[JsonConstructor]
-			internal TransactionData(bool isSampled, string type)
+			internal TransactionData(string name, bool isSampled, string type)
 			{
+				Name = name;
 				IsSampled = isSampled;
 				Type = type;
 			}
 
+			/// <summary>
+			/// IsSampled indicates whether or not the full information for a transaction is captured. If a transaction is unsampled no spans and less context information will be reported.
+			/// </summary>
 			[JsonProperty("sampled")]
 			public bool IsSampled { get; }
 
+			/// <summary>
+			/// Name is the generic designation of a transaction in the scope of a single service, eg: 'GET /users/:id'.
+			/// </summary>
+			[MaxLength]
+			public string Name { get; }
+
+			/// <summary>
+			/// Type expresses the correlated transaction's type as keyword that has specific relevance within the service's domain, eg: 'request', 'backgroundjob'.
+			/// </summary>
 			[MaxLength]
 			public string Type { get; }
 

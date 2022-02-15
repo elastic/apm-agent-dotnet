@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using Elastic.Apm.Api;
@@ -74,7 +75,7 @@ namespace Elastic.Apm.Feature.Tests
 			_scenarioContext.Set(span);
 		}
 
-		[Given(@"user sets span outcome to '(.*)'")]
+		[Given(@"a user sets the span outcome to '([^']*)'")]
 		public void GivenUserSetsSpanOutcomeTo(Outcome outcome)
 		{
 			var span = _scenarioContext.Get<ISpan>();
@@ -97,11 +98,18 @@ namespace Elastic.Apm.Feature.Tests
 			_scenarioContext.Set(transaction);
 		}
 
-		[Given(@"user sets transaction outcome to '(.*)'")]
-		public void GivenUserSetsTransactionOutcomeTo(Outcome outcome)
+		[Given(@"a user sets the transaction outcome to '([^']*)'")]
+		public void GivenUserSetsTransactionOutcomeTo(string unknown)
 		{
 			var transaction = _scenarioContext.Get<ITransaction>();
-			transaction.Outcome = outcome;
+			transaction.Outcome = Outcome.Unknown;
+		}
+
+		[When(@"the transaction ends")]
+		public void WhenTheTransactionEnds()
+		{
+			var transaction = _scenarioContext.Get<ITransaction>();
+			transaction.End();
 		}
 
 		[Given(@"transaction terminates with outcome '(.*)'")]
@@ -112,7 +120,7 @@ namespace Elastic.Apm.Feature.Tests
 			transaction.End();
 		}
 
-		[Given(@"span terminates with an error")]
+		[Given(@"an error is reported to the span")]
 		public void GivenSpanTerminatesWithAnError()
 		{
 			var span = _scenarioContext.Get<ISpan>();
@@ -127,7 +135,14 @@ namespace Elastic.Apm.Feature.Tests
 			span.End();
 		}
 
-		[Given(@"transaction terminates with an error")]
+		[When(@"the span ends")]
+		public void WhenTheSpanEnds()
+		{
+			var span = _scenarioContext.Get<ISpan>();
+			span.End();
+		}
+
+		[Given(@"an error is reported to the transaction")]
 		public void GivenTransactionTerminatesWithAnError()
 		{
 			var transaction = _scenarioContext.Get<ITransaction>();
@@ -142,28 +157,28 @@ namespace Elastic.Apm.Feature.Tests
 			transaction.End();
 		}
 
-		[Given(@"an HTTP transaction with (.*) response code")]
-		public void GivenAnHTTPTransactionWithResponseCode(int responseCode)
+		[Given(@"a HTTP call is received that returns '([^']*)'")]
+		public void GivenAnHTTPTransactionWithResponseCode(string responseCode)
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();
 			var transaction = agent.Tracer.StartTransaction("HttpTransaction", "Test");
 			transaction.Context.Request = new Request("GET", new Url { Full = "https://elastic.co" });
-			transaction.Context.Response = new Response() { StatusCode = responseCode };
-			WebRequestTransactionCreator.SetOutcomeForHttpResult(transaction, responseCode);
+			transaction.Context.Response = new Response() { StatusCode = int.Parse(responseCode) };
+			WebRequestTransactionCreator.SetOutcomeForHttpResult(transaction, int.Parse(responseCode));
 			_scenarioContext.Set(transaction);
 		}
 
-		[Given(@"an HTTP span with (.*) response code")]
-		public void GivenAnHTTPSpanWithResponseCode(int responseCode)
+		[Given(@"a HTTP call is made that returns '([^']*)'")]
+		public void GivenAnHTTPSpanWithResponseCode(string responseCode)
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();
 			var span = agent.Tracer.StartTransaction("Foo", "Test").StartSpan("HttpsSpan", "Test");
-			span.Context.Http = new Http() { StatusCode = responseCode };
-			HttpDiagnosticListenerImplBase<object, object>.SetOutcome(span, responseCode);
+			span.Context.Http = new Http() { StatusCode = int.Parse(responseCode) };
+			HttpDiagnosticListenerImplBase<object, object>.SetOutcome(span, int.Parse(responseCode));
 			_scenarioContext.Set(span);
 		}
 
-		[Given(@"a gRPC transaction with '(.*)' status")]
+		[Given(@"a gRPC call is received that returns '([^']*)'")]
 		public void GivenAGRPCTransactionWithStatus(string responseCode)
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();
@@ -172,7 +187,7 @@ namespace Elastic.Apm.Feature.Tests
 			_scenarioContext.Set(transaction);
 		}
 
-		[Given(@"a gRPC span with '(.*)' status")]
+		[Given(@"a gRPC call is made that returns '([^']*)'")]
 		public void GivenAGRPCSpanWithStatus(string responseCode)
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();
@@ -181,25 +196,41 @@ namespace Elastic.Apm.Feature.Tests
 			_scenarioContext.Set(span);
 		}
 
-		[Then(@"span outcome is '(.*)'")]
-		public void ThenSpanOutcomeIs(Outcome outcome)
+		[Then(@"the agent sets the span outcome to '([^']*)'")]
+		public void ThenSpanOutcomeIs(string outcome)
 		{
 			var span = _scenarioContext.Get<ISpan>();
-			span.Outcome.Should().Be(outcome);
+			span.Outcome.ToString().ToLower().Should().Be(outcome);
 		}
 
-		[Then(@"transaction outcome is '(.*)'")]
-		public void ThenTransactionOutcomeIs(Outcome outcome)
-		{
-			var transaction = _scenarioContext.Get<ITransaction>();
-			transaction.Outcome.Should().Be(outcome);
-		}
-
-		[Then(@"transaction outcome is ""(.*)""")]
-		public void ThenTransactionOutcomeIs2(Outcome outcome) => ThenTransactionOutcomeIs(outcome);
+		[Given(@"the agent sets the transaction outcome to '([^']*)'")]
+		public void ThenTransactionOutcomeIs2(string outcome) => ThenTransactionOutcomeIs(outcome);
 
 
 		[Then(@"span outcome is ""(.*)""")]
-		public void ThenSpanOutcomeIs2(Outcome outcome) => ThenSpanOutcomeIs(outcome);
+		public void ThenSpanOutcomeIs2(string outcome) => ThenSpanOutcomeIs(outcome);
+
+
+		[Given(@"the span outcome is '([^']*)'")]
+		public void GivenTheSpanOutcomeIs(string success)
+		{
+			var span = _scenarioContext.Get<ISpan>();
+			span.Outcome = Outcome.Success;
+		}
+
+		[Given(@"the transaction outcome is '([^']*)'")]
+		public void GivenTheTransactionOutcomeIs(string failure)
+		{
+			var transaction = _scenarioContext.Get<ITransaction>();
+			transaction.Outcome = Outcome.Failure;
+		}
+
+		[Then(@"transaction outcome is '([^']*)'")]
+		public void ThenTransactionOutcomeIs(string success)
+		{
+			var transaction = _scenarioContext.Get<ITransaction>();
+			transaction.Outcome.ToString().ToLower().Should().Be(success);
+		}
+
 	}
 }

@@ -26,7 +26,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				.StaticConnectionPool()
 				.AllDefaults();
 			var client = cluster.Client;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled:"false"))))
 			using (agent.Subscribe(new ElasticsearchDiagnosticsSubscriber()))
 			{
 				var searchResponse = await agent.Tracer.CaptureTransaction("Call Client", ApiConstants.ActionExec,
@@ -72,7 +72,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				.StaticConnectionPool()
 				.AllDefaults();
 			var client = cluster.Client;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled:"false"))))
 			using (agent.Subscribe(new ElasticsearchDiagnosticsSubscriber()))
 			{
 				try
@@ -110,7 +110,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				.StaticConnectionPool()
 				.Settings(s => s.DisablePing());
 			var client = cluster.Client;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled:"false"))))
 			using (agent.Subscribe(new ElasticsearchDiagnosticsSubscriber()))
 			{
 				var searchResponse = await agent.Tracer.CaptureTransaction("Call Client", ApiConstants.ActionExec,

@@ -47,12 +47,15 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 					["ELASTIC_APM_DISABLE_METRICS"] = "*",
 					["ELASTIC_APM_SERVICE_NAME"] = $"SqlClientSample-{targetFramework}",
 					["SQLSERVER_CONNECTION_STRING"] = _fixture.ConnectionString,
+					["ELASTIC_APM_EXIT_SPAN_MIN_DURATION"] = "0",
+					["ELASTIC_APM_SPAN_COMPRESSION_ENABLED"] = "false"
 				};
 
 				profiledApplication.Start(
 					targetFramework,
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					null,
 					line => _output.WriteLine(line.Line),
 					exception => _output.WriteLine($"{exception}"));
 			}

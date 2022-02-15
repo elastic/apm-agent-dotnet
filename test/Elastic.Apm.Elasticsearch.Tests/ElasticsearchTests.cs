@@ -30,7 +30,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 		public async Task Elasticsearch_Span_Does_Not_Have_Http_Child_Span()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled: "false"))))
 			using (agent.Subscribe(new ElasticsearchDiagnosticsSubscriber(), new HttpDiagnosticsSubscriber()))
 			{
 				var searchResponse = await agent.Tracer.CaptureTransaction("Call Client", ApiConstants.ActionExec,

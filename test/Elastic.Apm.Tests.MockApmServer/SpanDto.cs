@@ -45,6 +45,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public string Type { get; set; }
 
+		public CompositeDto Composite { get; set; }
+
 		public override string ToString() => new ToStringBuilder(nameof(SpanDto))
 		{
 			{ nameof(Id), Id },

@@ -31,6 +31,7 @@ namespace Elastic.Apm.Feature.Tests
 		public bool Enabled { get; set; } = true;
 		public string Environment { get; set; }
 		public IReadOnlyCollection<string> ExcludedNamespaces { get; set; } = DefaultValues.DefaultExcludedNamespaces;
+		public double ExitSpanMinDuration => DefaultValues.ExitSpanMinDurationInMilliseconds;
 		public TimeSpan FlushInterval { get; set; } = TimeSpan.Zero;
 		public IReadOnlyDictionary<string, string> GlobalLabels { get; set; } = new Dictionary<string, string>();
 		public string HostName { get; set; }
@@ -48,6 +49,9 @@ namespace Elastic.Apm.Feature.Tests
 		public string ServiceName { get; set; }
 		public string ServiceNodeName { get; set; }
 		public string ServiceVersion { get; set; }
+		public bool SpanCompressionEnabled => DefaultValues.SpanCompressionEnabled;
+		public double SpanCompressionExactMatchMaxDuration => DefaultValues.SpanCompressionExactMatchMaxDurationInMilliseconds;
+		public double SpanCompressionSameKindMaxDuration => DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
 		public double SpanFramesMinDurationInMilliseconds { get; set; } = DefaultValues.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit { get; set; } = DefaultValues.StackTraceLimit;
 		public bool TraceContextIgnoreSampledFalse { get; set; } = DefaultValues.TraceContextIgnoreSampledFalse;
@@ -56,5 +60,6 @@ namespace Elastic.Apm.Feature.Tests
 		public double TransactionSampleRate { get; set; } = DefaultValues.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader { get; set; } = DefaultValues.UseElasticTraceparentHeader;
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
+		public bool EnableOpenTelemetryBridge { get; set; }
 	}
 }

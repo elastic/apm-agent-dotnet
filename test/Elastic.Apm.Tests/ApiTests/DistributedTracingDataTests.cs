@@ -294,6 +294,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) await transactionCreator(agent);
 
+			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(traceId);
 			payloadSender.FirstTransaction.ParentId.Should().BeNullOrWhiteSpace();
 		}

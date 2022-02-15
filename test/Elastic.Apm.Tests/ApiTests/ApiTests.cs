@@ -746,6 +746,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.WaitForErrors();
 			payloadSender.Errors.Count.Should().Be(1);
+			payloadSender.FirstError.Transaction.Name.Should().Be(TestTransaction);
 			payloadSender.FirstError.Transaction.IsSampled.Should().Be(isSampled);
 			payloadSender.FirstError.Transaction.Type.Should().Be(CustomTransactionTypeForTests);
 			payloadSender.FirstError.TransactionId.Should().Be(capturedTransaction.Id);
@@ -790,7 +791,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const int manualPort = 1234;
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0"))))
 			{
 				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
 				{
@@ -856,7 +857,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var mockLogger = new TestLogger(LogLevel.Trace);
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger, payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger, payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0"))))
 			{
 				agent.Tracer.CaptureTransaction("test TX name", "test TX type",
 					tx =>

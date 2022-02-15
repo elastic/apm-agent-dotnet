@@ -79,6 +79,14 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void ServerUrls_Should_Use_ServerUrl_When_UrlWithBasePath_Specified()
+		{
+			var serverUrl = "http://myServer.com/apm";
+			using var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(serverUrl: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
+		}
+
+		[Fact]
 		public void ServerUrls_Should_Log_Error_When_Invalid_Url()
 		{
 			var serverUrl = "InvalidUrl";
@@ -315,7 +323,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
-#if !NETCOREAPP3_0 && !NETCOREAPP3_1 && !NET5_0
+#if !NETCOREAPP3_0 && !NETCOREAPP3_1 && !NET5_0 && !NET6_0
 				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
 				agent.ConfigurationReader.ServerUrl.Should().NotBe(serverUrlsWithSpace);
 #endif

@@ -15,7 +15,7 @@ Another option is to add a dependency to the agent's <<public-api, public API>>
 in order to programmatically create custom transactions and spans.
 
 If you want to extend the auto-instrumentation capabilities of the agent,
-the https://github.com/elastic/apm-agent-dotnet/blob/master/CONTRIBUTING.md[contributing guide] should get you started.
+the https://github.com/elastic/apm-agent-dotnet/blob/main/CONTRIBUTING.md[contributing guide] should get you started.
 
 NOTE: If, for example,
 the HTTP client library of your choice is not listed,

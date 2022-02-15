@@ -131,6 +131,41 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+
+		protected double ParseExitSpanMinDuration(ConfigurationKeyValue kv)
+		{
+			string value;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				value = DefaultValues.ExitSpanMinDuration;
+			else
+				value = kv.Value;
+
+			double valueInMilliseconds;
+			try
+			{
+				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
+				{
+					_logger?.Error()
+						?.Log("Failed to parse provided ParseExitSpanMinDuration `{ProvidedExitSpanMinDuration}' - " +
+							"using default: {ExitSpanMinDuration}",
+							value,
+							DefaultValues.ExitSpanMinDuration);
+					return DefaultValues.ExitSpanMinDurationInMilliseconds;
+				}
+			}
+			catch (ArgumentException e)
+			{
+				_logger?.Critical()
+					?.LogException(e,
+						nameof(ArgumentException) + " thrown from ParseExitSpanMinDuration which means a programming bug - " +
+						"using default: {ParseExitSpanMinDuration}",
+						DefaultValues.ExitSpanMinDuration);
+				return DefaultValues.ExitSpanMinDurationInMilliseconds;
+			}
+
+			return valueInMilliseconds;
+		}
+
 		protected IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueues(ConfigurationKeyValue kv) =>
 			_cachedWildcardMatchersIgnoreMessageQueues.IfNotInited?.InitOrGet(() => ParseIgnoreMessageQueuesImpl(kv))
 			?? _cachedWildcardMatchersIgnoreMessageQueues.Value;
@@ -188,6 +223,18 @@ namespace Elastic.Apm.Config
 			return true;
 		}
 
+		protected bool ParseEnableOpenTelemetryBridge(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.EnableOpenTelemetryBridge;
+
+			if (bool.TryParse(kv.Value, out var isOTelEnabled))
+				return isOTelEnabled;
+
+			_logger?.Warning()
+				?.Log("Failed parsing value for 'EnableOpenTelemetryBridge' setting to 'bool'. Received value: {receivedValue}", kv.Value);
+			return DefaultValues.EnableOpenTelemetryBridge;
+		}
+
 		protected bool ParseRecording(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
@@ -202,6 +249,7 @@ namespace Elastic.Apm.Config
 		protected bool ParseTraceContextIgnoreSampledFalse(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.TraceContextIgnoreSampledFalse;
+
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.TraceContextIgnoreSampledFalse;
 		}
@@ -209,6 +257,7 @@ namespace Elastic.Apm.Config
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;
+
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.VerifyServerCert;
 		}
@@ -262,12 +311,14 @@ namespace Elastic.Apm.Config
 			switch (kv.Key)
 			{
 				case EnvVarNames.ServerUrls:
-					_logger?.Info()?.Log(
-						"{ServerUrls} is deprecated. Use {ServerUrl}", EnvVarNames.ServerUrls, EnvVarNames.ServerUrl);
+					_logger?.Info()
+						?.Log(
+							"{ServerUrls} is deprecated. Use {ServerUrl}", EnvVarNames.ServerUrls, EnvVarNames.ServerUrl);
 					break;
 				case KeyNames.ServerUrls:
-					_logger?.Info()?.Log(
-						"{ServerUrls} is deprecated. Use {ServerUrl}", KeyNames.ServerUrls, KeyNames.ServerUrl);
+					_logger?.Info()
+						?.Log(
+							"{ServerUrls} is deprecated. Use {ServerUrl}", KeyNames.ServerUrls, KeyNames.ServerUrl);
 					break;
 			}
 
@@ -351,7 +402,9 @@ namespace Elastic.Apm.Config
 			if (valueInMilliseconds < Constraints.MinMetricsIntervalInMilliseconds)
 			{
 				_logger?.Error()
-					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - " +
+					?.Log(
+						"Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - "
+						+
 						"metrics collection will be disabled",
 						value,
 						Constraints.MinMetricsIntervalInMilliseconds);
@@ -395,10 +448,96 @@ namespace Elastic.Apm.Config
 			}
 			catch (Exception e)
 			{
-				_logger?.Error()?.LogException(e, "Failed parsing TransactionIgnoreUrls, values in the config: {TransactionIgnoreUrlsValues}", kv.Value);
+				_logger?.Error()
+					?.LogException(e, "Failed parsing TransactionIgnoreUrls, values in the config: {TransactionIgnoreUrlsValues}", kv.Value);
 				return DefaultValues.TransactionIgnoreUrls;
 			}
 		}
+
+		protected bool ParseSpanCompressionEnabled(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.SpanCompressionEnabled;
+
+			if (bool.TryParse(kv.Value, out var isSpanCompressionEnable))
+				return isSpanCompressionEnable;
+
+			_logger?.Warning()
+				?.Log(
+					"Failed parsing value for 'ParseSpanCompressionEnabled' setting to 'bool'. Received value: {receivedValue} - using default {defaultVal}",
+					kv.Value, DefaultValues.SpanCompressionEnabled);
+			return DefaultValues.SpanCompressionEnabled;
+		}
+
+		protected double ParseSpanCompressionExactMatchMaxDuration(ConfigurationKeyValue kv)
+		{
+			string value;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				value = DefaultValues.SpanCompressionExactMatchMaxDuration;
+			else
+				value = kv.Value;
+
+			double valueInMilliseconds;
+			try
+			{
+				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
+				{
+					_logger?.Error()
+						?.Log("Failed to parse provided SpanCompressionExactMatchMaxDuration `{ProvidedSpanCompressionExactMatchMaxDuration}' - "
+							+
+							"using default: {DefaultSpanCompressionExactMatchMaxDuration}",
+							value,
+							DefaultValues.SpanCompressionExactMatchMaxDuration);
+					return DefaultValues.SpanCompressionExactMatchMaxDurationInMilliseconds;
+				}
+			}
+			catch (ArgumentException e)
+			{
+				_logger?.Critical()
+					?.LogException(e,
+						nameof(ArgumentException) + " thrown from ParseSpanCompressionExactMatchMaxDuration which means a programming bug - " +
+						"using default: {SpanCompressionExactMatchMaxDuration}",
+						DefaultValues.SpanCompressionExactMatchMaxDurationInMilliseconds);
+				return DefaultValues.SpanCompressionExactMatchMaxDurationInMilliseconds;
+			}
+
+			return valueInMilliseconds;
+		}
+
+		protected double ParseSpanCompressionSameKindMaxDuration(ConfigurationKeyValue kv)
+		{
+			string value;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				value = DefaultValues.SpanCompressionSameKindMaxDuration;
+			else
+				value = kv.Value;
+
+			double valueInMilliseconds;
+
+			try
+			{
+				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
+				{
+					_logger?.Error()
+						?.Log("Failed to parse provided SpanCompressionSameKindMaxDuration `{ProvidedSpanCompressionSameKindMaxDuration}' - " +
+							"using default: {DefaultSpanCompressionSameKindMaxDuration}",
+							value,
+							DefaultValues.SpanCompressionSameKindMaxDuration);
+					return DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
+				}
+			}
+			catch (ArgumentException e)
+			{
+				_logger?.Critical()
+					?.LogException(e,
+						nameof(ArgumentException) + " thrown from ParseSpanCompressionSameKindMaxDuration which means a programming bug - " +
+						"using default: {SpanCompressionSameKindMaxDuration}",
+						DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds);
+				return DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
+			}
+
+			return valueInMilliseconds;
+		}
+
 
 		protected double ParseSpanFramesMinDurationInMilliseconds(ConfigurationKeyValue kv)
 		{
@@ -448,7 +587,8 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Error()
 					?.Log(
-						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' - using default: {Default" + dbgOptionName
+						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' - using default: {Default"
+						+ dbgOptionName
 						+ "}",
 						kv.Value, defaultValue);
 
@@ -469,15 +609,18 @@ namespace Elastic.Apm.Config
 		}
 
 		protected int ParseMaxBatchEventCount(ConfigurationKeyValue kv) =>
-			_cachedMaxBatchEventCount.IfNotInited?.InitOrGet(() => ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount"))
+			_cachedMaxBatchEventCount.IfNotInited?.InitOrGet(() =>
+				ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount"))
 			?? _cachedMaxBatchEventCount.Value;
 
 		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) =>
-			_cachedMaxQueueEventCount.IfNotInited?.InitOrGet(() => ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount"))
+			_cachedMaxQueueEventCount.IfNotInited?.InitOrGet(() =>
+				ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount"))
 			?? _cachedMaxQueueEventCount.Value;
 
 		protected TimeSpan ParseFlushInterval(ConfigurationKeyValue kv) =>
-			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S, TimeSpan.FromMilliseconds(DefaultValues.FlushIntervalInMilliseconds),
+			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S,
+				TimeSpan.FromMilliseconds(DefaultValues.FlushIntervalInMilliseconds),
 				"FlushInterval");
 
 		private TimeSpan ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(ConfigurationKeyValue kv, TimeSuffix defaultSuffix,
@@ -889,6 +1032,7 @@ namespace Elastic.Apm.Config
 		protected string ParseHostName(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+
 			return kv.Value;
 		}
 
@@ -1013,6 +1157,7 @@ namespace Elastic.Apm.Config
 			// https://stackoverflow.com/a/33573337
 			uri = null;
 			if (!Uri.TryCreate(u, UriKind.Absolute, out uri)) return false;
+
 			return uri.IsWellFormedOriginalString() && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 		}
 	}

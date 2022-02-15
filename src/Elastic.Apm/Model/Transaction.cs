@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
@@ -44,6 +45,8 @@ namespace Elastic.Apm.Model
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
+
+		internal Span CompressionBuffer;
 
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
@@ -95,6 +98,8 @@ namespace Elastic.Apm.Model
 		/// will be captured, which is typically the desired behaviour. Setting the timestamp to a specific value is typically
 		/// useful for testing.
 		/// </param>
+		/// <param name="id">An optional parameter to pass the id of the transaction</param>
+		/// <param name="traceId">An optional parameter to pass a trace id which will be applied to the transaction</param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -107,7 +112,9 @@ namespace Elastic.Apm.Model
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider,
 			bool ignoreActivity = false,
-			long? timestamp = null
+			long? timestamp = null,
+			string id = null,
+			string traceId = null
 		)
 		{
 			Configuration = configuration;
@@ -179,11 +186,20 @@ namespace Elastic.Apm.Model
 				{
 					// If no activity is created, create new random ids
 					var idBytes = new byte[8];
-					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					if (id == null)
+						Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					else
+						Id = id;
+
 					IsSampled = sampler.DecideIfToSample(idBytes);
 
-					idBytes = new byte[16];
-					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					if (traceId == null)
+					{
+						idBytes = new byte[16];
+						TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					}
+					else
+						TraceId = traceId;
 
 					if (IsSampled)
 					{
@@ -237,7 +253,7 @@ namespace Elastic.Apm.Model
 				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
 				if (configuration.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
-					|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
+						|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
 					_traceState?.SetSampleRate(sampler.Rate);
@@ -252,7 +268,7 @@ namespace Elastic.Apm.Model
 
 				// If there is no tracestate or no valid "es" vendor entry with an "s" (sample rate) attribute, then the agent must
 				// omit sample rate from non-root transactions and their spans.
-				// See https://github.com/elastic/apm/blob/master/specs/agents/tracing-sampling.md#propagation
+				// See https://github.com/elastic/apm/blob/main/specs/agents/tracing-sampling.md#propagation
 				if (_traceState?.SampleRate is null)
 					SampleRate = null;
 				else
@@ -298,7 +314,7 @@ namespace Elastic.Apm.Model
 		/// In general if there is an error on the span, the outcome will be <code> Outcome.Failure </code> otherwise it'll be
 		/// <code> Outcome.Success </code>..
 		/// There are some exceptions to this (see spec:
-		/// https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be
+		/// https://github.com/elastic/apm/blob/main/specs/agents/tracing-spans.md#span-outcome) when it can be
 		/// <code>Outcome.Unknown</code>/>.
 		/// Use <see cref="_outcomeChangedThroughApi" /> to check if it was specifically set to <code>Outcome.Unknown</code>, or if
 		/// it's just the default value.
@@ -337,6 +353,8 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
+
+		public OTel Otel { get; set; }
 
 		/// <summary>
 		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
@@ -445,7 +463,7 @@ namespace Elastic.Apm.Model
 
 		private Activity StartActivity()
 		{
-			var activity = new Activity(ApmTransactionActivityName);
+			var activity = new Activity(KnownListeners.ApmTransactionActivityName);
 			activity.SetIdFormat(ActivityIdFormat.W3C);
 			activity.Start();
 			return activity;
@@ -579,7 +597,27 @@ namespace Elastic.Apm.Model
 			handler?.Invoke(this, EventArgs.Empty);
 			Ended = null;
 
-			_sender.QueueTransaction(this);
+			if (CompressionBuffer != null)
+			{
+				if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
+				{
+					_logger?.Info()
+						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}", CompressionBuffer.Id);
+				}
+				else
+					_sender.QueueSpan(CompressionBuffer);
+
+				CompressionBuffer = null;
+			}
+
+			if (IsSampled || _apmServerInfo?.Version < new ElasticVersion(8, 0, 0, string.Empty))
+				_sender.QueueTransaction(this);
+			else
+			{
+				_logger?.Info()
+					?.Log("Dropping unsampled transaction - unsampled transactions won't be sent on APM Server v8+. TransactionId: {id}", Id);
+			}
+
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
 		}
 
@@ -608,11 +646,13 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
+			string id = null,
 			bool isExitSpan = false
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
-				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, isExitSpan: isExitSpan);
+				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,
+				isExitSpan: isExitSpan);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))
@@ -657,7 +697,9 @@ namespace Elastic.Apm.Model
 				labels
 			);
 
-		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null, bool isExitSpan = false)
+		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), capturedAction);
 
 		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false)
@@ -672,13 +714,18 @@ namespace Elastic.Apm.Model
 		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
 
 		internal static string StatusCodeToResult(string protocolName, int statusCode) => $"{protocolName} {statusCode.ToString()[0]}xx";

@@ -14,4 +14,9 @@ dotnet sln remove test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tes
 :: Remove profiler tests, which are tested separately- require profiler to be built
 dotnet sln remove test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj
 
-dotnet build -c Release --verbosity detailed
+dotnet nuget locals all --clear
+
+dotnet nuget add source --name nuget.org https://api.nuget.org/v3/index.json
+
+:: Build solution. Add `--verbosity detailed` for more detailed logs
+dotnet build -c Release
