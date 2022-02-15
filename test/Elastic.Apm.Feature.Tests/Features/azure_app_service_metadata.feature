@@ -1,7 +1,9 @@
 Feature: Extracting Metadata for Azure App Service
 
   Background:
-    Given an instrumented application is configured to collect cloud provider metadata for azure
+    Given an agent configured with
+      | setting        | value |
+      | cloud_provider | azure |
 
   Scenario Outline: Azure App Service with all environment variables present in expected format
     Given the following environment variables are present
