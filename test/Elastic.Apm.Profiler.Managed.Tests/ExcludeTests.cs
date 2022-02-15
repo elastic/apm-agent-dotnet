@@ -49,6 +49,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 					"net5.0",
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					null,
 					line =>
 					{
 						if (line.Line.StartsWith("["))
@@ -104,6 +105,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 					targetFramework,
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					null,
 					line =>
 					{
 						if (line.Line.StartsWith("["))
@@ -149,6 +151,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 					"net5.0",
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					null,
 					line =>
 					{
 						if (line.Line.StartsWith("["))
@@ -202,6 +205,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 					"net5.0",
 					TimeSpan.FromMinutes(2),
 					environmentVariables,
+					null,
 					line =>
 					{
 						if (line.Line.StartsWith("["))

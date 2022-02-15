@@ -28,9 +28,13 @@ namespace Elastic.Apm.Feature.Tests
 
 		public CloudProviderSteps(ScenarioContext scenarioContext) => _scenarioContext = scenarioContext;
 
-		[Given(@"^an instrumented application is configured to collect cloud provider metadata for (.*?)$")]
-		public void AgentWithCloudMetadata(string cloudProvider)
+
+		[Given(@"an agent configured with")]
+		[Scope(Feature = "Extracting Metadata for Azure App Service")]
+		public void GivenAnAgentConfiguredWith(Table table)
 		{
+			var cloudProvider = table.Rows[0][1];
+
 			var output = _scenarioContext.ScenarioContainer.Resolve<ITestOutputHelper>();
 			var logger = new XUnitLogger(LogLevel.Trace, output);
 			var config = new MockConfiguration(logger, cloudProvider: cloudProvider, flushInterval: "0");
@@ -66,7 +70,7 @@ namespace Elastic.Apm.Feature.Tests
 		{
 			var environmentVariables = _scenarioContext.Get<TestEnvironmentVariables>();
 
-			foreach(var row in table.Rows)
+			foreach (var row in table.Rows)
 				environmentVariables[row[0]] = row[1];
 		}
 

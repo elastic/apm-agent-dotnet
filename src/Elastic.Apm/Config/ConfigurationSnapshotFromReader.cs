@@ -33,6 +33,7 @@ namespace Elastic.Apm.Config
 		public bool Enabled => _content.Enabled;
 		public string Environment => _content.Environment;
 		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
+		public double ExitSpanMinDuration => _content.ExitSpanMinDuration;
 		public TimeSpan FlushInterval => _content.FlushInterval;
 		public IReadOnlyDictionary<string, string> GlobalLabels => _content.GlobalLabels;
 		public string HostName => _content.HostName;
@@ -53,6 +54,9 @@ namespace Elastic.Apm.Config
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;
 		public string ServiceVersion => _content.ServiceVersion;
+		public bool SpanCompressionEnabled => _content.SpanCompressionEnabled;
+		public double SpanCompressionExactMatchMaxDuration => _content.SpanCompressionExactMatchMaxDuration;
+		public double SpanCompressionSameKindMaxDuration => _content.SpanCompressionSameKindMaxDuration;
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
 
@@ -62,5 +66,6 @@ namespace Elastic.Apm.Config
 		public double TransactionSampleRate => _content.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader => _content.UseElasticTraceparentHeader;
 		public bool VerifyServerCert => _content.VerifyServerCert;
+		public bool EnableOpenTelemetryBridge => _content.EnableOpenTelemetryBridge;
 	}
 }

@@ -134,7 +134,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void StackTraceWithLambda()
 		{
-			Action action = () => { TestMethod(); };
+			var action = () => { TestMethod(); };
 
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));

@@ -62,6 +62,8 @@ namespace Elastic.Apm.Config
 		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(Read(KeyNames.ExcludedNamespaces, EnvVarNames.ExcludedNamespaces));
 
+		public double ExitSpanMinDuration => ParseExitSpanMinDuration(Read(KeyNames.ExitSpanMinDuration, EnvVarNames.ExitSpanMinDuration));
+
 		public virtual TimeSpan FlushInterval =>
 			ParseFlushInterval(Read(KeyNames.FlushInterval, EnvVarNames.FlushInterval));
 
@@ -131,6 +133,12 @@ namespace Elastic.Apm.Config
 		public virtual string ServiceVersion =>
 			ParseServiceVersion(Read(KeyNames.ServiceVersion, EnvVarNames.ServiceVersion));
 
+		public bool SpanCompressionEnabled => ParseSpanCompressionEnabled(Read(KeyNames.SpanCompressionEnabled, EnvVarNames.SpanCompressionEnabled));
+
+		public double SpanCompressionExactMatchMaxDuration => ParseSpanCompressionExactMatchMaxDuration(Read(KeyNames.SpanCompressionExactMatchMaxDuration, EnvVarNames.SpanCompressionExactMatchMaxDuration));
+
+		public double SpanCompressionSameKindMaxDuration => ParseSpanCompressionSameKindMaxDuration(Read(KeyNames.SpanCompressionSameKindMaxDuration, EnvVarNames.SpanCompressionSameKindMaxDuration));
+
 		public virtual double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public virtual int StackTraceLimit => _stackTraceLimit.Value;
@@ -152,5 +160,8 @@ namespace Elastic.Apm.Config
 
 		public virtual bool VerifyServerCert =>
 			ParseVerifyServerCert(Read(KeyNames.VerifyServerCert, EnvVarNames.VerifyServerCert));
+
+		public bool EnableOpenTelemetryBridge =>
+			ParseEnableOpenTelemetryBridge(Read(KeyNames.EnableOpenTelemetryBridge, EnvVarNames.EnableOpenTelemetryBridge));
 	}
 }

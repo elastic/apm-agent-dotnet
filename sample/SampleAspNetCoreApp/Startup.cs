@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+#if  NET5_0
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+#endif
 using SampleAspNetCoreApp.Data;
 
 namespace SampleAspNetCoreApp
@@ -52,7 +56,7 @@ namespace SampleAspNetCoreApp
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0 || NET6_0
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 #else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -75,7 +79,7 @@ namespace SampleAspNetCoreApp
 
 		public static void ConfigureRoutingAndMvc(IApplicationBuilder app)
 		{
-#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0 || NET6_0
 			app.UseRouting();
 
 			app.UseAuthentication();

@@ -16,7 +16,5 @@ namespace Elastic.Apm.Helpers
 		public static void Let<T>(this T x, Action<T> action) => action(x);
 
 		public static string AsNullableToString(this object value) => value?.ToString() ?? NullAsString;
-
-		public static string AsNullableToString<T>(this T? value) where T : struct => value?.ToString() ?? NullAsString;
 	}
 }

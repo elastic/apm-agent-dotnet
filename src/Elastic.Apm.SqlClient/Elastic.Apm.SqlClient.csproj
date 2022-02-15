@@ -3,7 +3,7 @@
     <RootNamespace>Elastic.Apm.SqlClient</RootNamespace>
     <AssemblyName>Elastic.Apm.SqlClient</AssemblyName>
     <PackageId>Elastic.Apm.SqlClient</PackageId>
-    <Description>Elastic APM for System.Data.SqlClient and Microsoft.Data.SqlClient. This package contains auto instrumentation for SqlClient. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+    <Description>Elastic APM for System.Data.SqlClient and Microsoft.Data.SqlClient. This package contains auto instrumentation for SqlClient. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sqlclient</PackageTags>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <IsPackable>true</IsPackable>

@@ -55,7 +55,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private CentralConfigurationReader ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
 		{
-			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
+			if (configPayload.UnknownKeys != null && configPayload.UnknownKeys.Any())
 			{
 				_logger.Info()
 					?.Log("Central configuration response contains keys that are not in the list of options"
@@ -147,6 +147,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			internal const string TransactionIgnoreUrls = "transaction_ignore_urls";
 			internal const string TransactionMaxSpansKey = "transaction_max_spans";
 			internal const string TransactionSampleRateKey = "transaction_sample_rate";
+			internal const string SpanCompressionEnabled = "span_compression_enabled";
+			internal const string SpanCompressionExactMatchMaxDuration = "span_compression_exact_match_max_duration";
+			internal const string SpanCompressionSameKindMaxDuration = "span_compression_same_kind_max_duration";
+			internal const string ExitSpanMinDuration = "exit_span_min_duration";
 
 			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
 			{
@@ -162,6 +166,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				TransactionIgnoreUrls,
 				TransactionMaxSpansKey,
 				TransactionSampleRateKey,
+				SpanCompressionEnabled,
+				SpanCompressionExactMatchMaxDuration,
+				SpanCompressionSameKindMaxDuration,
+				ExitSpanMinDuration
 			};
 
 			private readonly IDictionary<string, string> _keyValues;

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
@@ -48,6 +49,10 @@ namespace SampleAspNetCoreApp.Controllers
 			SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
 				"Index_span_name", "Index_span_type", async () =>
 				{
+					var a = new Activity("foo").Start();
+					Thread.Sleep(100);
+					a.Stop();
+
 					_sampleDataContext.Database.Migrate();
 					var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
 

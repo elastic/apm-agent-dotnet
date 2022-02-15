@@ -23,6 +23,32 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+
+[[release-notes-1.14.0]]
+==== 1.14.0
+
+[float]
+===== Features
+- {pull}1620[#1620] Span compression and dropping fast exit spans. New settings: `ExitSpanMinDuration`, `SpanCompressionEnabled`, `SpanCompressionExactMatchMaxDuration`, `SpanCompressionSameKindMaxDuration` (issues: {issue}1329[#1329] and {issue}1475[#1475])
+- {pull}1611[#1611] NpgSql 6.x support (issue: {issue}1602[#1602])
+- {pull}1589[#1589] Capture transaction name on errors (issue: {issue}1574[#1574])
+
+[float]
+===== Bug fixes
+- {pull}1603[#1603] .NET 6 support with startup hook (issue: {issue}1590[#1590])
+
+[float]
+===== Breaking changes
+- {pull}1586[#1586] Change unknown service.name to align with other agents. In the very rare cases when the agent is not able to autoamtically detect the name of a service, or it's not manually set, it'll use the default service name `unknown-dotnet-service`. In prior versions this was just `unknown`. (issue: {issue}1585[#1585])
+
+[[release-notes-1.13.0]]
+==== 1.13.0
+
+[float]
+===== Features
+- {pull}1498[#1498] OpenTelemetry Bridge - integration with `System.Diagnostics.Activity` - Beta (issue: {issue}1521[#1521])
+
+
 [[release-notes-1.12.1]]
 ==== 1.12.1
 

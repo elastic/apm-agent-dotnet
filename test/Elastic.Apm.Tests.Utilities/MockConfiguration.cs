@@ -26,8 +26,10 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _description;
 		private readonly string _disableMetrics;
 		private readonly string _enabled;
+		private readonly string _enableOpenTelemetryBridge;
 		private readonly string _environment;
 		private readonly string _excludedNamespaces;
+		private readonly string _exitSpanMinDuration;
 		private readonly string _flushInterval;
 		private readonly string _globalLabels;
 		private readonly string _hostName;
@@ -45,6 +47,9 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _serviceName;
 		private readonly string _serviceNodeName;
 		private readonly string _serviceVersion;
+		private readonly string _spanCompressionEnabled;
+		private readonly string _spanCompressionExactMatchMaxDuration;
+		private readonly string _spanCompressionSameKindMaxDuration;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
 		private readonly string _traceContextIgnoreSampledFalse;
@@ -66,6 +71,8 @@ namespace Elastic.Apm.Tests.Utilities
 			string captureHeaders = null,
 			string centralConfig = null,
 			string description = null,
+			string enableOpenTelemetryBridge = null,
+			string exitSpanMinDuration = null,
 			string transactionSampleRate = null,
 			string transactionMaxSpans = null,
 			string metricsInterval = null,
@@ -92,7 +99,10 @@ namespace Elastic.Apm.Tests.Utilities
 			string serverUrl = null,
 			string serverCert = null,
 			string ignoreMessageQueues = null,
-			string traceContextIgnoreSampledFalse = null
+			string traceContextIgnoreSampledFalse = null,
+			string spanCompressionEnabled = null,
+			string spanCompressionExactMatchMaxDuration = null,
+			string spanCompressionSameKindMaxDuration = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -106,6 +116,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_captureHeaders = captureHeaders;
 			_centralConfig = centralConfig;
 			_description = description;
+			_enableOpenTelemetryBridge = enableOpenTelemetryBridge;
 			_transactionSampleRate = transactionSampleRate;
 			_transactionMaxSpans = transactionMaxSpans;
 			_metricsInterval = metricsInterval;
@@ -132,6 +143,10 @@ namespace Elastic.Apm.Tests.Utilities
 			_serverCert = serverCert;
 			_ignoreMessageQueues = ignoreMessageQueues;
 			_traceContextIgnoreSampledFalse = traceContextIgnoreSampledFalse;
+			_spanCompressionEnabled = spanCompressionEnabled;
+			_spanCompressionExactMatchMaxDuration = spanCompressionExactMatchMaxDuration;
+			_spanCompressionSameKindMaxDuration = spanCompressionSameKindMaxDuration;
+			_exitSpanMinDuration = exitSpanMinDuration;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -159,6 +174,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(new ConfigurationKeyValue(EnvVarNames.ExcludedNamespaces, _excludedNamespaces, Origin));
+
+		public double ExitSpanMinDuration => ParseExitSpanMinDuration(Kv(EnvVarNames.ExitSpanMinDuration, _exitSpanMinDuration, Origin));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(EnvVarNames.FlushInterval, _flushInterval, Origin));
 
@@ -203,6 +220,14 @@ namespace Elastic.Apm.Tests.Utilities
 		public string ServiceName => ParseServiceName(Kv(EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceNodeName => ParseServiceNodeName(Kv(EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(EnvVarNames.ServiceVersion, _serviceVersion, Origin));
+		public bool SpanCompressionEnabled => ParseSpanCompressionEnabled(Kv(EnvVarNames.SpanCompressionEnabled, _spanCompressionEnabled, Origin));
+
+		public double SpanCompressionExactMatchMaxDuration =>
+			ParseSpanCompressionExactMatchMaxDuration(Kv(EnvVarNames.SpanCompressionExactMatchMaxDuration, _spanCompressionExactMatchMaxDuration,
+				Origin));
+
+		public double SpanCompressionSameKindMaxDuration => ParseSpanCompressionSameKindMaxDuration(Kv(EnvVarNames.SpanCompressionSameKindMaxDuration,
+			_spanCompressionSameKindMaxDuration, Origin));
 
 		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Kv(
 			EnvVarNames.SpanFramesMinDuration,
@@ -226,5 +251,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public bool VerifyServerCert =>
 			ParseVerifyServerCert(Kv(EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));
+
+		public bool EnableOpenTelemetryBridge =>
+			ParseEnableOpenTelemetryBridge(Kv(EnvVarNames.EnableOpenTelemetryBridge, _enableOpenTelemetryBridge, Origin));
 	}
 }

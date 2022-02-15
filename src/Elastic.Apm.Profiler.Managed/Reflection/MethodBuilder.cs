@@ -27,6 +27,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
         /// </summary>
         private static readonly ConcurrentDictionary<Key, TDelegate> Cache = new ConcurrentDictionary<Key, TDelegate>(new KeyComparer());
 
+#pragma warning disable 649
 		/// <summary>
         /// Feature flag used primarily for forcing testing of the token lookup strategy.
         /// </summary>
@@ -38,8 +39,9 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
         /// </summary>
         // ReSharper disable once StaticMemberInGenericType
         private static readonly bool ForceFallbackLookup;
+#pragma warning restore 649
 
-        private readonly Module _resolutionModule;
+		private readonly Module _resolutionModule;
         private readonly int _mdToken;
         private readonly int _originalOpCodeValue;
         private readonly OpCodeValue _opCode;

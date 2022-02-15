@@ -33,7 +33,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private long _dbgIterationsCount;
 		private EntityTagHeaderValue _eTag;
 
-		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, ICentralConfigurationResponseParser centralConfigurationResponseParser,
+		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore,
+			ICentralConfigurationResponseParser centralConfigurationResponseParser,
 			Service service,
 			HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		) : this(logger, configurationStore, configurationStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) =>
@@ -49,7 +50,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		/// snapshots)
 		/// when passing isEnabled: initialConfigSnapshot.CentralConfig and config: initialConfigSnapshot to base
 		/// </summary>
-		private CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, IConfiguration initialConfiguration, Service service
+		private CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore, IConfiguration initialConfiguration,
+			Service service
 			, HttpMessageHandler httpMessageHandler, IAgentTimer agentTimer, string dbgName
 		)
 			: base( /* isEnabled: */ initialConfiguration.CentralConfig, logger, ThisClassName, service, initialConfiguration, httpMessageHandler)
@@ -127,10 +129,11 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				else
 				{
 					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
-							+ " while fetching configuration from APM Server and parsing it.");
+						+ " while fetching configuration from APM Server and parsing it.");
 				}
 
-				_logger.IfLevel(level)?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
+				_logger.IfLevel(level)
+					?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
 						+ " ETag: `{ETag}'. URL: `{Url}'. Apm Server base URL: `{ApmServerUrl}'. WaitInterval: {WaitInterval}."
 						+ " dbgIterationsCount: {dbgIterationsCount}."
 						+ Environment.NewLine + "+-> Request:{HttpRequest}"
@@ -141,7 +144,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 						, HttpClient.BaseAddress.Sanitize().ToString()
 						, waitInfo.Interval.ToHms(),
 						_dbgIterationsCount
-						, httpRequest == null ? " N/A" : Environment.NewLine + httpRequest.Sanitize(_configurationStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()
+						, httpRequest == null
+							? " N/A"
+							: Environment.NewLine + httpRequest.Sanitize(_configurationStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()
 						, httpResponse == null ? " N/A" : Environment.NewLine + httpResponse.ToString().Indent()
 						, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
 						, httpResponseBody == null ? " N/A" : Environment.NewLine + httpResponseBody.Indent());
@@ -152,7 +157,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				httpResponse?.Dispose();
 			}
 
-			_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
+			_logger.Trace()
+				?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
 					, waitInfo.Interval.ToHms(), waitInfo.Reason, _dbgIterationsCount);
 			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CancellationTokenSource.Token).ConfigureAwait(false);
 		}
@@ -186,11 +192,13 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private async Task<(HttpResponseMessage, string)> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest) =>
 			await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
-				, _agentTimer.Now + GetConfigHttpRequestTimeout, CancellationTokenSource.Token).ConfigureAwait(false);
+					, _agentTimer.Now + GetConfigHttpRequestTimeout, CancellationTokenSource.Token)
+				.ConfigureAwait(false);
 
 		private void UpdateConfigStore(CentralConfigurationReader centralConfigurationReader)
 		{
-			_logger.Info()?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfigurationReader);
+			_logger.Info()
+				?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfigurationReader);
 
 			_configurationStore.CurrentSnapshot = new WrappingConfiguration(_initialSnapshot, centralConfigurationReader
 				, $"{_initialSnapshot.Description()} + central (ETag: `{centralConfigurationReader.ETag}')");
@@ -252,6 +260,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string Environment => _wrapped.Environment;
 			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
+			public double ExitSpanMinDuration => _centralConfiguration.ExitSpanMinDuration ?? _wrapped.ExitSpanMinDuration;
 
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 
@@ -285,12 +294,21 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public string ServiceNodeName => _wrapped.ServiceNodeName;
 
 			public string ServiceVersion => _wrapped.ServiceVersion;
+			public bool SpanCompressionEnabled => _centralConfiguration.SpanCompressionEnabled ?? _wrapped.SpanCompressionEnabled;
+
+			public double SpanCompressionExactMatchMaxDuration =>
+				_centralConfiguration.SpanCompressionExactMatchMaxDuration ?? _wrapped.SpanCompressionExactMatchMaxDuration;
+
+			public double SpanCompressionSameKindMaxDuration =>
+				_centralConfiguration.SpanCompressionSameKindMaxDuration ?? _wrapped.SpanCompressionSameKindMaxDuration;
 
 			public double SpanFramesMinDurationInMilliseconds =>
 				_centralConfiguration.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _centralConfiguration.StackTraceLimit ?? _wrapped.StackTraceLimit;
-			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _centralConfiguration.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
+
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
+				_centralConfiguration.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
 
 			public int TransactionMaxSpans => _centralConfiguration.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 
@@ -299,6 +317,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
+			public bool EnableOpenTelemetryBridge => _wrapped.EnableOpenTelemetryBridge;
 			public bool TraceContextIgnoreSampledFalse => _wrapped.TraceContextIgnoreSampledFalse;
 		}
 	}

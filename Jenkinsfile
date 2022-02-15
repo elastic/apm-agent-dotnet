@@ -12,7 +12,7 @@ pipeline {
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
     GITHUB_CHECK_ITS_NAME = 'Integration Tests'
-    ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
+    ITS_PIPELINE = 'apm-integration-tests-selector-mbp/main'
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
@@ -32,7 +32,7 @@ pipeline {
     issueCommentTrigger("(${obltGitHubComments()}|^run benchmark tests)")
   }
   parameters {
-    booleanParam(name: 'Run_As_Master_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on master branch.')
+    booleanParam(name: 'Run_As_Main_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on main branch.')
   }
   stages {
     stage('Initializing'){
@@ -101,7 +101,7 @@ pipeline {
                           whenTrue(isPR()) {
                             // build nuget packages and profiler
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
-                            sh label: 'Rustup', script: 'rustup default 1.54.0'
+                            sh label: 'Rustup', script: 'rustup default 1.56.0'
                             sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                             sh(label: 'Build profiler', script: './build.sh profiler-zip')
                           }
@@ -180,7 +180,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.54.0'
+                          sh label: 'Rustup', script: 'rustup default 1.56.0'
                           sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                           sh label: 'Build', script: './build.sh profiler-zip'
                           sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
@@ -358,9 +358,6 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        retry(3) {
-                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                        }
                         withAzureCredentials(path: "${HOME}", credentialsFile: '.credentials.json') {
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         }
@@ -434,7 +431,7 @@ pipeline {
               when {
                 anyOf {
                   changeRequest()
-                  expression { return !params.Run_As_Master_Branch }
+                  expression { return !params.Run_As_Main_Branch }
                 }
               }
               steps {
@@ -457,9 +454,9 @@ pipeline {
                 beforeAgent true
                 allOf {
                   anyOf {
-                    branch 'master'
+                    branch 'main'
                     tag pattern: '\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
-                    expression { return params.Run_As_Master_Branch }
+                    expression { return params.Run_As_Main_Branch }
                     expression { return env.BENCHMARK_UPDATED != "false" }
                     expression { return env.GITHUB_COMMENT?.contains('benchmark tests') }
                   }
@@ -501,8 +498,8 @@ pipeline {
       when {
         beforeAgent true
         anyOf {
-          branch 'master'
-          expression { return params.Run_As_Master_Branch }
+          branch 'main'
+          expression { return params.Run_As_Main_Branch }
         }
       }
       steps {
@@ -579,10 +576,11 @@ pipeline {
           steps {
             deleteDir()
             dir("${OPBEANS_REPO}"){
-              git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                  url: "git@github.com:elastic/${OPBEANS_REPO}.git"
+              git(credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
+                  url: "git@github.com:elastic/${OPBEANS_REPO}.git",
+                  branch: 'main')
               sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
-              // The opbeans pipeline will trigger a release for the master branch
+              // The opbeans pipeline will trigger a release for the main branch
               gitPush()
               // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
               gitCreateTag(tag: "v${env.BRANCH_NAME}")
@@ -623,6 +621,7 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.0.103'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.1.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.100'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '6.0.100'
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       withTerraform(){
