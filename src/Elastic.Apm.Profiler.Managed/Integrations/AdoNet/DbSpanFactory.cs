@@ -14,13 +14,12 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
 	internal static class DbSpanFactory<T>
 	{
-		private static readonly Type _type;
 		private static readonly InstrumentationFlag _instrumentationFlag;
 
 		static DbSpanFactory()
 		{
-			_type = typeof(T);
-			_instrumentationFlag = GetInstrumentationFlag(_type.FullName);
+			var type = typeof(T);
+			_instrumentationFlag = GetInstrumentationFlag(type.FullName);
 		}
 
 		internal static ISpan CreateSpan(ApmAgent agent, IDbCommand command)

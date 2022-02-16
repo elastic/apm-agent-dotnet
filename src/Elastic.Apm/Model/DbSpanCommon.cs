@@ -4,6 +4,7 @@
 
 using System;
 using System.Data;
+using System.Text;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -33,8 +34,14 @@ namespace Elastic.Apm.Model
 				captureStackTraceOnStart, true);
 		}
 
-		internal static string GetDbSpanName(IDbCommand dbCommand) =>
-			dbCommand.CommandText.Replace(Environment.NewLine, " ");
+		internal static string GetDbSpanName(IDbCommand dbCommand)
+		{
+			var signatureParser =  new SignatureParser(new Scanner());
+			var name = new StringBuilder();
+			signatureParser.QuerySignature(dbCommand.CommandText.Replace(Environment.NewLine, " "), name,  preparedStatement: dbCommand.Parameters.Count > 0);
+			return name.ToString();
+			//return dbCommand.CommandText.Replace(Environment.NewLine, " ");
+		}
 
 		internal void EndSpan(ISpan span, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
 		{
@@ -50,7 +57,7 @@ namespace Elastic.Apm.Model
 				{
 					capturedSpan.Context.Db = new Database
 					{
-						Statement = GetDbSpanName(dbCommand), Instance = dbCommand.Connection.Database, Type = Database.TypeSql
+						Statement = dbCommand.CommandText.Replace(Environment.NewLine, " "), Instance = dbCommand.Connection.Database, Type = Database.TypeSql
 					};
 
 					capturedSpan.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, defaultPort);
@@ -60,7 +67,6 @@ namespace Elastic.Apm.Model
 
 				capturedSpan.Outcome = outcome;
 			}
-
 			span.End();
 		}
 
