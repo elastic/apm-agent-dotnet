@@ -226,6 +226,6 @@ namespace Elastic.Apm.BackendComm
 			return value;
 		}
 
-		private static string AdaptUserAgentValue(string value) => Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
+		private static string AdaptUserAgentValue(string value) => Regex.Replace(value, "[ /()<>@,={}?\\[\\]\"\\\\]", "_");
 	}
 }

@@ -31,6 +31,7 @@ namespace Elastic.Apm.Feature.Tests
 
 		public OutcomeSteps(ScenarioContext scenarioContext) => _scenarioContext = scenarioContext;
 
+		[Scope(Feature = "Outcome")]
 		[Given(@"^an agent$")]
 		public void GivenAnAgent()
 		{
@@ -157,7 +158,7 @@ namespace Elastic.Apm.Feature.Tests
 			transaction.End();
 		}
 
-		[Given(@"a HTTP call is received that returns '([^']*)'")]
+		[Given(@"a HTTP call is received that returns (.*)")]
 		public void GivenAnHTTPTransactionWithResponseCode(string responseCode)
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();
@@ -168,7 +169,7 @@ namespace Elastic.Apm.Feature.Tests
 			_scenarioContext.Set(transaction);
 		}
 
-		[Given(@"a HTTP call is made that returns '([^']*)'")]
+		[Given(@"a HTTP call is made that returns (.*)")]
 		public void GivenAnHTTPSpanWithResponseCode(string responseCode)
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();
@@ -226,11 +227,31 @@ namespace Elastic.Apm.Feature.Tests
 		}
 
 		[Then(@"transaction outcome is '([^']*)'")]
-		public void ThenTransactionOutcomeIs(string success)
+		public void ThenTransactionOutcomeIs(string unkown)
 		{
 			var transaction = _scenarioContext.Get<ITransaction>();
-			transaction.Outcome.ToString().ToLower().Should().Be(success);
+			transaction.Outcome.Should().Be(Outcome.Unknown);
 		}
 
+		[Given(@"the agent sets the span outcome to '([^']*)'")]
+		public void GivenTheAgentSetsTheSpanOutcomeTo(string success)
+		{
+			var span = _scenarioContext.Get<ISpan>();
+			span.Outcome = Outcome.Success;
+		}
+
+		[Then(@"the span outcome is '([^']*)'")]
+		public void ThenTheSpanOutcomeIs(string spanOutcome)
+		{
+			var span = _scenarioContext.Get<ISpan>();
+			span.Outcome.ToString().ToLower().Should().Be(spanOutcome.ToLower());
+		}
+
+		[Then(@"the transaction outcome is '([^']*)'")]
+		public void ThenTheTransactionOutcomeIs(string transactionOutcome)
+		{
+			var transaction = _scenarioContext.Get<ITransaction>();
+			transaction.Outcome.ToString().ToLower().Should().Be(transactionOutcome.ToLower());
+		}
 	}
 }
