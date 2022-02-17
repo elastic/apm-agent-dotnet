@@ -189,6 +189,11 @@ namespace Elastic.Apm.Config
 		int MaxQueueEventCount { get; }
 
 		double MetricsIntervalInMilliseconds { get; }
+		
+		/// <summary>
+		/// The Proxy URL for outbound traffic.
+		/// </summary>
+		Uri ProxyUrl { get; }
 
 		/// <summary>
 		/// Whether the agent is recording.

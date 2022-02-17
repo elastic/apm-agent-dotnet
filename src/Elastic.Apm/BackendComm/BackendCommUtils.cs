@@ -176,7 +176,18 @@ namespace Elastic.Apm.BackendComm
 				};
 			}
 
-			return new HttpClientHandler { ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback };
+			IWebProxy proxy = null;
+			if (configuration.ProxyUrl is not null)
+			{
+				proxy = new WebProxy(configuration.ProxyUrl);
+			}
+
+			return new HttpClientHandler
+			{
+				ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback,
+				UseProxy = proxy is not null,
+				Proxy = proxy
+			};
 		}
 
 		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfiguration configuration, Service service, string dbgCallerDesc
