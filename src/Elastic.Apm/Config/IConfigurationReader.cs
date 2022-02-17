@@ -191,6 +191,11 @@ namespace Elastic.Apm.Config
 		double MetricsIntervalInMilliseconds { get; }
 
 		/// <summary>
+		/// The Proxy URL for outbound traffic.
+		/// </summary>
+		Uri ProxyUrl { get; }
+
+		/// <summary>
 		/// Whether the agent is recording.
 		/// When set to <c>true</c>. the agent instruments and capture requests, tracks errors, and
 		/// collects and sends metrics.
