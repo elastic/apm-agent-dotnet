@@ -162,6 +162,7 @@ namespace Elastic.Apm.Config
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
 			public const string UseElasticTraceparentHeader = Prefix + "USE_ELASTIC_TRACEPARENT_HEADER";
 			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
+			public const string ProxyUrl = Prefix + "PROXY_URL";
 		}
 
 		public static class KeyNames
@@ -191,6 +192,7 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);
 			public const string MetricsInterval = Prefix + nameof(MetricsInterval);
+			public const string ProxyUrl = Prefix + nameof(ProxyUrl);
 			public const string Recording = Prefix + nameof(Recording);
 			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
 			public const string SecretToken = Prefix + nameof(SecretToken);

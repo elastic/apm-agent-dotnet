@@ -40,6 +40,7 @@ namespace Elastic.Apm.Feature.Tests
 		public int MaxBatchEventCount { get; set; } = DefaultValues.MaxBatchEventCount;
 		public int MaxQueueEventCount { get; set; } = DefaultValues.MaxQueueEventCount;
 		public double MetricsIntervalInMilliseconds { get; set; } = DefaultValues.MetricsIntervalInMilliseconds;
+		public Uri ProxyUrl => null;
 		public bool Recording { get; set; } = true;
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; set; } = DefaultValues.SanitizeFieldNames;
 		public string SecretToken { get; set; }

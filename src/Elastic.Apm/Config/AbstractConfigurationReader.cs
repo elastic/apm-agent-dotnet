@@ -23,6 +23,7 @@ namespace Elastic.Apm.Config
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
 		private readonly LazyContextualInit<Uri> _cachedServerUrl = new LazyContextualInit<Uri>();
+		private readonly LazyContextualInit<Uri> _cachedProxyUrl = new LazyContextualInit<Uri>();
 
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
@@ -297,6 +298,25 @@ namespace Elastic.Apm.Config
 			_logger?.Error()?.Log("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, kv.Value);
 			_logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", DefaultValues.ServerUri);
 			return DefaultValues.ServerUri;
+		}
+
+		protected Uri ParseProxyUrl(ConfigurationKeyValue kv) =>
+			_cachedProxyUrl.IfNotInited?.InitOrGet(() => ParseProxyUrlImpl(kv)) ?? _cachedProxyUrl.Value;
+
+		private Uri ParseProxyUrlImpl(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+			{
+				_logger?.Debug()?.Log("Not Using Proxy");
+				return null;
+			}
+
+			if (TryParseUri(kv.Value, out var uri))
+				return uri;
+
+			_logger?.Error()?.Log("Failed parsing proxy URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, kv.Value);
+			
+			return null;
 		}
 
 		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv) =>

@@ -177,7 +177,7 @@ namespace Elastic.Apm.BackendComm
 			}
 
 			IWebProxy proxy = null;
-			if (configuration.ProxyUrl is not null)
+			if (configuration.ProxyUrl != null)
 			{
 				proxy = new WebProxy(configuration.ProxyUrl);
 			}
@@ -185,7 +185,7 @@ namespace Elastic.Apm.BackendComm
 			return new HttpClientHandler
 			{
 				ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback,
-				UseProxy = proxy is not null,
+				UseProxy = proxy != null,
 				Proxy = proxy
 			};
 		}

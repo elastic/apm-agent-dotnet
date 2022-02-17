@@ -65,6 +65,9 @@ namespace Elastic.Apm.Config
 		public int MaxQueueEventCount => ParseMaxQueueEventCount(Read(ConfigConsts.EnvVarNames.MaxQueueEventCount));
 
 		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Read(ConfigConsts.EnvVarNames.MetricsInterval));
+
+		public Uri ProxyUrl => ParseProxyUrl(Read(ConfigConsts.EnvVarNames.ProxyUrl));
+
 		public bool Recording => ParseRecording(Read(ConfigConsts.EnvVarNames.Recording));
 
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => ParseSanitizeFieldNames(Read(ConfigConsts.EnvVarNames.SanitizeFieldNames));

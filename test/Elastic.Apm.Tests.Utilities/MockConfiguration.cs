@@ -38,6 +38,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _maxBatchEventCount;
 		private readonly string _maxQueueEventCount;
 		private readonly string _metricsInterval;
+		private readonly string _proxyUrl;
 		private readonly string _recording;
 		private readonly string _sanitizeFieldNames;
 		private readonly string _secretToken;
@@ -83,6 +84,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string flushInterval = null,
 			string maxBatchEventCount = null,
 			string maxQueueEventCount = null,
+			string proxyUrl = null,
 			string sanitizeFieldNames = null,
 			string globalLabels = null,
 			string disableMetrics = null,
@@ -127,6 +129,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_flushInterval = flushInterval;
 			_maxBatchEventCount = maxBatchEventCount;
 			_maxQueueEventCount = maxQueueEventCount;
+			_proxyUrl = proxyUrl;
 			_sanitizeFieldNames = sanitizeFieldNames;
 			_globalLabels = globalLabels;
 			_disableMetrics = disableMetrics;
@@ -191,6 +194,7 @@ namespace Elastic.Apm.Tests.Utilities
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Kv(EnvVarNames.MaxBatchEventCount, _maxBatchEventCount, Origin));
 		public int MaxQueueEventCount => ParseMaxQueueEventCount(Kv(EnvVarNames.MaxQueueEventCount, _maxQueueEventCount, Origin));
 		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Kv(EnvVarNames.MetricsInterval, _metricsInterval, Origin));
+		public Uri ProxyUrl => ParseProxyUrl(Kv(EnvVarNames.ProxyUrl, _proxyUrl, Origin));
 		public bool Recording => ParseRecording(Kv(KeyNames.Recording, _recording, Origin));
 
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
@@ -200,17 +204,12 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public string ServerCert => ParseServerCert(Kv(EnvVarNames.ServerCert, _serverCert, Origin));
 
-		public Uri ServerUrl
-		{
-			get
-			{
-				return _serverUrl != null
+		public Uri ServerUrl => _serverUrl != null
 					? ParseServerUrl(Kv(EnvVarNames.ServerUrl, _serverUrl, Origin))
 #pragma warning disable 618
 					: ServerUrls[0];
 #pragma warning restore 618
-			}
-		}
+
 
 		[Obsolete("Use ServerUrl")]
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(_serverUrls != null
