@@ -94,7 +94,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		protected override async Task WorkLoopIteration()
 		{
 			++_dbgIterationsCount;
-			WaitInfoS waitInfo;
+			WaitInfoS waitInfo = default;
 			HttpRequestMessage httpRequest = null;
 			HttpResponseMessage httpResponse = null;
 			string httpResponseBody = null;
@@ -115,7 +115,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 			catch (OperationCanceledException)
 			{
-				throw;
+				if (CancellationTokenSource.IsCancellationRequested)
+				{
+					throw;
+				}
 			}
 			catch (Exception ex)
 			{

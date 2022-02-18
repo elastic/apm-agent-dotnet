@@ -347,7 +347,10 @@ namespace Elastic.Apm.Report
 						, string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems));
 
 				// throw to allow Workloop to handle
-				throw;
+				if(CancellationTokenSource.IsCancellationRequested)
+				{
+					throw;
+				}
 			}
 			catch (Exception e)
 			{
