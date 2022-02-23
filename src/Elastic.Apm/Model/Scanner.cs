@@ -394,26 +394,22 @@ namespace Elastic.Apm.Model
 		private bool IsTextEqualIgnoreCase(string name)
 			=> _input.IndexOf(name, _start, name.Length, StringComparison.CurrentCultureIgnoreCase) == _start; //TODO
 
-		/**
-		 * return input.regionMatches(true, start, name, 0, textLength());
-		 * Returns the portion of the SQL that relates to the most recently scanned token.
-		 * <p>
-		 *  Note: this method allocates memory and thus should only be used in tests.
-		 * </p>
-		 * @return the portion of the SQL that relates to the most recently scanned token
-		 */
-		internal string Text()
+		/// <summary>
+		/// Returns the portion of the SQL that relates to the most recently scanned token.
+		/// Note: this method allocates memory and thus should only be used in tests.
+		/// </summary>
+		/// <returns> the portion of the SQL that relates to the most recently scanned token </returns>
+		private string Text()
 		{
 			var sb = new StringBuilder();
 			AppendCurrentTokenText(sb);
 			return sb.ToString();
 		}
 
-		/**
-     * Appends the portion of the SQL that relates to the most recently scanned token to the provided {@link StringBuilder}.
-     *
-     * @param sb the {@link StringBuilder} which will be used to append the SQL
-     */
+		/// <summary>
+		/// Appends the portion of the SQL that relates to the most recently scanned token to the provided {@link StringBuilder}.
+		/// </summary>
+		/// <param name="sb"> the <see cref="StringBuilder"/> which will be used to append the SQL </param>
 		public void AppendCurrentTokenText(StringBuilder sb) => sb.Append(_input, _start, _end - _start);
 
 		public int TextLength() => _end - _start;
