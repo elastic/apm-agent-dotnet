@@ -40,34 +40,5 @@ namespace Elastic.Apm.Helpers
 				logger.Error()?.LogException(ex, MethodExitingExceptionMsgFmt, dbgCallerMethodName);
 			}
 		}
-
-		internal static async Task DoSwallowingExceptions(IApmLogger loggerArg, Func<Task> asyncAction, bool shouldSwallowCancellation = true
-			, [CallerMemberName] string dbgCallerMethodName = null
-		)
-		{
-			var logger = loggerArg.Scoped($"{ThisClassName}.{nameof(DoSwallowingExceptions)}");
-			try
-			{
-				logger.Debug()?.Log(MethodStartingMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName, DbgUtils.CurrentThreadDesc);
-				await asyncAction().ConfigureAwait(false);
-				logger.Debug()
-					?.Log(MethodExitingNormallyMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
-						, DbgUtils.CurrentThreadDesc);
-			}
-			catch (OperationCanceledException)
-			{
-				logger.Debug()
-					?.Log(MethodExitingCancelledMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
-						, DbgUtils.CurrentThreadDesc);
-
-				if (!shouldSwallowCancellation) throw;
-			}
-			catch (Exception ex)
-			{
-				logger.Error()
-					?.LogException(ex, MethodExitingExceptionMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
-						, DbgUtils.CurrentThreadDesc);
-			}
-		}
 	}
 }
