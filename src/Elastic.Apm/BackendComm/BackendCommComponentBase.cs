@@ -84,14 +84,24 @@ namespace Elastic.Apm.BackendComm
 			_logger.Debug()?.Log("Signaling work loop started event...");
 			_loopStarted.Set();
 
-			await ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
-					{
-						while (!CancellationTokenSource.IsCancellationRequested)
-							await WorkLoopIteration().ConfigureAwait(false);
-						// ReSharper disable once FunctionNeverReturns
-					}
-					, dbgCallerMethodName: _dbgName + "." + DbgUtils.CurrentMethodName())
-				.ConfigureAwait(false);
+			while (!CancellationTokenSource.IsCancellationRequested)
+			{
+				try
+				{
+					await WorkLoopIteration().ConfigureAwait(false);
+				}
+				catch (OperationCanceledException)
+				{
+					_logger.Debug()
+						?.Log(nameof(WorkLoop) + "OperationCanceledException - Current thread: {ThreadDesc}"
+							, DbgUtils.CurrentThreadDesc);
+				}
+				catch (Exception ex)
+				{
+					_logger.Error()
+						?.LogException(ex, nameof(WorkLoop) + " Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
+				}
+			}
 
 			_logger.Debug()?.Log("Signaling work loop completed event...");
 			_loopCompleted.Set();
