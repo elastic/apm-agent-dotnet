@@ -59,7 +59,8 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "15s", spanCompressionExactMatchMaxDuration:"100ms", exitSpanMinDuration:"0"))))
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "15s",
+						   spanCompressionExactMatchMaxDuration: "100ms", exitSpanMinDuration: "0"))))
 				Generate10DbCalls(agent, null, true, 200);
 
 			payloadSender.Transactions.Should().HaveCount(1);
@@ -79,7 +80,8 @@ namespace Elastic.Apm.Tests
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s", exitSpanMinDuration:"0"))))
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
+						   exitSpanMinDuration: "0"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{
@@ -127,7 +129,8 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s", exitSpanMinDuration: "0"))))
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
+						   exitSpanMinDuration: "0"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{
@@ -178,6 +181,35 @@ namespace Elastic.Apm.Tests
 			payloadSender.Spans[0].ParentId.Should().Be(payloadSender.Spans[3].Id);
 			payloadSender.Spans[1].ParentId.Should().Be(payloadSender.Spans[3].Id);
 			payloadSender.Spans[1].ParentId.Should().Be(payloadSender.Spans[3].Id);
+		}
+
+		/// <summary>
+		/// See: https://github.com/elastic/apm-agent-dotnet/issues/1631
+		/// Makes sure Span.Composite is empty when there is no compression.
+		/// </summary>
+		[Fact]
+		public void EmptyCompressFieldWithNoCompression()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "1ms",
+					spanCompressionExactMatchMaxDuration: "1ms", exitSpanMinDuration: "0")));
+			agent.Tracer.CaptureTransaction("foo", "bar", (t) =>
+			{
+				var span1 = t.StartSpan("span", "test", isExitSpan: true);
+				span1.Context.Destination = new Destination { Service = new Destination.DestinationService { Resource = "foo" } };
+				var span2 = t.StartSpan("span", "test", isExitSpan: true);
+				span2.Context.Destination = new Destination { Service = new Destination.DestinationService { Resource = "foo" } };
+
+				span2.Duration = 500;
+
+				span1.End();
+				span2.End();
+			});
+
+			payloadSender.Spans.Count.Should().Be(2);
+			(payloadSender.Spans[0] as Span)!.Composite.Should().BeNull();
+			(payloadSender.Spans[1] as Span)!.Composite.Should().BeNull();
 		}
 
 		private void Generate10DbCalls(IApmAgent agent, string spanName, bool shouldSleep = false, int spanDuration = 10) =>
