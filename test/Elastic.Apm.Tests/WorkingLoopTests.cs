@@ -59,12 +59,12 @@ public class WorkingLoopTests
 		// This won't be sent due to timeout
 		agent.Tracer.CaptureTransaction("Test", "Test", t => { });
 
-		Thread.Sleep(50);
+		Thread.Sleep(500);
 
 		// This will be sent
 		agent.Tracer.CaptureTransaction("Test2", "Test", t => { });
 
-		Thread.Sleep(50);
+		Thread.Sleep(500);
 
 		waitHandle.WaitOne(TimeSpan.FromMilliseconds(1000));
 

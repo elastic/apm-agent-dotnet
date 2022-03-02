@@ -125,7 +125,8 @@ namespace Elastic.Apm.BackendComm
 					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
 					return true;
 				};
-			} else if (!string.IsNullOrEmpty(configuration.ServerCert))
+			}
+			else if (!string.IsNullOrEmpty(configuration.ServerCert))
 			{
 				try
 				{
@@ -157,11 +158,12 @@ namespace Elastic.Apm.BackendComm
 				}
 				catch (Exception e)
 				{
-					logger.Error()?.LogException(
-						e,
-						"Could not configure {ConfigServerCert} at path {Path} for certificate pinning",
-						nameof(configuration.ServerCert),
-						configuration.ServerCert);
+					logger.Error()
+						?.LogException(
+							e,
+							"Could not configure {ConfigServerCert} at path {Path} for certificate pinning",
+							nameof(configuration.ServerCert),
+							configuration.ServerCert);
 				}
 			}
 			else
@@ -199,8 +201,15 @@ namespace Elastic.Apm.BackendComm
 
 			if (service.Runtime != null)
 			{
-				httpClient.DefaultRequestHeaders.UserAgent.Add(
-					new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
+				try
+				{
+					httpClient.DefaultRequestHeaders.UserAgent.Add(
+						new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
+				}
+				catch (Exception e)
+				{
+					logger.Warning()?.LogException(e, "Failed setting user agent header");
+				}
 			}
 
 			if (configuration.ApiKey != null)
