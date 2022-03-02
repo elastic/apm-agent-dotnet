@@ -516,13 +516,12 @@ namespace Elastic.Apm.Model
 		{
 			if (!IsSameKind(sibling)) return false;
 
-			Composite = new Composite();
-
 			if (Name == sibling.Name)
 			{
 				if (Duration <= Configuration.SpanCompressionExactMatchMaxDuration
 					&& sibling.Duration <= Configuration.SpanCompressionExactMatchMaxDuration)
 				{
+					Composite ??= new Composite();
 					Composite.CompressionStrategy = "exact_match";
 					return true;
 				}
@@ -532,6 +531,7 @@ namespace Elastic.Apm.Model
 
 			if (Duration <= Configuration.SpanCompressionSameKindMaxDuration && sibling.Duration <= Configuration.SpanCompressionSameKindMaxDuration)
 			{
+				Composite ??= new Composite();
 				Composite.CompressionStrategy = "same_kind";
 				if(_context.IsValueCreated)
 					Name = "Calls to " + Context.Destination.Service.Resource;
