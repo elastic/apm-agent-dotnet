@@ -1,6 +1,6 @@
 # End to End WebApi QuickStart
 
-This End to End demo will introduce APM stack + APM dotnet webapi agent for test and development purpose
+This End to End demo will introduce APM stack + APM dotnet webapi agent for test and development purpose (do not use it for production)
 
 The full csharp webapi demo is available under AspNetCore.Demo folder
 
