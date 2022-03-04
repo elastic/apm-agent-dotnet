@@ -80,4 +80,4 @@ After the first call to this api, the apm service `AspNetCoreDemo` will become a
 
 ### Open the APM kibana dashboard
 
-Open In your favorite browser open the [kibana apm services dashboard](http://localhost:5601/app/apm/services)
+Open In your favorite browser the [kibana apm services dashboard](http://localhost:5601/app/apm/services)
