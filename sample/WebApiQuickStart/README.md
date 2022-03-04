@@ -18,7 +18,7 @@ curl -L -O https://raw.githubusercontent.com/elastic/apm-server/main/docker-comp
 
 ### Or using a lighter one
 
-A copy of the apm-server project with less services (for development and test only)
+A copy of the apm-server `docker-compose.yml` project with less services (for development and test only)
 
 ```bash
 docker compose up -d && docker compose logs -f
