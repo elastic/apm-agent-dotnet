@@ -6,7 +6,7 @@ The full csharp webapi demo is available under AspNetCore.Demo folder
 
 ## Setup an apm-server
 
-This part will setup APM stack (apm-server + elasticsearch + apm-server) locally for development and test purpose to enable end to end AspNetCore quick demo.
+This part will setup APM stack (apm-server + elasticsearch + kibana) locally for development and test purpose to enable end to end AspNetCore quick demo.
 
 ### By using the latest version
 
