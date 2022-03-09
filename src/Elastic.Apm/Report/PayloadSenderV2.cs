@@ -37,6 +37,9 @@ namespace Elastic.Apm.Report
 		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
 
 		private readonly IApmServerInfo _apmServerInfo;
+		// A callback which is triggered after the ServerInfo is fetched.
+		// Components that depend on the server version can register for this callback and make decisions right after the server version is fetched.
+		private readonly Action<bool, IApmServerInfo> _serverInfoCallback;
 		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
 		internal readonly Api.System System;
 		private readonly IConfiguration _configuration;
@@ -61,7 +64,8 @@ namespace Elastic.Apm.Report
 			HttpMessageHandler httpMessageHandler = null,
 			string dbgName = null,
 			bool isEnabled = true,
-			IEnvironmentVariables environmentVariables = null
+			IEnvironmentVariables environmentVariables = null,
+			Action<bool, IApmServerInfo> serverInfoCallback = null
 		)
 			: base(isEnabled, logger, ThisClassName, service, configuration, httpMessageHandler)
 		{
@@ -78,6 +82,7 @@ namespace Elastic.Apm.Report
 
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(configuration.CloudProvider, _logger, environmentVariables);
 			_apmServerInfo = apmServerInfo;
+			_serverInfoCallback = serverInfoCallback;
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
@@ -206,7 +211,7 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient).ConfigureAwait(false);
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient, _serverInfoCallback).ConfigureAwait(false);
 				_getApmServerVersion = true;
 			}
 

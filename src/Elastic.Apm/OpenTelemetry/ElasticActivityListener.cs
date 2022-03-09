@@ -19,14 +19,18 @@ using Elastic.Apm.Model;
 
 namespace Elastic.Apm.OpenTelemetry
 {
-	public class ElasticActivityListener
+	public class ElasticActivityListener : IDisposable
 	{
-		internal readonly ConcurrentDictionary<string, Span> ActiveSpans = new();
-		internal readonly ConcurrentDictionary<string, Transaction> ActiveTransactions = new();
+		private readonly ConcurrentDictionary<string, Span> ActiveSpans = new();
+		private readonly ConcurrentDictionary<string, Transaction> ActiveTransactions = new();
 
-		internal ElasticActivityListener(IApmAgent agent, Tracer tracerInternal)
+		internal ElasticActivityListener(IApmAgent agent) => _logger = agent.Logger?.Scoped(nameof(ElasticActivityListener));
+
+		private readonly IApmLogger _logger;
+		private Tracer _tracer;
+
+		internal void Start(Tracer tracerInternal)
 		{
-			_logger = agent.Logger?.Scoped(nameof(ElasticActivityListener));
 			_tracer = tracerInternal;
 			Listener = new ActivityListener
 			{
@@ -37,10 +41,6 @@ namespace Elastic.Apm.OpenTelemetry
 			};
 			ActivitySource.AddActivityListener(Listener);
 		}
-
-		private readonly IApmLogger _logger;
-		internal Tracer _tracer;
-
 
 		private Action<Activity> ActivityStarted =>
 			activity =>
@@ -143,7 +143,7 @@ namespace Elastic.Apm.OpenTelemetry
 				}
 			};
 
-		public ActivityListener Listener { get; }
+		private ActivityListener Listener { get; set; }
 
 		private void InferSpanTypeAndSubType(Span span, Activity activity)
 		{
@@ -179,6 +179,8 @@ namespace Elastic.Apm.OpenTelemetry
 				}
 			}
 		}
+
+		public void Dispose() => Listener?.Dispose();
 	}
 }
 
