@@ -84,7 +84,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 					testData.Add(new object[] { "creditcardnumber" }); //*card
 					break;
 				case Tests.DefaultsWithKnownHeaders:
-					testData.Add(new object[] { "authorization", "Authorization" });
+					testData.Add(new object[] { "authorization", "Authorization" }); // *auth*
+					testData.Add(new object[] { "authority", "authority" }); // *auth*
+					testData.Add(new object[] { "auth", "auth" }); // *auth*
 					testData.Add(new object[] { "set-cookie", "Set-Cookie" });
 					break;
 				case Tests.DefaultWithRequestBodyNoError:
