@@ -474,7 +474,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 [options="header"]
 |============
 | Default | Type
-| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | Comma separated string
+| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, *auth*, set-cookie` | Comma separated string
 |============
 
 [float]
