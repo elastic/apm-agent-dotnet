@@ -61,7 +61,13 @@ pipeline {
         stage('Parallel'){
           when {
             beforeAgent true
-            expression { return env.ONLY_DOCS == "false" }
+            allOf {
+              expression { return env.ONLY_DOCS == "false" }
+              anyOf {
+                changeRequest()
+                branch '**/*'
+              }
+            }
           }
           parallel{
             stage('Linux'){
