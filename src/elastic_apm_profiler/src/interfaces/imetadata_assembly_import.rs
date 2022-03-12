@@ -158,22 +158,22 @@ impl IMetaDataAssemblyImport {
         let mut sz_locale: *mut WCHAR = ptr::null_mut();
         assembly_metadata.szLocale = (&mut sz_locale as *mut *mut WCHAR) as *mut WCHAR;
 
-        let mut assembly_flags = MaybeUninit::uninit();
-        let mut hash_algorithm = MaybeUninit::uninit();
+        let mut assembly_flags = 0;
+        let mut hash_algorithm = 0;
         let mut public_key = MaybeUninit::uninit();
-        let mut public_key_length = MaybeUninit::uninit();
+        let mut public_key_length = 0;
 
         let hr = unsafe {
             self.GetAssemblyProps(
                 assembly_token,
                 public_key.as_mut_ptr(),
-                public_key_length.as_mut_ptr(),
-                hash_algorithm.as_mut_ptr(),
+                &mut public_key_length,
+                &mut hash_algorithm,
                 name_buffer.as_mut_ptr(),
                 name_buffer_length,
                 name_length.as_mut_ptr(),
                 &mut assembly_metadata,
-                assembly_flags.as_mut_ptr(),
+                &mut assembly_flags,
             )
         };
 
@@ -184,29 +184,16 @@ impl IMetaDataAssemblyImport {
                     .to_string_lossy();
 
                 let public_key = unsafe {
-                    let l = public_key_length.assume_init();
                     let p = public_key.assume_init();
-                    if l == 0 {
+                    if public_key_length == 0 {
                         Vec::new()
                     } else {
-                        slice::from_raw_parts(p as *const u8, l as usize).to_vec()
+                        slice::from_raw_parts(p as *const u8, public_key_length as usize).to_vec()
                     }
                 };
 
-                let hash_algorithm = unsafe { hash_algorithm.assume_init() };
-                let assembly_flags = unsafe {
-                    let a = assembly_flags.assume_init();
-                    CorAssemblyFlags::from_bits(a).unwrap()
-                };
-
-                let locale = unsafe {
-                    U16CString::from_ptr(
-                        assembly_metadata.szLocale,
-                        assembly_metadata.cbLocale as usize,
-                    )
-                    .unwrap()
-                    .to_string_lossy()
-                };
+                let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap()
+                let locale = self.get_locale(&mut assembly_metadata);
 
                 Ok(AssemblyMetaData {
                     name,
@@ -343,15 +330,7 @@ impl IMetaDataAssemblyImport {
         };
 
         let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
-
-        let locale = unsafe {
-            U16CString::from_ptr(
-                assembly_metadata.szLocale,
-                assembly_metadata.cbLocale as usize,
-            )
-            .unwrap()
-            .to_string_lossy()
-        };
+        let locale = self.get_locale(&mut assembly_metadata);
 
         Ok(AssemblyMetaData {
             name,
@@ -369,6 +348,21 @@ impl IMetaDataAssemblyImport {
     }
 
     // Other Rust abstractions
+
+    fn get_locale(&self, assembly_metadata: &mut AssemblyMetaData) -> Option<String> {
+        if assembly_metadata.szLocale.is_null() {
+            None
+        } else {
+            unsafe {
+                Some(U16CString::from_ptr(
+                    assembly_metadata.szLocale,
+                    assembly_metadata.cbLocale as usize,
+                )
+                    .unwrap()
+                    .to_string_lossy())
+            }
+        }
+    }
 
     pub fn find_assembly_ref(&self, name: &str) -> Option<mdAssemblyRef> {
         if let Ok(assembly_refs) = self.enum_assembly_refs() {
