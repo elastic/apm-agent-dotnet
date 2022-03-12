@@ -183,16 +183,8 @@ impl IMetaDataAssemblyImport {
                     .unwrap()
                     .to_string_lossy();
 
-                let public_key = unsafe {
-                    let p = public_key.assume_init();
-                    if public_key_length == 0 {
-                        Vec::new()
-                    } else {
-                        slice::from_raw_parts(p as *const u8, public_key_length as usize).to_vec()
-                    }
-                };
-
-                let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap()
+                let public_key = self.get_public_key(public_key, public_key_length as usize);
+                let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
                 let locale = self.get_locale(&mut assembly_metadata);
 
                 Ok(AssemblyMetaData {
@@ -320,15 +312,7 @@ impl IMetaDataAssemblyImport {
             .unwrap()
             .to_string_lossy();
 
-        let public_key = unsafe {
-            let p = public_key.assume_init();
-            if public_key_length == 0 {
-                Vec::new()
-            } else {
-                slice::from_raw_parts(p as *const u8, public_key_length as usize).to_vec()
-            }
-        };
-
+        let public_key = self.get_public_key(public_key, public_key_length as usize);
         let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
         let locale = self.get_locale(&mut assembly_metadata);
 
@@ -349,17 +333,30 @@ impl IMetaDataAssemblyImport {
 
     // Other Rust abstractions
 
-    fn get_locale(&self, assembly_metadata: &mut AssemblyMetaData) -> Option<String> {
+    fn get_locale(&self, assembly_metadata: &mut ASSEMBLYMETADATA) -> Option<String> {
         if assembly_metadata.szLocale.is_null() {
             None
         } else {
             unsafe {
-                Some(U16CString::from_ptr(
-                    assembly_metadata.szLocale,
-                    assembly_metadata.cbLocale as usize,
-                )
+                Some(
+                    U16CString::from_ptr(
+                        assembly_metadata.szLocale,
+                        assembly_metadata.cbLocale as usize,
+                    )
                     .unwrap()
-                    .to_string_lossy())
+                    .to_string_lossy(),
+                )
+            }
+        }
+    }
+
+    fn get_public_key(&self, ptr: MaybeUninit<*mut c_void>, len: usize) -> Vec<u8> {
+        unsafe {
+            let p = ptr.assume_init();
+            if len == 0 {
+                Vec::new()
+            } else {
+                slice::from_raw_parts(p as *const u8, len).to_vec()
             }
         }
     }
