@@ -4,9 +4,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -49,7 +51,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				receivedData.Spans.ForEachIndexed((span, i) =>
 				{
-					span.Name.Should().StartWith("CREATE");
+					var signatureParser = new SignatureParser(new Scanner());
+					var name = new StringBuilder();
+					signatureParser.QuerySignature(dbStatements[i], name, preparedStatement: false);
+
+					span.Name.Should().StartWith(name.ToString());
 					span.Type.Should().Be(ApiConstants.TypeDb);
 					span.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
 					span.Context.Db.Type.Should().Be(Database.TypeSql);
@@ -67,7 +73,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					span.ParentId.Should().Be(transaction.Id);
 					span.ShouldOccurBetween(transaction);
 
-					if (i != 0) receivedData.Spans[i - 1].ShouldOccurBefore(span);
+					if (i != 0)
+						receivedData.Spans[i - 1].ShouldOccurBefore(span);
 				});
 
 				ShouldBeMonotonicInTime(receivedData.Spans);
@@ -156,7 +163,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				topLevelDbSpans.Concat(allChildDbSpansFlattened)
 					.ForEachIndexed((dbSpan, i) =>
 					{
-						dbSpan.Name.Should().StartWith("CREATE");
+						var signatureParser = new SignatureParser(new Scanner());
+						var name = new StringBuilder();
+						signatureParser.QuerySignature(dbStatements[i], name, preparedStatement: false);
+
+						dbSpan.Name.Should().StartWith(name.ToString());
 						dbSpan.Type.Should().Be(ApiConstants.TypeDb);
 						dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
 						dbSpan.Context.Db.Type.Should().Be(Database.TypeSql);

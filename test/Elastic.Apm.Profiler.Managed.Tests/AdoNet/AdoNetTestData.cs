@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -18,7 +18,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 		// frequent commands are executed to retrieve session parameters. we should ignore these
 		public const int OracleProviderExpectedSpans = 63;
-		public const string OracleProviderSpanNameStart = "DECLARE  err_code VARCHAR2(2000);  err_msg VARCHAR2(2000);";
+		public const string OracleProviderSpanNameStart = "DECLARE";
 
 		public IEnumerator<object[]> GetEnumerator()
 		{
