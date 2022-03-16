@@ -40,7 +40,6 @@ namespace Elastic.Apm.Model
 			var name = new StringBuilder();
 			signatureParser.QuerySignature(dbCommand.CommandText.Replace(Environment.NewLine, " "), name,  preparedStatement: dbCommand.Parameters.Count > 0);
 			return name.ToString();
-			//return dbCommand.CommandText.Replace(Environment.NewLine, " ");
 		}
 
 		internal void EndSpan(ISpan span, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
