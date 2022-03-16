@@ -47,6 +47,48 @@ namespace Elastic.Apm.Feature.Tests
 			regex.IsMatch(values).Should().BeTrue($"user agent values {values} should match {match}");
 		}
 
+		[Scope(Feature = "Agent Transport User agent Header")]
+		[Given(@"^an agent$")]
+		public void GivenAnAgent()
+		{
+			var output = _scenarioContext.ScenarioContainer.Resolve<ITestOutputHelper>();
+			var logger = new XUnitLogger(LogLevel.Trace, output);
+			var configuration = new TestConfiguration();
+			_scenarioContext.Set(configuration);
+
+			var payloadCollector = new PayloadCollector();
+			_scenarioContext.Set(payloadCollector);
+
+			var handler = new MockHttpMessageHandler();
+			handler.When(BuildIntakeV2EventsAbsoluteUrl(configuration.ServerUrl).AbsoluteUri)
+				.Respond(r =>
+				{
+					payloadCollector.ProcessPayload(r);
+					return new HttpResponseMessage(HttpStatusCode.OK);
+				});
+
+			var environmentVariables = new TestEnvironmentVariables();
+			_scenarioContext.Set(environmentVariables);
+
+			var service = Service.GetDefaultService(configuration, new NoopLogger());
+			service.Name = "foo";
+
+			_scenarioContext.Set(() =>
+			{
+				var payloadSender = new PayloadSenderV2(
+					logger,
+					configuration,
+					service,
+					new Api.System(),
+					MockApmServerInfo.Version710,
+					handler,
+					environmentVariables: environmentVariables);
+
+				return new ApmAgent(new TestAgentComponents(logger, configuration, payloadSender));
+			});
+
+		}
+
 		[Given(@"an agent configured with")]
 		public void GivenAnAgentConfiguredWith(Table table)
 		{

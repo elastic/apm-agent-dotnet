@@ -23,6 +23,14 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.14.1]]
+==== 1.14.1
+
+[float]
+===== Bug fixes
+- {pull}1634[#1634] Make sure events are sent after APM Server timeout (bug report: {pull}1630[#1630])
+- {pull}1639[#1639] Error on composite span validation (bug report: {issue}1631[#1631]))
+- {pull}1648[#1648] OpenTelemetry (Activity) bridge - APM Server version check
 
 [[release-notes-1.14.0]]
 ==== 1.14.0

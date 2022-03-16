@@ -15,7 +15,7 @@ feedback and ideas are always welcome.
 ### .NET source
 
 In order to build the .NET source code, you'll need
- * [.NET 5.0 or later](https://dotnet.microsoft.com/download/dotnet/5.0)
+ * [.NET 6.0 or later](https://dotnet.microsoft.com/download/dotnet/6.0)
  * **If** you're running on Windows **and** also wish to build projects that target .NET Framework,
 you'll need a minimum of .NET Framework 4.6.1 installed.
 

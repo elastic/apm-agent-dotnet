@@ -18,7 +18,7 @@ namespace Elastic.Apm.ServerInfo
 	internal class ApmServerInfoProvider
 	{
 		internal static async Task FillApmServerInfo(IApmServerInfo apmServerInfo, IApmLogger logger, IConfiguration configuration,
-			HttpClient httpClient
+			HttpClient httpClient, Action<bool, IApmServerInfo> callbackOnFinish
 		)
 		{
 			try
@@ -43,19 +43,25 @@ namespace Elastic.Apm.ServerInfo
 						try
 						{
 							apmServerInfo.Version = new ElasticVersion(strVersion);
+							callbackOnFinish?.Invoke(true, apmServerInfo);
 						}
 						catch (Exception e)
 						{
 							logger.Warning()?.LogException(e, "Failed parsing APM Server version - version string: {VersionString}", strVersion);
+							callbackOnFinish?.Invoke(false, apmServerInfo);
 						}
 					}
 				}
 				else
+				{
 					logger.Warning()?.Log("Failed reading APM server info, response from server: {ResponseCode}", responseMessage.StatusCode);
+					callbackOnFinish?.Invoke(false, apmServerInfo);
+				}
 			}
 			catch (Exception e)
 			{
 				logger.Warning()?.LogException(e, "Failed reading APM server info");
+				callbackOnFinish?.Invoke(false, apmServerInfo);
 			}
 		}
 	}
