@@ -10,30 +10,30 @@ namespace Elastic.Apm.Model
 {
 	internal class SignatureParser
 	{
-		/**
-     * If the cache reaches this size we assume that the application creates a lot of dynamic queries.
-     * In that case it's inefficient to try to cache these as they are not likely to be repeated.
-     * But we still pay the price of allocating a Map.Entry and a String for the signature.
-     */
+		/// <summary>
+		/// If the cache reaches this size we assume that the application creates a lot of dynamic queries.
+		/// In that case it's inefficient to try to cache these as they are not likely to be repeated.
+		/// But we still pay the price of allocating a Map.Entry and a String for the signature.
+		/// </summary>
 		private const int DisableCacheThreshold = 512;
 
-		/**
-     * The cache management overhead is probably not worth it for short queries
-     */
+		/// <summary>
+		/// The cache management overhead is probably not worth it for short queries
+		/// </summary>
 		private const int QueryLengthCacheLowerThreshold = 64;
 
-		/**
-     * We don't want to keep alive references to huge query strings
-     */
+		/// <summary>
+		/// We don't want to keep alive references to huge query strings
+		/// </summary>
 		private static readonly int QueryLengthCacheUpperThreshold = 10_000;
 
 		private readonly Scanner _scanner;
 
-		/**
-     * Not using weak keys because ORMs like Hibernate generate equal SQL strings for the same query but don't reuse the same string instance.
-     * When relying on weak keys, we would not leverage any caching benefits if the query string is collected.
-     * That means that we are leaking Strings but as the size of the map is limited that should not be an issue.
-     */
+		/// <summary>
+		/// Not using weak keys because ORMs like Hibernate generate equal SQL strings for the same query but don't reuse the same string instance.
+		/// When relying on weak keys, we would not leverage any caching benefits if the query string is collected.
+		/// That means that we are leaking Strings but as the size of the map is limited that should not be an issue.
+		/// </summary>
 		private readonly ConcurrentDictionary<string, string[]>
 			_signatureCache = new();
 

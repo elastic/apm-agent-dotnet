@@ -93,7 +93,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			var span = _payloadSender.FirstSpan;
 
 #if !NETFRAMEWORK
-			span.Name.Should().Be(commandText);
+			span.Name.ToLower().Should().Be("select");
 #endif
 			span.Subtype.Should().Be(ApiConstants.SubtypeMssql);
 			span.Type.Should().Be(ApiConstants.TypeDb);
@@ -154,7 +154,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			var span = _payloadSender.FirstSpan;
 
 #if !NETFRAMEWORK
-			span.Name.Should().Be(commandText);
+			span.Name.ToLower().Should().Be("select from faketable");
 #endif
 			span.Subtype.Should().Be(ApiConstants.SubtypeMssql);
 			span.Type.Should().Be(ApiConstants.TypeDb);
