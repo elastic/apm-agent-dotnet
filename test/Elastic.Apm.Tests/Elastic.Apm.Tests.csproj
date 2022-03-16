@@ -54,7 +54,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Content Include="TestResources\proc\**\*.*">
+    <Content Include="TestResources\**\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
