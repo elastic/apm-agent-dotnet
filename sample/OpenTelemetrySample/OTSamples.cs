@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using Elastic.Apm.Api;
@@ -77,12 +78,11 @@ namespace OpenTelemetrySample
 		{
 			var src = new ActivitySource("Test");
 
-			tracer.CaptureTransaction( nameof(Sample4), "test", t =>
+			tracer.CaptureTransaction(nameof(Sample4), "test", t =>
 			{
 				Thread.Sleep(100);
 				using (var activity = src.StartActivity("foo"))
 				{
-
 					tracer.CurrentSpan.CaptureSpan("ElasticApmSpan", "test", () => Thread.Sleep(50));
 					Thread.Sleep(150);
 				}
@@ -110,11 +110,33 @@ namespace OpenTelemetrySample
 			var src = new ActivitySource("Test");
 			using (var _ = src.StartActivity("SpanKindSample", ActivityKind.Server))
 			{
-
 				using (var activity = src.StartActivity("httpSpan", ActivityKind.Client)) activity?.SetTag("http.url", "http://foo.bar");
 				using (var activity = src.StartActivity("dbSpan", ActivityKind.Client)) activity?.SetTag("db.system", "mysql");
 				using (var activity = src.StartActivity("grpcSpan", ActivityKind.Client)) activity?.SetTag("rpc.system", "grpc");
 				using (var activity = src.StartActivity("messagingSpan", ActivityKind.Client)) activity?.SetTag("messaging.system", "rabbitmq");
+			}
+		}
+
+		public static void SpanLinkSample()
+		{
+			var src = new ActivitySource("Test");
+			Activity activity1;
+			using (activity1 = src.StartActivity("Activity1", ActivityKind.Server))
+			{
+				using var childActivity1 = src.StartActivity("ChildActivity1");
+			}
+
+			Activity activity2;
+			using (activity2 = src.StartActivity("Activity2", ActivityKind.Server))
+			{
+				using var childActivity2 = src.StartActivity("ChildActivity2", ActivityKind.Internal, new ActivityContext(),
+					links: new List<ActivityLink> { new ActivityLink(activity1.Context) });
+			}
+
+			using (var _ = src.StartActivity("Activity3", ActivityKind.Server, new ActivityContext(),
+					   links: new List<ActivityLink> { new ActivityLink(activity1.Context), new ActivityLink(activity2.Context) }))
+			{
+				using var childActivity3 = src.StartActivity("ChildActivity3");
 			}
 		}
 	}

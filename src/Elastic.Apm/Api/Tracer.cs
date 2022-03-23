@@ -67,20 +67,19 @@ namespace Elastic.Apm.Api
 		}
 
 		internal Transaction StartTransactionInternal(string name, string type,
-			long? timestamp = null, bool ignoreActivity = false, string id = null, string traceId = null, DistributedTracingData distributedTracingData = null
+			long? timestamp = null, bool ignoreActivity = false, string id = null, string traceId = null,
+			DistributedTracingData distributedTracingData = null, IEnumerable<Link> links = null
 		)
-			=> StartTransactionInternal(name, type, distributedTracingData, ignoreActivity, timestamp, id, traceId);
+			=> StartTransactionInternal(name, type, distributedTracingData, ignoreActivity, timestamp, id, traceId, links);
 
 		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null,
-			bool ignoreActivity = false, long? timestamp = null, string id = null, string traceId = null
+			bool ignoreActivity = false, long? timestamp = null, string id = null, string traceId = null, IEnumerable<Link> links = null
 		)
 		{
 			var currentConfig = _configurationProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, _breakdownMetricsProvider, ignoreActivity, timestamp, id)
-			{
-				Service = _service
-			};
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, _breakdownMetricsProvider, ignoreActivity, timestamp, id,
+				links: links) { Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
@@ -159,7 +158,8 @@ namespace Elastic.Apm.Api
 				return task;
 			});
 
-		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null) =>
+		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null
+		) =>
 			Task.Run(() =>
 			{
 				var transaction = StartTransaction(name, type, distributedTracingData);
@@ -178,7 +178,8 @@ namespace Elastic.Apm.Api
 			});
 
 		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func,
-			DistributedTracingData distributedTracingData = null) =>
+			DistributedTracingData distributedTracingData = null
+		) =>
 			Task.Run(() =>
 			{
 				var transaction = StartTransaction(name, type, distributedTracingData);
