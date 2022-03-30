@@ -202,7 +202,7 @@ namespace Elastic.Apm.Report
 		{
 			if (!_getCloudMetadata)
 			{
-				var cloud = await _cloudMetadataProviderCollection.GetMetadataAsync().ConfigureAwait(false);
+				var cloud = await _cloudMetadataProviderCollection.GetMetadataAsync();
 				if (cloud != null)
 					_metadata.Cloud = cloud;
 
@@ -211,12 +211,12 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient, _serverInfoCallback).ConfigureAwait(false);
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient, _serverInfoCallback);
 				_getApmServerVersion = true;
 			}
 
-			var batch = await ReceiveBatchAsync().ConfigureAwait(false);
-			await ProcessQueueItems(batch).ConfigureAwait(false);
+			var batch = await ReceiveBatchAsync();
+			await ProcessQueueItems(batch);
 		}
 
 		private async Task<object[]> ReceiveBatchAsync()
@@ -230,14 +230,14 @@ namespace Elastic.Apm.Report
 				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
-					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CancellationTokenSource.Token).ConfigureAwait(false))
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CancellationTokenSource.Token))
 						break;
 
 					_eventQueue.TriggerBatch();
 				}
 			}
 
-			var eventBatchToSend = await receiveAsyncTask.ConfigureAwait(false);
+			var eventBatchToSend = await receiveAsyncTask;
 			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
 			_logger.Trace()
 				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
@@ -259,10 +259,10 @@ namespace Elastic.Apm.Report
 			var timeoutDelayTask = Task.Delay(timeout, timeoutDelayCts.Token);
 			try
 			{
-				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask).ConfigureAwait(false);
+				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
 				if (completedTask == taskToAwait)
 				{
-					await taskToAwait.ConfigureAwait(false);
+					await taskToAwait;
 					return true;
 				}
 
@@ -318,8 +318,7 @@ namespace Elastic.Apm.Report
 				using (var content = new StreamContent(stream))
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
-					var response = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
-						.ConfigureAwait(false);
+					var response = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token);
 
 					if (response is null || !response.IsSuccessStatusCode)
 					{
@@ -330,7 +329,7 @@ namespace Elastic.Apm.Report
 								+ ", content: \n{ApmServerResponseContent}"
 								, _intakeV2EventsAbsoluteUrl.Sanitize()
 								, response?.StatusCode,
-								response is null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+								response is null ? null : await response.Content.ReadAsStringAsync());
 					}
 					else
 					{

@@ -26,13 +26,15 @@ namespace Elastic.Apm.BackendComm
 		private readonly IApmLogger _logger;
 		private readonly ManualResetEventSlim _loopCompleted;
 		private readonly ManualResetEventSlim _loopStarted;
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
+		private Thread _workLoopThread;
+		private readonly string _dbgDerivedClassName;
 
 		internal BackendCommComponentBase(bool isEnabled, IApmLogger logger, string dbgDerivedClassName, Service service
 			, IConfiguration configuration, HttpMessageHandler httpMessageHandler = null
 		)
 		{
 			_dbgName = $"{ThisClassName} ({dbgDerivedClassName})";
+			_dbgDerivedClassName = dbgDerivedClassName;
 			_logger = logger?.Scoped(_dbgName);
 			_isEnabled = isEnabled;
 
@@ -50,36 +52,23 @@ namespace Elastic.Apm.BackendComm
 			_loopCompleted = new ManualResetEventSlim();
 
 			HttpClient = BackendCommUtils.BuildHttpClient(logger, configuration, service, _dbgName, httpMessageHandler);
-
-			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{dbgDerivedClassName}", logger);
 		}
 
 		protected abstract Task WorkLoopIteration();
 
-		internal bool IsRunning => _singleThreadTaskScheduler.IsRunning;
-
-		private void PostToInternalTaskScheduler(string dbgActionDesc, Func<Task> asyncAction
-			, TaskCreationOptions taskCreationOptions = TaskCreationOptions.None
-		)
-		{
-#pragma warning disable 4014
-			// We don't pass any CancellationToken on purpose because in some case (for example work loop)
-			// we wait for asyncAction to start so we should never cancel it before it starts
-			Task.Factory.StartNew(asyncAction, CancellationToken.None, taskCreationOptions, _singleThreadTaskScheduler);
-#pragma warning restore 4014
-			_logger.Debug()?.Log("Posted {DbgTaskDesc} to internal task scheduler", dbgActionDesc);
-		}
+		internal bool IsRunning => _workLoopThread.IsAlive;
 
 		protected void StartWorkLoop()
 		{
-			PostToInternalTaskScheduler("Work loop", WorkLoop, TaskCreationOptions.LongRunning);
+			_workLoopThread = new Thread(WorkLoop) { Name = $"ElasticApm{_dbgDerivedClassName}", IsBackground = true };
+			_workLoopThread.Start();
 
 			_logger.Debug()?.Log("Waiting for work loop started event...");
 			_loopStarted.Wait();
 			_logger.Debug()?.Log("Work loop started signaled");
 		}
 
-		private async Task WorkLoop()
+		private void WorkLoop()
 		{
 			_logger.Debug()?.Log("Signaling work loop started event...");
 			_loopStarted.Set();
@@ -88,7 +77,9 @@ namespace Elastic.Apm.BackendComm
 			{
 				try
 				{
-					await WorkLoopIteration().ConfigureAwait(false);
+					// This runs on the dedicated work loop thread
+					// In order to make sure iterations don't overlap we wait for the current iteration - the intention here is to block
+					WorkLoopIteration().Wait();
 				}
 				catch (OperationCanceledException)
 				{
@@ -127,7 +118,8 @@ namespace Elastic.Apm.BackendComm
 				_loopCompleted.Wait();
 
 				_logger.Debug()?.Log("Disposing _singleThreadTaskScheduler ...");
-				_singleThreadTaskScheduler.Dispose();
+
+				_workLoopThread.Join();
 
 				_logger.Debug()?.Log("Disposing HttpClient...");
 				HttpClient.Dispose();
