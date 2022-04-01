@@ -32,11 +32,11 @@ This approach works with the following
 
 .NET Core 2.1+
 
-.NET 5
+.NET 5+
 
 |.NET Core 2.1+
 
-.NET 5
+.NET 5+
 |===
 
 and instruments the following assemblies
