@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -150,79 +150,88 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null) =>
-			Task.Run(() =>
-			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
-				var task = func();
-				RegisterContinuation(task, transaction);
-				return task;
-			});
-
-		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null) =>
-			Task.Run(() =>
-			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
-				var task = func(transaction);
-				RegisterContinuation(task, transaction);
-				return task;
-			});
-
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null) =>
-			Task.Run(() =>
-			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
-				var task = func();
-				RegisterContinuation(task, transaction);
-				return task;
-			});
-
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func,
-			DistributedTracingData distributedTracingData = null) =>
-			Task.Run(() =>
-			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
-				var task = func(transaction);
-				RegisterContinuation(task, transaction);
-				return task;
-			});
-
-		/// <summary>
-		/// Registers a continuation on the task.
-		/// Within the continuation it ends the transaction and captures errors
-		/// </summary>
-		private static void RegisterContinuation(Task task, ITransaction transaction) => task.ContinueWith(t =>
+		public async Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null)
 		{
-			if (t.IsFaulted)
+			var transaction = StartTransaction(name, type, distributedTracingData);
+			try
 			{
-				if (t.Exception != null)
-				{
-					if (t.Exception is { } aggregateException)
-					{
-						ExceptionFilter.Capture(
-							aggregateException.InnerExceptions.Count == 1
-								? aggregateException.InnerExceptions[0]
-								: aggregateException.Flatten(), transaction);
-					}
-					else
-						ExceptionFilter.Capture(t.Exception, transaction);
-				}
-				else
-					transaction.CaptureError("Task faulted", "A task faulted", new StackTrace(true).GetFrames());
+				await func();
 			}
-			else if (t.IsCanceled)
+			catch ( OperationCanceledException ex )
 			{
-				if (t.Exception == null)
-				{
-					transaction.CaptureError("Task canceled", "A task was canceled",
-						new StackTrace(true).GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
-				}
-				else
-					transaction.CaptureException(t.Exception);
-			}
+				transaction.CaptureError("Task canceled", "A task was canceled", new StackTrace(ex).GetFrames());
 
-			transaction.End();
-		}, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+				throw;
+			}
+			catch ( Exception e ) when ( ExceptionFilter.Capture(e, transaction) ) { }
+			finally
+			{
+				transaction.End();
+			}
+		}
+
+		public async Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null)
+		{
+			var transaction = StartTransaction(name, type, distributedTracingData);
+			try
+			{
+				await func(transaction);
+			}
+			catch ( OperationCanceledException ex )
+			{
+				transaction.CaptureError("Task canceled", "A task was canceled", new StackTrace(ex).GetFrames());
+
+				throw;
+			}
+			catch ( Exception e ) when ( ExceptionFilter.Capture(e, transaction) ) { }
+			finally
+			{
+				transaction.End();
+			}
+		}
+
+		public async Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null)
+		{
+			var transaction = StartTransaction(name, type, distributedTracingData);
+			try
+			{
+				return await func();
+			}
+			catch ( OperationCanceledException ex )
+			{
+				transaction.CaptureError("Task canceled", "A task was canceled", new StackTrace(ex).GetFrames());
+
+				throw;
+			}
+			catch ( Exception e ) when ( ExceptionFilter.Capture(e, transaction) ) { }
+			finally
+			{
+				transaction.End();
+			}
+			return default;
+		}
+
+		public async Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func,
+			DistributedTracingData distributedTracingData = null)
+		{
+			var transaction = StartTransaction(name, type, distributedTracingData);
+			try
+			{
+				return await func(transaction);
+			}
+			catch ( OperationCanceledException ex )
+			{
+				transaction.CaptureError("Task canceled", "A task was canceled", new StackTrace(ex).GetFrames());
+
+				throw;
+			}
+			catch ( Exception e ) when ( ExceptionFilter.Capture(e, transaction) ) { }
+			finally
+			{
+				transaction.End();
+			}
+			return default;
+		}
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null,
 			Dictionary<string, Label> labels = null

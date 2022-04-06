@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -687,6 +687,22 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 			Activity.Current.Should().BeNull();
+		}
+
+		[Fact]
+		public async Task CaptureTransaction_Does_Flow_SynchronizationContext()
+		{
+			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+			using var agent = new ApmAgent(new TestAgentComponents());
+
+			await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+			{
+				var sc = SynchronizationContext.Current;
+				sc.Should().NotBeNull();
+
+				await Task.Delay(1_000);
+			});
 		}
 
 		/// <summary>
