@@ -55,7 +55,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 				var span = currentExecutionSegment.StartSpan(
 					@event.CommandName,
 					ApiConstants.TypeDb,
-					"mongo", isExitSpan: true);
+					"mongodb", isExitSpan: true);
 
 				if (!_processingQueries.TryAdd(@event.RequestId, span))
 				{
@@ -70,7 +70,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 				{
 					Statement = @event.Command.ToString(),
 					Instance = @event.DatabaseNamespace.DatabaseName,
-					Type = "mongo"
+					Type = "mongodb"
 				};
 
 				if (@event.ConnectionId?.ServerId?.EndPoint != null)
