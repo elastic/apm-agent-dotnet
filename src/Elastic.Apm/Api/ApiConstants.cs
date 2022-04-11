@@ -18,6 +18,7 @@ namespace Elastic.Apm.Api
 		public const string SubtypePostgreSql = "postgresql";
 		public const string SubTypeGrpc = "grpc";
 		public const string SubTypeRedis = "redis";
+		public const string SubTypeMongoDb = "mongodb";
 
 		public const string TypeRequest = "request";
 		public const string TypeDb = "db";
