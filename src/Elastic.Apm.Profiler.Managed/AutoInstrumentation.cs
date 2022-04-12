@@ -44,7 +44,12 @@ namespace Elastic.Apm.Profiler.Managed
 #endif
 				// ensure global instance is created if it's not already
 				if (!skipInstantiation)
+				{
 					_ = Agent.Instance;
+
+					Agent.Subscribe(new Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber());
+				//	Agent.Subscribe(new AspNetCoreDiagnosticSubscriber());
+				}
 			}
 			catch
 			{
