@@ -67,7 +67,8 @@ namespace Elastic.Apm.Model
 			bool captureStackTraceOnStart = false,
 			long? timestamp = null,
 			bool isExitSpan = false,
-			string id = null
+			string id = null,
+			IEnumerable<Link> links = null
 		)
 		{
 			InstrumentationFlag = instrumentationFlag;
@@ -83,6 +84,7 @@ namespace Elastic.Apm.Model
 			IsExitSpan = isExitSpan;
 			Name = name;
 			Type = type;
+			Links = links;
 
 			if (_parentSpan != null)
 				_parentSpan._childDurationTimer.OnChildStart(Timestamp);
@@ -175,6 +177,11 @@ namespace Elastic.Apm.Model
 
 		[JsonIgnore]
 		public bool IsExitSpan { get; }
+
+		/// <summary>
+		/// Links holds links to other spans, potentially in other traces.
+		/// </summary>
+		public IEnumerable<Link> Links { get; }
 
 		[JsonIgnore]
 		public bool IsSampled => _enclosingTransaction.IsSampled;
@@ -310,12 +317,11 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-			string id = null,
-			bool isExitSpan = false
+			string id = null, bool isExitSpan = false, IEnumerable<Link> links = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id, links: links);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
@@ -475,7 +481,7 @@ namespace Elastic.Apm.Model
 						_logger.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
 						return;
 					}
-					if (span.Duration <  span.Configuration.ExitSpanMinDuration)
+					if (span.Duration < span.Configuration.ExitSpanMinDuration)
 					{
 						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
 							Duration!.Value);
@@ -533,7 +539,7 @@ namespace Elastic.Apm.Model
 			{
 				Composite ??= new Composite();
 				Composite.CompressionStrategy = "same_kind";
-				if(_context.IsValueCreated)
+				if (_context.IsValueCreated)
 					Name = "Calls to " + Context.Destination.Service.Resource;
 				return true;
 			}

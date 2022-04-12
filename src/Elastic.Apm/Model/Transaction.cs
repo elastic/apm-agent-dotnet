@@ -114,7 +114,8 @@ namespace Elastic.Apm.Model
 			bool ignoreActivity = false,
 			long? timestamp = null,
 			string id = null,
-			string traceId = null
+			string traceId = null,
+			IEnumerable<Link> links = null
 		)
 		{
 			Configuration = configuration;
@@ -125,6 +126,7 @@ namespace Elastic.Apm.Model
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_breakdownMetricsProvider = breakdownMetricsProvider;
+			Links = links;
 
 			Name = name;
 			HasCustomName = false;
@@ -362,6 +364,11 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		[JsonIgnore]
 		internal bool HasCustomName { get; private set; }
+
+		/// <summary>
+		/// Links holds links to other spans, potentially in other traces.
+		/// </summary>
+		public IEnumerable<Link> Links { get; }
 
 		[MaxLength]
 		public string Id { get; }
@@ -602,7 +609,8 @@ namespace Elastic.Apm.Model
 				if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 				{
 					_logger?.Info()
-						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}", CompressionBuffer.Id);
+						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
+							CompressionBuffer.Id);
 				}
 				else
 					_sender.QueueSpan(CompressionBuffer);
@@ -646,13 +654,12 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-			string id = null,
-			bool isExitSpan = false
+			string id = null, bool isExitSpan = false, IEnumerable<Link> links = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,
-				isExitSpan: isExitSpan);
+				isExitSpan: isExitSpan, links: links);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))
