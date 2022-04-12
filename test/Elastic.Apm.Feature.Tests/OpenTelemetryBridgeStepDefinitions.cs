@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using Elastic.Apm.Api;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using TechTalk.SpecFlow;
@@ -17,8 +19,10 @@ namespace Elastic.Apm.Feature.Tests
 		[Scope(Feature = "OpenTelemetry bridge")]
 		public void GivenAnAgent()
 		{
+			var mockPaylodSender = new MockPayloadSender();
+			_scenarioContext.Add("payloadSender", mockPaylodSender);
 			using (var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(enableOpenTelemetryBridge: "true"),
-				apmServerInfo: MockApmServerInfo.Version716)))
+				apmServerInfo: MockApmServerInfo.Version716, payloadSender: mockPaylodSender)))
 			{
 				_scenarioContext.Add("agent", agent);
 			}
@@ -34,16 +38,16 @@ namespace Elastic.Apm.Feature.Tests
 			_scenarioContext.Add("traceId", traceId);
 			_scenarioContext.Add("parentSpanId", parentSpanId);
 
-			src.StartActivity("foo", ActivityKind.Internal, new ActivityContext(traceId, parentSpanId, ActivityTraceFlags.Recorded));
+			src.StartActivity("foo", ActivityKind.Internal, new ActivityContext(traceId, parentSpanId, ActivityTraceFlags.Recorded)).Stop();
 		}
 
 
 		[Then(@"Elastic bridged object is a transaction")]
 		public void ThenElasticBridgedObjectIsATransaction()
 		{
-			var tracer = (_scenarioContext["agent"] as ApmAgent).Tracer;
-			tracer.CurrentTransaction.Should().NotBeNull();
-			tracer.CurrentSpan.Should().BeNull();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstTransaction.Should().NotBeNull();
+			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
 
 		[Then(@"Elastic bridged transaction has remote context as parent")]
@@ -51,89 +55,114 @@ namespace Elastic.Apm.Feature.Tests
 		{
 			var parentSpanId = _scenarioContext.Get<ActivitySpanId>("parentSpanId");
 			var traceId = _scenarioContext.Get<ActivityTraceId>("traceId");
-			var tracer = (_scenarioContext["agent"] as ApmAgent).Tracer;
-			tracer.CurrentTransaction.Should().NotBeNull();
-			tracer.CurrentTransaction.ParentId.Should().Be(parentSpanId.ToString());
-			tracer.CurrentTransaction.TraceId.Should().Be(traceId.ToString());
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstTransaction.Should().NotBeNull();
+
+			payloadSender.FirstTransaction.Should().NotBeNull();
+			payloadSender.FirstTransaction.ParentId.Should().Be(parentSpanId.ToString());
+			payloadSender.FirstTransaction.TraceId.Should().Be(traceId.ToString());
 		}
 
 		[Given(@"OTel span is created without parent")]
 		public void GivenOTelSpanIsCreatedWithoutParent()
 		{
-			throw new PendingStepException();
+			var src = new ActivitySource("Test");
+			src.StartActivity("foo");
 		}
 
 		[Given(@"OTel span ends")]
-		public void GivenOTelSpanEnds()
-		{
-			throw new PendingStepException();
-		}
+		public void GivenOTelSpanEnds() => Activity.Current.Stop();
 
 		[Then(@"Elastic bridged transaction is a root transaction")]
 		public void ThenElasticBridgedTransactionIsARootTransaction()
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstTransaction.Should().NotBeNull();
+			payloadSender.FirstTransaction.ParentId.Should().BeNullOrEmpty();
 		}
 
 		[Then(@"Elastic bridged transaction outcome is ""([^""]*)""")]
-		public void ThenElasticBridgedTransactionOutcomeIs(string unknown)
+		public void ThenElasticBridgedTransactionOutcomeIs(string outcome)
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstTransaction.Outcome.ToString().ToLower().Should().Be(outcome);
 		}
 
 		[Given(@"OTel span is created with local context as parent")]
 		public void GivenOTelSpanIsCreatedWithLocalContextAsParent()
 		{
-			throw new PendingStepException();
+			var agent = _scenarioContext.Get<ApmAgent>("agent");
+			var transaction = agent.Tracer.StartTransaction("foo", "bar");
+			_scenarioContext.Add("elasticTransaction", transaction);
+
+			var src = new ActivitySource("Test");
+			src.StartActivity("foo");
 		}
 
 		[Then(@"Elastic bridged object is a span")]
 		public void ThenElasticBridgedObjectIsASpan()
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstSpan.Should().NotBeNull();
 		}
 
 		[Then(@"Elastic bridged span has local context as parent")]
 		public void ThenElasticBridgedSpanHasLocalContextAsParent()
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			var transaction = _scenarioContext.Get<ITransaction>("elasticTransaction");
+			payloadSender.FirstSpan.ParentId.Should().Be(transaction.Id);
 		}
 
 		[Then(@"Elastic bridged span outcome is ""([^""]*)""")]
-		public void ThenElasticBridgedSpanOutcomeIs(string unknown)
+		public void ThenElasticBridgedSpanOutcomeIs(string outcome)
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstSpan.Outcome.ToString().ToLower().Should().Be(outcome);
 		}
+
 
 		[Given(@"an active transaction")]
-		[Scope(Feature = "otel_bridge")]
+		[Scope(Feature = "OpenTelemetry bridge")]
 		public void GivenAnActiveTransaction()
 		{
-			throw new PendingStepException();
+			var agent = _scenarioContext.Get<ApmAgent>("agent");
+			var transaction = agent.Tracer.StartTransaction("foo", "bar");
+			_scenarioContext.Add("elasticTransaction", transaction);
 		}
 
-		//[Given(@"OTel span is created with kind ""([^""]*)""")]
-		//public void GivenOTelSpanIsCreatedWithKind(string iNTERNAL)
-		//{
-		//	throw new PendingStepException();
-		//}
+		[Given(@"OTel span is created with kind ""([^""]*)""")]
+		public void OTelSpanIsCreatedWithKind(string kind)
+		{
+			var activityKind = Enum.Parse<ActivityKind>(kind, true);
+			var src = new ActivitySource("Test");
+			src.StartActivity("foo", activityKind);
+		}
 
 		[Then(@"Elastic bridged span OTel kind is ""([^""]*)""")]
-		public void ThenElasticBridgedSpanOTelKindIs(string iNTERNAL)
+		public void ThenElasticBridgedSpanOTelKindIs(string kind)
 		{
-			throw new PendingStepException();
+	
+
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstSpan as Span).Otel.SpanKind.ToLower().Should().Be(kind.ToLower());
 		}
 
 		[Then(@"Elastic bridged span type is ""([^""]*)""")]
-		public void ThenElasticBridgedSpanTypeIs(string app)
+		public void ThenElasticBridgedSpanTypeIs(string type)
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstSpan as Span).Type.Should().Be(type);
 		}
 
 		[Then(@"Elastic bridged span subtype is ""([^""]*)""")]
-		public void ThenElasticBridgedSpanSubtypeIs(string @internal)
+		public void ThenElasticBridgedSpanSubtypeIs(string subtype)
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			if(string.IsNullOrEmpty(subtype))
+				(payloadSender.FirstSpan as Span).Subtype.Should().BeNullOrEmpty();
+			else
+				(payloadSender.FirstSpan as Span).Subtype.Should().Be(subtype);
 		}
 
 		[Then(@"Elastic bridged transaction OTel kind is ""([^""]*)""")]

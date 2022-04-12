@@ -51,7 +51,7 @@ namespace Elastic.Apm.OpenTelemetry
 					return;
 
 				Transaction transaction = null;
-				if (activity?.Context != null && activity.ParentId != null)
+				if (activity?.Context != null && activity.ParentId != null && _tracer.CurrentTransaction == null)
 				{
 					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
 
@@ -86,8 +86,15 @@ namespace Elastic.Apm.OpenTelemetry
 							SpanKind = activity.Kind.ToString()
 						};
 
+						if (activity.Kind == ActivityKind.Internal)
+						{
+							newSpan.Type = "app";
+							newSpan.Subtype = "internal";
+						}
+
 						if (activity.Id != null) ActiveSpans.TryAdd(activity.Id, newSpan);
 					}
+
 				}
 
 				if (transaction != null)
@@ -130,6 +137,26 @@ namespace Elastic.Apm.OpenTelemetry
 							transaction.Otel.Attributes = new Dictionary<string, string>();
 
 						foreach (var tag in activity.Tags) transaction.Otel.Attributes.Add(tag.Key, tag.Value);
+
+						// By default we set unknown outcome
+						transaction.Outcome = Outcome.Unknown;
+#if NET6_0_OR_GREATER
+						switch (activity.Status)
+						{
+							case ActivityStatusCode.Unset:
+								transaction.Outcome = Outcome.Unknown;
+								break;
+							case ActivityStatusCode.Ok:
+								transaction.Outcome = Outcome.Success;
+								break;
+							case ActivityStatusCode.Error:
+								transaction.Outcome = Outcome.Failure;
+								break;
+							default:
+								break;
+						}
+#endif
+
 						transaction.End();
 					}
 					else if (ActiveSpans.TryRemove(activity.Id, out var span))
@@ -142,6 +169,25 @@ namespace Elastic.Apm.OpenTelemetry
 						foreach (var tag in activity.Tags) span.Otel.Attributes.Add(tag.Key, tag.Value);
 
 						InferSpanTypeAndSubType(span, activity);
+
+						// By default we set unknown outcome
+						span.Outcome = Outcome.Unknown;
+#if NET6_0_OR_GREATER
+						switch (activity.Status)
+						{
+							case ActivityStatusCode.Unset:
+								span.Outcome = Outcome.Unknown;
+								break;
+							case ActivityStatusCode.Ok:
+								span.Outcome = Outcome.Success;
+								break;
+							case ActivityStatusCode.Error:
+								span.Outcome = Outcome.Failure;
+								break;
+							default:
+								break;
+						}
+#endif
 						span.End();
 					}
 				}
@@ -170,8 +216,11 @@ namespace Elastic.Apm.OpenTelemetry
 				}
 				else if (activity.Kind == ActivityKind.Client)
 				{
-					span.Type = ApiConstants.TypeMessaging;
-					span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+					if (activity.Tags.Any(n => n.Key == "messaging.system"))
+					{
+						span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+						span.Type = ApiConstants.TypeMessaging;
+					}
 				}
 			}
 			else if (activity.Kind == ActivityKind.Consumer)
