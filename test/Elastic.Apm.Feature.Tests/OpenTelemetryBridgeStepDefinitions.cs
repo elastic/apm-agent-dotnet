@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
@@ -142,8 +143,6 @@ namespace Elastic.Apm.Feature.Tests
 		[Then(@"Elastic bridged span OTel kind is ""([^""]*)""")]
 		public void ThenElasticBridgedSpanOTelKindIs(string kind)
 		{
-	
-
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
 			(payloadSender.FirstSpan as Span).Otel.SpanKind.ToLower().Should().Be(kind.ToLower());
 		}
@@ -166,15 +165,17 @@ namespace Elastic.Apm.Feature.Tests
 		}
 
 		[Then(@"Elastic bridged transaction OTel kind is ""([^""]*)""")]
-		public void ThenElasticBridgedTransactionOTelKindIs(string iNTERNAL)
+		public void ThenElasticBridgedTransactionOTelKindIs(string kind)
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstTransaction as Transaction).Otel.SpanKind.ToLower().Should().Be(kind.ToLower());
 		}
 
 		[Then(@"Elastic bridged transaction type is '([^']*)'")]
-		public void ThenElasticBridgedTransactionTypeIs(string unknown)
+		public void ThenElasticBridgedTransactionTypeIs(string type)
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstTransaction).Type.Should().Be(type);
 		}
 
 		//[Given(@"OTel span is created with kind '([^']*)'")]
@@ -184,28 +185,64 @@ namespace Elastic.Apm.Feature.Tests
 		//}
 
 		[Given(@"OTel span status set to ""([^""]*)""")]
-		public void GivenOTelSpanStatusSetTo(string unset)
+		public void GivenOTelSpanStatusSetTo(string status)
 		{
-			throw new PendingStepException();
+			var activityStatus = Enum.Parse<ActivityStatusCode>(status, true);
+			Activity.Current.SetStatus(activityStatus);
 		}
 
 		[Given(@"OTel span is created with kind '([^']*)'")]
-		public void GivenOTelSpanIsCreatedWithKind(string iNTERNAL)
+		public void GivenOTelSpanIsCreatedWithKind(string kind)
 		{
-			throw new PendingStepException();
+			var activityKind = Enum.Parse<ActivityKind>(kind, true);
+			var src = new ActivitySource("Test");
+			src.StartActivity("foo", activityKind);
 		}
 
 		[Given(@"OTel span has following attributes")]
 		public void GivenOTelSpanHasFollowingAttributes(Table table)
 		{
-			throw new PendingStepException();
+			var tags = new Dictionary<string, string>();
+
+
+			var i = 0;
+			var h1 = "";
+			var h2 = "";
+			foreach (var item in table.Header)
+			{
+				if (i == 0)
+					h1 = item;
+				if (i == 1)
+					h2 = item;
+				i++;
+			}
+
+			if(!string.IsNullOrEmpty(h2))
+			{
+				Activity.Current.SetTag(h1, h2);
+				tags[h1] = h2;
+
+			}
+
+			foreach (var row in table.Rows)
+			{
+				if (!string.IsNullOrEmpty(row[1]))
+				{
+					Activity.Current.SetTag(row[0], row[1]);
+					tags[row[0]] = row[1];
+				}
+			}
+			_scenarioContext.Add("attributes", tags);
 		}
 
-		//[Then(@"Elastic bridged transaction type is ""([^""]*)""")]
-		//public void ThenElasticBridgedTransactionTypeIs(string request)
-		//{
-		//	throw new PendingStepException();
-		//}
+		[Then(@"Elastic bridged transaction type is ""([^""]*)""")]
+		public void ElasticBridgedTransactionTypeIsRequest(string request)
+		{
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstTransaction).Type.Should().Be(request);
+		}
+
+
 
 		//[Given(@"OTel span is created with kind '([^']*)'")]
 		//public void GivenOTelSpanIsCreatedWithKind(string cLIENT)
@@ -213,28 +250,39 @@ namespace Elastic.Apm.Feature.Tests
 		//	throw new PendingStepException();
 		//}
 
-		//[Then(@"Elastic bridged span type is '([^']*)'")]
-		//public void ThenElasticBridgedSpanTypeIs(string external)
-		//{
-		//	throw new PendingStepException();
-		//}
+		[Then(@"Elastic bridged span type is '([^']*)'")]
+		public void ElasticBridgedSpanTypeIsExternal(string external)
+		{
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstSpan).Type.Should().Be(external);
+		}
 
-		//[Then(@"Elastic bridged span subtype is '([^']*)'")]
-		//public void ThenElasticBridgedSpanSubtypeIs(string http)
-		//{
-		//	throw new PendingStepException();
-		//}
+		[Then(@"Elastic bridged span subtype is '([^']*)'")]
+		public void ThenElasticBridgedSpanSubtypeIsHttp(string http)
+		{
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstSpan).Subtype.Should().Be(http);
+		}
 
 		[Then(@"Elastic bridged span OTel attributes are copied as-is")]
 		public void ThenElasticBridgedSpanOTelAttributesAreCopiedAs_Is()
 		{
-			throw new PendingStepException();
+			var attributes = _scenarioContext.Get<Dictionary<string, string>>("attributes");
+
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			
+			foreach (var item in attributes)
+			{
+				(payloadSender.FirstSpan as Span).Otel.Attributes[item.Key].Should().Be(item.Value);
+			}
+
 		}
 
 		[Then(@"Elastic bridged span destination resource is set to ""([^""]*)""")]
 		public void ThenElasticBridgedSpanDestinationResourceIsSetTo(string p0)
 		{
-			throw new PendingStepException();
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			(payloadSender.FirstSpan as Span).Context.Destination.Service.Resource.Should().Be(p0);
 		}
 
 		//[Then(@"Elastic bridged span type is '([^']*)'")]
