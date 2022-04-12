@@ -69,6 +69,7 @@ namespace Elastic.Apm.Feature.Tests
 		}
 
 		[Given(@"an active span")]
+		[Scope(Feature = "Outcome")]
 		public void GivenAnActiveSpan()
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();
@@ -92,6 +93,7 @@ namespace Elastic.Apm.Feature.Tests
 		}
 
 		[Given(@"an active transaction")]
+		[Scope(Feature = "Outcome")]
 		public void GivenAnActiveTransaction()
 		{
 			var agent = _scenarioContext.Get<ApmAgent>();

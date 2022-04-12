@@ -51,7 +51,7 @@ namespace Elastic.Apm.OpenTelemetry
 					return;
 
 				Transaction transaction = null;
-				if (activity.Context != null && activity.Context.IsRemote && activity.ParentId != null)
+				if (activity?.Context != null && activity.ParentId != null)
 				{
 					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
 
@@ -81,8 +81,10 @@ namespace Elastic.Apm.OpenTelemetry
 
 					if (newSpan != null)
 					{
-						newSpan.Otel = new OTel();
-						newSpan.Otel.SpanKind = activity.Kind.ToString();
+						newSpan.Otel = new OTel
+						{
+							SpanKind = activity.Kind.ToString()
+						};
 
 						if (activity.Id != null) ActiveSpans.TryAdd(activity.Id, newSpan);
 					}
@@ -90,8 +92,10 @@ namespace Elastic.Apm.OpenTelemetry
 
 				if (transaction != null)
 				{
-					transaction.Otel = new OTel();
-					transaction.Otel.SpanKind = activity.Kind.ToString();
+					transaction.Otel = new OTel
+					{
+						SpanKind = activity.Kind.ToString()
+					};
 
 					if (activity.Kind == ActivityKind.Server)
 						transaction.Type = ApiConstants.TypeRequest;
