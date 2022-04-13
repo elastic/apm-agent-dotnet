@@ -105,10 +105,6 @@ namespace Elastic.Apm.OpenTelemetry
 						SpanKind = activity.Kind.ToString()
 					};
 
-					//if (activity.Kind == ActivityKind.Server)
-					//	transaction.Type = ApiConstants.TypeRequest;
-					//else if (activity.Kind == ActivityKind.Consumer) transaction.Type = ApiConstants.TypeMessaging;
-
 					if (activity.Id != null)
 						ActiveTransactions.TryAdd(activity.Id, transaction);
 				}
@@ -201,7 +197,6 @@ namespace Elastic.Apm.OpenTelemetry
 
 		private void InferTransactionType(Transaction transaction, Activity activity)
 		{
-
 			var isRpc = activity.Tags.Any(n => n.Key == "rpc.system");
 			var isHttp = activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme");
 			var isMessaging = activity.Tags.Any(n => n.Key == "messaging.system");
