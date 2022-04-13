@@ -17,6 +17,9 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public Dictionary<string, string> Attributes { get; set; }
 
+		/// <summary>
+		/// SpanKind holds the incoming OpenTelemetry span kind.
+		/// </summary>
 		public string SpanKind { get; set; }
 	}
 }

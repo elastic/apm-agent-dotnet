@@ -51,7 +51,7 @@ namespace Elastic.Apm.OpenTelemetry
 					return;
 
 				Transaction transaction = null;
-				if (activity.Context != null && activity.Context.IsRemote && activity.ParentId != null)
+				if (activity?.Context != null && activity.ParentId != null && _tracer.CurrentTransaction == null)
 				{
 					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
 
@@ -81,23 +81,32 @@ namespace Elastic.Apm.OpenTelemetry
 
 					if (newSpan != null)
 					{
-						newSpan.Otel = new OTel();
-						newSpan.Otel.SpanKind = activity.Kind.ToString();
+						newSpan.Otel = new OTel
+						{
+							SpanKind = activity.Kind.ToString()
+						};
 
-						if (activity.Id != null) ActiveSpans.TryAdd(activity.Id, newSpan);
+						if (activity.Kind == ActivityKind.Internal)
+						{
+							newSpan.Type = "app";
+							newSpan.Subtype = "internal";
+						}
+
+						if (activity.Id != null)
+							ActiveSpans.TryAdd(activity.Id, newSpan);
 					}
+
 				}
 
 				if (transaction != null)
 				{
-					transaction.Otel = new OTel();
-					transaction.Otel.SpanKind = activity.Kind.ToString();
+					transaction.Otel = new OTel
+					{
+						SpanKind = activity.Kind.ToString()
+					};
 
-					if (activity.Kind == ActivityKind.Server)
-						transaction.Type = ApiConstants.TypeRequest;
-					else if (activity.Kind == ActivityKind.Consumer) transaction.Type = ApiConstants.TypeMessaging;
-
-					if (activity.Id != null) ActiveTransactions.TryAdd(activity.Id, transaction);
+					if (activity.Id != null)
+						ActiveTransactions.TryAdd(activity.Id, transaction);
 				}
 			};
 
@@ -125,7 +134,30 @@ namespace Elastic.Apm.OpenTelemetry
 						if (activity.Tags.Any())
 							transaction.Otel.Attributes = new Dictionary<string, string>();
 
-						foreach (var tag in activity.Tags) transaction.Otel.Attributes.Add(tag.Key, tag.Value);
+						foreach (var tag in activity.Tags)
+							transaction.Otel.Attributes.Add(tag.Key, tag.Value);
+
+						InferTransactionType(transaction, activity);
+
+						// By default we set unknown outcome
+						transaction.Outcome = Outcome.Unknown;
+#if NET6_0_OR_GREATER
+						switch (activity.Status)
+						{
+							case ActivityStatusCode.Unset:
+								transaction.Outcome = Outcome.Unknown;
+								break;
+							case ActivityStatusCode.Ok:
+								transaction.Outcome = Outcome.Success;
+								break;
+							case ActivityStatusCode.Error:
+								transaction.Outcome = Outcome.Failure;
+								break;
+							default:
+								break;
+						}
+#endif
+
 						transaction.End();
 					}
 					else if (ActiveSpans.TryRemove(activity.Id, out var span))
@@ -135,47 +167,196 @@ namespace Elastic.Apm.OpenTelemetry
 						if (activity.Tags.Any())
 							span.Otel.Attributes = new Dictionary<string, string>();
 
-						foreach (var tag in activity.Tags) span.Otel.Attributes.Add(tag.Key, tag.Value);
+						foreach (var tag in activity.Tags)
+							span.Otel.Attributes.Add(tag.Key, tag.Value);
 
 						InferSpanTypeAndSubType(span, activity);
+
+						// By default we set unknown outcome
+						span.Outcome = Outcome.Unknown;
+#if NET6_0_OR_GREATER
+						switch (activity.Status)
+						{
+							case ActivityStatusCode.Unset:
+								span.Outcome = Outcome.Unknown;
+								break;
+							case ActivityStatusCode.Ok:
+								span.Outcome = Outcome.Success;
+								break;
+							case ActivityStatusCode.Error:
+								span.Outcome = Outcome.Failure;
+								break;
+							default:
+								break;
+						}
+#endif
 						span.End();
 					}
 				}
 			};
 
+		private void InferTransactionType(Transaction transaction, Activity activity)
+		{
+			var isRpc = activity.Tags.Any(n => n.Key == "rpc.system");
+			var isHttp = activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme");
+			var isMessaging = activity.Tags.Any(n => n.Key == "messaging.system");
+
+			if (activity.Kind == ActivityKind.Server && (isRpc || isHttp))
+			{
+				transaction.Type = ApiConstants.TypeRequest;
+			}
+			else if (activity.Kind == ActivityKind.Consumer && isMessaging)
+			{
+				transaction.Type = ApiConstants.TypeMessaging;
+			}
+			else
+			{
+				transaction.Type = "unknown";
+			}
+		}
+
 		private ActivityListener Listener { get; set; }
 
 		private void InferSpanTypeAndSubType(Span span, Activity activity)
 		{
-			if (activity.Kind == ActivityKind.Client)
+
+			string httpPortFromScheme(string scheme)
 			{
-				if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
+				if (scheme == "http")
 				{
-					span.Type = ApiConstants.TypeExternal;
-					span.Subtype = ApiConstants.SubtypeHttp;
+					return "80";
 				}
-				else if (activity.Tags.Any(n => n.Key == "db.system"))
+				else if (scheme == "https")
 				{
-					span.Type = ApiConstants.TypeDb;
-					span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
+					return "443";
 				}
-				else if (activity.Tags.Any(n => n.Key == "rpc.system"))
+
+				return string.Empty;
+			}
+
+			// extracts 'host' or 'host:port' from URL
+			string parseNetName(string url)
+			{
+				try
 				{
-					span.Type = ApiConstants.TypeExternal;
-					span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
+					var u = new Uri(url); // https://developer.mozilla.org/en-US/docs/Web/API/URL
+					return u.Host + ':' + u.Port;
+
 				}
-				else if (activity.Kind == ActivityKind.Client)
+				catch
 				{
-					span.Type = ApiConstants.TypeMessaging;
-					span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+					return string.Empty;
 				}
 			}
-			else if (activity.Kind == ActivityKind.Consumer)
+
+			var peerPort = "";
+			var netName = "";
+
+			if (activity.Tags.Any(n => n.Key == "net.peer.port"))
 			{
-				if (activity.Tags.Any(n => n.Key == "messaging.system"))
+				peerPort = activity.Tags.Where(n => n.Key == "net.peer.port").FirstOrDefault().Value;
+			}
+
+			if (activity.Tags.Any(n => n.Key == "net.peer.ip"))
+			{
+				netName = activity.Tags.Where(n => n.Key == "net.peer.ip").FirstOrDefault().Value;
+			}
+			if (activity.Tags.Any(n => n.Key == "net.peer.name"))
+			{
+				netName = activity.Tags.Where(n => n.Key == "net.peer.name").FirstOrDefault().Value;
+			}
+
+			if (netName.Length > 0 && peerPort.Length > 0)
+			{
+				netName += ':';
+				netName += peerPort;
+			}
+
+			if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
+			{
+				span.Type = ApiConstants.TypeExternal;
+				span.Subtype = ApiConstants.SubtypeHttp;
+
+				if (activity.Tags.Any(n => n.Key == "http.host") && activity.Tags.Any(n => n.Key == "http.scheme"))
 				{
-					span.Type = ApiConstants.TypeMessaging;
-					span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+					span.Context.Destination = new Destination
+					{
+						Service = new Destination.DestinationService
+						{
+							Resource = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":" + httpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value)
+						}
+					};
+
+				}
+				else if (activity.Tags.Any(n => n.Key == "http.url"))
+				{
+					span.Context.Destination = new Destination
+					{
+						Service = new Destination.DestinationService
+						{
+							Resource = parseNetName(activity.Tags.FirstOrDefault(n => n.Key == "http.url").Value)
+						}
+					};
+				}
+				else
+				{
+					span.Context.Destination = new Destination
+					{
+						Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+					};
+				}
+			}
+			else if (activity.Tags.Any(n => n.Key == "db.system"))
+			{
+				span.Type = ApiConstants.TypeDb;
+				span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
+
+				span.Context.Destination = new Destination
+				{
+					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+				};
+				if (activity.Tags.Any(n => n.Key == "db.name"))
+				{
+					span.Context.Destination.Service.Resource += '/';
+					span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "db.name").Value;
+				}
+			}
+			else if (activity.Tags.Any(n => n.Key == "rpc.system"))
+			{
+				span.Type = ApiConstants.TypeExternal;
+				span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
+
+				span.Context.Destination = new Destination
+				{
+					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+				};
+
+				if (activity.Tags.Any(n => n.Key == "rpc.service"))
+				{
+					span.Context.Destination.Service.Resource += "/";
+					span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "rpc.service").Value;
+				}
+			}
+			else if (activity.Tags.Any(n => n.Key == "messaging.system"))
+			{
+
+				span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+				span.Type = ApiConstants.TypeMessaging;
+
+				if (string.IsNullOrEmpty(netName) && activity.Tags.Any(n => n.Key == "messaging.url"))
+				{
+					netName = parseNetName(activity.Tags.FirstOrDefault(n => n.Key == "messaging.url").Value);
+				}
+
+				span.Context.Destination = new Destination
+				{
+					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+				};
+
+				if (activity.Tags.Any(n => n.Key == "messaging.destination"))
+				{
+					span.Context.Destination.Service.Resource += "/";
+					span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "messaging.destination").Value;
 				}
 			}
 		}
