@@ -170,7 +170,6 @@ Feature: OpenTelemetry bridge
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md
   Scenario: Messaging consumer
     Given an agent
-    And an active transaction
     And OTel span is created with kind 'CONSUMER'
     And OTel span has following attributes
       | messaging.system  | anything |
@@ -242,5 +241,3 @@ Feature: OpenTelemetry bridge
       | rpc.system | grpc |
     And OTel span ends
     Then Elastic bridged transaction type is 'request'
-
-
