@@ -272,8 +272,6 @@ namespace Elastic.Apm.OpenTelemetry
 				netName += peerPort;
 			}
 
-
-
 			if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
 			{
 				span.Type = ApiConstants.TypeExternal;

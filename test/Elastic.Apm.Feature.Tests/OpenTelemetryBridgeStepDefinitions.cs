@@ -181,12 +181,6 @@ namespace Elastic.Apm.Feature.Tests
 				(payloadSender.FirstSpan).Type.Should().Be(type);
 		}
 
-		//[Given(@"OTel span is created with kind '([^']*)'")]
-		//public void GivenOTelSpanIsCreatedWithKind(string sERVER)
-		//{
-		//	throw new PendingStepException();
-		//}
-
 		[Given(@"OTel span status set to ""([^""]*)""")]
 		public void GivenOTelSpanStatusSetTo(string status)
 		{
