@@ -39,18 +39,20 @@ After the new changelog and version have been merged to main, the only thing rem
  ## let's assume the origin is your forked repo and upstream the one where the releases are coming from.
  git checkout main
 
- ## let's ensure we do use the latest commit, although this requirement could be not neccessary if it's required
+ ## let's ensure we do use the latest commit, although this requirement could be not necessary if it's required
  ## to use another git commit rather than the HEAD at that time.
  git reset --hard upstream/main
 
  ## <major>, <minor>, <bug> and <suffix> should be replaced accordingly. <suffix> is an optional one.
- git tag <major>.<minor>.<bug>(-<suffix>)?
+ git tag v<major>.<minor>.<bug>(-<suffix>)?
 
  ## Push commit to the usptream repo.
- git push upstream <major>.<minor>.<bug>(-<suffix>)?
+ git push upstream v<major>.<minor>.<bug>(-<suffix>)?
  ```
 
 The above commands will push the GitHub tag and will trigger the corresponding [CI Build pipeline](Jenkinsfile) which will run all the required stages to satisfy the release is in a good shape, then at the very end of the pipeline there will be an input approval waiting for an UI interaction to release to the NuGet repo. This particular input approval step will notify by email, to the owners of this repo, regarding the expected action to be done for doing the release.
+
+Tag names should start with a `v` prefix.
 
 This release process is a tagged release event based with an input approval.
 

@@ -88,7 +88,9 @@ namespace Elastic.Apm.MongoDb.Tests
 			{
 				span.TransactionId.Should().Be(_payloadSender.FirstTransaction.Id);
 				span.Context.Db.Instance.Should().Be(DatabaseName);
+				span.Context.Db.Type.Should().Be("mongodb");
 				span.Type.Should().Be(ApiConstants.TypeDb);
+				span.Subtype.Should().Be(ApiConstants.SubTypeMongoDb);
 
 				span.Context.Destination.Should().NotBeNull();
 				span.Context.Destination.Address.Should().Be(address);

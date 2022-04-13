@@ -241,4 +241,3 @@ Feature: OpenTelemetry bridge
       | rpc.system | grpc |
     And OTel span ends
     Then Elastic bridged transaction type is 'request'
-

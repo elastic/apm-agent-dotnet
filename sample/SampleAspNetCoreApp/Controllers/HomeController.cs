@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
+using SampleAspNetCoreApp.Utils;
 
 namespace SampleAspNetCoreApp.Controllers
 {
@@ -280,6 +282,35 @@ namespace SampleAspNetCoreApp.Controllers
 			Agent.Tracer.CurrentTransaction.Outcome = Outcome.Failure;
 
 			return Ok();
+		}
+
+		/// <summary>
+		/// From: https://github.com/elastic/apm-agent-dotnet/issues/1571#issuecomment-984520076
+		/// </summary>
+		/// <param name="seconds"></param>
+		/// <param name="percentage"></param>
+		/// <param name="threads"></param>
+		/// <returns></returns>
+		[AllowAnonymous]
+		[HttpGet("burncpu/{seconds}/{percentage}/{threads}")]
+		public string BurnCpu(int seconds, int percentage, int threads)
+		{
+			var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(seconds));
+
+			try
+			{
+				CpuBurner.ConsumeMultipleCores(threads, percentage, cancellationToken.Token);
+				Thread.Sleep(TimeSpan.FromSeconds(seconds));
+			}
+			catch (ThreadAbortException)
+			{
+				cancellationToken.Cancel();
+				throw;
+			}
+
+			cancellationToken.Cancel();
+
+			return $"Burned Cpu for {seconds}s on {threads} threads with {percentage}% fired at {DateTimeOffset.Now}.";
 		}
 	}
 
