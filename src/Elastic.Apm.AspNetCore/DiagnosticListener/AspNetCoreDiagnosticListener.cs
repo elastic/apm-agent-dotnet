@@ -22,6 +22,9 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		private readonly PropertyFetcher _exceptionContextPropertyFetcher = new PropertyFetcher("Exception");
 		private readonly PropertyFetcher _httpContextPropertyFetcher = new PropertyFetcher("HttpContext");
 
+		private readonly PropertyFetcher _hostDefaultHttpContextFetcher = new PropertyFetcher("HttpContext");
+		private readonly PropertyFetcher _hostExceptionContextPropertyFetcher = new PropertyFetcher("Exception");
+
 		/// <summary>
 		/// Keeps track of ongoing transactions
 		/// </summary>
@@ -83,8 +86,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					break;
 				case "Microsoft.AspNetCore.Hosting.UnhandledException": // Not called when exception handler registered
-					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextUnhandledException)) return;
-					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception)) return;
+					if (!(_hostDefaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextUnhandledException)) return;
+					if (!(_hostExceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception)) return;
 					if (!_processingRequests.TryGetValue(httpContextUnhandledException, out var iCurrentTransaction)) return;
 
 					if (iCurrentTransaction is Transaction currentTransaction)
