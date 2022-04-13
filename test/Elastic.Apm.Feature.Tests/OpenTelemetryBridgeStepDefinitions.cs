@@ -158,7 +158,7 @@ namespace Elastic.Apm.Feature.Tests
 		public void ThenElasticBridgedSpanSubtypeIs(string subtype)
 		{
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
-			if(string.IsNullOrEmpty(subtype))
+			if (string.IsNullOrEmpty(subtype))
 				(payloadSender.FirstSpan as Span).Subtype.Should().BeNullOrEmpty();
 			else
 				(payloadSender.FirstSpan as Span).Subtype.Should().Be(subtype);
@@ -175,10 +175,7 @@ namespace Elastic.Apm.Feature.Tests
 		public void ThenElasticBridgedTransactionTypeIs(string type)
 		{
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
-			if(payloadSender.FirstTransaction != null)
-				(payloadSender.FirstTransaction).Type.Should().Be(type);
-			else if(payloadSender.FirstSpan != null)
-				(payloadSender.FirstSpan).Type.Should().Be(type);
+			payloadSender.FirstTransaction.Type.Should().Be(type);
 		}
 
 		[Given(@"OTel span status set to ""([^""]*)""")]
@@ -214,7 +211,7 @@ namespace Elastic.Apm.Feature.Tests
 				i++;
 			}
 
-			if(!string.IsNullOrEmpty(h2))
+			if (!string.IsNullOrEmpty(h2))
 			{
 				Activity.Current.SetTag(h1, h2);
 				tags[h1] = h2;
@@ -259,7 +256,7 @@ namespace Elastic.Apm.Feature.Tests
 			var attributes = _scenarioContext.Get<Dictionary<string, string>>("attributes");
 
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
-			
+
 			foreach (var item in attributes)
 			{
 				(payloadSender.FirstSpan as Span).Otel.Attributes[item.Key].Should().Be(item.Value);
