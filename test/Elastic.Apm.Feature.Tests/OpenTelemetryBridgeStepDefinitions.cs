@@ -175,7 +175,10 @@ namespace Elastic.Apm.Feature.Tests
 		public void ThenElasticBridgedTransactionTypeIs(string type)
 		{
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
-			(payloadSender.FirstTransaction).Type.Should().Be(type);
+			if(payloadSender.FirstTransaction != null)
+				(payloadSender.FirstTransaction).Type.Should().Be(type);
+			else if(payloadSender.FirstSpan != null)
+				(payloadSender.FirstSpan).Type.Should().Be(type);
 		}
 
 		//[Given(@"OTel span is created with kind '([^']*)'")]
@@ -242,14 +245,6 @@ namespace Elastic.Apm.Feature.Tests
 			(payloadSender.FirstTransaction).Type.Should().Be(request);
 		}
 
-
-
-		//[Given(@"OTel span is created with kind '([^']*)'")]
-		//public void GivenOTelSpanIsCreatedWithKind(string cLIENT)
-		//{
-		//	throw new PendingStepException();
-		//}
-
 		[Then(@"Elastic bridged span type is '([^']*)'")]
 		public void ElasticBridgedSpanTypeIsExternal(string external)
 		{
@@ -284,71 +279,5 @@ namespace Elastic.Apm.Feature.Tests
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
 			(payloadSender.FirstSpan as Span).Context.Destination.Service.Resource.Should().Be(p0);
 		}
-
-		//[Then(@"Elastic bridged span type is '([^']*)'")]
-		//public void ThenElasticBridgedSpanTypeIs(string db)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged span subtype is ""([^""]*)""")]
-		//public void ThenElasticBridgedSpanSubtypeIs(string mysql)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged span destination resource is set to ""([^""]*)""")]
-		//public void ThenElasticBridgedSpanDestinationResourceIsSetTo(string mysql)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Given(@"OTel span is created with kind '([^']*)'")]
-		//public void GivenOTelSpanIsCreatedWithKind(string cONSUMER)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged transaction type is '([^']*)'")]
-		//public void ThenElasticBridgedTransactionTypeIs(string messaging)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Given(@"OTel span is created with kind '([^']*)'")]
-		//public void GivenOTelSpanIsCreatedWithKind(string pRODUCER)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged span type is '([^']*)'")]
-		//public void ThenElasticBridgedSpanTypeIs(string messaging)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged span subtype is ""([^""]*)""")]
-		//public void ThenElasticBridgedSpanSubtypeIs(string rabbitmq)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged span subtype is ""([^""]*)""")]
-		//public void ThenElasticBridgedSpanSubtypeIs(string grpc)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged span destination resource is set to ""([^""]*)""")]
-		//public void ThenElasticBridgedSpanDestinationResourceIsSetTo(string grpc)
-		//{
-		//	throw new PendingStepException();
-		//}
-
-		//[Then(@"Elastic bridged transaction type is '([^']*)'")]
-		//public void ThenElasticBridgedTransactionTypeIs(string request)
-		//{
-		//	throw new PendingStepException();
-		//}
 	}
 }

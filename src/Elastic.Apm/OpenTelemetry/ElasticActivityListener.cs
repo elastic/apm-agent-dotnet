@@ -278,88 +278,92 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 
 
-			if (activity.Kind == ActivityKind.Client)
+
+			if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
 			{
-				if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
+				span.Type = ApiConstants.TypeExternal;
+				span.Subtype = ApiConstants.SubtypeHttp;
+
+				if (activity.Tags.Any(n => n.Key == "http.host") && activity.Tags.Any(n => n.Key == "http.scheme"))
 				{
-					span.Type = ApiConstants.TypeExternal;
-					span.Subtype = ApiConstants.SubtypeHttp;
+					span.Context.Destination = new Destination
+					{
+						Service = new Destination.DestinationService
+						{
+							Resource = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":" + httpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value)
+						}
+					};
 
-					if (activity.Tags.Any(n => n.Key == "http.host") && activity.Tags.Any(n => n.Key == "http.scheme"))
-					{
-						span.Context.Destination = new Destination
-						{
-							Service = new Destination.DestinationService
-							{
-								Resource = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":" + httpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value)
-							}
-						};
-
-					}
-					else if (activity.Tags.Any(n => n.Key == "http.url"))
-					{
-						span.Context.Destination = new Destination
-						{
-							Service = new Destination.DestinationService
-							{
-								Resource = parseNetName(activity.Tags.FirstOrDefault(n => n.Key == "http.url").Value)
-							}
-						};
-					}
-					else
-					{
-						span.Context.Destination = new Destination
-						{
-							Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
-						};
-					}
 				}
-				else if (activity.Tags.Any(n => n.Key == "db.system"))
+				else if (activity.Tags.Any(n => n.Key == "http.url"))
 				{
-					span.Type = ApiConstants.TypeDb;
-					span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
-
+					span.Context.Destination = new Destination
+					{
+						Service = new Destination.DestinationService
+						{
+							Resource = parseNetName(activity.Tags.FirstOrDefault(n => n.Key == "http.url").Value)
+						}
+					};
+				}
+				else
+				{
 					span.Context.Destination = new Destination
 					{
 						Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
 					};
-					if (activity.Tags.Any(n => n.Key == "db.name"))
-					{
-						span.Context.Destination.Service.Resource += '/';
-						span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "db.name").Value;
-					}
-				}
-				else if (activity.Tags.Any(n => n.Key == "rpc.system"))
-				{
-					span.Type = ApiConstants.TypeExternal;
-					span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
-
-					span.Context.Destination = new Destination
-					{
-						Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
-					};
-
-					if (activity.Tags.Any(n => n.Key == "rpc.service"))
-					{
-						span.Context.Destination.Service.Resource += "/";
-						span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "rpc.service").Value;
-					}
-				}
-				else if (activity.Kind == ActivityKind.Client)
-				{
-					if (activity.Tags.Any(n => n.Key == "messaging.system"))
-					{
-						span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
-						span.Type = ApiConstants.TypeMessaging;
-					}
 				}
 			}
-			else if (activity.Kind == ActivityKind.Consumer)
+			else if (activity.Tags.Any(n => n.Key == "db.system"))
 			{
-				if (activity.Tags.Any(n => n.Key == "messaging.system"))
+				span.Type = ApiConstants.TypeDb;
+				span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
+
+				span.Context.Destination = new Destination
 				{
-					span.Type = ApiConstants.TypeMessaging;
-					span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+				};
+				if (activity.Tags.Any(n => n.Key == "db.name"))
+				{
+					span.Context.Destination.Service.Resource += '/';
+					span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "db.name").Value;
+				}
+			}
+			else if (activity.Tags.Any(n => n.Key == "rpc.system"))
+			{
+				span.Type = ApiConstants.TypeExternal;
+				span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
+
+				span.Context.Destination = new Destination
+				{
+					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+				};
+
+				if (activity.Tags.Any(n => n.Key == "rpc.service"))
+				{
+					span.Context.Destination.Service.Resource += "/";
+					span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "rpc.service").Value;
+				}
+			}
+			else if (activity.Tags.Any(n => n.Key == "messaging.system"))
+			{
+
+				span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+				span.Type = ApiConstants.TypeMessaging;
+
+				if (string.IsNullOrEmpty(netName) && activity.Tags.Any(n => n.Key == "messaging.url"))
+				{
+					netName = parseNetName(activity.Tags.FirstOrDefault(n => n.Key == "messaging.url").Value);
+				}
+
+				span.Context.Destination = new Destination
+				{
+					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+				};
+
+				if (activity.Tags.Any(n => n.Key == "messaging.destination"))
+				{
+					span.Context.Destination.Service.Resource += "/";
+					span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "messaging.destination").Value;
 				}
 			}
 		}
