@@ -333,6 +333,17 @@ namespace Elastic.Apm.OpenTelemetry
 				{
 					span.Type = ApiConstants.TypeExternal;
 					span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
+
+					span.Context.Destination = new Destination
+					{
+						Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
+					};
+
+					if (activity.Tags.Any(n => n.Key == "rpc.service"))
+					{
+						span.Context.Destination.Service.Resource += "/";
+						span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "rpc.service").Value;
+					}
 				}
 				else if (activity.Kind == ActivityKind.Client)
 				{
