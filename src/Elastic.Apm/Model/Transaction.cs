@@ -749,7 +749,7 @@ namespace Elastic.Apm.Model
 			{
 				// Check for MVC areas
 				string areaString = null;
-				if (routeValues.TryGetValue("area", out var area))
+				if (routeValues.TryGetValue("area", out var area) && area != null)
 				{
 					count++;
 					areaString = area.ToString();
