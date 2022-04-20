@@ -55,13 +55,13 @@ namespace Elastic.Apm.OpenTelemetry
 				{
 					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
 
-					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
+					transaction = _tracer.StartTransactionInternal(activity.DisplayName, activity.Kind.ToString().ToLower() ?? "unknown",
 						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
 						distributedTracingData: dt);
 				}
 				else if (activity.ParentId == null)
 				{
-					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
+					transaction = _tracer.StartTransactionInternal(activity.DisplayName, activity.Kind.ToString().ToLower()?? "unknown",
 						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
 						activity.TraceId.ToString());
 				}
@@ -70,12 +70,12 @@ namespace Elastic.Apm.OpenTelemetry
 					Span newSpan;
 					if (_tracer.CurrentSpan == null)
 					{
-						newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, "unknown",
+						newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, activity.Kind.ToString().ToLower() ?? "unknown",
 							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
 					}
 					else
 					{
-						newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, "unknown",
+						newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, activity.Kind.ToString().ToLower() ?? "unknown",
 							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
 					}
 
@@ -211,7 +211,7 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 			else
 			{
-				transaction.Type = "unknown";
+				transaction.Type = activity.Kind.ToString().ToLower() ?? "unknown";
 			}
 		}
 
