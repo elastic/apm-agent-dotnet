@@ -4,8 +4,8 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.DiagnosticListeners;
@@ -28,7 +28,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		/// <summary>
 		/// Keeps track of ongoing transactions
 		/// </summary>
-		private readonly ConcurrentDictionary<HttpContext, ITransaction> _processingRequests = new ConcurrentDictionary<HttpContext, ITransaction>();
+		internal readonly ConditionalWeakTable<HttpContext, ITransaction> ProcessingRequests = new ConditionalWeakTable<HttpContext, ITransaction>();
 
 		public AspNetCoreDiagnosticListener(ApmAgent agent) : base(agent) { }
 
@@ -54,19 +54,21 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 						WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, Logger);
 
 					if (createdTransaction != null)
-						_processingRequests[httpContextStart] = createdTransaction;
+						ProcessingRequests.Add(httpContextStart, createdTransaction);
 				}
 			}
 			else if (kv.Key == $"{KnownListeners.MicrosoftAspNetCoreHostingHttpRequestIn}.Stop")
 			{
 				if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
 				{
-					if (_processingRequests.TryRemove(httpContextStop, out var createdTransaction))
+					if (ProcessingRequests.TryGetValue(httpContextStop, out var createdTransaction))
 					{
 						if (createdTransaction is Transaction transaction)
 							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, Logger);
 						else
-							createdTransaction.End();
+							createdTransaction?.End();
+
+						ProcessingRequests.Remove(httpContextStop);
 					}
 				}
 			}
@@ -76,7 +78,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 				case "Microsoft.AspNetCore.Diagnostics.HandledException":
 					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextDiagnosticsUnhandledException)) return;
 					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception diagnosticsException)) return;
-					if (!_processingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var iDiagnosticsTransaction)) return;
+					if (!ProcessingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var iDiagnosticsTransaction)) return;
 
 					if (iDiagnosticsTransaction is Transaction diagnosticsTransaction)
 					{
@@ -88,7 +90,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 				case "Microsoft.AspNetCore.Hosting.UnhandledException": // Not called when exception handler registered
 					if (!(_hostDefaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextUnhandledException)) return;
 					if (!(_hostExceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception)) return;
-					if (!_processingRequests.TryGetValue(httpContextUnhandledException, out var iCurrentTransaction)) return;
+					if (!ProcessingRequests.TryGetValue(httpContextUnhandledException, out var iCurrentTransaction)) return;
 
 					if (iCurrentTransaction is Transaction currentTransaction)
 					{
