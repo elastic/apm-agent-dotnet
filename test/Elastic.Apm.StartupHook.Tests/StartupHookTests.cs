@@ -29,7 +29,6 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <param name="targetFramework"></param>
 		/// <returns></returns>
 		[Theory]
-		[InlineData("netcoreapp3.0")]
 		[InlineData("netcoreapp3.1")]
 		[InlineData("net5.0")]
 		[InlineData("net6.0")]
@@ -72,7 +71,6 @@ namespace Elastic.Apm.StartupHook.Tests
 		}
 
 		[Theory]
-		[InlineData("netcoreapp3.0")]
 		[InlineData("netcoreapp3.1")]
 		[InlineData("net5.0")]
 		[InlineData("net6.0")]
@@ -125,7 +123,6 @@ namespace Elastic.Apm.StartupHook.Tests
 		}
 
 		[Theory]
-		[InlineData("netcoreapp3.0", ".NET Core", "3.0.0.0")]
 		[InlineData("netcoreapp3.1", ".NET Core", "3.1.0.0")]
 		[InlineData("net5.0", ".NET 5", "5.0.0.0")]
 		[InlineData("net6.0", ".NET 6", "6.0.0.0")]
@@ -173,14 +170,11 @@ namespace Elastic.Apm.StartupHook.Tests
 		}
 
 		[Theory]
-		[InlineData("webapi", "WebApi30", "netcoreapp3.0", "weatherforecast")]
 		[InlineData("webapi", "WebApi31", "netcoreapp3.1", "weatherforecast")]
 		[InlineData("webapi", "WebApi50", "net5.0", "weatherforecast")]
-		[InlineData("webapp", "WebApp30", "netcoreapp3.0", "")]
 		[InlineData("webapp", "WebApp31", "netcoreapp3.1", "")]
 		[InlineData("webapp", "WebApp50", "net5.0", "")]
 		[InlineData("webapp", "WebApp60", "net6.0", "")]
-		[InlineData("mvc", "Mvc30", "netcoreapp3.0", "")]
 		[InlineData("mvc", "Mvc31", "netcoreapp3.1", "")]
 		[InlineData("mvc", "Mvc50", "net5.0", "")]
 		[InlineData("mvc", "Mvc60", "net6.0", "")]
