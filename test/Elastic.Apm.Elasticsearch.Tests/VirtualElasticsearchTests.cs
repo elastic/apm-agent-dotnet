@@ -127,7 +127,6 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				error.Exception.Should().NotBeNull();
 				error.Exception.Message.Should().Contain("System.Net.Http.HttpRequestException");
 				error.Exception.StackTrace.Should().NotBeEmpty();
-				error.Exception.StackTrace.Should().OnlyContain(s => s.LineNo > 0);
 			}
 		}
 
