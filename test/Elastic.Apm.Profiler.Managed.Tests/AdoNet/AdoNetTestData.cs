@@ -27,13 +27,6 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			yield return new object[] { "net5.0" };
 			yield return new object[] { "netcoreapp3.1" };
 
-			// macOS only supports netcoreapp3.1 and up
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-			{
-				yield return new object[] { "netcoreapp3.0" };
-				yield return new object[] { "netcoreapp2.1" };
-			}
-
 			if (TestEnvironment.IsWindows)
 				yield return new object[] { "net461" };
 		}
