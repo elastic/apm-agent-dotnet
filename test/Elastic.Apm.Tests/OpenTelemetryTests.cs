@@ -5,6 +5,8 @@
 
 #if NET5_0 || NET6_0
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
@@ -21,7 +23,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample2(agent.Tracer);
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample2(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample2");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -45,7 +47,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample3(agent.Tracer);
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample3(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample3");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -64,7 +66,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample4(agent.Tracer);
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.Sample4(agent.Tracer);
 
 			payloadSender.FirstTransaction.Name.Should().Be("Sample4");
 			payloadSender.Spans.Should().HaveCount(2);
@@ -83,7 +85,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.OneSpanWithAttributes();
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.OneSpanWithAttributes();
 
 			payloadSender.FirstTransaction.Name.Should().Be("foo");
 			payloadSender.FirstTransaction.Otel.Should().NotBeNull();
@@ -97,7 +99,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.TwoSpansWithAttributes();
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.TwoSpansWithAttributes();
 
 			payloadSender.FirstTransaction.Name.Should().Be("foo");
 			payloadSender.FirstTransaction.Otel.Should().NotBeNull();
@@ -117,7 +119,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.SpanKindSample();
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.SpanKindSample();
 
 			payloadSender.FirstSpan.Type.Should().Be(ApiConstants.TypeExternal);
 			payloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
@@ -137,10 +139,45 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				configuration: new MockConfiguration(enableOpenTelemetryBridge: "false")))) OTSamples.Sample1();
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "false")))) OTSamples.Sample1();
 
 			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
 			payloadSender.Transactions.Should().BeNullOrEmpty();
+		}
+
+		/// <summary>
+		/// Makes sure that transaction.type is inferred already at start when possible (and not only at the end of the Activity)
+		/// </summary>
+		[Fact]
+		public void TransactionTypeTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")));
+			var src = new ActivitySource("Test");
+			var tags = new List<KeyValuePair<string, object>> { new("rpc.system", "foo") };
+			using var _ = src.StartActivity( nameof(TransactionTypeTest),  ActivityKind.Server,  new ActivityContext(), tags);
+			agent.Tracer.CurrentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
+		}
+
+		/// <summary>
+		/// Makes sure that Span.type and Span.subtype are inferred already at start when possible (and not only at the end of the Activity)
+		/// </summary>
+		[Fact]
+		public void SpanTypeTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")));
+			var src = new ActivitySource("Test");
+
+			agent.Tracer.CaptureTransaction("foo", "bar", () =>
+			{
+				var tags = new List<KeyValuePair<string, object>> { new ("db.system", "foo") };
+				using var _ = src.StartActivity(nameof(TransactionTypeTest), ActivityKind.Server, new ActivityContext(), tags);
+				agent.Tracer.CurrentSpan.Type.Should().Be(ApiConstants.TypeDb);
+				agent.Tracer.CurrentSpan.Subtype.Should().Be("foo");
+			});
 		}
 	}
 }

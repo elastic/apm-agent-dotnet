@@ -51,17 +51,17 @@ namespace Elastic.Apm.OpenTelemetry
 					return;
 
 				Transaction transaction = null;
-				if (activity?.Context != null && activity.ParentId != null && _tracer.CurrentTransaction == null)
+				if (activity.Context != null && activity.ParentId != null && _tracer.CurrentTransaction == null)
 				{
 					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
 
-					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
+					transaction = _tracer.StartTransactionInternal(activity.DisplayName, InferTransactionType(activity),
 						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
 						distributedTracingData: dt);
 				}
 				else if (activity.ParentId == null)
 				{
-					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
+					transaction = _tracer.StartTransactionInternal(activity.DisplayName, InferTransactionType(activity),
 						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
 						activity.TraceId.ToString());
 				}
@@ -70,21 +70,22 @@ namespace Elastic.Apm.OpenTelemetry
 					Span newSpan;
 					if (_tracer.CurrentSpan == null)
 					{
-						newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, "unknown",
+						var spanTypeAndSubType = InferSpanTypeAndSubType(activity);
+						newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, spanTypeAndSubType.Type,
+							spanTypeAndSubType.SubType,
 							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
 					}
 					else
 					{
-						newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, "unknown",
+						var spanTypeAndSubType = InferSpanTypeAndSubType(activity);
+						newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, spanTypeAndSubType.Type,
+							spanTypeAndSubType.SubType,
 							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
 					}
 
 					if (newSpan != null)
 					{
-						newSpan.Otel = new OTel
-						{
-							SpanKind = activity.Kind.ToString()
-						};
+						newSpan.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
 						if (activity.Kind == ActivityKind.Internal)
 						{
@@ -95,15 +96,11 @@ namespace Elastic.Apm.OpenTelemetry
 						if (activity.Id != null)
 							ActiveSpans.TryAdd(activity.Id, newSpan);
 					}
-
 				}
 
 				if (transaction != null)
 				{
-					transaction.Otel = new OTel
-					{
-						SpanKind = activity.Kind.ToString()
-					};
+					transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
 					if (activity.Id != null)
 						ActiveTransactions.TryAdd(activity.Id, transaction);
@@ -137,7 +134,8 @@ namespace Elastic.Apm.OpenTelemetry
 						foreach (var tag in activity.Tags)
 							transaction.Otel.Attributes.Add(tag.Key, tag.Value);
 
-						InferTransactionType(transaction, activity);
+						// infer transaction type before transaction ends.
+						transaction.Type = InferTransactionType(activity);
 
 						// By default we set unknown outcome
 						transaction.Outcome = Outcome.Unknown;
@@ -170,7 +168,11 @@ namespace Elastic.Apm.OpenTelemetry
 						foreach (var tag in activity.Tags)
 							span.Otel.Attributes.Add(tag.Key, tag.Value);
 
-						InferSpanTypeAndSubType(span, activity);
+						// Before the span ends we infer the type, subtype, service.resource
+						var spanTypeAndSubtype = InferSpanTypeAndSubType(activity);
+						span.Type = spanTypeAndSubtype.Type;
+						span.Subtype = spanTypeAndSubtype.SubType;
+						InferSpanDestination(span, activity);
 
 						// By default we set unknown outcome
 						span.Outcome = Outcome.Unknown;
@@ -195,41 +197,29 @@ namespace Elastic.Apm.OpenTelemetry
 				}
 			};
 
-		private void InferTransactionType(Transaction transaction, Activity activity)
+		private string InferTransactionType(Activity activity)
 		{
 			var isRpc = activity.Tags.Any(n => n.Key == "rpc.system");
 			var isHttp = activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme");
 			var isMessaging = activity.Tags.Any(n => n.Key == "messaging.system");
 
-			if (activity.Kind == ActivityKind.Server && (isRpc || isHttp))
+			return activity.Kind switch
 			{
-				transaction.Type = ApiConstants.TypeRequest;
-			}
-			else if (activity.Kind == ActivityKind.Consumer && isMessaging)
-			{
-				transaction.Type = ApiConstants.TypeMessaging;
-			}
-			else
-			{
-				transaction.Type = "unknown";
-			}
+				ActivityKind.Server when (isRpc || isHttp) => ApiConstants.TypeRequest,
+				ActivityKind.Consumer when isMessaging => ApiConstants.TypeMessaging,
+				_ => "unknown"
+			};
 		}
 
 		private ActivityListener Listener { get; set; }
 
-		private void InferSpanTypeAndSubType(Span span, Activity activity)
+		private void InferSpanDestination(Span span, Activity activity)
 		{
-
 			string httpPortFromScheme(string scheme)
 			{
 				if (scheme == "http")
-				{
 					return "80";
-				}
-				else if (scheme == "https")
-				{
-					return "443";
-				}
+				if (scheme == "https") return "443";
 
 				return string.Empty;
 			}
@@ -241,7 +231,6 @@ namespace Elastic.Apm.OpenTelemetry
 				{
 					var u = new Uri(url); // https://developer.mozilla.org/en-US/docs/Web/API/URL
 					return u.Host + ':' + u.Port;
-
 				}
 				catch
 				{
@@ -252,21 +241,12 @@ namespace Elastic.Apm.OpenTelemetry
 			var peerPort = "";
 			var netName = "";
 
-			if (activity.Tags.Any(n => n.Key == "net.peer.port"))
-			{
-				peerPort = activity.Tags.Where(n => n.Key == "net.peer.port").FirstOrDefault().Value;
-			}
+			if (activity.Tags.Any(n => n.Key == "net.peer.port")) peerPort = activity.Tags.FirstOrDefault(n => n.Key == "net.peer.port").Value;
 
-			if (activity.Tags.Any(n => n.Key == "net.peer.ip"))
-			{
-				netName = activity.Tags.Where(n => n.Key == "net.peer.ip").FirstOrDefault().Value;
-			}
-			if (activity.Tags.Any(n => n.Key == "net.peer.name"))
-			{
-				netName = activity.Tags.Where(n => n.Key == "net.peer.name").FirstOrDefault().Value;
-			}
+			if (activity.Tags.Any(n => n.Key == "net.peer.ip")) netName = activity.Tags.Where(n => n.Key == "net.peer.ip").FirstOrDefault().Value;
+			if (activity.Tags.Any(n => n.Key == "net.peer.name")) netName = activity.Tags.Where(n => n.Key == "net.peer.name").FirstOrDefault().Value;
 
-			if (netName.Length > 0 && peerPort.Length > 0)
+			if (peerPort != null && netName is { Length: > 0 } && peerPort.Length > 0)
 			{
 				netName += ':';
 				netName += peerPort;
@@ -274,19 +254,16 @@ namespace Elastic.Apm.OpenTelemetry
 
 			if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
 			{
-				span.Type = ApiConstants.TypeExternal;
-				span.Subtype = ApiConstants.SubtypeHttp;
-
 				if (activity.Tags.Any(n => n.Key == "http.host") && activity.Tags.Any(n => n.Key == "http.scheme"))
 				{
 					span.Context.Destination = new Destination
 					{
 						Service = new Destination.DestinationService
 						{
-							Resource = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":" + httpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value)
+							Resource = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":"
+								+ httpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value)
 						}
 					};
-
 				}
 				else if (activity.Tags.Any(n => n.Key == "http.url"))
 				{
@@ -308,9 +285,6 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 			else if (activity.Tags.Any(n => n.Key == "db.system"))
 			{
-				span.Type = ApiConstants.TypeDb;
-				span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
-
 				span.Context.Destination = new Destination
 				{
 					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
@@ -323,9 +297,6 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 			else if (activity.Tags.Any(n => n.Key == "rpc.system"))
 			{
-				span.Type = ApiConstants.TypeExternal;
-				span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
-
 				span.Context.Destination = new Destination
 				{
 					Service = new Destination.DestinationService { Resource = !string.IsNullOrEmpty(netName) ? netName : span.Subtype }
@@ -339,14 +310,8 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 			else if (activity.Tags.Any(n => n.Key == "messaging.system"))
 			{
-
-				span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
-				span.Type = ApiConstants.TypeMessaging;
-
 				if (string.IsNullOrEmpty(netName) && activity.Tags.Any(n => n.Key == "messaging.url"))
-				{
 					netName = parseNetName(activity.Tags.FirstOrDefault(n => n.Key == "messaging.url").Value);
-				}
 
 				span.Context.Destination = new Destination
 				{
@@ -359,6 +324,31 @@ namespace Elastic.Apm.OpenTelemetry
 					span.Context.Destination.Service.Resource += activity.Tags.FirstOrDefault(n => n.Key == "messaging.destination").Value;
 				}
 			}
+		}
+
+		private struct TypeAndSubType
+		{
+			public readonly string Type { get; }
+			public readonly string SubType { get; }
+
+			public TypeAndSubType(string type, string subType) => (Type, SubType) = (type, subType);
+		}
+
+		private TypeAndSubType InferSpanTypeAndSubType(Activity activity)
+		{
+			if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
+				return new TypeAndSubType(ApiConstants.TypeExternal, ApiConstants.SubtypeHttp);
+
+			if (activity.Tags.Any(n => n.Key == "db.system"))
+				return new TypeAndSubType(ApiConstants.TypeDb, activity.Tags.First(n => n.Key == "db.system").Value);
+
+			if (activity.Tags.Any(n => n.Key == "rpc.system"))
+				return new TypeAndSubType(ApiConstants.TypeExternal, activity.Tags.First(n => n.Key == "rpc.system").Value);
+
+			if (activity.Tags.Any(n => n.Key == "messaging.system"))
+				return new TypeAndSubType(ApiConstants.TypeMessaging, activity.Tags.First(n => n.Key == "messaging.system").Value);
+
+			return new TypeAndSubType("unknown", string.Empty);
 		}
 
 		public void Dispose() => Listener?.Dispose();
