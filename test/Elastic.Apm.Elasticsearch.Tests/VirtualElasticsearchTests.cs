@@ -2,11 +2,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using Elasticsearch.Net;
 using Elasticsearch.Net.VirtualizedCluster;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 using Error = Elastic.Apm.Model.Error;
 
 namespace Elastic.Apm.Elasticsearch.Tests
@@ -16,6 +19,10 @@ namespace Elastic.Apm.Elasticsearch.Tests
 	/// </summary>
 	public class VirtualElasticsearchTests
 	{
+		private readonly ITestOutputHelper _testOutputHelper;
+
+		public VirtualElasticsearchTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+
 		[Fact]
 		public async Task FailOverResultsInSpans()
 		{
@@ -26,7 +33,8 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				.StaticConnectionPool()
 				.AllDefaults();
 			var client = cluster.Client;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled:"false"))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+					   configuration: new MockConfiguration(exitSpanMinDuration: "0", spanCompressionEnabled: "false"))))
 			using (agent.Subscribe(new ElasticsearchDiagnosticsSubscriber()))
 			{
 				var searchResponse = await agent.Tracer.CaptureTransaction("Call Client", ApiConstants.ActionExec,
@@ -72,7 +80,9 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				.StaticConnectionPool()
 				.AllDefaults();
 			var client = cluster.Client;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled:"false"))))
+			using (var agent = new ApmAgent(new TestAgentComponents(logger: new XUnitLogger(LogLevel.Trace, _testOutputHelper),
+					   payloadSender: payloadSender,
+					   configuration: new MockConfiguration(exitSpanMinDuration: "0", spanCompressionEnabled: "false"))))
 			using (agent.Subscribe(new ElasticsearchDiagnosticsSubscriber()))
 			{
 				try
@@ -110,7 +120,8 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				.StaticConnectionPool()
 				.Settings(s => s.DisablePing());
 			var client = cluster.Client;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0", spanCompressionEnabled:"false"))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+					   configuration: new MockConfiguration(exitSpanMinDuration: "0", spanCompressionEnabled: "false"))))
 			using (agent.Subscribe(new ElasticsearchDiagnosticsSubscriber()))
 			{
 				var searchResponse = await agent.Tracer.CaptureTransaction("Call Client", ApiConstants.ActionExec,
