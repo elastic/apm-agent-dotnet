@@ -649,9 +649,9 @@ def cleanupAzureResources(){
             cmd label: "Create storage for Azure authentication",
                 script: "mkdir -p ${BASE_DIR}/.azure || true"
             cmd label: "Logging into Azure",
-                script: "${dockerCmd} az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}"
+                script: "${dockerCmd} " + 'az login --service-principal --username ${AZ_CLIENT_ID} --password ${AZ_CLIENT_SECRET} --tenant ${AZ_TENANT_ID}'
             cmd label: "Setting Azure subscription",
-                script: "${dockerCmd} az account set --subscription ${AZ_SUBSCRIPTION_ID}"
+                script: "${dockerCmd} " + 'az account set --subscription ${AZ_SUBSCRIPTION_ID}'
             cmd label: "Checking and removing any Azure related resource groups",
                 script: "for group in `${dockerCmd} az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX}')]\" --out json|jq .[].name --raw-output`;do ${dockerCmd} az group delete --name \$group --no-wait --yes;done"
         }
