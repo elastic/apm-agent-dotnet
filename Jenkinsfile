@@ -17,6 +17,7 @@ pipeline {
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
     AZURE_RESOURCE_GROUP_PREFIX = "ci-dotnet-${env.BUILD_ID}"
+    AZURE_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-azure-apm-ci'
   }
   options {
     timeout(time: 4, unit: 'HOURS')
@@ -364,7 +365,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        withAzureCredentials(path: "${HOME}", credentialsFile: '.credentials.json') {
+                        withAzureCredentials(path: "${HOME}", secret: env.AZURE_SECRET, credentialsFile: '.credentials.json') {
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         }
                       }
@@ -627,7 +628,7 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '6.0.100'
     """)
-    withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
+    withAzureCredentials(path: "${homePath}", secret: env.AZURE_SECRET, credentialsFile: '.credentials.json') {
       withTerraform(){
         body()
       }
@@ -636,7 +637,7 @@ def dotnet(Closure body){
 }
 
 def cleanupAzureResources(){
-    def props = getVaultSecret(secret: 'secret/apm-team/ci/apm-agent-dotnet-azure')
+    def props = getVaultSecret(secret: env.AZURE_SECRET)
     def authObj = props?.data
     def dockerCmd = "docker run --rm -i -v \$(pwd)/.azure:/root/.azure mcr.microsoft.com/azure-cli:latest"
     withEnvMask(vars: [
