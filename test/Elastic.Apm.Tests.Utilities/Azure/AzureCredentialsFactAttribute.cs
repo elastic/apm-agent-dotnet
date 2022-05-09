@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Tests.Utilities.XUnit;
 using Xunit;
 
 namespace Elastic.Apm.Tests.Utilities.Azure
@@ -14,6 +15,8 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 	{
 		public AzureCredentialsFactAttribute()
 		{
+			var disabledTestFact = new DisabledTestFact("Azure Secreat needs to be updated in CI - WIP");
+			Skip = disabledTestFact.Skip;
 			if (AzureCredentials.Instance is Unauthenticated)
 				Skip = "Azure credentials not available. If running locally, run `az login` to login";
 		}
