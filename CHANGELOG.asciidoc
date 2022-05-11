@@ -23,6 +23,21 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.15.0]]
+==== 1.15.0
+
+[float]
+===== Features
+- {pull}1657[#1657] Improved database span names based on parsed SQL statements (issue: {issue}242[#242])
+
+[float]
+===== Bug fixes
+- {pull}1670[#1670] Dedicated working loop thread for sending APM events (issue: {issue}1571[#1571])
+- {pull}1677[#1677] Fixed span type for MongoDB - with this a MongoDB logo will show up on the service map
+- {pull}1674[#1674] InvalidCastException in `AspNetCoreDiagnosticListener`
+- {pull}1683[#1683] MVC: handling `area:null` when creating transaction name based on routing
+- {pull}1685[#1685] Handle missing `.Stop` events in `AspNetCoreDiagnosticListener` (issue: {issue}1676[#1676])
+
 [[release-notes-1.14.1]]
 ==== 1.14.1
 
