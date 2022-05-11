@@ -13,6 +13,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Profiler.Managed.Tests.AdoNet;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -125,7 +126,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			await apmServer.StopAsync();
 		}
 
-		[Fact]
+		[DisabledTestFact("Sometimes fails in CI with 'Expected logs {empty} to have an item matching line.Contains(Format('service name {0} matches excluded name {1}. Profiler disabled''")]
 		public async Task ShouldNotInstrumentExcludedServiceName()
 		{
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);

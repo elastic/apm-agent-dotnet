@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,7 +25,7 @@ public class BasicTests
 	/// <summary>
 	/// Makes sure Agent.Version is suffixed with `p` when the profiler is loaded
 	/// </summary>
-	[Fact]
+	[DisabledTestFact("Sometimes fails in ci with 'System.InvalidOperationException : Sequence contains no elements' and logs are empty")]
 	public async Task AgentVersionTest()
 	{
 		var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);
