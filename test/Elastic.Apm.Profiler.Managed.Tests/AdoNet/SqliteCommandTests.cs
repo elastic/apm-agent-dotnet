@@ -25,9 +25,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		public SqliteCommandTests(ITestOutputHelper output) => _output = output;
 
 		[DisabledTestFact("Sometimes fails in CI with `Expected apmServer.ReceivedData.Transactions to contain 2 item(s), but found 0.`")]
-		[ClassData(typeof(AdoNetTestData))]
-		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
+		//[ClassData(typeof(AdoNetTestData))]
+		public async Task CaptureAutoInstrumentedSpans()
 		{
+			string targetFramework = null; // TODO: this is a parameter, but was moved due to DisabledTestFact
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
 			var port = apmServer.FindAvailablePortToListen();
