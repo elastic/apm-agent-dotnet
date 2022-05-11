@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -23,7 +24,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 		public SqliteCommandTests(ITestOutputHelper output) => _output = output;
 
-		[Theory]
+		[DisabledTestFact("Sometimes fails in CI with `Expected apmServer.ReceivedData.Transactions to contain 2 item(s), but found 0.`")]
 		[ClassData(typeof(AdoNetTestData))]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{

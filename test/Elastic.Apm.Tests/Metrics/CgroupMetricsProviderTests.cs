@@ -12,6 +12,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
@@ -83,7 +84,7 @@ namespace Elastic.Apm.Tests.Metrics
 			actual.Should().Be(expected);
 		}
 
-		[Fact]
+		[DisabledTestFact("Sometimes fails in CI with `System.ArgumentNullException : Value cannot be null.`")]
 		public void TestUnlimitedCgroup1()
 		{
 			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup","/proc/unlimited/memory", "cgroup cgroup");
