@@ -748,6 +748,38 @@ public class ConvenientApiSpanTests
 		payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
 	}
 
+	[Fact]
+	public async Task CaptureSpanWithSpanLinks()
+	{
+		var payloadSender = new MockPayloadSender();
+		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+		var transaction1 = agent.Tracer.StartTransaction("foo", "bar");
+		transaction1.End();
+
+		await agent.Tracer.CaptureTransaction("foo", "bar",
+			async (t) =>
+			{
+				await t.CaptureSpan("foo", "bar", async (s) =>
+				{
+					await s.CaptureSpan("ChildSpan", "bar", async () =>
+					{
+						await Task.Delay(100);
+					}, links: new[] { new SpanLink(transaction1.Id, transaction1.TraceId) });
+				});
+			});
+
+		payloadSender.Spans.Should().NotBeEmpty();
+		payloadSender.Spans.Should().HaveCount(2);
+
+		var capturedChildSpan = payloadSender.Spans.First(s => s.Name == "ChildSpan") as Span;
+		capturedChildSpan.Should().NotBeNull();
+
+		capturedChildSpan.Links.Should().HaveCount(1);
+		capturedChildSpan.Links.First().SpanId.Should().Be(transaction1.Id);
+		capturedChildSpan.Links.First().TraceId.Should().Be(transaction1.TraceId);
+	}
+
 	/// <summary>
 	/// Asserts on 1 transaction with 1 async span and 1 error
 	/// </summary>

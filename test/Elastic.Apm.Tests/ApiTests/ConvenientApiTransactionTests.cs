@@ -4,6 +4,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -684,6 +685,55 @@ public class ConvenientApiTransactionTests
 		});
 
 		Activity.Current.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task CaptureTransactionWithSpanLinks()
+	{
+		var payloadSender = new MockPayloadSender();
+		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+		var transaction1 = agent.Tracer.StartTransaction("foo", "bar");
+		transaction1.End();
+
+		await agent.Tracer.CaptureTransaction("foo", "bar",
+			async () =>
+			{
+				await Task.Delay(100);
+			}, links: new[] { new SpanLink(transaction1.Id, transaction1.TraceId) });
+
+		payloadSender.Transactions.Should().NotBeEmpty();
+		payloadSender.Transactions.Should().HaveCount(2);
+
+		(payloadSender.Transactions[1] as Transaction)!.Links.Should().HaveCount(1);
+		(payloadSender.Transactions[1] as Transaction)!.Links.First().SpanId.Should().Be(transaction1.Id);
+		(payloadSender.Transactions[1] as Transaction)!.Links.First().TraceId.Should().Be(transaction1.TraceId);
+	}
+
+	[Fact]
+	public async Task CaptureSpanWithSpanLinks()
+	{
+		var payloadSender = new MockPayloadSender();
+		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+		var transaction1 = agent.Tracer.StartTransaction("foo", "bar");
+		transaction1.End();
+
+		await agent.Tracer.CaptureTransaction("foo", "bar",
+			async (t) =>
+			{
+				await t.CaptureSpan("foo", "bar", async () =>
+				{
+					await Task.Delay(100);
+				}, links: new[] { new SpanLink(transaction1.Id, transaction1.TraceId) });
+			});
+
+		payloadSender.Spans.Should().NotBeEmpty();
+		payloadSender.Spans.Should().HaveCount(1);
+
+		(payloadSender.Spans[0] as Span)!.Links.Should().HaveCount(1);
+		(payloadSender.Spans[0] as Span)!.Links.First().SpanId.Should().Be(transaction1.Id);
+		(payloadSender.Spans[0] as Span)!.Links.First().TraceId.Should().Be(transaction1.TraceId);
 	}
 
 	/// <summary>
