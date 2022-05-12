@@ -585,7 +585,7 @@ pipeline {
               git(credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
                   url: "git@github.com:elastic/${OPBEANS_REPO}.git",
                   branch: 'main')
-              sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
+              sh script: ".ci/bump-version.sh ${env.BRANCH_NAME.replaceAll('^v', '')}", label: 'Bump version'
               // The opbeans pipeline will trigger a release for the main branch
               gitPush()
               // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
