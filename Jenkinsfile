@@ -589,7 +589,7 @@ pipeline {
               // The opbeans pipeline will trigger a release for the main branch
               gitPush()
               // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
-              gitCreateTag(tag: "v${env.BRANCH_NAME}")
+              gitCreateTag(tag: "${env.BRANCH_NAME}")
             }
           }
         }
