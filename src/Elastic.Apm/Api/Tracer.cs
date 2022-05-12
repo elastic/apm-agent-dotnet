@@ -57,11 +57,11 @@ namespace Elastic.Apm.Api
 		public DbSpanCommon DbSpanCommon { get; }
 
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null,
-			bool ignoreActivity = false
+			bool ignoreActivity = false, IEnumerable<SpanLink> links = null
 		)
 		{
 			if (_configurationProvider.CurrentSnapshot.Enabled && _configurationProvider.CurrentSnapshot.Recording)
-				return StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
+				return StartTransactionInternal(name, type, distributedTracingData, ignoreActivity, links: links);
 
 			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer, _configurationProvider.CurrentSnapshot);
 		}
@@ -86,9 +86,9 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null)
+		public void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null)
 		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
+			var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 
 			try
 			{
@@ -101,9 +101,9 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public void CaptureTransaction(string name, string type, Action action, DistributedTracingData distributedTracingData = null)
+		public void CaptureTransaction(string name, string type, Action action, DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null)
 		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
+			var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 
 			try
 			{
@@ -116,9 +116,9 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, DistributedTracingData distributedTracingData = null)
+		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null)
 		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
+			var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 			var retVal = default(T);
 			try
 			{
@@ -133,9 +133,9 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<T> func, DistributedTracingData distributedTracingData = null)
+		public T CaptureTransaction<T>(string name, string type, Func<T> func, DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null)
 		{
-			var transaction = StartTransaction(name, type, distributedTracingData);
+			var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 			var retVal = default(T);
 			try
 			{
@@ -150,40 +150,40 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null) =>
+		public Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null) =>
 			Task.Run(() =>
 			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
+				var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 				var task = func();
 				RegisterContinuation(task, transaction);
 				return task;
 			});
 
-		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null
+		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null
 		) =>
 			Task.Run(() =>
 			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
+				var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 				var task = func(transaction);
 				RegisterContinuation(task, transaction);
 				return task;
 			});
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null) =>
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null) =>
 			Task.Run(() =>
 			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
+				var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 				var task = func();
 				RegisterContinuation(task, transaction);
 				return task;
 			});
 
 		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func,
-			DistributedTracingData distributedTracingData = null
+			DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null
 		) =>
 			Task.Run(() =>
 			{
-				var transaction = StartTransaction(name, type, distributedTracingData);
+				var transaction = StartTransaction(name, type, distributedTracingData, links: links);
 				var task = func(transaction);
 				RegisterContinuation(task, transaction);
 				return task;
