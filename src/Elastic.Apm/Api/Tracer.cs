@@ -69,12 +69,12 @@ namespace Elastic.Apm.Api
 		internal Transaction StartTransactionInternal(string name, string type,
 			long? timestamp = null, bool ignoreActivity = false, string id = null, string traceId = null,
 			DistributedTracingData distributedTracingData = null,
-			IEnumerable<Link> links = null
+			IEnumerable<SpanLink> links = null
 		)
 			=> StartTransactionInternal(name, type, distributedTracingData, ignoreActivity, timestamp, id, traceId, links);
 
 		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null,
-			bool ignoreActivity = false, long? timestamp = null, string id = null, string traceId = null, IEnumerable<Link> links = null
+			bool ignoreActivity = false, long? timestamp = null, string id = null, string traceId = null, IEnumerable<SpanLink> links = null
 		)
 		{
 			var currentConfig = _configurationProvider.CurrentSnapshot;

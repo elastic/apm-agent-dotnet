@@ -6,21 +6,26 @@
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
-namespace Elastic.Apm.Model
+namespace Elastic.Apm.Api
 {
 	/// <summary>
 	/// Represents a span link.
 	/// Links holds links to other spans, potentially in other traces.
 	/// </summary>
-	internal class Link
+	public class SpanLink
 	{
+		public SpanLink(string spanId, string traceId)
+		{
+			SpanId = spanId;
+			TraceId = traceId;
+		}
+
 		[JsonProperty("span_id")]
 		[MaxLength]
-		public string SpanId { get; set; }
+		public string SpanId { get; }
 
 		[JsonProperty("trace_id")]
 		[MaxLength]
-		public string TraceId { get; set; }
-
+		public string TraceId { get; }
 	}
 }

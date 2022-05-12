@@ -52,11 +52,11 @@ namespace Elastic.Apm.OpenTelemetry
 
 				Transaction transaction = null;
 
-				var spanLinks = new List<Link>(activity.Links.Count());
+				var spanLinks = new List<SpanLink>(activity.Links.Count());
 				if (activity.Links != null && activity.Links.Any())
 				{
 					foreach (var link in activity.Links)
-						spanLinks.Add(new Link { SpanId = link.Context.SpanId.ToString(), TraceId = link.Context.TraceId.ToString() });
+						spanLinks.Add(new SpanLink(link.Context.SpanId.ToString(), link.Context.TraceId.ToString()));
 				}
 
 				if (activity?.Context != null && activity.ParentId != null && _tracer.CurrentTransaction == null)
