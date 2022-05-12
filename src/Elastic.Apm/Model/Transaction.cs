@@ -114,7 +114,8 @@ namespace Elastic.Apm.Model
 			bool ignoreActivity = false,
 			long? timestamp = null,
 			string id = null,
-			string traceId = null
+			string traceId = null,
+			IEnumerable<Link> links = null
 		)
 		{
 			Configuration = configuration;
@@ -129,6 +130,7 @@ namespace Elastic.Apm.Model
 			Name = name;
 			HasCustomName = false;
 			Type = type;
+			Links = links;
 
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
@@ -369,6 +371,11 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal bool IsContextCreated => _context.IsValueCreated;
 
+		/// <summary>
+		/// Links holds links to other spans, potentially in other traces.
+		/// </summary>
+		public IEnumerable<Link> Links { get; }
+
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }
 
@@ -602,7 +609,8 @@ namespace Elastic.Apm.Model
 				if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 				{
 					_logger?.Info()
-						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}", CompressionBuffer.Id);
+						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
+							CompressionBuffer.Id);
 				}
 				else
 					_sender.QueueSpan(CompressionBuffer);
@@ -646,13 +654,12 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-			string id = null,
-			bool isExitSpan = false
+			string id = null, bool isExitSpan = false, IEnumerable<Link> links = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,
-				isExitSpan: isExitSpan);
+				isExitSpan: isExitSpan, links: links);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))

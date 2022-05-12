@@ -7,6 +7,7 @@
 using System;
 using System.Linq;
 using Elastic.Apm.Api;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
@@ -144,6 +145,19 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
 			payloadSender.Transactions.Should().BeNullOrEmpty();
+		}
+
+		[Fact]
+		public void SpanLinkTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")))) OTSamples.SpanLinkSample();
+
+			payloadSender.WaitForTransactions(count: 3);
+
+			(payloadSender.Transactions[2] as Transaction)!.Links.Should().NotBeNullOrEmpty();
+			(payloadSender.Transactions[2] as Transaction)!.Links.ElementAt(0).SpanId.Should().Be(payloadSender.Transactions[0].Id);
 		}
 	}
 }
