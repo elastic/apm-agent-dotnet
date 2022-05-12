@@ -461,7 +461,7 @@ pipeline {
                 allOf {
                   anyOf {
                     branch 'main'
-                    tag pattern: '\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
+                    tag pattern: 'v\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
                     expression { return params.Run_As_Main_Branch }
                     expression { return env.BENCHMARK_UPDATED != "false" }
                     expression { return env.GITHUB_COMMENT?.contains('benchmark tests') }
@@ -530,7 +530,7 @@ pipeline {
         beforeInput true
         beforeAgent true
         // Tagged release events ONLY
-        tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
+        tag pattern: 'v\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
       }
       stages {
         stage('Notify') {
@@ -571,7 +571,7 @@ pipeline {
       }
       when {
         anyOf {
-          tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
+          tag pattern: 'v\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
         }
       }
       stages {
