@@ -35,7 +35,8 @@ namespace Elastic.Apm.Model
 			string name,
 			string type,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			IConfiguration configuration)
+			IConfiguration configuration
+		)
 		{
 			Name = name;
 			Type = type;
@@ -89,28 +90,44 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		) { }
 
-		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null, bool isExitSpan = false)
+		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), capturedAction);
 
-		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false)
+		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), capturedAction);
 
-		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false)
+		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
-		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false)
+		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
-		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
-		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null, bool isExitSpan = false)
+		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
 		public void End() => _currentExecutionSegmentsContainer.CurrentTransaction = null;
@@ -127,7 +144,9 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value) { }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false) =>
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		) =>
 			new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer);
 
 		public string EnsureParentId() => string.Empty;

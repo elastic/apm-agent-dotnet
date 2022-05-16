@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.HelpersTests;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -616,7 +617,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var expectedSpansCount = isSampled ? 1 : 0;
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-				configuration: new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0"))))
+					   configuration: new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
@@ -659,7 +660,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var expectedSpansCount = isSampled ? 1 : 0;
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-				configuration: new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0"))))
+					   configuration: new MockConfiguration(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
@@ -791,7 +792,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			const int manualPort = 1234;
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0"))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+					   configuration: new MockConfiguration(exitSpanMinDuration: "0"))))
 			{
 				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
 				{
@@ -857,7 +859,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			var mockLogger = new TestLogger(LogLevel.Trace);
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger, payloadSender: payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0"))))
+			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger, payloadSender: payloadSender,
+					   configuration: new MockConfiguration(exitSpanMinDuration: "0"))))
 			{
 				agent.Tracer.CaptureTransaction("test TX name", "test TX type",
 					tx =>
@@ -1156,6 +1159,119 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstError.Log.Message.Should().Be("foo");
 			payloadSender.FirstError.Log.Level.Should().Be("error");
 			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
+		}
+
+		[Fact]
+		public void SpanLinkOnTransactionTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("foo", "bar");
+			transaction1.End();
+
+			var transaction2 = agent.Tracer.StartTransaction("foo", "bar", links: new[] { new SpanLink(transaction1.Id, transaction1.TraceId) });
+			transaction2.End();
+
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().HaveCount(2);
+
+			(payloadSender.Transactions[1] as Transaction)!.Links.Should().HaveCount(1);
+			(payloadSender.Transactions[1] as Transaction)!.Links.First().SpanId.Should().Be(transaction1.Id);
+			(payloadSender.Transactions[1] as Transaction)!.Links.First().TraceId.Should().Be(transaction1.TraceId);
+		}
+
+		[Fact]
+		public void MultipleSpanLinkOnTransactionTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("foo", "bar");
+			transaction1.End();
+
+			var transaction2 = agent.Tracer.StartTransaction("foo", "bar");
+			transaction2.End();
+
+			var transaction3 = agent.Tracer.StartTransaction("foo", "bar",
+				links: new[] { new SpanLink(transaction1.Id, transaction1.TraceId), new SpanLink(transaction2.Id, transaction2.TraceId) });
+			transaction3.End();
+
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().HaveCount(3);
+
+			(payloadSender.Transactions[2] as Transaction)!.Links.Should().HaveCount(2);
+
+			(payloadSender.Transactions[2] as Transaction)!.Links.First().SpanId.Should().Be(transaction1.Id);
+			(payloadSender.Transactions[2] as Transaction)!.Links.First().TraceId.Should().Be(transaction1.TraceId);
+
+			(payloadSender.Transactions[2] as Transaction)!.Links.ElementAt(1).SpanId.Should().Be(transaction2.Id);
+			(payloadSender.Transactions[2] as Transaction)!.Links.ElementAt(1).TraceId.Should().Be(transaction2.TraceId);
+		}
+
+		[Fact]
+		public void MultipleSpanLinksOnSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("foo", "bar");
+			var span1 = transaction1.StartSpan("foo", "bar");
+			span1.End();
+			var span2 = transaction1.StartSpan("foo", "bar");
+			span2.End();
+
+			var span3 = transaction1.StartSpan("foo", "bar",
+				links: new[] { new SpanLink(span1.Id, span1.TraceId), new SpanLink(span2.Id, span2.TraceId) });
+
+			span3.End();
+			transaction1.End();
+
+			payloadSender.Spans.Should().NotBeEmpty();
+			payloadSender.Spans.Should().HaveCount(3);
+
+			(payloadSender.Spans[2] as Span)!.Links.Should().HaveCount(2);
+
+			(payloadSender.Spans[2] as Span)!.Links.First().SpanId.Should().Be(span1.Id);
+			(payloadSender.Spans[2] as Span)!.Links.First().TraceId.Should().Be(span1.TraceId);
+
+			(payloadSender.Spans[2] as Span)!.Links.ElementAt(1).SpanId.Should().Be(span2.Id);
+			(payloadSender.Spans[2] as Span)!.Links.ElementAt(1).TraceId.Should().Be(span2.TraceId);
+		}
+
+		[Fact]
+		public void MultipleSpanLinksOnChildSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("foo", "bar");
+			var span1 = transaction1.StartSpan("foo", "bar");
+			span1.End();
+			var span2 = transaction1.StartSpan("foo", "bar");
+			span2.End();
+
+			var span3 = transaction1.StartSpan("foo", "bar");
+
+			var childSpan = span3.StartSpan("ChildSpan", "bar",
+				links: new[] { new SpanLink(span1.Id, span1.TraceId), new SpanLink(span2.Id, span2.TraceId) });
+			childSpan.End();
+
+			span3.End();
+			transaction1.End();
+
+			payloadSender.Spans.Should().NotBeEmpty();
+			payloadSender.Spans.Should().HaveCount(4);
+
+			var capturedChildSpan = payloadSender.Spans.First(s => s.Name == "ChildSpan") as Span;
+			capturedChildSpan.Should().NotBeNull();
+			capturedChildSpan!.Links.Should().HaveCount(2);
+
+			capturedChildSpan!.Links.First().SpanId.Should().Be(span1.Id);
+			capturedChildSpan!.Links.First().TraceId.Should().Be(span1.TraceId);
+
+			capturedChildSpan!.Links.ElementAt(1).SpanId.Should().Be(span2.Id);
+			capturedChildSpan!.Links.ElementAt(1).TraceId.Should().Be(span2.TraceId);
 		}
 
 		private class TestException : Exception

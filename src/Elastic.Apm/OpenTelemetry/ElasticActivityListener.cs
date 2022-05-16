@@ -51,19 +51,27 @@ namespace Elastic.Apm.OpenTelemetry
 					return;
 
 				Transaction transaction = null;
+
+				var spanLinks = new List<SpanLink>(activity.Links.Count());
+				if (activity.Links != null && activity.Links.Any())
+				{
+					foreach (var link in activity.Links)
+						spanLinks.Add(new SpanLink(link.Context.SpanId.ToString(), link.Context.TraceId.ToString()));
+				}
+
 				if (activity?.Context != null && activity.ParentId != null && _tracer.CurrentTransaction == null)
 				{
 					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
 
 					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
 						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
-						distributedTracingData: dt);
+						distributedTracingData: dt, links: spanLinks);
 				}
 				else if (activity.ParentId == null)
 				{
 					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
 						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
-						activity.TraceId.ToString());
+						activity.TraceId.ToString(), links: spanLinks);
 				}
 				else
 				{
@@ -71,20 +79,17 @@ namespace Elastic.Apm.OpenTelemetry
 					if (_tracer.CurrentSpan == null)
 					{
 						newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, "unknown",
-							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
+							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString(), links: spanLinks);
 					}
 					else
 					{
 						newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, "unknown",
-							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString());
+							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString(), links: spanLinks);
 					}
 
 					if (newSpan != null)
 					{
-						newSpan.Otel = new OTel
-						{
-							SpanKind = activity.Kind.ToString()
-						};
+						newSpan.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
 						if (activity.Kind == ActivityKind.Internal)
 						{
@@ -95,15 +100,11 @@ namespace Elastic.Apm.OpenTelemetry
 						if (activity.Id != null)
 							ActiveSpans.TryAdd(activity.Id, newSpan);
 					}
-
 				}
 
 				if (transaction != null)
 				{
-					transaction.Otel = new OTel
-					{
-						SpanKind = activity.Kind.ToString()
-					};
+					transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
 					if (activity.Id != null)
 						ActiveTransactions.TryAdd(activity.Id, transaction);
@@ -219,7 +220,6 @@ namespace Elastic.Apm.OpenTelemetry
 
 		private void InferSpanTypeAndSubType(Span span, Activity activity)
 		{
-
 			string httpPortFromScheme(string scheme)
 			{
 				if (scheme == "http")
@@ -241,7 +241,6 @@ namespace Elastic.Apm.OpenTelemetry
 				{
 					var u = new Uri(url); // https://developer.mozilla.org/en-US/docs/Web/API/URL
 					return u.Host + ':' + u.Port;
-
 				}
 				catch
 				{
@@ -283,10 +282,10 @@ namespace Elastic.Apm.OpenTelemetry
 					{
 						Service = new Destination.DestinationService
 						{
-							Resource = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":" + httpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value)
+							Resource = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":"
+								+ httpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value)
 						}
 					};
-
 				}
 				else if (activity.Tags.Any(n => n.Key == "http.url"))
 				{
@@ -339,7 +338,6 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 			else if (activity.Tags.Any(n => n.Key == "messaging.system"))
 			{
-
 				span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
 				span.Type = ApiConstants.TypeMessaging;
 

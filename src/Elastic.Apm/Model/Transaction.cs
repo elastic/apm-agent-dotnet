@@ -114,7 +114,8 @@ namespace Elastic.Apm.Model
 			bool ignoreActivity = false,
 			long? timestamp = null,
 			string id = null,
-			string traceId = null
+			string traceId = null,
+			IEnumerable<SpanLink> links = null
 		)
 		{
 			Configuration = configuration;
@@ -129,6 +130,7 @@ namespace Elastic.Apm.Model
 			Name = name;
 			HasCustomName = false;
 			Type = type;
+			Links = links;
 
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
@@ -369,6 +371,11 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal bool IsContextCreated => _context.IsValueCreated;
 
+		/// <summary>
+		/// Links holds links to other spans, potentially in other traces.
+		/// </summary>
+		public IEnumerable<SpanLink> Links { get; }
+
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }
 
@@ -602,7 +609,8 @@ namespace Elastic.Apm.Model
 				if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 				{
 					_logger?.Info()
-						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}", CompressionBuffer.Id);
+						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
+							CompressionBuffer.Id);
 				}
 				else
 					_sender.QueueSpan(CompressionBuffer);
@@ -636,23 +644,24 @@ namespace Elastic.Apm.Model
 			return false;
 		}
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false)
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 		{
 			if (Configuration.Enabled && Configuration.Recording)
-				return StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan);
+				return StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-			string id = null,
-			bool isExitSpan = false
+			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,
-				isExitSpan: isExitSpan);
+				isExitSpan: isExitSpan, links: links);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))
@@ -698,35 +707,46 @@ namespace Elastic.Apm.Model
 			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
-			bool isExitSpan = false
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), capturedAction);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links),
+				capturedAction);
 
-		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), capturedAction);
-
-		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
-
-		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
-
-		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
-
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false
+		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
 		)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links),
+				capturedAction);
+
+		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
+
+		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
+
+		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
+
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null,
-			bool isExitSpan = false
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null,
-			bool isExitSpan = false
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan), func);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
 		internal static string StatusCodeToResult(string protocolName, int statusCode) => $"{protocolName} {statusCode.ToString()[0]}xx";
 
