@@ -228,7 +228,7 @@ namespace Elastic.Apm.Report
 			else
 			{
 				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
-				while (true)
+				while (!CancellationTokenSource.IsCancellationRequested)
 				{
 					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CancellationTokenSource.Token))
 						break;

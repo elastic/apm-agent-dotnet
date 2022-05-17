@@ -17,6 +17,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using FluentAssertions.Extensions;
@@ -79,15 +80,18 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 			var count = 0;
 			while (!testLogger.Log.Contains("Failed sending event.")
-				&& count < 10)
+				   && count < 10)
 			{
 				Thread.Sleep(500);
 				count++;
 			}
 
-			testLogger.Log.Should().NotContain(secretToken)
-				.And.Contain("http://[REDACTED]:[REDACTED]@localhost:8200").And.NotContain(serverUrl);
+			testLogger.Log.Should()
+				.NotContain(secretToken)
+				.And.Contain("http://[REDACTED]:[REDACTED]@localhost:8200")
+				.And.NotContain(serverUrl);
 		}
+
 		[Fact]
 		public async Task SecretToken_ShouldBeSent_WhenApiKeyIsNotSpecified()
 		{
@@ -107,7 +111,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var noopLogger = new NoopLogger();
 			var mockConfig = new MockConfiguration(_logger, secretToken: secretToken, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
-				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
+				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */
+				TestDisplayName);
 
 			// Act
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, mockConfig, payloadSender)))
@@ -142,7 +147,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var noopLogger = new NoopLogger();
 			var mockConfig = new MockConfiguration(_logger, secretToken: secretToken, apiKey: apiKey, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
-				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
+				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */
+				TestDisplayName);
 
 			// Act
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, mockConfig, payloadSender)))
@@ -221,9 +227,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 						yield return new TestArgs
 						{
-							FlushInterval = flushInterval,
-							MaxBatchEventCount = maxBatchEventCount,
-							MaxQueueEventCount = maxQueueEventCount
+							FlushInterval = flushInterval, MaxBatchEventCount = maxBatchEventCount, MaxQueueEventCount = maxQueueEventCount
 						};
 					}
 				}
@@ -259,7 +263,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710,
+				handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
@@ -306,7 +311,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710,
+				handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
@@ -360,7 +366,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
 				var numberOfEventsEnqueuedSuccessfully = 0;
-				for (var txIndex = 1; ; ++txIndex)
+				for (var txIndex = 1;; ++txIndex)
 				{
 					if (EnqueueDummyEvent(payloadSender, agent, txIndex))
 						++numberOfEventsEnqueuedSuccessfully;
@@ -410,7 +416,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710, handler, /* dbgName: */ TestDisplayName);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710,
+				handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
@@ -461,12 +468,25 @@ namespace Elastic.Apm.Tests.BackendCommTests
 				.WithMessage($"*{nameof(PayloadSenderV2)}*");
 		}
 
+		/// <summary>
+		/// Makes sure <see cref="BackendCommComponentBase.Dispose"/> finishes without exception and doesn't cause deadlock.
+		/// </summary>
+		[Fact]
+		public void PayloadSenderV2DisposeTest()
+		{
+			using (var payloadSenderV2 = new PayloadSenderV2(new NoopLogger(), new MockConfiguration(),
+					   Service.GetDefaultService(new MockConfiguration(), new NoopLogger()), new Api.System(),
+					   new ApmServerInfo()))
+				Thread.Sleep(1000);
+		}
+
 		private void CreateSutEnvAndTest(Action<ApmAgent, PayloadSenderV2> doAction)
 		{
 			var configReader = new MockConfiguration(_logger);
 			var mockHttpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 			var service = Service.GetDefaultService(configReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), MockApmServerInfo.Version710, mockHttpMessageHandler
+			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), MockApmServerInfo.Version710,
+				mockHttpMessageHandler
 				, /* dbgName: */ TestDisplayName);
 
 			payloadSender.IsRunning.Should().BeTrue();
