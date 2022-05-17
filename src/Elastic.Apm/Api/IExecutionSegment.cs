@@ -125,8 +125,11 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
-		void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null, bool isExitSpan = false);
+		void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -139,8 +142,11 @@ namespace Elastic.Apm.Api
 		/// <param name="capturedAction">The <see cref="Action" /> that points to the code that you want to capture as a span.</param>
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
-		void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false);
+		void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -158,10 +164,13 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <returns>
 		/// The result of the <paramref name="func" />.
 		/// </returns>
-		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false);
+		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -179,10 +188,13 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <returns>
 		/// The result of the <paramref name="func" />.
 		/// </returns>
-		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false);
+		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -196,8 +208,11 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <returns>The <see cref="Task" /> that you can await on.</returns>
-		Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false);
+		Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -214,8 +229,11 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <returns>The <see cref="Task" /> that you can await on.</returns>
-		Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false);
+		Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -232,9 +250,12 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <typeparam name="T">The return type of the <see cref="Task{T}" /> that you want to capture as span.</typeparam>
 		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
-		Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null, bool isExitSpan = false);
+		Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -252,9 +273,12 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <typeparam name="T">The return type of the <see cref="Task{T}" /> that you want to capture as span.</typeparam>
 		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
-		Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null, bool isExitSpan = false);
+		Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// Ends the item and schedules it to be reported to the APM Server.
@@ -338,8 +362,11 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <param name="isExitSpan">Indicates if this span is an exit span.</param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the one this method creates.</param>
 		/// <returns>Returns the newly created and active span.</returns>
-		ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false);
+		ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// Returns the value of a label.

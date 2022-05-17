@@ -79,7 +79,10 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
-		void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null);
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
+		void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -98,7 +101,10 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
-		void CaptureTransaction(string name, string type, Action action, DistributedTracingData distributedTracingData = null);
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
+		void CaptureTransaction(string name, string type, Action action, DistributedTracingData distributedTracingData = null,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -118,10 +124,13 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
 		/// <returns>
 		/// The result of the <paramref name="func" />.
 		/// </returns>
-		T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, DistributedTracingData distributedTracingData = null);
+		T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, DistributedTracingData distributedTracingData = null,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -141,10 +150,13 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
 		/// <returns>
 		/// The result of the <paramref name="func" />.
 		/// </returns>
-		T CaptureTransaction<T>(string name, string type, Func<T> func, DistributedTracingData distributedTracingData = null);
+		T CaptureTransaction<T>(string name, string type, Func<T> func, DistributedTracingData distributedTracingData = null,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -163,8 +175,11 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
 		/// <returns>A <see cref="Task" /> that can be awaited</returns>
-		Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null);
+		Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -183,8 +198,11 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
 		/// <returns>A <see cref="Task" /> that can be awaited</returns>
-		Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null);
+		Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -204,8 +222,11 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
 		/// <returns>A <see cref="Task{T}" /> that can be awaited</returns>
-		Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null);
+		Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null,
+			IEnumerable<SpanLink> links = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -226,8 +247,10 @@ namespace Elastic.Apm.Api
 		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
 		/// side.
 		/// </param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
 		/// <returns>A <see cref="Task{T}" /> that can be awaited.</returns>
-		Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, DistributedTracingData distributedTracingData = null
+		Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func,
+			DistributedTracingData distributedTracingData = null, IEnumerable<SpanLink> links = null
 		);
 
 		/// <summary>
@@ -247,7 +270,10 @@ namespace Elastic.Apm.Api
 		/// Elastic APM.
 		/// By setting <paramref name="ignoreActivity" /> to <c>false</c> you can turn off this functionality.
 		/// </param>
+		/// <param name="links">Contains a list of <see cref="SpanLink"/> which points to spans associated with the transaction this method creates.</param>
 		/// <returns>The transaction that is created based on the parameters. This transaction is already active.</returns>
-		ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false);
+		ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false,
+			IEnumerable<SpanLink> links = null
+		);
 	}
 }
