@@ -631,6 +631,8 @@ def dotnet(Closure body){
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       withTerraformEnv(version: '0.15.3'){
+        sh 'which terraform || true'
+        sh 'terraform --version || true'
         body()
       }
     }
