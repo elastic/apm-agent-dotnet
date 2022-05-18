@@ -46,9 +46,9 @@ namespace Elastic.Apm.Profiler.Managed
 				if (!skipInstantiation)
 				{
 					_ = Agent.Instance;
-
+#if !NETFRAMEWORK
 					Agent.Subscribe(new Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber());
-				//	Agent.Subscribe(new AspNetCoreDiagnosticSubscriber());
+#endif
 				}
 			}
 			catch
