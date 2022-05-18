@@ -47,6 +47,8 @@ namespace Elastic.Apm.Profiler.Managed
 				{
 					_ = Agent.Instance;
 #if !NETFRAMEWORK
+
+					Logger.Log(LogLevel.Debug, "Activate Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber");
 					Agent.Subscribe(new Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber());
 #endif
 				}

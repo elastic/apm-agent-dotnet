@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -101,7 +101,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			IDictionary<string, string> environmentVariables = null,
 			IDictionary<string, string> msBuildProperties = null,
 			Action<LineOut> onNext = null,
-			Action<Exception> onException = null
+			Action<Exception> onException = null,
+			bool doNotWaitForCompletion = false
 		)
 		{
 			var properties = CreateMsBuildProperties(msBuildProperties);
@@ -141,7 +142,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 
 			_process = new ObservableProcess(arguments);
 			_process.SubscribeLines(onNext ?? (_ => { }), onException ?? (_ => { }));
-			_process.WaitForCompletion(timeout);
+
+			if(!doNotWaitForCompletion)
+				_process.WaitForCompletion(timeout);
 		}
 
 		private static string GetPublishOutputDirectory(string targetFramework, string properties)

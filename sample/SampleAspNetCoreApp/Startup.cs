@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using Elastic.Apm;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.NetCoreAll;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-#if  NET5_0
+#if NET5_0
 using OpenTelemetry;
 using OpenTelemetry.Trace;
 #endif
@@ -62,7 +63,9 @@ namespace SampleAspNetCoreApp
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 #endif
 		{
-			app.UseAllElasticApm(Configuration);
+			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKIP_AGENT_REGISTRATION")))
+				app.UseAllElasticApm(Configuration);
+
 			ConfigureAllExceptAgent(app);
 		}
 
