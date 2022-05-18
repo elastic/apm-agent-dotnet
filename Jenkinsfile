@@ -598,7 +598,7 @@ pipeline {
   }
   post {
     cleanup {
-      //cleanupAzureResources()
+      cleanupAzureResources()
       notifyBuildResult()
     }
   }
