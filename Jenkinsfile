@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-@Library('apm@test/with-terraform') _
+@Library('apm@current') _
 
 pipeline {
   agent { label 'linux && immutable && docker' }
@@ -631,8 +631,6 @@ def dotnet(Closure body){
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       withTerraformEnv(version: '0.15.3'){
-        sh 'which terraform || true'
-        sh 'terraform --version || true'
         body()
       }
     }
