@@ -793,7 +793,6 @@ impl ICorProfilerInfo {
         let mut base_load_address = MaybeUninit::uninit();
         let name_buffer_length = unsafe { name_buffer_length.assume_init() };
         let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
         let mut name_length = MaybeUninit::uninit();
         let mut assembly_id = MaybeUninit::uninit();
         let hr = unsafe {
@@ -809,6 +808,7 @@ impl ICorProfilerInfo {
         match hr {
             S_OK => {
                 let base_load_address = unsafe { base_load_address.assume_init() };
+                unsafe { name_buffer.set_len(name_buffer_length as usize) };
                 let file_name = U16CString::from_vec_with_nul(name_buffer)
                     .unwrap()
                     .to_string_lossy();
@@ -922,7 +922,6 @@ impl ICorProfilerInfo {
 
         let name_buffer_length = unsafe { name_buffer_length.assume_init() };
         let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
         let mut name_length = MaybeUninit::uninit();
         let mut process_id = MaybeUninit::uninit();
         let hr = unsafe {
@@ -936,6 +935,7 @@ impl ICorProfilerInfo {
         };
         match hr {
             S_OK => {
+                unsafe { name_buffer.set_len(name_buffer_length as usize) };
                 let name = U16CString::from_vec_with_nul(name_buffer)
                     .unwrap()
                     .to_string_lossy();
@@ -1034,7 +1034,6 @@ impl ICorProfilerInfo {
 
         let map_buffer_length = unsafe { map_buffer_length.assume_init() };
         let mut map = Vec::<COR_DEBUG_IL_TO_NATIVE_MAP>::with_capacity(map_buffer_length as usize);
-        unsafe { map.set_len(map_buffer_length as usize) };
         let mut map_length = MaybeUninit::uninit();
         let hr = unsafe {
             self.GetILToNativeMapping(
@@ -1068,8 +1067,6 @@ impl ICorProfilerInfo3 {
 
         let file_name_buffer_length = unsafe { file_name_buffer_length.assume_init() };
         let mut file_name_buffer = Vec::<WCHAR>::with_capacity(file_name_buffer_length as usize);
-        unsafe { file_name_buffer.set_len(file_name_buffer_length as usize) };
-
         let mut base_load_address = MaybeUninit::uninit();
         let mut file_name_length = MaybeUninit::uninit();
         let mut assembly_id = MaybeUninit::uninit();
@@ -1092,6 +1089,7 @@ impl ICorProfilerInfo3 {
                 let assembly_id = unsafe { assembly_id.assume_init() };
                 let module_flags = unsafe { module_flags.assume_init() };
                 let module_flags = COR_PRF_MODULE_FLAGS::from_bits(module_flags).unwrap();
+                unsafe { file_name_buffer.set_len(file_name_buffer_length as usize) };
                 let file_name = U16CString::from_vec_with_nul(file_name_buffer)
                     .unwrap()
                     .to_string_lossy();
@@ -1125,8 +1123,6 @@ impl ICorProfilerInfo3 {
         let version_string_buffer_length = unsafe { version_string_buffer_length.assume_init() };
         let mut version_string_buffer =
             Vec::<WCHAR>::with_capacity(version_string_buffer_length as usize);
-        unsafe { version_string_buffer.set_len(version_string_buffer_length as usize) };
-
         let mut clr_instance_id = MaybeUninit::uninit();
         let mut runtime_type = MaybeUninit::uninit();
         let mut major_version = MaybeUninit::uninit();
@@ -1156,6 +1152,7 @@ impl ICorProfilerInfo3 {
                 let minor_version = unsafe { minor_version.assume_init() };
                 let build_number = unsafe { build_number.assume_init() };
                 let qfe_version = unsafe { qfe_version.assume_init() };
+                unsafe { version_string_buffer.set_len(version_string_buffer_length as usize) };
                 let version_string = U16CString::from_vec_with_nul(version_string_buffer)
                     .unwrap()
                     .to_string_lossy();

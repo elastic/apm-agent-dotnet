@@ -389,11 +389,11 @@ impl TargetMethodReference {
     }
 
     pub fn signature_types(&self) -> Option<&[String]> {
-        self.signature_types.as_ref().map(|s| s.as_slice())
+        self.signature_types.as_deref()
     }
 
     pub fn is_valid_for_assembly(&self, assembly_name: &str, version: &Version) -> bool {
-        if &self.assembly != assembly_name {
+        if self.assembly != assembly_name {
             return false;
         }
 
@@ -1363,10 +1363,10 @@ pub struct PublicKey {
 }
 
 impl PublicKey {
-    pub fn new(bytes: Vec<u8>, hash_algorithm: u32) -> Self {
+    pub fn new(bytes: Vec<u8>, hash_algorithm: Option<HashAlgorithmType>) -> Self {
         Self {
             bytes,
-            hash_algorithm: HashAlgorithmType::from_u32(hash_algorithm),
+            hash_algorithm,
         }
     }
 

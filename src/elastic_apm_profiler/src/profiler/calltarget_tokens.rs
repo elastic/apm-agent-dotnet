@@ -491,7 +491,7 @@ impl CallTargetTokens {
         let mut signature = Vec::with_capacity(2 + method_argument_signature.len());
         signature.push(CorCallingConvention::IMAGE_CEE_CS_CALLCONV_GENERICINST.bits());
         signature.push(1);
-        signature.extend_from_slice(&method_argument_signature);
+        signature.extend_from_slice(method_argument_signature);
 
         let default_method_spec = module_metadata
             .emit

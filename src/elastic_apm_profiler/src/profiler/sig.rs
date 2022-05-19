@@ -41,7 +41,7 @@ fn parse_optional_custom_mods(signature: &[u8]) -> Option<usize> {
         if let Some(cor_element_type) = CorElementType::from_u8(signature[idx]) {
             match cor_element_type {
                 CorElementType::ELEMENT_TYPE_CMOD_OPT | CorElementType::ELEMENT_TYPE_CMOD_REQD => {
-                    if let Some(mod_idx) = parse_custom_mod(&signature) {
+                    if let Some(mod_idx) = parse_custom_mod(signature) {
                         idx += mod_idx;
                     } else {
                         return None;
@@ -103,7 +103,7 @@ pub fn parse_number(signature: &[u8]) -> Option<(ULONG, usize)> {
 }
 
 fn parse_return_type(signature: &[u8]) -> Option<usize> {
-    if let Some(mut idx) = parse_optional_custom_mods(&signature) {
+    if let Some(mut idx) = parse_optional_custom_mods(signature) {
         if let Some(cor_element_type) = CorElementType::from_u8(signature[idx]) {
             match cor_element_type {
                 CorElementType::ELEMENT_TYPE_TYPEDBYREF | CorElementType::ELEMENT_TYPE_VOID => {
@@ -173,7 +173,7 @@ fn parse_method(signature: &[u8]) -> Option<usize> {
 }
 
 fn parse_param(signature: &[u8]) -> Option<usize> {
-    if let Some(mut idx) = parse_optional_custom_mods(&signature) {
+    if let Some(mut idx) = parse_optional_custom_mods(signature) {
         if let Some(cor_element_type) = CorElementType::from_u8(signature[idx]) {
             match cor_element_type {
                 CorElementType::ELEMENT_TYPE_TYPEDBYREF => {

@@ -455,7 +455,7 @@ pub fn process_replacement_calls(
 
             if wrapper_method_signature.return_type_is_object() {
                 if let Some(type_token) = return_type_is_value_type_or_generic(
-                    &module_metadata,
+                    module_metadata,
                     target.id,
                     &target.signature,
                 ) {
@@ -591,7 +591,7 @@ pub fn get_wrapper_method_ref(
         })?;
 
     let method_ref = module_wrapper_tokens
-        .get_wrapper_member_ref(&wrapper_method_key)
+        .get_wrapper_member_ref(wrapper_method_key)
         .unwrap_or(mdMemberRefNil);
     let type_ref = module_wrapper_tokens
         .get_wrapper_parent_type_ref(&wrapper_type_key)

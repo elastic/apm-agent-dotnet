@@ -703,7 +703,7 @@ impl Profiler {
                 E_FAIL
             })?;
 
-        let assembly_metadata: AssemblyMetaData = metadata_assembly_import.get_assembly_metadata()?;
+        let assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
         let is_managed_profiler_assembly = assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
 
         log::debug!(
