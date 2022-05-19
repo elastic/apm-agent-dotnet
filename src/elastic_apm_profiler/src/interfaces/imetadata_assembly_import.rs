@@ -334,12 +334,12 @@ impl IMetaDataAssemblyImport {
     // Other Rust abstractions
 
     fn get_locale(&self, assembly_metadata: &mut ASSEMBLYMETADATA) -> Option<String> {
-        if assembly_metadata.szLocale.is_null() {
+        if assembly_metadata.szLocale.is_null() || assembly_metadata.cbLocale == 0 {
             None
         } else {
             unsafe {
                 Some(
-                    U16CString::from_ptr(
+                    U16CString::from_ptr_with_nul(
                         assembly_metadata.szLocale,
                         assembly_metadata.cbLocale as usize,
                     )
