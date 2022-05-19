@@ -303,9 +303,15 @@ pub struct WrapperMethodReference {
     pub(crate) type_name: String,
     #[serde(rename = "method")]
     pub(crate) method_name: Option<String>,
-    pub(crate) action: String,
+    pub(crate) action: WrapperMethodAction,
     #[serde(rename = "signature")]
     pub(crate) method_signature: Option<MethodSignature>,
+}
+
+#[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
+pub enum WrapperMethodAction {
+    CallTargetModification,
+    ReplaceTargetMethod,
 }
 
 impl WrapperMethodReference {
@@ -314,11 +320,7 @@ impl WrapperMethodReference {
     }
 
     pub fn get_method_cache_key(&self) -> String {
-        format!(
-            "[{}]{}",
-            &self.assembly.name,
-            self.full_name(),
-        )
+        format!("[{}]{}", &self.assembly.name, self.full_name(),)
     }
 
     pub fn full_name(&self) -> String {
@@ -1443,6 +1445,7 @@ bitflags! {
 pub mod tests {
     use crate::profiler::types::{
         AssemblyReference, Integration, MethodSignature, PublicKeyToken, Version,
+        WrapperMethodAction,
     };
     use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
 
@@ -1566,7 +1569,7 @@ method_replacements:
             &wrapper.type_name,
             "Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration"
         );
-        assert_eq!(&wrapper.action, "CallTargetModification");
+        assert_eq!(wrapper.action, WrapperMethodAction::CallTargetModification);
 
         Ok(())
     }
