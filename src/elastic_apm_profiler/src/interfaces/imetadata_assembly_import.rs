@@ -272,12 +272,9 @@ impl IMetaDataAssemblyImport {
         let mut name_buffer = Vec::<WCHAR>::with_capacity(MAX_LENGTH as usize);
         let mut name_length = 0;
         let mut public_key = MaybeUninit::uninit();
-        // NOTE: null_mut() default values on ASSEMBLYMETADATA will not populated.
-        // This is not an issue now, but would be if AssemblyMetaData were to expose these values
         let mut assembly_metadata = ASSEMBLYMETADATA::default();
-        let mut sz_locale: *mut WCHAR = ptr::null_mut();
-        assembly_metadata.szLocale = (&mut sz_locale as *mut *mut WCHAR) as *mut WCHAR;
-
+        let sz_locale = U16CString::default();
+        assembly_metadata.szLocale = sz_locale.into_raw();
         let mut public_key_length = 0;
         let mut assembly_flags = 0;
 
@@ -307,6 +304,7 @@ impl IMetaDataAssemblyImport {
 
         let public_key = self.get_public_key(public_key, public_key_length as usize);
         let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
+        let _ = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
         let locale = self.get_locale(&mut assembly_metadata);
 
         Ok(AssemblyMetaData {
