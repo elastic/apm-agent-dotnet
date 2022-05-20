@@ -421,7 +421,7 @@ namespace Elastic.Apm.Model
 
 				if (Configuration.SpanCompressionEnabled)
 				{
-					if (!IsCompressionEligible())
+					if (!IsCompressionEligible() || _parentSpan is { _isEnded: true })
 					{
 						if (buffered != null)
 						{
