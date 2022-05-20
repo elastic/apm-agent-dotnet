@@ -212,6 +212,51 @@ namespace Elastic.Apm.Tests
 			(payloadSender.Spans[1] as Span)!.Composite.Should().BeNull();
 		}
 
+		/// <summary>
+		/// From https://github.com/elastic/apm-agent-dotnet/issues/1686
+		/// Creates a child span which is eligible for compression, but ends after it parent already ended.
+		/// The test makes sure we don't compress such spans.
+		/// Compressing such spans would mean we'd never send such spans, since the parent ends before we compress those.
+		/// </summary>
+		[Fact]
+		public void CompressEligibleSpanAfterParenEnded()
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
+						   exitSpanMinDuration: "0"))))
+			{
+				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
+				{
+					var parentSpan = t.StartSpan("foo1", "bar");
+
+					parentSpan.End();
+					for (var i = 0; i < 10; i++)
+					{
+						var childSpan = parentSpan.StartSpan("Select * From Table1", ApiConstants.TypeDb, ApiConstants.SubtypeMssql,
+							isExitSpan: true);
+						childSpan.Context.Db = new Database() { Type = "mssql", Instance = "01" };
+						childSpan.End();
+					}
+
+
+				});
+			}
+
+			// The manifestation of not implementing issues/1686 is to only have the parent span and skipping the children
+			// Which in the test case means only a single span.
+			payloadSender.Spans.Count.Should().NotBe(1);
+
+			payloadSender.Spans.Count.Should().Be(11);
+			payloadSender.Spans.Where(s =>
+			{
+				if(s is Span realSpan)
+					return realSpan.Composite != null;
+
+				return false;
+			}).Should().BeNullOrEmpty();
+		}
+
 		private void Generate10DbCalls(IApmAgent agent, string spanName, bool shouldSleep = false, int spanDuration = 10) =>
 			agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 			{
