@@ -243,6 +243,10 @@ namespace Elastic.Apm.Tests
 				});
 			}
 
+			// The manifestation of not implementing issues/1686 is to only have the parent span and skipping the children
+			// Which in the test case means only a single span.
+			payloadSender.Spans.Count.Should().NotBe(1);
+
 			payloadSender.Spans.Count.Should().Be(11);
 			payloadSender.Spans.Where(s =>
 			{
