@@ -315,10 +315,9 @@ impl WrapperMethodReference {
 
     pub fn get_method_cache_key(&self) -> String {
         format!(
-            "[{}]{}.{}",
+            "[{}]{}",
             &self.assembly.name,
-            &self.type_name,
-            self.method_name.as_ref().map_or("", |m| m.as_str()),
+            self.full_name(),
         )
     }
 
@@ -326,7 +325,7 @@ impl WrapperMethodReference {
         format!(
             "{}.{}",
             &self.type_name,
-            self.method_name.as_ref().map_or("", |m| m.as_str())
+            self.method_name.as_deref().unwrap_or("")
         )
     }
 }

@@ -151,7 +151,7 @@ pub fn process_replacement_calls(
                     log::warn!(
                         "JITCompilationStarted failed to obtain wrapper method ref for {}.{}(). function_id={}, function_token={}, name={}()",
                         &wrapper.type_name,
-                        wrapper.method_name.as_ref().map_or("", |m| m.as_str()),
+                        wrapper.method_name.as_deref().unwrap_or(""),
                         function_id,
                         function_token,
                         caller.full_name()
@@ -585,7 +585,7 @@ pub fn get_wrapper_method_ref(
             log::warn!(
                 "JITCompilationStarted: failed to store wrapper method ref for {}.{}()",
                 &wrapper.type_name,
-                wrapper.method_name.as_ref().map_or("", |m| m.as_str())
+                wrapper.method_name.as_deref().unwrap_or("")
             );
             e
         })?;
