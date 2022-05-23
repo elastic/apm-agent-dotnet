@@ -365,7 +365,9 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                         withAzureCredentials(path: "${HOME}", credentialsFile: '.credentials.json') {
-                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                          withTerraformEnv(version: '0.15.3') {
+                            bat(label: 'Test & coverage', script: '.ci/windows/test.bat')
+                          }
                         }
                       }
                     }
@@ -628,7 +630,7 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '6.0.100'
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
-      withTerraform(){
+      withTerraformEnv(version: '0.15.3'){
         body()
       }
     }
@@ -656,21 +658,6 @@ def cleanupAzureResources(){
                 script: "for group in `${dockerCmd} az group list --query \"[?name | starts_with(@,'${AZURE_RESOURCE_GROUP_PREFIX}')]\" --out json|jq .[].name --raw-output`;do ${dockerCmd} az group delete --name \$group --no-wait --yes;done"
         }
     }
-}
-
-def withTerraform(Closure body){
-  def binDir = "${HOME}/bin"
-  withEnv([
-    "PATH+TERRAFORM=${binDir}"
-    ]){
-      sh(label:'Install Terraform', script: """
-        mkdir -p ${binDir}
-        cd ${binDir}
-        curl -sSL -o terraform.zip https://releases.hashicorp.com/terraform/0.15.3/terraform_0.15.3_linux_amd64.zip
-        unzip terraform.zip
-      """)
-      body()
-  }
 }
 
 def release(Map args = [:]){
