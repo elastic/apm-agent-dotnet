@@ -182,6 +182,26 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender.Transactions.Should().HaveCount(1);
 		}
 
+		/// <summary>
+		/// See https://github.com/elastic/apm-agent-dotnet/issues/1533
+		/// If a URL matches a route, but the controller method returns e.g. HTTP 404,
+		/// the method name should be the real route and not "unknown route".
+		/// </summary>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task Http404WithValidRoute(bool diagnosticSourceOnly)
+		{
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
+			await httpClient.GetAsync("api/Home/ReturnNotFound/42");
+
+			_payloadSender.WaitForTransactions();
+			_payloadSender.Transactions.Should().HaveCount(1);
+			_payloadSender.FirstTransaction.Name.Should().Be("GET Home/ReturnNotFound {id}");
+
+			_payloadSender.FirstTransaction.Context.Response.StatusCode.Should().Be(404);
+		}
+
 		public void Dispose()
 		{
 			_agent?.Dispose();

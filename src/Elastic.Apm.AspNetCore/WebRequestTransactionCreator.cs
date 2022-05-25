@@ -193,14 +193,14 @@ namespace Elastic.Apm.AspNetCore
 					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
 					var routeData = context.GetRouteData()?.Values;
 
-					if (routeData != null && context.Response.StatusCode != StatusCodes.Status404NotFound)
+					if (routeData.Count > 0)
 					{
 						logger?.Trace()?.Log("Calculating transaction name based on route data");
 						var name = Transaction.GetNameFromRouteContext(routeData);
 
 						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
 					}
-					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
+					else
 					{
 						logger?.Trace()
 							?
