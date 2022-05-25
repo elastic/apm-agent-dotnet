@@ -284,6 +284,10 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
+		[HttpGet]
+		[Route("api/Home/ReturnNotFound/{id}")]
+		public ActionResult ReturnNotFound(int id) => NotFound();
+
 		/// <summary>
 		/// From: https://github.com/elastic/apm-agent-dotnet/issues/1571#issuecomment-984520076
 		/// </summary>
