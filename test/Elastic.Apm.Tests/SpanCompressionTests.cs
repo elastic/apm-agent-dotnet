@@ -37,18 +37,19 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Makes sure if no config is set, span compression is disabled
+		/// Makes sure if no config is set, span compression is enabled
+		/// The default changed in https://github.com/elastic/apm-agent-dotnet/issues/1662
 		/// </summary>
 		[Fact]
-		public void DisabledByDefault()
+		public void EnabledByDefault()
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) Generate10DbCalls(agent, spanName, true, 2);
 
 			payloadSender.Transactions.Should().HaveCount(1);
-			payloadSender.Spans.Should().HaveCount(10);
-			payloadSender.Spans.Where(s => (s as Span).Composite != null).Should().BeEmpty();
+			payloadSender.Spans.Should().HaveCount(1);
+			payloadSender.Spans.Where(s => (s as Span).Composite != null).Should().NotBeEmpty();
 		}
 
 		/// <summary>
