@@ -125,9 +125,10 @@ Feature: OpenTelemetry bridge
     Then Elastic bridged span type is 'external'
     Then Elastic bridged span subtype is 'http'
     Then Elastic bridged span OTel attributes are copied as-is
-    Then Elastic bridged span destination resource is set to "<resource>"
+    Then Elastic bridged span destination resource is set to "<target_service_name>"
+    Then Elastic bridged span service target type is 'http' and name is "<target_service_name>"
     Examples:
-      | http.url                      | http.scheme | http.host       | net.peer.ip | net.peer.name | net.peer.port | resource             |
+      | http.url                      | http.scheme | http.host       | net.peer.ip | net.peer.name | net.peer.port | target_service_name  |
       | https://testing.invalid:8443/ |             |                 |             |               |               | testing.invalid:8443 |
       | https://[::1]/                |             |                 |             |               |               | [::1]:443            |
       | http://testing.invalid/       |             |                 |             |               |               | testing.invalid:80   |
@@ -155,16 +156,17 @@ Feature: OpenTelemetry bridge
     Then Elastic bridged span subtype is "<db.system>"
     Then Elastic bridged span OTel attributes are copied as-is
     Then Elastic bridged span destination resource is set to "<resource>"
+    Then Elastic bridged span service target type is "<db.system>" and name is "<target_service_name>"
     Examples:
-      | db.system | db.name | net.peer.ip | net.peer.name | net.peer.port | resource           |
-      | mysql     |         |             |               |               | mysql              |
-      | oracle    |         |             | oracledb      |               | oracledb           |
-      | oracle    |         | 127.0.0.1   |               |               | 127.0.0.1          |
-      | mysql     |         | 127.0.0.1   | dbserver      | 3307          | dbserver:3307      |
-      | mysql     | myDb    |             |               |               | mysql/myDb         |
-      | oracle    | myDb    |             | oracledb      |               | oracledb/myDb      |
-      | oracle    | myDb    | 127.0.0.1   |               |               | 127.0.0.1/myDb     |
-      | mysql     | myDb    | 127.0.0.1   | dbserver      | 3307          | dbserver:3307/myDb |
+      | db.system | db.name | net.peer.ip | net.peer.name | net.peer.port | resource    | target_service_name |
+      | mysql     |         |             |               |               | mysql       |                     |
+      | oracle    |         |             | oracledb      |               | oracle      |                     |
+      | oracle    |         | 127.0.0.1   |               |               | oracle      |                     |
+      | mysql     |         | 127.0.0.1   | dbserver      | 3307          | mysql       |                     |
+      | mysql     | myDb    |             |               |               | mysql/myDb  | myDb                |
+      | oracle    | myDb    |             | oracledb      |               | oracle/myDb | myDb                |
+      | oracle    | myDb    | 127.0.0.1   |               |               | oracle/myDb | myDb                |
+      | mysql     | myDb    | 127.0.0.1   | dbserver      | 3307          | mysql/myDb  | myDb                |
 
   # --- Messaging consumer (transaction consuming/receiving a message)
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md
@@ -194,16 +196,17 @@ Feature: OpenTelemetry bridge
     Then Elastic bridged span subtype is "<messaging.system>"
     Then Elastic bridged span OTel attributes are copied as-is
     Then Elastic bridged span destination resource is set to "<resource>"
+    Then Elastic bridged span service target type is "<messaging.system>" and name is "<target_service_name>"
     Examples:
-      | messaging.system | messaging.destination | messaging.url         | net.peer.ip | net.peer.name | net.peer.port | resource                   |
-      | rabbitmq         |                       | amqp://carrot:4444/q1 |             |               |               | carrot:4444                |
-      | rabbitmq         |                       |                       | 127.0.0.1   | carrot-server | 7777          | carrot-server:7777         |
-      | rabbitmq         |                       |                       |             | carrot-server |               | carrot-server              |
-      | rabbitmq         |                       |                       | 127.0.0.1   |               |               | 127.0.0.1                  |
-      | rabbitmq         | myQueue               | amqp://carrot:4444/q1 |             |               |               | carrot:4444/myQueue        |
-      | rabbitmq         | myQueue               |                       | 127.0.0.1   | carrot-server | 7777          | carrot-server:7777/myQueue |
-      | rabbitmq         | myQueue               |                       |             | carrot-server |               | carrot-server/myQueue      |
-      | rabbitmq         | myQueue               |                       | 127.0.0.1   |               |               | 127.0.0.1/myQueue          |
+      | messaging.system | messaging.destination | messaging.url         | net.peer.ip | net.peer.name | net.peer.port | resource         | target_service_name |
+      | rabbitmq         |                       | amqp://carrot:4444/q1 |             |               |               | rabbitmq         |                     |
+      | rabbitmq         |                       |                       | 127.0.0.1   | carrot-server | 7777          | rabbitmq         |                     |
+      | rabbitmq         |                       |                       |             | carrot-server |               | rabbitmq         |                     |
+      | rabbitmq         |                       |                       | 127.0.0.1   |               |               | rabbitmq         |                     |
+      | rabbitmq         | myQueue               | amqp://carrot:4444/q1 |             |               |               | rabbitmq/myQueue | myQueue             |
+      | rabbitmq         | myQueue               |                       | 127.0.0.1   | carrot-server | 7777          | rabbitmq/myQueue | myQueue             |
+      | rabbitmq         | myQueue               |                       |             | carrot-server |               | rabbitmq/myQueue | myQueue             |
+      | rabbitmq         | myQueue               |                       | 127.0.0.1   |               |               | rabbitmq/myQueue | myQueue             |
 
   # --- RPC client
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md
@@ -222,15 +225,16 @@ Feature: OpenTelemetry bridge
     Then Elastic bridged span subtype is "<rpc.system>"
     Then Elastic bridged span OTel attributes are copied as-is
     Then Elastic bridged span destination resource is set to "<resource>"
+    Then Elastic bridged span service target type is "<rpc.system>" and name is "<target_service_name>"
     Examples:
-      | rpc.system | rpc.service | net.peer.ip | net.peer.name | net.peer.port | resource                  |
-      | grpc       |             |             |               |               | grpc                      |
-      | grpc       | myService   |             |               |               | grpc/myService            |
-      | grpc       | myService   |             | rpc-server    |               | rpc-server/myService      |
-      | grpc       | myService   | 127.0.0.1   | rpc-server    |               | rpc-server/myService      |
-      | grpc       |             | 127.0.0.1   | rpc-server    | 7777          | rpc-server:7777           |
-      | grpc       | myService   | 127.0.0.1   | rpc-server    | 7777          | rpc-server:7777/myService |
-      | grpc       | myService   | 127.0.0.1   |               | 7777          | 127.0.0.1:7777/myService  |
+      | rpc.system | rpc.service | net.peer.ip | net.peer.name | net.peer.port | resource        | target_service_name |
+      | grpc       |             |             |               |               | grpc            |                     |
+      | grpc       | myService   |             |               |               | myService       | myService           |
+      | grpc       | myService   |             | rpc-server    |               | rpc-server      | rpc-server          |
+      | grpc       | myService   | 127.0.0.1   | rpc-server    |               | rpc-server      | rpc-server          |
+      | grpc       |             | 127.0.0.1   | rpc-server    | 7777          | rpc-server:7777 | rpc-server:7777     |
+      | grpc       | myService   | 127.0.0.1   | rpc-server    | 7777          | rpc-server:7777 | rpc-server:7777     |
+      | grpc       | myService   | 127.0.0.1   |               | 7777          | 127.0.0.1:7777  | 127.0.0.1:7777      |
 
   # --- RPC server
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md
@@ -241,3 +245,4 @@ Feature: OpenTelemetry bridge
       | rpc.system | grpc |
     And OTel span ends
     Then Elastic bridged transaction type is 'request'
+
