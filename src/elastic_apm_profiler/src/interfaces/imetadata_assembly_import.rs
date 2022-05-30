@@ -329,14 +329,29 @@ impl IMetaDataAssemblyImport {
             None
         } else {
             unsafe {
-                Some(
-                    U16CString::from_ptr_with_nul(
-                        assembly_metadata.szLocale,
-                        assembly_metadata.cbLocale as usize,
+                if *assembly_metadata
+                    .szLocale
+                    .offset(assembly_metadata.cbLocale as isize - 1)
+                    == 0
+                {
+                    Some(
+                        U16CString::from_ptr_with_nul(
+                            assembly_metadata.szLocale,
+                            assembly_metadata.cbLocale as usize,
+                        )
+                        .unwrap()
+                        .to_string_lossy(),
                     )
-                    .unwrap()
-                    .to_string_lossy(),
-                )
+                } else {
+                    Some(
+                        U16CString::from_ptr(
+                            assembly_metadata.szLocale,
+                            assembly_metadata.cbLocale as usize,
+                        )
+                        .unwrap()
+                        .to_string_lossy(),
+                    )
+                }
             }
         }
     }
