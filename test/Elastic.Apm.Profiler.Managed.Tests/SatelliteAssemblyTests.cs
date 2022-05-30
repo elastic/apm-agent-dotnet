@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -39,6 +39,7 @@ public class SatelliteAssemblyTests
 				["ELASTIC_APM_DISABLE_METRICS"] = "*",
 				["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout",
 				["ELASTIC_APM_PROFILER_LOG"] = "debug",
+				["RUST_BACKTRACE"] = "1"
 			};
 
 			profiledApplication.Start(
