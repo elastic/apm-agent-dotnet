@@ -24,7 +24,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			Environment = environment;
 			var logger = new XUnitLogger(LogLevel.Trace, output);
 			_sender = new MockPayloadSender(logger);
-			Agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: _sender));
+			Agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: _sender, configuration: new MockConfiguration(spanCompressionEnabled: "false")));
 			Agent.Subscribe(new AzureBlobStorageDiagnosticsSubscriber());
 		}
 
