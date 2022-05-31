@@ -200,7 +200,7 @@ namespace Elastic.Apm.AspNetCore
 
 						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
 					}
-					else
+					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
 					{
 						logger?.Trace()
 							?
