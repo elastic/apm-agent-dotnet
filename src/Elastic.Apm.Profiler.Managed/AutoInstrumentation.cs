@@ -51,6 +51,8 @@ namespace Elastic.Apm.Profiler.Managed
 					Logger.Log(LogLevel.Debug, "Activate Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber");
 					Agent.Subscribe(new Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber());
 #endif
+					Logger.Log(LogLevel.Debug, "Activate Elastic.Apm.DiagnosticSource.HttpDiagnosticsSubscriber");
+					Agent.Subscribe(new Elastic.Apm.DiagnosticSource.HttpDiagnosticsSubscriber());
 				}
 			}
 			catch

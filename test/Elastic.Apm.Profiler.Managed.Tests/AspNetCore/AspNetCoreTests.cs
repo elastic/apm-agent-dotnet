@@ -21,6 +21,12 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 
 		public AspNetCoreTests(ITestOutputHelper output) => _output = output;
 
+		/// <summary>
+		/// Runs SampleAspNetCoreApp by injecting the agent purely based on the profiler
+		/// It calls /home/index which generates: 1) a transaction 2) db spans 3) http span
+		/// Makes sure the expected transaction and spans are sent to APM Server
+		/// </summary>
+		/// <param name="framework"></param>
 		[Theory]
 		[InlineData("net5.0")]
 		public async void AspNetCoreTest(string framework)
@@ -74,6 +80,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 			apmServer.ReceivedData.Spans.Should().HaveCountGreaterOrEqualTo(1);
 
 			apmServer.ReceivedData.Spans.Any(span => span.Context.Db != null).Should().BeTrue();
+			apmServer.ReceivedData.Spans.Any(span => span.Context.Http != null).Should().BeTrue();
 
 		}
 	}
