@@ -15,18 +15,13 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 {
-	public class AspNetCoreTests : IClassFixture<MySqlFixture>
+	public class AspNetCoreTests 
 	{
-		private readonly MySqlFixture _fixture;
 		private readonly ITestOutputHelper _output;
 
-		public AspNetCoreTests(MySqlFixture fixture, ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_output = output;
-		}
+		public AspNetCoreTests(ITestOutputHelper output) => _output = output;
 
-		[DockerTheory]
+		[Theory]
 		[InlineData("net5.0")]
 		public async void AspNetCoreTest(string framework)
 		{
@@ -35,17 +30,19 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			var ignoreTopic = "ignore-topic";
 			using (var profiledApplication = new ProfiledApplication("SampleAspNetCoreApp"))
 			{
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
+					["ELASTIC_APM_LOG_LEVEL"] = "Trace",
 					["SKIP_AGENT_REGISTRATION"] = "true"
 				};
 
+				// waiting for the "application started" log and make sure we send the http request after the app is running
 				var waitForAppStart = new AutoResetEvent(false);
-
+				// wait for the log that events are sent to server
+				var waitForEventsSentToServer = new AutoResetEvent(false);
 
 				profiledApplication.Start(
 					framework,
@@ -57,6 +54,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 						_output.WriteLine(line.Line);
 						if(line.Line.ToLower().Contains("application started"))
 							waitForAppStart.Set();
+						if(line.Line.ToLower().Contains("sent items to server:") && line.Line.ToLower().Contains("transaction"))
+							waitForEventsSentToServer.Set();
 					},
 					exception => _output.WriteLine($"{exception}"),
 					true);
@@ -67,9 +66,15 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 				var result = await httpClient.GetAsync("http://localhost:5000/home/index");
 				result.IsSuccessStatusCode.Should().BeTrue();
 				await result.Content.ReadAsStringAsync();
+
+				waitForEventsSentToServer.WaitOne(TimeSpan.FromSeconds(30));
 			}
 
-			apmServer.ReceivedData.Transactions.Should().HaveCount(1);
+			apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
+			apmServer.ReceivedData.Spans.Should().HaveCountGreaterOrEqualTo(1);
+
+			apmServer.ReceivedData.Spans.Any(span => span.Context.Db != null).Should().BeTrue();
+
 		}
 	}
 }
