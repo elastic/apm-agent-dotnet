@@ -64,7 +64,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 							waitForEventsSentToServer.Set();
 					},
 					exception => _output.WriteLine($"{exception}"),
-					true);
+					true, true);
 
 				waitForAppStart.WaitOne(TimeSpan.FromSeconds(30));
 

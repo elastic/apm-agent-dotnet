@@ -73,7 +73,6 @@ namespace SampleAspNetCoreApp
 		{
 			app.UseDeveloperExceptionPage();
 
-			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 

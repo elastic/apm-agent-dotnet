@@ -102,7 +102,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			IDictionary<string, string> msBuildProperties = null,
 			Action<LineOut> onNext = null,
 			Action<Exception> onException = null,
-			bool doNotWaitForCompletion = false
+			bool doNotWaitForCompletion = false,
+			bool useLocalhostHttp5000 = false
 		)
 		{
 			var properties = CreateMsBuildProperties(msBuildProperties);
@@ -135,7 +136,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			// use the .exe for net461
 			var arguments = targetFramework == "net461"
 				? new StartArguments(Path.Combine(workingDirectory, $"{_projectName}.exe"))
-				: new StartArguments("dotnet", $"{_projectName}.dll");
+				: useLocalhostHttp5000 ? new StartArguments("dotnet", $"{_projectName}.dll", "--urls", "http://localhost:5000") : new StartArguments("dotnet", $"{_projectName}.dll");
 
 			arguments.Environment = environmentVariables;
 			arguments.WorkingDirectory = workingDirectory;
