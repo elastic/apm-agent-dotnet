@@ -149,14 +149,8 @@ impl IMetaDataAssemblyImport {
         }
 
         let mut name_buffer = Vec::<WCHAR>::with_capacity(name_len as usize);
-        let l = if assembly_metadata.cbLocale != 0 {
-            let locale_len = assembly_metadata.cbLocale as usize;
-            let mut locale_buffer = Vec::<WCHAR>::with_capacity(locale_len);
-            assembly_metadata.szLocale = locale_buffer.as_mut_ptr();
-            Some(locale_buffer)
-        } else {
-            None
-        };
+        let sz_locale = U16CString::default();
+        assembly_metadata.szLocale = sz_locale.into_raw();
         let mut assembly_flags = 0;
         let mut hash_algorithm = 0;
         let mut public_key = MaybeUninit::uninit();
@@ -184,11 +178,7 @@ impl IMetaDataAssemblyImport {
                     .to_string_lossy();
                 let public_key = self.get_public_key(public_key, public_key_len as usize);
                 let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
-                unsafe {
-                    if let Some(mut v) = l {
-                        v.set_len(assembly_metadata.cbLocale as usize);
-                    }
-                }
+                let sz_locale = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
                 let locale = self.get_locale(&mut assembly_metadata);
 
                 Ok(AssemblyMetaData {
@@ -304,7 +294,7 @@ impl IMetaDataAssemblyImport {
 
         let public_key = self.get_public_key(public_key, public_key_length as usize);
         let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
-        let _ = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
+        let sz_locale = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
         let locale = self.get_locale(&mut assembly_metadata);
 
         Ok(AssemblyMetaData {
