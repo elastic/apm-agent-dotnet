@@ -117,7 +117,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		private static void HttpVersionAssertValid(this string thisObj)
 		{
 			thisObj.NonEmptyAssertValid();
-			thisObj.Should().BeOneOf("1.0", "1.1", "2.0");
+			thisObj.Should().BeOneOf("1.0", "1.1", "2.0", "2");
 		}
 
 		private static void HttpMethodAssertValid(this string thisObj)
