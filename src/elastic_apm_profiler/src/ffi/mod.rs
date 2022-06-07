@@ -615,6 +615,8 @@ pub struct ASSEMBLYMETADATA {
 }
 impl Default for ASSEMBLYMETADATA {
     fn default() -> Self {
+        // NOTE: null_mut() default values on ASSEMBLYMETADATA will not be populated.
+        // This is not an issue now, but would be if AssemblyMetaData were to expose these values
         Self {
             usMajorVersion: 0,
             usMinorVersion: 0,
