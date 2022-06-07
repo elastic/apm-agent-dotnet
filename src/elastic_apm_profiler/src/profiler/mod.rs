@@ -707,9 +707,10 @@ impl Profiler {
         let is_managed_profiler_assembly = assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
 
         log::debug!(
-            "AssemblyLoadFinished: name={}, version={}",
+            "AssemblyLoadFinished: name={}, version={}, culture={}",
             &assembly_metadata.name,
-            &assembly_metadata.version
+            &assembly_metadata.version,
+            &assembly_metadata.locale.as_deref().unwrap_or("neutral")
         );
 
         if is_managed_profiler_assembly {

@@ -24,7 +24,7 @@ namespace Elastic.Apm.Tests
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
 					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s"))))
 				Generate10DbCalls(agent, spanName);
 
@@ -37,18 +37,34 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Makes sure if no config is set, span compression is disabled
+		/// Makes sure if no config is set, span compression is enabled
+		/// The default changed in https://github.com/elastic/apm-agent-dotnet/issues/1662
 		/// </summary>
 		[Fact]
-		public void DisabledByDefault()
+		public void EnabledByDefaultOn80()
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) Generate10DbCalls(agent, spanName, true, 2);
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender))) Generate10DbCalls(agent, spanName, true, 2);
+
+			payloadSender.Transactions.Should().HaveCount(1);
+			payloadSender.Spans.Should().HaveCount(1);
+			payloadSender.Spans.Where(s => (s as Span).Composite != null).Should().NotBeEmpty();
+		}
+
+		/// <summary>
+		/// Makes sure that agents connected to older than APM Server 8.0 don't send composite spans
+		/// </summary>
+		[Fact]
+		public void NoCompositeOnPre80Versions()
+		{
+			var spanName = "Select * From Table";
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version710, payloadSender: payloadSender))) Generate10DbCalls(agent, spanName, true, 2);
 
 			payloadSender.Transactions.Should().HaveCount(1);
 			payloadSender.Spans.Should().HaveCount(10);
-			payloadSender.Spans.Where(s => (s as Span).Composite != null).Should().BeEmpty();
+			payloadSender.Spans.Where(s => (s as Span).Composite != null).Should().BeNullOrEmpty();
 		}
 
 		/// <summary>
@@ -58,7 +74,7 @@ namespace Elastic.Apm.Tests
 		public void BasicDbCallsWithSameKind()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
 					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "15s",
 						   spanCompressionExactMatchMaxDuration: "100ms", exitSpanMinDuration: "0"))))
 				Generate10DbCalls(agent, null, true, 200);
@@ -79,7 +95,7 @@ namespace Elastic.Apm.Tests
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
 					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
 						   exitSpanMinDuration: "0"))))
 			{
@@ -128,7 +144,7 @@ namespace Elastic.Apm.Tests
 		public void CompressionOnParentSpan()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
 					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
 						   exitSpanMinDuration: "0"))))
 			{
@@ -210,6 +226,51 @@ namespace Elastic.Apm.Tests
 			payloadSender.Spans.Count.Should().Be(2);
 			(payloadSender.Spans[0] as Span)!.Composite.Should().BeNull();
 			(payloadSender.Spans[1] as Span)!.Composite.Should().BeNull();
+		}
+
+		/// <summary>
+		/// From https://github.com/elastic/apm-agent-dotnet/issues/1686
+		/// Creates a child span which is eligible for compression, but ends after it parent already ended.
+		/// The test makes sure we don't compress such spans.
+		/// Compressing such spans would mean we'd never send such spans, since the parent ends before we compress those.
+		/// </summary>
+		[Fact]
+		public void CompressEligibleSpanAfterParenEnded()
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
+						   exitSpanMinDuration: "0"))))
+			{
+				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
+				{
+					var parentSpan = t.StartSpan("foo1", "bar");
+
+					parentSpan.End();
+					for (var i = 0; i < 10; i++)
+					{
+						var childSpan = parentSpan.StartSpan("Select * From Table1", ApiConstants.TypeDb, ApiConstants.SubtypeMssql,
+							isExitSpan: true);
+						childSpan.Context.Db = new Database() { Type = "mssql", Instance = "01" };
+						childSpan.End();
+					}
+
+
+				});
+			}
+
+			// The manifestation of not implementing issues/1686 is to only have the parent span and skipping the children
+			// Which in the test case means only a single span.
+			payloadSender.Spans.Count.Should().NotBe(1);
+
+			payloadSender.Spans.Count.Should().Be(11);
+			payloadSender.Spans.Where(s =>
+			{
+				if(s is Span realSpan)
+					return realSpan.Composite != null;
+
+				return false;
+			}).Should().BeNullOrEmpty();
 		}
 
 		private void Generate10DbCalls(IApmAgent agent, string spanName, bool shouldSleep = false, int spanDuration = 10) =>

@@ -79,6 +79,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				? new Dictionary<string, string>()
 				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
 			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
+			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.SpanCompressionEnabled, "false");
 
 			if (_sampleAppLogEnabled) EnvVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
 

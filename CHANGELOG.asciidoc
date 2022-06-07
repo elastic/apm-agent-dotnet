@@ -23,6 +23,18 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+
+[[release-notes-1.16.0]]
+==== 1.16.0
+
+[float]
+===== Features
+- {pull}1726[#1726] Automatic capturing of incoming HTTP Requests on ASP.NET Core with the Profiler based agent (issue: {issue}1610[#1610]).
+
+===== Bug fixes
+- {pull}1725[#1725] By disabling `system.cpu.total.norm.pct`, the agent won't create any instance of the `PerformanceCounter` type (workaround for issue: {issue}1724[#1724])
+- {pull}1723[#1723] Transaction names for incoming HTTP requests returning 404 but matching a valid route, will include the URL path instead of using `unknown route` (issue: {issue}1715[#1715]).
+
 [[release-notes-1.15.0]]
 ==== 1.15.0
 

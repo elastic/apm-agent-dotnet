@@ -4,7 +4,10 @@
 // See the LICENSE file in the project root for more information
 
 use core::{ptr, slice};
-use std::{ffi::c_void, mem::MaybeUninit};
+use std::{
+    ffi::c_void,
+    mem::MaybeUninit,
+};
 
 use com::{
     interfaces::iunknown::IUnknown,
@@ -612,7 +615,6 @@ impl IMetaDataImport {
 
         let name_buffer_length = unsafe { name_buffer_length.assume_init() };
         let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
         let mut name_length = MaybeUninit::uninit();
         let mut class_token = MaybeUninit::uninit();
         let mut pb_sig_blob = MaybeUninit::uninit();
@@ -634,6 +636,7 @@ impl IMetaDataImport {
             return Err(hr);
         }
 
+        unsafe { name_buffer.set_len(name_buffer_length as usize) };
         let class_token = unsafe { class_token.assume_init() };
         let name = U16CString::from_vec_with_nul(name_buffer)
             .unwrap()
@@ -682,7 +685,6 @@ impl IMetaDataImport {
 
         let name_buffer_length = unsafe { name_buffer_length.assume_init() };
         let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
         let mut name_length = MaybeUninit::uninit();
         let mut class_token = MaybeUninit::uninit();
         let mut pdw_attr = MaybeUninit::uninit();
@@ -716,6 +718,7 @@ impl IMetaDataImport {
             return Err(hr);
         }
 
+        unsafe { name_buffer.set_len(name_buffer_length as usize) };
         let name = U16CString::from_vec_with_nul(name_buffer)
             .unwrap()
             .to_string_lossy();
@@ -726,7 +729,7 @@ impl IMetaDataImport {
         let signature = unsafe {
             let ppv_sig_blob = ppv_sig_blob.assume_init();
             let pcb_sig_blob = pcb_sig_blob.assume_init();
-            std::slice::from_raw_parts(ppv_sig_blob, pcb_sig_blob as usize).to_vec()
+            slice::from_raw_parts(ppv_sig_blob, pcb_sig_blob as usize).to_vec()
         };
         let pul_code_rva = unsafe { pul_code_rva.assume_init() };
         let value_len = unsafe { value_len.assume_init() };
@@ -755,14 +758,14 @@ impl IMetaDataImport {
 
     /// Gets the metadata associated with the method referenced by the specified MethodDef token.
     pub fn get_method_props(&self, mb: mdMethodDef) -> Result<MethodProps, HRESULT> {
-        let mut name_buffer_length = MaybeUninit::uninit();
+        let mut name_len = 0;
         unsafe {
             self.GetMethodProps(
                 mb,
                 ptr::null_mut(),
                 ptr::null_mut(),
                 0,
-                name_buffer_length.as_mut_ptr(),
+                &mut name_len,
                 ptr::null_mut(),
                 ptr::null_mut(),
                 ptr::null_mut(),
@@ -772,10 +775,7 @@ impl IMetaDataImport {
         };
 
         let mut class_token = MaybeUninit::uninit();
-        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
-        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
-        let mut name_length = MaybeUninit::uninit();
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_len as usize);
         let mut attr_flags = MaybeUninit::uninit();
         let mut sig = MaybeUninit::uninit();
         let mut sig_length = MaybeUninit::uninit();
@@ -786,8 +786,8 @@ impl IMetaDataImport {
                 mb,
                 class_token.as_mut_ptr(),
                 name_buffer.as_mut_ptr(),
-                name_buffer_length,
-                name_length.as_mut_ptr(),
+                name_len,
+                &mut name_len,
                 attr_flags.as_mut_ptr(),
                 sig.as_mut_ptr(),
                 sig_length.as_mut_ptr(),
@@ -798,6 +798,7 @@ impl IMetaDataImport {
         match hr {
             S_OK => {
                 let class_token = unsafe { class_token.assume_init() };
+                unsafe { name_buffer.set_len(name_len as usize) };
                 let name = U16CString::from_vec_with_nul(name_buffer)
                     .unwrap()
                     .to_string_lossy();
@@ -833,26 +834,22 @@ impl IMetaDataImport {
 
     /// Gets the name of the module referenced by the specified metadata token.
     pub fn get_module_ref_props(&self, token: mdModuleRef) -> Result<ModuleRefProps, HRESULT> {
-        let mut name_buffer_length = MaybeUninit::uninit();
+        let mut name_buffer_len = 0;
         let hr = unsafe {
-            self.GetModuleRefProps(token, ptr::null_mut(), 0, name_buffer_length.as_mut_ptr())
+            self.GetModuleRefProps(token, ptr::null_mut(), 0, &mut name_buffer_len)
         };
 
         if FAILED(hr) {
             return Err(hr);
         }
 
-        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
-        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
-        let mut name_length = MaybeUninit::uninit();
-
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_len as usize);
         let hr = unsafe {
             self.GetModuleRefProps(
                 token,
                 name_buffer.as_mut_ptr(),
-                name_buffer_length,
-                name_length.as_mut_ptr(),
+                name_buffer_len,
+                &mut name_buffer_len,
             )
         };
 
@@ -860,6 +857,7 @@ impl IMetaDataImport {
             return Err(hr);
         }
 
+        unsafe { name_buffer.set_len(name_buffer_len as usize) };
         let name = U16CString::from_vec_with_nul(name_buffer)
             .unwrap()
             .to_string_lossy();
@@ -894,13 +892,13 @@ impl IMetaDataImport {
 
     /// Gets metadata information for the Type represented by the specified metadata token.
     pub fn get_type_def_props(&self, token: mdTypeDef) -> Result<TypeDefProps, HRESULT> {
-        let mut name_buffer_length = MaybeUninit::uninit();
+        let mut name_len = 0;
         let hr = unsafe {
             self.GetTypeDefProps(
                 token,
                 ptr::null_mut(),
                 0,
-                name_buffer_length.as_mut_ptr(),
+                &mut name_len,
                 ptr::null_mut(),
                 ptr::null_mut(),
             )
@@ -910,22 +908,18 @@ impl IMetaDataImport {
             return Err(hr);
         }
 
-        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
-        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
-
-        let mut name_length = MaybeUninit::uninit();
-        let mut cor_type_attr = MaybeUninit::uninit();
-        let mut extends_td = MaybeUninit::uninit();
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_len as usize);
+        let mut cor_type_attr: DWORD = 0;
+        let mut extends_td = mdTokenNil;
 
         let hr = unsafe {
             self.GetTypeDefProps(
                 token,
                 name_buffer.as_mut_ptr(),
-                name_buffer_length,
-                name_length.as_mut_ptr(),
-                cor_type_attr.as_mut_ptr(),
-                extends_td.as_mut_ptr(),
+                name_len,
+                &mut name_len,
+                &mut cor_type_attr,
+                &mut extends_td,
             )
         };
 
@@ -933,14 +927,11 @@ impl IMetaDataImport {
             return Err(hr);
         }
 
+        unsafe { name_buffer.set_len(name_len as usize) };
         let name = U16CString::from_vec_with_nul(name_buffer)
             .unwrap()
             .to_string_lossy();
-        let cor_type_attr = {
-            let c = unsafe { cor_type_attr.assume_init() };
-            CorTypeAttr::from_bits(c).unwrap()
-        };
-        let extends_td = unsafe { extends_td.assume_init() };
+        let cor_type_attr = CorTypeAttr::from_bits(cor_type_attr).unwrap();
         Ok(TypeDefProps {
             name,
             cor_type_attr,
@@ -950,35 +941,25 @@ impl IMetaDataImport {
 
     /// Gets the metadata associated with the Type referenced by the specified TypeRef token.
     pub fn get_type_ref_props(&self, token: mdTypeRef) -> Result<TypeRefProps, HRESULT> {
-        let mut name_buffer_length = MaybeUninit::uninit();
+        let mut name_len = 0;
         let mut parent_token = mdTokenNil;
 
         let hr = unsafe {
-            self.GetTypeRefProps(
-                token,
-                &mut parent_token,
-                ptr::null_mut(),
-                0,
-                name_buffer_length.as_mut_ptr(),
-            )
+            self.GetTypeRefProps(token, &mut parent_token, ptr::null_mut(), 0, &mut name_len)
         };
 
         if FAILED(hr) {
             return Err(hr);
         }
 
-        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
-        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
-        let mut name_length = MaybeUninit::uninit();
-
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_len as usize);
         let hr = unsafe {
             self.GetTypeRefProps(
                 token,
                 &mut parent_token,
                 name_buffer.as_mut_ptr(),
-                name_buffer_length,
-                name_length.as_mut_ptr(),
+                name_len,
+                &mut name_len,
             )
         };
 
@@ -986,6 +967,7 @@ impl IMetaDataImport {
             return Err(hr);
         }
 
+        unsafe { name_buffer.set_len(name_len as usize) };
         let name = U16CString::from_vec_with_nul(name_buffer)
             .unwrap()
             .to_string_lossy();
@@ -997,19 +979,17 @@ impl IMetaDataImport {
     /// the specified token.
     pub fn get_type_spec_from_token(&self, token: mdTypeSpec) -> Result<TypeSpec, HRESULT> {
         let mut signature = MaybeUninit::uninit();
-        let mut signature_len = MaybeUninit::uninit();
-        let hr = unsafe {
-            self.GetTypeSpecFromToken(token, signature.as_mut_ptr(), signature_len.as_mut_ptr())
-        };
+        let mut signature_len = 0;
+        let hr =
+            unsafe { self.GetTypeSpecFromToken(token, signature.as_mut_ptr(), &mut signature_len) };
 
         if FAILED(hr) {
             return Err(hr);
         }
 
         let signature = unsafe {
-            let s = signature.assume_init();
-            let l = signature_len.assume_init();
-            std::slice::from_raw_parts(s, l as usize).to_vec()
+            let sig = signature.assume_init();
+            slice::from_raw_parts(sig, signature_len as usize).to_vec()
         };
 
         Ok(TypeSpec { signature })
@@ -1017,23 +997,22 @@ impl IMetaDataImport {
 
     /// Gets the literal string represented by the specified metadata token.
     pub fn get_user_string(&self, stk: mdString) -> Result<String, HRESULT> {
-        let mut len = MaybeUninit::uninit();
-        let hr = unsafe { self.GetUserString(stk, ptr::null_mut(), 0, len.as_mut_ptr()) };
+        let mut len = 0;
+        let hr = unsafe { self.GetUserString(stk, ptr::null_mut(), 0, &mut len) };
 
         if FAILED(hr) {
             return Err(hr);
         }
 
-        let len = unsafe { len.assume_init() };
         let mut str_buffer = Vec::<WCHAR>::with_capacity(len as usize);
-        unsafe { str_buffer.set_len(len as usize) };
-        let hr = unsafe { self.GetUserString(stk, str_buffer.as_mut_ptr(), len, ptr::null_mut()) };
-
+        let hr = unsafe { self.GetUserString(stk, str_buffer.as_mut_ptr(), len, &mut len) };
         if FAILED(hr) {
             return Err(hr);
         }
 
-        // NOTE: the user string is not null terminated
+        unsafe { str_buffer.set_len(len as usize) };
+
+        // NOTE: user strings are *not* null terminated
         let str = String::from_utf16(&str_buffer).unwrap();
         Ok(str)
     }
@@ -1042,15 +1021,15 @@ impl IMetaDataImport {
 impl IMetaDataImport2 {
     /// Gets the metadata signature of the method referenced by the specified MethodSpec token.
     pub fn get_method_spec_props(&self, token: mdMethodSpec) -> Result<MethodSpecProps, HRESULT> {
-        let mut parent = MaybeUninit::uninit();
+        let mut parent = 0;
         let mut signature = MaybeUninit::uninit();
-        let mut signature_len = MaybeUninit::uninit();
+        let mut signature_len = 0;
         let hr = unsafe {
             self.GetMethodSpecProps(
                 token,
-                parent.as_mut_ptr(),
+                &mut parent,
                 signature.as_mut_ptr(),
-                signature_len.as_mut_ptr(),
+                &mut signature_len,
             )
         };
 
@@ -1058,11 +1037,9 @@ impl IMetaDataImport2 {
             return Err(hr);
         }
 
-        let parent = unsafe { parent.assume_init() };
         let signature = unsafe {
-            let s = signature.assume_init();
-            let l = signature_len.assume_init();
-            std::slice::from_raw_parts(s, l as usize).to_vec()
+            let sig = signature.assume_init();
+            slice::from_raw_parts(sig, signature_len as usize).to_vec()
         };
 
         Ok(MethodSpecProps { parent, signature })

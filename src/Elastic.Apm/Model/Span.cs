@@ -419,9 +419,9 @@ namespace Elastic.Apm.Model
 
 				var buffered = _parentSpan?._compressionBuffer ?? _enclosingTransaction.CompressionBuffer;
 
-				if (Configuration.SpanCompressionEnabled)
+				if (Configuration.SpanCompressionEnabled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 				{
-					if (!IsCompressionEligible())
+					if (!IsCompressionEligible() || _parentSpan is { _isEnded: true })
 					{
 						if (buffered != null)
 						{
