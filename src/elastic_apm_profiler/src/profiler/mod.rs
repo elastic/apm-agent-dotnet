@@ -21,7 +21,10 @@ use crate::{
         },
         rejit::RejitHandler,
         sig::get_sig_type_token_name,
-        types::{IntegrationMethod, MethodReplacement, ModuleMetadata, ModuleWrapperTokens},
+        types::{
+            IntegrationMethod, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
+            WrapperMethodAction,
+        },
     },
 };
 use com::{
@@ -707,9 +710,10 @@ impl Profiler {
         let is_managed_profiler_assembly = assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
 
         log::debug!(
-            "AssemblyLoadFinished: name={}, version={}",
+            "AssemblyLoadFinished: name={}, version={}, culture={}",
             &assembly_metadata.name,
-            &assembly_metadata.version
+            &assembly_metadata.version,
+            &assembly_metadata.locale.as_deref().unwrap_or("neutral")
         );
 
         if is_managed_profiler_assembly {
@@ -1521,7 +1525,7 @@ impl Profiler {
             };
 
             let wrapper = match integration.method_replacement.wrapper() {
-                Some(w) if &w.action == "CallTargetModification" => w,
+                Some(w) if w.action == WrapperMethodAction::CallTargetModification => w,
                 _ => continue,
             };
 

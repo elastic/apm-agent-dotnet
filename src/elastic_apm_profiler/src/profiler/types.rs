@@ -303,9 +303,15 @@ pub struct WrapperMethodReference {
     pub(crate) type_name: String,
     #[serde(rename = "method")]
     pub(crate) method_name: Option<String>,
-    pub(crate) action: String,
+    pub(crate) action: WrapperMethodAction,
     #[serde(rename = "signature")]
     pub(crate) method_signature: Option<MethodSignature>,
+}
+
+#[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
+pub enum WrapperMethodAction {
+    CallTargetModification,
+    ReplaceTargetMethod,
 }
 
 impl WrapperMethodReference {
@@ -314,19 +320,14 @@ impl WrapperMethodReference {
     }
 
     pub fn get_method_cache_key(&self) -> String {
-        format!(
-            "[{}]{}.{}",
-            &self.assembly.name,
-            &self.type_name,
-            self.method_name.as_ref().map_or("", |m| m.as_str()),
-        )
+        format!("[{}]{}", &self.assembly.name, self.full_name(),)
     }
 
     pub fn full_name(&self) -> String {
         format!(
             "{}.{}",
             &self.type_name,
-            self.method_name.as_ref().map_or("", |m| m.as_str())
+            self.method_name.as_deref().unwrap_or("")
         )
     }
 }
@@ -389,11 +390,11 @@ impl TargetMethodReference {
     }
 
     pub fn signature_types(&self) -> Option<&[String]> {
-        self.signature_types.as_ref().map(|s| s.as_slice())
+        self.signature_types.as_deref()
     }
 
     pub fn is_valid_for_assembly(&self, assembly_name: &str, version: &Version) -> bool {
-        if &self.assembly != assembly_name {
+        if self.assembly != assembly_name {
             return false;
         }
 
@@ -1363,10 +1364,10 @@ pub struct PublicKey {
 }
 
 impl PublicKey {
-    pub fn new(bytes: Vec<u8>, hash_algorithm: u32) -> Self {
+    pub fn new(bytes: Vec<u8>, hash_algorithm: Option<HashAlgorithmType>) -> Self {
         Self {
             bytes,
-            hash_algorithm: HashAlgorithmType::from_u32(hash_algorithm),
+            hash_algorithm,
         }
     }
 
@@ -1444,6 +1445,7 @@ bitflags! {
 pub mod tests {
     use crate::profiler::types::{
         AssemblyReference, Integration, MethodSignature, PublicKeyToken, Version,
+        WrapperMethodAction,
     };
     use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
 
@@ -1567,7 +1569,7 @@ method_replacements:
             &wrapper.type_name,
             "Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration"
         );
-        assert_eq!(&wrapper.action, "CallTargetModification");
+        assert_eq!(wrapper.action, WrapperMethodAction::CallTargetModification);
 
         Ok(())
     }
