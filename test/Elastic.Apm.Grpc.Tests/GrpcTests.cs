@@ -7,6 +7,7 @@ using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.GrpcClient;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Grpc.Net.Client;
 using GrpcServiceSample;
@@ -94,11 +95,14 @@ namespace Elastic.Apm.Grpc.Tests
 		/// </summary>
 		/// <param name="withDiagnosticSource"></param>
 		/// <returns></returns>
-		[InlineData(true)]
-		[InlineData(false)]
-		[Theory]
-		public async Task FailingGrpcCallTest(bool withDiagnosticSource)
+		// [InlineData(true)]
+		// [InlineData(false)]
+		[DisabledTestFact("Flaky in CI")]
+		public async Task FailingGrpcCallTest()
 		{
+			//TODO: once test re-enabled move this into a method parameter
+			var withDiagnosticSource = false;
+
 			var payloadSender = new MockPayloadSender();
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
