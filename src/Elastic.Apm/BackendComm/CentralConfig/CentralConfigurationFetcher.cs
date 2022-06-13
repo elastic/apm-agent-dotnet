@@ -126,6 +126,11 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					waitInfo = fetchConfigException.WaitInfo;
 					level = fetchConfigException.Severity;
 				}
+				else if (ex is HttpRequestException)
+				{
+					level = LogLevel.Debug;
+					waitInfo = new WaitInfoS(TimeSpan.FromHours(1), "HttpRequestException during fetching, Central Config is likely disabled");
+				}
 				else
 				{
 					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,8 +90,17 @@ namespace Elastic.Apm.BackendComm
 				}
 				catch (Exception ex)
 				{
-					_logger.Error()
-						?.LogException(ex, nameof(WorkLoop) + " Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
+					if (ex is AggregateException aggregateException && aggregateException.InnerExceptions.Any(e => e is TaskCanceledException))
+					{
+						_logger.Debug()
+							?.LogException(ex, nameof(WorkLoop) + "TaskCanceledException -  Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
+					}
+					else
+					{
+						_logger.Error()
+							?.LogException(ex, nameof(WorkLoop) + " Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
+					}
+
 				}
 			}
 
