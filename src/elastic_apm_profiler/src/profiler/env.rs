@@ -444,8 +444,7 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
         let exclude_integrations = val.split(';');
         for exclude_integration in exclude_integrations {
             log::trace!("exclude integrations that match {}", exclude_integration);
-            integrations
-                .retain(|i| i.name.to_lowercase() != exclude_integration.to_lowercase());
+            integrations.retain(|i| i.name.to_lowercase() != exclude_integration.to_lowercase());
         }
     };
 

@@ -21,7 +21,10 @@ use crate::{
         },
         rejit::RejitHandler,
         sig::get_sig_type_token_name,
-        types::{IntegrationMethod, MethodReplacement, ModuleMetadata, ModuleWrapperTokens},
+        types::{
+            IntegrationMethod, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
+            WrapperMethodAction,
+        },
     },
 };
 use com::{
@@ -1522,7 +1525,7 @@ impl Profiler {
             };
 
             let wrapper = match integration.method_replacement.wrapper() {
-                Some(w) if &w.action == "CallTargetModification" => w,
+                Some(w) if w.action == WrapperMethodAction::CallTargetModification => w,
                 _ => continue,
             };
 

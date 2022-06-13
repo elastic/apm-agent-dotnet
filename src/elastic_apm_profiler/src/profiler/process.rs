@@ -19,7 +19,7 @@ use crate::{
         sig::{parse_signature_types, parse_type},
         types::{
             FunctionInfo, MetadataBuilder, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
-            WrapperMethodRef, WrapperMethodReference,
+            WrapperMethodAction, WrapperMethodRef, WrapperMethodReference,
         },
     },
 };
@@ -66,7 +66,7 @@ pub fn process_replacement_calls(
             continue;
         }
         let wrapper = method_replacement.wrapper().unwrap();
-        if &wrapper.action != "ReplaceTargetMethod" {
+        if wrapper.action != WrapperMethodAction::ReplaceTargetMethod {
             continue;
         }
 

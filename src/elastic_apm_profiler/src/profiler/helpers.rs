@@ -21,7 +21,7 @@ use crate::{
         sig::parse_type,
         types::{
             AssemblyMetaData, FunctionInfo, Integration, IntegrationMethod, MethodSignature,
-            ModuleMetadata,
+            ModuleMetadata, WrapperMethodAction,
         },
     },
 };
@@ -664,7 +664,8 @@ pub fn flatten_integrations(
                 .into_iter()
                 .filter_map(move |method_replacement| {
                     if let Some(wrapper_method) = method_replacement.wrapper() {
-                        let is_calltarget = &wrapper_method.action == "CallTargetModification";
+                        let is_calltarget =
+                            wrapper_method.action == WrapperMethodAction::CallTargetModification;
                         if (calltarget_enabled && is_calltarget)
                             || (!calltarget_enabled && !is_calltarget)
                         {

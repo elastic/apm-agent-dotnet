@@ -4,10 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use core::{ptr, slice};
-use std::{
-    ffi::c_void,
-    mem::MaybeUninit,
-};
+use std::{ffi::c_void, mem::MaybeUninit};
 
 use com::{
     interfaces::iunknown::IUnknown,
@@ -835,9 +832,7 @@ impl IMetaDataImport {
     /// Gets the name of the module referenced by the specified metadata token.
     pub fn get_module_ref_props(&self, token: mdModuleRef) -> Result<ModuleRefProps, HRESULT> {
         let mut name_buffer_len = 0;
-        let hr = unsafe {
-            self.GetModuleRefProps(token, ptr::null_mut(), 0, &mut name_buffer_len)
-        };
+        let hr = unsafe { self.GetModuleRefProps(token, ptr::null_mut(), 0, &mut name_buffer_len) };
 
         if FAILED(hr) {
             return Err(hr);
