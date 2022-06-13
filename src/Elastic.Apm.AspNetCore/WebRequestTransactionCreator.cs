@@ -193,7 +193,7 @@ namespace Elastic.Apm.AspNetCore
 					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
 					var routeData = context.GetRouteData()?.Values;
 
-					if (routeData.Count > 0)
+					if (routeData != null && routeData.Count > 0)
 					{
 						logger?.Trace()?.Log("Calculating transaction name based on route data");
 						var name = Transaction.GetNameFromRouteContext(routeData);
