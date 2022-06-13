@@ -403,7 +403,7 @@ namespace Elastic.Apm.Tests
 			var userName = "abc";
 			var pw = "def";
 
-			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Debug);
 			var configReader = new MockConfiguration(serverUrls: $"http://{userName}:{pw}@localhost:8123", maxBatchEventCount: "0",
 				flushInterval: "0");
 
@@ -411,7 +411,7 @@ namespace Elastic.Apm.Tests
 			using var centralConfigFetcher =
 				new CentralConfigurationFetcher(inMemoryLogger, configStore, Service.GetDefaultService(configReader, inMemoryLogger));
 
-			inMemoryLogger.Lines.Should().HaveCount(1);
+			inMemoryLogger.Lines.Should().HaveCountGreaterOrEqualTo(1);
 			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));
 			inMemoryLogger.Lines.Should().Contain(n => n.Contains("http://[REDACTED]:[REDACTED]@localhost:8123"));
 		}
