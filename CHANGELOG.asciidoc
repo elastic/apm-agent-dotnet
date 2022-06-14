@@ -23,6 +23,15 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.16.1]]
+==== 1.16.1
+
+===== Features
+- {pull}1732[#1732] Improved logging around fetching central configuration (issue: {issue}1626[#1626]).
+
+===== Bug fixes
+- {pull}1710[#1710] Crash during assembly loading with the profiler based agent (issue: {issue}1705[#1705]).
+- Handling RouteData with `null` in legacy ASP.NET Core 2.2 apps (issue: {issue}1729[#1729]).
 
 [[release-notes-1.16.0]]
 ==== 1.16.0
