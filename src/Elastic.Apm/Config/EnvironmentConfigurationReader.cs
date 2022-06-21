@@ -116,6 +116,8 @@ namespace Elastic.Apm.Config
 
 		public int StackTraceLimit => _stackTraceLimit.Value;
 
+		public string TraceContinuationStrategy => ParseTraceContinuationStrategy(Read(ConfigConsts.EnvVarNames.TraceContinuationStrategy));
+
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Read(ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
 

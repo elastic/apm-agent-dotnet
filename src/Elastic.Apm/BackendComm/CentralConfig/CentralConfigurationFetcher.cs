@@ -70,12 +70,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			// if the logger supports switching the log level at runtime, allow it to be updated by central configuration
 			if (_initialSnapshot.CentralConfig && logger is ILogLevelSwitchable switchable)
+			{
 				_onResponse += reader =>
 				{
 					var currentLevel = switchable.LogLevelSwitch.Level;
 					if (reader.LogLevel != null && reader.LogLevel != currentLevel)
 						switchable.LogLevelSwitch.Level = reader.LogLevel.Value;
 				};
+			}
 
 			if (!_initialSnapshot.CentralConfig) return;
 
@@ -259,6 +261,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public string CloudProvider => _wrapped.CloudProvider;
 
 			public string Description { get; }
+
+			public string TraceContinuationStrategy => _centralConfiguration.TraceContinuationStrategy ?? _wrapped.TraceContinuationStrategy;
 
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
 			public bool Enabled => _wrapped.Enabled;

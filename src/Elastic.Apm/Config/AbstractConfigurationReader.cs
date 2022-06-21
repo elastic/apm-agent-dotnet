@@ -246,6 +246,27 @@ namespace Elastic.Apm.Config
 			return true;
 		}
 
+		protected string ParseTraceContinuationStrategy(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return DefaultValues.TraceContinuationStrategy;
+
+			// ReSharper disable once InvertIf
+			if (!SupportedValues.TraceContinuationStrategySupportedValues.Contains(kv.Value.ToLowerInvariant()))
+			{
+				_logger?.Error()
+					?.Log(
+						"The TraceContinuationStrategy value that was provided ('{EnteredValue}') in the configuration is not allowed. "
+						+ "The default TraceContinuationStrategy (`continue`) will be used."
+						+
+						"The supported values are : ",
+						kv.Value.ToLowerInvariant(), string.Join(", ", SupportedValues.TraceContinuationStrategySupportedValues));
+				return DefaultValues.TraceContinuationStrategy;
+			}
+
+			return kv.Value.ToLowerInvariant();
+		}
+
 		protected bool ParseTraceContextIgnoreSampledFalse(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.TraceContextIgnoreSampledFalse;

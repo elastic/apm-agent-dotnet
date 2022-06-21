@@ -151,6 +151,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			internal const string SpanCompressionExactMatchMaxDuration = "span_compression_exact_match_max_duration";
 			internal const string SpanCompressionSameKindMaxDuration = "span_compression_same_kind_max_duration";
 			internal const string ExitSpanMinDuration = "exit_span_min_duration";
+			internal const string TraceContinuationStrategy = "trace_continuation_strategy";
 
 			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
 			{

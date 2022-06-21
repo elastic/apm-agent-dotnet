@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -48,6 +49,7 @@ namespace Elastic.Apm.Config
 			public const string UnknownServiceName = "unknown-" + Consts.AgentName + "-service";
 			public const bool UseElasticTraceparentHeader = true;
 			public const bool VerifyServerCert = true;
+			public const string TraceContinuationStrategy = "continue";
 
 			public static readonly IReadOnlyCollection<string> DefaultApplicationNamespaces = new List<string>().AsReadOnly();
 
@@ -117,7 +119,6 @@ namespace Elastic.Apm.Config
 
 		public static class EnvVarNames
 		{
-			private const string Prefix = "ELASTIC_APM_";
 			public const string ApiKey = Prefix + "API_KEY";
 			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
@@ -142,12 +143,13 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
 			public const string MetricsInterval = Prefix + "METRICS_INTERVAL";
+			private const string Prefix = "ELASTIC_APM_";
 			public const string Recording = Prefix + "RECORDING";
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ServerCert = Prefix + "SERVER_CERT";
-			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServerUrl = Prefix + "SERVER_URL";
+			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
@@ -157,6 +159,7 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TraceContextIgnoreSampledFalse = Prefix + "TRACE_CONTEXT_IGNORE_SAMPLED_FALSE";
+			public const string TraceContinuationStrategy = Prefix + "TRACE_CONTINUATION_STRATEGY";
 			public const string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
@@ -166,7 +169,6 @@ namespace Elastic.Apm.Config
 
 		public static class KeyNames
 		{
-			private const string Prefix = "ElasticApm:";
 			public const string ApiKey = Prefix + nameof(ApiKey);
 			public const string ApplicationNamespaces = Prefix + nameof(ApplicationNamespaces);
 			public const string CaptureBody = Prefix + nameof(CaptureBody);
@@ -176,8 +178,8 @@ namespace Elastic.Apm.Config
 			public const string CloudProvider = Prefix + nameof(CloudProvider);
 			public const string DisableMetrics = Prefix + nameof(DisableMetrics);
 			public const string Enabled = Prefix + nameof(Enabled);
-			public const string Environment = Prefix + nameof(Environment);
 			public const string EnableOpenTelemetryBridge = Prefix + nameof(EnableOpenTelemetryBridge);
+			public const string Environment = Prefix + nameof(Environment);
 			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
 			public const string ExitSpanMinDuration = Prefix + nameof(ExitSpanMinDuration);
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
@@ -191,12 +193,13 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);
 			public const string MetricsInterval = Prefix + nameof(MetricsInterval);
+			private const string Prefix = "ElasticApm:";
 			public const string Recording = Prefix + nameof(Recording);
 			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
 			public const string SecretToken = Prefix + nameof(SecretToken);
 			public const string ServerCert = Prefix + nameof(ServerCert);
-			public const string ServerUrls = Prefix + nameof(ServerUrls);
 			public const string ServerUrl = Prefix + nameof(ServerUrl);
+			public const string ServerUrls = Prefix + nameof(ServerUrls);
 			public const string ServiceName = Prefix + nameof(ServiceName);
 			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
 			public const string ServiceVersion = Prefix + nameof(ServiceVersion);
@@ -204,8 +207,9 @@ namespace Elastic.Apm.Config
 			public const string SpanCompressionExactMatchMaxDuration = Prefix + nameof(SpanCompressionExactMatchMaxDuration);
 			public const string SpanCompressionSameKindMaxDuration = Prefix + nameof(SpanCompressionSameKindMaxDuration);
 			public const string SpanFramesMinDuration = Prefix + nameof(SpanFramesMinDuration);
-			public const string TraceContextIgnoreSampledFalse = Prefix + nameof(TraceContextIgnoreSampledFalse);
 			public const string StackTraceLimit = Prefix + nameof(StackTraceLimit);
+			public const string TraceContextIgnoreSampledFalse = Prefix + nameof(TraceContextIgnoreSampledFalse);
+			public const string TraceContinuationStrategy = Prefix + nameof(TraceContinuationStrategy);
 			public const string TransactionIgnoreUrls = Prefix + nameof(TransactionIgnoreUrls);
 			public const string TransactionMaxSpans = Prefix + nameof(TransactionMaxSpans);
 			public const string TransactionSampleRate = Prefix + nameof(TransactionSampleRate);
@@ -219,15 +223,20 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyErrors = "errors";
 			public const string CaptureBodyOff = "off";
 			public const string CaptureBodyTransactions = "transactions";
+			public const string CloudProviderAuto = "auto";
 
-			public static readonly List<string> CaptureBodySupportedValues =
-				new List<string> { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
+			public const string Continue = "continue";
+			public const string Restart = "restart";
+			public const string RestartExternal = "restart_external";
 
 			public const string CloudProviderAws = AwsCloudMetadataProvider.Name;
 			public const string CloudProviderAzure = AzureCloudMetadataProvider.Name;
 			public const string CloudProviderGcp = GcpCloudMetadataProvider.Name;
 			public const string CloudProviderNone = "none";
-			public const string CloudProviderAuto = "auto";
+
+			public static readonly List<string> CaptureBodySupportedValues = new() { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
+
+			public static readonly List<string> TraceContinuationStrategySupportedValues = new() { Continue, Restart, RestartExternal };
 
 			public static readonly HashSet<string> CloudProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{

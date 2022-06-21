@@ -132,14 +132,18 @@ namespace Elastic.Apm.Model
 			Type = type;
 			Links = links;
 
+			var shouldRestartTrace = configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.Restart ||
+				configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
+				&& (!distributedTracingData.TraceState.SampleRate.HasValue);
+
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
 			// so the traceid and tracestate of the parent will flow to it.
 			if (!ignoreActivity)
-				_activity = StartActivity();
+				_activity = StartActivity(shouldRestartTrace);
 
 			var isSamplingFromDistributedTracingData = false;
-			if (distributedTracingData == null)
+			if (distributedTracingData == null || shouldRestartTrace)
 			{
 				// We consider a newly created transaction **without** explicitly passed distributed tracing data
 				// to be a root transaction.
@@ -221,6 +225,7 @@ namespace Elastic.Apm.Model
 			else
 			{
 				var idBytes = new byte[8];
+
 
 				if (_activity != null)
 				{
@@ -468,9 +473,14 @@ namespace Elastic.Apm.Model
 				_outcome = outcome;
 		}
 
-		private Activity StartActivity()
+		private Activity StartActivity(bool shouldRestartTrace)
 		{
 			var activity = new Activity(KnownListeners.ApmTransactionActivityName);
+			if (shouldRestartTrace)
+			{
+				activity.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
+					Activity.Current != null ? Activity.Current.ActivityTraceFlags : ActivityTraceFlags.None);
+			}
 			activity.SetIdFormat(ActivityIdFormat.W3C);
 			activity.Start();
 			return activity;

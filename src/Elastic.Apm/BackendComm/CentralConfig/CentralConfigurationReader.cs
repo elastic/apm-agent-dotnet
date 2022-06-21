@@ -54,6 +54,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal double? TransactionSampleRate { get; private set; }
 
+		internal string TraceContinuationStrategy { get; private set; }
+
 		internal bool? SpanCompressionEnabled { get; private set; }
 
 		internal double? SpanCompressionExactMatchMaxDuration { get; private set; }
@@ -97,6 +99,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					ParseSpanCompressionSameKindMaxDuration);
 			ExitSpanMinDuration =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.ExitSpanMinDuration, ParseExitSpanMinDuration);
+			TraceContinuationStrategy =
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TraceContinuationStrategy, ParseTraceContinuationStrategy);
 		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>

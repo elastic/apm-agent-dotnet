@@ -61,6 +61,7 @@ namespace Elastic.Apm.Config
 		public int StackTraceLimit => _content.StackTraceLimit;
 
 		public bool TraceContextIgnoreSampledFalse => _content.TraceContextIgnoreSampledFalse;
+		public string TraceContinuationStrategy => _content.TraceContinuationStrategy;
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _content.TransactionIgnoreUrls;
 		public int TransactionMaxSpans => _content.TransactionMaxSpans;
 		public double TransactionSampleRate => _content.TransactionSampleRate;
