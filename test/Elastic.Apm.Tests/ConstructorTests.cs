@@ -53,6 +53,7 @@ namespace Elastic.Apm.Tests
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
 			public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
 			public string HostName { get; }
+			public string TraceContinuationStrategy => ConfigConsts.DefaultValues.TraceContinuationStrategy;
 			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => ConfigConsts.DefaultValues.TransactionIgnoreUrls;
 			public LogLevel LogLevel { get; }
 			public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
