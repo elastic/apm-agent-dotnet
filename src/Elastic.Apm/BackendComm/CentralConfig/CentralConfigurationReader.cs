@@ -36,6 +36,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal string ETag { get; }
 
+		internal double? ExitSpanMinDuration { get; private set; }
+
 		internal IReadOnlyList<WildcardMatcher> IgnoreMessageQueues { get; private set; }
 
 		internal LogLevel? LogLevel { get; private set; }
@@ -44,25 +46,23 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; private set; }
 
-		internal double? SpanFramesMinDurationInMilliseconds { get; private set; }
-
-		internal int? StackTraceLimit { get; private set; }
-
-		internal IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; private set; }
-
-		internal int? TransactionMaxSpans { get; private set; }
-
-		internal double? TransactionSampleRate { get; private set; }
-
-		internal string TraceContinuationStrategy { get; private set; }
-
 		internal bool? SpanCompressionEnabled { get; private set; }
 
 		internal double? SpanCompressionExactMatchMaxDuration { get; private set; }
 
 		internal double? SpanCompressionSameKindMaxDuration { get; private set; }
 
-		internal double? ExitSpanMinDuration { get; private set; }
+		internal double? SpanFramesMinDurationInMilliseconds { get; private set; }
+
+		internal int? StackTraceLimit { get; private set; }
+
+		internal string TraceContinuationStrategy { get; private set; }
+
+		internal IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; private set; }
+
+		internal int? TransactionMaxSpans { get; private set; }
+
+		internal double? TransactionSampleRate { get; private set; }
 
 		private void UpdateConfigurationValues()
 		{
@@ -100,7 +100,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			ExitSpanMinDuration =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.ExitSpanMinDuration, ParseExitSpanMinDuration);
 			TraceContinuationStrategy =
-				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TraceContinuationStrategy, ParseTraceContinuationStrategy);
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TraceContinuationStrategy,
+					ParseTraceContinuationStrategy);
 		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>

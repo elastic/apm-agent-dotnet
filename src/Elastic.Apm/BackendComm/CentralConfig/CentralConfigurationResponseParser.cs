@@ -9,8 +9,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
@@ -48,7 +48,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 			catch (Exception ex) when (!(ex is CentralConfigurationFetcher.FailedToFetchConfigException))
 			{
-				throw new CentralConfigurationFetcher.FailedToFetchConfigException("Exception was thrown while parsing response from APM Server", waitInfo,
+				throw new CentralConfigurationFetcher.FailedToFetchConfigException("Exception was thrown while parsing response from APM Server",
+					waitInfo,
 					cause: ex);
 			}
 		}
@@ -138,20 +139,20 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			internal const string CaptureBodyContentTypesKey = "capture_body_content_types";
 			internal const string CaptureBodyKey = "capture_body";
 			internal const string CaptureHeadersKey = "capture_headers";
+			internal const string ExitSpanMinDuration = "exit_span_min_duration";
 			internal const string IgnoreMessageQueues = "ignore_message_queues";
 			internal const string LogLevelKey = "log_level";
 			internal const string Recording = "recording";
 			internal const string SanitizeFieldNames = "sanitize_field_names";
-			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
-			internal const string StackTraceLimitKey = "stack_trace_limit";
-			internal const string TransactionIgnoreUrls = "transaction_ignore_urls";
-			internal const string TransactionMaxSpansKey = "transaction_max_spans";
-			internal const string TransactionSampleRateKey = "transaction_sample_rate";
 			internal const string SpanCompressionEnabled = "span_compression_enabled";
 			internal const string SpanCompressionExactMatchMaxDuration = "span_compression_exact_match_max_duration";
 			internal const string SpanCompressionSameKindMaxDuration = "span_compression_same_kind_max_duration";
-			internal const string ExitSpanMinDuration = "exit_span_min_duration";
+			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
+			internal const string StackTraceLimitKey = "stack_trace_limit";
 			internal const string TraceContinuationStrategy = "trace_continuation_strategy";
+			internal const string TransactionIgnoreUrls = "transaction_ignore_urls";
+			internal const string TransactionMaxSpansKey = "transaction_max_spans";
+			internal const string TransactionSampleRateKey = "transaction_sample_rate";
 
 			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
 			{

@@ -31,6 +31,7 @@ namespace Elastic.Apm.Config
 		public string Description { get; }
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => _content.DisableMetrics;
 		public bool Enabled => _content.Enabled;
+		public bool EnableOpenTelemetryBridge => _content.EnableOpenTelemetryBridge;
 		public string Environment => _content.Environment;
 		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
 		public double ExitSpanMinDuration => _content.ExitSpanMinDuration;
@@ -67,6 +68,5 @@ namespace Elastic.Apm.Config
 		public double TransactionSampleRate => _content.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader => _content.UseElasticTraceparentHeader;
 		public bool VerifyServerCert => _content.VerifyServerCert;
-		public bool EnableOpenTelemetryBridge => _content.EnableOpenTelemetryBridge;
 	}
 }

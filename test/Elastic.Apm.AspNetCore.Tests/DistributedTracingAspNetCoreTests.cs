@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -284,7 +285,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Does not set the TraceContextIgnoreSampledFalse config and makes sure that the traceparent header is not ignored.
-		/// This tests the default case when the config is not set, so the agent just follows W3C and takes the sampled flag as it is.
+		/// This tests the default case when the config is not set, so the agent just follows W3C and takes the sampled flag as it
+		/// is.
 		/// </summary>
 		[Fact]
 		public async Task TraceContextIgnoreSampledFalse_NotSet_WithNonEsTraceState_NotSampled()

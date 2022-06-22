@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -19,10 +20,17 @@ namespace Elastic.Apm.Config
 	public abstract class AbstractConfigurationReader
 	{
 		private const string ThisClassName = nameof(AbstractConfigurationReader);
+
+		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedApplicationNamespaces =
+			new LazyContextualInit<IReadOnlyList<string>>();
+
+		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedExcludedNamespaces =
+			new LazyContextualInit<IReadOnlyList<string>>();
+
 		private readonly LazyContextualInit<int> _cachedMaxBatchEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
-		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
 		private readonly LazyContextualInit<Uri> _cachedServerUrl = new LazyContextualInit<Uri>();
+		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
 
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
@@ -35,12 +43,6 @@ namespace Elastic.Apm.Config
 
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersTransactionIgnoreUrls =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
-
-		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedExcludedNamespaces =
-			new LazyContextualInit<IReadOnlyList<string>>();
-
-		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedApplicationNamespaces =
-			new LazyContextualInit<IReadOnlyList<string>>();
 
 		private readonly IApmLogger _logger;
 
@@ -1166,13 +1168,6 @@ namespace Elastic.Apm.Config
 
 		protected string ReadEnvVarValue(string envVarName) => Environment.GetEnvironmentVariable(envVarName)?.Trim();
 
-		private enum TimeSuffix
-		{
-			M,
-			Ms,
-			S
-		}
-
 		private static bool TryParseUri(string u, out Uri uri)
 		{
 			// https://stackoverflow.com/a/33573337
@@ -1180,6 +1175,13 @@ namespace Elastic.Apm.Config
 			if (!Uri.TryCreate(u, UriKind.Absolute, out uri)) return false;
 
 			return uri.IsWellFormedOriginalString() && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+		}
+
+		private enum TimeSuffix
+		{
+			M,
+			Ms,
+			S
 		}
 	}
 }
