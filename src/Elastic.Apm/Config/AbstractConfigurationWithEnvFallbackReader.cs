@@ -146,6 +146,9 @@ namespace Elastic.Apm.Config
 		public bool TraceContextIgnoreSampledFalse =>
 			ParseTraceContextIgnoreSampledFalse(Read(KeyNames.TraceContextIgnoreSampledFalse, EnvVarNames.TraceContextIgnoreSampledFalse));
 
+		public string TraceContinuationStrategy =>
+			ParseTraceContinuationStrategy(Read(KeyNames.TraceContinuationStrategy, EnvVarNames.TraceContinuationStrategy));
+
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Read(KeyNames.TransactionIgnoreUrls, EnvVarNames.TransactionIgnoreUrls));
 

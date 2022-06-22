@@ -955,10 +955,43 @@ NOTE: Setting this to `false` reduces memory allocations, network bandwidth, and
 |============
 
 [float]
+[[config-trace-continuation-strategy]]
+==== `TraceContinuationStrategy` (performance) (added[1.17.0])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Valid options: `continue`, `restart`, `restart_external`.
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration or Web.config key
+| `ELASTIC_APM_TRACE_CONTINUATION_STRATEGY` | `ElasticApm:TraceContinuationStrategy`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `true`                  | String
+|============
+
+The `traceparent` header of requests that are traced by the Elastic APM .NET Agent might have been added by a 3rd party component.
+
+This situation becomes more and more common as the w3c trace context gets adopted. In such cases you may end up with traces where part of the trace is outside of Elastic APM.
+
+In order to handle this properly, the agent offers trace continuation strategies with the following values and behavior:
+
+- `continue`: The agent takes the `traceparent` header as it is and applies it to the new transaction.
+- `restart`: The agent always creates a new trace with a new trace id. In this case the agent creates a span link in the new transaction pointing to the original `traceparent`.
+- `restart_external`: The agent first checks the `tracestate` header. If the header contains the `es` vendor flag (which means the request is coming from a service monitored by an Elastic APM Agent), it's treated as internal, otherwise (including the case when the `tracestate` header is not present) it's treated as external. In case of external calls the agent creates a new trace with a new trace id and creates a link in the new transaction pointing to the original trace.
+
+
+[float]
 [[config-transaction-ignore-urls]]
 ==== `TransactionIgnoreUrls` (performance)
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+IMPORTANT: Use of `TransactionIgnoreUrls` is deprecated. Use `TraceContinuationStrategy` with the `restart_external` value.
 
 This is used to restrict requests to certain URLs from being instrumented.
 
@@ -1251,6 +1284,7 @@ If your application is called by an {dotnet5} application that does not have an 
 | <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | Yes | HTTP, Performance
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
+| <<config-trace-continuation-strategy,`TraceContinuationStrategy`>> | Yes | HTTP, Performance
 | <<config-use-elastic-apm-traceparent-header,`UseElasticTraceparentHeader`>> | No | HTTP
 | <<config-verify-server-cert,`VerifyServerCert`>> | No | Reporter
 

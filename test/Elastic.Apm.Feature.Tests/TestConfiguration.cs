@@ -55,6 +55,7 @@ namespace Elastic.Apm.Feature.Tests
 		public double SpanFramesMinDurationInMilliseconds { get; set; } = DefaultValues.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit { get; set; } = DefaultValues.StackTraceLimit;
 		public bool TraceContextIgnoreSampledFalse { get; set; } = DefaultValues.TraceContextIgnoreSampledFalse;
+		public string TraceContinuationStrategy { get; } = DefaultValues.TraceContinuationStrategy;
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; set; } = DefaultValues.TransactionIgnoreUrls;
 		public int TransactionMaxSpans { get; set; } = DefaultValues.TransactionMaxSpans;
 		public double TransactionSampleRate { get; set; } = DefaultValues.TransactionSampleRate;

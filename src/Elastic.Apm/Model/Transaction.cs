@@ -46,8 +46,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
-		internal Span CompressionBuffer;
-
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
 		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
@@ -130,16 +128,21 @@ namespace Elastic.Apm.Model
 			Name = name;
 			HasCustomName = false;
 			Type = type;
-			Links = links;
+			var spanLinks = links as SpanLink[] ?? links?.ToArray();
+			Links = spanLinks;
+
+			var shouldRestartTrace = configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.Restart ||
+				configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
+				&& !distributedTracingData.TraceState.SampleRate.HasValue;
 
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
 			// so the traceid and tracestate of the parent will flow to it.
 			if (!ignoreActivity)
-				_activity = StartActivity();
+				_activity = StartActivity(shouldRestartTrace);
 
 			var isSamplingFromDistributedTracingData = false;
-			if (distributedTracingData == null)
+			if (distributedTracingData == null || shouldRestartTrace)
 			{
 				// We consider a newly created transaction **without** explicitly passed distributed tracing data
 				// to be a root transaction.
@@ -165,6 +168,14 @@ namespace Elastic.Apm.Model
 						_traceState.AddTextHeader(_activity.TraceStateString);
 
 					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
+
+					if (shouldRestartTrace && distributedTracingData != null)
+					{
+						if (Links == null || spanLinks == null)
+							Links = new List<SpanLink> { new(distributedTracingData.ParentId, distributedTracingData.TraceId) };
+						else
+							Links = new List<SpanLink>(spanLinks) { new(distributedTracingData.ParentId, distributedTracingData.TraceId) };
+					}
 
 					// In the unlikely event that tracestate populated from activity contains an es vendor key, the tracestate
 					// is mutated to set the sample rate defined by the sampler, because we consider a transaction without
@@ -221,6 +232,7 @@ namespace Elastic.Apm.Model
 			else
 			{
 				var idBytes = new byte[8];
+
 
 				if (_activity != null)
 				{
@@ -326,6 +338,8 @@ namespace Elastic.Apm.Model
 		private bool _outcomeChangedThroughApi;
 		internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
+		internal Span CompressionBuffer;
+
 		/// <summary>
 		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
 		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
@@ -356,8 +370,6 @@ namespace Elastic.Apm.Model
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		public OTel Otel { get; set; }
-
 		/// <summary>
 		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
 		/// or "fixed" automatically.
@@ -371,11 +383,6 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal bool IsContextCreated => _context.IsValueCreated;
 
-		/// <summary>
-		/// Links holds links to other spans, potentially in other traces.
-		/// </summary>
-		public IEnumerable<SpanLink> Links { get; }
-
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }
 
@@ -383,6 +390,11 @@ namespace Elastic.Apm.Model
 		[Obsolete(
 			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => Context.Labels;
+
+		/// <summary>
+		/// Links holds links to other spans, potentially in other traces.
+		/// </summary>
+		public IEnumerable<SpanLink> Links { get; }
 
 		[MaxLength]
 		public string Name
@@ -394,6 +406,8 @@ namespace Elastic.Apm.Model
 				_name = value;
 			}
 		}
+
+		public OTel Otel { get; set; }
 
 		/// <summary>
 		/// The outcome of the transaction: success, failure, or unknown.
@@ -468,9 +482,14 @@ namespace Elastic.Apm.Model
 				_outcome = outcome;
 		}
 
-		private Activity StartActivity()
+		private Activity StartActivity(bool shouldRestartTrace)
 		{
 			var activity = new Activity(KnownListeners.ApmTransactionActivityName);
+			if (shouldRestartTrace)
+			{
+				activity.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
+					Activity.Current != null ? Activity.Current.ActivityTraceFlags : ActivityTraceFlags.None);
+			}
 			activity.SetIdFormat(ActivityIdFormat.W3C);
 			activity.Start();
 			return activity;
