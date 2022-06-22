@@ -130,7 +130,8 @@ namespace Elastic.Apm.Model
 			Name = name;
 			HasCustomName = false;
 			Type = type;
-			Links = links;
+			var spanLinks = links as SpanLink[] ?? links?.ToArray();
+			Links = spanLinks;
 
 			var shouldRestartTrace = configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.Restart ||
 				configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
@@ -169,6 +170,14 @@ namespace Elastic.Apm.Model
 						_traceState.AddTextHeader(_activity.TraceStateString);
 
 					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
+
+					if (shouldRestartTrace && distributedTracingData != null)
+					{
+						if (Links == null || spanLinks == null)
+							Links = new List<SpanLink> { new(distributedTracingData.ParentId, distributedTracingData.TraceId) };
+						else
+							Links = new List<SpanLink>(spanLinks) { new (distributedTracingData.ParentId, distributedTracingData.TraceId) };
+					}
 
 					// In the unlikely event that tracestate populated from activity contains an es vendor key, the tracestate
 					// is mutated to set the sample rate defined by the sampler, because we consider a transaction without

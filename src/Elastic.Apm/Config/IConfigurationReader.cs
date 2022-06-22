@@ -315,6 +315,7 @@ namespace Elastic.Apm.Config
 		/// This can be useful when a caller service always sets the sampled flag to false and the agent would have no chance to
 		/// create any sampled transaction.
 		/// </summary>
+		[Obsolete("Use TraceContinuationStrategy")]
 		bool TraceContextIgnoreSampledFalse { get; }
 
 		/// <summary>

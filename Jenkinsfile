@@ -107,7 +107,7 @@ pipeline {
                           whenTrue(isPR()) {
                             // build nuget packages and profiler
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
-                            sh label: 'Rustup', script: 'rustup default 1.56.0'
+                            sh label: 'Rustup', script: 'rustup default 1.56.1'
                             sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                             sh(label: 'Build profiler', script: './build.sh profiler-zip')
                           }

@@ -327,6 +327,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().BeNullOrEmpty();
 		}
 
 		[Fact]
@@ -347,6 +349,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().BeNullOrEmpty();
 		}
 
 		[Fact]
@@ -367,6 +371,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().HaveCount(1);
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).SpanId.Should().BeNullOrEmpty("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).TraceId.Should().BeNullOrEmpty("0af7651916cd43dd8448eb211c80319c");
 		}
 
 		[Fact]
@@ -387,6 +395,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().BeNullOrEmpty();
 		}
 
 		[Fact]
@@ -407,6 +417,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().HaveCount(1);
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).SpanId.Should().BeNullOrEmpty("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).TraceId.Should().BeNullOrEmpty("0af7651916cd43dd8448eb211c80319c");
 		}
 
 		[Fact]
@@ -427,6 +441,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().HaveCount(1);
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).SpanId.Should().BeNullOrEmpty("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).TraceId.Should().BeNullOrEmpty("0af7651916cd43dd8448eb211c80319c");
 		}
 
 		public async Task DisposeAsync()
