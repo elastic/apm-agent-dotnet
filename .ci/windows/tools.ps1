@@ -21,7 +21,7 @@ choco install vswhere -y --no-progress -r --version 2.8.4
 
 # Install rust
 Write-Host "Install rust-ms"
-choco install rust-ms -y --no-progress -r --version 1.56.1
+choco install rust-ms -y --no-progress -r --version 1.57.0
 
 # Download and install cargo make
 Write-Host "Download cargo-make"
