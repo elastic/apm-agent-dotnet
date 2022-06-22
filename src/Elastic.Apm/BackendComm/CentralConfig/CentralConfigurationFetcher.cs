@@ -30,9 +30,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly IApmLogger _logger;
 		private readonly Action<CentralConfigurationReader> _onResponse;
 
-		private long _dbgIterationsCount;
-		private EntityTagHeaderValue _eTag;
-
 		internal CentralConfigurationFetcher(IApmLogger logger, IConfigurationStore configurationStore,
 			ICentralConfigurationResponseParser centralConfigurationResponseParser,
 			Service service,
@@ -70,12 +67,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			// if the logger supports switching the log level at runtime, allow it to be updated by central configuration
 			if (_initialSnapshot.CentralConfig && logger is ILogLevelSwitchable switchable)
+			{
 				_onResponse += reader =>
 				{
 					var currentLevel = switchable.LogLevelSwitch.Level;
 					if (reader.LogLevel != null && reader.LogLevel != currentLevel)
 						switchable.LogLevelSwitch.Level = reader.LogLevel.Value;
 				};
+			}
 
 			if (!_initialSnapshot.CentralConfig) return;
 
@@ -90,6 +89,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			StartWorkLoop();
 		}
+
+		private long _dbgIterationsCount;
+		private EntityTagHeaderValue _eTag;
 
 		protected override async Task WorkLoopIteration()
 		{
@@ -262,6 +264,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
 			public bool Enabled => _wrapped.Enabled;
+			public bool EnableOpenTelemetryBridge => _wrapped.EnableOpenTelemetryBridge;
 
 			public string Environment => _wrapped.Environment;
 			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
@@ -311,6 +314,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				_centralConfiguration.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _centralConfiguration.StackTraceLimit ?? _wrapped.StackTraceLimit;
+			public bool TraceContextIgnoreSampledFalse => _wrapped.TraceContextIgnoreSampledFalse;
+
+			public string TraceContinuationStrategy => _centralConfiguration.TraceContinuationStrategy ?? _wrapped.TraceContinuationStrategy;
 
 			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 				_centralConfiguration.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
@@ -322,8 +328,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
-			public bool EnableOpenTelemetryBridge => _wrapped.EnableOpenTelemetryBridge;
-			public bool TraceContextIgnoreSampledFalse => _wrapped.TraceContextIgnoreSampledFalse;
 		}
 	}
 }
