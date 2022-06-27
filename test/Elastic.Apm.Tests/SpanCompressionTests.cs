@@ -48,7 +48,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender))) Generate10DbCalls(agent, spanName, true, 2);
 
 			payloadSender.Transactions.Should().HaveCount(1);
-			payloadSender.Spans.Should().HaveCount(1);
+			payloadSender.Spans.Should().HaveCount(1, $"Spans should be compressed, we expect 1 compressed spans. Current Spans: {string.Join(Environment.NewLine, payloadSender.Spans)}");
 			payloadSender.Spans.Where(s => (s as Span).Composite != null).Should().NotBeEmpty();
 		}
 

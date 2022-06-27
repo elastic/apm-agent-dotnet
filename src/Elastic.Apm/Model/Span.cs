@@ -287,7 +287,8 @@ namespace Elastic.Apm.Model
 			{ nameof(Name), Name },
 			{ nameof(Type), Type },
 			{ nameof(Outcome), Outcome },
-			{ nameof(IsSampled), IsSampled }
+			{ nameof(IsSampled), IsSampled },
+			{ nameof(Duration), Duration}
 		}.ToString();
 
 		public bool TryGetLabel<T>(string key, out T value)
