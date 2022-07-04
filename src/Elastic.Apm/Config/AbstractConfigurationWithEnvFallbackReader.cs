@@ -37,7 +37,7 @@ namespace Elastic.Apm.Config
 		public string ApiKey => ParseApiKey(Read(KeyNames.ApiKey, EnvVarNames.ApiKey));
 
 		public IReadOnlyCollection<string> ApplicationNamespaces =>
-			ParseExcludedNamespaces(Read(KeyNames.ApplicationNamespaces, EnvVarNames.ApplicationNamespaces));
+			ParseApplicationNamespaces(Read(KeyNames.ApplicationNamespaces, EnvVarNames.ApplicationNamespaces));
 
 		public virtual string CaptureBody => ParseCaptureBody(Read(KeyNames.CaptureBody, EnvVarNames.CaptureBody));
 
