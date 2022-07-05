@@ -394,7 +394,9 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Links holds links to other spans, potentially in other traces.
 		/// </summary>
-		public IEnumerable<SpanLink> Links { get; }
+		public IEnumerable<SpanLink> Links { get; private set; }
+
+		internal void SetSpanLinks(IEnumerable<SpanLink> links) => Links = links;
 
 		[MaxLength]
 		public string Name
