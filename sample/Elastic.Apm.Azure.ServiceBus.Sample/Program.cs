@@ -25,12 +25,9 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 			var connectionString = args[0];
 			_client = new ServiceBusClient(connectionString);
 
-
 			_queueName = "foo"; //Guid.NewGuid().ToString("D");
 
-
 			await ReadMessages();
-
 
 			Console.WriteLine("Press any key to continue...");
 			Console.ReadKey();
@@ -46,7 +43,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 
 			Console.WriteLine("Receiving messages from queue");
 
-			var messages = await receiver.ReceiveMessagesAsync(2)
+			var messages = await receiver.ReceiveMessagesAsync(15)
 				.ConfigureAwait(false);
 
 			Console.WriteLine("Printing messages:");
@@ -63,7 +60,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 		{
 			var sender = _client.CreateSender(_queueName);
 
-			for (var i = 0; i < 1; i++) await sender.SendMessageAsync(new ServiceBusMessage($"test message {i}")).ConfigureAwait(false);
+			await Agent.Tracer.CaptureTransaction("Send AzureServiceBus Messages", "messaging", async () =>
+			{
+				for (var i = 0; i < 10; i++) await sender.SendMessageAsync(new ServiceBusMessage($"test message {i}")).ConfigureAwait(false);
+			});
 
 			Console.WriteLine("Messages sent");
 		}

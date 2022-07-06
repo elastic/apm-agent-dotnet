@@ -49,7 +49,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			switch (kv.Key)
 			{
 				case "Message.Start":
-					OnMessageStart(kv, "SEND");
+					OnMessageStart(kv, "PREPARE MESSAGE");
 					break;
 				case "Message.Stop":
 					OnMessageStop();
