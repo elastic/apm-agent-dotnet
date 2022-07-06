@@ -49,7 +49,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			switch (kv.Key)
 			{
 				case "Message.Start":
-					OnMessageStart(kv, "PREPARE MESSAGE");
+					OnMessageStart(kv, "PREPARE");
 					break;
 				case "Message.Stop":
 					OnMessageStop();
@@ -106,7 +106,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
-			var name = $"{ServiceBus.SegmentName} {action}";
+			var name = $"{ServiceBus.SegmentName} {action} message";
 
 			_onMessageCurrent = currentSegment switch
 			{
@@ -155,16 +155,19 @@ namespace Elastic.Apm.Azure.ServiceBus
 				transaction.Context.Message = new Message { Queue = new Queue { Name = queueName } };
 
 			// transaction creation will create an activity, so use this as the key.
-			var activityId = Activity.Current.Id;
-
-			if (!_processingSegments.TryAdd(activityId, transaction))
+			if (Activity.Current != null)
 			{
-				Logger.Trace()
-					?.Log(
-						"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
-						action,
-						transaction.Id,
-						activityId);
+				var activityId = Activity.Current.Id;
+
+				if (!_processingSegments.TryAdd(activityId, transaction))
+				{
+					Logger.Trace()
+						?.Log(
+							"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
+							action,
+							transaction.Id,
+							activityId);
+				}
 			}
 		}
 
@@ -217,17 +220,20 @@ namespace Elastic.Apm.Azure.ServiceBus
 			}
 
 			// transaction creation will create an activity, so use this as the key.
-			var activityId = Activity.Current.Id;
-
-			if (!_processingSegments.TryAdd(activityId, segment))
+			if (Activity.Current != null)
 			{
-				Logger.Trace()
-					?.Log(
-						"Could not add {Action} {SegmentName} {TransactionId} for activity {ActivityId} to tracked segments",
-						action,
-						segment is ITransaction ? "transaction" : "span",
-						segment.Id,
-						activityId);
+				var activityId = Activity.Current.Id;
+
+				if (!_processingSegments.TryAdd(activityId, segment))
+				{
+					Logger.Trace()
+						?.Log(
+							"Could not add {Action} {SegmentName} {TransactionId} for activity {ActivityId} to tracked segments",
+							action,
+							segment is ITransaction ? "transaction" : "span",
+							segment.Id,
+							activityId);
+				}
 			}
 		}
 
@@ -364,14 +370,15 @@ namespace Elastic.Apm.Azure.ServiceBus
 			segment.End();
 		}
 
-
-#pragma warning disable CS1574, CS1584, CS1581, CS1580
+		// ServiceBusReceiver isn't directly referenced - disable warning for it
+#pragma warning disable CS1574
 		/// <summary>
 		/// <see cref="ServiceBusReceiver"/> creates activity links based on the `Diagnostic-Id` property of the message.
 		/// This property is written based the activity on the producer side.
 		/// When reading a batch of messages we create span links for each parent.
 		/// We walk up the activity chain, look for the ServiceBusReceiver activity and use these activity links to create span links.
 		/// </summary>
+#pragma warning restore CS1574
 		private void PopulateLinks()
 		{
 			var current = Activity.Current;
@@ -397,54 +404,51 @@ namespace Elastic.Apm.Azure.ServiceBus
 			foreach (var prop in propertyInfos)
 			{
 				if (prop.GetValue(current) is IEnumerable<Activity> activityList
-					&& activityList.Count() > 1) // it's only batch processing when there is more than 1 link to parents
-					IterateActivityLinks(activityList);
+					&& activityList.Any())
+					CollectSpanLinks(activityList);
 				else
 				{
 					if (prop.GetValue(current) is IEnumerable<ActivityLink> activityLinkList
-						&& activityLinkList.Count() > 1) // it's only batch processing when there is more than 1 link to parents
-						IterateActivityLinks(activityLinkList);
+						&& activityLinkList.Any())
+						CollectSpanLinks(activityLinkList);
 					else
 						return;
 				}
 			}
 
-
-			void IterateActivityLinks(object links)
+			void CollectSpanLinks(object links)
 			{
 				if (Activity.Current?.Id != null && _processingSegments.TryGetValue(Activity.Current.Id, out var segment))
 				{
-					if (segment is Transaction realTransaction)
+					var spanLinks = new List<SpanLink>();
+
+					var iEnumerable = links as IEnumerable;
+					if (iEnumerable == null) return;
+
+					foreach (var link in iEnumerable)
 					{
-						var spanLinks = new List<SpanLink>();
+						// According to spec we only create up to 1k links.
+						if (spanLinks.Count == 1000)
+							break;
 
-						var iEnumerable = links as IEnumerable;
-						if (iEnumerable == null) return;
-
-						foreach (var link in iEnumerable)
+						if (link is Activity activity)
 						{
-							// According to spec we only create up to 1k links.
-							if (spanLinks.Count == 1000)
-								break;
-
-							if (link is Activity activity)
-							{
-								spanLinks.Add(new SpanLink(activity.ParentSpanId.ToString(),
-									activity.TraceId.ToString()));
-							}
-							else if (link is ActivityLink activityLink)
-							{
-								spanLinks.Add(new SpanLink(activityLink.Context.SpanId.ToString(),
-									activityLink.Context.TraceId.ToString()));
-							}
+							spanLinks.Add(new SpanLink(activity.ParentSpanId.ToString(),
+								activity.TraceId.ToString()));
 						}
-
-						//TODO Make it work for span as well.
-						realTransaction.SetSpanLinks(spanLinks);
+						else if (link is ActivityLink activityLink)
+						{
+							spanLinks.Add(new SpanLink(activityLink.Context.SpanId.ToString(),
+								activityLink.Context.TraceId.ToString()));
+						}
 					}
+
+					if (segment is Transaction realTransaction)
+						realTransaction.InsertSpanLinkInternal(spanLinks);
+					else if(segment is Span realSpan)
+						realSpan.InsertSpanLinkInternal(spanLinks);
 				}
 			}
 		}
-#pragma warning restore CS1574, CS1584, CS1581, CS1580
 	}
 }

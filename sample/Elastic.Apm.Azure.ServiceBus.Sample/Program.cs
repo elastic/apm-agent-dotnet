@@ -43,7 +43,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 
 			Console.WriteLine("Receiving messages from queue");
 
-			var messages = await receiver.ReceiveMessagesAsync(15)
+			var messages = await receiver.ReceiveMessagesAsync(16)
 				.ConfigureAwait(false);
 
 			Console.WriteLine("Printing messages:");
