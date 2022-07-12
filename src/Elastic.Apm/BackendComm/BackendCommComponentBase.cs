@@ -27,7 +27,7 @@ namespace Elastic.Apm.BackendComm
 		private readonly IApmLogger _logger;
 		private readonly ManualResetEventSlim _loopCompleted;
 		private readonly ManualResetEventSlim _loopStarted;
-		protected Thread WorkLoopThread;
+		private Thread _workLoopThread;
 		private readonly string _dbgDerivedClassName;
 
 		internal BackendCommComponentBase(bool isEnabled, IApmLogger logger, string dbgDerivedClassName, Service service
@@ -57,12 +57,12 @@ namespace Elastic.Apm.BackendComm
 
 		protected abstract void WorkLoopIteration();
 
-		internal bool IsRunning => WorkLoopThread.IsAlive;
+		internal bool IsRunning => _workLoopThread.IsAlive;
 
 		protected void StartWorkLoop()
 		{
-			WorkLoopThread = new Thread(WorkLoop) { Name = $"ElasticApm{_dbgDerivedClassName}", IsBackground = true };
-			WorkLoopThread.Start();
+			_workLoopThread = new Thread(WorkLoop) { Name = $"ElasticApm{_dbgDerivedClassName}", IsBackground = true };
+			_workLoopThread.Start();
 
 			_logger.Debug()?.Log("Waiting for work loop started event...");
 			_loopStarted.Wait();
@@ -129,7 +129,7 @@ namespace Elastic.Apm.BackendComm
 
 				_logger.Debug()?.Log("Disposing _singleThreadTaskScheduler ...");
 
-				WorkLoopThread.Join();
+				_workLoopThread.Join();
 
 				_logger.Debug()?.Log("Disposing HttpClient...");
 				HttpClient.Dispose();
