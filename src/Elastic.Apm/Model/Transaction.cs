@@ -401,10 +401,13 @@ namespace Elastic.Apm.Model
 			var spanLinks = links as SpanLink[] ?? links.ToArray();
 			if (Links == null || !Links.Any())
 				Links = spanLinks;
+			else
+			{
 
-			var newList = new List<SpanLink>(Links);
-			newList.AddRange(spanLinks);
-			Links = new List<SpanLink>(newList);
+				var newList = new List<SpanLink>(Links);
+				newList.AddRange(spanLinks);
+				Links = new List<SpanLink>(newList);
+			}
 		}
 
 		[MaxLength]

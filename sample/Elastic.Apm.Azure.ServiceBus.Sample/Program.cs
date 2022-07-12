@@ -35,6 +35,17 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 			return 0;
 		}
 
+		private static async Task SendSingleMessage()
+		{
+			var sender = _client.CreateSender(_queueName);
+
+			await Agent.Tracer.CaptureTransaction("Send AzureServiceBus Single Message", "messaging", async () =>
+			{
+				 await sender.SendMessageAsync(new ServiceBusMessage($"test message - single")).ConfigureAwait(false);
+			});
+
+			Console.WriteLine("Messages sent");
+		}
 
 		private static async Task ReadMessages()
 		{
@@ -50,10 +61,25 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 			foreach (var item in messages)
 			{
 				Console.Write($"Body: {item.Body} - ");
-				Console.WriteLine($"CorrelationId: {item.CorrelationId}");
 			}
 			Console.WriteLine($"Message count: {messages.Count}");
-			Console.WriteLine("Receiving message from queue");
+			Console.WriteLine("Receiving messages from queue done");
+		}
+
+		private static async Task ReadSingleMessage()
+		{
+			var receiver = _client.CreateReceiver(_queueName,
+				new ServiceBusReceiverOptions() { ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete });
+
+			Console.WriteLine("Receiving messages from queue");
+
+			var message = await receiver.ReceiveMessageAsync()
+				.ConfigureAwait(false);
+
+			Console.WriteLine("Printing single message:");
+			Console.Write($"Body: {message.Body} - ");
+
+			Console.WriteLine("Receiving message from queue done");
 		}
 
 		private static async Task SendMessages()
