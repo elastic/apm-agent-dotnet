@@ -26,7 +26,7 @@ namespace Elastic.Apm.BackendComm
 		private readonly bool _isEnabled;
 		private readonly IApmLogger _logger;
 		private readonly ManualResetEventSlim _loopCompleted;
-		private ManualResetEventSlim _loopStarted;
+		private readonly ManualResetEventSlim _loopStarted;
 		protected Thread WorkLoopThread;
 		private readonly string _dbgDerivedClassName;
 
