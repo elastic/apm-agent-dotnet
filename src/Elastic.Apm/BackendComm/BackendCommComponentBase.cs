@@ -26,8 +26,8 @@ namespace Elastic.Apm.BackendComm
 		private readonly bool _isEnabled;
 		private readonly IApmLogger _logger;
 		private readonly ManualResetEventSlim _loopCompleted;
-		private readonly ManualResetEventSlim _loopStarted;
-		private Thread _workLoopThread;
+		private ManualResetEventSlim _loopStarted;
+		protected Thread WorkLoopThread;
 		private readonly string _dbgDerivedClassName;
 
 		internal BackendCommComponentBase(bool isEnabled, IApmLogger logger, string dbgDerivedClassName, Service service
@@ -55,18 +55,25 @@ namespace Elastic.Apm.BackendComm
 			HttpClient = BackendCommUtils.BuildHttpClient(logger, configuration, service, _dbgName, httpMessageHandler);
 		}
 
-		protected abstract Task WorkLoopIteration();
+		protected abstract void WorkLoopIteration();
 
-		internal bool IsRunning => _workLoopThread.IsAlive;
+		internal bool IsRunning => WorkLoopThread.IsAlive;
 
 		protected void StartWorkLoop()
 		{
-			_workLoopThread = new Thread(WorkLoop) { Name = $"ElasticApm{_dbgDerivedClassName}", IsBackground = true };
-			_workLoopThread.Start();
+			StartWorkLoopThread();
 
 			_logger.Debug()?.Log("Waiting for work loop started event...");
 			_loopStarted.Wait();
 			_logger.Debug()?.Log("Work loop started signaled");
+		}
+
+		protected void StartWorkLoopThread()
+		{
+			_loopStarted = new ManualResetEventSlim();
+
+			WorkLoopThread = new Thread(WorkLoop) { Name = $"ElasticApm{_dbgDerivedClassName}", IsBackground = true };
+			WorkLoopThread.Start();
 		}
 
 		private void WorkLoop()
@@ -80,7 +87,7 @@ namespace Elastic.Apm.BackendComm
 				{
 					// This runs on the dedicated work loop thread
 					// In order to make sure iterations don't overlap we wait for the current iteration - the intention here is to block
-					WorkLoopIteration().Wait();
+					WorkLoopIteration();
 				}
 				catch (OperationCanceledException)
 				{
@@ -93,14 +100,14 @@ namespace Elastic.Apm.BackendComm
 					if (ex is AggregateException aggregateException && aggregateException.InnerExceptions.Any(e => e is TaskCanceledException))
 					{
 						_logger.Debug()
-							?.LogException(ex, nameof(WorkLoop) + "TaskCanceledException -  Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
+							?.LogException(ex, nameof(WorkLoop) + "TaskCanceledException -  Current thread: {ThreadDesc}",
+								DbgUtils.CurrentThreadDesc);
 					}
 					else
 					{
 						_logger.Error()
 							?.LogException(ex, nameof(WorkLoop) + " Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
 					}
-
 				}
 			}
 
@@ -129,7 +136,7 @@ namespace Elastic.Apm.BackendComm
 
 				_logger.Debug()?.Log("Disposing _singleThreadTaskScheduler ...");
 
-				_workLoopThread.Join();
+				WorkLoopThread.Join();
 
 				_logger.Debug()?.Log("Disposing HttpClient...");
 				HttpClient.Dispose();

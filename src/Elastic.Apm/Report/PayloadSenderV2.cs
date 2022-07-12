@@ -157,6 +157,8 @@ namespace Elastic.Apm.Report
 		{
 			ThrowIfDisposed();
 
+			if (!WorkLoopThread.IsAlive) StartWorkLoopThread();
+
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
 			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
 			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
@@ -198,11 +200,14 @@ namespace Elastic.Apm.Report
 			return true;
 		}
 
-		protected override async Task WorkLoopIteration()
+		/// <summary>
+		/// Runs on the background thread dedicated to sending data to APM Server. It's ok to block this thread.
+		/// </summary>
+		protected override void WorkLoopIteration()
 		{
 			if (!_getCloudMetadata)
 			{
-				var cloud = await _cloudMetadataProviderCollection.GetMetadataAsync();
+				var cloud = _cloudMetadataProviderCollection.GetMetadataAsync().Result;
 				if (cloud != null)
 					_metadata.Cloud = cloud;
 
@@ -211,12 +216,12 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient, _serverInfoCallback);
+				ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient, _serverInfoCallback).Wait();
 				_getApmServerVersion = true;
 			}
 
-			var batch = await ReceiveBatchAsync();
-			await ProcessQueueItems(batch);
+			var batch = ReceiveBatchAsync().Result;
+			ProcessQueueItems(batch).Wait();
 		}
 
 		private async Task<object[]> ReceiveBatchAsync()
