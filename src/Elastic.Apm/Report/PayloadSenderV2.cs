@@ -157,8 +157,6 @@ namespace Elastic.Apm.Report
 		{
 			ThrowIfDisposed();
 
-			if (!WorkLoopThread.IsAlive) StartWorkLoopThread();
-
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
 			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
 			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch

@@ -61,19 +61,12 @@ namespace Elastic.Apm.BackendComm
 
 		protected void StartWorkLoop()
 		{
-			StartWorkLoopThread();
+			WorkLoopThread = new Thread(WorkLoop) { Name = $"ElasticApm{_dbgDerivedClassName}", IsBackground = true };
+			WorkLoopThread.Start();
 
 			_logger.Debug()?.Log("Waiting for work loop started event...");
 			_loopStarted.Wait();
 			_logger.Debug()?.Log("Work loop started signaled");
-		}
-
-		protected void StartWorkLoopThread()
-		{
-			_loopStarted = new ManualResetEventSlim();
-
-			WorkLoopThread = new Thread(WorkLoop) { Name = $"ElasticApm{_dbgDerivedClassName}", IsBackground = true };
-			WorkLoopThread.Start();
 		}
 
 		private void WorkLoop()
