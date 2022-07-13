@@ -106,6 +106,22 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
+			string queueName = null;
+			foreach (var tag in activity.Tags)
+			{
+				switch (tag.Key)
+				{
+					case "message_bus.destination":
+						queueName = tag.Value;
+						break;
+					default:
+						continue;
+				}
+			}
+
+			if (MatchesIgnoreMessageQueues(queueName))
+				return;
+
 			var name = $"{ServiceBus.SegmentName} {action} message";
 
 			_onMessageCurrent = currentSegment switch
@@ -445,7 +461,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 					if (segment is Transaction realTransaction)
 						realTransaction.InsertSpanLinkInternal(spanLinks);
-					else if(segment is Span realSpan)
+					else if (segment is Span realSpan)
 						realSpan.InsertSpanLinkInternal(spanLinks);
 				}
 			}
