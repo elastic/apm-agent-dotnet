@@ -186,6 +186,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.SpansOnFirstTransaction.First();
+			span.Links.Should().NotBeNullOrEmpty();
 
 			span.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			span.Type.Should().Be(ApiConstants.TypeMessaging);
@@ -216,6 +217,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
+			transaction.Links.Should().NotBeNullOrEmpty();
 
 			transaction.Context.Message.Should().NotBeNull();
 			transaction.Context.Message.Queue.Should().NotBeNull();
@@ -246,6 +248,8 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {subscription}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
 
+			transaction.Links.Should().NotBeNullOrEmpty();
+
 			transaction.Context.Message.Should().NotBeNull();
 			transaction.Context.Message.Queue.Should().NotBeNull();
 			transaction.Context.Message.Queue.Name.Should().Be(subscription);
@@ -272,6 +276,9 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(2);
 
 			var transaction = _sender.FirstTransaction;
+
+			transaction.Links.Should().NotBeNullOrEmpty();
+
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
 
@@ -307,6 +314,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(2);
 
 			var transaction = _sender.FirstTransaction;
+			transaction.Links.Should().NotBeNullOrEmpty();
 			var subscription = $"{scope.TopicName}/Subscriptions/{scope.SubscriptionName}";
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {subscription}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
