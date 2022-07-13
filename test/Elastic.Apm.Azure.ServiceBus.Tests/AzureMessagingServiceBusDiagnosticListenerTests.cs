@@ -50,8 +50,11 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			if (!_sender.WaitForSpans())
 				throw new Exception("No span received in timeout");
 
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
+			_sender.Spans.Should().HaveCount(2);
+
+			_sender.FirstSpan.Name.Should().Be($"{ServiceBus.SegmentName} PREPARE message");
+
+			var span = _sender.Spans[1];
 
 			span.Name.Should().Be($"{ServiceBus.SegmentName} SEND to {scope.QueueName}");
 			span.Type.Should().Be(ApiConstants.TypeMessaging);
@@ -81,8 +84,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			if (!_sender.WaitForSpans())
 				throw new Exception("No span received in timeout");
 
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
+			_sender.Spans.Should().HaveCount(2);
+			_sender.FirstSpan.Name.Should().Be($"{ServiceBus.SegmentName} PREPARE message");
+
+			var span = _sender.Spans[1];
 
 			span.Name.Should().Be($"{ServiceBus.SegmentName} SEND to {scope.TopicName}");
 			span.Type.Should().Be(ApiConstants.TypeMessaging);
@@ -114,8 +119,11 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			if (!_sender.WaitForSpans())
 				throw new Exception("No span received in timeout");
 
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
+			_sender.Spans.Should().HaveCount(2);
+
+			_sender.FirstSpan.Name.Should().Be($"{ServiceBus.SegmentName} PREPARE message");
+
+			var span = _sender.Spans[1];
 
 			span.Name.Should().Be($"{ServiceBus.SegmentName} SCHEDULE to {scope.QueueName}");
 			span.Type.Should().Be(ApiConstants.TypeMessaging);
@@ -147,8 +155,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			if (!_sender.WaitForSpans())
 				throw new Exception("No span received in timeout");
 
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
+			_sender.Spans.Should().HaveCount(2);
+			_sender.FirstSpan.Name.Should().Be($"{ServiceBus.SegmentName} PREPARE message");
+
+			var span = _sender.Spans[1];
 
 			span.Name.Should().Be($"{ServiceBus.SegmentName} SCHEDULE to {scope.TopicName}");
 			span.Type.Should().Be(ApiConstants.TypeMessaging);
@@ -187,6 +197,8 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.SpansOnFirstTransaction.First();
 
+			span.Links.Should().NotBeNullOrEmpty();
+
 			span.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			span.Type.Should().Be(ApiConstants.TypeMessaging);
 			span.Subtype.Should().Be(ServiceBus.SubType);
@@ -214,6 +226,8 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(1);
 			var transaction = _sender.FirstTransaction;
 
+			transaction.Links.Should().NotBeNullOrEmpty();
+
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
 
@@ -240,6 +254,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			_sender.Transactions.Should().HaveCount(1);
 			var transaction = _sender.FirstTransaction;
+			transaction.Links.Should().NotBeNullOrEmpty();
 			var subscription = $"{scope.TopicName}/Subscriptions/{scope.SubscriptionName}";
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {subscription}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
@@ -270,6 +285,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(2);
 
 			var transaction = _sender.FirstTransaction;
+			transaction.Links.Should().NotBeNullOrEmpty();
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
 
@@ -304,6 +320,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(2);
 
 			var transaction = _sender.FirstTransaction;
+			transaction.Links.Should().NotBeNullOrEmpty();
 			var subscription = $"{scope.TopicName}/Subscriptions/{scope.SubscriptionName}";
 			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {subscription}");
 			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
