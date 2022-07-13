@@ -152,6 +152,13 @@ namespace Elastic.Apm.Report
 
 		public void QueueError(IError error) => EnqueueEvent(error, "Error");
 
+		protected override void Dispose(bool disposing)
+		{
+			_eventQueue?.TriggerBatch();
+			_eventQueue?.Complete();
+			base.Dispose(disposing);
+		}
+
 		internal bool EnqueueEvent(object eventObj, string dbgEventKind)
 		{
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
@@ -191,7 +198,6 @@ namespace Elastic.Apm.Report
 					, newEventQueueCount, _maxQueueEventCount, eventObj);
 
 			if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
-
 			return true;
 		}
 
@@ -219,7 +225,7 @@ namespace Elastic.Apm.Report
 			}
 
 			var batch = ReceiveBatch();
-			if(batch != null)
+			if (batch != null)
 				ProcessQueueItems(batch);
 		}
 
@@ -228,12 +234,7 @@ namespace Elastic.Apm.Report
 			_eventQueue.TryReceive(null, out var receivedItems);
 
 			if (_flushInterval == TimeSpan.Zero)
-			{
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
-
-				if (receivedItems == null)
-					receivedItems = _eventQueue.Receive();
-			}
 			else
 			{
 				while (!CancellationTokenSource.IsCancellationRequested)
@@ -242,8 +243,16 @@ namespace Elastic.Apm.Report
 
 					if (receivedItems == null)
 					{
-						Task.Delay(_flushInterval, CancellationTokenSource.Token).ConfigureAwait(false).GetAwaiter().GetResult();
-						if (_eventQueue.TryReceive(null, out receivedItems))
+						try
+						{
+							receivedItems = _eventQueue.Receive(_flushInterval);
+						}
+						catch (TimeoutException)
+						{
+							_logger.Trace()?.Log("FlushInterval reached, no item in the queue");
+						}
+
+						if (receivedItems?.Length > 0)
 							break;
 					}
 					else
@@ -253,7 +262,7 @@ namespace Elastic.Apm.Report
 				}
 			}
 
-			if(receivedItems == null)
+			if (receivedItems == null)
 			{
 				_eventQueue.TryReceive(null, out receivedItems);
 			}
@@ -322,12 +331,12 @@ namespace Elastic.Apm.Report
 						var webRequest = new HttpRequestMessage(HttpMethod.Post, _intakeV2EventsAbsoluteUrl) { Content = content };
 						response = HttpClient.Send(webRequest, CancellationTokenSource.Token);
 					}
-					catch(NotSupportedException) //HttpMessageHandler may not support synchronous sending
+					catch (Exception) //HttpMessageHandler may not support synchronous sending
 					{
-						 response = HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
-						.ConfigureAwait(false)
-						.GetAwaiter()
-						.GetResult();
+						response = HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
+							.ConfigureAwait(false)
+							.GetAwaiter()
+							.GetResult();
 					}
 #else
 					var response = HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)

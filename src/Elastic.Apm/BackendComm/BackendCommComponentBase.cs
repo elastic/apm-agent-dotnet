@@ -108,7 +108,9 @@ namespace Elastic.Apm.BackendComm
 			_loopCompleted.Set();
 		}
 
-		public void Dispose()
+		public void Dispose() => Dispose(true);
+
+		protected virtual void Dispose(bool isDisposing)
 		{
 			if (!_isEnabled)
 			{
@@ -140,5 +142,6 @@ namespace Elastic.Apm.BackendComm
 				_logger.Debug()?.Log("Exiting...");
 			});
 		}
+
 	}
 }
