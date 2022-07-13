@@ -103,21 +103,6 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		[Theory]
 		[MemberData(nameof(AwaitOrTimeoutVariantsToTest))]
-		internal void TryAwaitOrTimeout_task_timed_out_test(string dbgVariantDesc, Func<IApmLogger, ISutEnv> sutEnvCreator)
-		{
-			var sutEnv = sutEnvCreator(_logger);
-			var directDelayTask = Task.Delay(VeryShortTimeout);
-			var tryAwaitOrTimeoutTask = sutEnv.TryAwaitOrTimeoutCall(VeryShortTimeout, out var delayTask);
-
-			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => tryAwaitOrTimeoutTask.IsCompleted
-				, () => $"dbgVariantDesc: {dbgVariantDesc}. tryAwaitOrTimeoutTask: {tryAwaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}."
-					+ $" directDelayTask = {directDelayTask.Status}");
-
-			sutEnv.VerifyTryAwaitTimeout(tryAwaitOrTimeoutTask, delayTask);
-		}
-
-		[Theory]
-		[MemberData(nameof(AwaitOrTimeoutVariantsToTest))]
 		internal void TryAwaitOrTimeout_task_cancelled_test(string dbgVariantDesc, Func<IApmLogger, ISutEnv> sutEnvCreator)
 		{
 			var sutEnv = sutEnvCreator(_logger);
