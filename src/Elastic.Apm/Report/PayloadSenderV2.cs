@@ -221,7 +221,8 @@ namespace Elastic.Apm.Report
 			}
 
 			var batch = ReceiveBatch();
-			ProcessQueueItems(batch);
+			if(batch != null)
+				ProcessQueueItems(batch);
 		}
 
 		private object[] ReceiveBatch()
@@ -229,7 +230,12 @@ namespace Elastic.Apm.Report
 			_eventQueue.TryReceive(null, out var receivedItems);
 
 			if (_flushInterval == TimeSpan.Zero)
+			{
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
+
+				if (receivedItems == null)
+					receivedItems = _eventQueue.Receive();
+			}
 			else
 			{
 				while (!CancellationTokenSource.IsCancellationRequested)
@@ -239,7 +245,8 @@ namespace Elastic.Apm.Report
 					if (receivedItems == null)
 					{
 						Task.Delay(_flushInterval, CancellationTokenSource.Token).ConfigureAwait(false).GetAwaiter().GetResult();
-						if (_eventQueue.TryReceive(null, out receivedItems)) break;
+						if (_eventQueue.TryReceive(null, out receivedItems))
+							break;
 					}
 					else
 						break;
@@ -248,14 +255,25 @@ namespace Elastic.Apm.Report
 				}
 			}
 
-			receivedItems ??= _eventQueue.Receive();
+			if(receivedItems == null)
+			{
+				_eventQueue.TryReceive(null, out receivedItems);
+			}
 
 			var eventBatchToSend = receivedItems;
-			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
+			if (eventBatchToSend != null)
+			{
+				var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
 
-			_logger.Trace()
-				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
-					, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+				_logger.Trace()
+					?.Log("There is data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
+						, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+			}
+			else
+			{
+				_logger.Trace()
+					?.Log("There is no data to send.");
+			}
 			return eventBatchToSend;
 		}
 
@@ -300,8 +318,19 @@ namespace Elastic.Apm.Report
 					content.Headers.ContentType = MediaTypeHeaderValue;
 
 #if NET5_0_OR_GREATER
-					var webRequest = new HttpRequestMessage(HttpMethod.Post, _intakeV2EventsAbsoluteUrl) { Content = content };
-					var response = HttpClient.Send(webRequest);
+					HttpResponseMessage response = null;
+					try
+					{
+						var webRequest = new HttpRequestMessage(HttpMethod.Post, _intakeV2EventsAbsoluteUrl) { Content = content };
+						response = HttpClient.Send(webRequest, CancellationTokenSource.Token);
+					}
+					catch(NotSupportedException) //HttpMessageHandler may not support synchronous sending
+					{
+						 response = HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
+						.ConfigureAwait(false)
+						.GetAwaiter()
+						.GetResult();
+					}
 #else
 					var response = HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
 						.ConfigureAwait(false)
