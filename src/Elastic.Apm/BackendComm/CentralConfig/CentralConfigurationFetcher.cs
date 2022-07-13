@@ -104,7 +104,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			{
 				httpRequest = BuildHttpRequest(_eTag);
 
-				(httpResponse, httpResponseBody) = FetchConfigHttpResponseAsync(httpRequest).Result;
+				(httpResponse, httpResponseBody) = FetchConfigHttpResponseAsync(httpRequest).ConfigureAwait(false).GetAwaiter().GetResult();
 
 				CentralConfigurationReader centralConfigurationReader;
 				(centralConfigurationReader, waitInfo) = _centralConfigurationResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
