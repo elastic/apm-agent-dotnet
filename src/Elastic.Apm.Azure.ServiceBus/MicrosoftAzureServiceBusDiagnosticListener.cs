@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Transactions;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
@@ -25,12 +26,19 @@ namespace Elastic.Apm.Azure.ServiceBus
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
 		private readonly PropertyFetcherCollection _sendProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcherCollection _scheduleProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
-		private readonly PropertyFetcherCollection _receiveProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
-		private readonly PropertyFetcherCollection _receiveDeferredProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
-		private readonly PropertyFetcherCollection _processProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
-		private readonly PropertyFetcherCollection _processSessionProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
-		private readonly PropertyFetcher _exceptionProperty = new PropertyFetcher("Exception");
-		private readonly Framework _framework;
+		private readonly PropertyFetcherCollection _receiveProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status", "Messages" };
+
+		private readonly PropertyFetcherCollection _receiveDeferredProperties =
+			new PropertyFetcherCollection { "Entity", "Endpoint", "Status", "Messages" };
+
+		private readonly PropertyFetcherCollection _processProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status", "Messages" };
+
+		private readonly PropertyFetcherCollection _processSessionProperties =
+			new PropertyFetcherCollection { "Entity", "Endpoint", "Status", "Messages" };
+
+		private readonly PropertyFetcherCollection _exceptionProperty = new PropertyFetcherCollection { "Exception", "Messages" };
+
+	private readonly Framework _framework;
 
 		public override string Name { get; } = "Microsoft.Azure.ServiceBus";
 
@@ -272,6 +280,8 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
+			FillSpanLinks(cachedProperties, segment, kv);
+
 			var status = cachedProperties.Fetch(kv.Value, "Status") as TaskStatus?;
 			var outcome = status switch
 			{
@@ -303,11 +313,46 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
-			if (_exceptionProperty.Fetch(kv.Value) is Exception exception)
+			if (_exceptionProperty.Fetch(kv.Value, "Exception") is Exception exception)
 				segment.CaptureException(exception);
+
+			FillSpanLinks(_exceptionProperty, segment, kv);
 
 			segment.Outcome = Outcome.Failure;
 			segment.End();
+		}
+
+		private void FillSpanLinks(PropertyFetcherCollection cachedProperties, IExecutionSegment segment, KeyValuePair<string, object> kv)
+		{
+			var messages = cachedProperties.Fetch(kv.Value, "Messages") as IEnumerable<object>;
+
+			var spanLinks = new List<SpanLink>();
+			if (messages != null)
+			{
+				foreach (var message in messages)
+				{
+					if (message.GetType().GetProperty("UserProperties")?.GetValue(message) is Dictionary<string, object> properties)
+					{
+						foreach (var property in properties)
+						{
+							if (property.Key.Equals("Diagnostic-Id", StringComparison.InvariantCultureIgnoreCase))
+							{
+								var parsedTraceParent = DistributedTracingData.TryDeserializeFromString(property.Value.ToString());
+								if(parsedTraceParent != null)
+									spanLinks.Add(new SpanLink(parsedTraceParent.ParentId, parsedTraceParent.TraceId));
+							}
+						}
+					}
+				}
+			}
+
+			switch (segment)
+			{
+				case Model.Transaction t: t.InsertSpanLinkInternal(spanLinks);
+					break;
+				case Model.Span s: s.InsertSpanLinkInternal(spanLinks);
+					break;
+			}
 		}
 	}
 }
