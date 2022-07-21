@@ -991,8 +991,6 @@ In order to handle this properly, the agent offers trace continuation strategies
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-IMPORTANT: Use of `TransactionIgnoreUrls` is deprecated. Use `TraceContinuationStrategy` with the `restart_external` value.
-
 This is used to restrict requests to certain URLs from being instrumented.
 
 This property should be set to a comma separated string containing one or more paths.
@@ -1214,6 +1212,8 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 [float]
 [[config-trace-context-ignore-sampled-false]]
 ==== `TraceContextIgnoreSampledFalse`
+
+IMPORTANT: Use of `TraceContextIgnoreSampledFalse` is deprecated. Use `TraceContinuationStrategy` with the `restart_external` value.
 
 The agent uses the https://www.w3.org/TR/trace-context/[W3C Trace Context] specification and standards for distributed tracing. The traceparent header from the W3C Trace Context specification defines a https://www.w3.org/TR/trace-context/#sampled-flag[sampled flag] which is propagated from a caller service to a callee service, and determines whether a trace is sampled in the callee service. The default behavior of the agent honors the sampled flag value and behaves accordingly.
 
