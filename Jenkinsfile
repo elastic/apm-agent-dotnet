@@ -453,7 +453,7 @@ pipeline {
               }
             }
             stage('Benchmarks') {
-              agent { label 'metal' }
+              agent { label 'microbenchmarks-pool' }
               environment {
                 REPORT_FILE = 'apm-agent-benchmark-results.json'
                 HOME = "${env.WORKSPACE}"

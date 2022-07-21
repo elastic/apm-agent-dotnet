@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
@@ -234,7 +235,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Links holds links to other spans, potentially in other traces.
 		/// </summary>
-		public IEnumerable<SpanLink> Links { get; }
+		public IEnumerable<SpanLink> Links { get; private set; }
 
 		public Composite Composite { get; set; }
 
@@ -560,6 +561,17 @@ namespace Elastic.Apm.Model
 			}
 
 			return false;
+		}
+
+		internal void InsertSpanLinkInternal(IEnumerable<SpanLink> links)
+		{
+			var spanLinks = links as SpanLink[] ?? links.ToArray();
+			if (Links == null || !Links.Any())
+				Links = spanLinks;
+
+			var newList = new List<SpanLink>(Links);
+			newList.AddRange(spanLinks);
+			Links = new List<SpanLink>(newList);
 		}
 
 		private void SetThisToParentsBuffer()
