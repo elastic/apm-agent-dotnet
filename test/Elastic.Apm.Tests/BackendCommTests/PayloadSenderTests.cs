@@ -450,24 +450,6 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			lastPayloadSender.IsRunning.Should().BeFalse();
 		}
 
-		[Fact]
-		public void calling_after_Dispose_throws()
-		{
-			PayloadSenderV2 payloadSender = null;
-			Transaction dummyTx = null;
-			CreateSutEnvAndTest((agent, payloadSenderArg) =>
-			{
-				payloadSender = payloadSenderArg;
-				dummyTx = new Transaction(agent, "TestName", "TestType");
-				payloadSender.QueueTransaction(dummyTx);
-			});
-
-			AsAction(() => payloadSender.QueueTransaction(dummyTx))
-				.Should()
-				.ThrowExactly<ObjectDisposedException>()
-				.WithMessage($"*{nameof(PayloadSenderV2)}*");
-		}
-
 		/// <summary>
 		/// Makes sure <see cref="BackendCommComponentBase.Dispose"/> finishes without exception and doesn't cause deadlock.
 		/// </summary>
