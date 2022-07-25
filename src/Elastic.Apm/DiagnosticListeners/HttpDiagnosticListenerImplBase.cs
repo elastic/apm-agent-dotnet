@@ -150,7 +150,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					foreach (var httpSpanTracer in httpTracers)
 					{
 						if (httpSpanTracer.IsMatch(method, requestUrl,
-							header => RequestTryGetHeader(request, header, out var value) ? value : null))
+								header => RequestTryGetHeader(request, header, out var value) ? value : null))
 						{
 							span = httpSpanTracer.StartSpan(ApmAgent, method, requestUrl,
 								header => RequestTryGetHeader(request, header, out var value) ? value : null);
@@ -191,13 +191,12 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			PropagateTraceContext(request, transaction, span);
 
-			if (span is Span realSpan)
+			if (span is Span { ShouldBeSentToApmServer: false } realSpan)
 			{
-				if (!realSpan.ShouldBeSentToApmServer)
-				{
-					realSpan.ServiceResource =  UrlUtils.ExtractService(requestUrl, realSpan);
-					return;
-				}
+				var type = !string.IsNullOrEmpty(realSpan.Subtype) ? realSpan.Subtype : realSpan.Type;
+				var target = new Target(type, UrlUtils.ExtractService(requestUrl, realSpan));
+				realSpan.DroppedSpanStatCache = new Span.DroppedSpanStatCacheStruct(target, target.ToDestinationServiceResource());
+				return;
 			}
 
 			span.Context.Http = new Http { Method = method };

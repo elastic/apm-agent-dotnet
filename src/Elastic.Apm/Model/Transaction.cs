@@ -98,6 +98,7 @@ namespace Elastic.Apm.Model
 		/// </param>
 		/// <param name="id">An optional parameter to pass the id of the transaction</param>
 		/// <param name="traceId">An optional parameter to pass a trace id which will be applied to the transaction</param>
+		/// <param name="links">Span links associated with this transaction</param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -266,7 +267,9 @@ namespace Elastic.Apm.Model
 
 				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
+#pragma warning disable CS0618
 				if (configuration.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
+#pragma warning restore CS0618
 						|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
@@ -403,7 +406,6 @@ namespace Elastic.Apm.Model
 				Links = spanLinks;
 			else
 			{
-
 				var newList = new List<SpanLink>(Links);
 				newList.AddRange(spanLinks);
 				Links = new List<SpanLink>(newList);
@@ -509,15 +511,17 @@ namespace Elastic.Apm.Model
 			return activity;
 		}
 
-		internal void UpdateDroppedSpanStats(string destinationServiceResource, Outcome outcome, double duration)
+		internal void UpdateDroppedSpanStats(string serviceTargetType, string serviceTargetName, string destinationServiceResource, Outcome outcome,
+			double duration
+		)
 		{
 			if (_droppedSpanStatsMap == null)
 			{
 				_droppedSpanStatsMap = new Dictionary<DroppedSpanStatsKey, DroppedSpanStats>
 				{
 					{
-						new DroppedSpanStatsKey(destinationServiceResource, outcome),
-						new DroppedSpanStats(destinationServiceResource, outcome, duration)
+						new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
+						new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration)
 					}
 				};
 			}
@@ -526,15 +530,15 @@ namespace Elastic.Apm.Model
 				if (_droppedSpanStatsMap.Count >= 128)
 					return;
 
-				if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(destinationServiceResource, outcome), out var item))
+				if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome), out var item))
 				{
 					item.DurationCount++;
 					item.DurationSumUs += duration;
 				}
 				else
 				{
-					_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(destinationServiceResource, outcome),
-						new DroppedSpanStats(destinationServiceResource, outcome, duration));
+					_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
+						new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration));
 				}
 			}
 		}
@@ -883,30 +887,34 @@ namespace Elastic.Apm.Model
 
 		private readonly struct DroppedSpanStatsKey : IEquatable<DroppedSpanStatsKey>
 		{
-			// ReSharper disable once NotAccessedField.Local
-			private readonly string _destinationServiceResource;
-
-			// ReSharper disable once NotAccessedField.Local
-			private readonly Outcome _outcome;
-
-			public DroppedSpanStatsKey(string destinationServiceResource, Outcome outcome)
-			{
-				_destinationServiceResource = destinationServiceResource;
-				_outcome = outcome;
-			}
-
-			public bool Equals(DroppedSpanStatsKey other) =>
-				_destinationServiceResource == other._destinationServiceResource && _outcome == other._outcome;
-
-			public override bool Equals(object obj) => obj is DroppedSpanStatsKey other && Equals(other);
-
 			public override int GetHashCode()
 			{
 				unchecked
 				{
-					return ((_destinationServiceResource != null ? _destinationServiceResource.GetHashCode() : 0) * 397) ^ (int)_outcome;
+					var hashCode = (int)_outcome;
+					hashCode = (hashCode * 397) ^ (_serviceTargetType != null ? _serviceTargetType.GetHashCode() : 0);
+					hashCode = (hashCode * 397) ^ (_serviceTargetName != null ? _serviceTargetName.GetHashCode() : 0);
+					return hashCode;
 				}
 			}
+
+			private readonly string _serviceTargetType;
+			private readonly string _serviceTargetName;
+
+			// ReSharper disable once NotAccessedField.Local
+			private readonly Outcome _outcome;
+
+			public DroppedSpanStatsKey(string serviceTargetType, string serviceTargetName, Outcome outcome)
+			{
+				_serviceTargetName = serviceTargetName;
+				_serviceTargetType = serviceTargetType;
+				_outcome = outcome;
+			}
+
+			public bool Equals(DroppedSpanStatsKey other) =>
+				_serviceTargetType == other._serviceTargetType && _serviceTargetName == other._serviceTargetName && _outcome == other._outcome;
+
+			public override bool Equals(object obj) => obj is DroppedSpanStatsKey other && Equals(other);
 
 			public static bool operator ==(DroppedSpanStatsKey left, DroppedSpanStatsKey right) => left.Equals(right);
 

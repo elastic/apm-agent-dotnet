@@ -140,11 +140,5 @@ namespace Elastic.Apm.BackendComm
 				_logger.Debug()?.Log("Exiting...");
 			});
 		}
-
-		protected void ThrowIfDisposed()
-		{
-			if (_disposableHelper != null && _disposableHelper.HasStarted)
-				throw new ObjectDisposedException( /* objectName: */ _dbgName);
-		}
 	}
 }
