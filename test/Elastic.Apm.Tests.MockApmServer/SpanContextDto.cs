@@ -12,32 +12,33 @@ using Elastic.Apm.Model;
 // ReSharper disable ClassNeverInstantiated.Global
 
 
-namespace Elastic.Apm.Tests.MockApmServer
+namespace Elastic.Apm.Tests.MockApmServer;
+
+internal class SpanContextDto : IDto
 {
-	internal class SpanContextDto : IDto
+	public Database Db { get; set; }
+
+	public Destination Destination { get; set; }
+
+	public Http Http { get; set; }
+
+	[JsonProperty("tags")]
+	public LabelsDictionary Labels { get; set; }
+
+	public Message Message { get; set; }
+
+	public Service Service { get; set; }
+
+	public override string ToString() => new ToStringBuilder(nameof(SpanContextDto))
 	{
-		public Database Db { get; set; }
+		{ nameof(Db), Db }, { nameof(Http), Http }, { nameof(Labels), Labels }, { nameof(Destination), Destination }
+	}.ToString();
 
-		public Destination Destination { get; set; }
-
-		public Http Http { get; set; }
-
-		public Message Message { get; set; }
-
-		[JsonProperty("tags")]
-		public LabelsDictionary Labels { get; set; }
-
-		public override string ToString() => new ToStringBuilder(nameof(SpanContextDto))
-		{
-			{ nameof(Db), Db }, { nameof(Http), Http }, { nameof(Labels), Labels }, { nameof(Destination), Destination }
-		}.ToString();
-
-		public void AssertValid()
-		{
-			Db?.AssertValid();
-			Http?.AssertValid();
-			Labels?.LabelsAssertValid();
-			Destination?.AssertValid();
-		}
+	public void AssertValid()
+	{
+		Db?.AssertValid();
+		Http?.AssertValid();
+		Labels?.LabelsAssertValid();
+		Destination?.AssertValid();
 	}
 }
