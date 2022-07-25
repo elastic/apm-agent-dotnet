@@ -41,7 +41,7 @@ namespace Elastic.Apm.Model
 		// which points to this span.
 		private bool _hasPropagatedContext;
 
-		private bool Discardable => IsExitSpan && !_hasPropagatedContext && Outcome == Outcome.Success;
+		private bool Discardable => IsExitSpan && !_hasPropagatedContext && Outcome == Outcome.Success && Configuration.SpanCompressionEnabled;
 
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
@@ -289,7 +289,7 @@ namespace Elastic.Apm.Model
 			{ nameof(Type), Type },
 			{ nameof(Outcome), Outcome },
 			{ nameof(IsSampled), IsSampled },
-			{ nameof(Duration), Duration}
+			{ nameof(Duration), Duration }
 		}.ToString();
 
 		public bool TryGetLabel<T>(string key, out T value)
@@ -309,7 +309,9 @@ namespace Elastic.Apm.Model
 
 		public OTel Otel { get; set; }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 		{
 			if (Configuration.Enabled && Configuration.Recording)
 				return StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links);
@@ -604,21 +606,32 @@ namespace Elastic.Apm.Model
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
 			bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), capturedAction);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links),
+				capturedAction);
 
-		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), capturedAction);
+		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links),
+				capturedAction);
 
-		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
-		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
-		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
@@ -683,29 +696,30 @@ namespace Elastic.Apm.Model
 				Context.Destination ??= new Destination();
 				Context.Destination.Service = new Destination.DestinationService();
 
+				var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Db.Instance;
+
 				if (Context.Db != null)
 				{
-					if (Context.Db.Instance != null)
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Db.Instance;
-					else
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					Context.Service = Context.Db.Instance != null
+						? new SpanService(new Target(type, Context.Db.Instance))
+						: new SpanService(Target.TargetWithType(type));
 				}
 				else if (Context.Http?.Url != null)
 				{
-					if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
-						Context.Destination.Service = new() { Resource = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this) };
-					else
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					Context.Service = !string.IsNullOrEmpty(_context?.Value?.Http?.Url)
+						? new SpanService(new Target(type, UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this), true))
+						: new SpanService(Target.TargetWithType(type));
 				}
 				else if (Context.Message != null)
 				{
-					if (!string.IsNullOrEmpty(Context.Message.Queue?.Name))
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Message.Queue.Name;
-					else
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					Context.Service = !string.IsNullOrEmpty(Context.Message.Queue?.Name)
+						? new SpanService(new Target(type, Context.Message.Queue.Name))
+						: new SpanService(Target.TargetWithType(type));
 				}
 				else
-					Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					Context.Service = new SpanService(Target.TargetWithType(type));
+
+				Context.Destination.Service.Resource = Context.Service.Target.ToDestinationServiceResource();
 			}
 
 			void CopyMissingProperties(Destination src)
