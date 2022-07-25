@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
@@ -41,48 +40,5 @@ namespace Elastic.Apm.Api
 		{
 			{ nameof(Db), Db }, { nameof(Http), Http }, { "Labels", InternalLabels }, { nameof(Destination), Destination },
 		}.ToString();
-	}
-
-	public class SpanService
-	{
-		public Target Target { get; private set; }
-
-		public SpanService(Target target) => Target = target;
-	}
-
-	public class Target
-	{
-		public string Type { get; private set; }
-		public string Name { get; private set; }
-
-		/// <summary>
-		/// Indicates to only use <see cref="Name"/> in <see cref="ToDestinationServiceResource"/>.
-		/// E.g. HTTP spans only use name in `Destination.Service.Resource`.
-		/// </summary>
-		private bool _onlyUseName;
-
-		private Target() { }
-
-		public Target(string type, string name) => (Type, Name) = (type, name);
-		internal Target(string type, string name, bool onlyUseName = false) => (Type, Name, _onlyUseName) = (type, name, onlyUseName);
-		public static Target TargetWithName(string name) => new Target { Name = name };
-		public static Target TargetWithType(string type) => new Target { Type = type };
-
-		public string ToDestinationServiceResource()
-		{
-			var sb = new StringBuilder();
-
-			if (!_onlyUseName)
-			{
-				if (!string.IsNullOrEmpty(Type))
-					sb.Append(Type);
-				if (string.IsNullOrEmpty(Name)) return sb.ToString();
-
-				if (sb.Length > 0)
-					sb.Append("/");
-			}
-			sb.Append(Name);
-			return sb.ToString();
-		}
 	}
 }
