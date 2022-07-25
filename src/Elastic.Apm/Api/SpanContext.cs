@@ -52,8 +52,8 @@ namespace Elastic.Apm.Api
 
 	public class Target
 	{
-		public string Type { get; set; }
-		public string Name { get; set; }
+		public string Type { get; private set; }
+		public string Name { get; private set; }
 
 		/// <summary>
 		/// Indicates to only use <see cref="Name"/> in <see cref="ToDestinationServiceResource"/>.

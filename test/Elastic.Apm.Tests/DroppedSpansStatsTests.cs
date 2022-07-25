@@ -43,6 +43,8 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.DroppedSpanStats.Should().NotBeNullOrEmpty();
 			payloadSender.FirstTransaction.DroppedSpanStats.Should().HaveCount(1);
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DestinationServiceResource.Should().Be("foo.bar:443");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetName.Should().Be("foo.bar:443");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetType.Should().Be("bar");
 			payloadSender.FirstTransaction.DroppedSpanStats.First().Outcome.Should().Be(Outcome.Success);
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(1);
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationSumUs.Should().Be(100);
@@ -100,15 +102,18 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
-					&& n.DurationCount == 2 && Math.Abs(n.DurationSumUs - 250) < 1 && n.DestinationServiceResource == "foo.bar:443");
+					&& n.DurationCount == 2 && Math.Abs(n.DurationSumUs - 250) < 1 && n.DestinationServiceResource == "foo.bar:443"
+					&& n.ServiceTargetName == "foo.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Failure
-					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 50) < 1 && n.DestinationServiceResource == "foo.bar:443");
+					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 50) < 1 && n.DestinationServiceResource == "foo.bar:443"
+					&& n.ServiceTargetName == "foo.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
-					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 15) < 1 && n.DestinationServiceResource == "foo2.bar:443");
+					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 15) < 1 && n.DestinationServiceResource == "foo2.bar:443"
+					&& n.ServiceTargetName == "foo2.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
@@ -170,6 +175,8 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.DroppedSpanStats.Should().HaveCount(1);
 
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DestinationServiceResource.Should().Be("bar");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetType.Should().Be("bar");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetName.Should().BeNullOrEmpty();
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(500);
 		}
 	}

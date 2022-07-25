@@ -146,12 +146,12 @@ namespace Elastic.Apm.Model
 		public string Action { get; set; }
 
 		/// <summary>
-		/// Stores Context.Destination.Service.Resource on the top level.
-		/// With this field, we can set Resource for dropped spans without instantiating Context.
+		/// Stores Context.Destination.Service.Resource and Contest.Service.Target on the top level.
+		/// With this field, we can set Target.Name, Target.Type, and Resource for dropped spans without instantiating Context.
 		/// Only set for dropped spans.
 		/// </summary>
 		[JsonIgnore]
-		public string ServiceResource { get; set; }
+		internal DroppedSpanStatCacheStruct? DroppedSpanStatCache { get; set; }
 
 		[JsonIgnore]
 		internal IConfiguration Configuration => _enclosingTransaction.Configuration;
@@ -401,16 +401,23 @@ namespace Elastic.Apm.Model
 
 			try
 			{
-				DeduceDestination();
+				DeduceServiceTarget();
 			}
 			catch (Exception e)
 			{
 				_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
 			}
 
-			if (_isDropped && (!string.IsNullOrEmpty(ServiceResource)
-					|| (_context.IsValueCreated && Context?.Destination?.Service?.Resource != null)))
-				_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+			if (_isDropped && _context.IsValueCreated)
+			{
+				_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
+					Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+			}
+			else if (_isDropped && !_context.IsValueCreated && DroppedSpanStatCache.HasValue)
+			{
+				_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type, DroppedSpanStatCache.Value.Target.Name,
+					DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
+			}
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
@@ -480,15 +487,35 @@ namespace Elastic.Apm.Model
 				{
 					if (span.Composite != null && span.Duration < span.Configuration.ExitSpanMinDuration)
 					{
-						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
-							Duration!.Value);
+						switch (_context.IsValueCreated)
+						{
+							case true:
+								_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
+									Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+								break;
+							case false when DroppedSpanStatCache.HasValue:
+								_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type,
+									DroppedSpanStatCache.Value.Target.Name,
+									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
+								break;
+						}
 						_logger.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
 						return;
 					}
 					if (span.Duration < span.Configuration.ExitSpanMinDuration)
 					{
-						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
-							Duration!.Value);
+						switch (_context.IsValueCreated)
+						{
+							case true:
+								_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
+									Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+								break;
+							case false when DroppedSpanStatCache.HasValue:
+								_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type,
+									DroppedSpanStatCache.Value.Target.Name,
+									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
+								break;
+						}
 						_logger.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
 						return;
 					}
@@ -660,16 +687,19 @@ namespace Elastic.Apm.Model
 				labels
 			);
 
-		private void DeduceDestination()
+		private void DeduceServiceTarget()
 		{
 			if (!IsExitSpan)
 				return;
 
 			if (!_context.IsValueCreated)
 			{
-				if (string.IsNullOrEmpty(ServiceResource))
-					ServiceResource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
-				return;
+				if (DroppedSpanStatCache == null)
+				{
+					var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					DroppedSpanStatCache = new DroppedSpanStatCacheStruct(Target.TargetWithType(type), type);
+					return;
+				}
 			}
 
 			if (Context.Http != null)
@@ -792,6 +822,15 @@ namespace Elastic.Apm.Model
 				exception,
 				labels
 			);
+
+		internal struct DroppedSpanStatCacheStruct
+		{
+			public DroppedSpanStatCacheStruct(Target target, string destinationServiceResource) =>
+				(Target, DestinationServiceResource) = (target, destinationServiceResource);
+
+			internal Target Target { get; }
+			internal string DestinationServiceResource { get; }
+		}
 	}
 
 	internal class SpanTimer

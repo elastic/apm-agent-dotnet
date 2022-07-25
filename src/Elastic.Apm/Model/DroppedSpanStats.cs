@@ -14,9 +14,13 @@ namespace Elastic.Apm.Model
 	/// </summary>
 	internal class DroppedSpanStats
 	{
-		public DroppedSpanStats(string destinationServiceResource, Outcome outcome, double durationSumUs)
+		public DroppedSpanStats(string serviceTargetType, string serviceTargetName, string destinationServiceResource, Outcome outcome,
+			double durationSumUs
+		)
 		{
 			DurationCount = 1;
+			ServiceTargetType = serviceTargetType;
+			ServiceTargetName = serviceTargetName;
 			DestinationServiceResource = destinationServiceResource;
 			Outcome = outcome;
 			DurationSumUs = durationSumUs;
@@ -28,6 +32,18 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		[JsonProperty("destination_service_resource")]
 		public string DestinationServiceResource { get; }
+
+		/// <summary>
+		/// ServiceTargetType identifies the type of the target service being operated on e.g. 'oracle', 'rabbitmq'
+		/// </summary>
+		[JsonProperty("service_target_type")]
+		public string ServiceTargetType { get; }
+
+		/// <summary>
+		/// ServiceTargetName identifies the instance name of the target service being operated on
+		/// </summary>
+		[JsonProperty("service_target_name")]
+		public string ServiceTargetName { get; }
 
 		/// <summary>
 		/// Duration holds duration aggregations about the dropped span.

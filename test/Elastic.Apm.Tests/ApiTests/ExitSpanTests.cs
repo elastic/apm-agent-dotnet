@@ -36,7 +36,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 			payloadSender.FirstSpan.Context.Destination.Should().BeNull();
-			payloadSender.FirstSpan.ServiceResource.Should().Be("bar");
+			payloadSender.FirstSpan.DroppedSpanStatCache.Should().NotBeNull();
+			payloadSender.FirstSpan.DroppedSpanStatCache!.Value.Target.Type.Should().Be("bar");
 		}
 
 		[Fact]
@@ -56,6 +57,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstSpan.Context.Destination.Address.Should().Be("elastic.co");
 			payloadSender.FirstSpan.Context.Destination.Port.Should().Be(443);
 			payloadSender.FirstSpan.Context.Destination.Service.Resource.Should().Be("elastic.co:443");
+			payloadSender.FirstSpan.Context.Service.Target.Type.Should().Be("bar");
+			payloadSender.FirstSpan.Context.Service.Target.Name.Should().Be("elastic.co:443");
 		}
 	}
 }
