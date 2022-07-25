@@ -547,7 +547,7 @@ namespace Elastic.Apm.Model
 		private bool IsSameKind(Span other) => Type == other.Type
 			&& Subtype == other.Subtype
 			&& _context.IsValueCreated && other._context.IsValueCreated
-			&& Context.Destination.Service.Resource == other.Context.Destination.Service.Resource;
+			&& Context.Service.Target == other.Context.Service.Target;
 
 		private bool TryToCompressRegular(Span sibling)
 		{
@@ -571,7 +571,7 @@ namespace Elastic.Apm.Model
 				Composite ??= new Composite();
 				Composite.CompressionStrategy = "same_kind";
 				if (_context.IsValueCreated)
-					Name = "Calls to " + Context.Destination.Service.Resource;
+					Name = "Calls to " + Context.Service.Target.ToDestinationServiceResource();
 				return true;
 			}
 
@@ -721,6 +721,9 @@ namespace Elastic.Apm.Model
 					return;
 
 				if (_context.IsValueCreated && !string.IsNullOrEmpty(_context.Value.Destination?.Service?.Resource))
+					return;
+
+				if (_context.IsValueCreated && _context.Value.Service?.Target != null)
 					return;
 
 				Context.Destination ??= new Destination();

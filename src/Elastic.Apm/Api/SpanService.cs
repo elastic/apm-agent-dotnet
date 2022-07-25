@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Text;
 
 namespace Elastic.Apm.Api
@@ -21,7 +22,7 @@ namespace Elastic.Apm.Api
 	/// <summary>
 	/// Target holds information about the outgoing service in case of an outgoing event.
 	/// </summary>
-	public class Target
+	public class Target : IEquatable<Target>
 	{
 		/// <summary>
 		/// Immutable type of the target service for the event.
@@ -37,7 +38,7 @@ namespace Elastic.Apm.Api
 		/// Indicates to only use <see cref="Name"/> in <see cref="ToDestinationServiceResource"/>.
 		/// E.g. HTTP spans only use name in `Destination.Service.Resource`.
 		/// </summary>
-		private bool _onlyUseName;
+		private readonly bool _onlyUseName;
 
 		private Target() { }
 
@@ -65,5 +66,35 @@ namespace Elastic.Apm.Api
 			sb.Append(Name);
 			return sb.ToString();
 		}
+
+		public bool Equals(Target other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return Type == other.Type && Name == other.Name;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return Equals((Target)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				// ReSharper disable NonReadonlyMemberInGetHashCode
+				return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+			}
+		}
+
+		public static bool operator ==(Target left, Target right) => Equals(left, right);
+
+		public static bool operator !=(Target left, Target right) => !Equals(left, right);
 	}
 }

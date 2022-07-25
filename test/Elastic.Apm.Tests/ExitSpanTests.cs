@@ -101,7 +101,7 @@ public class ExitSpanTests
 			{
 				t.CaptureSpan("GET elastic.co", ApiConstants.TypeExternal, s =>
 				{
-					s.Context.Http = new Http() { Method  = "GET", StatusCode = 200};
+					s.Context.Http = new Http() { Method = "GET", StatusCode = 200 };
 					s.Context.Http.SetUrl(new Uri("https://elastic.co"));
 				}, subType: ApiConstants.SubtypeHttp, isExitSpan: true);
 			});
@@ -124,7 +124,7 @@ public class ExitSpanTests
 			{
 				t.CaptureSpan("GET host", ApiConstants.TypeExternal, s =>
 				{
-					s.Context.Http = new Http() { Method  = "GET", StatusCode = 200};
+					s.Context.Http = new Http() { Method = "GET", StatusCode = 200 };
 					s.Context.Http.SetUrl(new Uri("http://host:80"));
 				}, subType: ApiConstants.SubtypeHttp, isExitSpan: true);
 			});
@@ -147,7 +147,7 @@ public class ExitSpanTests
 			{
 				t.CaptureSpan("RabbitMq", ApiConstants.TypeMessaging, s =>
 				{
-					s.Context.Message = new Message {Age = new Age{Ms =  1}, Body = "foo", RoutingKey = "bar"};
+					s.Context.Message = new Message { Age = new Age { Ms = 1 }, Body = "foo", RoutingKey = "bar" };
 				}, subType: "rabbitmq", isExitSpan: true);
 			});
 		}
@@ -169,7 +169,7 @@ public class ExitSpanTests
 			{
 				t.CaptureSpan("RabbitMq", ApiConstants.TypeMessaging, s =>
 				{
-					s.Context.Message = new Message { Queue =  new Queue{Name = "my-queue"}};
+					s.Context.Message = new Message { Queue = new Queue { Name = "my-queue" } };
 				}, subType: "rabbitmq", isExitSpan: true);
 			});
 		}
@@ -178,5 +178,33 @@ public class ExitSpanTests
 
 		payloadSender.FirstSpan.Context.Service.Target.Name.Should().Be("my-queue");
 		payloadSender.FirstSpan.Context.Service.Target.Type.Should().Be("rabbitmq");
+	}
+
+	/// <summary>
+	/// Makes sure that setting <see cref="SpanContext.Service"/> has higher precedence
+	/// than the logic to infer those values automatically.
+	/// </summary>
+	[Fact]
+	public void ManuallySetTargetHasHigherPrecedence()
+	{
+		var payloadSender = new MockPayloadSender();
+		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				   configuration: new MockConfiguration(spanCompressionEnabled: "false"))))
+		{
+			agent.Tracer.CaptureTransaction("foo", "bar", t =>
+			{
+				t.CaptureSpan("Select From MyTable", ApiConstants.TypeDb, s =>
+				{
+					// Fill db fields - this is used for the logic to manually infer Service.Target.*
+					s.Context.Db = new Database { Instance = "myInstance", Statement = "Select * From MyTable", Type = Database.TypeSql };
+
+					// Manually set Service.Target to a custom value different from what the agent would infer
+					s.Context.Service = new SpanService(new Target("foo", "bar"));
+				}, ApiConstants.SubtypeMssql, isExitSpan: true);
+			});
+		}
+
+		payloadSender.FirstSpan.Context.Service.Target.Type.Should().Be("foo");
+		payloadSender.FirstSpan.Context.Service.Target.Name.Should().Be("bar");
 	}
 }
