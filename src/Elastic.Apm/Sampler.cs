@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Globalization;
 using System.Text;
 
 namespace Elastic.Apm
@@ -90,7 +91,7 @@ namespace Elastic.Apm
 			if (Constant.HasValue)
 				retVal.Append($"constant: {Constant}");
 			else
-				retVal.Append($"rate: {Rate}");
+				retVal.Append($"rate: {Rate.ToString(CultureInfo.InvariantCulture)}");
 			retVal.Append(" }");
 			return retVal.ToString();
 		}
