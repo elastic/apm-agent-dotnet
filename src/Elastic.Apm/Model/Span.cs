@@ -696,7 +696,7 @@ namespace Elastic.Apm.Model
 				Context.Destination ??= new Destination();
 				Context.Destination.Service = new Destination.DestinationService();
 
-				var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Db.Instance;
+				var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
 
 				if (Context.Db != null)
 				{
@@ -706,9 +706,20 @@ namespace Elastic.Apm.Model
 				}
 				else if (Context.Http?.Url != null)
 				{
-					Context.Service = !string.IsNullOrEmpty(_context?.Value?.Http?.Url)
-						? new SpanService(new Target(type, UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this), true))
-						: new SpanService(Target.TargetWithType(type));
+					if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
+					{
+						try
+						{
+							var uri = Context.Http.OriginalUrl ?? new Uri(Context.Http.Url);
+							Context.Service = new SpanService(new Target(type, UrlUtils.ExtractService(uri, this), true));
+						}
+						catch
+						{
+							Context.Service = new SpanService(Target.TargetWithType(type));
+						}
+					}
+					else
+						Context.Service = new SpanService(Target.TargetWithType(type));
 				}
 				else if (Context.Message != null)
 				{

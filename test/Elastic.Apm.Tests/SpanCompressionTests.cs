@@ -84,7 +84,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstSpan.Composite.Should().NotBeNull();
 			payloadSender.FirstSpan.Composite.Count.Should().Be(10);
 			payloadSender.FirstSpan.Composite.CompressionStrategy = "same_kind";
-			payloadSender.FirstSpan.Name.Should().Be("Calls to mssql");
+			payloadSender.FirstSpan.Name.Should().Be("Calls to mssql/01");
 		}
 
 		/// <summary>
