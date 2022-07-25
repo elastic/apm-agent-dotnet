@@ -27,7 +27,7 @@ internal class SpanContextDto : IDto
 
 	public Message Message { get; set; }
 
-	public Service Service { get; set; }
+	public SpanService Service { get; set; }
 
 	public override string ToString() => new ToStringBuilder(nameof(SpanContextDto))
 	{
