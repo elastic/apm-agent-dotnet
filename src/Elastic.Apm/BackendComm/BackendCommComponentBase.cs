@@ -142,6 +142,5 @@ namespace Elastic.Apm.BackendComm
 				_logger.Debug()?.Log("Exiting...");
 			});
 		}
-
 	}
 }

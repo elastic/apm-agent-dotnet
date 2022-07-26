@@ -36,9 +36,10 @@ namespace Elastic.Apm.Model
 
 		internal static string GetDbSpanName(IDbCommand dbCommand)
 		{
-			var signatureParser =  new SignatureParser(new Scanner());
+			var signatureParser = new SignatureParser(new Scanner());
 			var name = new StringBuilder();
-			signatureParser.QuerySignature(dbCommand.CommandText.Replace(Environment.NewLine, " "), name,  preparedStatement: dbCommand.Parameters.Count > 0);
+			signatureParser.QuerySignature(dbCommand.CommandText.Replace(Environment.NewLine, " "), name,
+				preparedStatement: dbCommand.Parameters.Count > 0);
 			return name.ToString();
 		}
 
@@ -56,13 +57,20 @@ namespace Elastic.Apm.Model
 				{
 					capturedSpan.Context.Db = new Database
 					{
-						Statement = dbCommand.CommandText.Replace(Environment.NewLine, " "), Instance = dbCommand.Connection.Database, Type = Database.TypeSql
+						Statement = dbCommand.CommandText.Replace(Environment.NewLine, " "),
+						Instance = dbCommand.Connection.Database,
+						Type = Database.TypeSql
 					};
 
 					capturedSpan.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, defaultPort);
 				}
 				else
-					capturedSpan.ServiceResource =  !string.IsNullOrEmpty(capturedSpan.Subtype) ? capturedSpan.Subtype : Database.TypeSql + dbCommand.Connection.Database;
+				{
+					var type = !string.IsNullOrEmpty(capturedSpan.Subtype) ? capturedSpan.Subtype : capturedSpan.Type;
+					var target = new Target(type, dbCommand.Connection.Database);
+
+					capturedSpan.DroppedSpanStatCache = new Span.DroppedSpanStatCacheStruct(target, target.ToDestinationServiceResource());
+				}
 
 				capturedSpan.Outcome = outcome;
 			}

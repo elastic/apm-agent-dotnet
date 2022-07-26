@@ -34,12 +34,11 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		public bool ShouldSerializeLabels() => InternalLabels.IsValueCreated && InternalLabels.Value.MergedDictionary.Count > 0;
 
+		public SpanService Service { get; set; }
+
 		public override string ToString() => new ToStringBuilder(nameof(SpanContext))
 		{
-			{ nameof(Db), Db },
-			{ nameof(Http), Http },
-			{ "Labels", InternalLabels },
-			{ nameof(Destination), Destination },
+			{ nameof(Db), Db }, { nameof(Http), Http }, { "Labels", InternalLabels }, { nameof(Destination), Destination },
 		}.ToString();
 	}
 }
