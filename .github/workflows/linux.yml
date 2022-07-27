@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build - linux
         run: |-
-          DOTNET_ROOT=${GITHUB_WORKSPACE}/.dotnet",
+          DOTNET_ROOT=${GITHUB_WORKSPACE}/.dotnet
           PATH${GITHUB_WORKSPACE}/.dotnet/tools:${GITHUB_WORKSPACE}/.dotnet
           mkdir -p ${DOTNET_ROOT}
           # Download .Net SDK installer script
