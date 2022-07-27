@@ -1,0 +1,26 @@
+name: Windows NET Core Startup
+on:
+  pull_request:
+
+# limit the access of the generated GITHUB_TOKEN
+permissions:
+  contents: read
+
+jobs:
+  windows-net-core-startup:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+      - name: Prepare tools
+        run: dotnet tool install -g Codecov.Tool --version 1.2.0
+      - name: Startup Hooks - windows
+        run: |-
+          .\build.bat agent-zip
+          .\.ci\windows\test-startuphooks.bat

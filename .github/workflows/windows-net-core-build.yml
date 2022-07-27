@@ -1,0 +1,25 @@
+name: Windows NET Core Build
+on:
+  pull_request:
+
+# limit the access of the generated GITHUB_TOKEN
+permissions:
+  contents: read
+
+jobs:
+  windows-net-core-build:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+      - name: Build dotnet - windows
+        run: |-
+          .\.ci\windows\dotnet.bat
+          .\build.bat agent-zip
+          .\build.bat profiler-zip
