@@ -167,7 +167,8 @@ namespace Elastic.Apm.DistributedTracing
 						}
 					}
 
-					if (double.TryParse(headerValue.Substring(valueStart, valueEnd - valueStart), out var value))
+					if (double.TryParse(headerValue.Substring(valueStart, valueEnd - valueStart), NumberStyles.Any, CultureInfo.InvariantCulture,
+							out var value))
 					{
 						if (value >= 0 && value <= 1)
 						{
