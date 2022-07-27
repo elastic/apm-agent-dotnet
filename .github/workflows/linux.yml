@@ -28,3 +28,8 @@ jobs:
           rustup default 1.57.0
           cargo install --force cargo-make
           ./build.sh profiler-zip
+      - name: Test - linux
+        run: |-
+          DOTNET_ROOT=${GITHUB_WORKSPACE}/.dotnet
+          PATH=${GITHUB_WORKSPACE}/.dotnet/tools:${GITHUB_WORKSPACE}/.dotnet:${PATH}
+          .ci/linux/test.sh
