@@ -20,5 +20,6 @@ jobs:
         run: .ci/linux/prepare-dotnet-tools.sh
       - name: Profiler - linux
         run: |-
+          cargo install --force cargo-make
           ./build.sh profiler-zip
           .ci/linux/test-profiler.sh
