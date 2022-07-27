@@ -70,63 +70,6 @@ pipeline {
             }
           }
           parallel{
-            stage('Linux'){
-              options { skipDefaultCheckout() }
-              environment {
-                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
-              }
-              /**
-              Make sure there are no code style violation in the repo.
-              */
-              stages{
-                stage('Startup Hook Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test startup hooks - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Build', script: './build.sh agent-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-startuphooks.sh'
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Profiler Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test profiler - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.57.0'
-                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                          sh label: 'Build', script: './build.sh profiler-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-              }
-            }
             stage('Windows .NET Framework'){
               agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }
