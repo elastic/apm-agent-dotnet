@@ -1,4 +1,4 @@
-name: Linux
+name: Linux Test
 on:
   pull_request:
 
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  linux:
+  linux-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -26,13 +26,6 @@ jobs:
           ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version '3.1.100'
           ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version '5.0.100'
           ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version '6.0.100'
-      - name: Build - linux
-        run: |-
-          .ci/linux/build.sh
-          .ci/linux/release.sh true
-          rustup default 1.57.0
-          cargo install --force cargo-make
-          ./build.sh profiler-zip
       - name: Test - linux
         run: |-
           .ci/linux/test.sh
