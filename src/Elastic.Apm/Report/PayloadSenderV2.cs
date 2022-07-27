@@ -9,7 +9,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
@@ -55,6 +54,8 @@ namespace Elastic.Apm.Report
 
 		private string _cachedMetadataJsonLine;
 		private long _eventQueueCount;
+
+		private object batchLock = new object();
 
 		public PayloadSenderV2(
 			IApmLogger logger,
@@ -154,8 +155,12 @@ namespace Elastic.Apm.Report
 
 		protected override void Dispose(bool disposing)
 		{
-			_eventQueue?.TriggerBatch();
-			_eventQueue?.Complete();
+			lock (batchLock)
+			{
+				_eventQueue?.TriggerBatch();
+				_eventQueue?.Complete();
+			}
+
 			base.Dispose(disposing);
 		}
 
@@ -177,7 +182,9 @@ namespace Elastic.Apm.Report
 				return false;
 			}
 
-			var enqueuedSuccessfully = _eventQueue.Post(eventObj);
+			bool enqueuedSuccessfully;
+			lock (batchLock) enqueuedSuccessfully = _eventQueue.Post(eventObj);
+
 			if (!enqueuedSuccessfully)
 			{
 				_logger.Debug()
@@ -197,7 +204,9 @@ namespace Elastic.Apm.Report
 					+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
 					, newEventQueueCount, _maxQueueEventCount, eventObj);
 
-			if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
+			if (_flushInterval != TimeSpan.Zero) return true;
+
+			lock (batchLock) _eventQueue.TriggerBatch();
 			return true;
 		}
 
@@ -231,6 +240,7 @@ namespace Elastic.Apm.Report
 
 		private object[] ReceiveBatch()
 		{
+			// ReSharper disable once InconsistentlySynchronizedField
 			_eventQueue.TryReceive(null, out var receivedItems);
 
 			if (_flushInterval == TimeSpan.Zero)
@@ -245,6 +255,7 @@ namespace Elastic.Apm.Report
 					{
 						try
 						{
+							// ReSharper disable once InconsistentlySynchronizedField
 							receivedItems = _eventQueue.Receive(_flushInterval);
 						}
 						catch (TimeoutException)
@@ -258,14 +269,12 @@ namespace Elastic.Apm.Report
 					else
 						break;
 
-					_eventQueue.TriggerBatch();
+					lock (batchLock) _eventQueue.TriggerBatch();
 				}
 			}
 
-			if (receivedItems == null)
-			{
-				_eventQueue.TryReceive(null, out receivedItems);
-			}
+			// ReSharper disable once InconsistentlySynchronizedField
+			if (receivedItems == null) _eventQueue.TryReceive(null, out receivedItems);
 
 			var eventBatchToSend = receivedItems;
 			if (eventBatchToSend != null)
