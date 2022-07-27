@@ -266,11 +266,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 						if (isSampled) receivedData.Transactions.First().SpanCount.Dropped.Should().Be(spansToExecCount - pageData.SpansCount);
 
-						receivedData.Spans.ForEachIndexed((span, i) =>
+						for (var i = 0; i < receivedData.Spans.Count; i++)
 						{
-							span.Name.Should().Be($"Span_#{i}_name");
-							span.Type.Should().Be($"Span_#{i}_type");
-						});
+							receivedData.Spans.Should().Contain(s => s.Name == $"Span_#{i}_name");
+							receivedData.Spans.Should().Contain(s => s.Type == $"Span_#{i}_type");
+						}
 					},  /* shouldGatherDiagnostics: */ false);
 				}
 			}
