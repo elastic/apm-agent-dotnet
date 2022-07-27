@@ -165,6 +165,140 @@ pipeline {
                 }
               }
             }
+            stage('Windows .NET Core'){
+              agent { label 'windows-2019 && immutable' }
+              options { skipDefaultCheckout() }
+              environment {
+                HOME = "${env.WORKSPACE}"
+                DOTNET_ROOT = "C:\\Program Files\\dotnet"
+                CARGO_MAKE_HOME = "C:\\tools\\cargo"
+                PATH = "${PATH};${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;${env.CARGO_MAKE_HOME};${env.USERPROFILE}\\.cargo\\bin"
+                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+              }
+              stages{
+                /**
+                Install the required tools
+                */
+                stage('Install tools') {
+                  steps {
+                    cleanDir("${WORKSPACE}/*")
+                    unstash 'source'
+                    dir("${HOME}"){
+                      powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                    }
+                  }
+                }
+                /**
+                Build the project from code..
+                */
+                stage('Build - dotnet') {
+                  steps {
+                    withGithubNotify(context: 'Build dotnet - Windows') {
+                      retry(3) {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          whenTrue(isPR()) {
+                            bat(label: 'Build agent', script: './build.bat agent-zip')
+                            bat(label: 'Build profiler', script: './build.bat profiler-zip')
+                          }
+                        }
+                      }
+                    }
+                  }
+                  post {
+                    success {
+                      whenTrue(isPR()) {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
+                      }
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                /**
+                Execute unit tests.
+                */
+                stage('Test') {
+                  steps {
+                    withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        withAzureCredentials(path: "${HOME}", credentialsFile: '.credentials.json') {
+                          withTerraformEnv(version: '0.15.3') {
+                            bat(label: 'Test & coverage', script: '.ci/windows/test.bat')
+                          }
+                        }
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                stage('Startup Hook Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test startup hooks - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        retry(3) {
+                          bat label: 'Build', script: './build.bat agent-zip'
+                        }
+                        bat label: 'Test & coverage', script: '.ci/windows/test-startuphooks.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                stage('Profiler Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test profiler - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        retry(3) {
+                          bat label: 'Build', script: './build.bat profiler-zip'
+                        }
+                        bat label: 'Test & coverage', script: '.ci/windows/test-profiler.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+              }
+              post {
+                always {
+                  cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                }
+              }
+            }
             stage('Integration Tests') {
               agent none
               when {
