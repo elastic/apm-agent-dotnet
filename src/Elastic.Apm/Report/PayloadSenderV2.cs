@@ -85,7 +85,8 @@ namespace Elastic.Apm.Report
 			_apmServerInfo = apmServerInfo;
 			_serverInfoCallback = serverInfoCallback;
 			_metadata = new Metadata { Service = service, System = System };
-			foreach (var globalLabelKeyValue in configuration.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
+			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
+				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
 			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
 			{
@@ -159,47 +160,52 @@ namespace Elastic.Apm.Report
 			base.Dispose(disposing);
 		}
 
-		internal void EnqueueEvent(object eventObj, string dbgEventKind) =>
-			Task.Run(async () =>
+		internal async Task<bool> EnqueueEventInternal(object eventObj, string dbgEventKind)
+		{
+			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
+			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
+			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
+			var newEventQueueCount = Interlocked.Increment(ref _eventQueueCount);
+			if (newEventQueueCount > _maxQueueEventCount)
 			{
-				// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
-				// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
-				// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
-				var newEventQueueCount = Interlocked.Increment(ref _eventQueueCount);
-				if (newEventQueueCount > _maxQueueEventCount)
-				{
-					_logger.Debug()
-						?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded."
-							+ " newEventQueueCount: {EventQueueCount}."
-							+ " MaxQueueEventCount: {MaxQueueEventCount}."
-							+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-							, newEventQueueCount, _maxQueueEventCount, eventObj);
-					Interlocked.Decrement(ref _eventQueueCount);
-					return;
-				}
-
-				var enqueuedSuccessfully = await _eventQueue.SendAsync(eventObj);
-				if (!enqueuedSuccessfully)
-				{
-					_logger.Debug()
-						?.Log("Failed to enqueue " + dbgEventKind + "."
-							+ " newEventQueueCount: {EventQueueCount}."
-							+ " MaxQueueEventCount: {MaxQueueEventCount}."
-							+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-							, newEventQueueCount, _maxQueueEventCount, eventObj);
-					Interlocked.Decrement(ref _eventQueueCount);
-					return;
-				}
-
 				_logger.Debug()
-					?.Log("Enqueued " + dbgEventKind + "."
+					?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded."
 						+ " newEventQueueCount: {EventQueueCount}."
 						+ " MaxQueueEventCount: {MaxQueueEventCount}."
 						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
 						, newEventQueueCount, _maxQueueEventCount, eventObj);
+				Interlocked.Decrement(ref _eventQueueCount);
+				return false;
+			}
 
-				if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
-			});
+			var enqueuedSuccessfully = await _eventQueue.SendAsync(eventObj);
+			if (!enqueuedSuccessfully)
+			{
+				_logger.Debug()
+					?.Log("Failed to enqueue " + dbgEventKind + "."
+						+ " newEventQueueCount: {EventQueueCount}."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
+						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+						, newEventQueueCount, _maxQueueEventCount, eventObj);
+				Interlocked.Decrement(ref _eventQueueCount);
+				return false;
+			}
+
+			_logger.Debug()
+				?.Log("Enqueued " + dbgEventKind + "."
+					+ " newEventQueueCount: {EventQueueCount}."
+					+ " MaxQueueEventCount: {MaxQueueEventCount}."
+					+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+					, newEventQueueCount, _maxQueueEventCount, eventObj);
+
+			if (_flushInterval == TimeSpan.Zero)
+				_eventQueue.TriggerBatch();
+
+			return true;
+		}
+
+		internal void EnqueueEvent(object eventObj, string dbgEventKind) =>
+			Task.Run(async () => await EnqueueEventInternal(eventObj, dbgEventKind));
 
 		/// <summary>
 		/// Runs on the background thread dedicated to sending data to APM Server. It's ok to block this thread.
@@ -262,7 +268,8 @@ namespace Elastic.Apm.Report
 				}
 			}
 
-			if (receivedItems == null) _eventQueue.TryReceive(null, out receivedItems);
+			if (receivedItems == null)
+				_eventQueue.TryReceive(null, out receivedItems);
 
 			var eventBatchToSend = receivedItems;
 			if (eventBatchToSend != null)
@@ -301,13 +308,16 @@ namespace Elastic.Apm.Report
 						switch (item)
 						{
 							case Transaction transaction:
-								if (TryExecuteFilter(TransactionFilters, transaction) != null) Serialize(item, "transaction", writer);
+								if (TryExecuteFilter(TransactionFilters, transaction) != null)
+									Serialize(item, "transaction", writer);
 								break;
 							case Span span:
-								if (TryExecuteFilter(SpanFilters, span) != null) Serialize(item, "span", writer);
+								if (TryExecuteFilter(SpanFilters, span) != null)
+									Serialize(item, "span", writer);
 								break;
 							case Error error:
-								if (TryExecuteFilter(ErrorFilters, error) != null) Serialize(item, "error", writer);
+								if (TryExecuteFilter(ErrorFilters, error) != null)
+									Serialize(item, "error", writer);
 								break;
 							case MetricSet _:
 								Serialize(item, "metricset", writer);
