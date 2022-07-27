@@ -37,6 +37,7 @@ namespace Elastic.Apm.Report
 		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
 
 		private readonly IApmServerInfo _apmServerInfo;
+
 		// A callback which is triggered after the ServerInfo is fetched.
 		// Components that depend on the server version can register for this callback and make decisions right after the server version is fetched.
 		private readonly Action<bool, IApmServerInfo> _serverInfoCallback;
@@ -84,7 +85,8 @@ namespace Elastic.Apm.Report
 			_apmServerInfo = apmServerInfo;
 			_serverInfoCallback = serverInfoCallback;
 			_metadata = new Metadata { Service = service, System = System };
-			foreach (var globalLabelKeyValue in configuration.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
+			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
+				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
 			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
 			{
@@ -122,7 +124,8 @@ namespace Elastic.Apm.Report
 			List<Func<ISpan, ISpan>> spanFilters,
 			List<Func<IError, IError>> errorFilters,
 			IApmServerInfo apmServerInfo,
-			IApmLogger logger)
+			IApmLogger logger
+		)
 		{
 			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
 			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
@@ -139,10 +142,7 @@ namespace Elastic.Apm.Report
 		static PayloadSenderV2()
 		{
 			Utf8Encoding = new UTF8Encoding(false);
-			MediaTypeHeaderValue = new MediaTypeHeaderValue("application/x-ndjson")
-			{
-				CharSet = Utf8Encoding.WebName
-			};
+			MediaTypeHeaderValue = new MediaTypeHeaderValue("application/x-ndjson") { CharSet = Utf8Encoding.WebName };
 		}
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
@@ -153,7 +153,14 @@ namespace Elastic.Apm.Report
 
 		public void QueueError(IError error) => EnqueueEvent(error, "Error");
 
-		internal bool EnqueueEvent(object eventObj, string dbgEventKind)
+		protected override void Dispose(bool disposing)
+		{
+			_eventQueue?.TriggerBatch();
+			_eventQueue?.Complete();
+			base.Dispose(disposing);
+		}
+
+		internal async Task<bool> EnqueueEventInternal(object eventObj, string dbgEventKind)
 		{
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
 			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
@@ -171,7 +178,7 @@ namespace Elastic.Apm.Report
 				return false;
 			}
 
-			var enqueuedSuccessfully = _eventQueue.Post(eventObj);
+			var enqueuedSuccessfully = await _eventQueue.SendAsync(eventObj);
 			if (!enqueuedSuccessfully)
 			{
 				_logger.Debug()
@@ -191,16 +198,23 @@ namespace Elastic.Apm.Report
 					+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
 					, newEventQueueCount, _maxQueueEventCount, eventObj);
 
-			if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
+			if (_flushInterval == TimeSpan.Zero)
+				_eventQueue.TriggerBatch();
 
 			return true;
 		}
 
-		protected override async Task WorkLoopIteration()
+		internal void EnqueueEvent(object eventObj, string dbgEventKind) =>
+			Task.Run(async () => await EnqueueEventInternal(eventObj, dbgEventKind));
+
+		/// <summary>
+		/// Runs on the background thread dedicated to sending data to APM Server. It's ok to block this thread.
+		/// </summary>
+		protected override void WorkLoopIteration()
 		{
 			if (!_getCloudMetadata)
 			{
-				var cloud = await _cloudMetadataProviderCollection.GetMetadataAsync();
+				var cloud = _cloudMetadataProviderCollection.GetMetadataAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 				if (cloud != null)
 					_metadata.Cloud = cloud;
 
@@ -209,75 +223,72 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient, _serverInfoCallback);
+				ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configuration, HttpClient, _serverInfoCallback)
+					.ConfigureAwait(false)
+					.GetAwaiter()
+					.GetResult();
 				_getApmServerVersion = true;
 			}
 
-			var batch = await ReceiveBatchAsync();
-			await ProcessQueueItems(batch);
+			var batch = ReceiveBatch();
+			if (batch != null)
+				ProcessQueueItems(batch);
 		}
 
-		private async Task<object[]> ReceiveBatchAsync()
+		private object[] ReceiveBatch()
 		{
-			var receiveAsyncTask = _eventQueue.ReceiveAsync(CancellationTokenSource.Token);
+			_eventQueue.TryReceive(null, out var receivedItems);
 
 			if (_flushInterval == TimeSpan.Zero)
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
 			else
 			{
-				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (!CancellationTokenSource.IsCancellationRequested)
 				{
-					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CancellationTokenSource.Token))
+					_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
+
+					if (receivedItems == null)
+					{
+						try
+						{
+							receivedItems = _eventQueue.Receive(_flushInterval);
+						}
+						catch (TimeoutException)
+						{
+							_logger.Trace()?.Log("FlushInterval reached, no item in the queue");
+						}
+
+						if (receivedItems?.Length > 0)
+							break;
+					}
+					else
 						break;
 
 					_eventQueue.TriggerBatch();
 				}
 			}
 
-			var eventBatchToSend = await receiveAsyncTask;
-			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
-			_logger.Trace()
-				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
-					, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+			if (receivedItems == null)
+				_eventQueue.TryReceive(null, out receivedItems);
+
+			var eventBatchToSend = receivedItems;
+			if (eventBatchToSend != null)
+			{
+				var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
+
+				_logger.Trace()
+					?.Log("There is data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
+						, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+			}
+			else
+			{
+				_logger.Trace()
+					?.Log("There is no data to send.");
+			}
 			return eventBatchToSend;
 		}
 
-		/// <summary>
-		/// It's recommended to use this method (or another TryAwaitOrTimeout or AwaitOrTimeout method)
-		/// instead of just Task.WhenAny(taskToAwait, Task.Delay(timeout))
-		/// because this method cancels the timer for timeout while <c>Task.Delay(timeout)</c>.
-		/// If the number of “zombie” timer jobs starts becoming significant, performance could suffer.
-		/// For more detailed explanation see https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
-		/// </summary>
-		/// <returns><c>true</c> if <c>taskToAwait</c> completed before the timeout, <c>false</c> otherwise</returns>
-		private static async Task<bool> TryAwaitOrTimeout(Task taskToAwait, TimeSpan timeout, CancellationToken cancellationToken = default)
-		{
-			var timeoutDelayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-			var timeoutDelayTask = Task.Delay(timeout, timeoutDelayCts.Token);
-			try
-			{
-				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
-				if (completedTask == taskToAwait)
-				{
-					await taskToAwait;
-					return true;
-				}
-
-				Assertion.IfEnabled?.That(completedTask == timeoutDelayTask
-					, $"{nameof(completedTask)}: {completedTask}, {nameof(timeoutDelayTask)}: timeOutTask, {nameof(taskToAwait)}: taskToAwait");
-				// no need to cancel timeout timer if it has been triggered
-				timeoutDelayTask = null;
-				return false;
-			}
-			finally
-			{
-				if (timeoutDelayTask != null) timeoutDelayCts.Cancel();
-				timeoutDelayCts.Dispose();
-			}
-		}
-
-		private async Task ProcessQueueItems(object[] queueItems)
+		private void ProcessQueueItems(object[] queueItems)
 		{
 			// can reuse underlying buffers from a pool in future.
 			using var stream = new MemoryStream(1024);
@@ -297,13 +308,16 @@ namespace Elastic.Apm.Report
 						switch (item)
 						{
 							case Transaction transaction:
-								if (TryExecuteFilter(TransactionFilters, transaction) != null) Serialize(item, "transaction", writer);
+								if (TryExecuteFilter(TransactionFilters, transaction) != null)
+									Serialize(item, "transaction", writer);
 								break;
 							case Span span:
-								if (TryExecuteFilter(SpanFilters, span) != null) Serialize(item, "span", writer);
+								if (TryExecuteFilter(SpanFilters, span) != null)
+									Serialize(item, "span", writer);
 								break;
 							case Error error:
-								if (TryExecuteFilter(ErrorFilters, error) != null) Serialize(item, "error", writer);
+								if (TryExecuteFilter(ErrorFilters, error) != null)
+									Serialize(item, "error", writer);
 								break;
 							case MetricSet _:
 								Serialize(item, "metricset", writer);
@@ -316,8 +330,28 @@ namespace Elastic.Apm.Report
 				using (var content = new StreamContent(stream))
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
-					var response = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token);
 
+#if NET5_0_OR_GREATER
+					HttpResponseMessage response = null;
+					try
+					{
+						var webRequest = new HttpRequestMessage(HttpMethod.Post, _intakeV2EventsAbsoluteUrl) { Content = content };
+						response = HttpClient.Send(webRequest, CancellationTokenSource.Token);
+					}
+					catch (Exception) //HttpMessageHandler may not support synchronous sending
+					{
+						response = HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
+							.ConfigureAwait(false)
+							.GetAwaiter()
+							.GetResult();
+					}
+#else
+					var response = HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
+						.ConfigureAwait(false)
+						.GetAwaiter()
+						.GetResult();
+#endif
+					// ReSharper disable ConditionIsAlwaysTrueOrFalse
 					if (response is null || !response.IsSuccessStatusCode)
 					{
 						_logger?.Error()
@@ -327,8 +361,9 @@ namespace Elastic.Apm.Report
 								+ ", content: \n{ApmServerResponseContent}"
 								, _intakeV2EventsAbsoluteUrl.Sanitize()
 								, response?.StatusCode,
-								response is null ? null : await response.Content.ReadAsStringAsync());
+								response?.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult());
 					}
+					// ReSharper enable ConditionIsAlwaysTrueOrFalse
 					else
 					{
 						_logger?.Debug()
@@ -344,7 +379,7 @@ namespace Elastic.Apm.Report
 				_logger?.Warning()
 					?.Log(
 						"Cancellation requested. Following events were not transferred successfully to the server ({ApmServerUrl}):"
-							+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
+						+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
 						, HttpClient.BaseAddress.Sanitize()
 						, string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems));
 
@@ -357,7 +392,7 @@ namespace Elastic.Apm.Report
 					?.LogException(
 						e,
 						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):"
-							+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
+						+ $"{Environment.NewLine}{TextUtils.Indentation}{{SerializedItems}}"
 						, HttpClient.BaseAddress.Sanitize()
 						, string.Join($",{Environment.NewLine}{TextUtils.Indentation}", queueItems)
 					);

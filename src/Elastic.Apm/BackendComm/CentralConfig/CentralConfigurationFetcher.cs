@@ -93,7 +93,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private long _dbgIterationsCount;
 		private EntityTagHeaderValue _eTag;
 
-		protected override async Task WorkLoopIteration()
+		protected override void WorkLoopIteration()
 		{
 			++_dbgIterationsCount;
 			WaitInfoS waitInfo;
@@ -104,7 +104,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			{
 				httpRequest = BuildHttpRequest(_eTag);
 
-				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest).ConfigureAwait(false);
+				(httpResponse, httpResponseBody) = FetchConfigHttpResponseAsync(httpRequest).ConfigureAwait(false).GetAwaiter().GetResult();
 
 				CentralConfigurationReader centralConfigurationReader;
 				(centralConfigurationReader, waitInfo) = _centralConfigurationResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
@@ -167,7 +167,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger.Trace()
 				?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
 					, waitInfo.Interval.ToHms(), waitInfo.Reason, _dbgIterationsCount);
-			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CancellationTokenSource.Token).ConfigureAwait(false);
+			_agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CancellationTokenSource.Token).Wait();
 		}
 
 		private HttpRequestMessage BuildHttpRequest(EntityTagHeaderValue eTag)

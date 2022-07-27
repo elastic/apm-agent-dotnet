@@ -55,7 +55,7 @@ namespace Elastic.Apm.BackendComm
 			HttpClient = BackendCommUtils.BuildHttpClient(logger, configuration, service, _dbgName, httpMessageHandler);
 		}
 
-		protected abstract Task WorkLoopIteration();
+		protected abstract void WorkLoopIteration();
 
 		internal bool IsRunning => _workLoopThread.IsAlive;
 
@@ -80,7 +80,7 @@ namespace Elastic.Apm.BackendComm
 				{
 					// This runs on the dedicated work loop thread
 					// In order to make sure iterations don't overlap we wait for the current iteration - the intention here is to block
-					WorkLoopIteration().Wait();
+					WorkLoopIteration();
 				}
 				catch (OperationCanceledException)
 				{
@@ -93,14 +93,14 @@ namespace Elastic.Apm.BackendComm
 					if (ex is AggregateException aggregateException && aggregateException.InnerExceptions.Any(e => e is TaskCanceledException))
 					{
 						_logger.Debug()
-							?.LogException(ex, nameof(WorkLoop) + "TaskCanceledException -  Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
+							?.LogException(ex, nameof(WorkLoop) + "TaskCanceledException -  Current thread: {ThreadDesc}",
+								DbgUtils.CurrentThreadDesc);
 					}
 					else
 					{
 						_logger.Error()
 							?.LogException(ex, nameof(WorkLoop) + " Current thread: {ThreadDesc}", DbgUtils.CurrentThreadDesc);
 					}
-
 				}
 			}
 
@@ -108,7 +108,9 @@ namespace Elastic.Apm.BackendComm
 			_loopCompleted.Set();
 		}
 
-		public void Dispose()
+		public void Dispose() => Dispose(true);
+
+		protected virtual void Dispose(bool isDisposing)
 		{
 			if (!_isEnabled)
 			{

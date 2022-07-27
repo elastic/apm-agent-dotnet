@@ -68,7 +68,6 @@ public class WorkingLoopTests
 
 		waitHandle.WaitOne(TimeSpan.FromMilliseconds(1000));
 
-		logger.Lines.Should().Contain(l => l.Contains("{PayloadSenderV2} Serialized item to send: Transaction") && l.Contains("Name: Test2"));
 		logger.Lines.Should().NotContain(l => l.Contains("WorkLoop is about to exit because it was cancelled"));
 	}
 }
