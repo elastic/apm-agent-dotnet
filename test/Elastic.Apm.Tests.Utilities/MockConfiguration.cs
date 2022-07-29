@@ -58,6 +58,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _transactionMaxSpans;
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
+		private readonly string _useFullPathRequestMatching;
 		private readonly string _verifyServerCert;
 
 		public MockConfiguration(IApmLogger logger = null,
@@ -89,6 +90,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string disableMetrics = null,
 			string verifyServerCert = null,
 			string useElasticTraceparentHeader = null,
+			string useFullPathRequestMatching = null,
 			string applicationNamespaces = null,
 			string excludedNamespaces = null,
 			string transactionIgnoreUrls = null,
@@ -134,6 +136,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_disableMetrics = disableMetrics;
 			_verifyServerCert = verifyServerCert;
 			_useElasticTraceparentHeader = useElasticTraceparentHeader;
+			_useFullPathRequestMatching = useFullPathRequestMatching;
 			_applicationNamespaces = applicationNamespaces;
 			_excludedNamespaces = excludedNamespaces;
 			_transactionIgnoreUrls = transactionIgnoreUrls;
@@ -257,6 +260,9 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public bool UseElasticTraceparentHeader =>
 			ParseUseElasticTraceparentHeader(Kv(EnvVarNames.UseElasticTraceparentHeader, _useElasticTraceparentHeader, Origin));
+
+		public bool UseFullPathRequestMatching =>
+			ParseUseElasticTraceparentHeader(Kv(EnvVarNames.UseFullPathRequestMatching, _useFullPathRequestMatching, Origin));
 
 		public bool VerifyServerCert =>
 			ParseVerifyServerCert(Kv(EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));

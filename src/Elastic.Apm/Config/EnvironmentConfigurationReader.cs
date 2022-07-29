@@ -136,6 +136,8 @@ namespace Elastic.Apm.Config
 
 		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
 
+		public bool UseFullPathRequestMatching => ParseUseFullPathRequestMatching(Read(ConfigConsts.EnvVarNames.UseFullPathRequestMatching));
+
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
 
 		private ConfigurationKeyValue Read(string key) =>

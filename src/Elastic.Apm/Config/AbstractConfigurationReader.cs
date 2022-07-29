@@ -55,6 +55,9 @@ namespace Elastic.Apm.Config
 		protected bool ParseUseElasticTraceparentHeader(ConfigurationKeyValue kv) =>
 			ParseBoolOption(kv, DefaultValues.UseElasticTraceparentHeader, "UseElasticTraceparentHeader");
 
+		protected bool ParseUseFullPathRequestMatching(ConfigurationKeyValue kv) =>
+			ParseBoolOption(kv, DefaultValues.UseFullPathRequestMatching, "UseFullPathRequestMatching");
+
 		protected internal static bool TryParseLogLevel(string value, out LogLevel level)
 		{
 			level = default;

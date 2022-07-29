@@ -38,7 +38,7 @@ namespace Elastic.Apm.AspNetCore
 				transaction = t;
 
 			if (transaction != null)
-				WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, context, _logger);
+				WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, context, _logger, _agent.ConfigurationStore.CurrentSnapshot);
 
 			try
 			{
@@ -55,7 +55,7 @@ namespace Elastic.Apm.AspNetCore
 					transaction.CollectRequestBody(true, context.Request, _logger);
 
 				if(transaction != null)
-					WebRequestTransactionCreator.StopTransaction(transaction, context, _logger);
+					WebRequestTransactionCreator.StopTransaction(transaction, context, _logger, _agent.ConfigurationStore.CurrentSnapshot);
 				else
 					createdTransaction?.End();
 			}

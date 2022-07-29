@@ -48,6 +48,7 @@ namespace Elastic.Apm.Config
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown-" + Consts.AgentName + "-service";
 			public const bool UseElasticTraceparentHeader = true;
+			public const bool UseFullPathRequestMatching = false;
 			public const bool VerifyServerCert = true;
 			public const string TraceContinuationStrategy = "continue";
 
@@ -164,6 +165,7 @@ namespace Elastic.Apm.Config
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
 			public const string UseElasticTraceparentHeader = Prefix + "USE_ELASTIC_TRACEPARENT_HEADER";
+			public const string UseFullPathRequestMatching = Prefix + "USE_FULL_PATH_REQUEST_MATCHING";
 			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
 		}
 
@@ -214,6 +216,7 @@ namespace Elastic.Apm.Config
 			public const string TransactionMaxSpans = Prefix + nameof(TransactionMaxSpans);
 			public const string TransactionSampleRate = Prefix + nameof(TransactionSampleRate);
 			public const string UseElasticTraceparentHeader = Prefix + nameof(UseElasticTraceparentHeader);
+			public const string UseFullPathRequestMatching = Prefix + nameof(UseFullPathRequestMatching);
 			public const string VerifyServerCert = Prefix + nameof(VerifyServerCert);
 		}
 

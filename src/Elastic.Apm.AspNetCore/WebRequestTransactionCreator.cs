@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 
 namespace Elastic.Apm.AspNetCore
@@ -27,14 +28,16 @@ namespace Elastic.Apm.AspNetCore
 		{
 			try
 			{
-				if (WildcardMatcher.IsAnyMatch(configuration?.TransactionIgnoreUrls, context.Request.Path))
+				var requestPath = GetRequestPath(context.Request, configuration);
+
+				if (WildcardMatcher.IsAnyMatch(configuration?.TransactionIgnoreUrls, requestPath))
 				{
-					logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", context.Request.Path);
+					logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", requestPath);
 					return null;
 				}
 
 				ITransaction transaction;
-				var transactionName = $"{context.Request.Method} {context.Request.Path}";
+				var transactionName = $"{context.Request.Method} {requestPath}";
 
 				var containsTraceParentHeader =
 					context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderName, out var traceParentHeader);
@@ -85,12 +88,12 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		internal static void FillSampledTransactionContextRequest(Transaction transaction, HttpContext context, IApmLogger logger)
+		internal static void FillSampledTransactionContextRequest(Transaction transaction, HttpContext context, IApmLogger logger, IConfiguration configuration)
 		{
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction, logger);
+			if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction, logger, configuration);
 		}
 
-		private static void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction, IApmLogger logger)
+		private static void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction, IApmLogger logger, IConfiguration configuration)
 		{
 			try
 			{
@@ -102,7 +105,7 @@ namespace Elastic.Apm.AspNetCore
 					HostName = context.Request.Host.Host,
 					Protocol = GetProtocolName(context.Request.Protocol),
 					Raw = GetRawUrl(context.Request, logger) ?? context.Request.GetEncodedUrl(),
-					PathName = context.Request.Path,
+					PathName = GetRequestPath(context.Request, configuration),
 					Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
 				};
 
@@ -163,6 +166,11 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
+		private static string GetRequestPath(HttpRequest httpRequest, IConfiguration configuration)
+			=> configuration?.UseFullPathRequestMatching ?? ConfigConsts.DefaultValues.UseFullPathRequestMatching
+				? httpRequest.PathBase + httpRequest.Path
+				: httpRequest.Path;
+
 		private static string GetHttpVersion(string protocolString)
 		{
 			switch (protocolString)
@@ -180,7 +188,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		internal static void StopTransaction(Transaction transaction, HttpContext context, IApmLogger logger)
+		internal static void StopTransaction(Transaction transaction, HttpContext context, IApmLogger logger, IConfiguration configuration)
 		{
 			if (transaction == null) return;
 
@@ -190,23 +198,10 @@ namespace Elastic.Apm.AspNetCore
 			{
 				if (!transaction.HasCustomName)
 				{
-					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
-					var routeData = context.GetRouteData()?.Values;
+					var name = GetNameFromRouteContext(context, logger, configuration);
 
-					if (routeData != null && routeData.Count > 0)
-					{
-						logger?.Trace()?.Log("Calculating transaction name based on route data");
-						var name = Transaction.GetNameFromRouteContext(routeData);
-
-						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
-					}
-					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
-					{
-						logger?.Trace()
-							?
-							.Log("No route data found or status code is 404 - setting transaction name to 'unknown route");
-						transaction.Name = $"{context.Request.Method} unknown route";
-					}
+					if (name is not null)
+						transaction.Name = name;
 				}
 
 				if (grpcCallInfo == default)
@@ -235,6 +230,36 @@ namespace Elastic.Apm.AspNetCore
 			{
 				transaction.End();
 			}
+		}
+
+		private static string GetNameFromRouteContext(HttpContext context, IApmLogger logger, IConfiguration configuration)
+		{
+			//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
+			var routeData = context.GetRouteData()?.Values;
+
+			if (routeData != null && routeData.Count > 0)
+			{
+				logger?.Trace()?.Log("Calculating transaction name based on route data");
+				var name = Transaction.GetNameFromRouteContext(routeData);
+
+				if ((configuration?.UseFullPathRequestMatching ?? ConfigConsts.DefaultValues.UseFullPathRequestMatching)
+					&& context.Request.PathBase.HasValue
+					&& context.Request.PathBase.Value != "/")
+					name = $"{context.Request.PathBase.Value!.TrimStart('/')}/{name}";
+
+				if (!string.IsNullOrWhiteSpace(name))
+					return $"{context.Request.Method} {name}";
+			}
+			else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
+			{
+				logger?.Trace()
+					?
+					.Log("No route data found or status code is 404 - setting transaction name to 'unknown route");
+
+				return $"{context.Request.Method} unknown route";
+			}
+
+			return null;
 		}
 
 		internal static void SetOutcomeForHttpResult(ITransaction transaction, int HttpReturnCode)

@@ -85,6 +85,7 @@ namespace Elastic.Apm.Tests
 			public IReadOnlyCollection<string> ApplicationNamespaces => ConfigConsts.DefaultValues.DefaultApplicationNamespaces;
 
 			public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
+			public bool UseFullPathRequestMatching => ConfigConsts.DefaultValues.UseFullPathRequestMatching;
 
 			public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 			// ReSharper restore UnassignedGetOnlyAutoProperty

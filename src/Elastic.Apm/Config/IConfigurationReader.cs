@@ -375,6 +375,12 @@ namespace Elastic.Apm.Config
 		bool UseElasticTraceparentHeader { get; }
 
 		/// <summary>
+		/// When set to <c>true</c> agent will use full HTTP request path when recording a transaction
+		/// (including <see href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httprequest.pathbase">HttpRequest.PathBase</see>).
+		/// </summary>
+		bool UseFullPathRequestMatching { get; }
+
+		/// <summary>
 		/// The agent verifies the server's certificate if an HTTPS connection to the APM server is used.
 		/// Verification can be disabled by setting to <c>false</c>.
 		/// </summary>

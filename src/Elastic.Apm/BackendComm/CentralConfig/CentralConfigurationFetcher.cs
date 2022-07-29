@@ -326,6 +326,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public double TransactionSampleRate => _centralConfiguration.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
 
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
+			public bool UseFullPathRequestMatching => _wrapped.UseFullPathRequestMatching;
 
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
 		}

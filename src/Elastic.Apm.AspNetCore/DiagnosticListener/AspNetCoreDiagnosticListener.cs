@@ -42,16 +42,15 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			{
 				if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
 				{
-					var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, Logger, ApmAgent.Tracer,
-						(ApmAgent as ApmAgent)?.ConfigurationStore.CurrentSnapshot);
-
+					var configurationSnapshot = (ApmAgent as ApmAgent)?.ConfigurationStore.CurrentSnapshot;
+					var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, Logger, ApmAgent.Tracer, configurationSnapshot);
 
 					Transaction transaction = null;
 					if (createdTransaction is Transaction t)
 						transaction = t;
 
 					if (transaction != null)
-						WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, Logger);
+						WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, Logger, configurationSnapshot);
 
 					if (createdTransaction != null)
 						ProcessingRequests.Add(httpContextStart, createdTransaction);
@@ -64,7 +63,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 					if (ProcessingRequests.TryGetValue(httpContextStop, out var createdTransaction))
 					{
 						if (createdTransaction is Transaction transaction)
-							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, Logger);
+							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, Logger,
+								(ApmAgent as ApmAgent)?.ConfigurationStore.CurrentSnapshot);
 						else
 							createdTransaction?.End();
 

@@ -194,5 +194,45 @@ namespace Elastic.Apm.AspNetCore.Tests
 				context?.Request.Method.Should().Be(HttpMethod.Get.Method);
 			}
 		}
+
+
+		[Fact]
+		public async Task RecordFullRequestPathWhenFullPathRequestMatchingIsConfigured()
+		{
+			var capturedPayload = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(useFullPathRequestMatching: "true"))))
+			{
+				// Based on Helper GetClient
+				var builder = _factory
+					.WithWebHostBuilder(n =>
+					{
+						n.Configure(app =>
+						{
+							app.Use((context, next) =>
+							{
+								context.Request.PathBase = "/ReverseProxyPrefix";
+								return next();
+							});
+
+							// ReSharper disable twice AccessToDisposedClosure
+							app.UseElasticApm(agent, agent.Logger);
+
+							app.UseStaticFiles();
+							app.UseCookiePolicy();
+
+							Startup.ConfigureRoutingAndMvc(app);
+						});
+
+						n.ConfigureServices(Helper.ConfigureServices);
+					});
+
+				var client  = builder.CreateClient();
+
+				await client.GetAsync("/Home/Index");
+
+				capturedPayload.WaitForTransactions(count: 1);
+				capturedPayload.Transactions.Should().Contain(t => t.Name.EndsWith("ReverseProxyPrefix/Home/Index"));
+			}
+		}
 	}
 }
