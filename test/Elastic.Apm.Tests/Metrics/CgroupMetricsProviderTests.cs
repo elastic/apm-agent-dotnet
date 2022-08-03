@@ -98,7 +98,7 @@ namespace Elastic.Apm.Tests.Metrics
 			memUsageSample?.KeyValue.Value.Should().Be(964778496);
 		}
 
-		[Fact]
+		[DisabledTestFact("Flaky")]
 		public void TestUnlimitedCgroup2()
 		{
 			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2","/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
