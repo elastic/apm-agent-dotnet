@@ -379,7 +379,7 @@ namespace Elastic.Apm.Model
 			return Token.Eof;
 		}
 
-		private char Peek() => _input.ElementAt(_pos);
+		private char Peek() => _input[_pos];
 
 		public char Next()
 		{
