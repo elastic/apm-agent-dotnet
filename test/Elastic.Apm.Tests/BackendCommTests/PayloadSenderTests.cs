@@ -325,7 +325,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		internal async void FlushInterval_test(TestArgs args, int numberOfEventsToSend)
 		{
 			var batchSentBarrier = new Barrier(2);
-			var barrierTimeout = 30.Seconds();
+			var barrierTimeout = 50.Seconds();
 
 			var handler = new MockHttpMessageHandler((r, c) =>
 			{

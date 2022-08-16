@@ -311,13 +311,15 @@ namespace Elastic.Apm.Tests
 				var hasGenSize = false;
 				var hasGcTime = false;
 
+				var arrayLength = 0;
+
 				for (var j = 0; j < 10; j++)
 				{
 					for (var i = 0; i < 500; i++)
 					{
 						var array = new int[10000000];
 						// In order to make sure the line above is not optimized away, let's use the array:
-						_output.WriteLine($"GC test, int[] allocated with length: {array.Length}");
+						arrayLength += array.Length;
 					}
 
 					GC.Collect(2, GCCollectionMode.Forced, true, true);
@@ -328,7 +330,7 @@ namespace Elastic.Apm.Tests
 					{
 						var array = new int[10000000];
 						// In order to make sure the line above is not optimized away, let's use the array:
-						_output.WriteLine($"GC test, int[] allocated with length: {array.Length}");
+						arrayLength += array.Length;
 					}
 
 					GC.Collect(2, GCCollectionMode.Forced, true, true);
@@ -350,6 +352,9 @@ namespace Elastic.Apm.Tests
 					if (containsValue && hasGenSize && hasGcTime)
 						break;
 				}
+
+				// In order to make sure allocations above isn't optimized away, let's use arrayLength:
+				_output.WriteLine($"GC test, multiple int[] instances allocated with length: {arrayLength}");
 
 				if (PlatformDetection.IsDotNetFullFramework)
 				{

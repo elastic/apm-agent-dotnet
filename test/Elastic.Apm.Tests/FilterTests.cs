@@ -214,8 +214,15 @@ public class FilterTests
 
 		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: _logger));
 		executeCodeThatGeneratesData(agent);
-		// hold the test run until the event is processed within PayloadSender's thread - also makes sure that PayloadSender is not disposed
-		var _ = taskCompletionSource.Task.Result;
+		try
+		{
+			// hold the test run until the event is processed within PayloadSender's thread - also makes sure that PayloadSender is not disposed
+			var _ = taskCompletionSource.Task.Result;
+		}
+		catch (Exception e)
+		{
+			//ignore
+		}
 	}
 
 	private static MockHttpMessageHandler RegisterHandlerAndAssert(
