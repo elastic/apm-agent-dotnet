@@ -242,7 +242,15 @@ namespace Elastic.Apm.Report
 			if (_flushInterval == TimeSpan.Zero)
 			{
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
-				receivedItems = _eventQueue.Receive(CancellationTokenSource.Token);
+				try
+				{
+					receivedItems = _eventQueue.Receive(CancellationTokenSource.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					_logger.Trace()?.Log("Waiting on EventQueue cancelled.");
+				}
+
 			}
 			else
 			{
