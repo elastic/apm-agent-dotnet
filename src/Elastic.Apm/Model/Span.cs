@@ -547,7 +547,7 @@ namespace Elastic.Apm.Model
 		private bool IsSameKind(Span other) => Type == other.Type
 			&& Subtype == other.Subtype
 			&& _context.IsValueCreated && other._context.IsValueCreated
-			&& Context.Service.Target == other.Context.Service.Target;
+			&& Context?.Service?.Target == other.Context?.Service?.Target;
 
 		private bool TryToCompressRegular(Span sibling)
 		{
