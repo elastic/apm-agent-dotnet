@@ -250,7 +250,6 @@ namespace Elastic.Apm.Report
 				{
 					_logger.Trace()?.Log("Waiting on EventQueue cancelled.");
 				}
-
 			}
 			else
 			{

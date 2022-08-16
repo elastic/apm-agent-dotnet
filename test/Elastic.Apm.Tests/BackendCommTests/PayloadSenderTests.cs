@@ -23,10 +23,8 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
-using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 using MockHttpMessageHandler = Elastic.Apm.Tests.Utilities.MockHttpMessageHandler;
 using RichardSzalay.MockHttp;
-using System = Elastic.Apm.Api.System;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {
@@ -44,8 +42,11 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		private static readonly TimeSpan VeryShortFlushInterval = 1.Seconds();
 		private readonly IApmLogger _logger;
 
-		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */) =>
+		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */)
+		{
+			Environment.SetEnvironmentVariable("ELASTIC_APM_TESTS_LOG_LEVEL", "trace");
 			_logger = LoggerBase.Scoped(ThisClassName);
+		}
 
 		public static IEnumerable<object[]> TestArgsVariantsWithVeryLongFlushInterval =>
 			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval).Select(t => new object[] { t });
@@ -329,6 +330,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 			var handler = new MockHttpMessageHandler((r, c) =>
 			{
+				TestOutputHelper.WriteLine("Receiving request in MockHttpMessageHandler");
 				batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue();
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 			});
