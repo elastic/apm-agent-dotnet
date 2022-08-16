@@ -23,9 +23,8 @@ dotnet sln remove test/Elastic.Apm.StaticExplicitInitialization.Tests/Elastic.Ap
 :: LogFilePath property
 ::
 dotnet test -c Release ^
- --verbosity normal ^
+ --verbosity quiet ^
  --results-directory target ^
- --diag target\diag.log ^
  --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" ^
  --collect:"XPlat Code Coverage" ^
  --settings coverlet.runsettings ^
