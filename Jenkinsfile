@@ -680,7 +680,7 @@ def release(Map args = [:]){
 def reportTests() {
   dir("${BASE_DIR}"){
     archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/Sequence_*.xml,target/**/testhost*.dmp')
-    junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
+    junit(allowEmptyResults: true, keepLongStdio: false, testResults: 'test/**/junit-*.xml')
   }
 }
 
