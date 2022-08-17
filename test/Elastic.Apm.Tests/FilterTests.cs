@@ -32,7 +32,7 @@ public class FilterTests
 	public FilterTests(ITestOutputHelper testOutputHelper)
 	{
 		var adapter = new XunitOutputToLineWriterAdaptor(testOutputHelper, nameof(FilterTests));
-		_logger = new LineWriterToLoggerAdaptor(new SplittingLineWriter(adapter), LogLevel.Trace);
+		_logger = new LineWriterToLoggerAdaptor(new SplittingLineWriter(adapter), LogLevel.Error);
 	}
 
 	/// <summary>
@@ -40,8 +40,8 @@ public class FilterTests
 	/// Makes sure changes are applied to the serialized transaction.
 	/// </summary>
 	[Fact]
-	public void RenameTransactionNameAndTypeIn2Filters() =>
-		RegisterFilterRunCodeAndAssert(
+	public async Task RenameTransactionNameAndTypeIn2Filters() =>
+		await RegisterFilterRunCodeAndAssert(
 			payloadSender =>
 			{
 				payloadSender.TransactionFilters.Add(t =>
@@ -73,8 +73,8 @@ public class FilterTests
 	/// serialized with the changes.
 	/// </summary>
 	[Fact]
-	public void MultipleHandlerOneOfThemThrowingOnTransactions() =>
-		RegisterFilterRunCodeAndAssert(
+	public async Task MultipleHandlerOneOfThemThrowingOnTransactions() =>
+		await RegisterFilterRunCodeAndAssert(
 			payloadSender =>
 			{
 				// Rename transaction name
@@ -110,9 +110,8 @@ public class FilterTests
 	/// Makes sure that changes from the 2 filters that don't throw get applied and the span is serialized accordingly.
 	/// </summary>
 	[Fact]
-	public void FilterSpanWith3Filters()
-		=>
-			RegisterFilterRunCodeAndAssert(
+	public async Task FilterSpanWith3Filters()
+		=> await RegisterFilterRunCodeAndAssert(
 				payloadSender =>
 				{
 					// Rename span name
@@ -152,14 +151,15 @@ public class FilterTests
 	/// Makes sure the span is not sent and serialized.
 	/// </summary>
 	[Fact]
-	public void DropSpanWithSpecificName()
-		=> RegisterFilterRunCodeAndAssert(
+	public async Task DropSpanWithSpecificName()
+		=> await RegisterFilterRunCodeAndAssert(
 			payloadSender =>
 			{
 				// Rename span name
 				payloadSender.SpanFilters.Add(span =>
 				{
-					if (span.Name == "SpanToDrop") return null;
+					if (span.Name == "SpanToDrop")
+						return null;
 
 					return span;
 				});
@@ -175,7 +175,7 @@ public class FilterTests
 				return true;
 			});
 
-	private void RegisterFilterRunCodeAndAssert(Action<PayloadSenderV2> registerFilters, Action<ApmAgent> executeCodeThatGeneratesData,
+	private async Task RegisterFilterRunCodeAndAssert(Action<PayloadSenderV2> registerFilters, Action<ApmAgent> executeCodeThatGeneratesData,
 		Func<List<Transaction>, List<Span>, List<Error>, bool> assert
 	)
 	{
@@ -214,8 +214,15 @@ public class FilterTests
 
 		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: _logger));
 		executeCodeThatGeneratesData(agent);
-		// hold the test run until the event is processed within PayloadSender's thread - also makes sure that PayloadSender is not disposed
-		var _ = taskCompletionSource.Task.Result;
+		try
+		{
+			// hold the test run until the event is processed within PayloadSender's thread - also makes sure that PayloadSender is not disposed
+			await taskCompletionSource.Task;
+		}
+		catch (Exception e)
+		{
+			//ignore
+		}
 	}
 
 	private static MockHttpMessageHandler RegisterHandlerAndAssert(
