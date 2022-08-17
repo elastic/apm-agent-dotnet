@@ -23,8 +23,10 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 using MockHttpMessageHandler = Elastic.Apm.Tests.Utilities.MockHttpMessageHandler;
 using RichardSzalay.MockHttp;
+using System = Elastic.Apm.Api.System;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {
@@ -227,7 +229,9 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 						yield return new TestArgs
 						{
-							FlushInterval = flushInterval, MaxBatchEventCount = maxBatchEventCount, MaxQueueEventCount = maxQueueEventCount
+							FlushInterval = flushInterval,
+							MaxBatchEventCount = maxBatchEventCount,
+							MaxQueueEventCount = maxQueueEventCount
 						};
 					}
 				}
@@ -282,7 +286,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
 				var numberOfEventsEnqueuedSuccessfully = 0;
-				for (var txIndex = 1;; ++txIndex)
+				for (var txIndex = 1; ; ++txIndex)
 				{
 					if (await EnqueueDummyEvent(payloadSender, agent, txIndex))
 						++numberOfEventsEnqueuedSuccessfully;
@@ -325,23 +329,21 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 			var handler = new MockHttpMessageHandler((r, c) =>
 			{
-				TestOutputHelper.WriteLine("Receiving request in MockHttpMessageHandler");
 				batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue();
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 			});
 
 			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
-			using (var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710,
-					   handler, /* dbgName: */ TestDisplayName))
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), MockApmServerInfo.Version710,
+				handler, /* dbgName: */ TestDisplayName);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
-				using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
+				for (var eventIndex = 1; eventIndex <= numberOfEventsToSend; ++eventIndex)
 				{
-					for (var eventIndex = 1; eventIndex <= numberOfEventsToSend; ++eventIndex)
-					{
-						(await EnqueueDummyEvent(payloadSender, agent, eventIndex)).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
-						batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
-					}
+					(await EnqueueDummyEvent(payloadSender, agent, eventIndex)).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
+					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
 				}
 			}
 		}
