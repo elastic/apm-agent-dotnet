@@ -311,7 +311,7 @@ namespace Elastic.Apm.Tests
 				var hasGenSize = false;
 				var hasGcTime = false;
 
-				var arrayLength = 0;
+				long arrayLength = 0;
 
 				for (var j = 0; j < 10; j++)
 				{
