@@ -349,6 +349,20 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		}
 
 		[Fact]
+		public void Find_a_better_name()
+		{
+			var logger = new InMemoryBlockingLogger(LogLevel.Warning);
+			var configReader = new MockConfiguration(logger, apiKey: "*** INVALID_API_KEY ***");
+			var mockHttpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
+			var service = Service.GetDefaultService(configReader, logger);
+
+			using (new PayloadSenderV2(logger, configReader, service, new Api.System(), null, mockHttpMessageHandler, TestDisplayName))
+			{
+				logger.Lines.Should().Contain(l => l.Contains("Failed parsing APM Server version - version string not available"));
+			};
+		}
+
+		[Fact]
 		public void Dispose_stops_the_thread()
 		{
 			PayloadSenderV2 lastPayloadSender = null;
