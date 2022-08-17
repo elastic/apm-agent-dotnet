@@ -15,7 +15,7 @@ namespace Elastic.Apm.Tests;
 public class ApmServerInfoProviderTests
 {
 	[Fact]
-	public void FillApmServerInfo_warns_on_missing_server_version()
+	public async Task FillApmServerInfo_warns_on_missing_server_version()
 	{
 		var logger = new InMemoryBlockingLogger(LogLevel.Warning);
 		var configReader = new MockConfiguration(logger);
@@ -28,12 +28,12 @@ public class ApmServerInfoProviderTests
 		var httpClient =  BackendCommUtils.BuildHttpClient(logger, configReader, service, nameof(ApmServerInfoProviderTests), httpMessageHandler);
 
 		var callbackWasCalled = false;
-		ApmServerInfoProvider.FillApmServerInfo(null, logger, configReader, httpClient, ((status, _) =>
+		await ApmServerInfoProvider.FillApmServerInfo(null, logger, configReader, httpClient, ((status, _) =>
 		{
-			status.Should().Be(false);
+			status.Should().BeFalse();
 			callbackWasCalled = true;
 		}));
-		callbackWasCalled.Should().Be(true);
+		callbackWasCalled.Should().BeTrue();
 		logger.Lines.Should().Contain(line => line.Contains("Failed parsing APM Server version - version string not available"));
 	}
 }
