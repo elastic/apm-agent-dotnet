@@ -561,6 +561,39 @@ namespace Elastic.Apm.Config
 			return valueInMilliseconds;
 		}
 
+		protected double ParseSpanStackTraceMinDurationInMilliseconds(ConfigurationKeyValue kv)
+		{
+			string value;
+			if (string.IsNullOrWhiteSpace(kv?.Value))
+				value = DefaultValues.SpanStackTraceMinDuration;
+			else
+				value = kv.Value;
+
+			double valueInMilliseconds;
+
+			try
+			{
+				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
+				{
+					_logger?.Error()
+						?.Log("Failed to parse provided span stack trace minimum duration `{ProvidedSpanStackTraceMinDuration}' - " +
+									"using default: {DefaultSpanStackTraceMinDuration}",
+							value,
+							DefaultValues.SpanStackTraceMinDuration);
+					return DefaultValues.SpanStackTraceMinDurationInMilliseconds;
+				}
+			}
+			catch (ArgumentException e)
+			{
+				_logger?.Critical()
+					?.LogException(e, nameof(ArgumentException) + " thrown from TryParseTimeInterval which means a programming bug - " +
+														"using default: {DefaultSpanStackTraceMinDuration}",
+						DefaultValues.SpanStackTraceMinDuration);
+				return DefaultValues.SpanStackTraceMinDurationInMilliseconds;
+			}
+
+			return valueInMilliseconds;
+		}
 
 		protected double ParseSpanFramesMinDurationInMilliseconds(ConfigurationKeyValue kv)
 		{

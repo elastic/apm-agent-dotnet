@@ -50,6 +50,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _spanCompressionEnabled;
 		private readonly string _spanCompressionExactMatchMaxDuration;
 		private readonly string _spanCompressionSameKindMaxDuration;
+		private readonly string _spanStackTraceMinDurationInMilliseconds;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
 		private readonly string _traceContextIgnoreSampledFalse;
@@ -79,6 +80,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string metricsInterval = null,
 			string captureBody = SupportedValues.CaptureBodyOff,
 			string stackTraceLimit = null,
+			string spanStackTraceMinDurationInMilliseconds = null,
 			string spanFramesMinDurationInMilliseconds = null,
 			string captureBodyContentTypes = DefaultValues.CaptureBodyContentTypes,
 			string flushInterval = null,
@@ -124,6 +126,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_metricsInterval = metricsInterval;
 			_captureBody = captureBody;
 			_stackTraceLimit = stackTraceLimit;
+			_spanStackTraceMinDurationInMilliseconds = spanStackTraceMinDurationInMilliseconds;
 			_spanFramesMinDurationInMilliseconds = spanFramesMinDurationInMilliseconds;
 			_captureBodyContentTypes = captureBodyContentTypes;
 			_flushInterval = flushInterval;
@@ -235,6 +238,11 @@ namespace Elastic.Apm.Tests.Utilities
 		public double SpanCompressionSameKindMaxDuration => ParseSpanCompressionSameKindMaxDuration(Kv(EnvVarNames.SpanCompressionSameKindMaxDuration,
 			_spanCompressionSameKindMaxDuration, Origin));
 
+		public double SpanStackTraceMinDurationInMilliseconds => ParseSpanStackTraceMinDurationInMilliseconds(Kv(
+			EnvVarNames.SpanStackTraceMinDuration,
+			_spanStackTraceMinDurationInMilliseconds, Origin));
+
+		[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Kv(
 			EnvVarNames.SpanFramesMinDuration,
 			_spanFramesMinDurationInMilliseconds, Origin));

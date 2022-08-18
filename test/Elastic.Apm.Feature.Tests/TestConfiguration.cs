@@ -52,6 +52,8 @@ namespace Elastic.Apm.Feature.Tests
 		public bool SpanCompressionEnabled => DefaultValues.SpanCompressionEnabled;
 		public double SpanCompressionExactMatchMaxDuration => DefaultValues.SpanCompressionExactMatchMaxDurationInMilliseconds;
 		public double SpanCompressionSameKindMaxDuration => DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
+		public double SpanStackTraceMinDurationInMilliseconds { get; set; } = DefaultValues.SpanStackTraceMinDurationInMilliseconds;
+		[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 		public double SpanFramesMinDurationInMilliseconds { get; set; } = DefaultValues.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit { get; set; } = DefaultValues.StackTraceLimit;
 		public bool TraceContextIgnoreSampledFalse { get; set; } = DefaultValues.TraceContextIgnoreSampledFalse;

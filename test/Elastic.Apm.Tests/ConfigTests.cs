@@ -785,6 +785,29 @@ namespace Elastic.Apm.Tests
 			config.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
 		}
 
+		[Fact]
+		public void SetSpanStackTraceMinDurationAndStackTraceLimit()
+		{
+			// Test default values.
+			var config1 = new EnvironmentConfigurationReader(new NoopLogger());
+			config1.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
+			config1.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
+
+			// Test non-default values.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, "23ms");
+			Environment.SetEnvironmentVariable(EnvVarNames.StackTraceLimit, "42");
+			var config2 = new EnvironmentConfigurationReader(new NoopLogger());
+			config2.SpanStackTraceMinDurationInMilliseconds.Should().Be(23);
+			config2.StackTraceLimit.Should().Be(42);
+
+			// Test explicitly set default values.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, DefaultValues.SpanStackTraceMinDuration);
+			Environment.SetEnvironmentVariable(EnvVarNames.StackTraceLimit, DefaultValues.StackTraceLimit.ToString());
+			var config3 = new EnvironmentConfigurationReader(new NoopLogger());
+			config3.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
+			config3.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
+		}
+
 		/// <summary>
 		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" />
 		/// are in sync
@@ -799,6 +822,24 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(EnvVarNames.SpanFramesMinDuration, DefaultValues.SpanFramesMinDuration);
 			var config = new EnvironmentConfigurationReader(new NoopLogger());
 			config.SpanFramesMinDurationInMilliseconds.Should().Be(DefaultValues.SpanFramesMinDurationInMilliseconds);
+		}
+
+		[Fact]
+		public void SpanStackTraceMinDurationDefaultValuesInSync()
+		{
+			// Test default value.
+			var config1 = new EnvironmentConfigurationReader(new NoopLogger());
+			config1.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
+
+			// Test non-default value.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, "23ms");
+			var config2 = new EnvironmentConfigurationReader(new NoopLogger());
+			config2.SpanStackTraceMinDurationInMilliseconds.Should().Be(23);
+
+			// Test explicitly set default value.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, DefaultValues.SpanStackTraceMinDuration);
+			var config3 = new EnvironmentConfigurationReader(new NoopLogger());
+			config3.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
 		}
 
 		[InlineData("2", 2)]
@@ -833,6 +874,23 @@ namespace Elastic.Apm.Tests
 				   new ApmAgent(new TestAgentComponents(
 					   configuration: new MockConfiguration(spanFramesMinDurationInMilliseconds: configValue))))
 				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
+		}
+
+		[InlineData("2ms", 2)]
+		[InlineData("2s", 2 * 1000)]
+		[InlineData("2m", 2 * 60 * 1000)]
+		[InlineData("2", 2)]
+		[InlineData("-2ms", -2)]
+		// ReSharper disable once StringLiteralTypo
+		[InlineData("dsfkldfs", DefaultValues.SpanStackTraceMinDurationInMilliseconds)]
+		[InlineData("2,32", DefaultValues.SpanStackTraceMinDurationInMilliseconds)]
+		[Theory]
+		public void SpanStackTraceMinDurationInMilliseconds(string configValue, int expectedValue)
+		{
+			using (var agent =
+			       new ApmAgent(new TestAgentComponents(
+				       configuration: new MockConfiguration(spanStackTraceMinDurationInMilliseconds: configValue))))
+				agent.ConfigurationReader.SpanStackTraceMinDurationInMilliseconds.Should().Be(expectedValue);
 		}
 
 		[InlineData("123ms", 123)]

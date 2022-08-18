@@ -113,8 +113,10 @@ namespace Elastic.Apm.Model
 					// System.Net.Http.HttpRequestOut.Stop
 					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
 					// capture the stacktrace is .Start
-					if (captureStackTraceOnStart && Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0)
+					if (captureStackTraceOnStart && IsCaptureStackTraceOnStartEnabled())
+					{
 						RawStackTrace = new StackTrace(true);
+					}
 				}
 			}
 			else
@@ -125,6 +127,51 @@ namespace Elastic.Apm.Model
 			_logger.Trace()
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
+		}
+
+		internal bool IsCaptureStackTraceOnStartEnabled()
+		{
+			if (Configuration.StackTraceLimit != 0)
+			{
+				if (Configuration.SpanStackTraceMinDurationInMilliseconds !=
+				    ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds)
+				{
+					return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0;
+				}
+				// Legacy setting?
+				if (Configuration.SpanFramesMinDurationInMilliseconds != ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds)
+				{
+					return Configuration.SpanFramesMinDurationInMilliseconds != 0;
+				}
+
+				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0;
+			}
+			return false;
+		}
+
+		internal bool IsCaptureStackTraceOnEndEnabled()
+		{
+			if (Configuration.StackTraceLimit != 0 && RawStackTrace == null)
+			{
+				if (Configuration.SpanStackTraceMinDurationInMilliseconds !=
+				    ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds)
+				{
+					return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
+					       Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
+				}
+				// Legacy setting?
+				if (Configuration.SpanFramesMinDurationInMilliseconds !=
+				    ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds)
+				{
+					return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
+					       (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
+					        Configuration.SpanFramesMinDurationInMilliseconds < 0);
+				}
+
+				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
+				       Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
+			}
+			return false;
 		}
 
 		private bool _isEnded;
@@ -423,10 +470,10 @@ namespace Elastic.Apm.Model
 			{
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
-					&& (Duration >= Configuration.SpanFramesMinDurationInMilliseconds
-						|| Configuration.SpanFramesMinDurationInMilliseconds < 0))
+				if (IsCaptureStackTraceOnEndEnabled())
+				{
 					RawStackTrace = new StackTrace(true);
+				}
 
 				var buffered = _parentSpan?._compressionBuffer ?? _enclosingTransaction.CompressionBuffer;
 
