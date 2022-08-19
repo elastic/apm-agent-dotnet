@@ -133,13 +133,10 @@ namespace Elastic.Apm.Model
 		{
 			if (Configuration.StackTraceLimit != 0)
 			{
-				if (Configuration.SpanStackTraceMinDurationInMilliseconds !=
-				    ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds)
-				{
-					return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0;
-				}
-				// Legacy setting?
-				if (Configuration.SpanFramesMinDurationInMilliseconds != ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds)
+				// If the legacy setting (span_frames_min_duration) is present but the new
+				// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
+				if (Configuration.SpanFramesMinDurationInMilliseconds != ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds &&
+				    Configuration.SpanStackTraceMinDurationInMilliseconds == ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds)
 				{
 					return Configuration.SpanFramesMinDurationInMilliseconds != 0;
 				}
@@ -153,15 +150,10 @@ namespace Elastic.Apm.Model
 		{
 			if (Configuration.StackTraceLimit != 0 && RawStackTrace == null)
 			{
-				if (Configuration.SpanStackTraceMinDurationInMilliseconds !=
-				    ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds)
-				{
-					return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
-					       Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
-				}
-				// Legacy setting?
-				if (Configuration.SpanFramesMinDurationInMilliseconds !=
-				    ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds)
+				// If the legacy setting (span_frames_min_duration) is present but the new
+				// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
+				if (Configuration.SpanFramesMinDurationInMilliseconds != ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds &&
+				    Configuration.SpanStackTraceMinDurationInMilliseconds == ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds)
 				{
 					return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
 					       (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
