@@ -200,11 +200,11 @@ app.UseElasticApm(Configuration, new GrpcClientDiagnosticListener()); <1>
 ----
 <1> Configuration is the `IConfiguration` instance passed to your `Startup` type
 
-or passing `GrpcClientDiagnosticListener` to the `Subscribe` method
+or passing `GrpcClientDiagnosticSubscriber` to the `Subscribe` method
 
 [source,csharp]
 ----
-Agent.Subscribe(new GrpcClientDiagnosticListener());
+Agent.Subscribe(new GrpcClientDiagnosticSubscriber());
 ----
 
 Diagnostic events from `Grpc.Net.Client` are captured as spans.
