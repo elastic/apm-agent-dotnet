@@ -16,6 +16,9 @@ using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;
 
+// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
+#pragma warning disable CS0618
+
 namespace Elastic.Apm.Tests
 {
 	/// <summary>

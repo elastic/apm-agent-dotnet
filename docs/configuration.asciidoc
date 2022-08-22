@@ -1175,7 +1175,7 @@ Setting this to `0` disables stack trace collection. Any positive integer value 
 | `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit`
 |============
 
-NOTE: If you would like to disable stack trace capturing only for spans, but still capture stack traces for errors, set the <<config-span-frames-min-duration>> config to `0`.
+NOTE: If you would like to disable stack trace capturing only for spans, but still capture stack traces for errors, set the <<config-span-stack-trace-min-duration>> config to `-1`.
 
 [float]
 [[config-span-stack-trace-min-duration]]

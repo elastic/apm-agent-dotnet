@@ -198,5 +198,5 @@ A good place to start is <<config-all-options-summary>>. There are multiple sett
 The most expensive operation in the agent is typically stack trace capturing. The agent, by default, only captures stack traces for spans with a duration of 5ms or more, and with a limit of 50 stack frames.
 If this is too much in your environment, consider disabling stack trace capturing either partially or entirely:
 
-- To disable stack trace capturing for spans, but continue to capture stack traces for errors, set the <<config-span-frames-min-duration>> to `0` and leave the <<config-stack-trace-limit>> on its default.
+- To disable stack trace capturing for spans, but continue to capture stack traces for errors, set the <<config-span-stack-trace-min-duration>> to `-1` and leave the <<config-stack-trace-limit>> on its default.
 - To disable stack trace capturing entirely –which in most applications reduces the agent overhead dramatically– set <<config-stack-trace-limit>> to `0`.
