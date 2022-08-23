@@ -16,6 +16,7 @@ namespace Elastic.Apm.Config
 		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
+		private readonly Lazy<double> _spanStackTraceMinDurationInMilliseconds;
 
 		private readonly Lazy<int> _stackTraceLimit;
 
@@ -24,6 +25,10 @@ namespace Elastic.Apm.Config
 			_spanFramesMinDurationInMilliseconds
 				= new Lazy<double>(() =>
 					ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
+
+			_spanStackTraceMinDurationInMilliseconds
+				= new Lazy<double>(() =>
+					ParseSpanStackTraceMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.SpanStackTraceMinDuration)));
 
 			_stackTraceLimit = new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
 		}
@@ -118,6 +123,9 @@ namespace Elastic.Apm.Config
 		public double SpanCompressionSameKindMaxDuration =>
 			ParseSpanCompressionSameKindMaxDuration(Read(ConfigConsts.EnvVarNames.SpanCompressionSameKindMaxDuration));
 
+		public double SpanStackTraceMinDurationInMilliseconds => _spanStackTraceMinDurationInMilliseconds.Value;
+
+		[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 		public double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public int StackTraceLimit => _stackTraceLimit.Value;
