@@ -147,6 +147,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			internal const string SpanCompressionEnabled = "span_compression_enabled";
 			internal const string SpanCompressionExactMatchMaxDuration = "span_compression_exact_match_max_duration";
 			internal const string SpanCompressionSameKindMaxDuration = "span_compression_same_kind_max_duration";
+			internal const string SpanStackTraceMinDurationKey = "span_stack_trace_min_duration";
+			[Obsolete("Use SpanStackTraceMinDurationKey")]
 			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
 			internal const string StackTraceLimitKey = "stack_trace_limit";
 			internal const string TraceContinuationStrategy = "trace_continuation_strategy";
@@ -163,6 +165,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				LogLevelKey,
 				Recording,
 				SanitizeFieldNames,
+				SpanStackTraceMinDurationKey,
 				SpanFramesMinDurationKey,
 				StackTraceLimitKey,
 				TransactionIgnoreUrls,

@@ -55,7 +55,7 @@ set <<config-stack-trace-limit,`StackTraceLimit`>> to `0`.
 In its default settings,
 the APM agent collects a stack trace for every recorded span with duration longer than 5ms.
 To increase the duration threshold,
-set <<config-span-frames-min-duration,`SpanFramesMinDuration`>>.
+set <<config-span-stack-trace-min-duration,`SpanStackTraceMinDuration`>>.
 
 [float]
 [[performance-tuning-stack-frame-limit]]

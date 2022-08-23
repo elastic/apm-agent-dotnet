@@ -113,7 +113,7 @@ namespace Elastic.Apm.Model
 					// System.Net.Http.HttpRequestOut.Stop
 					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
 					// capture the stacktrace is .Start
-					if (captureStackTraceOnStart && Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0)
+					if (captureStackTraceOnStart && IsCaptureStackTraceOnStartEnabled())
 						RawStackTrace = new StackTrace(true);
 				}
 			}
@@ -126,6 +126,50 @@ namespace Elastic.Apm.Model
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
 		}
+
+// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
+#pragma warning disable CS0618
+		// If the legacy setting (span_frames_min_duration) is present but the new
+		// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
+		private bool UseLegacyCaptureStackTraceSetting()
+		{
+			// If the legacy setting (span_frames_min_duration) is present but the new
+			// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
+			const double tolerance = 0.00001;
+			return Math.Abs(Configuration.SpanFramesMinDurationInMilliseconds -
+			                ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds) > tolerance &&
+			       Math.Abs(Configuration.SpanStackTraceMinDurationInMilliseconds -
+			                ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds) < tolerance;
+		}
+
+		internal bool IsCaptureStackTraceOnStartEnabled()
+		{
+			if (Configuration.StackTraceLimit != 0)
+			{
+				if (UseLegacyCaptureStackTraceSetting())
+					return Configuration.SpanFramesMinDurationInMilliseconds != 0;
+
+				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0;
+			}
+			return false;
+		}
+		internal bool IsCaptureStackTraceOnEndEnabled()
+		{
+			if (Configuration.StackTraceLimit != 0 && RawStackTrace == null)
+			{
+				if (UseLegacyCaptureStackTraceSetting())
+				{
+					return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
+					       (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
+					        Configuration.SpanFramesMinDurationInMilliseconds < 0);
+				}
+
+				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
+				       Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
+			}
+			return false;
+		}
+#pragma warning restore CS0618
 
 		private bool _isEnded;
 
@@ -423,9 +467,7 @@ namespace Elastic.Apm.Model
 			{
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
-					&& (Duration >= Configuration.SpanFramesMinDurationInMilliseconds
-						|| Configuration.SpanFramesMinDurationInMilliseconds < 0))
+				if (IsCaptureStackTraceOnEndEnabled())
 					RawStackTrace = new StackTrace(true);
 
 				var buffered = _parentSpan?._compressionBuffer ?? _enclosingTransaction.CompressionBuffer;
@@ -547,7 +589,7 @@ namespace Elastic.Apm.Model
 		private bool IsSameKind(Span other) => Type == other.Type
 			&& Subtype == other.Subtype
 			&& _context.IsValueCreated && other._context.IsValueCreated
-			&& Context.Service.Target == other.Context.Service.Target;
+			&& Context?.Service?.Target == other.Context?.Service?.Target;
 
 		private bool TryToCompressRegular(Span sibling)
 		{
