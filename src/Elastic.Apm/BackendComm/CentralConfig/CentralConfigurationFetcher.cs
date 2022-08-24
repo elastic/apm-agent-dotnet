@@ -310,6 +310,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public double SpanCompressionSameKindMaxDuration =>
 				_centralConfiguration.SpanCompressionSameKindMaxDuration ?? _wrapped.SpanCompressionSameKindMaxDuration;
 
+			public double SpanStackTraceMinDurationInMilliseconds =>
+				_centralConfiguration.SpanStackTraceMinDurationInMilliseconds ?? _wrapped.SpanStackTraceMinDurationInMilliseconds;
+
+			[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 			public double SpanFramesMinDurationInMilliseconds =>
 				_centralConfiguration.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 

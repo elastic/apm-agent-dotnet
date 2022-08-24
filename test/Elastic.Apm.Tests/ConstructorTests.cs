@@ -71,6 +71,8 @@ namespace Elastic.Apm.Tests
 			public double SpanCompressionSameKindMaxDuration => ConfigConsts.DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => ConfigConsts.DefaultValues.DisableMetrics;
 			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => ConfigConsts.DefaultValues.IgnoreMessageQueues;
+			public double SpanStackTraceMinDurationInMilliseconds =>  ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds;
+			[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;

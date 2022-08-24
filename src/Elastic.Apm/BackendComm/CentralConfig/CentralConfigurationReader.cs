@@ -52,6 +52,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal double? SpanCompressionSameKindMaxDuration { get; private set; }
 
+		internal double? SpanStackTraceMinDurationInMilliseconds { get; private set; }
+
 		internal double? SpanFramesMinDurationInMilliseconds { get; private set; }
 
 		internal int? StackTraceLimit { get; private set; }
@@ -76,6 +78,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			CaptureHeaders =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
 			LogLevel = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.LogLevelKey, ParseLogLevel);
+			SpanStackTraceMinDurationInMilliseconds =
+				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanStackTraceMinDurationKey,
+					ParseSpanStackTraceMinDurationInMilliseconds);
 			SpanFramesMinDurationInMilliseconds =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanFramesMinDurationKey,
 					ParseSpanFramesMinDurationInMilliseconds);
