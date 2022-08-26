@@ -450,14 +450,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		[Fact]
-		public async Task TraceContinuationStrategyWithRestartExternalAndNoTraceParent()
+		public async Task TraceContinuationStrategyRestartExternalAndNoTraceParent()
 		{
 			_agent1.ConfigurationStore.CurrentSnapshot =
 				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart_external");
 
 			var client = new HttpClient();
 
-			client.DefaultRequestHeaders.Remove("traceparent");
+			// HttpClient always seem to add a `traceparent` header - calling `Remove("traceparent")` does not help.
+			// Therefore we add a fake value which fails validation and it'll be treated as a `null` traceparent` header.
+			client.DefaultRequestHeaders.Add("traceparent", "foo");
 			client.DefaultRequestHeaders.Remove("tracestate");
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
