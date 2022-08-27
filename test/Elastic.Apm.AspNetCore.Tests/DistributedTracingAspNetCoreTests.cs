@@ -449,6 +449,25 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.Links.ElementAt(0).TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
 		}
 
+		[Fact]
+		public async Task TraceContinuationStrategyRestartExternalAndNoTraceParent()
+		{
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart_external");
+
+			var client = new HttpClient();
+
+			// HttpClient always seem to add a `traceparent` header - calling `Remove("traceparent")` does not help.
+			// Therefore we add a fake value which fails validation and it'll be treated as a `null` traceparent` header.
+			client.DefaultRequestHeaders.Add("traceparent", "foo");
+			client.DefaultRequestHeaders.Remove("tracestate");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.Transactions.Should().NotBeNullOrEmpty();
+		}
+
 		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();
