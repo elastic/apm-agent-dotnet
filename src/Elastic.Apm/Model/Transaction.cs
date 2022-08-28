@@ -132,10 +132,16 @@ namespace Elastic.Apm.Model
 			var spanLinks = links as SpanLink[] ?? links?.ToArray();
 			Links = spanLinks;
 
+			// Restart the trace when:
+			// - `TraceContinuationStrategy == Restart` OR
+			// - `TraceContinuationStrategy == RestartExternal` AND
+			//		- `TraceState` is not present (Elastic Agent would have added it) OR
+			//		- `TraceState` is present but the SampleRate is not present (Elastic agent adds SampleRate to TraceState)
 			var shouldRestartTrace = configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.Restart ||
-				configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
-				&& distributedTracingData is { TraceState: { SampleRate: null } };
+				(configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
+					&& (distributedTracingData?.TraceState == null || distributedTracingData is { TraceState: { SampleRate: null } }));
 
+			// For each new transaction, start an Activity if we're not ignoring them.
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
 			// so the traceid and tracestate of the parent will flow to it.
