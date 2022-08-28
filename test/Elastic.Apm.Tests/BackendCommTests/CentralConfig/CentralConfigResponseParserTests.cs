@@ -225,6 +225,15 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 					})
 				};
 
+				yield return new object[]
+				{
+					// making sure empty json does not cause any error.
+					"{}", new Action<CentralConfigurationReader>(cfg =>
+					{
+						cfg.Should().NotBeNull();
+					})
+				};
+
 				foreach (var value in Enum.GetValues(typeof(LogLevel)))
 				{
 					yield return new object[]

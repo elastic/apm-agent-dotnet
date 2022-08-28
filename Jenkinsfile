@@ -107,7 +107,7 @@ pipeline {
                           whenTrue(isPR()) {
                             // build nuget packages and profiler
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
-                            sh label: 'Rustup', script: 'rustup default 1.57.0'
+                            sh label: 'Rustup', script: 'rustup default 1.59.0'
                             sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                             sh(label: 'Build profiler', script: './build.sh profiler-zip')
                           }
@@ -186,7 +186,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.57.0'
+                          sh label: 'Rustup', script: 'rustup default 1.59.0'
                           sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                           sh label: 'Build', script: './build.sh profiler-zip'
                           sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'

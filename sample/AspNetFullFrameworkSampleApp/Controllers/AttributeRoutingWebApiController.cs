@@ -12,10 +12,16 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 	{
 		public const string RoutePrefix = "api/AttributeRoutingWebApi";
 		public const string Route = "{id}";
+		public const string RouteAmbiguous = "ambiguous";
 
 		[HttpGet]
 		[Route(Route)]
 		public IHttpActionResult Get(string id) =>
 			Ok($"attributed routed web api controller {id}");
+
+		[HttpGet]
+		[Route(RouteAmbiguous)]
+		public IHttpActionResult Get2() =>
+			Ok($"attributed routed web api controller with ambiguous route");
 	}
 }
