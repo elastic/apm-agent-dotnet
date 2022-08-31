@@ -29,7 +29,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 				kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext")?.GetValue(kv.Value) as DefaultHttpContext;
 
 			var transaction = ApmAgent.Tracer.CurrentTransaction as Transaction;
-			transaction?.CollectRequestBody(true, new AspNetCoreRequestFacade(httpContextUnhandledException?.Request), Logger);
+			transaction?.CollectRequestBody(true, new AspNetCoreHttpRequest(httpContextUnhandledException?.Request), Logger);
 			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
 		}

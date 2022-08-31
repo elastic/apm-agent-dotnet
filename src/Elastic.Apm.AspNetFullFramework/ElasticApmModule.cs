@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -20,6 +20,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
+using Elastic.Apm.Extensions;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -168,7 +169,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				transaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
 			}
 
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(request, transaction);
+			if (transaction.IsSampled) FillSampledTransactionContextRequest(request, transaction, _logger);
 		}
 
 		/// <summary>
@@ -197,7 +198,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			return TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue);
 		}
 
-		private static void FillSampledTransactionContextRequest(HttpRequest request, ITransaction transaction)
+		private static void FillSampledTransactionContextRequest(HttpRequest request, ITransaction transaction, IApmLogger logger)
 		{
 			var httpRequestUrl = request.Unvalidated.Url;
 			var queryString = httpRequestUrl.Query;
@@ -233,6 +234,8 @@ namespace Elastic.Apm.AspNetFullFramework
 					? ConvertHeaders(request.Unvalidated.Headers, (transaction as Transaction)?.Configuration)
 					: null
 			};
+
+			transaction.CollectRequestBody(false, new AspNetHttpRequest(request), logger);
 		}
 
 		private static string GetHttpVersion(string protocol)

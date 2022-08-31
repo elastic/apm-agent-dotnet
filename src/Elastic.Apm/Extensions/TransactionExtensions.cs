@@ -4,18 +4,13 @@
 
 using System;
 using System.Net.Mime;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Extensions
 {
-	internal interface IRequestFacade
-	{
-		string GetContentType();
-		string ExtractBody(IApmLogger logger, IConfiguration configuration);
-	}
-
 	internal static class TransactionExtensions
 	{
 		/// <summary>
@@ -25,12 +20,12 @@ namespace Elastic.Apm.Extensions
 		/// <param name="isForError">Is request body being captured for error (otherwise it's for transaction)</param>
 		/// <param name="httpRequest">Current http request</param>
 		/// <param name="logger">Logger object</param>
-		internal static void CollectRequestBody(this Transaction transaction, bool isForError, IRequestFacade httpRequest, IApmLogger logger)
+		internal static void CollectRequestBody(this ITransaction transaction, bool isForError, IHttpRequestAdapter httpRequest, IApmLogger logger)
 		{
 			if (!transaction.IsSampled)
 				return;
 
-			if (httpRequest == null)
+			if (httpRequest == null || !httpRequest.HasValue)
 				return;
 
 			string body = null;
@@ -42,21 +37,21 @@ namespace Elastic.Apm.Extensions
 				&& !ReferenceEquals(transaction.Context.Request.Body, Consts.Redacted))
 				return;
 
-			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest?.GetContentType(), logger))
+			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest?.ContentType, logger))
 				body = httpRequest.ExtractBody(logger, transaction.Configuration);
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
 			transaction.Context.Request.Body = body ?? Apm.Consts.Redacted;
 		}
 
-		internal static bool IsCaptureRequestBodyEnabled(this Transaction transaction, bool isForError) =>
+		internal static bool IsCaptureRequestBodyEnabled(this ITransaction transaction, bool isForError) =>
 			transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll)
 			||
 			(isForError
 				? transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors)
 				: transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
 
-		private static bool IsCaptureRequestBodyEnabledForContentType(Transaction transaction, string requestContentType, IApmLogger logger)
+		private static bool IsCaptureRequestBodyEnabledForContentType(ITransaction transaction, string requestContentType, IApmLogger logger)
 		{
 			// We need to parse the content type and check it's not null and is of valid value
 			if (string.IsNullOrEmpty(requestContentType))

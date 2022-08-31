@@ -112,7 +112,7 @@ namespace Elastic.Apm.AspNetCore
 					Headers = GetHeaders(context.Request.Headers, transaction.Configuration)
 				};
 
-				transaction.CollectRequestBody(false, new AspNetCoreRequestFacade(context.Request), logger);
+				transaction.CollectRequestBody(false, new AspNetCoreHttpRequest(context.Request), logger);
 			}
 			catch (Exception ex)
 			{

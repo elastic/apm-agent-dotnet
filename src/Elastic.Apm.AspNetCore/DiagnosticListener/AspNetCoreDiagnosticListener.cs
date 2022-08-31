@@ -82,7 +82,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iDiagnosticsTransaction is Transaction diagnosticsTransaction)
 					{
-						diagnosticsTransaction.CollectRequestBody(true, new AspNetCoreRequestFacade(httpContextDiagnosticsUnhandledException.Request), Logger);
+						diagnosticsTransaction.CollectRequestBody(true, new AspNetCoreHttpRequest(httpContextDiagnosticsUnhandledException.Request), Logger);
 						diagnosticsTransaction.CaptureException(diagnosticsException);
 					}
 
@@ -94,7 +94,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iCurrentTransaction is Transaction currentTransaction)
 					{
-						currentTransaction.CollectRequestBody(true, new AspNetCoreRequestFacade(httpContextUnhandledException.Request), Logger);
+						currentTransaction.CollectRequestBody(true, new AspNetCoreHttpRequest(httpContextUnhandledException.Request), Logger);
 						currentTransaction.CaptureException(exception);
 					}
 					break;

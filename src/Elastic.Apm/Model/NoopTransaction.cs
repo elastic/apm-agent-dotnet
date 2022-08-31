@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -44,6 +44,8 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
 			Configuration = configuration;
 		}
+
+		public bool IsContextCreated => true;
 
 		public Context Context =>
 			ReusableContextInstance;
