@@ -134,7 +134,7 @@ namespace Elastic.Apm.Model
 
 			var shouldRestartTrace = configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.Restart ||
 				configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
-				&& !distributedTracingData.TraceState.SampleRate.HasValue;
+				&& distributedTracingData is { TraceState: { SampleRate: null } };
 
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
