@@ -4,6 +4,9 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Utilities;
@@ -245,6 +248,27 @@ namespace Elastic.Apm.Tests
 				payloadSender: new MockPayloadSender()));
 			var transaction = agent.Tracer.StartTransaction("transaction", "type");
 			return transaction.StartSpan("span", "type") as Model.Span;
+		}
+
+		[Fact]
+		public void Ensure_SpanDurations_Are_Accurate()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("Warmup", "bar", t =>
+			{
+				t.CaptureSpan("span1", "sample", () => { Thread.Sleep(TimeSpan.FromMilliseconds(10)); });
+			});
+			var durations = new[] { 1, 5, 10, 20, 50, 75, 100 };
+			agent.Tracer.CaptureTransaction("foo", "bar", t =>
+			{
+				for (var i = 0; i < durations.Length; i++)
+					t.CaptureSpan($"span_{i}", "sample", () => { Thread.Sleep(TimeSpan.FromMilliseconds(durations[i])); });
+			});
+			const int epsilon = 5;
+			for (var i = 0; i < durations.Length; i++)
+				payloadSender.Spans[i + 1].Duration.Should().BeInRange(durations[i] - epsilon, durations[i] + epsilon);
 		}
 	}
 }
