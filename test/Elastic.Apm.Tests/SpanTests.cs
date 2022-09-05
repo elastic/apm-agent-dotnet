@@ -253,6 +253,13 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void Ensure_SpanDurations_Are_Accurate()
 		{
+			static void CrudeSleep(long ticks)
+			{
+				var stopWatch = Stopwatch.StartNew();
+				while (stopWatch.ElapsedTicks <= ticks)
+				{}
+			}
+
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -264,7 +271,7 @@ namespace Elastic.Apm.Tests
 			agent.Tracer.CaptureTransaction("foo", "bar", t =>
 			{
 				for (var i = 0; i < durations.Length; i++)
-					t.CaptureSpan($"span_{i}", "sample", () => { Thread.Sleep(TimeSpan.FromMilliseconds(durations[i])); });
+					t.CaptureSpan($"span_{i}", "sample", () => { CrudeSleep(TimeSpan.FromMilliseconds(durations[i]).Ticks); });
 			});
 			const int epsilon = 5;
 			for (var i = 0; i < durations.Length; i++)
