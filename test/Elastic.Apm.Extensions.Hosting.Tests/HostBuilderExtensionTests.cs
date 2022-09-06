@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,7 +13,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 	public class HostBuilderExtensionTests
 	{
 		/// <summary>
-		/// Makes sure in case of 2 IHostBuilder insatnces when both call UseElasticApm no exception is thrown
+		/// Makes sure in case of 2 IHostBuilder instances when both call UseElasticApm no exception is thrown
 		/// </summary>
 		/// <returns></returns>
 		[Fact]
@@ -35,7 +36,28 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 		public void IsAgentInitializedAfterUseElasticApm()
 		{
 			using var _ = CreateHostBuilder().Build();
-			Agent.IsConfigured.Should().BeTrue();
+
+		}
+
+		/// <summary>
+		/// Makes sure that dependency-resolving is not invoked when <see cref="HostBuilderExtensions.UseElasticApm" />
+		/// is called. This results in unwanted multiple instantiation of registered singletons.
+		/// see: https://github.com/elastic/apm-agent-dotnet/issues/1607
+		/// </summary>
+		[Fact] public void UseElasticApm_DoesNotCause_MultipleInstancesOfSingletons()
+		{
+			var host = Host.CreateDefaultBuilder()
+			.ConfigureServices((_, services) =>
+			{
+				services.AddHostedService<HostedService>();
+			})
+			.UseElasticApm()
+			.Build();
+
+			var logger1 = Agent.Instance.Logger;
+			var logger2 = host.Services.GetService<IApmLogger>();
+
+			logger1.Should().Be(logger2);
 		}
 
 		/// <summary>

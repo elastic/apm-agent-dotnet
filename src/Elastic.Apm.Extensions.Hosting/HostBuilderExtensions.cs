@@ -41,52 +41,40 @@ namespace Elastic.Apm.Extensions.Hosting
 		/// </summary>
 		/// <param name="builder">Builder.</param>
 		/// <param name="subscribers">Specify which diagnostic source subscribers you want to connect.</param>
-		public static IHostBuilder UseElasticApm(this IHostBuilder builder, params IDiagnosticsSubscriber[] subscribers)
+		public static IHostBuilder UseElasticApm(this IHostBuilder builder, params IDiagnosticsSubscriber[] subscribers) => UseElasticApm(builder, null, subscribers);
+
+		internal static IHostBuilder UseElasticApm(this IHostBuilder builder, IPayloadSender payloadSender, params IDiagnosticsSubscriber[] subscribers)
 		{
 			builder.ConfigureServices((ctx, services) =>
 			{
-				//If the static agent doesn't exist, we create one here. If there is already 1 agent created, we reuse it.
+				IApmLogger logger;
+				IConfigurationReader configReader;
+				AgentComponents agentComponents;
+
+				// If the static agent doesn't exist, we create one here. If there is already 1 agent created, we reuse it.
 				if (!Agent.IsConfigured)
 				{
-					services.AddSingleton<IApmLogger, NetCoreLogger>();
-					services.AddSingleton<IConfigurationReader>(sp =>
-						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), GetHostingEnvironmentName(ctx, sp.GetService<IApmLogger>())));
+					logger = new NetCoreLogger(new LoggerFactory());  // TODO: Could this be a problem?
+					configReader = new MicrosoftExtensionsConfig(ctx.Configuration, logger, GetHostingEnvironmentName(ctx, logger));
+					agentComponents = new AgentComponents(logger, configReader, payloadSender);
+					UpdateServiceInformation(agentComponents.Service);
+					Agent.Setup(agentComponents);
 				}
 				else
 				{
-					services.AddSingleton(Agent.Instance.Logger);
-					services.AddSingleton(Agent.Instance.ConfigurationReader);
+					logger = Agent.Instance.Logger;
+					configReader = Agent.Instance.ConfigurationReader;
+					agentComponents = Agent.Instance.Components;
 				}
 
-				services.AddSingleton(sp =>
-				{
-					if (Agent.IsConfigured) return Agent.Components;
-
-					var logger = sp.GetService<IApmLogger>();
-					var configReader = sp.GetService<IConfigurationReader>();
-
-					var payloadSender = sp.GetService<IPayloadSender>();
-
-					var components = new AgentComponents(logger, configReader, payloadSender);
-					UpdateServiceInformation(components.Service);
-					return components;
-				});
-
-				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
-				{
-					if (Agent.IsConfigured) return Agent.Instance;
-
-					Agent.Setup(sp.GetService<AgentComponents>());
-					return Agent.Instance;
-				});
-
+				services.AddSingleton(logger);
+				services.AddSingleton(configReader);
+				services.AddSingleton(agentComponents);
+				services.AddSingleton<IApmAgent>(Agent.Instance);
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 
-				// Force to create agent
-				var serviceProvider = services.BuildServiceProvider();
-				var agent = serviceProvider.GetService<IApmAgent>();
-
-				if (!(agent is ApmAgent apmAgent)) return;
+				// Create agent
+				if (!(Agent.Instance is ApmAgent apmAgent)) return;
 
 				if (!Agent.IsConfigured || !apmAgent.ConfigurationReader.Enabled) return;
 

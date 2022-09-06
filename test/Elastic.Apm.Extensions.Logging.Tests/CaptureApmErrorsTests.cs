@@ -58,7 +58,6 @@ namespace Elastic.Apm.Extensions.Logging.Tests
 
 		private static IHostBuilder CreateHostBuilder(MockPayloadSender payloadSender = null) =>
 			Host.CreateDefaultBuilder()
-				.ConfigureServices(n => n.AddSingleton<IPayloadSender, MockPayloadSender>(_ => payloadSender))
 				.ConfigureServices((_, services) => { services.AddHostedService<HostedService>(); })
 				.ConfigureLogging((_, logging) =>
 				{
@@ -69,6 +68,6 @@ namespace Elastic.Apm.Extensions.Logging.Tests
 				logging.AddConsole(options => options.IncludeScopes = true);
 #endif
 				})
-				.UseElasticApm();
+				.UseElasticApm(payloadSender);
 	}
 }
