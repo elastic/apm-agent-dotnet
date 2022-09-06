@@ -116,6 +116,14 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 				//If that's the case we don't need to care about them here. They will flow somewhere else.
 				return null;
 			}
+			finally
+			{
+				var streamReader = new StreamReader(stream);
+				streamReader.ReadToEnd();
+				if (stream.CanSeek)
+					stream.Seek(0, SeekOrigin.Begin); //StreamReader doesn't have the Seek method, stream does.
+				streamReader.ReadToEnd(); // This now works
+			}
 		}
 	}
 }
