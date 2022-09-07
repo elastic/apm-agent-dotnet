@@ -20,42 +20,52 @@ namespace Elastic.Apm.Helpers
 			if (requestBody == null) return null;
 
 			string body = null;
-			requestBody.Position = 0;
-			var arrayPool = ArrayPool<char>.Shared;
-			var capacity = 512;
-			var buffer = arrayPool.Rent(capacity);
-			var totalRead = 0;
-			int read;
 
-			// requestBody.Length is 0 on initial buffering - length relates to how much has been read and buffered.
-			// Read to just beyond request body max length so that we can determine if truncation will occur
-			try
+			var capacity = 512;
+			var totalRead = 0;
+			var arrayPool = ArrayPool<char>.Shared;
+			char[] buffer;
+
+			if (requestBody.CanSeek)
 			{
-				// TODO: can we assume utf-8 encoding?
-				using var reader = new StreamReader(requestBody, Encoding.UTF8, false, buffer.Length, true);
-				while ((read = reader.Read(buffer, 0, capacity)) != 0)
+				buffer = arrayPool.Rent(capacity);
+				int read;
+
+				// requestBody.Length is 0 on initial buffering - length relates to how much has been read and buffered.
+				// Read to just beyond request body max length so that we can determine if truncation will occur
+				try
 				{
-					totalRead += read;
-					if (totalRead > RequestBodyMaxLength)
+					// TODO: can we assume utf-8 encoding?
+					using var reader = new StreamReader(requestBody, Encoding.UTF8, false, buffer.Length, true);
+					while ((read = reader.Read(buffer, 0, capacity)) != 0)
 					{
-						longerThanMaxLength = true;
-						break;
+						totalRead += read;
+						if (totalRead > RequestBodyMaxLength)
+						{
+							longerThanMaxLength = true;
+							break;
+						}
 					}
 				}
+				finally
+				{
+					arrayPool.Return(buffer);
+				}
+				requestBody.Position = 0;
 			}
-			finally
+			else
 			{
-				arrayPool.Return(buffer);
+				totalRead = (int)requestBody.Length;
+				longerThanMaxLength = totalRead > RequestBodyMaxLength;
 			}
 
-			requestBody.Position = 0;
 			capacity = Math.Min(totalRead, RequestBodyMaxLength);
 			buffer = arrayPool.Rent(capacity);
 
 			try
 			{
 				using var reader = new StreamReader(requestBody, Encoding.UTF8, false, RequestBodyMaxLength, true);
-				read = reader.ReadBlock(buffer, 0, capacity);
+				var read = reader.ReadBlock(buffer, 0, capacity);
 				body = new string(buffer, 0, read);
 			}
 			finally
@@ -63,7 +73,8 @@ namespace Elastic.Apm.Helpers
 				arrayPool.Return(buffer);
 			}
 
-			requestBody.Position = 0;
+			if (requestBody.CanSeek)
+				requestBody.Position = 0;
 
 			return body;
 		}

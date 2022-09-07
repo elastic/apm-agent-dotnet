@@ -33,8 +33,7 @@ namespace Elastic.Apm.AspNetFullFramework
 					body = form.AsSanitizedString(configuration, out longerThanMaxLength);
 				}
 				else
-					body = RequestBodyStreamHelper.ToString(_request.GetBufferlessInputStream(), out longerThanMaxLength);
-
+					body = RequestBodyStreamHelper.ToString(_request.GetBufferedInputStream(), out longerThanMaxLength);
 			}
 
 			return body;
