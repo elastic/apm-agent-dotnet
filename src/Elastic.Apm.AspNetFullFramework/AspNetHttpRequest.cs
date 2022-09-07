@@ -9,6 +9,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.AspNetCore;
+using System.IO;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -33,7 +34,16 @@ namespace Elastic.Apm.AspNetFullFramework
 					body = form.AsSanitizedString(configuration, out longerThanMaxLength);
 				}
 				else
-					body = RequestBodyStreamHelper.ToString(_request.GetBufferedInputStream(), out longerThanMaxLength);
+				{
+					if (_request.ReadEntityBodyMode == ReadEntityBodyMode.Bufferless)
+					{
+						// TODO log
+					}
+					else
+					{
+						body = RequestBodyStreamHelper.ToString(_request.InputStream, out longerThanMaxLength);
+					}
+				}
 			}
 
 			return body;

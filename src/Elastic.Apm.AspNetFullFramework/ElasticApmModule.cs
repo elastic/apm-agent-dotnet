@@ -236,8 +236,6 @@ namespace Elastic.Apm.AspNetFullFramework
 					? ConvertHeaders(request.Unvalidated.Headers, (transaction as Transaction)?.Configuration)
 					: null
 			};
-
-			transaction.CollectRequestBody(false, new AspNetHttpRequest(request), logger);
 		}
 
 		private static string GetHttpVersion(string protocol)
@@ -384,6 +382,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				FillSampledTransactionContextResponse(response, transaction);
 				FillSampledTransactionContextUser(context, transaction);
+				transaction.CollectRequestBody(false, new AspNetHttpRequest(context.Request), _logger);
 			}
 
 			transaction.End();
