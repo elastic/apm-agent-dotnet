@@ -31,7 +31,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests.Soap
 			var pathData = SampleAppUrlPaths.CallSoapServiceProtocolV12;
 			var action = "Input";
 
-			var input = @"This is the input";
+			var input = string.Join("", Enumerable.Repeat(@"This is the input.", 300));
+
 			var request = new HttpRequestMessage(HttpMethod.Post, pathData.Uri)
 			{
 				Content = new StringContent($@"<?xml version=""1.0"" encoding=""utf-8""?>
