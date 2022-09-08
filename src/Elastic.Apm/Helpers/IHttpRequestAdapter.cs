@@ -15,7 +15,7 @@ namespace Elastic.Apm.Helpers
 	{
 		bool HasValue { get; }
 		string ContentType { get; }
-		string ExtractBody(IConfiguration configuration, out bool longerThanMaxLength);
+		string ExtractBody(IConfiguration configuration, IApmLogger logger, out bool longerThanMaxLength);
 	}
 
 	internal static class IHttpRequestAdapterExtensions
@@ -33,7 +33,7 @@ namespace Elastic.Apm.Helpers
 			var longerThanMaxLength = false;
 			try
 			{
-				return httpRequest.ExtractBody(configuration, out longerThanMaxLength);
+				return httpRequest.ExtractBody(configuration, logger, out longerThanMaxLength);
 			}
 			catch (IOException ioException)
 			{

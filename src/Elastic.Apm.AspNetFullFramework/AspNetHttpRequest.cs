@@ -2,14 +2,12 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System.Text;
-using System;
 using System.Web;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.AspNetCore;
-using System.IO;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -21,7 +19,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public bool HasValue => _request != null;
 		public string ContentType => _request?.ContentType;
-		public string ExtractBody(IConfiguration configuration, out bool longerThanMaxLength)
+		public string ExtractBody(IConfiguration configuration, IApmLogger logger, out bool longerThanMaxLength)
 		{
 			string body = null;
 			longerThanMaxLength = false;
@@ -37,7 +35,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				{
 					if (_request.ReadEntityBodyMode == ReadEntityBodyMode.Bufferless)
 					{
-						// TODO log
+						logger.Warning()?.Log($"Request body capturing is not possible 'bufferless' mode");
 					}
 					else
 					{
