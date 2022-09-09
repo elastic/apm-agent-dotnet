@@ -18,5 +18,7 @@ namespace Elastic.Apm.Tests.Utilities
 		public MockApmServerInfo(ElasticVersion version) => Version = version;
 
 		public ElasticVersion Version { get; set; }
+
+		public override string ToString() => $"{nameof(MockApmServerInfo)}: {Version}";
 	}
 }
