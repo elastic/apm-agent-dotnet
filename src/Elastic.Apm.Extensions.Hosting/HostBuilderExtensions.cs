@@ -15,6 +15,21 @@ namespace Elastic.Apm.Extensions.Hosting
 {
 	public static class HostBuilderExtensions
 	{
+		private static string GetHostingEnvironmentName(HostBuilderContext ctx)
+		{
+			try
+			{
+				var propertyInfo = ctx.GetType().GetProperty("HostingEnvironment");
+				var hostingEnvironment = propertyInfo.GetValue(ctx, null);
+				propertyInfo = hostingEnvironment.GetType().GetProperty("EnvironmentName");
+				return propertyInfo.GetValue(hostingEnvironment, null) as string;
+			}
+			catch (Exception)
+			{
+			}
+			return null;
+		}
+
 		/// <summary>
 		///  Register Elastic APM .NET Agent with components in the container.
 		///  You can customize the agent by passing additional IDiagnosticsSubscriber components to this method.
@@ -34,7 +49,7 @@ namespace Elastic.Apm.Extensions.Hosting
 				{
 					services.AddSingleton<IApmLogger, NetCoreLogger>();
 					services.AddSingleton<IConfigurationReader>(sp =>
-						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), ctx.HostingEnvironment.EnvironmentName));
+						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), GetHostingEnvironmentName(ctx)));
 				}
 				else
 				{
