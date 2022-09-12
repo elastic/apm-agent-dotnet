@@ -27,8 +27,8 @@ namespace Elastic.Apm.Config
 			public const bool CentralConfig = true;
 			public const string CloudProvider = SupportedValues.CloudProviderAuto;
 			public const bool EnableOpenTelemetryBridge = false;
-			public const string ExitSpanMinDuration = "1ms";
-			public const int ExitSpanMinDurationInMilliseconds = 1000;
+			public const string ExitSpanMinDuration = "0ms";
+			public const int ExitSpanMinDurationInMilliseconds = 0;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
 			public const LogLevel LogLevel = Logging.LogLevel.Error;
 			public const int MaxBatchEventCount = 10;
