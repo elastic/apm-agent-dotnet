@@ -468,6 +468,33 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.Transactions.Should().NotBeNullOrEmpty();
 		}
 
+		/// <summary>
+		/// Sends a request with a valid `traceparent` and without a `tracestate` header with setting `traceContinuationStrategy`
+		/// to `restart_external`.
+		/// Makes sure the trace is restarted, meaning values from the `traceparent` header aren't used for the transaction.
+		/// </summary>
+		[Fact]
+		public async Task TraceContinuationStrategyRestartExternalAndNoTraceState()
+		{
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart_external");
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Remove("tracestate");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.Transactions.Should().NotBeNullOrEmpty();
+
+			// The trace is restarted (due to `traceContinuationStrategy=restart_external`), so assert that the traceId and
+			// parentId aren't reused from `traceparent`.
+			_payloadSender1.FirstTransaction.Id.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
+		}
+
 		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();
