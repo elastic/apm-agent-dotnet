@@ -84,8 +84,12 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 
 		internal static string GetSoap12ActionFromInputStream(Stream stream)
 		{
+			StreamReader streamReader = null;
+
 			try
 			{
+				streamReader = new StreamReader(stream);
+
 				var settings = new XmlReaderSettings
 				{
 					IgnoreProcessingInstructions = true,
@@ -93,7 +97,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 					IgnoreWhitespace = true
 				};
 
-				using var reader = XmlReader.Create(stream, settings);
+				using var reader = XmlReader.Create(streamReader, settings);
 				reader.MoveToContent();
 				if (reader.LocalName != "Envelope")
 					return null;
@@ -118,11 +122,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 			}
 			finally
 			{
-				var streamReader = new StreamReader(stream);
-				streamReader.ReadToEnd();
-				if (stream.CanSeek)
-					stream.Seek(0, SeekOrigin.Begin); //StreamReader doesn't have the Seek method, stream does.
-				streamReader.ReadToEnd(); // This now works
+				streamReader?.ReadToEnd();
 			}
 		}
 	}
