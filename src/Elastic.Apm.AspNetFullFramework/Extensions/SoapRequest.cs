@@ -85,11 +85,9 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		internal static string GetSoap12ActionFromInputStream(Stream stream)
 		{
 			StreamReader streamReader = null;
-
 			try
 			{
 				streamReader = new StreamReader(stream);
-
 				var settings = new XmlReaderSettings
 				{
 					IgnoreProcessingInstructions = true,
