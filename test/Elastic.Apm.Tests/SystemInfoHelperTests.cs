@@ -58,6 +58,9 @@ namespace Elastic.Apm.Tests
 		// ubuntu cgroup
 		[InlineData("1:name=systemd:/user.slice/user-1000.slice/user@1000.service/apps.slice/apps-org.gnome.Terminal" +
 			".slice/vte-spawn-75bc72bd-6642-4cf5-b62c-0674e11bfc84.scope", null, null)]
+		// AWS ECS cgroup
+		[InlineData("1:name=systemd:/ecs/03752a671e744971a862edcee6195646/03752a671e744971a862edcee6195646-4015103728",
+			"03752a671e744971a862edcee6195646-4015103728", null)]
 		public void ParseKubernetesInfo_FromCGroupLine(string line, string containerId, string podId)
 		{
 			var system = new Api.System();
