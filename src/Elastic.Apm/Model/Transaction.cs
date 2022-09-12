@@ -142,7 +142,6 @@ namespace Elastic.Apm.Model
 					&& (distributedTracingData?.TraceState == null || distributedTracingData is { TraceState: { SampleRate: null } }));
 
 			// For each new transaction, start an Activity if we're not ignoring them.
-			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
 			// so the traceid and tracestate of the parent will flow to it.
 			if (!ignoreActivity)
