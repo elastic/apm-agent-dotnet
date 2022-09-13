@@ -16,6 +16,7 @@ namespace Elastic.Apm.Helpers
 	{
 		private readonly Regex _containerUidRegex = new Regex("^[0-9a-fA-F]{64}$");
 		private readonly Regex _shortenedUuidRegex = new Regex("^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4,}");
+		private readonly Regex _ecsContainerIdRegex = new Regex("^[a-z0-9]{32}-[0-9]{10}$");
 		private readonly Regex _podRegex = new Regex(
 			@"(?:^/kubepods[\S]*/pod([^/]+)$)|(?:^/kubepods\.slice/(kubepods-[^/]+\.slice/)?kubepods[^/]*-pod([^/]+)\.slice$)");
 
@@ -74,7 +75,7 @@ namespace Elastic.Apm.Helpers
 
 			// If the line matched the one of the kubernetes patterns, we assume that the last part is always the container ID.
 			// Otherwise we validate that it is a 64-length hex string
-			if (system.Kubernetes != null || _containerUidRegex.IsMatch(idPart) || _shortenedUuidRegex.IsMatch(idPart))
+			if (system.Kubernetes != null || _containerUidRegex.IsMatch(idPart) || _shortenedUuidRegex.IsMatch(idPart) || _ecsContainerIdRegex.IsMatch(idPart))
 				system.Container = new Container { Id = idPart };
 			else
 				_logger.Info()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
@@ -107,7 +108,8 @@ namespace Elastic.Apm.Helpers
 						?? Environment.GetEnvironmentVariable("HOSTNAME"))
 						?? Environment.GetEnvironmentVariable("HOST");
 
-					if (host == null) _logger.Error()?.Log("Failed to get hostname via environment variables.");
+					if (host == null)
+						_logger.Error()?.Log("Failed to get hostname via environment variables.");
 					return host;
 				}
 				catch (Exception exception)

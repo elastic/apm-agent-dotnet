@@ -589,7 +589,7 @@ Additionally, spans that lead to an error can't be discarded.
 [options="header"]
 |============
 | Default | Type
-| `1ms`  | TimeDuration
+| `0ms`  | TimeDuration
 |============
 
 
@@ -1073,7 +1073,7 @@ If your application is called by an {dotnet5} application that does not have an 
 [options="header"]
 |============
 | Environment variable name            | IConfiguration or Web.config key
-| `TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
+| `ELASTIC_APM_TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
 |============
 
 [options="header"]
