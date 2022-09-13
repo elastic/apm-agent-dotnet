@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
@@ -18,6 +19,32 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class DroppedSpansStatsTests
 	{
+		[Fact]
+		public void DroppedSpanStats_MustReflect_ExitSpanMinDuration_Configuration()
+		{
+			Helper_CreateSpanWithDuration(Config.ConfigConsts.DefaultValues.ExitSpanMinDuration, 0).Should().BeNull();
+			Helper_CreateSpanWithDuration("Oms", 0).Should().BeNull();
+			Helper_CreateSpanWithDuration("10ms", 0).Count().Should().Be(1);
+		}
+
+		private static IEnumerable<DroppedSpanStats> Helper_CreateSpanWithDuration(string exitSpanMinDuration, double actualSpanDuration)
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent =
+			       new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(exitSpanMinDuration: exitSpanMinDuration),
+				       payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
+				{
+					var span = transaction.StartSpan("exit_span", "type", isExitSpan: true);
+					span.Duration = actualSpanDuration;
+					span.End();
+				});
+			}
+
+			return payloadSender.FirstTransaction.DroppedSpanStats;
+		}
+
 		[Fact]
 		public void SingleDroppedSpanTest()
 		{
