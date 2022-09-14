@@ -25,13 +25,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests.Soap
 		/// does not cause an exception to be thrown when the framework deserializes the input stream
 		/// to parse the parameters for the web method.
 		/// </summary>
-		[AspNetFullFrameworkFact]
-		public async Task Name_Should_Should_Not_Throw_Exception_When_Asmx_Soap12_Request()
+		[AspNetFullFrameworkTheory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task Name_Should_Should_Not_Throw_Exception_When_Asmx_Soap12_Request(bool useLargePayload)
 		{
 			var pathData = SampleAppUrlPaths.CallSoapServiceProtocolV12;
 			var action = "Input";
 
-			var input = @"This is the input";
+			var input = useLargePayload ? string.Join("", Enumerable.Repeat("This is a large input. ", 500)) : "This is the input";
+
 			var request = new HttpRequestMessage(HttpMethod.Post, pathData.Uri)
 			{
 				Content = new StringContent($@"<?xml version=""1.0"" encoding=""utf-8""?>
