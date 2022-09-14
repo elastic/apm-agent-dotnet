@@ -22,7 +22,9 @@ namespace Elastic.Apm.Cloud
 		{
 		}
 
-		public override Task<Api.Cloud> GetMetadataAsync()
+		public override Task<Api.Cloud> GetMetadataAsync() => Task.FromResult(GetMetadata());
+
+		internal Api.Cloud GetMetadata()
 		{
 			var functionsExtensionVersion = GetEnvironmentVariable(FunctionsExtensionVersion);
 			var websiteOwnerName = GetEnvironmentVariable(WebsiteOwnerName);
@@ -33,10 +35,10 @@ namespace Elastic.Apm.Cloud
 			if (NullOrEmptyVariable(FunctionsExtensionVersion, functionsExtensionVersion) ||
 			    NullOrEmptyVariable(WebsiteOwnerName, websiteOwnerName) ||
 			    NullOrEmptyVariable(WebsiteSiteName, websiteSiteName))
-				return Task.FromResult<Api.Cloud>(null);
+				return null;
 
 			var tokens = TokenizeWebSiteOwnerName(websiteOwnerName);
-			if (!tokens.HasValue) return Task.FromResult<Api.Cloud>(null);
+			if (!tokens.HasValue) return null;
 
 			if (string.IsNullOrEmpty(regionName))
 				regionName = tokens.Value.Region;
@@ -44,14 +46,14 @@ namespace Elastic.Apm.Cloud
 			if (string.IsNullOrEmpty(websiteResourceGroup))
 				websiteResourceGroup = tokens.Value.ResourceGroup;
 
-			return Task.FromResult(new Api.Cloud
+			return new Api.Cloud
 			{
 				Provider = "azure",
 				Account = new CloudAccount { Id = tokens.Value.SubscriptionId },
 				Instance = new CloudInstance { Name = websiteSiteName },
 				Project = new CloudProject { Name = websiteResourceGroup },
 				Region = regionName
-			});
+			};
 		}
 	}
 }
