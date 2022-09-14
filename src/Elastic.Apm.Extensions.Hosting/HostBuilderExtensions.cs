@@ -15,7 +15,7 @@ namespace Elastic.Apm.Extensions.Hosting
 {
 	public static class HostBuilderExtensions
 	{
-		private static string GetHostingEnvironmentName(HostBuilderContext ctx)
+		internal static string GetHostingEnvironmentName(HostBuilderContext ctx, IApmLogger logger)
 		{
 			try
 			{
@@ -24,8 +24,9 @@ namespace Elastic.Apm.Extensions.Hosting
 				propertyInfo = hostingEnvironment.GetType().GetProperty("EnvironmentName");
 				return propertyInfo.GetValue(hostingEnvironment, null) as string;
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				logger?.Warning()?.LogException(e, "Failed to retrieve hosting environment name");
 			}
 			return null;
 		}
@@ -49,7 +50,7 @@ namespace Elastic.Apm.Extensions.Hosting
 				{
 					services.AddSingleton<IApmLogger, NetCoreLogger>();
 					services.AddSingleton<IConfigurationReader>(sp =>
-						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), GetHostingEnvironmentName(ctx)));
+						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), GetHostingEnvironmentName(ctx, sp.GetService<IApmLogger>())));
 				}
 				else
 				{
