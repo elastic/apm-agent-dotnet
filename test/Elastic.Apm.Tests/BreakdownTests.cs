@@ -6,7 +6,9 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -680,6 +682,24 @@ namespace Elastic.Apm.Tests
 			testLogger.Lines.Count(n => n.Contains("The limit of 1000 metricsets has been reached, no new metricsets will be created"))
 				.Should()
 				.Be(2);
+		}
+
+		/// <summary>
+		/// According to the spec, the timestamp of the reported MetricSet should be the timestamp when the MetricSet gets reported.
+		/// </summary>
+		[Fact]
+		private async Task TimeStampTest()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent();
+			using (agent) agent.Tracer.CaptureTransaction("test", "test", () => { });
+			await Task.Delay(500);
+
+			var timeStampBeforeReporting = TimeUtils.TimestampNow();
+			var metricTimestamp = breakdownMetricsProvider.GetSamples().First().Timestamp;
+
+			// assert that the timestamp of the MetricSet is close enough to the call of the `breakdownMetricsProvider.GetSamples()` method.
+			var diff = TimeUtils.DurationBetweenTimestamps(timeStampBeforeReporting, metricTimestamp);
+			Math.Abs(diff).Should().BeLessThan(100);
 		}
 
 		private static bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 1000;

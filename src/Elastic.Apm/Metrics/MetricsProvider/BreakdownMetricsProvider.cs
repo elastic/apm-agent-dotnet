@@ -64,11 +64,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			lock (_lock)
 			{
-				var timestampNow = TimeUtils.TimestampNow();
-
 				foreach (var item in transaction.SpanTimings)
 				{
-					var groupKey = new GroupKey(new TransactionInfo { Name = transaction.Name, Type = transaction.Type },
+					var groupKey = new GroupKey(new TransactionInfo() { Name = transaction.Name, Type = transaction.Type },
 						new SpanInfo { Type = item.Key.Type, SubType = item.Key.SubType });
 
 					if (_itemsToSend.ContainsKey(groupKey))
@@ -94,11 +92,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					else if (_itemsToSend.Count < MetricLimit)
 					{
 						var metricSet =
-							new MetricSet(timestampNow,
-								new List<MetricSample>
-								{
-									new(SpanSelfTimeCount, item.Value.Count), new(SpanSelfTimeSumUs, item.Value.TotalDuration * 1000)
-								}) { Span = groupKey.Span, Transaction = groupKey.Transaction };
+							new MetricSet(new List<MetricSample>
+							{
+								new(SpanSelfTimeCount, item.Value.Count), new(SpanSelfTimeSumUs, item.Value.TotalDuration * 1000)
+							}) { Span = groupKey.Span, Transaction = groupKey.Transaction };
 						_itemsToSend.Add(groupKey, metricSet);
 					}
 					else
@@ -128,6 +125,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_loggedWarning = false;
 			}
 
+			var timestampNow = TimeUtils.TimestampNow();
+			// According to the spec, timestampNow should be the time when we report the metrics.
+			foreach (var item in retVal) item.Timestamp = timestampNow;
 			return retVal;
 		}
 	}

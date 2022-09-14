@@ -16,6 +16,8 @@ namespace Elastic.Apm.Metrics
 	{
 		public MetricSet(long timestamp, IEnumerable<MetricSample> samples)
 			=> (Timestamp, Samples) = (timestamp, samples);
+		public MetricSet(IEnumerable<MetricSample> samples)
+			=> Samples = samples;
 
 		/// <inheritdoc />
 		public IEnumerable<MetricSample> Samples { get; set; }
@@ -28,7 +30,7 @@ namespace Elastic.Apm.Metrics
 		public SpanInfo Span { get; set; }
 	}
 
-	public class TransactionInfo: IEquatable<TransactionInfo>
+	public class TransactionInfo : IEquatable<TransactionInfo>
 	{
 		[MaxLength]
 		public string Name { get; set; }
@@ -65,7 +67,7 @@ namespace Elastic.Apm.Metrics
 		public static bool operator !=(TransactionInfo left, TransactionInfo right) => !Equals(left, right);
 	}
 
-	public class SpanInfo: IEquatable<SpanInfo>
+	public class SpanInfo : IEquatable<SpanInfo>
 	{
 		[MaxLength]
 		public string Type { get; set; }
