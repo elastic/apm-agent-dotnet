@@ -5,10 +5,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Reflection;
 using Elastic.Apm.Helpers;
 
-namespace Elastic.Apm.AspNetCore
+namespace Elastic.Apm.AspNetFullFramework
 {
 	internal class AspNetHttpForm : IHttpFormAdapter
 	{

@@ -6,7 +6,6 @@ using System.Web;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.AspNetFullFramework.Extensions;
-using Elastic.Apm.AspNetCore;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
@@ -34,13 +33,9 @@ namespace Elastic.Apm.AspNetFullFramework
 				else
 				{
 					if (_request.ReadEntityBodyMode == ReadEntityBodyMode.Bufferless)
-					{
 						logger.Warning()?.Log($"Request body capturing is not possible 'bufferless' mode");
-					}
 					else
-					{
 						body = RequestBodyStreamHelper.ToString(_request.InputStream, out longerThanMaxLength);
-					}
 				}
 			}
 
