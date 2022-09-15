@@ -56,6 +56,18 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			fakeSubscriber.IsSubscribed.Should().BeTrue();
 		}
 
+		[Fact]
+		public void GetHostingEnvironmentName_WorksViaReflection()
+		{
+			var environmentName = default(string);
+			CreateHostBuilder().ConfigureServices((ctx, services) =>
+			{
+				environmentName = HostBuilderExtensions.GetHostingEnvironmentName(ctx, null);
+			}).Build();
+
+			environmentName.Should().Be("Production");
+		}
+
 		/// <summary>
 		/// Sets `enabled=false` and makes sure that <see cref="HostBuilderExtensions.UseElasticApm" /> does not turn on diagnostic
 		/// listeners.
