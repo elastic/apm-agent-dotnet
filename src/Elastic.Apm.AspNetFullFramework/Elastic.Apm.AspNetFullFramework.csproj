@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetFullFramework</AssemblyName>
@@ -19,5 +19,12 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="NOTICE">
+      <Pack>True</Pack>
+      <PackagePath>.</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
