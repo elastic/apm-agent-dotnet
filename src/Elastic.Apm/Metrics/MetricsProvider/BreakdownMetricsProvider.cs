@@ -42,7 +42,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// </summary>
 		private bool _loggedWarning;
 
-		private readonly object _lock = new();
+		/// <summary>
+		/// Lock for operations on <see cref="_itemsToSend"/>.
+		/// </summary>
+		private readonly object _itemsToSendLock = new();
+
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 
 		public string DbgName => nameof(BreakdownMetricsProvider);
@@ -53,7 +57,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			get
 			{
-				lock (_lock)
+				lock (_itemsToSendLock)
 					return _itemsToSend.Count > 0;
 			}
 		}
@@ -62,7 +66,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public void CaptureTransaction(Transaction transaction)
 		{
-			lock (_lock)
+			lock (_itemsToSendLock)
 			{
 				foreach (var item in transaction.SpanTimings)
 				{
@@ -117,17 +121,22 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			List<MetricSet> retVal;
 
-			lock (_lock)
+			lock (_itemsToSendLock)
 			{
 				retVal = new List<MetricSet>(_itemsToSend.Count);
-				retVal.AddRange(_itemsToSend.Values.ToList());
+
+				// According to the spec, timestampNow should be the time when we report the metrics.
+				var timestampNow = TimeUtils.TimestampNow();
+
+				foreach (var item in _itemsToSend.Values.ToList())
+				{
+					item.Timestamp = timestampNow;
+					retVal.Add(item);
+				}
+
 				_itemsToSend.Clear();
 				_loggedWarning = false;
 			}
-
-			var timestampNow = TimeUtils.TimestampNow();
-			// According to the spec, timestampNow should be the time when we report the metrics.
-			foreach (var item in retVal) item.Timestamp = timestampNow;
 			return retVal;
 		}
 	}
