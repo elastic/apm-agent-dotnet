@@ -17,6 +17,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.StartupHook.Loader" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Static.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
