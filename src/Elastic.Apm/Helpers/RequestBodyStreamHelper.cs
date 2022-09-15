@@ -26,7 +26,7 @@ namespace Elastic.Apm.Helpers
 			var arrayPool = ArrayPool<char>.Shared;
 			char[] buffer;
 
-			if (requestBody.CanSeek)
+			if (requestBody.Length == 0)
 			{
 				buffer = arrayPool.Rent(capacity);
 				int read;
@@ -73,8 +73,7 @@ namespace Elastic.Apm.Helpers
 				arrayPool.Return(buffer);
 			}
 
-			if (requestBody.CanSeek)
-				requestBody.Position = 0;
+			requestBody.Position = 0;
 
 			return body;
 		}

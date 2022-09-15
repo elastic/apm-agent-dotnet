@@ -45,7 +45,7 @@ namespace Elastic.Apm.Helpers
 			}
 
 			if (longerThanMaxLength)
-				logger.Debug()?.Log("truncated body to max length {MaxLength}", RequestBodyStreamHelper.RequestBodyMaxLength);
+				logger.Info()?.Log("truncated body to max length {MaxLength}", RequestBodyStreamHelper.RequestBodyMaxLength);
 
 			return null;
 		}

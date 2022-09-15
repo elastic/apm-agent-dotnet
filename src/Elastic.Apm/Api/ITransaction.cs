@@ -27,11 +27,6 @@ namespace Elastic.Apm.Api
 		Context Context { get; }
 
 		/// <summary>
-		/// Provides information on whether the lazily initialized field <see cref="Context" /> has a value or not.
-		/// </summary>
-		bool IsContextCreated { get; }
-
-		/// <summary>
 		/// An arbitrary mapping of additional metadata to store with the event.
 		/// Custom is used to add non-indexed, custom contextual information to transactions. Non-indexed means the data is
 		/// not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data. However,

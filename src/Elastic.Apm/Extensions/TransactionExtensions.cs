@@ -8,6 +8,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Extensions
 {
@@ -32,7 +33,8 @@ namespace Elastic.Apm.Extensions
 
 			// Is request body already captured?
 			// We check transaction.IsContextCreated to avoid creating empty Context (that accessing transaction.Context directly would have done).
-			if (transaction.IsContextCreated
+			var hasContext = (transaction is Transaction t && t.IsContextCreated) || transaction.Context != null;
+			if (hasContext
 				&& transaction.Context.Request.Body != null
 				&& !ReferenceEquals(transaction.Context.Request.Body, Consts.Redacted))
 				return;

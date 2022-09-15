@@ -389,7 +389,7 @@ namespace Elastic.Apm.Model
 		public string Id { get; }
 
 		[JsonIgnore]
-		public bool IsContextCreated => _context.IsValueCreated;
+		internal bool IsContextCreated => _context.IsValueCreated;
 
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }

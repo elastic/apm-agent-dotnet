@@ -45,8 +45,6 @@ namespace Elastic.Apm.Model
 			Configuration = configuration;
 		}
 
-		public bool IsContextCreated => true;
-
 		public Context Context =>
 			ReusableContextInstance;
 
