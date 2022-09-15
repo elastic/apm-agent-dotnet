@@ -877,7 +877,7 @@ because a large number of blocking synchronous I/O operations can lead to thread
 which makes the application unresponsive. If your application becomes unresponsive with this
 feature enabled, consider disabling capturing.
 
-In ASP.NET (.NET Full Framework), this setting has no effect in case of non-buffered requests
+In ASP.NET (.NET Full Framework), this setting has no effect on non-buffered requests
 (see https://docs.microsoft.com/en-us/dotnet/api/system.web.httprequest.readentitybodymode?view=netframework-4.8[HttpRequest.ReadEntityBodyMode]).
 ====
 
