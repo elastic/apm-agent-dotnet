@@ -20,6 +20,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
+using Elastic.Apm.Extensions;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -170,7 +171,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				transaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
 			}
 
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(request, transaction);
+			if (transaction.IsSampled) FillSampledTransactionContextRequest(request, transaction, _logger);
 		}
 
 		/// <summary>
@@ -199,7 +200,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			return TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue);
 		}
 
-		private static void FillSampledTransactionContextRequest(HttpRequest request, ITransaction transaction)
+		private static void FillSampledTransactionContextRequest(HttpRequest request, ITransaction transaction, IApmLogger logger)
 		{
 			var httpRequestUrl = request.Unvalidated.Url;
 			var queryString = httpRequestUrl.Query;
@@ -381,6 +382,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				FillSampledTransactionContextResponse(response, transaction);
 				FillSampledTransactionContextUser(context, transaction);
+				transaction.CollectRequestBody(false, new AspNetHttpRequest(context.Request), _logger);
 			}
 
 			transaction.End();

@@ -32,7 +32,7 @@ namespace Elastic.Apm.Api
 		string Id { get; }
 
 		/// <summary>
-		/// It's true if and only of this segment is sampled.
+		/// It's true if and only if this segment is sampled.
 		/// </summary>
 		bool IsSampled { get; }
 
