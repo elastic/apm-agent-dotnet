@@ -7,8 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
-using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.Extensions;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Reflection;
@@ -82,7 +82,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iDiagnosticsTransaction is Transaction diagnosticsTransaction)
 					{
-						diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, Logger);
+						diagnosticsTransaction.CollectRequestBody(true, new AspNetCoreHttpRequest(httpContextDiagnosticsUnhandledException.Request), Logger);
 						diagnosticsTransaction.CaptureException(diagnosticsException);
 					}
 
@@ -94,7 +94,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iCurrentTransaction is Transaction currentTransaction)
 					{
-						currentTransaction.CollectRequestBody(true, httpContextUnhandledException.Request, Logger);
+						currentTransaction.CollectRequestBody(true, new AspNetCoreHttpRequest(httpContextUnhandledException.Request), Logger);
 						currentTransaction.CaptureException(exception);
 					}
 					break;

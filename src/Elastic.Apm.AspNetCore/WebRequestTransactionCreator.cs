@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using Elastic.Apm.Api;
-using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
+using Elastic.Apm.Extensions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Primitives;
 
 namespace Elastic.Apm.AspNetCore
 {
@@ -113,7 +112,7 @@ namespace Elastic.Apm.AspNetCore
 					Headers = GetHeaders(context.Request.Headers, transaction.Configuration)
 				};
 
-				transaction.CollectRequestBody(false, context.Request, logger);
+				transaction.CollectRequestBody(false, new AspNetCoreHttpRequest(context.Request), logger);
 			}
 			catch (Exception ex)
 			{

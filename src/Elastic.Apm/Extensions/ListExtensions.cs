@@ -4,7 +4,7 @@
 
 using System.Collections.Generic;
 
-namespace Elastic.Apm.AspNetCore.Extensions
+namespace Elastic.Apm.Extensions
 {
 	internal static class ListExtensions
 	{

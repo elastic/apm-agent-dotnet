@@ -6,6 +6,9 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -574,6 +577,75 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Creates 2k transactions with the same name.
+		/// Makes sure only a single MetricSet is created and metrics for transactions with the same name and type are aggregated
+		/// </summary>
+		[Fact]
+		public void SameTransactionTest()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent(metricsInterval: "30s");
+			using (agent)
+			{
+				for (var i = 0; i < 2000; i++)
+					agent.TracerInternal.CaptureTransaction("test", "request", () => { });
+			}
+
+			var samples = breakdownMetricsProvider.GetSamples().ToList();
+			samples.Count.Should().Be(1);
+
+			samples.First().Span.Type.Should().Be("app");
+			samples.First().Samples.First().KeyValue.Value.Should().Be(2000);
+			samples.First().Transaction.Name.Should().Be("test");
+			samples.First().Transaction.Type.Should().Be("request");
+		}
+
+		/// <summary>
+		/// Creates multiple transactions with the same name and type and multiple spans on it with the same type and subtype.
+		/// Makes sure that MetricSets are aggregated correctly.
+		/// </summary>
+		[Fact]
+		public void SameTransactionWithMultipleSameSpans()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent(metricsInterval: "30s");
+			using (agent)
+			{
+				for (var i = 0; i < 500; i++)
+				{
+					agent.TracerInternal.CaptureTransaction("test", "request", (t) =>
+					{
+						for (var j = 0; j < 10; j++) t.CaptureSpan("Span1", ApiConstants.TypeDb, () => { }, ApiConstants.SubtypeMssql);
+						for (var j = 0; j < 10; j++) t.CaptureSpan("Span2", ApiConstants.TypeExternal, () => { }, ApiConstants.SubtypeHttp);
+						for (var j = 0; j < 10; j++) t.CaptureSpan("Span2", ApiConstants.TypeDb, () => { }, ApiConstants.SubtypeMssql);
+					});
+				}
+			}
+
+			var samples = breakdownMetricsProvider.GetSamples().ToList();
+			samples.Count.Should().Be(3);
+
+			samples.Should()
+				.Contain(m => m.Span.Type == "app" &&
+					m.Samples.First().KeyValue.Value == 500 &&
+					m.Transaction.Name == "test" &&
+					m.Transaction.Type == "request");
+
+
+			samples.Should()
+				.Contain(m => m.Span.Type == ApiConstants.TypeDb &&
+					m.Span.SubType == ApiConstants.SubtypeMssql &&
+					m.Samples.First().KeyValue.Value == 10000 &&
+					m.Transaction.Name == "test" &&
+					m.Transaction.Type == "request");
+
+			samples.Should()
+				.Contain(m => m.Span.Type == ApiConstants.TypeExternal &&
+					m.Span.SubType == ApiConstants.SubtypeHttp &&
+					m.Samples.First().KeyValue.Value == 5000 &&
+					m.Transaction.Name == "test" &&
+					m.Transaction.Type == "request");
+		}
+
+		/// <summary>
 		/// Makes sure the 1K limit warning in <see cref="BreakdownMetricsProvider" /> is only printed once per metric collection
 		/// (and e.g. not per transaction).
 		/// See https://github.com/elastic/apm-agent-dotnet/issues/1361.
@@ -590,7 +662,6 @@ namespace Elastic.Apm.Tests
 				for (var transactionNumber = 0; transactionNumber < 50; transactionNumber++)
 				{
 					var t = agent.TracerInternal.StartTransactionInternal("test", "request");
-
 
 					for (var i = 0; i < 5000; i++) t.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
 					t.End();
@@ -613,16 +684,34 @@ namespace Elastic.Apm.Tests
 				.Be(2);
 		}
 
+		/// <summary>
+		/// According to the spec, the timestamp of the reported MetricSet should be the timestamp when the MetricSet gets reported.
+		/// </summary>
+		[Fact]
+		private async Task TimeStampTest()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent();
+			using (agent) agent.Tracer.CaptureTransaction("test", "test", () => { });
+			await Task.Delay(500);
+
+			var timeStampBeforeReporting = TimeUtils.TimestampNow();
+			var metricTimestamp = breakdownMetricsProvider.GetSamples().First().Timestamp;
+
+			// assert that the timestamp of the MetricSet is close enough to the call of the `breakdownMetricsProvider.GetSamples()` method.
+			var diff = TimeUtils.DurationBetweenTimestamps(timeStampBeforeReporting, metricTimestamp);
+			Math.Abs(diff).Should().BeLessThan(100);
+		}
+
 		private static bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 1000;
 
-		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent(IApmLogger logger = null)
+		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent(IApmLogger logger = null, string metricsInterval = null)
 		{
 			logger ??= new NoopLogger();
 			var breakdownMetricsProvider = new BreakdownMetricsProvider(logger);
 
 			var agentComponents = new AgentComponents(
 				logger,
-				new MockConfiguration(metricsInterval: "1s"),
+				new MockConfiguration(metricsInterval: metricsInterval ?? "1s"),
 				new NoopPayloadSender(),
 				new FakeMetricsCollector(), //metricsCollector will be set in AgentComponents.ctor
 				new CurrentExecutionSegmentsContainer(),
