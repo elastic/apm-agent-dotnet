@@ -41,9 +41,22 @@ namespace Elastic.Apm.Extensions.Hosting
 		/// </summary>
 		/// <param name="builder">Builder.</param>
 		/// <param name="subscribers">Specify which diagnostic source subscribers you want to connect.</param>
-		public static IHostBuilder UseElasticApm(this IHostBuilder builder, params IDiagnosticsSubscriber[] subscribers) => UseElasticApm(builder, null, subscribers);
+		public static IHostBuilder UseElasticApm(this IHostBuilder builder, params IDiagnosticsSubscriber[] subscribers) => UseElasticApm(builder, null, null, subscribers);
 
-		internal static IHostBuilder UseElasticApm(this IHostBuilder builder, IPayloadSender payloadSender, params IDiagnosticsSubscriber[] subscribers)
+		/// <summary>
+		///  Register Elastic APM .NET Agent with components in the container.
+		///  You can customize the agent by passing additional IDiagnosticsSubscriber components to this method.
+		///  Use this method if you want to control what tracing capability of the agent you would like to use
+		///  or in case you want to minimize the number of dependencies added to your application.
+		///  If you want to simply enable every tracing component without configuration please use the
+		///  UseAllElasticApm extension method from the Elastic.Apm.NetCoreAll package.
+		/// </summary>
+		/// <param name="builder">Builder.</param>
+		/// <param name="loggerFactory">Specify which LoggerFactory to use.</param>
+		/// <param name="subscribers">Specify which diagnostic source subscribers you want to connect.</param>
+		public static IHostBuilder UseElasticApm(this IHostBuilder builder, ILoggerFactory loggerFactory, params IDiagnosticsSubscriber[] subscribers) => UseElasticApm(builder, null, loggerFactory, subscribers);
+
+		internal static IHostBuilder UseElasticApm(this IHostBuilder builder, IPayloadSender payloadSender, ILoggerFactory loggerFactory, params IDiagnosticsSubscriber[] subscribers)
 		{
 			builder.ConfigureServices((ctx, services) =>
 			{
@@ -54,7 +67,7 @@ namespace Elastic.Apm.Extensions.Hosting
 				// If the static agent doesn't exist, we create one here. If there is already 1 agent created, we reuse it.
 				if (!Agent.IsConfigured)
 				{
-					logger = new NetCoreLogger(new LoggerFactory());  // TODO: Could this be a problem?
+					logger = new NetCoreLogger(loggerFactory ?? new LoggerFactory());
 					configReader = new MicrosoftExtensionsConfig(ctx.Configuration, logger, GetHostingEnvironmentName(ctx, logger));
 					agentComponents = new AgentComponents(logger, configReader, payloadSender);
 					UpdateServiceInformation(agentComponents.Service);

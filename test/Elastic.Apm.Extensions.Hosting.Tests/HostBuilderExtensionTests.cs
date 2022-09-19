@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SampleConsoleNetCoreApp;
 using Xunit;
 
@@ -58,6 +60,26 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			var logger2 = host.Services.GetService<IApmLogger>();
 
 			logger1.Should().Be(logger2);
+		}
+
+		/// <summary>
+		/// Makes sure that a custom supplied logger factory is actually used.
+		/// </summary>
+		[Fact]
+		public void UseElasticApm_UsesSpecifiedLoggerFactory()
+		{
+			var loggerFactory = new TestLoggerFactory();
+			loggerFactory.CreateLoggerWasCalled.Should().BeFalse();
+
+			var host = Host.CreateDefaultBuilder()
+			.ConfigureServices((_, services) =>
+			{
+				services.AddHostedService<HostedService>();
+			})
+			.UseElasticApm(loggerFactory)
+			.Build();
+
+			loggerFactory.CreateLoggerWasCalled.Should().BeTrue();
 		}
 
 		/// <summary>
@@ -131,6 +153,19 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 				IsSubscribed = true;
 				return null;
 			}
+		}
+
+		internal class TestLoggerFactory : ILoggerFactory
+		{
+			private readonly LoggerFactory _loggerFactory = new();
+			public void AddProvider(ILoggerProvider provider) => throw new NotImplementedException();
+			public ILogger CreateLogger(string categoryName)
+			{
+				CreateLoggerWasCalled = true;
+				return _loggerFactory.CreateLogger(categoryName);
+			}
+			public void Dispose() => throw new NotImplementedException();
+			public bool CreateLoggerWasCalled { get; private set; }
 		}
 	}
 }
