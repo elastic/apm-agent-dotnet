@@ -33,7 +33,14 @@ namespace Elastic.Apm.Elasticsearch.Tests
 		public async Task DisposeAsync()
 		{
 			await _container.StopAsync();
-			await _container.DisposeAsync();
+			try
+			{
+				await _container.DisposeAsync();
+			}
+			catch
+			{
+				//ignore
+			}
 		}
 
 		ValueTask IAsyncDisposable.DisposeAsync()
@@ -41,7 +48,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			if (_container != null)
 				return _container.DisposeAsync();
 
-			return new ValueTask();
+			return default;
 		}
 	}
 }
