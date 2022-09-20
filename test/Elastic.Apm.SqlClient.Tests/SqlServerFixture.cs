@@ -42,6 +42,18 @@ namespace Elastic.Apm.SqlClient.Tests
 			await _container.DisposeAsync();
 		}
 
-		ValueTask IAsyncDisposable.DisposeAsync() => _container.DisposeAsync();
+#if !NET5_0_OR_GREATER
+		private readonly ValueTask _completedValueTask = default;
+#endif
+		ValueTask IAsyncDisposable.DisposeAsync()
+		{
+			if (_container != null)
+				return _container.DisposeAsync();
+#if NET5_0_OR_GREATER
+			return ValueTask.CompletedTask;
+#else
+			return _completedValueTask;
+#endif
+		}
 	}
 }

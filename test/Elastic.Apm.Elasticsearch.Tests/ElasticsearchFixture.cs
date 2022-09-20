@@ -12,7 +12,6 @@ namespace Elastic.Apm.Elasticsearch.Tests
 {
 	public class ElasticsearchFixture : IAsyncDisposable, IAsyncLifetime
 	{
-
 		private readonly ElasticsearchTestContainer _container;
 
 		public ElasticsearchFixture()
@@ -37,6 +36,13 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			await _container.DisposeAsync();
 		}
 
-		ValueTask IAsyncDisposable.DisposeAsync() => _container.DisposeAsync();
+		private readonly ValueTask _completedValueTask = default;
+		ValueTask IAsyncDisposable.DisposeAsync()
+		{
+			if (_container != null)
+				return _container.DisposeAsync();
+
+			return _completedValueTask;
+		}
 	}
 }
