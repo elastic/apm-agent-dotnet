@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
@@ -12,7 +13,7 @@ using Xunit;
 namespace Elastic.Apm.SqlClient.Tests
 {
 	// ReSharper disable once ClassNeverInstantiated.Global - it's used as a generic parameter
-	public class SqlServerFixture : IAsyncLifetime
+	public class SqlServerFixture : IAsyncDisposable, IAsyncLifetime
 	{
 		private readonly MsSqlTestcontainer _container;
 
@@ -35,6 +36,12 @@ namespace Elastic.Apm.SqlClient.Tests
 			ConnectionString = _container.ConnectionString;
 		}
 
-		public async Task DisposeAsync() => await _container.StopAsync();
+		public async Task DisposeAsync()
+		{
+			await _container.StopAsync();
+			await _container.DisposeAsync();
+		}
+
+		ValueTask IAsyncDisposable.DisposeAsync() => _container.DisposeAsync();
 	}
 }
