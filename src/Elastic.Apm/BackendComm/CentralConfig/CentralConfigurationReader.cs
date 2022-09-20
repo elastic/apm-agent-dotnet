@@ -81,9 +81,13 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			SpanStackTraceMinDurationInMilliseconds =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanStackTraceMinDurationKey,
 					ParseSpanStackTraceMinDurationInMilliseconds);
+// Disable obsolete-warning
+#pragma warning disable CS0618
 			SpanFramesMinDurationInMilliseconds =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanFramesMinDurationKey,
 					ParseSpanFramesMinDurationInMilliseconds);
+// Disable obsolete-warning
+#pragma warning restore CS0618
 			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.StackTraceLimitKey,
 				ParseStackTraceLimit);
 			Recording = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.Recording, ParseRecording);

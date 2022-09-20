@@ -318,6 +318,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				_centralConfiguration.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _centralConfiguration.StackTraceLimit ?? _wrapped.StackTraceLimit;
+			[Obsolete("Use TraceContinuationStrategy")]
 			public bool TraceContextIgnoreSampledFalse => _wrapped.TraceContextIgnoreSampledFalse;
 
 			public string TraceContinuationStrategy => _centralConfiguration.TraceContinuationStrategy ?? _wrapped.TraceContinuationStrategy;
