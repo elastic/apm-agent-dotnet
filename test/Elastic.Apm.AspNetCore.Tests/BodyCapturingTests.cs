@@ -154,7 +154,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var i = 0;
 
 			// an approximation, since doesn't include JSON syntax
-			while (charLength < Consts.RequestBodyMaxLength)
+			while (charLength < RequestBodyStreamHelper.RequestBodyMaxLength)
 			{
 				var key = $"key{i}";
 				var value = $"value{i}";
@@ -178,7 +178,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var transaction = sutEnv.MockPayloadSender.FirstTransaction;
 			transaction.Context.Request.Body.Should().NotBeNull().And.BeOfType<string>();
 			var body = (string)transaction.Context.Request.Body;
-			body.Should().HaveLength(Consts.RequestBodyMaxLength);
+			body.Should().HaveLength(RequestBodyStreamHelper.RequestBodyMaxLength);
 			sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
 		}
 
@@ -215,7 +215,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var formValues = new List<KeyValuePair<string, string>>();
 			var i = 0;
 
-			while (charLength < Consts.RequestBodyMaxLength)
+			while (charLength < RequestBodyStreamHelper.RequestBodyMaxLength)
 			{
 				var key = $"key{i}";
 				var value = $"value{i}";
@@ -233,7 +233,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var transaction = sutEnv.MockPayloadSender.FirstTransaction;
 			transaction.Context.Request.Body.Should().NotBeNull().And.BeOfType<string>();
 			var body = (string)transaction.Context.Request.Body;
-			body.Should().HaveLength(Consts.RequestBodyMaxLength);
+			body.Should().HaveLength(RequestBodyStreamHelper.RequestBodyMaxLength);
 			sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
 		}
 
