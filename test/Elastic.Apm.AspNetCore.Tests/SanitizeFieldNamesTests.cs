@@ -82,6 +82,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 					testData.Add(new object[] { "usersessionid" }); //*session
 					testData.Add(new object[] { "secretcreditcard" }); //*credit*
 					testData.Add(new object[] { "creditcardnumber" }); //*card
+					testData.Add(new object[] { "X-Ms-Client-Principal" }); //*principal*
+					testData.Add(new object[] { "Ms-Client-Principal-Id" }); //*principal*
+					testData.Add(new object[] { "X-Ms-Client-Principal-Idp" }); //*principal*
+					testData.Add(new object[] { "X-Ms-Client-Principal-Name" }); //*principal*
 					break;
 				case Tests.DefaultsWithKnownHeaders:
 					testData.Add(new object[] { "authorization", "Authorization" }); // *auth*
