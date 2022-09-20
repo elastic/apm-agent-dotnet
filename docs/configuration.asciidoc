@@ -589,7 +589,7 @@ Additionally, spans that lead to an error can't be discarded.
 [options="header"]
 |============
 | Default | Type
-| `1ms`  | TimeDuration
+| `0ms`  | TimeDuration
 |============
 
 
@@ -876,6 +876,9 @@ https://docs.microsoft.com/en-us/aspnet/core/migration/22-to-30?#allowsynchronou
 because a large number of blocking synchronous I/O operations can lead to thread pool starvation,
 which makes the application unresponsive. If your application becomes unresponsive with this
 feature enabled, consider disabling capturing.
+
+In ASP.NET (.NET Full Framework), this setting has no effect on non-buffered requests
+(see https://docs.microsoft.com/en-us/dotnet/api/system.web.httprequest.readentitybodymode?view=netframework-4.8[HttpRequest.ReadEntityBodyMode]).
 ====
 
 [WARNING]
@@ -1073,7 +1076,7 @@ If your application is called by an {dotnet5} application that does not have an 
 [options="header"]
 |============
 | Environment variable name            | IConfiguration or Web.config key
-| `TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
+| `ELASTIC_APM_TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
 |============
 
 [options="header"]

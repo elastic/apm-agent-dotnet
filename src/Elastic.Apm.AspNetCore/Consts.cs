@@ -8,8 +8,6 @@ namespace Elastic.Apm.AspNetCore
 {
 	internal static class Consts
 	{
-		public const int RequestBodyMaxLength = 10000;
-
 		internal static class OpenIdClaimTypes
 		{
 			internal const string Email = "email";

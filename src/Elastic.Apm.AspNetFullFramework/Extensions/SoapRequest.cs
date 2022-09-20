@@ -84,8 +84,10 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 
 		internal static string GetSoap12ActionFromInputStream(Stream stream)
 		{
+			StreamReader streamReader = null;
 			try
 			{
+				streamReader = new StreamReader(stream);
 				var settings = new XmlReaderSettings
 				{
 					IgnoreProcessingInstructions = true,
@@ -93,7 +95,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 					IgnoreWhitespace = true
 				};
 
-				using var reader = XmlReader.Create(stream, settings);
+				using var reader = XmlReader.Create(streamReader, settings);
 				reader.MoveToContent();
 				if (reader.LocalName != "Envelope")
 					return null;
@@ -115,6 +117,10 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 				//for instance undeclared namespaces, typographical quotes, etc...
 				//If that's the case we don't need to care about them here. They will flow somewhere else.
 				return null;
+			}
+			finally
+			{
+				streamReader?.ReadToEnd();
 			}
 		}
 	}
