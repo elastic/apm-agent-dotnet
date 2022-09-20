@@ -49,7 +49,7 @@ namespace Elastic.Apm.SqlClient.Tests
 #if NET5_0_OR_GREATER
 			return ValueTask.CompletedTask;
 #else
-			return new ValueTask();
+			return default;
 #endif
 		}
 	}
