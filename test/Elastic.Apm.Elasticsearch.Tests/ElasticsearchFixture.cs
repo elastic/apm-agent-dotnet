@@ -36,13 +36,12 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			await _container.DisposeAsync();
 		}
 
-		private readonly ValueTask _completedValueTask = default;
 		ValueTask IAsyncDisposable.DisposeAsync()
 		{
 			if (_container != null)
 				return _container.DisposeAsync();
 
-			return _completedValueTask;
+			return new ValueTask();
 		}
 	}
 }
