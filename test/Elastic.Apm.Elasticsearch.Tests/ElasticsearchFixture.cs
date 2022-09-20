@@ -5,13 +5,14 @@
 
 using System;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Builders;
 using Xunit;
 
 namespace Elastic.Apm.Elasticsearch.Tests
 {
-	public class ElasticsearchFixture : IDisposable, IAsyncLifetime
+	public class ElasticsearchFixture : IAsyncDisposable, IAsyncLifetime
 	{
+
 		private readonly ElasticsearchTestContainer _container;
 
 		public ElasticsearchFixture()
@@ -33,9 +34,9 @@ namespace Elastic.Apm.Elasticsearch.Tests
 		public async Task DisposeAsync()
 		{
 			await _container.StopAsync();
-			_container.Dispose();
+			await _container.DisposeAsync();
 		}
 
-		public void Dispose() => _container?.Dispose();
+		ValueTask IAsyncDisposable.DisposeAsync() => _container.DisposeAsync();
 	}
 }
