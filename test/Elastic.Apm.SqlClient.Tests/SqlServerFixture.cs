@@ -5,14 +5,15 @@
 
 using System;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Containers.Builders;
-using DotNet.Testcontainers.Containers.Configurations.Databases;
-using DotNet.Testcontainers.Containers.Modules.Databases;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
+using DotNet.Testcontainers.Containers;
 using Xunit;
 
 namespace Elastic.Apm.SqlClient.Tests
 {
-	public class SqlServerFixture : IDisposable, IAsyncLifetime
+	// ReSharper disable once ClassNeverInstantiated.Global - it's used as a generic parameter
+	public class SqlServerFixture : IAsyncDisposable, IAsyncLifetime
 	{
 		private readonly MsSqlTestcontainer _container;
 
@@ -38,9 +39,18 @@ namespace Elastic.Apm.SqlClient.Tests
 		public async Task DisposeAsync()
 		{
 			await _container.StopAsync();
-			_container.Dispose();
+			await _container.DisposeAsync();
 		}
 
-		public void Dispose() => _container?.Dispose();
+		ValueTask IAsyncDisposable.DisposeAsync()
+		{
+			if (_container != null)
+				return _container.DisposeAsync();
+#if NET5_0_OR_GREATER
+			return ValueTask.CompletedTask;
+#else
+			return default;
+#endif
+		}
 	}
 }

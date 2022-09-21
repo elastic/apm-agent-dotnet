@@ -10,7 +10,6 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Docker;
 using Elasticsearch.Net;
-using Elasticsearch.Net.VirtualizedCluster;
 using FluentAssertions;
 using Xunit;
 
