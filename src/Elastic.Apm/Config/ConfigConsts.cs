@@ -91,7 +91,8 @@ namespace Elastic.Apm.Config
 							 "*credit*",
 							 "*card*",
 							 "*auth*",
-							 "set-cookie"
+							 "set-cookie",
+							 "*principal*"
 						 })
 					SanitizeFieldNames.Add(WildcardMatcher.ValueOf(item));
 
