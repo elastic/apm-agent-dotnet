@@ -16,7 +16,7 @@ using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;
 
-// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
+// Disable warnings due to obsolete settings keys
 #pragma warning disable CS0618
 
 namespace Elastic.Apm.Tests
@@ -51,7 +51,6 @@ namespace Elastic.Apm.Tests
 			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } }
 		};
 
-#pragma warning disable 618
 		[Fact]
 		public void ServerUrlsSimpleTest()
 		{
@@ -167,7 +166,6 @@ namespace Elastic.Apm.Tests
 					serverUrl
 				);
 		}
-#pragma warning restore 618
 
 		/// <summary>
 		/// Makes sure that empty string means sanitization is turned off
@@ -254,7 +252,6 @@ namespace Elastic.Apm.Tests
 			agent.ConfigurationReader.Enabled.Should().BeTrue();
 		}
 
-#pragma warning disable 618
 		/// <summary>
 		/// Sets 2 servers and makes sure that they are all parsed
 		/// </summary>
@@ -335,7 +332,6 @@ namespace Elastic.Apm.Tests
 				agent.ConfigurationReader.ServerUrl.Should().Be("http://myServer:1234");
 			}
 		}
-#pragma warning restore 618
 
 		[Fact]
 		public void SecretTokenSimpleTest()
@@ -716,9 +712,7 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, "localhost"); //invalid, it should be "http://localhost"
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
-#pragma warning disable 618
 			var serverUrl = config.ServerUrls.FirstOrDefault();
-#pragma warning restore 618
 			serverUrl.Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
 		}

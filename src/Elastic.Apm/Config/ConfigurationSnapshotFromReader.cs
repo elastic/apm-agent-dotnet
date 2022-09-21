@@ -63,6 +63,7 @@ namespace Elastic.Apm.Config
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
 
+		[Obsolete("Use TraceContinuationStrategy")]
 		public bool TraceContextIgnoreSampledFalse => _content.TraceContextIgnoreSampledFalse;
 		public string TraceContinuationStrategy => _content.TraceContinuationStrategy;
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _content.TransactionIgnoreUrls;

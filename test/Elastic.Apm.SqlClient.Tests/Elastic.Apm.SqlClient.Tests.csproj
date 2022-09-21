@@ -16,7 +16,6 @@
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-    <PackageReference Include="StrongNamer" Version="0.2.5" />
     <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
     <PackageReference Include="Testcontainers" Version="2.1.0" />
     <!-- Strong name any assemblies that aren't i.e. DotNet.Testcontainers -->
