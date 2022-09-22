@@ -256,7 +256,7 @@ namespace Elastic.Apm.Tests
 			static void CrudeSleep(long ticks)
 			{
 				var stopWatch = Stopwatch.StartNew();
-				while (stopWatch.ElapsedTicks <= ticks)
+				while (stopWatch.Elapsed.Ticks <= ticks)
 				{}
 			}
 
@@ -273,7 +273,7 @@ namespace Elastic.Apm.Tests
 				for (var i = 0; i < durations.Length; i++)
 					t.CaptureSpan($"span_{i}", "sample", () => { CrudeSleep(TimeSpan.FromMilliseconds(durations[i]).Ticks); });
 			});
-			const int epsilon = 5;
+			const int epsilon = 1;
 			for (var i = 0; i < durations.Length; i++)
 				payloadSender.Spans[i + 1].Duration.Should().BeInRange(durations[i] - epsilon, durations[i] + epsilon);
 		}
