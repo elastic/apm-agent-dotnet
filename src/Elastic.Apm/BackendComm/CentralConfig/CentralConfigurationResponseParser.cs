@@ -166,7 +166,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				Recording,
 				SanitizeFieldNames,
 				SpanStackTraceMinDurationKey,
+// Disable obsolete-warning
+#pragma warning disable CS0618
 				SpanFramesMinDurationKey,
+#pragma warning restore CS0618
 				StackTraceLimitKey,
 				TransactionIgnoreUrls,
 				TransactionMaxSpansKey,
