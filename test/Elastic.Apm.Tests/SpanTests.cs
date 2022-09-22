@@ -271,7 +271,8 @@ namespace Elastic.Apm.Tests
 			agent.Tracer.CaptureTransaction("foo", "bar", t =>
 			{
 				for (var i = 0; i < durations.Length; i++)
-					t.CaptureSpan($"span_{i}", "sample", () => { CrudeSleep(TimeSpan.FromMilliseconds(durations[i]).Ticks); });
+					t.CaptureSpan($"span_{i}", "sample", () => { Thread.Sleep(TimeSpan.FromMilliseconds(durations[i])); });
+					//t.CaptureSpan($"span_{i}", "sample", () => { CrudeSleep(TimeSpan.FromMilliseconds(durations[i]).Ticks); });
 			});
 			const int epsilon = 1;
 			for (var i = 0; i < durations.Length; i++)
