@@ -72,8 +72,6 @@ namespace Elastic.Apm.Cloud
 			return null;
 		}
 
-		public bool TryGetValue(string key, out ICloudMetadataProvider provider) => Dictionary.TryGetValue(key, out provider);
-
 		public override string ToString() => string.Join(",", Dictionary.Keys);
 	}
 }
