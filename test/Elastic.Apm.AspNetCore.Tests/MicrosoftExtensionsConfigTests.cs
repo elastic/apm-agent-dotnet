@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -121,6 +121,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel, "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, serverUrl);
+			var serverUseWindowsCredentials = "true";
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUseWindowsCredentials, serverUseWindowsCredentials);
 			var serviceName = "MyServiceName123";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
 			var serviceNodeName = "Some service node name";
@@ -145,6 +147,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 #pragma warning restore 618
 			config.ServerUrl.Should().Be(new Uri(serverUrl));
+			config.ServerUseWindowsCredentials.Should().Be(true);
 			config.ServiceName.Should().Be(serviceName);
 			config.ServiceNodeName.Should().Be(serviceNodeName);
 			config.ServiceVersion.Should().Be(serviceVersion);

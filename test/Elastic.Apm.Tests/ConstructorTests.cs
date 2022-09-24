@@ -63,6 +63,7 @@ namespace Elastic.Apm.Tests
 			public string ServerCert { get; }
 			public string ApiKey { get; }
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
+			public bool ServerUseWindowsCredentials { get; }
 			public Uri ServerUrl => ConfigConsts.DefaultValues.ServerUri;
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }

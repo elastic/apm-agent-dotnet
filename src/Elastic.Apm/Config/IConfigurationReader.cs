@@ -245,6 +245,11 @@ namespace Elastic.Apm.Config
 		IReadOnlyList<Uri> ServerUrls { get; }
 
 		/// <summary>
+		/// If set to true, Agent will use windows default credentials that the service running the agent has to send requests if it is needed for proxy.
+		/// </summary>
+		bool ServerUseWindowsCredentials { get; }
+
+		/// <summary>
 		/// The name of service instrumented by the APM agent. This is used to group all the errors and transactions
 		/// of the service together, and is the primary filter in the Elastic APM user interface.
 		/// </summary>

@@ -153,6 +153,7 @@ namespace Elastic.Apm.Config
 			public const string ServerCert = Prefix + "SERVER_CERT";
 			public const string ServerUrl = Prefix + "SERVER_URL";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
+			public const string ServerUseWindowsCredentials = Prefix + "SERVER_USE_WINDOWS_CREDENTIALS";			
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
@@ -204,6 +205,7 @@ namespace Elastic.Apm.Config
 			public const string ServerCert = Prefix + nameof(ServerCert);
 			public const string ServerUrl = Prefix + nameof(ServerUrl);
 			public const string ServerUrls = Prefix + nameof(ServerUrls);
+			public const string ServerUseWindowsCredentials = Prefix + nameof(ServerUseWindowsCredentials);
 			public const string ServiceName = Prefix + nameof(ServiceName);
 			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
 			public const string ServiceVersion = Prefix + nameof(ServiceVersion);

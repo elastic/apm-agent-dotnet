@@ -109,7 +109,7 @@ namespace Elastic.Apm.Config
 					: Read(ConfigConsts.EnvVarNames.ServerUrl));
 			}
 		}
-
+		public bool ServerUseWindowsCredentials => ParseServerUseWindowsCredentials(Read(ConfigConsts.EnvVarNames.ServerUseWindowsCredentials));
 		public string ServiceName => ParseServiceName(Read(ConfigConsts.EnvVarNames.ServiceName));
 
 		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.EnvVarNames.ServiceNodeName));

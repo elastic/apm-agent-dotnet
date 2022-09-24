@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -132,6 +132,7 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		public virtual bool ServerUseWindowsCredentials => ParseServerUseWindowsCredentials(Read(KeyNames.ServerUseWindowsCredentials, EnvVarNames.ServerUseWindowsCredentials));
 		public virtual string ServiceName => ParseServiceName(Read(KeyNames.ServiceName, EnvVarNames.ServiceName));
 
 		public string ServiceNodeName => ParseServiceNodeName(Read(KeyNames.ServiceNodeName, EnvVarNames.ServiceNodeName));
