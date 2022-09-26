@@ -32,9 +32,9 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 		public async Task DisposeAsync()
 		{
-			await _container.StopAsync();
 			try
 			{
+				await _container.StopAsync();
 				await _container.DisposeAsync();
 			}
 			catch
