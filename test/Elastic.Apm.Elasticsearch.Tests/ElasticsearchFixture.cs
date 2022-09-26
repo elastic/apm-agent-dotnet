@@ -6,6 +6,7 @@
 using System;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Containers;
 using Xunit;
 
 namespace Elastic.Apm.Elasticsearch.Tests
@@ -32,14 +33,10 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 		public async Task DisposeAsync()
 		{
-			try
+			if (_container.State == TestcontainersState.Running)
 			{
 				await _container.StopAsync();
 				await _container.DisposeAsync();
-			}
-			catch
-			{
-				//ignore
 			}
 		}
 
