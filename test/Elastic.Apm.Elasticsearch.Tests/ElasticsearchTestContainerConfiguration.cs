@@ -4,16 +4,12 @@
 // See the LICENSE file in the project root for more information
 
 using System.Linq;
-using System.Threading.Tasks;
-using DotNet.Testcontainers.Client;
-using DotNet.Testcontainers.Containers.Builders;
-using DotNet.Testcontainers.Containers.Configurations.Abstractions;
-using DotNet.Testcontainers.Containers.OutputConsumers;
-using DotNet.Testcontainers.Containers.WaitStrategies;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
 
 namespace Elastic.Apm.Elasticsearch.Tests
 {
-	public static class TestcontainersBuilderExtensions
+	public static class TestContainersBuilderExtensions
 	{
 		public static ITestcontainersBuilder<ElasticsearchTestContainer> WithElasticsearch(
 			this ITestcontainersBuilder<ElasticsearchTestContainer> builder,
@@ -25,16 +21,14 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 			return builder
 				.WithImage(configuration.Image)
+				.WithHostname("localhost")
 				.WithPortBinding(configuration.Port, configuration.DefaultPort)
 				.WithWaitStrategy(configuration.WaitStrategy)
-				.ConfigureContainer(container =>
-				{
-					container.Port = configuration.DefaultPort;
-				});
+				.WithExposedPort(configuration.DefaultPort);
 		}
 	}
 
-	public class ElasticsearchTestContainerConfiguration : HostedServiceConfiguration
+	public sealed class ElasticsearchTestContainerConfiguration : TestcontainerDatabaseConfiguration
 	{
 		private const int ElasticsearchDefaultPort = 9200;
 		private const string ElasticsearchImageVersion = "7.12.1";
@@ -42,12 +36,10 @@ namespace Elastic.Apm.Elasticsearch.Tests
 		public ElasticsearchTestContainerConfiguration()
 			: this($"docker.elastic.co/elasticsearch/elasticsearch:{ElasticsearchImageVersion}") { }
 
-		public ElasticsearchTestContainerConfiguration(string image) : base(image, ElasticsearchDefaultPort)
+		public ElasticsearchTestContainerConfiguration(string image) : base(image, ElasticsearchDefaultPort, ElasticsearchDefaultPort)
 		{
-			Environments["discovery.type"] = "single-node";
-			WaitStrategy = Wait.UntilBashCommandsAreCompleted("curl -s -k http://localhost:9200/_cluster/health | grep -vq '\"status\":\"\\(^red\\)\"'");
+			Environments.Add("discovery.type", "single-node");
+			WaitStrategy.UntilCommandIsCompleted("curl -s -k http://localhost:9200/_cluster/health | grep -vq '\"status\":\"\\(^red\\)\"'");
 		}
-
-		public override IWaitUntil WaitStrategy { get; }
 	}
 }

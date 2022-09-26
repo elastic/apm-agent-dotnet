@@ -4,7 +4,7 @@
 
 using System.Text.RegularExpressions;
 
-namespace Elastic.Apm.AspNetCore.Extensions
+namespace Elastic.Apm.Extensions
 {
 	internal static class StringExtensions
 	{

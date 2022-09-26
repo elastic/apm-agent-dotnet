@@ -6,6 +6,7 @@
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
@@ -25,6 +26,7 @@ namespace Elastic.Apm.ServerInfo
 			{
 				using var requestMessage = new HttpRequestMessage(HttpMethod.Get, configuration.ServerUrl);
 				requestMessage.Headers.Add("Metadata", "true");
+				requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
 				var responseMessage = await httpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
@@ -36,7 +38,7 @@ namespace Elastic.Apm.ServerInfo
 
 					var serializer = new JsonSerializer();
 					var metadata = serializer.Deserialize<JObject>(jsonReader);
-					var version = metadata["version"];
+					var version = metadata?["version"];
 					var strVersion = version?.Value<string>();
 					if (strVersion != null)
 					{
@@ -50,6 +52,11 @@ namespace Elastic.Apm.ServerInfo
 							logger.Warning()?.LogException(e, "Failed parsing APM Server version - version string: {VersionString}", strVersion);
 							callbackOnFinish?.Invoke(false, apmServerInfo);
 						}
+					}
+					else
+					{
+						logger.Warning()?.Log("Failed parsing APM Server version - version string not available");
+						callbackOnFinish?.Invoke(false, apmServerInfo);
 					}
 				}
 				else

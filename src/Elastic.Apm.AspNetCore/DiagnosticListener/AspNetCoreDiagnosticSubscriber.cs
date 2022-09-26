@@ -1,5 +1,6 @@
 using System;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
@@ -11,6 +12,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 	{
 		public IDisposable Subscribe(IApmAgent agent)
 		{
+			agent.Logger.Debug()?.Log($"{nameof(AspNetCoreDiagnosticSubscriber)} starting to subscribe");
+
 			var retVal = new CompositeDisposable();
 			if (!agent.ConfigurationReader.Enabled)
 				return retVal;
@@ -21,6 +24,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			retVal.Add(System.Diagnostics.DiagnosticListener
 				.AllListeners
 				.Subscribe(subscriber));
+
+			agent.Logger.Debug()?.Log($"{nameof(AspNetCoreDiagnosticSubscriber)} subscribed");
 
 			return retVal;
 		}

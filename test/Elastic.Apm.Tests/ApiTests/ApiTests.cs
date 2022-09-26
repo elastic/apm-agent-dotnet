@@ -793,7 +793,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-					   configuration: new MockConfiguration(exitSpanMinDuration: "0"))))
+					   configuration: new MockConfiguration(exitSpanMinDuration: "0", spanCompressionEnabled: "false"))))
 			{
 				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
 				{

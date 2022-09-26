@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -35,8 +36,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public Task InitializeAsync()
 		{
-			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1, configuration: new MockConfiguration(exitSpanMinDuration:"0")));
-			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2, configuration: new MockConfiguration(exitSpanMinDuration:"0")));
+			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1,
+				configuration: new MockConfiguration(exitSpanMinDuration: "0")));
+			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2,
+				configuration: new MockConfiguration(exitSpanMinDuration: "0")));
 
 			_taskForApp1 = Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
@@ -282,7 +285,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Does not set the TraceContextIgnoreSampledFalse config and makes sure that the traceparent header is not ignored.
-		/// This tests the default case when the config is not set, so the agent just follows W3C and takes the sampled flag as it is.
+		/// This tests the default case when the config is not set, so the agent just follows W3C and takes the sampled flag as it
+		/// is.
 		/// </summary>
 		[Fact]
 		public async Task TraceContextIgnoreSampledFalse_NotSet_WithNonEsTraceState_NotSampled()
@@ -305,6 +309,190 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// Assert that the transaction is not a root transaction
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBeNullOrEmpty();
+		}
+
+		[Fact]
+		public async Task TraceContinuationStrategyContinue()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContextIgnoreSampledFalse: "continue");
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Add("tracestate", $"foo=bar:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().BeNullOrEmpty();
+		}
+
+		[Fact]
+		public async Task TraceContinuationStrategyDefault()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger());
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Add("tracestate", $"foo=bar:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().BeNullOrEmpty();
+		}
+
+		[Fact]
+		public async Task TraceContinuationStrategyRestartExternalWithNoEsTag()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart_external");
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Add("tracestate", $"foo=bar:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.TraceId.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().HaveCount(1);
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).SpanId.Should().Be("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+		}
+
+		[Fact]
+		public async Task TraceContinuationStrategyRestartExternalWithEsTag()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart_external");
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Add("tracestate", $"es=s:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().BeNullOrEmpty();
+		}
+
+		[Fact]
+		public async Task TraceContinuationStrategyRestartWithEsTag()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart");
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Add("tracestate", $"es=s:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.TraceId.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().HaveCount(1);
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).SpanId.Should().Be("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+		}
+
+		[Fact]
+		public async Task TraceContinuationStrategyRestartWithoutEsTag()
+		{
+			// Set TraceContextIgnoreSampledFalse (and 100% sample rate)
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart");
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Add("tracestate", $"foo=bar:0.5");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.TraceId.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+
+			_payloadSender1.FirstTransaction.Links.Should().HaveCount(1);
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).SpanId.Should().Be("b7ad6b7169203331");
+			_payloadSender1.FirstTransaction.Links.ElementAt(0).TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+		}
+
+		[Fact]
+		public async Task TraceContinuationStrategyRestartExternalAndNoTraceParent()
+		{
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart_external");
+
+			var client = new HttpClient();
+
+			// HttpClient always seem to add a `traceparent` header - calling `Remove("traceparent")` does not help.
+			// Therefore we add a fake value which fails validation and it'll be treated as a `null` traceparent` header.
+			client.DefaultRequestHeaders.Add("traceparent", "foo");
+			client.DefaultRequestHeaders.Remove("tracestate");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.Transactions.Should().NotBeNullOrEmpty();
+		}
+
+		/// <summary>
+		/// Sends a request with a valid `traceparent` and without a `tracestate` header with setting `traceContinuationStrategy`
+		/// to `restart_external`.
+		/// Makes sure the trace is restarted, meaning values from the `traceparent` header aren't used for the transaction.
+		/// </summary>
+		[Fact]
+		public async Task TraceContinuationStrategyRestartExternalAndNoTraceState()
+		{
+			_agent1.ConfigurationStore.CurrentSnapshot =
+				new MockConfiguration(new NoopLogger(), traceContinuationStrategy: "restart_external");
+
+			var client = new HttpClient();
+
+			client.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Remove("tracestate");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.Transactions.Should().NotBeNullOrEmpty();
+
+			// The trace is restarted (due to `traceContinuationStrategy=restart_external`), so assert that the traceId and
+			// parentId aren't reused from `traceparent`.
+			_payloadSender1.FirstTransaction.Id.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
+			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
 		}
 
 		public async Task DisposeAsync()

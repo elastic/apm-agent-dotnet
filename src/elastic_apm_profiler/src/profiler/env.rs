@@ -65,7 +65,7 @@ pub static IS_AZURE_APP_SERVICE: Lazy<bool> = Lazy::new(|| {
 pub fn check_if_running_in_azure_app_service() -> Result<(), HRESULT> {
     if *IS_AZURE_APP_SERVICE {
         log::info!("Initialize: detected Azure App Service context");
-        if let Some(app_pool_id) = std::env::var(APP_POOL_ID_ENV_VAR).ok() {
+        if let Ok(app_pool_id) = std::env::var(APP_POOL_ID_ENV_VAR) {
             if app_pool_id.starts_with('~') {
                 log::info!(
                     "Initialize: {} environment variable value {} suggests \
@@ -77,7 +77,7 @@ pub fn check_if_running_in_azure_app_service() -> Result<(), HRESULT> {
             }
         }
 
-        if let Some(cli_telemetry) = std::env::var(DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR).ok() {
+        if let Ok(cli_telemetry) = std::env::var(DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR) {
             if &cli_telemetry == "AzureKudu" {
                 log::info!(
                     "Initialize: {} environment variable value {} suggests \
@@ -101,9 +101,9 @@ pub fn get_env_vars() -> String {
             if key.starts_with("ELASTIC_")
                 || key.starts_with("CORECLR_")
                 || key.starts_with("COR_")
-                || &key == APP_POOL_ID_ENV_VAR
-                || &key == DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR
-                || &key == COMPLUS_LOADEROPTIMIZATION
+                || key == APP_POOL_ID_ENV_VAR
+                || key == DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR
+                || key == COMPLUS_LOADEROPTIMIZATION
             {
                 let value = if key.contains("SECRET") || key.contains("API_KEY") {
                     "[REDACTED]"
@@ -321,15 +321,15 @@ pub fn initialize_logging(process_name: &str) -> Handle {
         // try to create the log directory ahead of time so that we can determine if it's a valid
         // directory. if the directory can't be created, try the default log directory or home directory
         // before bailing and not setting up the file logger.
-        if let Err(_) = std::fs::create_dir_all(&log_dir) {
+        if std::fs::create_dir_all(&log_dir).is_err() {
             let default_log_dir = get_default_log_dir();
             if log_dir != default_log_dir {
                 log_dir = default_log_dir;
-                if let Err(_) = std::fs::create_dir_all(&log_dir) {
+                if std::fs::create_dir_all(&log_dir).is_err() {
                     let home_log_dir = get_home_log_dir();
                     if log_dir != home_log_dir {
                         log_dir = home_log_dir;
-                        if let Err(e) = std::fs::create_dir_all(&log_dir) {
+                        if std::fs::create_dir_all(&log_dir).is_err() {
                             valid_log_dir = false;
                         }
                     } else {
@@ -338,7 +338,7 @@ pub fn initialize_logging(process_name: &str) -> Handle {
                 }
             } else {
                 log_dir = get_home_log_dir();
-                if let Err(e) = std::fs::create_dir_all(&log_dir) {
+                if std::fs::create_dir_all(&log_dir).is_err() {
                     valid_log_dir = false;
                 }
             }
@@ -346,12 +346,10 @@ pub fn initialize_logging(process_name: &str) -> Handle {
 
         if valid_log_dir {
             let log_file_name = log_dir
-                .clone()
                 .join(format!("elastic_apm_profiler_{}_{}.log", process_name, pid))
                 .to_string_lossy()
                 .to_string();
             let rolling_log_file_name = log_dir
-                .clone()
                 .join(format!(
                     "elastic_apm_profiler_{}_{}_{{}}.log",
                     process_name, pid
@@ -442,16 +440,12 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
     );
 
     // Now filter integrations
-    match std::env::var(ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR) {
-        Ok(val) => {
-            let exclude_integrations = val.split(';');
-            for exclude_integration in exclude_integrations {
-                log::trace!("exclude integrations that match {}", exclude_integration);
-                integrations
-                    .retain(|i| i.name.to_lowercase() != exclude_integration.to_lowercase());
-            }
+    if let Ok(val) = std::env::var(ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR) {
+        let exclude_integrations = val.split(';');
+        for exclude_integration in exclude_integrations {
+            log::trace!("exclude integrations that match {}", exclude_integration);
+            integrations.retain(|i| i.name.to_lowercase() != exclude_integration.to_lowercase());
         }
-        Err(_) => (),
     };
 
     Ok(integrations)

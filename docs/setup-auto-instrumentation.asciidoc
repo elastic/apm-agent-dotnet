@@ -5,8 +5,6 @@
 [[setup-auto-instrumentation]]
 === Profiler Auto instrumentation
 
-beta::[]
-
 [float]
 ==== Quick start
 

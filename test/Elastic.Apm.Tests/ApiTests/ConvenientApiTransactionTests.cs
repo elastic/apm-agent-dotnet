@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -734,6 +734,115 @@ public class ConvenientApiTransactionTests
 		(payloadSender.Spans[0] as Span)!.Links.Should().HaveCount(1);
 		(payloadSender.Spans[0] as Span)!.Links.First().SpanId.Should().Be(transaction1.Id);
 		(payloadSender.Spans[0] as Span)!.Links.First().TraceId.Should().Be(transaction1.TraceId);
+	}
+
+	[Fact]
+	public async Task CaptureTransaction_Does_Flow_SynchronizationContext_NoTask()
+	{
+		SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+		using var agent = new ApmAgent(new TestAgentComponents());
+
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async () =>
+		{
+			var sc = SynchronizationContext.Current;
+			sc.Should().NotBeNull();
+
+			await Task.Delay(1_000);
+		});
+	}
+
+	[Fact]
+	public async Task CaptureTransaction_Does_Flow_SynchronizationContext_EmptyTask()
+	{
+		SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+		using var agent = new ApmAgent(new TestAgentComponents());
+
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		{
+			var sc = SynchronizationContext.Current;
+			sc.Should().NotBeNull();
+
+			await Task.Delay(1_000);
+		});
+	}
+
+	[Fact]
+	public async Task CaptureTransaction_Does_Flow_SynchronizationContext_Task_WithValue()
+	{
+		SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+		using var agent = new ApmAgent(new TestAgentComponents());
+
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		{
+			var sc = SynchronizationContext.Current;
+			sc.Should().NotBeNull();
+
+			await Task.Delay(1_000);
+			return 42;
+		});
+	}
+
+	[Fact]
+	public async Task CaptureSpan_Does_Flow_SynchronizationContext_NoTask()
+	{
+		SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+		using var agent = new ApmAgent(new TestAgentComponents());
+
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		{
+			var sc = SynchronizationContext.Current;
+			sc.Should().NotBeNull();
+
+			await t.CaptureSpan("AsyncSPan", "test", async () =>
+			{
+				sc.Should().NotBeNull();
+				await Task.Delay(1_000);
+			});
+		});
+	}
+
+	[Fact]
+	public async Task CaptureSpan_Does_Flow_SynchronizationContext_EmptyTask()
+	{
+		SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+		using var agent = new ApmAgent(new TestAgentComponents());
+
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		{
+			var sc = SynchronizationContext.Current;
+			sc.Should().NotBeNull();
+
+			await t.CaptureSpan("AsyncSPan", "test", async (s) =>
+			{
+				sc.Should().NotBeNull();
+				await Task.Delay(1_000);
+			});
+		});
+	}
+
+	[Fact]
+	public async Task CaptureSpan_Does_Flow_SynchronizationContext_Task_WithValue()
+	{
+		SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+		using var agent = new ApmAgent(new TestAgentComponents());
+
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		{
+			var sc = SynchronizationContext.Current;
+			sc.Should().NotBeNull();
+			await t.CaptureSpan("AsyncSPan", "test", async (s) =>
+			{
+				sc.Should().NotBeNull();
+				await Task.Delay(1_000);
+				return 42;
+			});
+		});
 	}
 
 	/// <summary>

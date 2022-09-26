@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -15,6 +16,7 @@ namespace Elastic.Apm.Config
 		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
+		private readonly Lazy<double> _spanStackTraceMinDurationInMilliseconds;
 
 		private readonly Lazy<int> _stackTraceLimit;
 
@@ -23,6 +25,10 @@ namespace Elastic.Apm.Config
 			_spanFramesMinDurationInMilliseconds
 				= new Lazy<double>(() =>
 					ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
+
+			_spanStackTraceMinDurationInMilliseconds
+				= new Lazy<double>(() =>
+					ParseSpanStackTraceMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.SpanStackTraceMinDuration)));
 
 			_stackTraceLimit = new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
 		}
@@ -44,6 +50,7 @@ namespace Elastic.Apm.Config
 		public string Description => Origin;
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => ParseDisableMetrics(Read(ConfigConsts.EnvVarNames.DisableMetrics));
 		public bool Enabled => ParseEnabled(Read(ConfigConsts.EnvVarNames.Enabled));
+		public bool EnableOpenTelemetryBridge => ParseEnableOpenTelemetryBridge(Read(ConfigConsts.EnvVarNames.EnableOpenTelemetryBridge));
 
 		public string Environment => ParseEnvironment(Read(ConfigConsts.EnvVarNames.Environment));
 
@@ -74,21 +81,6 @@ namespace Elastic.Apm.Config
 		public string ServerCert => ParseServerCert(Read(ConfigConsts.EnvVarNames.ServerCert));
 
 		/// <inheritdoc />
-		[Obsolete("Use ServerUrl")]
-		public IReadOnlyList<Uri> ServerUrls
-		{
-			get
-			{
-				// Use ServerUrl if there's no value for ServerUrls so that usage of ServerUrls
-				// outside of the agent will work with ServerUrl
-				var configurationKeyValue = Read(ConfigConsts.EnvVarNames.ServerUrls);
-				return ParseServerUrls(!string.IsNullOrEmpty(configurationKeyValue.Value)
-					? configurationKeyValue
-					: Read(ConfigConsts.EnvVarNames.ServerUrl));
-			}
-		}
-
-		/// <inheritdoc />
 		public Uri ServerUrl
 		{
 			get
@@ -103,18 +95,45 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		/// <inheritdoc />
+		[Obsolete("Use ServerUrl")]
+		public IReadOnlyList<Uri> ServerUrls
+		{
+			get
+			{
+				// Use ServerUrl if there's no value for ServerUrls so that usage of ServerUrls
+				// outside of the agent will work with ServerUrl
+				var configurationKeyValue = Read(ConfigConsts.EnvVarNames.ServerUrls);
+				return ParseServerUrls(!string.IsNullOrEmpty(configurationKeyValue.Value)
+					? configurationKeyValue
+					: Read(ConfigConsts.EnvVarNames.ServerUrl));
+			}
+		}
+
 		public string ServiceName => ParseServiceName(Read(ConfigConsts.EnvVarNames.ServiceName));
 
 		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.EnvVarNames.ServiceNodeName));
 
 		public string ServiceVersion => ParseServiceVersion(Read(ConfigConsts.EnvVarNames.ServiceVersion));
 		public bool SpanCompressionEnabled => ParseSpanCompressionEnabled(Read(ConfigConsts.EnvVarNames.SpanCompressionEnabled));
-		public double SpanCompressionExactMatchMaxDuration => ParseSpanCompressionExactMatchMaxDuration(Read(ConfigConsts.EnvVarNames.SpanCompressionExactMatchMaxDuration));
-		public double SpanCompressionSameKindMaxDuration => ParseSpanCompressionSameKindMaxDuration(Read(ConfigConsts.EnvVarNames.SpanCompressionSameKindMaxDuration));
 
+		public double SpanCompressionExactMatchMaxDuration =>
+			ParseSpanCompressionExactMatchMaxDuration(Read(ConfigConsts.EnvVarNames.SpanCompressionExactMatchMaxDuration));
+
+		public double SpanCompressionSameKindMaxDuration =>
+			ParseSpanCompressionSameKindMaxDuration(Read(ConfigConsts.EnvVarNames.SpanCompressionSameKindMaxDuration));
+
+		public double SpanStackTraceMinDurationInMilliseconds => _spanStackTraceMinDurationInMilliseconds.Value;
+
+		[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 		public double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public int StackTraceLimit => _stackTraceLimit.Value;
+
+		public bool TraceContextIgnoreSampledFalse =>
+			ParseTraceContextIgnoreSampledFalse(Read(ConfigConsts.EnvVarNames.TraceContextIgnoreSampledFalse));
+
+		public string TraceContinuationStrategy => ParseTraceContinuationStrategy(Read(ConfigConsts.EnvVarNames.TraceContinuationStrategy));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Read(ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
@@ -126,9 +145,7 @@ namespace Elastic.Apm.Config
 		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
 
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
-		public bool EnableOpenTelemetryBridge => ParseEnableOpenTelemetryBridge(Read(ConfigConsts.EnvVarNames.EnableOpenTelemetryBridge));
 
-		public bool TraceContextIgnoreSampledFalse => ParseTraceContextIgnoreSampledFalse(Read(ConfigConsts.EnvVarNames.TraceContextIgnoreSampledFalse));
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);
 	}

@@ -88,13 +88,14 @@ namespace Elastic.Apm.AspNetCore
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
 
-		internal static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
-#if NETCOREAPP3_0 || NET5_0
+		private static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
+#if NETCOREAPP3_0_OR_GREATER || NET5_0
 			(serviceProvider.GetService(typeof(IWebHostEnvironment)) as IWebHostEnvironment)?.EnvironmentName;
 #else
+#pragma warning disable CS0246
 			(serviceProvider.GetService(typeof(IHostingEnvironment)) as IHostingEnvironment)?.EnvironmentName;
+#pragma warning restore CS0246
 #endif
-
 
 		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory

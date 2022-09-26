@@ -134,6 +134,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_Correct_RouteTemplate_When_Multiple_WebApi_Attribute_Routing()
+		{
+			var pathData = SampleAppUrlPaths.AttributeRoutingWebApiPage("ambiguous");
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be($"GET {AttributeRoutingWebApiController.RoutePrefix}/{AttributeRoutingWebApiController.RouteAmbiguous}");
+			});
+		}
+		[AspNetFullFrameworkFact]
 		public async Task Name_Should_Be_Path_When_Webforms_Page()
 		{
 			var pathData = SampleAppUrlPaths.WebformsPage;

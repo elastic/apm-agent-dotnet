@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Report;
-using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SampleConsoleNetCoreApp;
 using Xunit;
-using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Hosting.Tests
 {
@@ -52,11 +49,23 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			fakeSubscriber.IsSubscribed.Should().BeFalse();
 
 			using var _ = Host.CreateDefaultBuilder()
-				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
+				.ConfigureServices((_, services) => { services.AddHostedService<HostedService>(); })
 				.UseElasticApm(fakeSubscriber)
 				.Build();
 
 			fakeSubscriber.IsSubscribed.Should().BeTrue();
+		}
+
+		[Fact]
+		public void GetHostingEnvironmentName_WorksViaReflection()
+		{
+			var environmentName = default(string);
+			CreateHostBuilder().ConfigureServices((ctx, services) =>
+			{
+				environmentName = HostBuilderExtensions.GetHostingEnvironmentName(ctx, null);
+			}).Build();
+
+			environmentName.Should().Be("Production");
 		}
 
 		/// <summary>
@@ -74,7 +83,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			try
 			{
 				using var _ = Host.CreateDefaultBuilder()
-					.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
+					.ConfigureServices((_, services) => { services.AddHostedService<HostedService>(); })
 					.UseElasticApm(fakeSubscriber)
 					.Build();
 
@@ -88,7 +97,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 
 		private static IHostBuilder CreateHostBuilder() =>
 			Host.CreateDefaultBuilder()
-				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
+				.ConfigureServices((_, services) => { services.AddHostedService<HostedService>(); })
 				.UseElasticApm();
 
 		public class FakeSubscriber : IDiagnosticsSubscriber

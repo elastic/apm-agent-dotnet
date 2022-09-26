@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
@@ -18,6 +19,32 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class DroppedSpansStatsTests
 	{
+		[Fact]
+		public void DroppedSpanStats_MustReflect_ExitSpanMinDuration_Configuration()
+		{
+			Helper_CreateSpanWithDuration(Config.ConfigConsts.DefaultValues.ExitSpanMinDuration, 0).Should().BeNull();
+			Helper_CreateSpanWithDuration("Oms", 0).Should().BeNull();
+			Helper_CreateSpanWithDuration("10ms", 0).Count().Should().Be(1);
+		}
+
+		private static IEnumerable<DroppedSpanStats> Helper_CreateSpanWithDuration(string exitSpanMinDuration, double actualSpanDuration)
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent =
+			       new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(exitSpanMinDuration: exitSpanMinDuration),
+				       payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
+				{
+					var span = transaction.StartSpan("exit_span", "type", isExitSpan: true);
+					span.Duration = actualSpanDuration;
+					span.End();
+				});
+			}
+
+			return payloadSender.FirstTransaction.DroppedSpanStats;
+		}
+
 		[Fact]
 		public void SingleDroppedSpanTest()
 		{
@@ -43,6 +70,8 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.DroppedSpanStats.Should().NotBeNullOrEmpty();
 			payloadSender.FirstTransaction.DroppedSpanStats.Should().HaveCount(1);
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DestinationServiceResource.Should().Be("foo.bar:443");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetName.Should().Be("foo.bar:443");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetType.Should().Be("bar");
 			payloadSender.FirstTransaction.DroppedSpanStats.First().Outcome.Should().Be(Outcome.Success);
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(1);
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationSumUs.Should().Be(100);
@@ -100,15 +129,18 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
-					&& n.DurationCount == 2 && Math.Abs(n.DurationSumUs - 250) < 1 && n.DestinationServiceResource == "foo.bar:443");
+					&& n.DurationCount == 2 && Math.Abs(n.DurationSumUs - 250) < 1 && n.DestinationServiceResource == "foo.bar:443"
+					&& n.ServiceTargetName == "foo.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Failure
-					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 50) < 1 && n.DestinationServiceResource == "foo.bar:443");
+					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 50) < 1 && n.DestinationServiceResource == "foo.bar:443"
+					&& n.ServiceTargetName == "foo.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
-					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 15) < 1 && n.DestinationServiceResource == "foo2.bar:443");
+					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 15) < 1 && n.DestinationServiceResource == "foo2.bar:443"
+					&& n.ServiceTargetName == "foo2.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
@@ -170,6 +202,8 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.DroppedSpanStats.Should().HaveCount(1);
 
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DestinationServiceResource.Should().Be("bar");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetType.Should().Be("bar");
+			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetName.Should().BeNullOrEmpty();
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(500);
 		}
 	}

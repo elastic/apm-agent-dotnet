@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
@@ -40,7 +41,7 @@ namespace Elastic.Apm.Model
 		// which points to this span.
 		private bool _hasPropagatedContext;
 
-		private bool Discardable => IsExitSpan && !_hasPropagatedContext && Outcome == Outcome.Success;
+		private bool Discardable => IsExitSpan && !_hasPropagatedContext && Outcome == Outcome.Success && Configuration.SpanCompressionEnabled;
 
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
@@ -112,7 +113,7 @@ namespace Elastic.Apm.Model
 					// System.Net.Http.HttpRequestOut.Stop
 					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
 					// capture the stacktrace is .Start
-					if (captureStackTraceOnStart && Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0)
+					if (captureStackTraceOnStart && IsCaptureStackTraceOnStartEnabled())
 						RawStackTrace = new StackTrace(true);
 				}
 			}
@@ -125,6 +126,50 @@ namespace Elastic.Apm.Model
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
 		}
+
+// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
+#pragma warning disable CS0618
+		// If the legacy setting (span_frames_min_duration) is present but the new
+		// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
+		private bool UseLegacyCaptureStackTraceSetting()
+		{
+			// If the legacy setting (span_frames_min_duration) is present but the new
+			// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
+			const double tolerance = 0.00001;
+			return Math.Abs(Configuration.SpanFramesMinDurationInMilliseconds -
+			                ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds) > tolerance &&
+			       Math.Abs(Configuration.SpanStackTraceMinDurationInMilliseconds -
+			                ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds) < tolerance;
+		}
+
+		internal bool IsCaptureStackTraceOnStartEnabled()
+		{
+			if (Configuration.StackTraceLimit != 0)
+			{
+				if (UseLegacyCaptureStackTraceSetting())
+					return Configuration.SpanFramesMinDurationInMilliseconds != 0;
+
+				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0;
+			}
+			return false;
+		}
+		internal bool IsCaptureStackTraceOnEndEnabled()
+		{
+			if (Configuration.StackTraceLimit != 0 && RawStackTrace == null)
+			{
+				if (UseLegacyCaptureStackTraceSetting())
+				{
+					return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
+					       (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
+					        Configuration.SpanFramesMinDurationInMilliseconds < 0);
+				}
+
+				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
+				       Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
+			}
+			return false;
+		}
+#pragma warning restore CS0618
 
 		private bool _isEnded;
 
@@ -145,12 +190,12 @@ namespace Elastic.Apm.Model
 		public string Action { get; set; }
 
 		/// <summary>
-		/// Stores Context.Destination.Service.Resource on the top level.
-		/// With this field, we can set Resource for dropped spans without instantiating Context.
+		/// Stores Context.Destination.Service.Resource and Contest.Service.Target on the top level.
+		/// With this field, we can set Target.Name, Target.Type, and Resource for dropped spans without instantiating Context.
 		/// Only set for dropped spans.
 		/// </summary>
 		[JsonIgnore]
-		public string ServiceResource { get; set; }
+		internal DroppedSpanStatCacheStruct? DroppedSpanStatCache { get; set; }
 
 		[JsonIgnore]
 		internal IConfiguration Configuration => _enclosingTransaction.Configuration;
@@ -234,7 +279,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Links holds links to other spans, potentially in other traces.
 		/// </summary>
-		public IEnumerable<SpanLink> Links { get; }
+		public IEnumerable<SpanLink> Links { get; private set; }
 
 		public Composite Composite { get; set; }
 
@@ -287,7 +332,8 @@ namespace Elastic.Apm.Model
 			{ nameof(Name), Name },
 			{ nameof(Type), Type },
 			{ nameof(Outcome), Outcome },
-			{ nameof(IsSampled), IsSampled }
+			{ nameof(IsSampled), IsSampled },
+			{ nameof(Duration), Duration }
 		}.ToString();
 
 		public bool TryGetLabel<T>(string key, out T value)
@@ -307,7 +353,9 @@ namespace Elastic.Apm.Model
 
 		public OTel Otel { get; set; }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 		{
 			if (Configuration.Enabled && Configuration.Recording)
 				return StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links);
@@ -397,29 +445,34 @@ namespace Elastic.Apm.Model
 
 			try
 			{
-				DeduceDestination();
+				DeduceServiceTarget();
 			}
 			catch (Exception e)
 			{
 				_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
 			}
 
-			if (_isDropped && (!string.IsNullOrEmpty(ServiceResource)
-					|| (_context.IsValueCreated && Context?.Destination?.Service?.Resource != null)))
-				_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+			if (_isDropped && _context.IsValueCreated)
+			{
+				_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
+					Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+			}
+			else if (_isDropped && !_context.IsValueCreated && DroppedSpanStatCache.HasValue)
+			{
+				_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type, DroppedSpanStatCache.Value.Target.Name,
+					DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
+			}
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (Configuration.StackTraceLimit != 0 && Configuration.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
-					&& (Duration >= Configuration.SpanFramesMinDurationInMilliseconds
-						|| Configuration.SpanFramesMinDurationInMilliseconds < 0))
+				if (IsCaptureStackTraceOnEndEnabled())
 					RawStackTrace = new StackTrace(true);
 
 				var buffered = _parentSpan?._compressionBuffer ?? _enclosingTransaction.CompressionBuffer;
 
-				if (Configuration.SpanCompressionEnabled)
+				if (Configuration.SpanCompressionEnabled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 				{
 					if (!IsCompressionEligible() || _parentSpan is { _isEnded: true })
 					{
@@ -476,15 +529,35 @@ namespace Elastic.Apm.Model
 				{
 					if (span.Composite != null && span.Duration < span.Configuration.ExitSpanMinDuration)
 					{
-						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
-							Duration!.Value);
+						switch (_context.IsValueCreated)
+						{
+							case true:
+								_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
+									Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+								break;
+							case false when DroppedSpanStatCache.HasValue:
+								_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type,
+									DroppedSpanStatCache.Value.Target.Name,
+									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
+								break;
+						}
 						_logger.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
 						return;
 					}
 					if (span.Duration < span.Configuration.ExitSpanMinDuration)
 					{
-						_enclosingTransaction.UpdateDroppedSpanStats(ServiceResource ?? Context?.Destination?.Service?.Resource, _outcome,
-							Duration!.Value);
+						switch (_context.IsValueCreated)
+						{
+							case true:
+								_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
+									Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
+								break;
+							case false when DroppedSpanStatCache.HasValue:
+								_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type,
+									DroppedSpanStatCache.Value.Target.Name,
+									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
+								break;
+						}
 						_logger.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
 						return;
 					}
@@ -516,7 +589,7 @@ namespace Elastic.Apm.Model
 		private bool IsSameKind(Span other) => Type == other.Type
 			&& Subtype == other.Subtype
 			&& _context.IsValueCreated && other._context.IsValueCreated
-			&& Context.Destination.Service.Resource == other.Context.Destination.Service.Resource;
+			&& Context?.Service?.Target == other.Context?.Service?.Target;
 
 		private bool TryToCompressRegular(Span sibling)
 		{
@@ -540,7 +613,7 @@ namespace Elastic.Apm.Model
 				Composite ??= new Composite();
 				Composite.CompressionStrategy = "same_kind";
 				if (_context.IsValueCreated)
-					Name = "Calls to " + Context.Destination.Service.Resource;
+					Name = "Calls to " + Context.Service.Target.ToDestinationServiceResource();
 				return true;
 			}
 
@@ -559,6 +632,17 @@ namespace Elastic.Apm.Model
 			}
 
 			return false;
+		}
+
+		internal void InsertSpanLinkInternal(IEnumerable<SpanLink> links)
+		{
+			var spanLinks = links as SpanLink[] ?? links.ToArray();
+			if (Links == null || !Links.Any())
+				Links = spanLinks;
+
+			var newList = new List<SpanLink>(Links);
+			newList.AddRange(spanLinks);
+			Links = new List<SpanLink>(newList);
 		}
 
 		private void SetThisToParentsBuffer()
@@ -591,21 +675,32 @@ namespace Elastic.Apm.Model
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
 			bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), capturedAction);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links),
+				capturedAction);
 
-		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), capturedAction);
+		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links),
+				capturedAction);
 
-		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
-		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
-		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null)
+		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null, bool isExitSpan = false,
+			IEnumerable<SpanLink> links = null
+		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null,
+			bool isExitSpan = false, IEnumerable<SpanLink> links = null
 		)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action, isExitSpan: isExitSpan, links: links), func);
 
@@ -634,16 +729,19 @@ namespace Elastic.Apm.Model
 				labels
 			);
 
-		private void DeduceDestination()
+		private void DeduceServiceTarget()
 		{
 			if (!IsExitSpan)
 				return;
 
 			if (!_context.IsValueCreated)
 			{
-				if (string.IsNullOrEmpty(ServiceResource))
-					ServiceResource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
-				return;
+				if (DroppedSpanStatCache == null)
+				{
+					var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					DroppedSpanStatCache = new DroppedSpanStatCacheStruct(Target.TargetWithType(type), type);
+					return;
+				}
 			}
 
 			if (Context.Http != null)
@@ -667,32 +765,47 @@ namespace Elastic.Apm.Model
 				if (_context.IsValueCreated && !string.IsNullOrEmpty(_context.Value.Destination?.Service?.Resource))
 					return;
 
+				if (_context.IsValueCreated && _context.Value.Service?.Target != null)
+					return;
+
 				Context.Destination ??= new Destination();
 				Context.Destination.Service = new Destination.DestinationService();
 
+				var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+
 				if (Context.Db != null)
 				{
-					if (Context.Db.Instance != null)
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Db.Instance;
-					else
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					Context.Service = Context.Db.Instance != null
+						? new SpanService(new Target(type, Context.Db.Instance))
+						: new SpanService(Target.TargetWithType(type));
 				}
 				else if (Context.Http?.Url != null)
 				{
 					if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
-						Context.Destination.Service = new() { Resource = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this) };
+					{
+						try
+						{
+							var uri = Context.Http.OriginalUrl ?? new Uri(Context.Http.Url);
+							Context.Service = new SpanService(new Target(type, UrlUtils.ExtractService(uri, this), true));
+						}
+						catch
+						{
+							Context.Service = new SpanService(Target.TargetWithType(type));
+						}
+					}
 					else
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+						Context.Service = new SpanService(Target.TargetWithType(type));
 				}
 				else if (Context.Message != null)
 				{
-					if (!string.IsNullOrEmpty(Context.Message.Queue?.Name))
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type + Context.Message.Queue.Name;
-					else
-						Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					Context.Service = !string.IsNullOrEmpty(Context.Message.Queue?.Name)
+						? new SpanService(new Target(type, Context.Message.Queue.Name))
+						: new SpanService(Target.TargetWithType(type));
 				}
 				else
-					Context.Destination.Service.Resource = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+					Context.Service = new SpanService(Target.TargetWithType(type));
+
+				Context.Destination.Service.Resource = Context.Service.Target.ToDestinationServiceResource();
 			}
 
 			void CopyMissingProperties(Destination src)
@@ -754,6 +867,15 @@ namespace Elastic.Apm.Model
 				exception,
 				labels
 			);
+
+		internal struct DroppedSpanStatCacheStruct
+		{
+			public DroppedSpanStatCacheStruct(Target target, string destinationServiceResource) =>
+				(Target, DestinationServiceResource) = (target, destinationServiceResource);
+
+			internal Target Target { get; }
+			internal string DestinationServiceResource { get; }
+		}
 	}
 
 	internal class SpanTimer

@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -45,8 +45,6 @@ namespace Elastic.Apm.Model
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-
-		internal Span CompressionBuffer;
 
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
@@ -100,6 +98,7 @@ namespace Elastic.Apm.Model
 		/// </param>
 		/// <param name="id">An optional parameter to pass the id of the transaction</param>
 		/// <param name="traceId">An optional parameter to pass a trace id which will be applied to the transaction</param>
+		/// <param name="links">Span links associated with this transaction</param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -130,16 +129,26 @@ namespace Elastic.Apm.Model
 			Name = name;
 			HasCustomName = false;
 			Type = type;
-			Links = links;
+			var spanLinks = links as SpanLink[] ?? links?.ToArray();
+			Links = spanLinks;
+
+			// Restart the trace when:
+			// - `TraceContinuationStrategy == Restart` OR
+			// - `TraceContinuationStrategy == RestartExternal` AND
+			//		- `TraceState` is not present (Elastic Agent would have added it) OR
+			//		- `TraceState` is present but the SampleRate is not present (Elastic agent adds SampleRate to TraceState)
+			var shouldRestartTrace = configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.Restart ||
+				(configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
+					&& (distributedTracingData?.TraceState == null || distributedTracingData is { TraceState: { SampleRate: null } }));
 
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
 			// so the traceid and tracestate of the parent will flow to it.
 			if (!ignoreActivity)
-				_activity = StartActivity();
+				_activity = StartActivity(shouldRestartTrace);
 
 			var isSamplingFromDistributedTracingData = false;
-			if (distributedTracingData == null)
+			if (distributedTracingData == null || shouldRestartTrace)
 			{
 				// We consider a newly created transaction **without** explicitly passed distributed tracing data
 				// to be a root transaction.
@@ -165,6 +174,14 @@ namespace Elastic.Apm.Model
 						_traceState.AddTextHeader(_activity.TraceStateString);
 
 					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
+
+					if (shouldRestartTrace && distributedTracingData != null)
+					{
+						if (Links == null || spanLinks == null)
+							Links = new List<SpanLink> { new(distributedTracingData.ParentId, distributedTracingData.TraceId) };
+						else
+							Links = new List<SpanLink>(spanLinks) { new(distributedTracingData.ParentId, distributedTracingData.TraceId) };
+					}
 
 					// In the unlikely event that tracestate populated from activity contains an es vendor key, the tracestate
 					// is mutated to set the sample rate defined by the sampler, because we consider a transaction without
@@ -222,6 +239,7 @@ namespace Elastic.Apm.Model
 			{
 				var idBytes = new byte[8];
 
+
 				if (_activity != null)
 				{
 					Id = _activity.SpanId.ToHexString();
@@ -254,7 +272,9 @@ namespace Elastic.Apm.Model
 
 				// If TraceContextIgnoreSampledFalse is set and the upstream service is not from our agent (aka no sample rate set)
 				// ignore the sampled flag and make a new sampling decision.
+#pragma warning disable CS0618
 				if (configuration.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
+#pragma warning restore CS0618
 						|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
 				{
 					IsSampled = sampler.DecideIfToSample(idBytes);
@@ -326,6 +346,8 @@ namespace Elastic.Apm.Model
 		private bool _outcomeChangedThroughApi;
 		internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
+		internal Span CompressionBuffer;
+
 		/// <summary>
 		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
 		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
@@ -356,8 +378,6 @@ namespace Elastic.Apm.Model
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		public OTel Otel { get; set; }
-
 		/// <summary>
 		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
 		/// or "fixed" automatically.
@@ -371,11 +391,6 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal bool IsContextCreated => _context.IsValueCreated;
 
-		/// <summary>
-		/// Links holds links to other spans, potentially in other traces.
-		/// </summary>
-		public IEnumerable<SpanLink> Links { get; }
-
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }
 
@@ -383,6 +398,24 @@ namespace Elastic.Apm.Model
 		[Obsolete(
 			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => Context.Labels;
+
+		/// <summary>
+		/// Links holds links to other spans, potentially in other traces.
+		/// </summary>
+		public IEnumerable<SpanLink> Links { get; private set; }
+
+		internal void InsertSpanLinkInternal(IEnumerable<SpanLink> links)
+		{
+			var spanLinks = links as SpanLink[] ?? links.ToArray();
+			if (Links == null || !Links.Any())
+				Links = spanLinks;
+			else
+			{
+				var newList = new List<SpanLink>(Links);
+				newList.AddRange(spanLinks);
+				Links = new List<SpanLink>(newList);
+			}
+		}
 
 		[MaxLength]
 		public string Name
@@ -394,6 +427,8 @@ namespace Elastic.Apm.Model
 				_name = value;
 			}
 		}
+
+		public OTel Otel { get; set; }
 
 		/// <summary>
 		/// The outcome of the transaction: success, failure, or unknown.
@@ -468,23 +503,30 @@ namespace Elastic.Apm.Model
 				_outcome = outcome;
 		}
 
-		private Activity StartActivity()
+		private Activity StartActivity(bool shouldRestartTrace)
 		{
 			var activity = new Activity(KnownListeners.ApmTransactionActivityName);
+			if (shouldRestartTrace)
+			{
+				activity.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
+					Activity.Current != null ? Activity.Current.ActivityTraceFlags : ActivityTraceFlags.None);
+			}
 			activity.SetIdFormat(ActivityIdFormat.W3C);
 			activity.Start();
 			return activity;
 		}
 
-		internal void UpdateDroppedSpanStats(string destinationServiceResource, Outcome outcome, double duration)
+		internal void UpdateDroppedSpanStats(string serviceTargetType, string serviceTargetName, string destinationServiceResource, Outcome outcome,
+			double duration
+		)
 		{
 			if (_droppedSpanStatsMap == null)
 			{
 				_droppedSpanStatsMap = new Dictionary<DroppedSpanStatsKey, DroppedSpanStats>
 				{
 					{
-						new DroppedSpanStatsKey(destinationServiceResource, outcome),
-						new DroppedSpanStats(destinationServiceResource, outcome, duration)
+						new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
+						new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration)
 					}
 				};
 			}
@@ -493,15 +535,15 @@ namespace Elastic.Apm.Model
 				if (_droppedSpanStatsMap.Count >= 128)
 					return;
 
-				if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(destinationServiceResource, outcome), out var item))
+				if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome), out var item))
 				{
 					item.DurationCount++;
 					item.DurationSumUs += duration;
 				}
 				else
 				{
-					_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(destinationServiceResource, outcome),
-						new DroppedSpanStats(destinationServiceResource, outcome, duration));
+					_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
+						new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration));
 				}
 			}
 		}
@@ -850,30 +892,34 @@ namespace Elastic.Apm.Model
 
 		private readonly struct DroppedSpanStatsKey : IEquatable<DroppedSpanStatsKey>
 		{
-			// ReSharper disable once NotAccessedField.Local
-			private readonly string _destinationServiceResource;
-
-			// ReSharper disable once NotAccessedField.Local
-			private readonly Outcome _outcome;
-
-			public DroppedSpanStatsKey(string destinationServiceResource, Outcome outcome)
-			{
-				_destinationServiceResource = destinationServiceResource;
-				_outcome = outcome;
-			}
-
-			public bool Equals(DroppedSpanStatsKey other) =>
-				_destinationServiceResource == other._destinationServiceResource && _outcome == other._outcome;
-
-			public override bool Equals(object obj) => obj is DroppedSpanStatsKey other && Equals(other);
-
 			public override int GetHashCode()
 			{
 				unchecked
 				{
-					return ((_destinationServiceResource != null ? _destinationServiceResource.GetHashCode() : 0) * 397) ^ (int)_outcome;
+					var hashCode = (int)_outcome;
+					hashCode = (hashCode * 397) ^ (_serviceTargetType != null ? _serviceTargetType.GetHashCode() : 0);
+					hashCode = (hashCode * 397) ^ (_serviceTargetName != null ? _serviceTargetName.GetHashCode() : 0);
+					return hashCode;
 				}
 			}
+
+			private readonly string _serviceTargetType;
+			private readonly string _serviceTargetName;
+
+			// ReSharper disable once NotAccessedField.Local
+			private readonly Outcome _outcome;
+
+			public DroppedSpanStatsKey(string serviceTargetType, string serviceTargetName, Outcome outcome)
+			{
+				_serviceTargetName = serviceTargetName;
+				_serviceTargetType = serviceTargetType;
+				_outcome = outcome;
+			}
+
+			public bool Equals(DroppedSpanStatsKey other) =>
+				_serviceTargetType == other._serviceTargetType && _serviceTargetName == other._serviceTargetName && _outcome == other._outcome;
+
+			public override bool Equals(object obj) => obj is DroppedSpanStatsKey other && Equals(other);
 
 			public static bool operator ==(DroppedSpanStatsKey left, DroppedSpanStatsKey right) => left.Equals(right);
 

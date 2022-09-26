@@ -53,6 +53,7 @@ namespace Elastic.Apm.Tests
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
 			public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
 			public string HostName { get; }
+			public string TraceContinuationStrategy => ConfigConsts.DefaultValues.TraceContinuationStrategy;
 			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => ConfigConsts.DefaultValues.TransactionIgnoreUrls;
 			public LogLevel LogLevel { get; }
 			public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
@@ -70,6 +71,8 @@ namespace Elastic.Apm.Tests
 			public double SpanCompressionSameKindMaxDuration => ConfigConsts.DefaultValues.SpanCompressionSameKindMaxDurationInMilliseconds;
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => ConfigConsts.DefaultValues.DisableMetrics;
 			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => ConfigConsts.DefaultValues.IgnoreMessageQueues;
+			public double SpanStackTraceMinDurationInMilliseconds =>  ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds;
+			[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;

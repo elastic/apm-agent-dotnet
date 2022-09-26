@@ -474,7 +474,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 [options="header"]
 |============
 | Default | Type
-| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, *auth*, set-cookie` | Comma separated string
+| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, *auth*, set-cookie, *principal*` | Comma separated string
 |============
 
 [float]
@@ -589,7 +589,7 @@ Additionally, spans that lead to an error can't be discarded.
 [options="header"]
 |============
 | Default | Type
-| `1ms`  | TimeDuration
+| `0ms`  | TimeDuration
 |============
 
 
@@ -876,6 +876,9 @@ https://docs.microsoft.com/en-us/aspnet/core/migration/22-to-30?#allowsynchronou
 because a large number of blocking synchronous I/O operations can lead to thread pool starvation,
 which makes the application unresponsive. If your application becomes unresponsive with this
 feature enabled, consider disabling capturing.
+
+In ASP.NET (.NET Full Framework), this setting has no effect on non-buffered requests
+(see https://docs.microsoft.com/en-us/dotnet/api/system.web.httprequest.readentitybodymode?view=netframework-4.8[HttpRequest.ReadEntityBodyMode]).
 ====
 
 [WARNING]
@@ -955,6 +958,37 @@ NOTE: Setting this to `false` reduces memory allocations, network bandwidth, and
 |============
 
 [float]
+[[config-trace-continuation-strategy]]
+==== `TraceContinuationStrategy` (performance) (added[1.17.0])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Valid options: `continue`, `restart`, `restart_external`.
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration or Web.config key
+| `ELASTIC_APM_TRACE_CONTINUATION_STRATEGY` | `ElasticApm:TraceContinuationStrategy`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `true`                  | String
+|============
+
+The `traceparent` header of requests that are traced by the Elastic APM .NET Agent might have been added by a 3rd party component.
+
+This situation becomes more and more common as the w3c trace context gets adopted. In such cases you may end up with traces where part of the trace is outside of Elastic APM.
+
+In order to handle this properly, the agent offers trace continuation strategies with the following values and behavior:
+
+- `continue`: The agent takes the `traceparent` header as it is and applies it to the new transaction.
+- `restart`: The agent always creates a new trace with a new trace id. In this case the agent creates a span link in the new transaction pointing to the original `traceparent`.
+- `restart_external`: The agent first checks the `tracestate` header. If the header contains the `es` vendor flag (which means the request is coming from a service monitored by an Elastic APM Agent), it's treated as internal, otherwise (including the case when the `tracestate` header is not present) it's treated as external. In case of external calls the agent creates a new trace with a new trace id and creates a link in the new transaction pointing to the original trace.
+
+
+[float]
 [[config-transaction-ignore-urls]]
 ==== `TransactionIgnoreUrls` (performance)
 
@@ -1018,6 +1052,37 @@ When this setting is `true`, the agent also adds the header `elasticapm-tracepar
 |============
 | Default                 | Type
 | `true`                  | Boolean
+|============
+
+[float]
+[[config-trace-context-ignore-sampled-false]]
+==== `TraceContextIgnoreSampledFalse`
+
+IMPORTANT: Use of `TraceContextIgnoreSampledFalse` is deprecated. Use `TraceContinuationStrategy` with the `restart_external` value.
+
+The agent uses the https://www.w3.org/TR/trace-context/[W3C Trace Context] specification and standards for distributed tracing. The traceparent header from the W3C Trace Context specification defines a https://www.w3.org/TR/trace-context/#sampled-flag[sampled flag] which is propagated from a caller service to a callee service, and determines whether a trace is sampled in the callee service. The default behavior of the agent honors the sampled flag value and behaves accordingly.
+
+There may be cases where you wish to change the default behavior of the agent with respect to the sampled flag. By setting the `TraceContextIgnoreSampled` configuration value to `true`, the agent ignores the sampled flag of the W3C Trace Context traceparent header when it has a value of `false` **and** and there is no agent specific tracestate header value present. In ignoring the sampled flag, the agent makes a sampling decision based on the <<config-transaction-sample-rate, sample rate>>. This can be useful when a caller service always sets a sampled flag value of `false`, that results in the agent never sampling any transactions.
+
+[IMPORTANT]
+--
+:dotnet5: .NET 5
+
+{dotnet5} applications set the W3C Trace Context for outgoing HTTP requests by default, but with the traceparent header sampled flag set to `false`. If a {dotnet5} application has an active agent, the agent ensures that the sampled flag is propagated with the agent's sampling decision. If a {dotnet5} application does not have an active agent however, and the application calls another service that does have an active agent, the propagation of a sampled flag value of `false` results in no sampled transactions in the callee service.
+
+If your application is called by an {dotnet5} application that does not have an active agent, setting the `TraceContextIgnoreSampledFalse` configuration value to `true` instructs the agent to start a new transaction and make a sampling decision based on the <<config-transaction-sample-rate, sample rate>>, when the traceparent header sampled flag has a value of `false` **and** there is no agent specific tracestate header value present.
+--
+
+[options="header"]
+|============
+| Environment variable name            | IConfiguration or Web.config key
+| `ELASTIC_APM_TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `false`                 | Boolean
 |============
 
 [[config-messaging]]
@@ -1113,11 +1178,11 @@ Setting this to `0` disables stack trace collection. Any positive integer value 
 | `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit`
 |============
 
-NOTE: If you would like to disable stack trace capturing only for spans, but still capture stack traces for errors, set the <<config-span-frames-min-duration>> config to `0`.
+NOTE: If you would like to disable stack trace capturing only for spans, but still capture stack traces for errors, set the <<config-span-stack-trace-min-duration>> config to `-1`.
 
 [float]
-[[config-span-frames-min-duration]]
-==== `SpanFramesMinDuration` (performance)
+[[config-span-stack-trace-min-duration]]
+==== `SpanStackTraceMinDuration` (performance)
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
@@ -1125,12 +1190,13 @@ In its default settings,
 the APM agent collects a stack trace for every recorded span with duration longer than `5ms`.
 While this is very helpful to find the exact place in your code that causes the span,
 collecting this stack trace does have some overhead.
-When setting this option to a negative value, like `-1ms`, stack traces are collected for all spans.
+When setting this option to zero (regardless of the time unit), like `0ms`, stack traces are collected for all spans.
 Setting it to a positive value, e.g. `5ms`,
 limits stack trace collection to spans with durations equal to or longer than the given value,
 e.g. 5 milliseconds.
 
-To disable stack trace collection for spans completely, set the value to `0ms`.
+To disable stack trace collection for spans completely, set this option to a negative value,
+like `-1ms`.
 
 Supports the duration suffixes `ms`, `s` and `m`.
 Example: `5ms`.
@@ -1145,8 +1211,10 @@ The default unit for this option is `ms`
 [options="header"]
 |============
 | Environment variable name     | IConfiguration or Web.config key
-| `ELASTIC_APM_SPAN_FRAMES_MIN_DURATION` | `ElasticApm:SpanFramesMinDuration`
+| `ELASTIC_APM_SPAN_STACK_TRACE_MIN_DURATION` | `ElasticApm:SpanStackTraceMinDuration`
 |============
+
+IMPORTANT: Use of `SpanFramesMinDuration` is deprecated. Use `SpanStackTraceMinDuration`.
 
 
 [[config-supportability]]
@@ -1177,36 +1245,6 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | Default                 | Type
 | `Error`                 | String
 |============
-
-[float]
-[[config-trace-context-ignore-sampled-false]]
-==== `TraceContextIgnoreSampledFalse`
-
-The agent uses the https://www.w3.org/TR/trace-context/[W3C Trace Context] specification and standards for distributed tracing. The traceparent header from the W3C Trace Context specification defines a https://www.w3.org/TR/trace-context/#sampled-flag[sampled flag] which is propagated from a caller service to a callee service, and determines whether a trace is sampled in the callee service. The default behavior of the agent honors the sampled flag value and behaves accordingly.
-
-There may be cases where you wish to change the default behavior of the agent with respect to the sampled flag. By setting the `TraceContextIgnoreSampled` configuration value to `true`, the agent ignores the sampled flag of the W3C Trace Context traceparent header when it has a value of `false` **and** and there is no agent specific tracestate header value present. In ignoring the sampled flag, the agent makes a sampling decision based on the <<config-transaction-sample-rate, sample rate>>. This can be useful when a caller service always sets a sampled flag value of `false`, that results in the agent never sampling any transactions.
-
-[IMPORTANT]
---
-:dotnet5: .NET 5
-
-{dotnet5} applications set the W3C Trace Context for outgoing HTTP requests by default, but with the traceparent header sampled flag set to `false`. If a {dotnet5} application has an active agent, the agent ensures that the sampled flag is propagated with the agent's sampling decision. If a {dotnet5} application does not have an active agent however, and the application calls another service that does have an active agent, the propagation of a sampled flag value of `false` results in no sampled transactions in the callee service.
-
-If your application is called by an {dotnet5} application that does not have an active agent, setting the `TraceContextIgnoreSampledFalse` configuration value to `true` instructs the agent to start a new transaction and make a sampling decision based on the <<config-transaction-sample-rate, sample rate>>, when the traceparent header sampled flag has a value of `false` **and** there is no agent specific tracestate header value present.
---
-
-[options="header"]
-|============
-| Environment variable name            | IConfiguration or Web.config key
-| `TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
-|============
-
-[options="header"]
-|============
-| Default                 | Type
-| `false`                 | Boolean
-|============
-
 
 [[config-all-options-summary]]
 === All options summary
@@ -1245,12 +1283,13 @@ If your application is called by an {dotnet5} application that does not have an 
 | <<config-span-compression-enabled,`SpanCompressionEnabled`>> | Yes | Core, Performance
 | <<config-span-compression-exact-match-max-duration,`SpanCompressionExactMatchMaxDuration`>> | Yes | Core, Performance
 | <<config-span-compression-same-kind-max-duration,`SpanCompressionSameKindMaxDuration`>> | Yes | Core, Performance
-| <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
+| <<config-span-stack-trace-min-duration,`SpanStackTraceMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
 | <<config-trace-context-ignore-sampled-false,`TraceContextIgnoreSampledFalse`>> | No | Core
 | <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | Yes | HTTP, Performance
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
+| <<config-trace-continuation-strategy,`TraceContinuationStrategy`>> | Yes | HTTP, Performance
 | <<config-use-elastic-apm-traceparent-header,`UseElasticTraceparentHeader`>> | No | HTTP
 | <<config-verify-server-cert,`VerifyServerCert`>> | No | Reporter
 

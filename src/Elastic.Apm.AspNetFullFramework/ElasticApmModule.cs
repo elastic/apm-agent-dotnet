@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -20,6 +20,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
+using Elastic.Apm.Extensions;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -35,8 +36,9 @@ namespace Elastic.Apm.AspNetFullFramework
 		private readonly string _dbgInstanceName;
 		private HttpApplication _application;
 		private IApmLogger _logger;
-		private Type _httpRouteDataInterfaceType;
+		private readonly Lazy<Type> _httpRouteDataInterfaceType = new Lazy<Type>(() => Type.GetType("System.Web.Http.Routing.IHttpRouteData,System.Web.Http"));
 		private Func<object, string> _routeDataTemplateGetter;
+		private Func<object, decimal> _routePrecedenceGetter;
 
 		public ElasticApmModule() =>
 			// ReSharper disable once ImpureMethodCallOnReadonlyValueField
@@ -85,6 +87,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 
 			_routeDataTemplateGetter = CreateWebApiAttributeRouteTemplateGetter();
+			_routePrecedenceGetter = CreateRoutePrecedenceGetter();
 			_application = application;
 			_application.BeginRequest += OnBeginRequest;
 			_application.EndRequest += OnEndRequest;
@@ -168,7 +171,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				transaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
 			}
 
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(request, transaction);
+			if (transaction.IsSampled) FillSampledTransactionContextRequest(request, transaction, _logger);
 		}
 
 		/// <summary>
@@ -197,7 +200,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			return TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue);
 		}
 
-		private static void FillSampledTransactionContextRequest(HttpRequest request, ITransaction transaction)
+		private static void FillSampledTransactionContextRequest(HttpRequest request, ITransaction transaction, IApmLogger logger)
 		{
 			var httpRequestUrl = request.Unvalidated.Url;
 			var queryString = httpRequestUrl.Query;
@@ -325,18 +328,24 @@ namespace Elastic.Apm.AspNetFullFramework
 						string name = null;
 
 						// if we're dealing with Web API attribute routing, get transaction name from the route template
-						if (routeData.TryGetValue("MS_SubRoutes", out var template) && _httpRouteDataInterfaceType != null)
+						if (routeData.TryGetValue("MS_SubRoutes", out var template) && _httpRouteDataInterfaceType.Value != null)
 						{
 							if (template is IEnumerable enumerable)
 							{
+								var minPrecedence = decimal.MaxValue;
 								var enumerator = enumerable.GetEnumerator();
-								if (enumerator.MoveNext())
+								while (enumerator.MoveNext())
 								{
 									var subRoute = enumerator.Current;
-									if (subRoute != null && _httpRouteDataInterfaceType.IsInstanceOfType(subRoute))
+									if (subRoute != null && _httpRouteDataInterfaceType.Value.IsInstanceOfType(subRoute))
 									{
-										_logger?.Trace()?.Log("Calculating transaction name from web api attribute routing");
-										name = _routeDataTemplateGetter(subRoute);
+										var precedence = _routePrecedenceGetter(subRoute);
+										if (precedence < minPrecedence)
+										{
+											_logger?.Trace()?.Log($"Calculating transaction name from web api attribute routing (route precedence: {precedence})");
+											minPrecedence = precedence;
+											name = _routeDataTemplateGetter(subRoute);
+										}
 									}
 								}
 							}
@@ -373,6 +382,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				FillSampledTransactionContextResponse(response, transaction);
 				FillSampledTransactionContextUser(context, transaction);
+				transaction.CollectRequestBody(false, new AspNetHttpRequest(context.Request), _logger);
 			}
 
 			transaction.End();
@@ -463,22 +473,58 @@ namespace Elastic.Apm.AspNetFullFramework
 		}
 
 		/// <summary>
+		/// Compiles a delegate from a lambda expression to get a route's DataTokens property,
+		/// which holds the precedence value.
+		/// </summary>
+		private Func<object, decimal> CreateRoutePrecedenceGetter()
+		{
+			if (_httpRouteDataInterfaceType.Value != null)
+			{
+				var routePropertyInfo = _httpRouteDataInterfaceType.Value.GetProperty("Route");
+				if (routePropertyInfo != null)
+				{
+					var routeType = routePropertyInfo.PropertyType;
+					var dataTokensPropertyInfo = routeType.GetProperty("DataTokens");
+					if (dataTokensPropertyInfo != null)
+					{
+						var routePropertyGetter = ExpressionBuilder.BuildPropertyGetter(_httpRouteDataInterfaceType.Value, routePropertyInfo);
+						var dataTokensPropertyGetter = ExpressionBuilder.BuildPropertyGetter(routeType, dataTokensPropertyInfo);
+						return subRoute =>
+						{
+							var precedence = decimal.MaxValue;
+							var route = routePropertyGetter(subRoute);
+							if (route != null)
+							{
+								var dataTokens = dataTokensPropertyGetter(route) as IDictionary<string, object>;
+								object v = null;
+								if (dataTokens?.TryGetValue("precedence", out v) ?? true)
+									precedence = (decimal)v;
+							}
+							return precedence;
+						};
+					}
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		/// Compiles a delegate from a lambda expression to get the route template from HttpRouteData when
 		/// System.Web.Http is referenced.
 		/// </summary>
 		private Func<object, string> CreateWebApiAttributeRouteTemplateGetter()
 		{
-			_httpRouteDataInterfaceType = Type.GetType("System.Web.Http.Routing.IHttpRouteData,System.Web.Http");
-			if (_httpRouteDataInterfaceType != null)
+			if (_httpRouteDataInterfaceType.Value != null)
 			{
-				var routePropertyInfo = _httpRouteDataInterfaceType.GetProperty("Route");
+				var routePropertyInfo = _httpRouteDataInterfaceType.Value.GetProperty("Route");
 				if (routePropertyInfo != null)
 				{
 					var routeType = routePropertyInfo.PropertyType;
 					var routeTemplatePropertyInfo = routeType.GetProperty("RouteTemplate");
 					if (routeTemplatePropertyInfo != null)
 					{
-						var routePropertyGetter = ExpressionBuilder.BuildPropertyGetter(_httpRouteDataInterfaceType, routePropertyInfo);
+						var routePropertyGetter = ExpressionBuilder.BuildPropertyGetter(_httpRouteDataInterfaceType.Value, routePropertyInfo);
 						var routeTemplatePropertyGetter = ExpressionBuilder.BuildPropertyGetter(routeType, routeTemplatePropertyInfo);
 						return routeData =>
 						{

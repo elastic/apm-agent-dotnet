@@ -15,6 +15,9 @@ using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
+// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
+#pragma warning disable CS0618
+
 namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 {
 	public class CentralConfigResponseParserTests
@@ -222,6 +225,15 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 						cfg.CaptureHeaders.Should()
 							.NotBeNull()
 							.And.Be(true);
+					})
+				};
+
+				yield return new object[]
+				{
+					// making sure empty json does not cause any error.
+					"{}", new Action<CentralConfigurationReader>(cfg =>
+					{
+						cfg.Should().NotBeNull();
 					})
 				};
 

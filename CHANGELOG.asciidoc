@@ -23,6 +23,44 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.17.0]]
+==== 1.17.0
+
+===== Features
+- {pull}1739[#1739] Introduce the `TraceContinuationStrategy` config (issue: {issue}1637[#1637]).
+- {pull}1749[#1749] Span Links with Azure ServiceBus (issue: {issue}1638[#1638]).
+- {pull}1765[#1765] Improve db granularity (issue: {issue}1664[#1664]).
+- {pull}1795[#1795] Add config option `span_stack_trace_min_duration` (issue: {issue}1529[#1529]).
+
+===== Bug fixes
+- {pull}1746[#1746] Fix default for the `ApplicationNamespaces` config.
+- {pull}1755[#1755] Flow SynchronizationContext across public API calls (issue: {issue}1660[#1660]).
+- {pull}1753[#1753] PayloadSender threading improvements (issue: {issue}1571[#1571]).
+- {pull}1773[#1773] Include Accept header on APM server info call (caused errors when reading APM Server info) (issue: {issue}1624[#1624]).
+- {pull}1781[#1781] Significantly improved the performance of database query parsing (issue: {issue}1763[#1763]).
+- {pull}1787[#1787] Fix FillApmServerInfo : Invalid ElasticApm_ApiKey throws Exception (issue: {issue}1735[#1735]).
+
+[[release-notes-1.16.1]]
+==== 1.16.1
+
+===== Features
+- {pull}1732[#1732] Improved logging around fetching central configuration (issue: {issue}1626[#1626]).
+
+===== Bug fixes
+- {pull}1710[#1710] Crash during assembly loading with the profiler based agent (issue: {issue}1705[#1705]).
+- Handling RouteData with `null` in legacy ASP.NET Core 2.2 apps (issue: {issue}1729[#1729]).
+
+[[release-notes-1.16.0]]
+==== 1.16.0
+
+[float]
+===== Features
+- {pull}1726[#1726] Automatic capturing of incoming HTTP Requests on ASP.NET Core with the Profiler based agent (issue: {issue}1610[#1610]).
+
+===== Bug fixes
+- {pull}1725[#1725] By disabling `system.cpu.total.norm.pct`, the agent won't create any instance of the `PerformanceCounter` type (workaround for issue: {issue}1724[#1724])
+- {pull}1723[#1723] Transaction names for incoming HTTP requests returning 404 but matching a valid route, will include the URL path instead of using `unknown route` (issue: {issue}1715[#1715]).
+
 [[release-notes-1.15.0]]
 ==== 1.15.0
 

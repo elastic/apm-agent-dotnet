@@ -19,7 +19,7 @@ use crate::{
         sig::{parse_signature_types, parse_type},
         types::{
             FunctionInfo, MetadataBuilder, MethodReplacement, ModuleMetadata, ModuleWrapperTokens,
-            WrapperMethodRef, WrapperMethodReference,
+            WrapperMethodAction, WrapperMethodRef, WrapperMethodReference,
         },
     },
 };
@@ -66,7 +66,7 @@ pub fn process_replacement_calls(
             continue;
         }
         let wrapper = method_replacement.wrapper().unwrap();
-        if &wrapper.action != "ReplaceTargetMethod" {
+        if wrapper.action != WrapperMethodAction::ReplaceTargetMethod {
             continue;
         }
 
@@ -151,7 +151,7 @@ pub fn process_replacement_calls(
                     log::warn!(
                         "JITCompilationStarted failed to obtain wrapper method ref for {}.{}(). function_id={}, function_token={}, name={}()",
                         &wrapper.type_name,
-                        wrapper.method_name.as_ref().map_or("", |m| m.as_str()),
+                        wrapper.method_name.as_deref().unwrap_or(""),
                         function_id,
                         function_token,
                         caller.full_name()
@@ -455,7 +455,7 @@ pub fn process_replacement_calls(
 
             if wrapper_method_signature.return_type_is_object() {
                 if let Some(type_token) = return_type_is_value_type_or_generic(
-                    &module_metadata,
+                    module_metadata,
                     target.id,
                     &target.signature,
                 ) {
@@ -585,13 +585,13 @@ pub fn get_wrapper_method_ref(
             log::warn!(
                 "JITCompilationStarted: failed to store wrapper method ref for {}.{}()",
                 &wrapper.type_name,
-                wrapper.method_name.as_ref().map_or("", |m| m.as_str())
+                wrapper.method_name.as_deref().unwrap_or("")
             );
             e
         })?;
 
     let method_ref = module_wrapper_tokens
-        .get_wrapper_member_ref(&wrapper_method_key)
+        .get_wrapper_member_ref(wrapper_method_key)
         .unwrap_or(mdMemberRefNil);
     let type_ref = module_wrapper_tokens
         .get_wrapper_parent_type_ref(&wrapper_type_key)

@@ -11,8 +11,6 @@ pipeline {
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
-    GITHUB_CHECK_ITS_NAME = 'Integration Tests'
-    ITS_PIPELINE = 'apm-integration-tests-selector-mbp/main'
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
@@ -107,7 +105,7 @@ pipeline {
                           whenTrue(isPR()) {
                             // build nuget packages and profiler
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
-                            sh label: 'Rustup', script: 'rustup default 1.56.0'
+                            sh label: 'Rustup', script: 'rustup default 1.59.0'
                             sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                             sh(label: 'Build profiler', script: './build.sh profiler-zip')
                           }
@@ -186,7 +184,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.56.0'
+                          sh label: 'Rustup', script: 'rustup default 1.59.0'
                           sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                           sh label: 'Build', script: './build.sh profiler-zip'
                           sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
@@ -434,26 +432,8 @@ pipeline {
                 }
               }
             }
-            stage('Integration Tests') {
-              agent none
-              when {
-                anyOf {
-                  changeRequest()
-                  expression { return !params.Run_As_Main_Branch }
-                }
-              }
-              steps {
-                build(job: env.ITS_PIPELINE, propagate: false, wait: false,
-                      parameters: [string(name: 'INTEGRATION_TEST', value: '.NET'),
-                                    string(name: 'BUILD_OPTS', value: "--dotnet-agent-version ${env.GIT_BASE_COMMIT} --opbeans-dotnet-agent-branch ${env.GIT_BASE_COMMIT}"),
-                                    string(name: 'GITHUB_CHECK_NAME', value: env.GITHUB_CHECK_ITS_NAME),
-                                    string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
-                                    string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
-                githubNotify(context: "${env.GITHUB_CHECK_ITS_NAME}", description: "${env.GITHUB_CHECK_ITS_NAME} ...", status: 'PENDING', targetUrl: "${env.JENKINS_URL}search/?q=${env.ITS_PIPELINE.replaceAll('/','+')}")
-              }
-            }
             stage('Benchmarks') {
-              agent { label 'metal' }
+              agent { label 'microbenchmarks-pool' }
               environment {
                 REPORT_FILE = 'apm-agent-benchmark-results.json'
                 HOME = "${env.WORKSPACE}"

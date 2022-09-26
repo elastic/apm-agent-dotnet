@@ -63,7 +63,7 @@ namespace Elastic.Apm.Extensions.Logging.Tests
 				.ConfigureLogging((_, logging) =>
 				{
 					logging.ClearProviders();
-#if NET5_0
+#if NET5_0_OR_GREATER
 					logging.AddSimpleConsole(o => o.IncludeScopes = true);
 #else
 				logging.AddConsole(options => options.IncludeScopes = true);

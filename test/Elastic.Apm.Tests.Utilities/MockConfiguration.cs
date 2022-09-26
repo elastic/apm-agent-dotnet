@@ -50,9 +50,11 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _spanCompressionEnabled;
 		private readonly string _spanCompressionExactMatchMaxDuration;
 		private readonly string _spanCompressionSameKindMaxDuration;
+		private readonly string _spanStackTraceMinDurationInMilliseconds;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
 		private readonly string _traceContextIgnoreSampledFalse;
+		private readonly string _traceContinuationStrategy;
 		private readonly string _transactionIgnoreUrls;
 		private readonly string _transactionMaxSpans;
 		private readonly string _transactionSampleRate;
@@ -78,6 +80,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string metricsInterval = null,
 			string captureBody = SupportedValues.CaptureBodyOff,
 			string stackTraceLimit = null,
+			string spanStackTraceMinDurationInMilliseconds = null,
 			string spanFramesMinDurationInMilliseconds = null,
 			string captureBodyContentTypes = DefaultValues.CaptureBodyContentTypes,
 			string flushInterval = null,
@@ -102,7 +105,8 @@ namespace Elastic.Apm.Tests.Utilities
 			string traceContextIgnoreSampledFalse = null,
 			string spanCompressionEnabled = null,
 			string spanCompressionExactMatchMaxDuration = null,
-			string spanCompressionSameKindMaxDuration = null
+			string spanCompressionSameKindMaxDuration = null,
+			string traceContinuationStrategy = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -122,6 +126,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_metricsInterval = metricsInterval;
 			_captureBody = captureBody;
 			_stackTraceLimit = stackTraceLimit;
+			_spanStackTraceMinDurationInMilliseconds = spanStackTraceMinDurationInMilliseconds;
 			_spanFramesMinDurationInMilliseconds = spanFramesMinDurationInMilliseconds;
 			_captureBodyContentTypes = captureBodyContentTypes;
 			_flushInterval = flushInterval;
@@ -147,6 +152,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_spanCompressionExactMatchMaxDuration = spanCompressionExactMatchMaxDuration;
 			_spanCompressionSameKindMaxDuration = spanCompressionSameKindMaxDuration;
 			_exitSpanMinDuration = exitSpanMinDuration;
+			_traceContinuationStrategy = traceContinuationStrategy;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -169,6 +175,9 @@ namespace Elastic.Apm.Tests.Utilities
 			ParseDisableMetrics(Kv(EnvVarNames.DisableMetrics, _disableMetrics, Origin));
 
 		public bool Enabled => ParseEnabled(Kv(EnvVarNames.Enabled, _enabled, Origin));
+
+		public bool EnableOpenTelemetryBridge =>
+			ParseEnableOpenTelemetryBridge(Kv(EnvVarNames.EnableOpenTelemetryBridge, _enableOpenTelemetryBridge, Origin));
 
 		public string Environment => ParseEnvironment(Kv(EnvVarNames.Environment, _environment, Origin));
 
@@ -229,6 +238,11 @@ namespace Elastic.Apm.Tests.Utilities
 		public double SpanCompressionSameKindMaxDuration => ParseSpanCompressionSameKindMaxDuration(Kv(EnvVarNames.SpanCompressionSameKindMaxDuration,
 			_spanCompressionSameKindMaxDuration, Origin));
 
+		public double SpanStackTraceMinDurationInMilliseconds => ParseSpanStackTraceMinDurationInMilliseconds(Kv(
+			EnvVarNames.SpanStackTraceMinDuration,
+			_spanStackTraceMinDurationInMilliseconds, Origin));
+
+		[Obsolete("Use SpanStackTraceMinDurationInMilliseconds")]
 		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Kv(
 			EnvVarNames.SpanFramesMinDuration,
 			_spanFramesMinDurationInMilliseconds, Origin));
@@ -237,6 +251,9 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public bool TraceContextIgnoreSampledFalse =>
 			ParseTraceContextIgnoreSampledFalse(Kv(EnvVarNames.TraceContextIgnoreSampledFalse, _traceContextIgnoreSampledFalse, Origin));
+
+		public string TraceContinuationStrategy =>
+			ParseTraceContinuationStrategy(Kv(EnvVarNames.TraceContinuationStrategy, _traceContinuationStrategy, Origin));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Kv(EnvVarNames.TransactionIgnoreUrls, _transactionIgnoreUrls, Origin));
@@ -251,8 +268,5 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public bool VerifyServerCert =>
 			ParseVerifyServerCert(Kv(EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));
-
-		public bool EnableOpenTelemetryBridge =>
-			ParseEnableOpenTelemetryBridge(Kv(EnvVarNames.EnableOpenTelemetryBridge, _enableOpenTelemetryBridge, Origin));
 	}
 }

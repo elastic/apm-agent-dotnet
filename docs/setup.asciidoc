@@ -6,14 +6,14 @@
 
 The .NET agent can be added to an application in three different ways
 
+Profiler runtime instrumentation::
+The agent supports auto instrumentation without any code change and without
+any recompilation of your projects. See <<setup-auto-instrumentation>>.
+
 NuGet packages::
 The agent ships as a set of <<packages, NuGet packages>> available on https://nuget.org[nuget.org].
 You can add the Agent and specific instrumentations to a .NET application by 
 referencing one or more of these packages and following the package documentation.
-
-Profiler runtime instrumentation::
-The agent supports auto instrumentation without any code change and without
-any recompilation of your projects. See <<setup-auto-instrumentation>>.
 
 Host startup hook::
 On **.NET Core 3.0+**, the agent supports auto instrumentation without any code change and without

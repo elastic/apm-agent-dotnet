@@ -109,7 +109,9 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Destination.Port.Should().NotBeNull();
 
 			span.Context.Destination.Service.Should().NotBeNull();
-			span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubtypeMssql);
+			span.Context.Destination.Service.Resource.Should().Be($"{ApiConstants.SubtypeMssql}/{span.Context.Db.Instance}");
+			span.Context.Service.Target.Type.Should().Be(ApiConstants.SubtypeMssql);
+			span.Context.Service.Target.Name.Should().Be(span.Context.Db.Instance);
 		}
 
 		[Theory]
@@ -170,7 +172,10 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Destination.Port.Should().NotBeNull();
 
 			span.Context.Destination.Service.Should().NotBeNull();
-			span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubtypeMssql);
+
+			span.Context.Destination.Service.Resource.Should().Be($"{ApiConstants.SubtypeMssql}/{span.Context.Db.Instance}");
+			span.Context.Service.Target.Type.Should().Be(ApiConstants.SubtypeMssql);
+			span.Context.Service.Target.Name.Should().Be(span.Context.Db.Instance);
 		}
 
 		public void Dispose()

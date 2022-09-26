@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 use core::slice;
+use num_traits::FromPrimitive;
 use std::{ffi::c_void, mem::MaybeUninit, ptr};
 
 use com::{
@@ -15,7 +16,7 @@ use widestring::U16CString;
 use crate::{
     cil::MAX_LENGTH,
     ffi::*,
-    profiler::types::{AssemblyMetaData, PublicKey, Version},
+    profiler::types::{AssemblyMetaData, HashAlgorithmType, PublicKey, Version},
 };
 
 interfaces! {
@@ -127,7 +128,8 @@ impl IMetaDataAssemblyImport {
             return Err(hr);
         }
 
-        let mut name_buffer_length = MaybeUninit::uninit();
+        let mut assembly_metadata = ASSEMBLYMETADATA::default();
+        let mut name_len = 0;
         let hr = unsafe {
             self.GetAssemblyProps(
                 assembly_token,
@@ -136,8 +138,8 @@ impl IMetaDataAssemblyImport {
                 ptr::null_mut(),
                 ptr::null_mut(),
                 0,
-                name_buffer_length.as_mut_ptr(),
-                ptr::null_mut(),
+                &mut name_len,
+                &mut assembly_metadata,
                 ptr::null_mut(),
             )
         };
@@ -146,32 +148,23 @@ impl IMetaDataAssemblyImport {
             return Err(hr);
         }
 
-        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
-        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
-        unsafe { name_buffer.set_len(name_buffer_length as usize) };
-
-        let mut name_length = MaybeUninit::uninit();
-        // NOTE: null_mut() default values on ASSEMBLYMETADATA will not populated.
-        // This is not an issue now, but would be if AssemblyMetaData were to expose these values
-        let mut assembly_metadata = ASSEMBLYMETADATA::default();
-
-        let mut sz_locale: *mut WCHAR = ptr::null_mut();
-        assembly_metadata.szLocale = (&mut sz_locale as *mut *mut WCHAR) as *mut WCHAR;
-
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_len as usize);
+        let sz_locale = U16CString::default();
+        assembly_metadata.szLocale = sz_locale.into_raw();
         let mut assembly_flags = 0;
         let mut hash_algorithm = 0;
         let mut public_key = MaybeUninit::uninit();
-        let mut public_key_length = 0;
+        let mut public_key_len = 0;
 
         let hr = unsafe {
             self.GetAssemblyProps(
                 assembly_token,
                 public_key.as_mut_ptr(),
-                &mut public_key_length,
+                &mut public_key_len,
                 &mut hash_algorithm,
                 name_buffer.as_mut_ptr(),
-                name_buffer_length,
-                name_length.as_mut_ptr(),
+                name_len,
+                &mut name_len,
                 &mut assembly_metadata,
                 &mut assembly_flags,
             )
@@ -179,19 +172,23 @@ impl IMetaDataAssemblyImport {
 
         match hr {
             S_OK => {
+                unsafe { name_buffer.set_len(name_len as usize) };
                 let name = U16CString::from_vec_with_nul(name_buffer)
                     .unwrap()
                     .to_string_lossy();
-
-                let public_key = self.get_public_key(public_key, public_key_length as usize);
+                let public_key = self.get_public_key(public_key, public_key_len as usize);
                 let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
+                let sz_locale = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
                 let locale = self.get_locale(&mut assembly_metadata);
 
                 Ok(AssemblyMetaData {
                     name,
                     locale,
                     assembly_token,
-                    public_key: PublicKey::new(public_key, hash_algorithm),
+                    public_key: PublicKey::new(
+                        public_key,
+                        HashAlgorithmType::from_u32(hash_algorithm),
+                    ),
                     version: Version::new(
                         assembly_metadata.usMajorVersion,
                         assembly_metadata.usMinorVersion,
@@ -209,29 +206,22 @@ impl IMetaDataAssemblyImport {
         let mut en = ptr::null_mut() as HCORENUM;
         let max = 256;
         let mut assembly_refs = Vec::with_capacity(max as usize);
-        let mut assembly_len = MaybeUninit::uninit();
+        let mut assembly_len = 0;
 
         let hr = unsafe {
-            self.EnumAssemblyRefs(
-                &mut en,
-                assembly_refs.as_mut_ptr(),
-                max,
-                assembly_len.as_mut_ptr(),
-            )
+            self.EnumAssemblyRefs(&mut en, assembly_refs.as_mut_ptr(), max, &mut assembly_len)
         };
 
         if FAILED(hr) {
             return Err(hr);
         }
 
-        let len = unsafe {
-            let len = assembly_len.assume_init();
-            assembly_refs.set_len(len as usize);
-            len
-        };
+        unsafe {
+            assembly_refs.set_len(assembly_len as usize);
+        }
 
         // no more assembly refs
-        if len < max {
+        if assembly_len < max {
             unsafe {
                 self.CloseEnum(en);
             }
@@ -241,27 +231,20 @@ impl IMetaDataAssemblyImport {
         let mut all_assembly_refs = assembly_refs;
         loop {
             assembly_refs = Vec::with_capacity(max as usize);
-            assembly_len = MaybeUninit::uninit();
+            assembly_len = 0;
             let hr = unsafe {
-                self.EnumAssemblyRefs(
-                    &mut en,
-                    assembly_refs.as_mut_ptr(),
-                    max,
-                    assembly_len.as_mut_ptr(),
-                )
+                self.EnumAssemblyRefs(&mut en, assembly_refs.as_mut_ptr(), max, &mut assembly_len)
             };
 
             if FAILED(hr) {
                 return Err(hr);
             }
 
-            let len = unsafe {
-                let len = assembly_len.assume_init();
-                assembly_refs.set_len(len as usize);
-                len
-            };
+            unsafe {
+                assembly_refs.set_len(assembly_len as usize);
+            }
             all_assembly_refs.append(&mut assembly_refs);
-            if len < max {
+            if assembly_len < max {
                 break;
             }
         }
@@ -279,12 +262,9 @@ impl IMetaDataAssemblyImport {
         let mut name_buffer = Vec::<WCHAR>::with_capacity(MAX_LENGTH as usize);
         let mut name_length = 0;
         let mut public_key = MaybeUninit::uninit();
-        // NOTE: null_mut() default values on ASSEMBLYMETADATA will not populated.
-        // This is not an issue now, but would be if AssemblyMetaData were to expose these values
         let mut assembly_metadata = ASSEMBLYMETADATA::default();
-        let mut sz_locale: *mut WCHAR = ptr::null_mut();
-        assembly_metadata.szLocale = (&mut sz_locale as *mut *mut WCHAR) as *mut WCHAR;
-
+        let sz_locale = U16CString::default();
+        assembly_metadata.szLocale = sz_locale.into_raw();
         let mut public_key_length = 0;
         let mut assembly_flags = 0;
 
@@ -314,13 +294,14 @@ impl IMetaDataAssemblyImport {
 
         let public_key = self.get_public_key(public_key, public_key_length as usize);
         let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
+        let sz_locale = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
         let locale = self.get_locale(&mut assembly_metadata);
 
         Ok(AssemblyMetaData {
             name,
             locale,
             assembly_token: assembly_ref,
-            public_key: PublicKey::new(public_key, 32772),
+            public_key: PublicKey::new(public_key, Some(HashAlgorithmType::Sha1)),
             version: Version::new(
                 assembly_metadata.usMajorVersion,
                 assembly_metadata.usMinorVersion,

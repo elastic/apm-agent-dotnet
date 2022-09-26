@@ -16,6 +16,9 @@ using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;
 
+// Disable warnings due to obsolete settings keys
+#pragma warning disable CS0618
+
 namespace Elastic.Apm.Tests
 {
 	/// <summary>
@@ -48,7 +51,6 @@ namespace Elastic.Apm.Tests
 			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } }
 		};
 
-#pragma warning disable 618
 		[Fact]
 		public void ServerUrlsSimpleTest()
 		{
@@ -164,7 +166,6 @@ namespace Elastic.Apm.Tests
 					serverUrl
 				);
 		}
-#pragma warning restore 618
 
 		/// <summary>
 		/// Makes sure that empty string means sanitization is turned off
@@ -173,8 +174,8 @@ namespace Elastic.Apm.Tests
 		public void SanitizeFieldNamesTestWithEmptyString()
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					configuration: new MockConfiguration(sanitizeFieldNames: ""))))
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration(sanitizeFieldNames: ""))))
 				agent.ConfigurationReader.SanitizeFieldNames.Should().BeEmpty();
 		}
 
@@ -185,8 +186,8 @@ namespace Elastic.Apm.Tests
 		public void SanitizeFieldNamesTestWithNoValue()
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					configuration: new MockConfiguration())))
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration())))
 				agent.ConfigurationReader.SanitizeFieldNames.Should().BeEquivalentTo(DefaultValues.SanitizeFieldNames);
 		}
 
@@ -251,7 +252,6 @@ namespace Elastic.Apm.Tests
 			agent.ConfigurationReader.Enabled.Should().BeTrue();
 		}
 
-#pragma warning disable 618
 		/// <summary>
 		/// Sets 2 servers and makes sure that they are all parsed
 		/// </summary>
@@ -321,7 +321,8 @@ namespace Elastic.Apm.Tests
 			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
+			using (var agent = new ApmAgent(
+					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
 #if !NETCOREAPP3_0 && !NETCOREAPP3_1 && !NET5_0 && !NET6_0
 				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
@@ -331,7 +332,6 @@ namespace Elastic.Apm.Tests
 				agent.ConfigurationReader.ServerUrl.Should().Be("http://myServer:1234");
 			}
 		}
-#pragma warning restore 618
 
 		[Fact]
 		public void SecretTokenSimpleTest()
@@ -376,7 +376,7 @@ namespace Elastic.Apm.Tests
 		{
 			// ReSharper disable once RedundantArgumentDefaultValue
 			using (var agent = new ApmAgent(new TestAgentComponents(
-				configuration: new MockConfiguration(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes))))
+					   configuration: new MockConfiguration(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes))))
 			{
 				var expected = new List<string> { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 				agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
@@ -567,7 +567,8 @@ namespace Elastic.Apm.Tests
 			var serviceName = "MyService123";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
+			using (var agent = new ApmAgent(
+					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -587,7 +588,8 @@ namespace Elastic.Apm.Tests
 			var serviceName = "My.Service.Test";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
+			using (var agent = new ApmAgent(
+					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -605,7 +607,8 @@ namespace Elastic.Apm.Tests
 			var serviceName = "MyService123!";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
+			using (var agent = new ApmAgent(
+					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -625,7 +628,8 @@ namespace Elastic.Apm.Tests
 			var serviceName = DefaultValues.UnknownServiceName;
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
+			using (var agent = new ApmAgent(
+					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -645,7 +649,8 @@ namespace Elastic.Apm.Tests
 			var serviceVersion = "2.1.0.5";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceVersion, serviceVersion);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
+			using (var agent = new ApmAgent(
+					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -660,7 +665,8 @@ namespace Elastic.Apm.Tests
 			var serviceNodeName = "Some service node name";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceNodeName, serviceNodeName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
+			using (var agent = new ApmAgent(
+					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
 				// Act
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
@@ -706,9 +712,7 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, "localhost"); //invalid, it should be "http://localhost"
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
-#pragma warning disable 618
 			var serverUrl = config.ServerUrls.FirstOrDefault();
-#pragma warning restore 618
 			serverUrl.Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
 		}
@@ -778,6 +782,29 @@ namespace Elastic.Apm.Tests
 			config.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
 		}
 
+		[Fact]
+		public void SetSpanStackTraceMinDurationAndStackTraceLimit()
+		{
+			// Test default values.
+			var config1 = new EnvironmentConfigurationReader(new NoopLogger());
+			config1.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
+			config1.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
+
+			// Test non-default values.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, "23ms");
+			Environment.SetEnvironmentVariable(EnvVarNames.StackTraceLimit, "42");
+			var config2 = new EnvironmentConfigurationReader(new NoopLogger());
+			config2.SpanStackTraceMinDurationInMilliseconds.Should().Be(23);
+			config2.StackTraceLimit.Should().Be(42);
+
+			// Test explicitly set default values.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, DefaultValues.SpanStackTraceMinDuration);
+			Environment.SetEnvironmentVariable(EnvVarNames.StackTraceLimit, DefaultValues.StackTraceLimit.ToString());
+			var config3 = new EnvironmentConfigurationReader(new NoopLogger());
+			config3.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
+			config3.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
+		}
+
 		/// <summary>
 		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" />
 		/// are in sync
@@ -794,6 +821,24 @@ namespace Elastic.Apm.Tests
 			config.SpanFramesMinDurationInMilliseconds.Should().Be(DefaultValues.SpanFramesMinDurationInMilliseconds);
 		}
 
+		[Fact]
+		public void SpanStackTraceMinDurationDefaultValuesInSync()
+		{
+			// Test default value.
+			var config1 = new EnvironmentConfigurationReader(new NoopLogger());
+			config1.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
+
+			// Test non-default value.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, "23ms");
+			var config2 = new EnvironmentConfigurationReader(new NoopLogger());
+			config2.SpanStackTraceMinDurationInMilliseconds.Should().Be(23);
+
+			// Test explicitly set default value.
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanStackTraceMinDuration, DefaultValues.SpanStackTraceMinDuration);
+			var config3 = new EnvironmentConfigurationReader(new NoopLogger());
+			config3.SpanStackTraceMinDurationInMilliseconds.Should().Be(DefaultValues.SpanStackTraceMinDurationInMilliseconds);
+		}
+
 		[InlineData("2", 2)]
 		[InlineData("0", 0)]
 		[InlineData("-2", -2)]
@@ -807,7 +852,7 @@ namespace Elastic.Apm.Tests
 		public void StackTraceLimit(string configValue, int expectedValue)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(stackTraceLimit: configValue))))
+				   new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(stackTraceLimit: configValue))))
 				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
 		}
 
@@ -823,9 +868,26 @@ namespace Elastic.Apm.Tests
 		public void SpanFramesMinDurationInMilliseconds(string configValue, int expectedValue)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					configuration: new MockConfiguration(spanFramesMinDurationInMilliseconds: configValue))))
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration(spanFramesMinDurationInMilliseconds: configValue))))
 				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
+		}
+
+		[InlineData("2ms", 2)]
+		[InlineData("2s", 2 * 1000)]
+		[InlineData("2m", 2 * 60 * 1000)]
+		[InlineData("2", 2)]
+		[InlineData("-2ms", -2)]
+		// ReSharper disable once StringLiteralTypo
+		[InlineData("dsfkldfs", DefaultValues.SpanStackTraceMinDurationInMilliseconds)]
+		[InlineData("2,32", DefaultValues.SpanStackTraceMinDurationInMilliseconds)]
+		[Theory]
+		public void SpanStackTraceMinDurationInMilliseconds(string configValue, int expectedValue)
+		{
+			using (var agent =
+			       new ApmAgent(new TestAgentComponents(
+				       configuration: new MockConfiguration(spanStackTraceMinDurationInMilliseconds: configValue))))
+				agent.ConfigurationReader.SpanStackTraceMinDurationInMilliseconds.Should().Be(expectedValue);
 		}
 
 		[InlineData("123ms", 123)]
@@ -845,8 +907,8 @@ namespace Elastic.Apm.Tests
 		public void FlushInterval_tests(string configValue, int expectedValueInMilliseconds)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					configuration: new MockConfiguration(flushInterval: configValue))))
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration(flushInterval: configValue))))
 				agent.ConfigurationReader.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(expectedValueInMilliseconds));
 		}
 
@@ -867,8 +929,8 @@ namespace Elastic.Apm.Tests
 		public void MaxQueueEventCount_tests(string configValue, int expectedValue)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					configuration: new MockConfiguration(maxQueueEventCount: configValue))))
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration(maxQueueEventCount: configValue))))
 				agent.ConfigurationReader.MaxQueueEventCount.Should().Be(expectedValue);
 		}
 
@@ -889,8 +951,8 @@ namespace Elastic.Apm.Tests
 		public void MaxBatchEventCount_tests(string configValue, int expectedValue)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					configuration: new MockConfiguration(maxBatchEventCount: configValue))))
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration(maxBatchEventCount: configValue))))
 				agent.ConfigurationReader.MaxBatchEventCount.Should().Be(expectedValue);
 		}
 
@@ -906,8 +968,8 @@ namespace Elastic.Apm.Tests
 		public void CentralConfig_tests(string configValue, bool expectedValue)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					configuration: new MockConfiguration(centralConfig: configValue))))
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration(centralConfig: configValue))))
 				agent.ConfigurationReader.CentralConfig.Should().Be(expectedValue);
 		}
 
@@ -930,7 +992,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockLogger = new TestLogger();
 			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger
-				, new MockConfiguration(mockLogger, globalLabels: optionValue))))
+					   , new MockConfiguration(mockLogger, globalLabels: optionValue))))
 				agent.ConfigurationReader.GlobalLabels.Should().BeEmpty();
 			mockLogger.Lines.Should()
 				.Contain(line =>
@@ -961,7 +1023,8 @@ namespace Elastic.Apm.Tests
 
 			var noopLogger = new NoopLogger();
 			using var metricsProvider =
-				new MetricsCollector(noopLogger, mockPayloadSender, new ConfigurationStore(new MockConfiguration(disableMetrics: "*cpu*"), noopLogger));
+				new MetricsCollector(noopLogger, mockPayloadSender,
+					new ConfigurationStore(new MockConfiguration(disableMetrics: "*cpu*"), noopLogger));
 			metricsProvider.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();
@@ -1031,7 +1094,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TransactionIgnoreUrlsTestWithCustomSettingWithSpace()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionIgnoreUrls: "*index, *myPageToIgnore*")));
+			var agent = new ApmAgent(
+				new TestAgentComponents(configuration: new MockConfiguration(transactionIgnoreUrls: "*index, *myPageToIgnore*")));
 			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INDEX").Should().BeTrue();
 			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "/home/INDEX").Should().BeTrue();
 			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INdEX").Should().BeTrue();
@@ -1085,6 +1149,16 @@ namespace Elastic.Apm.Tests
 			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "bootstrap.css").Should().BeTrue();
 		}
 
+		[Fact]
+		public void DefaultApplicationNamespaceConfig()
+		{
+			var config = new ConcreteEmptyConfigurationWithEnvFallbackReader(new NoopLogger());
+			var appNamespaces = config.ApplicationNamespaces;
+			appNamespaces.Should().BeNullOrEmpty();
+			var excludedNamespaces = config.ExcludedNamespaces;
+			excludedNamespaces.Should().BeEquivalentTo(ConfigConsts.DefaultValues.DefaultExcludedNamespaces);
+		}
+
 		private static double MetricsIntervalTestCommon(string configValue)
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, configValue);
@@ -1097,6 +1171,19 @@ namespace Elastic.Apm.Tests
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, null);
 			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, null);
+		}
+
+		/// <summary>
+		/// An implementation of <see cref="AbstractConfigurationWithEnvFallbackReader"/> which always returns an empty string for each config.
+		/// With this implementation we can test default values.
+		/// </summary>
+		private class ConcreteEmptyConfigurationWithEnvFallbackReader : AbstractConfigurationWithEnvFallbackReader
+		{
+			public ConcreteEmptyConfigurationWithEnvFallbackReader(IApmLogger logger) : base(
+				logger, "test", nameof(ConcreteEmptyConfigurationWithEnvFallbackReader)) { }
+
+			protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName) =>
+				new ConfigurationKeyValue(key, string.Empty, "InMemmory");
 		}
 	}
 }

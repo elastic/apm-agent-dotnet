@@ -79,6 +79,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				? new Dictionary<string, string>()
 				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
 			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
+			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.SpanCompressionEnabled, "false");
 
 			if (_sampleAppLogEnabled) EnvVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
 
@@ -252,9 +253,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static string BuildApmServerUrl(int apmServerPort) => $"http://localhost:{apmServerPort}/";
 
-		protected async Task<SampleAppResponse> SendGetRequestToSampleAppAndVerifyResponse(Uri uri, int expectedStatusCode,
-			bool timeHttpCall = true, bool addTraceContextHeaders = false
-		)
+		protected Task<SampleAppResponse> SendGetRequestToSampleAppAndVerifyResponse(Uri uri, int expectedStatusCode,
+			bool timeHttpCall = true, bool addTraceContextHeaders = false, HttpContent httpContent = null)
+				=> SendRequestToSampleAppAndVerifyResponse(HttpMethod.Get, uri, expectedStatusCode, timeHttpCall, addTraceContextHeaders, httpContent);
+
+		protected Task<SampleAppResponse> SendPostRequestToSampleAppAndVerifyResponse(Uri uri, int expectedStatusCode,
+			bool timeHttpCall = true, bool addTraceContextHeaders = false, HttpContent httpContent = null)
+				=> SendRequestToSampleAppAndVerifyResponse(HttpMethod.Post, uri, expectedStatusCode, timeHttpCall, addTraceContextHeaders, httpContent);
+
+		protected async Task<SampleAppResponse> SendRequestToSampleAppAndVerifyResponse(HttpMethod httpMethod, Uri uri, int expectedStatusCode,
+			bool timeHttpCall = true, bool addTraceContextHeaders = false, HttpContent httpContent = null)
 		{
 			var startTime = DateTime.UtcNow;
 			if (timeHttpCall)
@@ -265,7 +273,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 			try
 			{
-				var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+				var httpRequestMessage = new HttpRequestMessage(httpMethod, uri)
+				{
+					Content = httpContent
+				};
+
 				if (addTraceContextHeaders)
 				{
 					httpRequestMessage.Headers.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Azure;
@@ -20,15 +18,12 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 	[Collection("AzureCosmosDb")]
 	public class MicrosoftAzureCosmosTests
 	{
-		private readonly ITestOutputHelper _output;
 		private readonly MockPayloadSender _sender;
 		private readonly ApmAgent _agent;
 		private readonly CosmosClient _client;
 
 		public MicrosoftAzureCosmosTests(AzureCosmosDbTestEnvironment environment, ITestOutputHelper output)
 		{
-			_output = output;
-
 			var logger = new XUnitLogger(LogLevel.Trace, output);
 			_sender = new MockPayloadSender(logger);
 			_agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: _sender));
@@ -81,9 +76,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			{
 				var iterator = _client.GetDatabaseQueryIterator<DatabaseProperties>();
 				while(iterator.HasMoreResults)
-				{
-					foreach (var db in await iterator.ReadNextAsync()) { }
-				}
+					foreach (var _ in await iterator.ReadNextAsync()) { }
 			});
 
 			AssertSpan("List databases");
@@ -121,14 +114,14 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 		public async Task Capture_Span_When_List_Collections()
 		{
 			var db = await CreateDatabaseAsync();
-			var container = await CreateContainerAsync(db);
+			await CreateContainerAsync(db);
 
 			await _agent.Tracer.CaptureTransaction("List CosmosDb Collections", ApiConstants.TypeDb, async () =>
 			{
 				var iterator = db.GetContainerQueryIterator<ContainerProperties>();
 				while(iterator.HasMoreResults)
 				{
-					foreach (var container in await iterator.ReadNextAsync())
+					foreach (var _ in await iterator.ReadNextAsync())
 					{
 					}
 				}
@@ -232,9 +225,18 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			span.Type.Should().Be(ApiConstants.TypeDb);
 			span.Subtype.Should().Be(ApiConstants.SubTypeCosmosDb);
 
-			span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubTypeCosmosDb);
+			if(!string.IsNullOrEmpty(db))
+				span.Context.Destination.Service.Resource.Should().Be($"{ApiConstants.SubTypeCosmosDb}/{db}");
+			else
+				span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubTypeCosmosDb);
+
+			span.Context.Service.Target.Type.Should().Be(ApiConstants.SubTypeCosmosDb);
+
 			if (db != null)
+			{
 				span.Context.Db.Instance.Should().Be(db);
+				span.Context.Service.Target.Name.Should().Be(db);
+			}
 		}
 	}
 }
