@@ -3,14 +3,18 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using DotNet.Testcontainers.Containers.Configurations;
-using DotNet.Testcontainers.Containers.Modules.Abstractions;
+
+using System.Linq;
+using DotNet.Testcontainers.Configurations;
+using DotNet.Testcontainers.Containers;
+using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Elasticsearch.Tests
 {
-	public class ElasticsearchTestContainer : HostedServiceContainer
+	public sealed class ElasticsearchTestContainer : TestcontainerDatabase
 	{
-		internal ElasticsearchTestContainer(TestcontainersConfiguration configuration) : base(configuration) => Hostname = "localhost";
+		internal ElasticsearchTestContainer(ITestcontainersConfiguration configuration, ILogger logger)
+			: base(configuration, logger) => ContainerPort = int.Parse(configuration.ExposedPorts.First().Value);
 
 		public override string ConnectionString => $"http://{Hostname}:{Port}";
 	}

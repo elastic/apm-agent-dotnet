@@ -219,7 +219,7 @@ public class FilterTests
 			// hold the test run until the event is processed within PayloadSender's thread - also makes sure that PayloadSender is not disposed
 			await taskCompletionSource.Task;
 		}
-		catch (Exception e)
+		catch (Exception)
 		{
 			//ignore
 		}
