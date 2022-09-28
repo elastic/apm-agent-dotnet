@@ -9,8 +9,37 @@ jobs:
   triage:
     runs-on: ubuntu-latest
     steps:
-    - uses: AlexanderWert/issue-labeler@v2.3
+    - name: Add agent-dotnet label
+      uses: actions-ecosystem/action-add-labels@v1
       with:
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
-        configuration-path: .github/labeler-config.yml
-        enable-versioned-regex: 0
+        labels: agent-dotnet
+    - name: Check team membership for user
+      uses: elastic/get-user-teams-membership@v1.0.4
+      id: checkUserMember
+      with:
+        username: ${{ github.actor }}
+        team: 'apm'
+        usernamesToExclude: |
+          apmmachine
+          dependabot
+          dependabot[bot]
+        GITHUB_TOKEN: ${{ secrets.APM_TECH_USER_TOKEN }}
+    - name: Add community and triage lables
+      if: steps.checkUserMember.outputs.isTeamMember != 'true' && steps.checkUserMember.outputs.isExcluded != 'true'
+      uses: actions-ecosystem/action-add-labels@v1
+      with:
+        labels: |
+          community
+          triage
+    - name: Add comment for community PR
+      if: steps.checkUserMember.outputs.isTeamMember != 'true' && steps.checkUserMember.outputs.isExcluded != 'true'
+      uses: wow-actions/auto-comment@v1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        pullRequestOpened: |
+          👋 @{{ author }} Thanks a lot for your contribution! 
+          
+          It may take some time before we review a PR, so even if you don’t see activity for some time, it **does not** mean that we have forgotten about it. 
+          
+          Every once in a while we go through a process of prioritization, after which we are focussing on the tasks that were planned for the upcoming [milestone](https://github.com/elastic/apm-agent-java/milestones). The prioritization status is typically reflected through the PR labels. It could be pending triage, a candidate for a future milestone, or have a target milestone set to it.
+          
