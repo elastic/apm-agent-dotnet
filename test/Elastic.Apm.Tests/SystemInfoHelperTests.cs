@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Utilities;
@@ -51,6 +50,8 @@ namespace Elastic.Apm.Tests
 			public string PodId;
 		}
 
+// Remove warning about unused test parameter "name"
+#pragma warning disable xUnit1026
 		[Theory]
 		[JsonFileData("./TestResources/json-specs/cgroup_parsing.json", typeof(CGroupTestData))]
 		public void ParseKubernetesInfo_FromCGroupLine(string name, CGroupTestData data)
@@ -72,6 +73,7 @@ namespace Elastic.Apm.Tests
 			else
 				system.Kubernetes.Pod.Uid.Should().Be(podId);
 		}
+#pragma warning restore xUnit1026
 
 		[Fact]
 		public void ParseKubernetesInfo_ShouldUseContainerInfoAndHostName_WhenNoEnvironmentVariablesAreSet()
