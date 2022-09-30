@@ -9,7 +9,6 @@ using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Elastic.Apm.Tests
