@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Xunit.Sdk;
