@@ -650,7 +650,7 @@ namespace Elastic.Apm.Model
 			{
 				if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 				{
-					_logger?.Info()
+					_logger?.Debug()
 						?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
 							CompressionBuffer.Id);
 				}
@@ -664,7 +664,7 @@ namespace Elastic.Apm.Model
 				_sender.QueueTransaction(this);
 			else
 			{
-				_logger?.Info()
+				_logger?.Debug()
 					?.Log("Dropping unsampled transaction - unsampled transactions won't be sent on APM Server v8+. TransactionId: {id}", Id);
 			}
 
