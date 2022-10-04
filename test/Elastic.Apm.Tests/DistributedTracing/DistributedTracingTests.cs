@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests.DistributedTracing
 		{
 			var traceParents = data.Headers
 				.Where(h => h[0].Equals("traceparent", StringComparison.InvariantCultureIgnoreCase))
-				.Select(h => h?[1]);
+				.Select(h => h[1]);
 			var traceStates = data.Headers
 				.Where(h => h[0].Equals("tracestate", StringComparison.InvariantCultureIgnoreCase))
 				.Select(h => h?[1]);
