@@ -5,7 +5,10 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -13,6 +16,25 @@ namespace Elastic.Apm.Tests
 {
 	public class WildcardMatcherTests
 	{
+// Remove warning about unused test parameter "testCaseName"
+#pragma warning disable xUnit1026
+		[Theory]
+		[JsonFileData("./TestResources/json-specs/wildcard_matcher_tests.json")]
+		public void TestCasesFromJsonSpec(string testCaseName, dynamic data)
+		{
+			var testData = (JObject)data;
+			var key = testData.Properties().First();
+			var value = (JObject)key.Last;
+			var matcher = WildcardMatcher.ValueOf(key.Name);
+			foreach (var kvp in value)
+			{
+				var input = kvp.Key;
+				var expected = kvp.Value.Value<bool>();
+				matcher.Matches(input).Should().Be(expected);
+			}
+		}
+#pragma warning restore xUnit1026
+
 		[Fact]
 		public void SimpleTestCaseInsensitive()
 		{
