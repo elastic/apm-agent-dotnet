@@ -16,10 +16,10 @@ public class JsonFileDataAttribute : DataAttribute
 	private readonly string _fileName;
 	private readonly Type _inputDataType;
 
-	public JsonFileDataAttribute(string fileName, Type inputDataType)
+	public JsonFileDataAttribute(string fileName, Type inputDataType = null)
 	{
 		_fileName = fileName;
-		_inputDataType = inputDataType;
+		_inputDataType = inputDataType ?? typeof(JToken);
 	}
 
 	public override IEnumerable<object[]> GetData(MethodInfo testMethod)
@@ -27,7 +27,10 @@ public class JsonFileDataAttribute : DataAttribute
 		if (!File.Exists(_fileName))
 			throw new ArgumentException($"JSON input file {_fileName} does not exist");
 
-		var jToken = JToken.Parse(File.ReadAllText(_fileName));
+		var jToken = JToken.Parse(File.ReadAllText(_fileName), new JsonLoadSettings
+		{
+			CommentHandling = CommentHandling.Ignore
+		});
 		switch (jToken.Type)
 		{
 			case JTokenType.Array:
@@ -39,7 +42,7 @@ public class JsonFileDataAttribute : DataAttribute
 					yield return new [] { kvp.Key, kvp.Value.ToObject(_inputDataType) };
 				break;
 			default:
-				throw new Exception($"Unexpected JSON input: '{jToken}");
+				throw new Exception($"Unexpected JSON input: '{jToken}'");
 		}
 	}
 }
