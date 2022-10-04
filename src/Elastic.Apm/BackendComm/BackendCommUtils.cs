@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -20,7 +18,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.BackendComm
 {
-	internal class BackendCommUtils
+	internal static class BackendCommUtils
 	{
 		private const string ThisClassName = nameof(BackendCommUtils);
 
@@ -95,8 +93,10 @@ namespace Elastic.Apm.BackendComm
 		private static void ConfigServicePoint(Uri serverUrlBase, IApmLogger logger) =>
 			ConfigServicePointOnceHelper.IfNotInited?.Init(() =>
 			{
+// ServicePointManager is obsolete
+#pragma warning disable SYSLIB0014
 				var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
-
+#pragma warning restore SYSLIB0014
 				try
 				{
 					servicePoint.ConnectionLeaseTimeout = (int)DnsTimeout.TotalMilliseconds;
