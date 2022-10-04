@@ -31,7 +31,7 @@ namespace Elastic.Apm.Tests.DistributedTracing
 				.Select(h => h[1]);
 			var traceStates = data.Headers
 				.Where(h => h[0].Equals("tracestate", StringComparison.InvariantCultureIgnoreCase))
-				.Select(h => h?[1]);
+				.Select(h => h[1]);
 			// Multiple occurrences of the trace headers are automatically invalid.
 			if (traceParents.Count() < 2 && traceStates.Count() < 2)
 			{
