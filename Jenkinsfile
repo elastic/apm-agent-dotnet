@@ -102,7 +102,7 @@ pipeline {
                       dir("${BASE_DIR}"){
                         dotnet(){
                           sh '.ci/linux/build.sh'
-                          whenTrue(isPR()) {
+                          whenTrue() {
                             // build nuget packages and profiler
                             sh(label: 'Package', script: '.ci/linux/release.sh true')
                             sh label: 'Rustup', script: 'rustup default 1.59.0'
@@ -119,7 +119,7 @@ pipeline {
                         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                     }
                     success {
-                      whenTrue(isPR()) {
+                      whenTrue() {
                         archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
                       }
                     }
@@ -332,7 +332,7 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                          whenTrue(isPR()) {
+                          whenTrue() {
                             bat(label: 'Build agent', script: './build.bat agent-zip')
                             bat(label: 'Build profiler', script: './build.bat profiler-zip')
                           }
@@ -342,7 +342,7 @@ pipeline {
                   }
                   post {
                     success {
-                      whenTrue(isPR()) {
+                      whenTrue() {
                         archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
                       }
                     }
