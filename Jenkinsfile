@@ -102,13 +102,11 @@ pipeline {
                       dir("${BASE_DIR}"){
                         dotnet(){
                           sh '.ci/linux/build.sh'
-                          whenTrue() {
-                            // build nuget packages and profiler
-                            sh(label: 'Package', script: '.ci/linux/release.sh true')
-                            sh label: 'Rustup', script: 'rustup default 1.59.0'
-                            sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                            sh(label: 'Build profiler', script: './build.sh profiler-zip')
-                          }
+                          // build nuget packages and profiler
+                          sh(label: 'Package', script: '.ci/linux/release.sh true')
+                          sh label: 'Rustup', script: 'rustup default 1.59.0'
+                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
+                          sh(label: 'Build profiler', script: './build.sh profiler-zip')
                         }
                       }
                     }
@@ -119,9 +117,7 @@ pipeline {
                         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                     }
                     success {
-                      whenTrue() {
-                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
-                      }
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
                     }
                   }
                 }
@@ -332,19 +328,15 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                          whenTrue() {
-                            bat(label: 'Build agent', script: './build.bat agent-zip')
-                            bat(label: 'Build profiler', script: './build.bat profiler-zip')
-                          }
+                          bat(label: 'Build agent', script: './build.bat agent-zip')
+                          bat(label: 'Build profiler', script: './build.bat profiler-zip')
                         }
                       }
                     }
                   }
                   post {
                     success {
-                      whenTrue() {
-                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
-                      }
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
                     }
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
