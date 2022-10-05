@@ -90,7 +90,7 @@ namespace Elastic.Apm.Model
 					return;
 				case Scanner.Token.Insert:
 				case Scanner.Token.Replace:
-					signature.Append(firstToken.ToString());
+					signature.Append(firstToken.ToString().ToUpperInvariant());
 					if (scanner.ScanUntil(Scanner.Token.Into) && scanner.ScanUntil(Scanner.Token.Ident))
 					{
 						signature.Append(" INTO");

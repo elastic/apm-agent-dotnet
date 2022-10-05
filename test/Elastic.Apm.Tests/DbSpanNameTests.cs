@@ -11,6 +11,7 @@ using System.Text;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Model;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -18,9 +19,26 @@ namespace Elastic.Apm.Tests;
 
 public class DbSpanNameTests
 {
+	public struct SqlSignatureTestData
+	{
+		public string Input;
+		public string Output;
+	}
+
+	[Theory]
+	[JsonFileData("./TestResources/json-specs/sql_signature_examples.json", typeof(SqlSignatureTestData))]
+	public void TestDbSignatures(SqlSignatureTestData data)
+	{
+		var signatureParser = new SignatureParser(new Scanner());
+		var name = new StringBuilder();
+		signatureParser.QuerySignature(data.Input, name, false);
+
+		name.ToString().Should().Be(data.Output);
+	}
+
 	[MemberData(nameof(SqlSignatureExamplesTestData))]
 	[Theory]
-	public void TestDbSignatures(string input, string output)
+	public void TestDbSignatures_Legacy(string input, string output)
 	{
 		var signatureParser = new SignatureParser(new Scanner());
 		var name = new StringBuilder();
