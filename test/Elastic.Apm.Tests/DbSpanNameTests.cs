@@ -69,4 +69,44 @@ public class DbSpanNameTests
 			}
 		}
 	}
+
+	public class SqlTokenTestData
+	{
+		public string Name;
+		public string Comment;
+		public string Input;
+		public List<SqlToken> Tokens = new();
+	}
+
+	public struct SqlToken
+	{
+		public string Kind;
+		public string Text;
+	}
+
+	[Theory]
+	[JsonFileData("./TestResources/json-specs/sql_token_examples.json", typeof(SqlTokenTestData))]
+	public void TestSqlTokenParsing(SqlTokenTestData data)
+	{
+		var parsedTokens = Helper_ParseSql(data.Input);
+		parsedTokens.Count.Should().Be(data.Tokens.Count);
+		for (var i = 0; i < parsedTokens.Count; i++)
+			parsedTokens[i].ToString().Should().BeEquivalentTo(data.Tokens[i].Kind);
+	}
+
+	private static List<Scanner.Token> Helper_ParseSql(string sql)
+	{
+		var scanner = new Scanner();
+		scanner.SetQuery(sql);
+		var tokens = new List<Scanner.Token>();
+		while (true)
+		{
+			var token = scanner.Scan();
+			if (token == Scanner.Token.Eof)
+				break;
+			tokens.Add(token);
+		}
+
+		return tokens;
+	}
 }
