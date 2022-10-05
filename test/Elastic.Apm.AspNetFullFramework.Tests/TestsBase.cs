@@ -143,7 +143,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
 
 			internal static readonly SampleAppUrlPathData ChildHttpSpanWithResponseForbiddenPage =
-				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, spansCount: 1, errorsCount: 0);
+				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, transactionsCount:2, spansCount: 1, errorsCount: 0);
 
 
 			/// <summary>

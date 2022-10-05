@@ -70,7 +70,6 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
-		internal static readonly Uri ChildHttpSpanWithResponseForbiddenUrl = new Uri("https://httpstat.us/403");
 
 		public ActionResult Index() => View();
 
@@ -87,10 +86,12 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		{
 			//see https://github.com/elastic/apm-agent-dotnet/issues/443
 			var httpClient = new HttpClient();
-			var res = await httpClient.GetAsync(ChildHttpSpanWithResponseForbiddenUrl);
+			var res = await httpClient.GetAsync(GetUrlForMethod(nameof(ForbiddenResponse)));
 			var retVal = new ContentResult { Content = res.IsSuccessStatusCode.ToString() };
 			return retVal;
 		}
+
+		public ActionResult ForbiddenResponse() => new HttpStatusCodeResult(HttpStatusCode.Forbidden);
 
 		public Task<ActionResult> Contact()
 		{
