@@ -2,7 +2,8 @@
   <!-- Root Directory Build Properties -->
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <NoWarn>NU1503</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>NU1503,NU1608,CS8002,</NoWarn>
     <!-- suppress NETSDK1138 warnings for EOL frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <SolutionRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.bat))</SolutionRoot>

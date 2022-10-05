@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Utilities;
@@ -44,25 +43,23 @@ namespace Elastic.Apm.Tests
 			system.Kubernetes.Should().BeNull();
 		}
 
-		[Theory]
-		// underscores
-		[InlineData("1:name=systemd:/kubepods.slice/kubepods-burstable.slice/" +
-			"kubepods-burstable-pod90d81341_92de_11e7_8cf2_507b9d4141fa.slice/" +
-			"crio-2227daf62df6694645fee5df53c1f91271546a9560e8600a525690ae252b7f63.scope",
-			"2227daf62df6694645fee5df53c1f91271546a9560e8600a525690ae252b7f63", "90d81341-92de-11e7-8cf2-507b9d4141fa")]
-		// openshift form
-		[InlineData("9:freezer:/kubepods.slice/kubepods-pod22949dce_fd8b_11ea_8ede_98f2b32c645c.slice" +
-			"/docker-b15a5bdedd2e7645c3be271364324321b908314e4c77857bbfd32a041148c07f.scope",
-			"b15a5bdedd2e7645c3be271364324321b908314e4c77857bbfd32a041148c07f",
-			"22949dce-fd8b-11ea-8ede-98f2b32c645c")]
-		// ubuntu cgroup
-		[InlineData("1:name=systemd:/user.slice/user-1000.slice/user@1000.service/apps.slice/apps-org.gnome.Terminal" +
-			".slice/vte-spawn-75bc72bd-6642-4cf5-b62c-0674e11bfc84.scope", null, null)]
-		// AWS ECS cgroup
-		[InlineData("1:name=systemd:/ecs/03752a671e744971a862edcee6195646/03752a671e744971a862edcee6195646-4015103728",
-			"03752a671e744971a862edcee6195646-4015103728", null)]
-		public void ParseKubernetesInfo_FromCGroupLine(string line, string containerId, string podId)
+		public struct CGroupTestData
 		{
+			public string GroupLine;
+			public string ContainerId;
+			public string PodId;
+		}
+
+// Remove warning about unused test parameter "name"
+#pragma warning disable xUnit1026
+		[Theory]
+		[JsonFileData("./TestResources/json-specs/cgroup_parsing.json", typeof(CGroupTestData))]
+		public void ParseKubernetesInfo_FromCGroupLine(string name, CGroupTestData data)
+		{
+			var line = data.GroupLine;
+			var containerId = data.ContainerId;
+			var podId = data.PodId;
+
 			var system = new Api.System();
 			_systemInfoHelper.ParseContainerId(system, "hostname", line);
 
@@ -76,6 +73,7 @@ namespace Elastic.Apm.Tests
 			else
 				system.Kubernetes.Pod.Uid.Should().Be(podId);
 		}
+#pragma warning restore xUnit1026
 
 		[Fact]
 		public void ParseKubernetesInfo_ShouldUseContainerInfoAndHostName_WhenNoEnvironmentVariablesAreSet()
