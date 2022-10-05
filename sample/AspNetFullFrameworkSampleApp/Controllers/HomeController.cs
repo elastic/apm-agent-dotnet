@@ -37,6 +37,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string CustomChildSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomChildSpanThrows);
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
 		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
+		internal const string ForbiddenResponseMethodName = nameof(ForbiddenResponse);
 
 		internal const string DbOperationOutsideTransactionTestPageRelativePath =
 			HomePageRelativePath + "/" + nameof(DbOperationOutsideTransactionTest);
