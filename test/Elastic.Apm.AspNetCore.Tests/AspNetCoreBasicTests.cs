@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -14,7 +13,6 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
-using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -349,7 +347,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
 				.Context.Destination.Service.Resource.ToLower()
 				.Should()
-				.Be("api.github.com:443");
+				.Be("api.github.com");
 		}
 
 		/// <summary>
