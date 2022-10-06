@@ -45,7 +45,7 @@ namespace Elastic.Apm.Feature.Tests
 		public string SecretToken { get; set; }
 		public string ServerCert { get; set; }
 		public Uri ServerUrl { get; set; } = DefaultValues.ServerUri;
-		public bool ServerUseWindowsCredentials { get; set; }
+		public bool UseWindowsCredentials { get; set; }
 		public IReadOnlyList<Uri> ServerUrls { get; set; } = new List<Uri> { DefaultValues.ServerUri };
 		public string ServiceName { get; set; }
 		public string ServiceNodeName { get; set; }

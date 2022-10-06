@@ -121,8 +121,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel, "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, serverUrl);
-			var serverUseWindowsCredentials = "true";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUseWindowsCredentials, serverUseWindowsCredentials);
+			var useWindowsCredentials = "true";
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.UseWindowsCredentials, useWindowsCredentials);
 			var serviceName = "MyServiceName123";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
 			var serviceNodeName = "Some service node name";
@@ -147,7 +147,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 #pragma warning restore 618
 			config.ServerUrl.Should().Be(new Uri(serverUrl));
-			config.ServerUseWindowsCredentials.Should().Be(true);
+			config.UseWindowsCredentials.Should().Be(true);
 			config.ServiceName.Should().Be(serviceName);
 			config.ServiceNodeName.Should().Be(serviceNodeName);
 			config.ServiceVersion.Should().Be(serviceVersion);

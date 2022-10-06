@@ -617,13 +617,17 @@ IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 |============
 
 [float]
-[[server-use-windows-credentials]]
-==== `ServerUseWindowsCredentials`
+[[use-windows-credentials]]
+==== `UseWindowsCredentials`
+
+Set this property to true when requests made by the apm-agent should, if requested by the server, be authenticated using the credentials of the currently logged on user.
+
+This is useful when using windows authentication on a proxy, that routes apm-agent requests to the apm-server.
 
 [options="header"]
 |============
 | Environment variable name | IConfiguration or Web.config key
-| `ELASTIC_APM_SERVER_USE_WINDOWS_CREDENTIALS` | `ElasticApm:ServerUseWindowsCredentials`
+| `ELASTIC_APM_USE_WINDOWS_CREDENTIALS` | `ElasticApm:UseWindowsCredentials`
 |============
 
 [options="header"]
@@ -1293,7 +1297,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-secret-token,`SecretToken`>> | No | Reporter
 | <<config-server-cert,`ServerCert`>> | No | Reporter
 | <<config-server-url,`ServerUrl`>> | No | Reporter
-| <<config-server-use-windows-credentials,`ServerUseWindowsCredentials`>> | No | Reporter
+| <<config-use-windows-credentials,`UseWindowsCredentials`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
 | <<config-service-node-name, `ServiceNodeName`>> | No | Core
 | <<config-service-version,`ServiceVersion`>> | No | Core

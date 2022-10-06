@@ -247,7 +247,7 @@ namespace Elastic.Apm.Config
 		/// <summary>
 		/// If set to true, Agent will use windows default credentials that the service running the agent has to send requests if it is needed for proxy.
 		/// </summary>
-		bool ServerUseWindowsCredentials { get; }
+		bool UseWindowsCredentials { get; }
 
 		/// <summary>
 		/// The name of service instrumented by the APM agent. This is used to group all the errors and transactions
