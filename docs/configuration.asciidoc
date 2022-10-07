@@ -620,7 +620,7 @@ IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 [[use-windows-credentials]]
 ==== `UseWindowsCredentials`
 
-Set this property to true when requests made by the apm-agent should, if requested by the server, be authenticated using the credentials of the currently logged on user.
+Set this property to true when requests made by the APM agent should, if requested by the server, be authenticated using the credentials of the currently logged on user.
 
 This is useful when using windows authentication on a proxy, that routes apm-agent requests to the apm-server.
 
