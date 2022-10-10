@@ -617,7 +617,7 @@ IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 |============
 
 [float]
-[[use-windows-credentials]]
+[[config-use-windows-credentials]]
 ==== `UseWindowsCredentials`
 
 Set this property to true when requests made by the APM agent should, if requested by the server, be authenticated using the credentials of the currently logged on user.
