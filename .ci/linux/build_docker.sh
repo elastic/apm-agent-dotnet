@@ -1,5 +1,5 @@
 BUILD_PROPS="src/Directory.Build.props"
-ZIP_FILE_BASE_PATH=${BASE_DIR}/build/output/
+ZIP_FILE_BASE_PATH="/build/output/"
 
 DOTNET_AGENT_VERSION=$(grep "VersionPrefix" ${BUILD_PROPS} | sed 's#<.*>\(.*\)<.*>#\1#' | tr -d " ")
   if [ -z "${DOTNET_AGENT_VERSION}" ] ; then
