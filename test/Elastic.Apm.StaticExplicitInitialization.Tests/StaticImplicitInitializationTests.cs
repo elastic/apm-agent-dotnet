@@ -28,7 +28,7 @@ namespace Elastic.Apm.StaticExplicitInitialization.Tests
 
 			logger.Lines.Should()
 				.Contain(n => n.Contains(
-					"he singleton APM agent has already been instantiated and can no longer be configured. Reusing existing instance"));
+					"The singleton APM agent has already been instantiated and can no longer be configured. Reusing existing instance"));
 		}
 	}
 }
