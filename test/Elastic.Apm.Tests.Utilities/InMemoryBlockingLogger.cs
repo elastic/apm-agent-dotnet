@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Elastic.Apm.Logging;
-using Timer = System.Timers.Timer;
 
 namespace Elastic.Apm.Tests.Utilities
 {
@@ -12,7 +12,7 @@ namespace Elastic.Apm.Tests.Utilities
 	/// </summary>
 	public class InMemoryBlockingLogger : IApmLogger
 	{
-		private readonly List<string> _lines = new List<string>();
+		private readonly ConcurrentQueue<string> _lines = new ConcurrentQueue<string>();
 		private readonly LogLevel _logLevel;
 		private readonly ManualResetEvent _waitHandle;
 
@@ -31,7 +31,7 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				_waitHandle.WaitOne(TimeSpan.FromMinutes(1));
-				return _lines;
+				return _lines.ToList();
 			}
 		}
 
@@ -42,7 +42,7 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			if (!IsEnabled(level)) return;
 
-			_lines.Add(formatter(state, e));
+			_lines.Enqueue(formatter(state, e));
 			_waitHandle.Set();
 		}
 	}

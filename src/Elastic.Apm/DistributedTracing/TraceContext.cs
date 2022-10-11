@@ -4,8 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Elastic.Apm.Api;
 
 namespace Elastic.Apm.DistributedTracing
@@ -44,6 +42,8 @@ namespace Elastic.Apm.DistributedTracing
 			var bestAttempt = false;
 
 			if (string.IsNullOrWhiteSpace(traceParentValue)) return null;
+
+			traceParentValue = traceParentValue.Trim();
 
 			if (traceParentValue.Length < VersionPrefixIdLength || traceParentValue[VersionPrefixIdLength - 1] != '-') return null;
 

@@ -51,7 +51,7 @@ namespace Elastic.Apm.Config
 
 		[Obsolete("Use ServerUrl")]
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
-
+		public bool UseWindowsCredentials => _content.UseWindowsCredentials;
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;
 		public string ServiceVersion => _content.ServiceVersion;

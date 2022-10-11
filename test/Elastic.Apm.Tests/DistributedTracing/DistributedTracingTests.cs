@@ -2,7 +2,12 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.DistributedTracing;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -10,6 +15,43 @@ namespace Elastic.Apm.Tests.DistributedTracing
 {
 	public class DistributedTracingTests
 	{
+		public class TraceStateTestData
+		{
+			public List<string[]> Headers { get; set; }
+			[JsonProperty("is_traceparent_valid")] public bool IsTraceParentValid { get; set; }
+			[JsonProperty("is_tracestate_valid")] public bool? IsTraceStateValid { get; set; }
+		}
+
+		[Theory]
+		[JsonFileData("./TestResources/json-specs/w3c_distributed_tracing.json", typeof(TraceStateTestData))]
+		public void TestCasesFromJsonSpec(TraceStateTestData data)
+		{
+			var traceParents = data.Headers
+				.Where(h => h[0].Equals("traceparent", StringComparison.InvariantCultureIgnoreCase))
+				.Select(h => h[1]);
+			var traceStates = data.Headers
+				.Where(h => h[0].Equals("tracestate", StringComparison.InvariantCultureIgnoreCase))
+				.Select(h => h[1]);
+			// Multiple occurrences of the trace headers are automatically invalid.
+			if (traceParents.Count() < 2 && traceStates.Count() < 2)
+			{
+				var traceParent = traceParents.FirstOrDefault();
+				var traceState = traceStates.FirstOrDefault();
+
+				var res = TraceContext.TryExtractTracingData(traceParent, traceState);
+				if (data.IsTraceParentValid)
+					res.Should().NotBeNull();
+				else
+					res.Should().BeNull(traceParent);
+
+				if (data.IsTraceStateValid.HasValue)
+				{
+					res.Should().NotBeNull();
+					res.HasTraceState.Should().Be(data.IsTraceStateValid.Value);
+				}
+			}
+		}
+
 		[Fact]
 		public void Valid_TraceParent_Recorded_Should_Be_Parsed()
 		{

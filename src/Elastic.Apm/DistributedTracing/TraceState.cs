@@ -222,6 +222,9 @@ namespace Elastic.Apm.DistributedTracing
 			{
 				// TODO: Span-ify
 				var item = listMember.Split('=');
+				if (item.Length > 2)
+					return null;
+
 				if (item.Length != 2)
 					continue;
 
