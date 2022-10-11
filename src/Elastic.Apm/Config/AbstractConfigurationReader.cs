@@ -277,6 +277,8 @@ namespace Elastic.Apm.Config
 			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.TraceContextIgnoreSampledFalse;
 		}
 
+		protected bool ParseUseWindowsCredentials(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureHeaders, "UseWindowsCredentials");
+
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;

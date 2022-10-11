@@ -1055,6 +1055,26 @@ When this setting is `true`, the agent also adds the header `elasticapm-tracepar
 |============
 
 [float]
+[[config-use-windows-credentials]]
+==== `UseWindowsCredentials`
+
+Set this property to true when requests made by the APM agent should, if requested by the server, be authenticated using the credentials of the currently logged on user.
+
+This is useful when using windows authentication on a proxy, that routes APM agent requests to the APM server.
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_USE_WINDOWS_CREDENTIALS` | `ElasticApm:UseWindowsCredentials`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `false`                 | Boolean
+|============
+
+[float]
 [[config-trace-context-ignore-sampled-false]]
 ==== `TraceContextIgnoreSampledFalse`
 
@@ -1291,6 +1311,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
 | <<config-trace-continuation-strategy,`TraceContinuationStrategy`>> | Yes | HTTP, Performance
 | <<config-use-elastic-apm-traceparent-header,`UseElasticTraceparentHeader`>> | No | HTTP
+| <<config-use-windows-credentials,`UseWindowsCredentials`>> | No | Reporter
 | <<config-verify-server-cert,`VerifyServerCert`>> | No | Reporter
 
 |============

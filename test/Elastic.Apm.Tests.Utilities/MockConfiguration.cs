@@ -44,6 +44,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _serverCert;
 		private readonly string _serverUrl;
 		private readonly string _serverUrls;
+		private readonly string _useWindowsCredentials;
 		private readonly string _serviceName;
 		private readonly string _serviceNodeName;
 		private readonly string _serviceVersion;
@@ -100,6 +101,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string enabled = null,
 			string recording = null,
 			string serverUrl = null,
+			string useWindowsCredentials = null,
 			string serverCert = null,
 			string ignoreMessageQueues = null,
 			string traceContextIgnoreSampledFalse = null,
@@ -145,6 +147,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_enabled = enabled;
 			_recording = recording;
 			_serverUrl = serverUrl;
+			_useWindowsCredentials = useWindowsCredentials;
 			_serverCert = serverCert;
 			_ignoreMessageQueues = ignoreMessageQueues;
 			_traceContextIgnoreSampledFalse = traceContextIgnoreSampledFalse;
@@ -226,6 +229,7 @@ namespace Elastic.Apm.Tests.Utilities
 			? Kv(EnvVarNames.ServerUrls, _serverUrls, Origin)
 			: Kv(EnvVarNames.ServerUrl, _serverUrl, Origin));
 
+		public bool UseWindowsCredentials => ParseUseWindowsCredentials(Kv(EnvVarNames.UseWindowsCredentials, _useWindowsCredentials, Origin));
 		public string ServiceName => ParseServiceName(Kv(EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceNodeName => ParseServiceNodeName(Kv(EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(EnvVarNames.ServiceVersion, _serviceVersion, Origin));

@@ -110,6 +110,8 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		public bool UseWindowsCredentials => ParseUseWindowsCredentials(Read(ConfigConsts.EnvVarNames.UseWindowsCredentials));
+
 		public string ServiceName => ParseServiceName(Read(ConfigConsts.EnvVarNames.ServiceName));
 
 		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.EnvVarNames.ServiceNodeName));

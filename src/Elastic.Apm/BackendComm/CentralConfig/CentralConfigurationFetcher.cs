@@ -298,6 +298,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			[Obsolete("Use ServerUrl")]
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
 
+			public bool UseWindowsCredentials => _wrapped.UseWindowsCredentials;
+
 			public string ServiceName => _wrapped.ServiceName;
 			public string ServiceNodeName => _wrapped.ServiceNodeName;
 
