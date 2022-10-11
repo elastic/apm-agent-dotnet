@@ -58,12 +58,21 @@ namespace Elastic.Apm
 	{
 		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() =>
 		{
-			_isConfigured = true;
-			return new ApmAgent(Components);
+			lock (InitializationLock)
+			{
+				_isConfigured = true;
+				var agentComponents = new ApmAgent(Components);
+
+				agentComponents?.Logger?.Trace()
+					?.Log("Initialization - Agent instance initialized. Callstack: {callstack}", new StackTrace().ToString());
+
+				return agentComponents;
+			}
 		});
 
 		private static volatile bool _isConfigured;
 
+		private static readonly object InitializationLock = new object();
 
 		internal static AgentComponents Components { get; private set; }
 
@@ -162,16 +171,31 @@ namespace Elastic.Apm
 
 		public static void Setup(AgentComponents agentComponents)
 		{
-			if (LazyApmAgent.IsValueCreated)
-				agentComponents?.Logger?.Error()
-					?.Log("The singleton APM agent has" +
-						" already been instantiated and can no longer be configured. Reusing existing instance");
+			lock (InitializationLock)
+			{
+				if (_isConfigured)
+				{
+					Components?.Logger?.Error()
+						?.Log("The singleton APM agent has" +
+							" already been instantiated and can no longer be configured. Reusing existing instance. "
+							+ "Callstack: {callstack}", new StackTrace().ToString());
 
-			agentComponents?.Logger?.Trace()
-				?.Log("Initialization - Agent.Setup called. Callstack: {callstack}", new StackTrace().ToString());
+					// Above line logs on the already configured `Components`
+					// In order to let the caller know, we also log on the logger of the rejected `agentComponents`
+					agentComponents.Logger?.Error()
+						?.Log("The singleton APM agent has" +
+							" already been instantiated and can no longer be configured. Reusing existing instance. "
+							+ "Callstack: {callstack}", new StackTrace().ToString());
 
-			Components = agentComponents;
-			_isConfigured = true;
+					return;
+				}
+
+				agentComponents?.Logger?.Trace()
+					?.Log("Initialization - Agent.Setup called. Callstack: {callstack}", new StackTrace().ToString());
+
+				Components = agentComponents;
+				_isConfigured = true;
+			}
 		}
 
 		internal static void Setup(ApmAgent apmAgent)
