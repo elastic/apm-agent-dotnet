@@ -33,7 +33,6 @@ namespace Elastic.Apm.Helpers
 			return new Destination { Address = host, Port = url.Port == -1 ? (int?)null : url.Port };
 		}
 
-		internal static string ExtractService(Uri url, ISpan span) =>
-			url.IsDefaultPort ? url.Host : $"{url.Host}:{url.Port}";
+		internal static string ExtractService(Uri url, ISpan span) => $"{url.Host}:{url.Port}";
 	}
 }
