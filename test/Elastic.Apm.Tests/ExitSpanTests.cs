@@ -107,9 +107,9 @@ public class ExitSpanTests
 			});
 		}
 
-		payloadSender.FirstSpan.Context.Destination.Service.Resource.Should().Be("elastic.co");
+		payloadSender.FirstSpan.Context.Destination.Service.Resource.Should().Be("elastic.co:443");
 
-		payloadSender.FirstSpan.Context.Service.Target.Name.Should().Be("elastic.co");
+		payloadSender.FirstSpan.Context.Service.Target.Name.Should().Be("elastic.co:443");
 		payloadSender.FirstSpan.Context.Service.Target.Type.Should().Be(ApiConstants.SubtypeHttp);
 	}
 
@@ -130,9 +130,9 @@ public class ExitSpanTests
 			});
 		}
 
-		payloadSender.FirstSpan.Context.Destination.Service.Resource.Should().Be("host");
+		payloadSender.FirstSpan.Context.Destination.Service.Resource.Should().Be("host:80");
 
-		payloadSender.FirstSpan.Context.Service.Target.Name.Should().Be("host");
+		payloadSender.FirstSpan.Context.Service.Target.Name.Should().Be("host:80");
 		payloadSender.FirstSpan.Context.Service.Target.Type.Should().Be(ApiConstants.SubtypeHttp);
 	}
 
