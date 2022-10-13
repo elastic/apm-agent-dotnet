@@ -23,6 +23,22 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.18.0]]
+==== 1.18.0
+
+===== Features
+- Profiler based agent is now GA
+- {pull}1806[#1806] Capture request body in ASP.NET Full Framework (issue: {issue}379[#379]).
+- {pull}1832[#1832] `UseWindowsCredentials`: new configuration to force the agent to use the credentials of the authenticated Windows user when events are sent to the APM Server (issue: {issue}1825[#1825]).
+
+===== Bug fixes
+- {pull}1800[#1800] Fix incorrect transaction name in ASP.NET Web Api (issue: {issue}1645[#1637]).
+- {pull}1803[#1803] and {pull}1804[#1804] Fix potential NullReferenceException in TraceContinuationStrategy implementation (issue: {issue}1802[#1802]).
+- {pull}1780[#1780] Fix container ID parsing in AWS ECS/Fargate environments (issue: {issue}1779[#1779]). 
+- {pull}1814[#1814] Use correct default value for ExitSpanMinDuration (issue: {issue}1789[#1789]).
+- {pull}1811[#1811] Fixed crashes on some SOAP 1.2 requests when using GetBufferedInputStream (issue: {issue}1759[#1759]). 
+- {pull}1816[#1816] Group MetricSets in BreakdownMetricsProvider (issue: {issue}1678[#1678]).
+
 [[release-notes-1.17.0]]
 ==== 1.17.0
 
