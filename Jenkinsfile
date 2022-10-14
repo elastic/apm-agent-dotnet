@@ -548,36 +548,6 @@ pipeline {
         }
       }
     }
-    stage('AfterRelease') {
-      options {
-        skipDefaultCheckout()
-      }
-      when {
-        anyOf {
-          tag pattern: 'v\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
-        }
-      }
-      stages {
-        stage('Opbeans') {
-          environment {
-            REPO_NAME = "${OPBEANS_REPO}"
-          }
-          steps {
-            deleteDir()
-            dir("${OPBEANS_REPO}"){
-              git(credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                  url: "git@github.com:elastic/${OPBEANS_REPO}.git",
-                  branch: 'main')
-              sh script: ".ci/bump-version.sh ${env.BRANCH_NAME.replaceAll('^v', '')}", label: 'Bump version'
-              // The opbeans pipeline will trigger a release for the main branch
-              gitPush()
-              // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
-              gitCreateTag(tag: "${env.BRANCH_NAME}")
-            }
-          }
-        }
-      }
-    }
   }
   post {
     cleanup {
