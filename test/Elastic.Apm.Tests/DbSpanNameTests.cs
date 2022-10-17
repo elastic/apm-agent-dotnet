@@ -36,40 +36,6 @@ public class DbSpanNameTests
 		name.ToString().Should().Be(data.Output);
 	}
 
-	[MemberData(nameof(SqlSignatureExamplesTestData))]
-	[Theory]
-	public void TestDbSignatures_Legacy(string input, string output)
-	{
-		var signatureParser = new SignatureParser(new Scanner());
-		var name = new StringBuilder();
-		signatureParser.QuerySignature(input.Replace(Environment.NewLine, " "), name, false);
-
-		name.ToString().ToLower().Should().Be(output.ToLower());
-	}
-
-	public static IEnumerable<object[]> SqlSignatureExamplesTestData
-	{
-		get
-		{
-			var _projectRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			var filePath = Path.GetFullPath(Path.Combine(_projectRoot, "TestResources" + Path.DirectorySeparatorChar + "db" + Path.DirectorySeparatorChar + "sql_signature_examples.json"));
-
-			using (var file = File.OpenText(filePath))
-			using (var reader = new JsonTextReader(file))
-			{
-				var array = (JArray)JToken.ReadFrom(reader);
-
-				foreach (var item in array)
-				{
-					var input = item["input"].Value<string>();
-					var output = item["output"].Value<string>();
-
-					yield return new object[] { input, output };
-				}
-			}
-		}
-	}
-
 	public class SqlTokenTestData
 	{
 		public string Name;

@@ -197,6 +197,15 @@ pipeline {
                     }
                   }
                 }
+                stage('Create Docker image') {
+                  steps {
+                    withGithubNotify(context: 'Create Docker image - Linux') {
+                      dir("${BASE_DIR}"){
+                        sh(label: 'Create Docker Image', script: '.ci/linux/build_docker.sh')
+                      }
+                    }
+                  }
+                }
               }
             }
             stage('Windows .NET Framework'){

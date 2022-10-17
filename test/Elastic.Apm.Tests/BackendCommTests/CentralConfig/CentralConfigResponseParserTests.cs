@@ -163,7 +163,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"{0.75}\"}}",
+					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"0.75\"}}",
 					new Action<CentralConfigurationReader>(cfg =>
 					{
 						cfg.TransactionSampleRate.Should()

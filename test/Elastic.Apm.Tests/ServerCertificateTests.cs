@@ -4,7 +4,8 @@
 // See the LICENSE file in the project root for more information
 
 // depends on Mock APM server project TargetFramework
-#if NET5_0
+
+#if NET5_0_OR_GREATER
 
 using System;
 using System.IO;
@@ -13,10 +14,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Utilities;
-using Xunit;
 using Elastic.Apm.Tests.MockApmServer;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Xunit;
 
 namespace Elastic.Apm.Tests
 {
