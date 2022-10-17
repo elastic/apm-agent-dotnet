@@ -20,7 +20,7 @@
       <InternalsVisibleTo Include="Elastic.Apm.Grpc.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Apm.StackExchange.Redis.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Apm.Tests" Key="$(ExposedPublicKey)" />
-      <InternalsVisibleTo Include="Elastic.Apm.StaticImplicitInitialization.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.StaticExplicitInitialization.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Apm.Azure.ServiceBus.Tests" Key="$(ExposedPublicKey)" />
