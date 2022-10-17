@@ -60,17 +60,14 @@ namespace Elastic.Apm
 		{
 			lock (InitializationLock)
 			{
-				_isConfigured = true;
-				var agentComponents = new ApmAgent(Components);
+				var agent = new ApmAgent(Components);
 
-				agentComponents?.Logger?.Trace()
+				agent.Logger?.Trace()
 					?.Log("Initialization - Agent instance initialized. Callstack: {callstack}", new StackTrace().ToString());
 
-				return agentComponents;
+				return agent;
 			}
 		});
-
-		private static volatile bool _isConfigured;
 
 		private static readonly object InitializationLock = new object();
 
@@ -80,7 +77,7 @@ namespace Elastic.Apm
 
 		internal static ApmAgent Instance => LazyApmAgent.Value;
 
-		public static bool IsConfigured => _isConfigured;
+		public static bool IsConfigured => LazyApmAgent.IsValueCreated;
 
 		/// <summary>
 		/// The entry point for manual instrumentation. Gets an <see cref="ITracer" /> from
@@ -173,7 +170,7 @@ namespace Elastic.Apm
 		{
 			lock (InitializationLock)
 			{
-				if (_isConfigured)
+				if (LazyApmAgent.IsValueCreated)
 				{
 					Components?.Logger?.Error()
 						?.Log("The singleton APM agent has" +
@@ -182,7 +179,7 @@ namespace Elastic.Apm
 
 					// Above line logs on the already configured `Components`
 					// In order to let the caller know, we also log on the logger of the rejected `agentComponents`
-					agentComponents.Logger?.Error()
+					agentComponents?.Logger?.Error()
 						?.Log("The singleton APM agent has" +
 							" already been instantiated and can no longer be configured. Reusing existing instance. "
 							+ "Callstack: {callstack}", new StackTrace().ToString());
@@ -191,10 +188,11 @@ namespace Elastic.Apm
 				}
 
 				agentComponents?.Logger?.Trace()
-					?.Log("Initialization - Agent.Setup called. Callstack: {callstack}", new StackTrace().ToString());
+					?.Log("Initialization - Agent.Setup called");
 
 				Components = agentComponents;
-				_isConfigured = true;
+				// Force initialization
+				var _ = LazyApmAgent.Value;
 			}
 		}
 
