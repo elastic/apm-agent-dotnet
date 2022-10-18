@@ -734,7 +734,9 @@ namespace Elastic.Apm.Model
 			if (!IsExitSpan)
 				return;
 
-			if (!_context.IsValueCreated)
+			// In order to avoid the creation of Context, set target and resource
+			// on the top level DroppedSpanStatCache and return.
+			if (!_context.IsValueCreated && !IsExitSpan && _isDropped)
 			{
 				if (DroppedSpanStatCache == null)
 				{
@@ -766,46 +768,54 @@ namespace Elastic.Apm.Model
 					return;
 
 				if (_context.IsValueCreated && _context.Value.Service?.Target != null)
-					return;
-
-				Context.Destination ??= new Destination();
-				Context.Destination.Service = new Destination.DestinationService();
-
-				var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
-
-				if (Context.Db != null)
 				{
-					Context.Service = Context.Db.Instance != null
-						? new SpanService(new Target(type, Context.Db.Instance))
-						: new SpanService(Target.TargetWithType(type));
+					// Nothing to do here.
+					// If "Service.Target" is already set, the inference mechanism should not override it.
+					// We need to make sure though to set "Destination.Service.Resource" before exiting.
 				}
-				else if (Context.Http?.Url != null)
+				else
 				{
-					if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
+					var type = !string.IsNullOrEmpty(Subtype) ? Subtype : Type;
+
+					if (Context.Db != null)
 					{
-						try
+						Context.Service = Context.Db.Instance != null
+							? new SpanService(new Target(type, Context.Db.Instance))
+							: new SpanService(Target.TargetWithType(type));
+					}
+					else if (Context.Message != null)
+					{
+						Context.Service = !string.IsNullOrEmpty(Context.Message.Queue?.Name)
+							? new SpanService(new Target(type, Context.Message.Queue.Name))
+							: new SpanService(Target.TargetWithType(type));
+					}
+					else if (Context.Http?.Url != null)
+					{
+						if (!string.IsNullOrEmpty(_context?.Value?.Http?.Url))
 						{
-							var uri = Context.Http.OriginalUrl ?? new Uri(Context.Http.Url);
-							Context.Service = new SpanService(new Target(type, UrlUtils.ExtractService(uri, this), true));
+							try
+							{
+								var uri = Context.Http.OriginalUrl ?? new Uri(Context.Http.Url);
+								Context.Service =
+									new SpanService(new Target(type, UrlUtils.ExtractService(uri, this), true));
+							}
+							catch
+							{
+								Context.Service = new SpanService(Target.TargetWithType(type));
+							}
 						}
-						catch
-						{
+						else
 							Context.Service = new SpanService(Target.TargetWithType(type));
-						}
 					}
 					else
 						Context.Service = new SpanService(Target.TargetWithType(type));
 				}
-				else if (Context.Message != null)
-				{
-					Context.Service = !string.IsNullOrEmpty(Context.Message.Queue?.Name)
-						? new SpanService(new Target(type, Context.Message.Queue.Name))
-						: new SpanService(Target.TargetWithType(type));
-				}
-				else
-					Context.Service = new SpanService(Target.TargetWithType(type));
 
-				Context.Destination.Service.Resource = Context.Service.Target.ToDestinationServiceResource();
+				Context.Destination ??= new Destination();
+				Context.Destination.Service = new Destination.DestinationService
+				{
+					Resource = Context.Service.Target.ToDestinationServiceResource()
+				};
 			}
 
 			void CopyMissingProperties(Destination src)
