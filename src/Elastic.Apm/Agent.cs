@@ -58,12 +58,18 @@ namespace Elastic.Apm
 	{
 		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() =>
 		{
-			_isConfigured = true;
-			return new ApmAgent(Components);
+			lock (InitializationLock)
+			{
+				var agent = new ApmAgent(Components);
+
+				agent.Logger?.Trace()
+					?.Log("Initialization - Agent instance initialized. Callstack: {callstack}", new StackTrace().ToString());
+
+				return agent;
+			}
 		});
 
-		private static volatile bool _isConfigured;
-
+		private static readonly object InitializationLock = new object();
 
 		internal static AgentComponents Components { get; private set; }
 
@@ -71,7 +77,7 @@ namespace Elastic.Apm
 
 		internal static ApmAgent Instance => LazyApmAgent.Value;
 
-		public static bool IsConfigured => _isConfigured;
+		public static bool IsConfigured => LazyApmAgent.IsValueCreated;
 
 		/// <summary>
 		/// The entry point for manual instrumentation. Gets an <see cref="ITracer" /> from
@@ -162,16 +168,32 @@ namespace Elastic.Apm
 
 		public static void Setup(AgentComponents agentComponents)
 		{
-			if (LazyApmAgent.IsValueCreated)
-				agentComponents?.Logger?.Error()
-					?.Log("The singleton APM agent has" +
-						" already been instantiated and can no longer be configured. Reusing existing instance");
+			lock (InitializationLock)
+			{
+				if (LazyApmAgent.IsValueCreated)
+				{
+					Components?.Logger?.Error()
+						?.Log("The singleton APM agent has" +
+							" already been instantiated and can no longer be configured. Reusing existing instance. "
+							+ "Callstack: {callstack}", new StackTrace().ToString());
 
-			agentComponents?.Logger?.Trace()
-				?.Log("Initialization - Agent.Setup called. Callstack: {callstack}", new StackTrace().ToString());
+					// Above line logs on the already configured `Components`
+					// In order to let the caller know, we also log on the logger of the rejected `agentComponents`
+					agentComponents?.Logger?.Error()
+						?.Log("The singleton APM agent has" +
+							" already been instantiated and can no longer be configured. Reusing existing instance. "
+							+ "Callstack: {callstack}", new StackTrace().ToString());
 
-			Components = agentComponents;
-			_isConfigured = true;
+					return;
+				}
+
+				agentComponents?.Logger?.Trace()
+					?.Log("Initialization - Agent.Setup called");
+
+				Components = agentComponents;
+				// Force initialization
+				var _ = LazyApmAgent.Value;
+			}
 		}
 
 		internal static void Setup(ApmAgent apmAgent)

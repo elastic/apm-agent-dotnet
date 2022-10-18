@@ -35,9 +35,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				t.StartSpan("foo", "bar", isExitSpan: true).End();
 			});
 
-			payloadSender.FirstSpan.Context.Destination.Should().BeNull();
-			payloadSender.FirstSpan.DroppedSpanStatCache.Should().NotBeNull();
-			payloadSender.FirstSpan.DroppedSpanStatCache!.Value.Target.Type.Should().Be("bar");
+			payloadSender.FirstSpan.Context.Service.Target.Type.Should().Be("bar");
+			payloadSender.FirstSpan.DroppedSpanStatCache.Should().BeNull();
 		}
 
 		[Fact]

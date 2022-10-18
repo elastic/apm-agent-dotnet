@@ -8,6 +8,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2017 Datadog, Inc.
 // </copyright>
 
+using System;
 using System.Threading;
 
 namespace Elastic.Apm.Profiler.Managed
@@ -21,6 +22,8 @@ namespace Elastic.Apm.Profiler.Managed
 			// check if already called
 			if (Interlocked.Exchange(ref FirstInitialization, 0) != 1)
 				return;
+
+			Logger.Log(LogLevel.Debug, $"{nameof(AutoInstrumentation)}.{nameof(Initialize)} called");
 
 			try
 			{
@@ -42,12 +45,14 @@ namespace Elastic.Apm.Profiler.Managed
 				if (System.Web.Hosting.HostingEnvironment.IsHosted)
 					skipInstantiation = true;
 #endif
+				Logger.Log(LogLevel.Debug,
+					"{methodName}: value of {skipInstantiation}", $"{nameof(AutoInstrumentation)}.{nameof(Initialize)}", skipInstantiation);
+
 				// ensure global instance is created if it's not already
 				if (!skipInstantiation)
 				{
 					_ = Agent.Instance;
 #if !NETFRAMEWORK
-
 					Logger.Log(LogLevel.Debug, "Activate Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber");
 					Agent.Subscribe(new Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber());
 #endif
@@ -55,9 +60,9 @@ namespace Elastic.Apm.Profiler.Managed
 					Agent.Subscribe(new Elastic.Apm.DiagnosticSource.HttpDiagnosticsSubscriber());
 				}
 			}
-			catch
+			catch (Exception e)
 			{
-				// ignore
+				Logger.Error(e, $"Exception in {nameof(AutoInstrumentation)}.{nameof(Initialize)}");
 			}
 		}
 	}

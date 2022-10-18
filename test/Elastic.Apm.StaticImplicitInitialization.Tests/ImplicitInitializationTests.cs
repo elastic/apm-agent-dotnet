@@ -2,7 +2,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -16,15 +15,14 @@ namespace Elastic.Apm.StaticImplicitInitialization.Tests
 	public class ImplicitInitializationTests
 	{
 		/// <summary>
-		/// Makes sure Agent.IsConfigured only returns true after Setup is called.
+		/// Makes sure Agent.IsConfigured is true after implicit agent initialization
 		/// </summary>
 		[Fact]
-		public void IsConfigured()
+		public void IsConfiguredWithImplicitInitialization()
 		{
 			Agent.IsConfigured.Should().BeFalse();
 
-			using var agentComponents = new TestAgentComponents();
-			Agent.Setup(agentComponents);
+			Agent.Tracer.CaptureTransaction("Foo", "Bar", () => { });
 			Agent.IsConfigured.Should().BeTrue();
 		}
 	}
