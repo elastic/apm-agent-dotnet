@@ -734,9 +734,7 @@ namespace Elastic.Apm.Model
 			if (!IsExitSpan)
 				return;
 
-			// In order to avoid the creation of Context, set target and resource
-			// on the top level DroppedSpanStatCache and return.
-			if (!_context.IsValueCreated && !IsExitSpan && _isDropped)
+			if (!_context.IsValueCreated && !IsExitSpan)
 			{
 				if (DroppedSpanStatCache == null)
 				{
