@@ -83,8 +83,8 @@ In case of a major release, we need to create the `<major>.x` branch from the cu
 Additionally, in case of a major version release, we need to create a PR in [elastic/docs](https://github.com/elastic/docs).
 
 In this PR we need to update:
-- [`conf.yaml`](https://github.com/elastic/docs/blob/master/conf.yaml): Set the `current` part to the new `<major>.x` and add that to the `branches` and `live` parts.
-- [`shared/versions/stack/*.asciidoc`](https://github.com/elastic/docs/tree/master/shared/versions/stack): This directory defines how links from stack versioned documentation relate to links from non-stacked versioned documentation. For example, in the 8.5 file, the variable :apm-dotnet-branch: is set to 1.12. This means any links in the 8.5 stack docs (like the APM Guide) that point to the APM Agent .NET Reference, will point to the 1.12 version of those docs. The number of files you update in this directory depends on version compatibility between stack docs and your APM agent. In general, we update as far back as the new version of the agent is compatible with the Stack; this pushes new documentation to the user.
+- [`conf.yaml`](https://github.com/elastic/docs/blob/master/conf.yaml): Set the `current` part to the new `<major>.x` and add that to the `branches` and `live` parts. In addition, remove the previous major from the `live` key.
+- [`shared/versions/stack/*.asciidoc`](https://github.com/elastic/docs/tree/master/shared/versions/stack): This directory defines how links from stack versioned documentation relate to links from non-stacked versioned documentation. For example, in the 8.5 file, the variable :apm-dotnet-branch: is set to 1.x. This means any links in the 8.5 stack docs (like the APM Guide) that point to the APM Agent .NET Reference, will point to the 1.x version of those docs. The number of files you update in this directory depends on version compatibility between stack docs and your APM agent. In general, we update as far back as the new version of the agent is compatible with the Stack; this pushes new documentation to the user.
 
 ## Executing the release script locally
 
