@@ -17,6 +17,7 @@ Feature: OpenTelemetry bridge
     Then Elastic bridged transaction is a root transaction
     # outcome should not be inferred from the lack/presence of errors
     Then Elastic bridged transaction outcome is "unknown"
+	Then Elastic bridged transaction trace id is equal to OTel trace id
 
   Scenario: Create span from OTel span
     Given an agent

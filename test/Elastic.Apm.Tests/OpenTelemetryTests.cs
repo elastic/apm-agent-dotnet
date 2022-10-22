@@ -5,6 +5,7 @@
 
 #if NET5_0 || NET6_0
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
@@ -158,6 +159,41 @@ namespace Elastic.Apm.Tests
 
 			(payloadSender.Transactions[2] as Transaction)!.Links.Should().NotBeNullOrEmpty();
 			(payloadSender.Transactions[2] as Transaction)!.Links.ElementAt(0).SpanId.Should().Be(payloadSender.Transactions[0].Id);
+		}
+
+		[Fact]
+		public void DistributedTracingTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")));
+
+			var src = new ActivitySource("Test");
+			string traceId = null;
+			string traceparent = null;
+			string tracestate = null;
+			using (var activity1 = src.StartActivity("foo", ActivityKind.Server))
+			{
+				traceId = activity1?.TraceId.ToString();
+				activity1?.SetTag("foo1", "bar1");
+				using (var activity2 = src.StartActivity("producer", ActivityKind.Producer))
+				{
+					activity2?.SetTag("foo2", "bar2");
+					traceparent = activity2?.Id;
+					tracestate = activity2?.TraceStateString;
+				}
+			}
+
+			ActivityContext.TryParse(traceparent, tracestate, out var parentContext);
+			using (var activity3 = src.StartActivity("remote_consumer", ActivityKind.Consumer, parentContext))
+			{
+				activity3?.SetTag("consumer", "test");
+			}
+
+			payloadSender.WaitForTransactions(count: 2);
+
+			payloadSender.FirstTransaction.TraceId.Should().Be(traceId);
+			payloadSender.Transactions[1].TraceId.Should().Be(traceId);
 		}
 	}
 }
