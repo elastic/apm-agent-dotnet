@@ -173,6 +173,21 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstTransaction.TraceId.Should().Be(payloadSender.Transactions[1].TraceId, because: "The transactions should be under the same trace.");
 		}
+
+		/// <summary>
+		/// Make sure that the traceId on a root activity is the same as the traceId on the transaction which the bridge creates from the root activity.
+		/// </summary>
+		[Fact]
+		public void ActivityAndTransactionTraceIdSynced()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+				configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")));
+			var src = new ActivitySource("Test");
+			string traceId;
+			using (var activity = src.StartActivity("foo", ActivityKind.Server)) traceId = activity.TraceId.ToString();
+			payloadSender.FirstTransaction.TraceId.Should().Be(traceId);
+		}
 	}
 }
 
