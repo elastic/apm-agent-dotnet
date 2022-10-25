@@ -192,8 +192,8 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.WaitForTransactions(count: 2);
 
+			payloadSender.FirstTransaction.TraceId.Should().Be(payloadSender.Transactions[1].TraceId, because: "The transactions should be under the same trace.");
 			payloadSender.FirstTransaction.TraceId.Should().Be(traceId);
-			payloadSender.Transactions[1].TraceId.Should().Be(traceId);
 		}
 	}
 }

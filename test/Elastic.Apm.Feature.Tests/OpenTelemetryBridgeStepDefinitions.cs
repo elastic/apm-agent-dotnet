@@ -68,8 +68,7 @@ namespace Elastic.Apm.Feature.Tests
 		public void GivenOTelSpanIsCreatedWithoutParent()
 		{
 			var src = new ActivitySource("Test");
-			var activity = src.StartActivity("foo");
-			_scenarioContext.Add("traceId", activity.TraceId);
+			src.StartActivity("foo");
 		}
 
 		[Given(@"OTel span ends")]
@@ -89,15 +88,6 @@ namespace Elastic.Apm.Feature.Tests
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
 			payloadSender.FirstTransaction.Outcome.ToString().ToLower().Should().Be(outcome);
 		}
-
-		[Then(@"Elastic bridged transaction trace id is equal to OTel trace id")]
-		public void ThenElasticBridgedTransactionTraceIdIsEqualToOTelTraceId()
-		{
-			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
-			var traceId = _scenarioContext.Get<ActivityTraceId>("traceId");
-			payloadSender.FirstTransaction.TraceId.Should().Be(traceId.ToString());
-		}
-
 
 		[Given(@"OTel span is created with local context as parent")]
 		public void GivenOTelSpanIsCreatedWithLocalContextAsParent()
