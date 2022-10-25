@@ -169,9 +169,9 @@ namespace Elastic.Apm.Tests
 					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true")));
 
 			var src = new ActivitySource("Test");
-			string traceId = null;
-			string traceparent = null;
-			string tracestate = null;
+			string traceId;
+			string traceparent;
+			string tracestate;
 			using (var activity1 = src.StartActivity("foo", ActivityKind.Server))
 			{
 				traceId = activity1?.TraceId.ToString();
@@ -186,9 +186,8 @@ namespace Elastic.Apm.Tests
 
 			ActivityContext.TryParse(traceparent, tracestate, out var parentContext);
 			using (var activity3 = src.StartActivity("remote_consumer", ActivityKind.Consumer, parentContext))
-			{
 				activity3?.SetTag("consumer", "test");
-			}
+			
 
 			payloadSender.WaitForTransactions(count: 2);
 
