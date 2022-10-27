@@ -141,5 +141,33 @@ namespace OpenTelemetrySample
 				using var childActivity3 = src.StartActivity("ChildActivity3");
 			}
 		}
+
+		/// <summary>
+		/// OTSpan
+		///      -
+		///      ---> OTSpan
+		///                -
+		///                ---> OTSpan
+		/// </summary>
+		public static void DistributedTraceSample()
+		{
+			var src = new ActivitySource("Test");
+			string traceparent;
+			string tracestate;
+			using (var activity1 = src.StartActivity("foo", ActivityKind.Server))
+			{
+				activity1?.SetTag("foo1", "bar1");
+				using (var activity2 = src.StartActivity("producer", ActivityKind.Producer))
+				{
+					activity2?.SetTag("foo2", "bar2");
+					traceparent = activity2?.Id;
+					tracestate = activity2?.TraceStateString;
+				}
+			}
+
+			ActivityContext.TryParse(traceparent, tracestate, out var parentContext);
+			using (var activity3 = src.StartActivity("remote_consumer", ActivityKind.Consumer, parentContext))
+				activity3?.SetTag("consumer", "test");
+		}
 	}
 }

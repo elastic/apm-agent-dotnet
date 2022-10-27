@@ -56,6 +56,36 @@ Tag names should start with a `v` prefix.
 
 This release process is a tagged release event based with an input approval.
 
+## Steps after the release 
+
+### Attaching files on GitHub
+
+We attach 2 files to the release on GitHub:
+- `ElasticApmAgent_<major>.<minor>.<bug>(-<suffix>)?.zip`: This is the startup-hook based agent.
+- `elastic_apm_profiler_<major>.<minor>.<bug>(-<suffix>)?.zip`: This is the profiler-based agent. The CI currently generates 2 profiler zip files, one for Windows (with `libelastic_apm_profiler.dll`), and one for Linux (with `libelastic_apm_profiler.so`). The only difference in the zip files is the native agent, the remaining files are the same. We copy the 2 native files into a folder with the remaining files and zip that folder as `elastic_apm_profiler_<major>.<minor>.<bug>(-<suffix>)?.zip` which we attach to the release.
+
+The steps above aren't currently automated. All the necessary files can be found under "Artifacts" in Jenkins and the files need to be manually attached to the release on GitHub.
+
+### Updating the documentation
+
+Each major version has a `<major>.x` branch in the repository (e.g. for major version `1` we have the branch `1.x`).
+
+In case of minor and patch releases we just need to update the `<major>.x` branch to the currently released tag:
+
+ ```bash
+git checkout <major>.<minor>.<bug>(-<suffix>)? -b <major>.x
+
+git push --force  upstream
+ ```
+
+In case of a major release, we need to create the `<major>.x` branch from the currently released tag and push the new `<major>.x` branch.
+
+Additionally, in case of a major version release, we need to create a PR in [elastic/docs](https://github.com/elastic/docs).
+
+In this PR we need to update:
+- [`conf.yaml`](https://github.com/elastic/docs/blob/master/conf.yaml): Set the `current` part to the new `<major>.x` and add that to the `branches` and `live` parts. In addition, remove the previous major entry from the `live` key.
+- [`shared/versions/stack/*.asciidoc`](https://github.com/elastic/docs/tree/master/shared/versions/stack): This directory defines how links from stack-versioned documentation relate to links from non stack-versioned documentation. For example, in the `8.5` file, the variable `:apm-dotnet-branch:` is set to `1.x`. This means any links in the `8.5` stack docs (like the APM Guide) that point to the APM .NET Agent reference, will point to the `1.x` version of those docs. The number of files you update in this directory depends on version compatibility between stack docs and your APM agent. In general, we update as far back as the new version of the agent is compatible with the stack; this pushes new documentation to the user.
+
 ## Executing the release script locally
 
 If required then it's possible to run the release script locally, for such, the credentials are needed to push to the NuGet repo.
