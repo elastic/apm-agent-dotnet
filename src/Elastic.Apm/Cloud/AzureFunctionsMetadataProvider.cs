@@ -39,15 +39,15 @@ namespace Elastic.Apm.Cloud
 			if (!tokens.HasValue) return Task.FromResult<Api.Cloud>(null);
 
 			if (string.IsNullOrEmpty(regionName))
-				regionName = tokens.Value.region;
+				regionName = tokens.Value.Region;
 
 			if (string.IsNullOrEmpty(websiteResourceGroup))
-				websiteResourceGroup = tokens.Value.resourceGroup;
+				websiteResourceGroup = tokens.Value.ResourceGroup;
 
 			return Task.FromResult(new Api.Cloud
 			{
 				Provider = "azure",
-				Account = new CloudAccount { Id = tokens.Value.subscriptionId },
+				Account = new CloudAccount { Id = tokens.Value.SubscriptionId },
 				Instance = new CloudInstance { Name = websiteSiteName },
 				Project = new CloudProject { Name = websiteResourceGroup },
 				Region = regionName

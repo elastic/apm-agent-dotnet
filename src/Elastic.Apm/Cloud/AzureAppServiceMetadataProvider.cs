@@ -13,11 +13,12 @@ namespace Elastic.Apm.Cloud
 	/// <summary>
 	/// Provides cloud metadata for Microsoft Azure App Services
 	/// </summary>
-	internal class AzureAppServiceMetadataProvider : EnvironmentBasedAzureMetadataProvider
+	public class AzureAppServiceMetadataProvider : EnvironmentBasedAzureMetadataProvider
 	{
 		internal const string Name = "azure-app-service";
 
-		public AzureAppServiceMetadataProvider(IApmLogger logger, IDictionary environmentVariables) : base(Name, logger,
+		internal AzureAppServiceMetadataProvider(IApmLogger logger, IDictionary environmentVariables) : base(Name,
+			logger,
 			environmentVariables)
 		{
 		}
@@ -41,11 +42,11 @@ namespace Elastic.Apm.Cloud
 
 			return Task.FromResult(new Api.Cloud
 			{
-				Account = new CloudAccount { Id = tokens.Value.subscriptionId },
+				Account = new CloudAccount { Id = tokens.Value.SubscriptionId },
 				Instance = new CloudInstance { Id = websiteInstanceId, Name = websiteSiteName },
 				Project = new CloudProject { Name = websiteResourceGroup },
 				Provider = "azure",
-				Region = tokens.Value.region
+				Region = tokens.Value.Region
 			});
 		}
 	}

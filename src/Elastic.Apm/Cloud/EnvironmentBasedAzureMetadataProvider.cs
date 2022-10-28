@@ -13,7 +13,7 @@ namespace Elastic.Apm.Cloud
 	/// <summary>
 	/// Base blass for Azure metadata providers that operate on environment variables.
 	/// </summary>
-	internal abstract class EnvironmentBasedAzureMetadataProvider : ICloudMetadataProvider
+	public abstract class EnvironmentBasedAzureMetadataProvider : ICloudMetadataProvider
 	{
 		protected readonly IApmLogger _logger;
 		protected readonly IDictionary _environmentVariables;
@@ -67,8 +67,7 @@ namespace Elastic.Apm.Cloud
 			return true;
 		}
 
-		protected (string subscriptionId, string resourceGroup, string region)? TokenizeWebSiteOwnerName(
-			string websiteOwnerName)
+		internal WebSiteOwnerNameTokens? TokenizeWebSiteOwnerName(string websiteOwnerName)
 		{
 			var websiteOwnerNameParts = websiteOwnerName.Split('+');
 			if (websiteOwnerNameParts.Length != 2)
@@ -99,12 +98,23 @@ namespace Elastic.Apm.Cloud
 			var region = websiteOwnerNameParts[1].Substring(lastHyphenIndex + 1);
 			var resourceGroup = websiteOwnerNameParts[1].Substring(0, lastHyphenIndex);
 
-			return
-			(
-				subscriptionId,
-				resourceGroup,
-				region
-			);
+			return new WebSiteOwnerNameTokens(subscriptionId, resourceGroup, region);
 		}
+	}
+
+	internal struct WebSiteOwnerNameTokens
+	{
+		internal WebSiteOwnerNameTokens(string subscriptionId, string resourceGroup, string region)
+		{
+			SubscriptionId = subscriptionId;
+			ResourceGroup = resourceGroup;
+			Region = region;
+		}
+
+		internal string Region { get; }
+
+		internal string ResourceGroup { get; }
+
+		internal string SubscriptionId { get; }
 	}
 }
