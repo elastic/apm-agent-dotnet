@@ -37,20 +37,28 @@ namespace Elastic.Apm.Cloud
 					Add(new GcpCloudMetadataProvider(logger));
 					break;
 				case SupportedValues.CloudProviderAzure:
+				{
 					Add(new AzureCloudMetadataProvider(logger));
-					Add(new AzureAppServiceMetadataProvider(logger, environmentVariables.GetEnvironmentVariables()));
+					var environment = environmentVariables.GetEnvironmentVariables();
+					Add(new AzureAppServiceMetadataProvider(logger, environment));
+					Add(new AzureFunctionsMetadataProvider(logger, environment));
 					break;
+				}
 				case SupportedValues.CloudProviderNone:
 					break;
 				case SupportedValues.CloudProviderAuto:
 				case "":
 				case null:
+				{
 					// keyed collection is ordered
 					Add(new AwsCloudMetadataProvider(logger));
 					Add(new GcpCloudMetadataProvider(logger));
 					Add(new AzureCloudMetadataProvider(logger));
-					Add(new AzureAppServiceMetadataProvider(logger, environmentVariables.GetEnvironmentVariables()));
+					var environment = environmentVariables.GetEnvironmentVariables();
+					Add(new AzureAppServiceMetadataProvider(logger, environment));
+					Add(new AzureFunctionsMetadataProvider(logger, environment));
 					break;
+				}
 				default:
 					throw new ArgumentException($"Unknown cloud provider {cloudProvider}", nameof(cloudProvider));
 			}
