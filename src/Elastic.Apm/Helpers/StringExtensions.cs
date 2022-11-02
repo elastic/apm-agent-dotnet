@@ -10,6 +10,8 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class StringExtensions
 	{
+		internal static string NotNull(this string s) => s ?? string.Empty;
+
 		internal static bool IsEmpty(this string input)
 		{
 			input.ThrowIfArgumentNull(nameof(input));
