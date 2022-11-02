@@ -105,6 +105,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var (_, waitInfoS) = _parser.ParseHttpResponse(response, string.Empty);
 
 			waitInfoS.Interval.Should().Be(TimeSpan.FromMinutes(5));
+			waitInfoS.Reason.Should().Be("The max-age directive in Cache-Control header in APM Server's response is zero or negative, "
+				+ $"which is invalid - falling back to use default ({CentralConfigurationResponseParser.WaitTimeIfNoCacheControlMaxAge.Minutes} minutes) wait time.");
 		}
 
 		[Fact]
