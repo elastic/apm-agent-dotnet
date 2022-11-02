@@ -75,12 +75,12 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 			if(seconds < 5)
 			{
-				waitInfoS.Reason.Should().Be("The max-age directive in Cache-Control header in APM Server's response is less than 5 second, "
+				waitInfoS.Reason.Should().Be("The max-age directive in Cache-Control header in APM Server's response is less than 5 seconds, "
 					+ "which is less than expected by the spec - falling back to use 5 seconds wait time.");
 			}
 			else
 			{
-				waitInfoS.Reason.Should().NotBe("The max-age directive in Cache-Control header in APM Server's response is less than 5 second, "
+				waitInfoS.Reason.Should().NotBe("The max-age directive in Cache-Control header in APM Server's response is less than 5 seconds, "
 					+ "which is less than expected by the spec - falling back to use 5 seconds wait time.");
 			}
 		}
