@@ -19,12 +19,15 @@ namespace Elastic.Apm.Api
 		public const string SubTypeGrpc = "grpc";
 		public const string SubTypeRedis = "redis";
 		public const string SubTypeMongoDb = "mongodb";
+		public const string SubTypeCosmosDb = "cosmosdb";
+		public const string SubTypeInternal = "internal";
 
 		public const string TypeRequest = "request";
 		public const string TypeDb = "db";
 		public const string TypeExternal = "external";
 		public const string TypeMessaging = "messaging";
 		public const string TypeStorage = "storage";
-		public const string SubTypeCosmosDb = "cosmosdb";
+		public const string TypeApp = "app";
+		public const string TypeUnknown = "unknown";
 	}
 }
