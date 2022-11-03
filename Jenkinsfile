@@ -92,18 +92,6 @@ pipeline {
               //     }
               //   }
                 /**
-                Install the required tools
-                */
-                /*
-                stage('Install tools') {
-                  steps {
-                    dir("${BASE_DIR}") {
-                      sh(label: 'Install tools', script: '.ci/linux/tools.sh')
-                    }
-                  }
-                }
-                */
-                /**
                 Build the project from code..
                 */
                 stage('Build') {
