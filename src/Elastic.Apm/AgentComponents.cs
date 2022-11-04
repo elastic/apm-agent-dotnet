@@ -48,7 +48,7 @@ namespace Elastic.Apm
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
 				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
-				PrintAgentLogPreambel(Logger);
+				PrintAgentLogPreamble(Logger);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
@@ -192,18 +192,25 @@ namespace Elastic.Apm
 		{
 			if (logger?.Info() != null)
 			{
-				var info = logger.Info().Value;
-				info.Log("********************************************************************************");
-				info.Log(
-					$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetName().Version}, build date: {File.GetCreationTime(Assembly.GetExecutingAssembly().Location).ToUniversalTime()} UTC");
-				info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
-				info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
-				info.Log($"Operating System: {RuntimeInformation.OSDescription}");
-				info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
-				info.Log($"Host: {Environment.MachineName}");
-				info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
-				info.Log($"Time zone: {TimeZoneInfo.Local}");
-				info.Log("********************************************************************************");
+				try
+				{
+					var info = logger.Info().Value;
+					info.Log("********************************************************************************");
+					info.Log(
+						$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetName().Version}, file creation time: {File.GetCreationTime(Assembly.GetExecutingAssembly().Location).ToUniversalTime()} UTC");
+					info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
+					info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
+					info.Log($"Operating System: {RuntimeInformation.OSDescription}");
+					info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
+					info.Log($"Host: {Environment.MachineName}");
+					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
+					info.Log($"Time zone: {TimeZoneInfo.Local}");
+					info.Log("********************************************************************************");
+				}
+				catch (Exception e)
+				{
+					logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
+				}
 			}
 		}
 	}
