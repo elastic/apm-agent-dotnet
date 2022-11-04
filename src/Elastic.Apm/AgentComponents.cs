@@ -188,7 +188,7 @@ namespace Elastic.Apm
 			CentralConfigurationFetcher?.Dispose();
 		}
 
-		private static void PrintAgentLogPreambel(IApmLogger logger)
+		private static void PrintAgentLogPreamble(IApmLogger logger)
 		{
 			if (logger?.Info() != null)
 			{
