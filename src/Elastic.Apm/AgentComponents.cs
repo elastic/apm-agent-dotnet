@@ -4,6 +4,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -12,11 +16,11 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
+using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 #if NET5_0 || NET6_0
 using Elastic.Apm.OpenTelemetry;
 #endif
-using Elastic.Apm.Report;
-using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm
 {
@@ -44,6 +48,7 @@ namespace Elastic.Apm
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
 				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
+				PrintAgentLogPreamble(Logger);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
@@ -60,7 +65,7 @@ namespace Elastic.Apm
 				ElasticActivityListener activityListener = null;
 				if (ConfigurationReader.EnableOpenTelemetryBridge)
 				{
-					activityListener = new OpenTelemetry.ElasticActivityListener(this);
+					activityListener = new ElasticActivityListener(this);
 
 					serverInfoCallback = (success, serverInfo) =>
 					{
@@ -181,6 +186,32 @@ namespace Elastic.Apm
 			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
 
 			CentralConfigurationFetcher?.Dispose();
+		}
+
+		private static void PrintAgentLogPreamble(IApmLogger logger)
+		{
+			if (logger?.Info() != null)
+			{
+				try
+				{
+					var info = logger.Info().Value;
+					info.Log("********************************************************************************");
+					info.Log(
+						$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetName().Version}, file creation time: {File.GetCreationTime(Assembly.GetExecutingAssembly().Location).ToUniversalTime()} UTC");
+					info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
+					info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
+					info.Log($"Operating System: {RuntimeInformation.OSDescription}");
+					info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
+					info.Log($"Host: {Environment.MachineName}");
+					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
+					info.Log($"Time zone: {TimeZoneInfo.Local}");
+					info.Log("********************************************************************************");
+				}
+				catch (Exception e)
+				{
+					logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
+				}
+			}
 		}
 	}
 }
