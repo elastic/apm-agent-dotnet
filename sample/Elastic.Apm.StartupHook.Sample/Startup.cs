@@ -21,7 +21,7 @@ namespace Elastic.Apm.StartupHook.Sample
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-#if NET5_0 || NET6_0
+#if NET5_0_OR_GREATER
 			services.AddControllersWithViews();
 #else
 			services.AddMvc();
