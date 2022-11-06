@@ -170,25 +170,15 @@ namespace Elastic.Apm
 		{
 			lock (InitializationLock)
 			{
-				if (LazyApmAgent.IsValueCreated)
-				{
-					Components?.Logger?.Error()
-						?.Log("The singleton APM agent has" +
-							" already been instantiated and can no longer be configured. Reusing existing instance. "
-							+ "Callstack: {callstack}", new StackTrace().ToString());
-
-					// Above line logs on the already configured `Components`
-					// In order to let the caller know, we also log on the logger of the rejected `agentComponents`
-					agentComponents?.Logger?.Error()
-						?.Log("The singleton APM agent has" +
-							" already been instantiated and can no longer be configured. Reusing existing instance. "
-							+ "Callstack: {callstack}", new StackTrace().ToString());
-
-					return;
-				}
-
 				agentComponents?.Logger?.Trace()
 					?.Log("Initialization - Agent.Setup called");
+
+				if (LazyApmAgent.IsValueCreated)
+				{
+					agentComponents?.Logger?.Warning()
+						?.Log("Agent.Setup called - An already initialized agent is getting re-initialized - new AgentComponents will be used"
+							+ "Callstack: {callstack}", new StackTrace().ToString());
+				}
 
 				Components = agentComponents;
 				// Force initialization

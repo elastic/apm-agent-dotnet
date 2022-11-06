@@ -16,19 +16,21 @@ namespace Elastic.Apm.StaticExplicitInitialization.Tests
 		{
 			Agent.IsConfigured.Should().BeFalse();
 
-			var logger = new InMemoryBlockingLogger(LogLevel.Error);
-			using var agentComponents = new TestAgentComponents(logger: logger);
+			using var agentComponents = new TestAgentComponents();
 			Agent.Setup(agentComponents);
 			Agent.IsConfigured.Should().BeTrue();
 
 			// 2. initialization with a new dummy-AgentComponents - this will be rejected
-			Agent.Setup(new AgentComponents());
+			var logger = new InMemoryBlockingLogger(LogLevel.Warning);
+			using var secondAgentComponents = new TestAgentComponents(logger: logger);
+			Agent.Setup(secondAgentComponents);
 
-			Agent.Components.Should().Be(agentComponents);
+			Agent.Components.Should().NotBe(agentComponents);
+			Agent.Components.Should().Be(secondAgentComponents);
 
 			logger.Lines.Should()
 				.Contain(n => n.Contains(
-					"The singleton APM agent has already been instantiated and can no longer be configured. Reusing existing instance"));
+					"re-initialized"));
 		}
 	}
 }
