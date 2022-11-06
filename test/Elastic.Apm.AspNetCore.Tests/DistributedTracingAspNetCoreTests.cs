@@ -511,7 +511,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <returns></returns>
 		private async Task ExecuteAndCheckDistributedCall(bool startActivityBeforeHttpCall = true)
 		{
-#if NET5_0 || NET6_0
+#if NET5_0_OR_GREATER
 			// .NET 5 has built-in W3C TraceContext support and Activity uses the W3C id format by default (pre .NET 5 it was opt-in)
 			// This means if there is no active activity, the outgoing HTTP request on HttpClient will add the traceparent header with
 			// a flag recorded=false. The agent would pick this up on the incoming call and start an unsampled transaction.

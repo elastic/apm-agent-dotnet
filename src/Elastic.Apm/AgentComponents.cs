@@ -18,7 +18,7 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-#if NET5_0 || NET6_0
+#if NET5_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
 #endif
 
@@ -61,7 +61,7 @@ namespace Elastic.Apm
 				// Called by PayloadSenderV2 after the ServerInfo is fetched
 				Action<bool, IApmServerInfo> serverInfoCallback = null;
 
-#if NET5_0 || NET6_0
+#if NET5_0_OR_GREATER
 				ElasticActivityListener activityListener = null;
 				if (ConfigurationReader.EnableOpenTelemetryBridge)
 				{
@@ -110,7 +110,7 @@ namespace Elastic.Apm
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
 
-#if NET5_0 || NET6_0
+#if NET5_0_OR_GREATER
 				if (ConfigurationReader.EnableOpenTelemetryBridge)
 				{
 					// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version

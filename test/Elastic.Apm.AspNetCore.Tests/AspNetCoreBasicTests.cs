@@ -125,7 +125,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NET5_0 || NET6_0
+#if NET5_0_OR_GREATER
 			transaction.Context.Request.HttpVersion.Should().Be("1.1");
 #elif NETCOREAPP3_0 || NETCOREAPP3_1
 			transaction.Context.Request.HttpVersion.Should().Be("2");
@@ -281,7 +281,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NET5_0 || NET6_0
+#if NET5_0_OR_GREATER
 			transaction.Context.Request.HttpVersion.Should().Be("1.1");
 #elif NETCOREAPP3_0 || NETCOREAPP3_1
 			transaction.Context.Request.HttpVersion.Should().Be("2");
