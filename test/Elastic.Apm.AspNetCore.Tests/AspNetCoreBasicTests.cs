@@ -98,6 +98,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 5");
 #elif NET6_0
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
+#elif NET7_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 7");
 #else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 #endif
@@ -249,6 +251,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 5");
 #elif NET6_0
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
+#elif NET7_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 7");
 #else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 #endif

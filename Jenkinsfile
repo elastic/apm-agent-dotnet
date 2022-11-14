@@ -609,6 +609,7 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.1.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '6.0.100'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '7.0.100'
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       withTerraformEnv(version: '0.15.3'){
