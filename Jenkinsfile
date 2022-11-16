@@ -546,6 +546,15 @@ pipeline {
             }
           }
         }
+        stage('Publish Docker image') {
+          steps {
+            withGithubNotify(context: 'Create Docker image - Linux') {
+              dir("${BASE_DIR}"){
+                sh(label: 'Publish Docker Image', script: '.ci/linux/push_docker.sh')
+              }
+            }
+          }
+        }
       }
     }
     stage('AfterRelease') {
