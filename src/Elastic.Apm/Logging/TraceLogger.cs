@@ -7,7 +7,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Elastic.Apm.Helpers;
+using System.Threading;
 
 namespace Elastic.Apm.Logging
 {
@@ -51,6 +51,8 @@ namespace Elastic.Apm.Logging
 
 			builder.Append('[')
 				.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"))
+				.Append("][")
+				.Append(Thread.CurrentThread.ManagedThreadId)
 				.Append("][")
 				.Append(logLevel)
 				.Append("] - ")

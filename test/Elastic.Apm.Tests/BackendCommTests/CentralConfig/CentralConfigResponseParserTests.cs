@@ -52,6 +52,63 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			waitInfoS.Interval.Should().Be(TimeSpan.FromMinutes(5));
 		}
 
+		/// <summary>
+		/// According to spec, the agent should retry fetching central config with not less than 5 sec interval.
+		/// Makes sure that MaxAge headers with less than 5 sec fall back to use a 5 sec wait time.
+		/// </summary>
+		/// <param name="seconds">The MaxAge header returned to the agent.</param>
+		[Theory]
+		[InlineData(1)]
+		[InlineData(4)]
+		[InlineData(5)]
+		public void ParseHttpResponse_ShouldUse5SecWaitTime_WhenMaxAgeIsLessThan5Sec(int seconds)
+		{
+			var response = new HttpResponseMessage
+			{
+				StatusCode = HttpStatusCode.NotModified,
+				Headers = { CacheControl = new CacheControlHeaderValue { MaxAge = TimeSpan.FromSeconds(seconds) } }
+			};
+
+			var (_, waitInfoS) = _parser.ParseHttpResponse(response, string.Empty);
+
+			waitInfoS.Interval.Should().Be(TimeSpan.FromSeconds(5));
+
+			if(seconds < 5)
+			{
+				waitInfoS.Reason.Should().Be("The max-age directive in Cache-Control header in APM Server's response is less than 5 seconds, "
+					+ "which is less than expected by the spec - falling back to use 5 seconds wait time.");
+			}
+			else
+			{
+				waitInfoS.Reason.Should().NotBe("The max-age directive in Cache-Control header in APM Server's response is less than 5 seconds, "
+					+ "which is less than expected by the spec - falling back to use 5 seconds wait time.");
+			}
+		}
+
+		/// <summary>
+		/// Makes sure the agent handles 0 or negative MaxAge headers by falling back to the default wait time (5 minutes).
+		/// </summary>
+		/// <param name="seconds">The MaxAge header returned to the agent.</param>
+		[Theory]
+		[InlineData(0)]
+		[InlineData(-1)]
+		[InlineData(-10)]
+		[InlineData(int.MinValue)]
+		public void  ParseHttpResponse_ShouldUseDefaultWaitTime_WhenMaxAgeIsZeroOrNegative(int seconds)
+		{
+			var response = new HttpResponseMessage
+			{
+				StatusCode = HttpStatusCode.NotModified,
+				Headers = { CacheControl = new CacheControlHeaderValue { MaxAge = TimeSpan.FromSeconds(seconds) } }
+			};
+
+			var (_, waitInfoS) = _parser.ParseHttpResponse(response, string.Empty);
+
+			waitInfoS.Interval.Should().Be(TimeSpan.FromMinutes(5));
+			waitInfoS.Reason.Should().Be("The max-age directive in Cache-Control header in APM Server's response is zero or negative, "
+				+ $"which is invalid - falling back to use default ({CentralConfigurationResponseParser.WaitTimeIfNoCacheControlMaxAge.Minutes} minutes) wait time.");
+		}
+
 		[Fact]
 		public void ParseHttpResponse_ShouldReturnNullConfigDelta_WhenResponseStatusCodeIs304()
 		{
