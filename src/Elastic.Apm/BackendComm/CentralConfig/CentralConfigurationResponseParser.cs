@@ -74,6 +74,19 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			if (httpResponse.Headers?.CacheControl?.MaxAge != null)
 			{
+				if (httpResponse.Headers.CacheControl.MaxAge <= TimeSpan.FromSeconds(0))
+				{
+					return new CentralConfigurationFetcher.WaitInfoS(WaitTimeIfNoCacheControlMaxAge,
+						"The max-age directive in Cache-Control header in APM Server's response is zero or negative, "
+						+ $"which is invalid - falling back to use default ({WaitTimeIfNoCacheControlMaxAge.Minutes} minutes) wait time.");
+				}
+				if (httpResponse.Headers.CacheControl.MaxAge > TimeSpan.FromSeconds(0) && httpResponse.Headers.CacheControl.MaxAge < TimeSpan.FromSeconds(5))
+				{
+					return new CentralConfigurationFetcher.WaitInfoS(TimeSpan.FromSeconds(5),
+						"The max-age directive in Cache-Control header in APM Server's response is less than 5 seconds, "
+						+ "which is less than expected by the spec - falling back to use 5 seconds wait time.");
+				}
+
 				return new CentralConfigurationFetcher.WaitInfoS(httpResponse.Headers.CacheControl.MaxAge.Value,
 					"Wait time is taken from max-age directive in Cache-Control header in APM Server's response");
 			}

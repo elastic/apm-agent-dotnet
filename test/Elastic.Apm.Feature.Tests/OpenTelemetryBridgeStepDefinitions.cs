@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -268,7 +269,26 @@ namespace Elastic.Apm.Feature.Tests
 		public void ThenElasticBridgedSpanDestinationResourceIsSetTo(string p0)
 		{
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
-			(payloadSender.FirstSpan as Span).Context.Destination.Service.Resource.Should().Be(p0);
+			payloadSender.FirstSpan.Context.Destination.Service.Resource.Should().Be(p0);
+		}
+
+		[Then(@"Elastic bridged span service target type is '(.*)' and name is ""(.*)""")]
+		public void ThenElasticBridgedSpanServiceTargetTypeIsAndNameIs(string targetType, string name)
+			=> ThenElasticBridgedSpanServiceTargetTypeIsAndNameIs2(targetType, name);
+
+		[Then(@"Elastic bridged span service target type is ""(.*)"" and name is ""(.*)""")]
+		public void ThenElasticBridgedSpanServiceTargetTypeIsAndNameIs2(string targetType, string name)
+		{
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstSpan.Context.Service.Target.Type.Should().Be(targetType);
+			payloadSender.FirstSpan.Context.Service.Target.Name.NotNull().Should().Be(name);
+		}
+
+		[Then(@"Elastic bridged transaction result is not set")]
+		public void ThenElasticBridgedTransactionResultIsNotSet()
+		{
+			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
+			payloadSender.FirstTransaction.Result.Should().BeNullOrEmpty();
 		}
 	}
 }

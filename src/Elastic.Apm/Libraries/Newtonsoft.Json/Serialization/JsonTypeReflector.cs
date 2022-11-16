@@ -468,7 +468,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 		{
 			get
 			{
-#if !(PORTABLE40 || PORTABLE || DOTNET || NETSTANDARD2_0 || NET5_0 || NET6_0)
+#if !(PORTABLE40 || PORTABLE || DOTNET || NETSTANDARD2_0 || NET5_0_OR_GREATER)
                 if (DynamicCodeGeneration)
                 {
                     return DynamicReflectionDelegateFactory.Instance;
