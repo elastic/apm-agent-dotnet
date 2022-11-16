@@ -9,8 +9,11 @@ set -euxo pipefail
 .ci/linux/remove-projects.sh
 
 echo "*** TEST FUNC"
-func
+echo $PATH
+which dotnet
+which func
 func --version
+dotnet --version
 
 # Run tests for all solution
 dotnet test -c Release ElasticApmAgent.sln \

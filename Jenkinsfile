@@ -272,7 +272,8 @@ def dotnet(Closure body){
   withEnv([
     "HOME=${homePath}",
     "DOTNET_ROOT=${homePath}/.dotnet",
-    "PATH+DOTNET=${homePath}/.dotnet/tools:${homePath}/.dotnet"
+    "PATH+DOTNET=${homePath}/.dotnet/tools:${homePath}/.dotnet",
+    "PATH=${homePath}/azure-functions-cli:${PATH}"
     ]){
     sh(label: 'Install dotnet SDK', script: """
     mkdir -p \${DOTNET_ROOT}
@@ -284,6 +285,32 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.1.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '6.0.100'
+    """)
+    sh(label: 'Install Azure Functions Core Tools', script: """
+      # See: https://github.com/Azure/azure-functions-core-tools#other-linux-distributions
+
+    # Get the URL for the latest v4 linux-64 artifact
+    latest_v4_release_url=\$(curl -s https://api.github.com/repos/Azure/azure-functions-core-tools/releases \
+      | jq -r '.[].assets[].browser_download_url' \
+      | grep 'Azure.Functions.Cli.linux-x64.4.*zip\$' \
+      | head -n 1)
+    
+    # Preserve only the filename component of the URL
+    latest_v4_release_file=\${latest_v4_release_url##*/}
+
+    # Download the artifact
+    curl -sLO "\${latest_v4_release_url}"
+
+    # Unzip the artifact to ./azure-functions-cli
+    unzip -d azure-functions-cli "\${latest_v4_release_file}"
+
+    # Make required executables ... executable.
+    chmod +x ./azure-functions-cli/func
+    chmod +x ./azure-functions-cli/gozip
+
+    echo $PATH
+
+    func --version
     """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       withTerraformEnv(version: '0.15.3'){
