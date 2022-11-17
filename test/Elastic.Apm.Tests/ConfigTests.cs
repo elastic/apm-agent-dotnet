@@ -324,7 +324,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(
 					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfigurationReader())))
 			{
-#if !NETCOREAPP3_0 && !NETCOREAPP3_1 && !NET5_0 && !NET6_0
+#if !NETCOREAPP3_0 && !NETCOREAPP3_1 && !NET5_0_OR_GREATER
 				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
 				agent.ConfigurationReader.ServerUrl.Should().NotBe(serverUrlsWithSpace);
 #endif
@@ -1156,7 +1156,7 @@ namespace Elastic.Apm.Tests
 			var appNamespaces = config.ApplicationNamespaces;
 			appNamespaces.Should().BeNullOrEmpty();
 			var excludedNamespaces = config.ExcludedNamespaces;
-			excludedNamespaces.Should().BeEquivalentTo(ConfigConsts.DefaultValues.DefaultExcludedNamespaces);
+			excludedNamespaces.Should().BeEquivalentTo(DefaultValues.DefaultExcludedNamespaces);
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)

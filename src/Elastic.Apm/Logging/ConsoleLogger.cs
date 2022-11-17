@@ -4,7 +4,7 @@
 
 using System;
 using System.IO;
-using Elastic.Apm.Config;
+using System.Threading;
 using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Logging
@@ -69,6 +69,8 @@ namespace Elastic.Apm.Logging
 			{
 				writer.Write('[');
 				writer.Write(dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"));
+				writer.Write("][");
+				writer.Write(Thread.CurrentThread.ManagedThreadId);
 				writer.Write("][");
 				writer.Write(LevelToString(level));
 				writer.Write("] - ");
