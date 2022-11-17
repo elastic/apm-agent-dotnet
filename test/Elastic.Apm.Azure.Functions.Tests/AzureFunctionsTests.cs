@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -30,12 +29,6 @@ public class AzureFunctionsTests : IAsyncLifetime
 
 	public AzureFunctionsTests(ITestOutputHelper output)
 	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-		{
-			// Skip until `func` tooling is Available in Linux CI (https://github.com/elastic/infra/pull/37751)
-			return;
-		}
-
 		_output = output;
 		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsTests));
 		_apmServer.OnReceive += o =>
@@ -108,12 +101,6 @@ public class AzureFunctionsTests : IAsyncLifetime
 	[Fact]
 	public async Task Invoke_Http_Ok()
 	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-		{
-			// Skip until `func` tooling is Available in Linux CI (https://github.com/elastic/infra/pull/37751)
-			return;
-		}
-
 		await InvokeFunction("http://localhost:7071/api/SampleHttpTrigger");
 
 		_waitForTransactionDataEvent.WaitOne(TimeSpan.FromSeconds(30));
