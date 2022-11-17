@@ -131,8 +131,10 @@ pipeline {
                       unstash 'source'
                       filebeat(output: "docker.log"){
                         dir("${BASE_DIR}"){
-                          dotnet(){
-                            sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                          testTools(){
+                            dotnet(){
+                              sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                            }
                           }
                         }
                       }
@@ -286,6 +288,19 @@ def dotnet(Closure body){
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.100'
     ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '6.0.100'
     """)
+    withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
+      withTerraformEnv(version: '0.15.3'){
+        body()
+      }
+    }
+  }
+}
+
+def testTools(Closure body){
+  def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
+  withEnv([
+    "PATH=${homePath}/azure-functions-cli:${PATH}"
+    ]){
     sh(label: 'Install Azure Functions Core Tools', script: """
       # See: https://github.com/Azure/azure-functions-core-tools#other-linux-distributions
 
@@ -307,16 +322,8 @@ def dotnet(Closure body){
     # Make required executables ... executable.
     chmod +x ./azure-functions-cli/func
     chmod +x ./azure-functions-cli/gozip
-
-    echo $PATH
-
-    func --version
     """)
-    withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
-      withTerraformEnv(version: '0.15.3'){
-        body()
-      }
-    }
+    body()
   }
 }
 
