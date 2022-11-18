@@ -17,7 +17,8 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Elastic.Apm.Azure.Storage.Tests;
+namespace Elastic.Apm.Azure.Functions.Tests;
+
 
 [Collection("AzureFunctions")]
 public class AzureFunctionsTests : IAsyncLifetime
