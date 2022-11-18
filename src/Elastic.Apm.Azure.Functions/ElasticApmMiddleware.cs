@@ -20,7 +20,7 @@ using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 
 namespace Elastic.Apm.Azure.Functions;
 
-public class ElasticApmMiddleware : IFunctionsWorkerMiddleware
+public class ApmMiddleware : IFunctionsWorkerMiddleware
 {
 	private static readonly IApmLogger Logger;
 	private static readonly string FaasIdPrefix;
