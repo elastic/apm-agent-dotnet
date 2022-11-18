@@ -5,15 +5,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Model
 {
@@ -47,6 +44,8 @@ namespace Elastic.Apm.Model
 
 		public Context Context =>
 			ReusableContextInstance;
+
+		public Faas FaaS { get; set; }
 
 		public Dictionary<string, string> Custom => _custom.Value;
 

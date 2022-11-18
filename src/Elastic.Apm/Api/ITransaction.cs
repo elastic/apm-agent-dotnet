@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Api
 {
@@ -20,6 +21,11 @@ namespace Elastic.Apm.Api
 	[Specification("transaction.json")]
 	public interface ITransaction : IExecutionSegment
 	{
+		/// <summary>
+		/// Contains data related to FaaS (Function as a Service) events.
+		/// </summary>
+		public Faas FaaS { get; set; }
+
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
 		/// This field is lazily initialized, you don't have to assign a value to it and you don't have to null check it either.

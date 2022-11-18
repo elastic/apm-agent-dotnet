@@ -1,10 +1,9 @@
-using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using Elastic.Apm.Api;
-using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.Extensions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -167,7 +166,7 @@ namespace Elastic.Apm.Feature.Tests
 			var transaction = agent.Tracer.StartTransaction("HttpTransaction", "Test");
 			transaction.Context.Request = new Request("GET", new Url { Full = "https://elastic.co" });
 			transaction.Context.Response = new Response() { StatusCode = int.Parse(responseCode) };
-			WebRequestTransactionCreator.SetOutcomeForHttpResult(transaction, int.Parse(responseCode));
+			transaction.SetOutcomeForHttpResult(int.Parse(responseCode));
 			_scenarioContext.Set(transaction);
 		}
 

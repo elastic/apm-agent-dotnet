@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 var host = new HostBuilder()
 	.ConfigureFunctionsWorkerDefaults(builder =>
 	{
-		builder.UseMiddleware<ElasticApmMiddleware>();
+		builder.UseMiddleware<ApmMiddleware>();
 	})
 	.Build();
 

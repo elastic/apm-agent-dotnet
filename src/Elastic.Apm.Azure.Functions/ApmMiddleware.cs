@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Cloud;
+using Elastic.Apm.Extensions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -20,15 +21,15 @@ using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 
 namespace Elastic.Apm.Azure.Functions;
 
-public class ElasticApmMiddleware : IFunctionsWorkerMiddleware
+public class ApmMiddleware : IFunctionsWorkerMiddleware
 {
 	private static readonly IApmLogger Logger;
 	private static readonly string FaasIdPrefix;
 	private static int ColdStart = 1;
 
-	static ElasticApmMiddleware()
+	static ApmMiddleware()
 	{
-		Logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmMiddleware));
+		Logger = Agent.Instance.Logger.Scoped(nameof(ApmMiddleware));
 		var metaData = new AzureFunctionsMetadataProvider(Logger,
 			new EnvironmentVariables(Logger).GetEnvironmentVariables()).GetMetadata();
 		FaasIdPrefix =
@@ -40,38 +41,39 @@ public class ElasticApmMiddleware : IFunctionsWorkerMiddleware
 
 	public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
 	{
-		try
-		{
-			Logger.Trace()?.Log($"{nameof(Invoke)} - {context.FunctionDefinition.Name}");
+		Logger.Trace()?.Log($"{nameof(Invoke)} - {context.FunctionDefinition.Name}");
 
-			var data = GetTriggerSpecificData(context);
-			await Agent.Tracer.CaptureTransaction(data.Name, ApiConstants.TypeRequest, async t =>
+		var data = GetTriggerSpecificData(context);
+		await Agent.Tracer.CaptureTransaction(data.Name, ApiConstants.TypeRequest, async t =>
+		{
+			var success = true;
+			t.FaaS = new Faas
 			{
-				if (t is Transaction transaction) // TODO: Expose FaaS property on ITransaction?
-				{
-					transaction.FaaS = new Faas
-					{
-						Name = context.FunctionDefinition.Name,
-						Id = $"{FaasIdPrefix}{context.FunctionDefinition.Name}",
-						Trigger = new Trigger { Type = data.TriggerType },
-						Execution = context.InvocationId,
-						ColdStart = IsColdStart()
-					};
-				}
+				Name = context.FunctionDefinition.Name,
+				Id = $"{FaasIdPrefix}{context.FunctionDefinition.Name}",
+				Trigger = new Trigger { Type = data.TriggerType },
+				Execution = context.InvocationId,
+				ColdStart = IsColdStart()
+			};
 
+			try
+			{
 				await next(context);
-
-				t.Outcome = Outcome.Success;
-				t.Result = GetTriggerSpecificResult(context);
-			}, data.TracingData);
-		}
-		catch (Exception ex)
-		{
-			Logger.Log(LogLevel.Error, $"Exception was thrown during '{nameof(Invoke)}'", ex, null);
-		}
+			}
+			catch (Exception ex)
+			{
+				success = false;
+				Logger.Log(LogLevel.Error, $"Exception was thrown during '{nameof(Invoke)}'", ex, null);
+				throw;
+			}
+			finally
+			{
+				SetTriggerSpecificResult(t, success, context);
+			}
+		}, data.TracingData);
 	}
 
-	private TriggerSpecificData GetTriggerSpecificData(FunctionContext context)
+	private static TriggerSpecificData GetTriggerSpecificData(FunctionContext context)
 	{
 		var httpRequestData = GetHttpRequestData(context);
 		if (httpRequestData != null)
@@ -88,12 +90,28 @@ public class ElasticApmMiddleware : IFunctionsWorkerMiddleware
 		return new TriggerSpecificData(context.FunctionDefinition.Name, Trigger.TypeOther, null);
 	}
 
-	private static string GetTriggerSpecificResult(FunctionContext context)
+	private static void SetTriggerSpecificResult(ITransaction transaction, bool success, FunctionContext context)
 	{
 		var httpResponseData = GetProperty<HttpResponseData>(context, "InvocationResult");
-		return httpResponseData != null
-			? $"HTTP {(int)httpResponseData.StatusCode / 100}xx"
-			: "success";
+		if (httpResponseData != null) // HTTP Trigger
+		{
+			var httpStatusCode = (int)httpResponseData.StatusCode;
+			transaction.Result = Transaction.StatusCodeToResult("HTTP", httpStatusCode);
+			transaction.SetOutcomeForHttpResult(httpStatusCode);
+		}
+		else // Generic
+		{
+			if (success)
+			{
+				transaction.Result = "success";
+				transaction.Outcome = Outcome.Success;
+			}
+			else
+			{
+				transaction.Result = "failure";
+				transaction.Outcome = Outcome.Failure;
+			}
+		}
 	}
 
 	private static HttpRequestData? GetHttpRequestData(FunctionContext functionContext)

@@ -43,7 +43,7 @@ namespace Elastic.Apm.Extensions
 				body = httpRequest.ExtractBody(logger, transaction.Configuration);
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
-			transaction.Context.Request.Body = body ?? Apm.Consts.Redacted;
+			transaction.Context.Request.Body = body ?? Consts.Redacted;
 		}
 
 		internal static bool IsCaptureRequestBodyEnabled(this ITransaction transaction, bool isForError) =>
@@ -70,6 +70,17 @@ namespace Elastic.Apm.Extensions
 			{
 				logger?.Info()?.LogException(ex, "Exception occurred when capturing '{ContentType}' content type", requestContentType);
 				return false;
+			}
+		}
+
+		internal static void SetOutcomeForHttpResult(this ITransaction transaction, int httpReturnCode)
+		{
+			if (transaction is Transaction realTransaction)
+			{
+				if (httpReturnCode >= 500 || httpReturnCode < 100)
+					realTransaction.SetOutcome(Outcome.Failure);
+				else
+					realTransaction.SetOutcome(Outcome.Success);
 			}
 		}
 	}
