@@ -32,3 +32,6 @@ Invoke-WebRequest -UseBasicParsing `
 Write-Host "Unzip cargo-make"
 New-Item -ItemType directory -Path C:\tools\cargo
 Expand-Archive -LiteralPath C:\tools\cargo-make.zip -DestinationPath C:\tools\cargo
+
+# Install Azure Functions Core Tools (https://github.com/Azure/azure-functions-core-tools)
+choco install azure-functions-core-tools -y --no-progress -r --version 4.0.4829
