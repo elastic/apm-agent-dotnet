@@ -6,18 +6,24 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Elastic.Apm.Api;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
+using FluentAssertions;
 
 namespace Elastic.Apm.Tests.Utilities
 {
 	internal class MockPayloadSender : IPayloadSender
 	{
+		private static readonly JObject JsonSpanTypesData =
+			JObject.Parse(File.ReadAllText("./TestResources/json-specs/span_types.json"));
+
 		private readonly List<IError> _errors = new List<IError>();
 		private readonly List<Func<IError, IError>> _errorFilters = new List<Func<IError, IError>>();
 		private readonly object _spanLock = new object();
@@ -41,6 +47,12 @@ namespace Elastic.Apm.Tests.Utilities
 
 			PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, _errorFilters, MockApmServerInfo.Version710, logger ?? new NoopLogger());
 		}
+
+		/// <summary>
+		/// Allows opt-in to strict span type/sub-type checking
+		/// TODO: In the future this should become an opt-out setting.
+		/// </summary>
+		public bool IsStrictSpanCheckEnabled { get; set; } = false;
 
 		private readonly AutoResetEvent _transactionWaitHandle;
 		private readonly AutoResetEvent _spanWaitHandle;
@@ -226,7 +238,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			lock (_transactionLock)
 			{
-				transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
+				transaction = _transactionFilters.Aggregate(transaction,
+					(current, filter) => filter(current));
 				_transactions.Add(transaction);
 				_transactionWaitHandle.Set();
 			}
@@ -234,11 +247,48 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public void QueueSpan(ISpan span)
 		{
+			VerifySpan(span);
 			lock (_spanLock)
 			{
 				span = _spanFilters.Aggregate(span, (current, filter) => filter(current));
 				_spans.Add(span);
 				_spanWaitHandle.Set();
+			}
+		}
+
+		private void VerifySpan(ISpan span)
+		{
+			var type = span.Type;
+			type.Should().NotBeNullOrEmpty("span type is mandatory");
+
+			if (IsStrictSpanCheckEnabled)
+			{
+				var spanTypeInfo = JsonSpanTypesData[type] as JObject;
+				spanTypeInfo.Should().NotBeNull($"span type '{type}' is not allowed by the spec");
+
+				var allowNullSubtype = spanTypeInfo["allow_null_subtype"]?.Value<bool>();
+				var allowUnlistedSubtype = spanTypeInfo["allow_unlisted_subtype"]?.Value<bool>();
+				var subTypes = spanTypeInfo["subtypes"];
+				var hasSubtypes = subTypes != null && subTypes.Any();
+
+				var subType = span.Subtype;
+				if (subType != null)
+				{
+					if (!allowUnlistedSubtype.GetValueOrDefault() && hasSubtypes)
+					{
+						var subTypeInfo = subTypes[subType];
+						subTypeInfo.Should()
+							.NotBeNull($"span subtype '{subType}' is not allowed by the spec for type '{type}'");
+					}
+				}
+				else
+				{
+					if (!hasSubtypes)
+					{
+						allowNullSubtype.Should().Be(true,
+							$"span type '{type}' requires non-null subtype (allow_null_subtype=false)");
+					}
+				}
 			}
 		}
 
