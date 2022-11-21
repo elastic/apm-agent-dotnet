@@ -206,6 +206,20 @@ pipeline {
                     }
                   }
                 }
+                stage('Publish Docker image') {
+                  environment {
+                    DOCKER_SECRET = 'secret/apm-team/ci/docker-registry/prod'
+                    DOCKER_REGISTRY = 'docker.elastic.co'
+                  }
+                  steps {
+                    withGithubNotify(context: 'Create Docker image - Linux') {
+                      dir("${BASE_DIR}"){
+                        dockerLogin(secret: env.DOCKER_SECRET, registry: env.DOCKER_REGISTRY)
+                        sh(label: 'Publish Docker Image', script: '.ci/linux/push_docker.sh')
+                      }
+                    }
+                  }
+                }        
               }
             }
             stage('Windows .NET Framework'){
