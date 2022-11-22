@@ -124,84 +124,100 @@ pipeline {
                 /**
                 Execute unit tests.
                 */
-                stage('Test') {
-                  steps {
-                    withGithubNotify(context: 'Test - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      filebeat(output: "docker.log"){
-                        dir("${BASE_DIR}"){
-                          dotnet(){
-                            sh label: 'Test & coverage', script: '.ci/linux/test.sh'
-                          }
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                      publishCoverage(adapters: [coberturaAdapter("${BASE_DIR}/target/**/*coverage.cobertura.xml")],
-                                      sourceFileResolver: sourceFiles('STORE_ALL_BUILD'))
-                      codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Startup Hook Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test startup hooks - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Build', script: './build.sh agent-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-startuphooks.sh'
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Profiler Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test profiler - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.59.0'
-                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                          sh label: 'Build', script: './build.sh profiler-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
+                // stage('Test') {
+                //   steps {
+                //     withGithubNotify(context: 'Test - Linux', tab: 'tests') {
+                //       deleteDir()
+                //       unstash 'source'
+                //       filebeat(output: "docker.log"){
+                //         dir("${BASE_DIR}"){
+                //           dotnet(){
+                //             sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                //           }
+                //         }
+                //       }
+                //     }
+                //   }
+                //   post {
+                //     always {
+                //       reportTests()
+                //       publishCoverage(adapters: [coberturaAdapter("${BASE_DIR}/target/**/*coverage.cobertura.xml")],
+                //                       sourceFileResolver: sourceFiles('STORE_ALL_BUILD'))
+                //       codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
+                //     }
+                //     unsuccessful {
+                //       archiveArtifacts(allowEmptyArchive: true,
+                //         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                //     }
+                //   }
+                // }
+                // stage('Startup Hook Tests') {
+                //   steps {
+                //     withGithubNotify(context: 'Test startup hooks - Linux', tab: 'tests') {
+                //       deleteDir()
+                //       unstash 'source'
+                //       dir("${BASE_DIR}"){
+                //         dotnet(){
+                //           sh label: 'Build', script: './build.sh agent-zip'
+                //           sh label: 'Test & coverage', script: '.ci/linux/test-startuphooks.sh'
+                //         }
+                //       }
+                //     }
+                //   }
+                //   post {
+                //     always {
+                //       reportTests()
+                //     }
+                //     unsuccessful {
+                //       archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                //     }
+                //   }
+                // }
+                // stage('Profiler Tests') {
+                //   steps {
+                //     withGithubNotify(context: 'Test profiler - Linux', tab: 'tests') {
+                //       deleteDir()
+                //       unstash 'source'
+                //       dir("${BASE_DIR}"){
+                //         dotnet(){
+                //           sh label: 'Rustup', script: 'rustup default 1.59.0'
+                //           sh label: 'Cargo make', script: 'cargo install --force cargo-make'
+                //           sh label: 'Build', script: './build.sh profiler-zip'
+                //           sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
+                //         }
+                //       }
+                //     }
+                //   }
+                //   post {
+                //     always {
+                //       reportTests()
+                //     }
+                //     unsuccessful {
+                //       archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                //     }
+                //   }
+                // }
                 stage('Create Docker image') {
                   steps {
                     withGithubNotify(context: 'Create Docker image - Linux') {
                       dir("${BASE_DIR}"){
                         sh(label: 'Create Docker Image', script: '.ci/linux/build_docker.sh')
+                      }
+                    }
+                  }
+                }
+                stage('Publish Docker image') {
+                  environment {
+                    DOCKER_SECRET = 'secret/apm-team/ci/docker-registry/prod'
+                    DOCKER_REGISTRY = 'docker.elastic.co'
+                    HOME = "${env.WORKSPACE}"
+                  }
+                  steps {
+                    withGithubNotify(context: 'Create Docker image - Linux') {
+                      dir("${BASE_DIR}"){
+                        dockerLogin(secret: env.DOCKER_SECRET, registry: env.DOCKER_REGISTRY)
+                        sh(script: 'chmod +x .ci/linux/push_docker.sh')
+                        sh(label: 'Publish Docker Image', script: '.ci/linux/push_docker.sh')
                       }
                     }
                   }
