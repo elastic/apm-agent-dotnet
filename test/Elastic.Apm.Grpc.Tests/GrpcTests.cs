@@ -34,7 +34,7 @@ namespace Elastic.Apm.Grpc.Tests
 		[Theory]
 		public async Task BasicGrpcTest(bool withDiagnosticSource)
 		{
-			var payloadSender = new MockPayloadSender();
+			var payloadSender = new MockPayloadSender { IsStrictSpanCheckEnabled = true };
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			IHost sampleAppHost;
