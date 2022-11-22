@@ -210,6 +210,7 @@ pipeline {
                   environment {
                     DOCKER_SECRET = 'secret/apm-team/ci/docker-registry/prod'
                     DOCKER_REGISTRY = 'docker.elastic.co'
+                    HOME = "${env.WORKSPACE}"
                   }
                   steps {
                     withGithubNotify(context: 'Create Docker image - Linux') {
