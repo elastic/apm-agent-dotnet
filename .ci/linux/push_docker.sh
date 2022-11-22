@@ -39,7 +39,7 @@ readonly CUR_TAG=${CUR_TAG:-$GIT_TAG_DEFAULT}
 
 # 2. Construct the image:tag that we are working with
 # This is roughly <repo>/<namespace>/image
-readonly DOCKER_PUSH_IMAGE="docker.elastic.co/observability/apm-agent-dotnet:$CUR_TAG"
+readonly DOCKER_PUSH_IMAGE="docker.elastic.co/observability/apm-agent-dotnet:1.18.0"
 
 # 3. Proceed with pushing to the registry
 readonly DOCKER_REGISTRY_URL=`echo $DOCKER_PUSH_IMAGE|cut -f1 -d/`
