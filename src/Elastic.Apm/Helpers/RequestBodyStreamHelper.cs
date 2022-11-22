@@ -6,20 +6,33 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Elastic.Apm.Helpers
 {
+	internal struct ReadRequestBodyResult
+	{
+		internal ReadRequestBodyResult(string body, bool isLongerThanMaxLength)
+		{
+			Body = body;
+			IsLongerThanMaxLength = isLongerThanMaxLength;
+		}
+
+		internal string Body { get; }
+		internal bool IsLongerThanMaxLength { get; }
+	}
+
 	internal static class RequestBodyStreamHelper
 	{
 		internal const int RequestBodyMaxLength = 10000;
 
-		internal static string ToString(Stream requestBody, out bool longerThanMaxLength)
+		internal static async Task<ReadRequestBodyResult> ToString(Stream requestBody)
 		{
-			longerThanMaxLength = false;
+			var longerThanMaxLength = false;
 
-			if (requestBody == null) return null;
+			if (requestBody == null) return new ReadRequestBodyResult();
 
-			string body = null;
+			string body;
 
 			var capacity = 512;
 			var totalRead = 0;
@@ -29,7 +42,6 @@ namespace Elastic.Apm.Helpers
 			if (requestBody.Length == 0)
 			{
 				buffer = arrayPool.Rent(capacity);
-				int read;
 
 				// requestBody.Length is 0 on initial buffering - length relates to how much has been read and buffered.
 				// Read to just beyond request body max length so that we can determine if truncation will occur
@@ -37,7 +49,8 @@ namespace Elastic.Apm.Helpers
 				{
 					// TODO: can we assume utf-8 encoding?
 					using var reader = new StreamReader(requestBody, Encoding.UTF8, false, buffer.Length, true);
-					while ((read = reader.Read(buffer, 0, capacity)) != 0)
+					int read;
+					while ((read = await reader.ReadAsync(buffer, 0, capacity)) != 0)
 					{
 						totalRead += read;
 						if (totalRead > RequestBodyMaxLength)
@@ -65,7 +78,7 @@ namespace Elastic.Apm.Helpers
 			try
 			{
 				using var reader = new StreamReader(requestBody, Encoding.UTF8, false, RequestBodyMaxLength, true);
-				var read = reader.ReadBlock(buffer, 0, capacity);
+				var read = await reader.ReadBlockAsync(buffer, 0, capacity);
 				body = new string(buffer, 0, read);
 			}
 			finally
@@ -75,7 +88,7 @@ namespace Elastic.Apm.Helpers
 
 			requestBody.Position = 0;
 
-			return body;
+			return new ReadRequestBodyResult(body, longerThanMaxLength);
 		}
 	}
 }
