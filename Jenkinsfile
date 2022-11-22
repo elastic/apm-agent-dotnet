@@ -139,7 +139,7 @@ pipeline {
                     withGithubNotify(context: 'Create Docker image - Linux') {
                       dir("${BASE_DIR}"){
                         dockerLogin(secret: env.DOCKER_SECRET, registry: env.DOCKER_REGISTRY)
-                        sh(script: 'chmod +x ci/linux/push_docker.sh')
+                        sh(script: 'chmod +x .ci/linux/push_docker.sh')
                         sh(label: 'Publish Docker Image', script: '.ci/linux/push_docker.sh')
                       }
                     }
