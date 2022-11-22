@@ -3,7 +3,7 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>NU1503,NU1608,CS8002,</NoWarn>
+    <NoWarn>NU1701,NU1503,NU1608,CS8002,</NoWarn>
     <!-- suppress NETSDK1138 warnings for EOL frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <SolutionRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.bat))</SolutionRoot>

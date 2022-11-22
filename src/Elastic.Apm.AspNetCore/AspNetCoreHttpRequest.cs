@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
@@ -16,11 +17,7 @@ namespace Elastic.Apm.AspNetCore
 
 		internal AspNetCoreHttpRequest(HttpRequest request) => _request = request;
 
-		public string ExtractBody(IConfiguration configuration, IApmLogger logger, out bool longerThanMaxLength)
-		{
-			longerThanMaxLength = false;
-			return _request?.ExtractRequestBody(configuration, out longerThanMaxLength);
-		}
+		public Task<ReadRequestBodyResult> ExtractBody(IConfiguration configuration, IApmLogger logger) => _request?.ExtractRequestBody(configuration);
 
 		public bool HasValue => _request != null;
 		public string ContentType => _request?.ContentType;

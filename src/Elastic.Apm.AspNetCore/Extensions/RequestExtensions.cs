@@ -11,15 +11,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 {
 	internal static class HttpRequestExtensions
 	{
-		internal static string ExtractRequestBody(this HttpRequest request, IConfiguration configuration,
-			out bool longerThanMaxLength)
-		{
-			var result = AsyncHelper.RunSync(() => ExtractRequestBodyAsync(request, configuration));
-			longerThanMaxLength = result.IsLongerThanMaxLength;
-			return result.Body;
-		}
-
-		private static async Task<ReadRequestBodyResult> ExtractRequestBodyAsync(this HttpRequest request,
+		internal static async Task<ReadRequestBodyResult> ExtractRequestBody(this HttpRequest request,
 			IConfiguration configuration)
 		{
 			// Ensure the request Microsoft.AspNetCore.Http.HttpRequest.Body can be read multiple times

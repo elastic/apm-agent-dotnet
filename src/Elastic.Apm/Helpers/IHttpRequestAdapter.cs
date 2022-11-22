@@ -6,6 +6,7 @@ using System.IO;
 using System;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using System.Threading.Tasks;
 
 namespace Elastic.Apm.Helpers
 {
@@ -13,7 +14,7 @@ namespace Elastic.Apm.Helpers
 	{
 		bool HasValue { get; }
 		string ContentType { get; }
-		string ExtractBody(IConfiguration configuration, IApmLogger logger, out bool longerThanMaxLength);
+		Task<ReadRequestBodyResult> ExtractBody(IConfiguration configuration, IApmLogger logger);
 	}
 
 	internal static class IHttpRequestAdapterExtensions
@@ -31,7 +32,9 @@ namespace Elastic.Apm.Helpers
 			var longerThanMaxLength = false;
 			try
 			{
-				return httpRequest.ExtractBody(configuration, logger, out longerThanMaxLength);
+				var result = AsyncHelper.RunSync(() => httpRequest.ExtractBody(configuration, logger));
+				longerThanMaxLength = result.IsLongerThanMaxLength;
+				return result.Body;
 			}
 			catch (IOException ioException)
 			{

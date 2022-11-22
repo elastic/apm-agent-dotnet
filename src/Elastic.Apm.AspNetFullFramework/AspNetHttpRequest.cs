@@ -7,6 +7,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.Logging;
+using System.Threading.Tasks;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -18,10 +19,10 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public bool HasValue => _request != null;
 		public string ContentType => _request?.ContentType;
-		public string ExtractBody(IConfiguration configuration, IApmLogger logger, out bool longerThanMaxLength)
+		public async Task<ReadRequestBodyResult> ExtractBody(IConfiguration configuration, IApmLogger logger)
 		{
 			string body = null;
-			longerThanMaxLength = false;
+			var longerThanMaxLength = false;
 
 			if (_request != null)
 			{
@@ -35,11 +36,13 @@ namespace Elastic.Apm.AspNetFullFramework
 					if (_request.ReadEntityBodyMode == ReadEntityBodyMode.Bufferless)
 						logger.Warning()?.Log($"Request body capturing is not possible 'bufferless' mode");
 					else
-						body = RequestBodyStreamHelper.ToString(_request.InputStream, out longerThanMaxLength);
+					{
+						return await RequestBodyStreamHelper.ToString(_request.InputStream);
+					}
 				}
 			}
 
-			return body;
+			return new ReadRequestBodyResult(body, longerThanMaxLength);
 		}
 	}
 }
