@@ -110,8 +110,8 @@ internal class StartupHook
 
 		if (loaderAssembly is null)
 		{
-			_logger.WriteLine(
-				$"No {LoaderDll} assembly loaded. Agent not loaded");
+			_logger.WriteLine($"No {LoaderDll} assembly loaded. Agent not loaded");
+			return;
 		}
 
 		LoadAssembliesFromLoaderDirectory(loaderDirectory);

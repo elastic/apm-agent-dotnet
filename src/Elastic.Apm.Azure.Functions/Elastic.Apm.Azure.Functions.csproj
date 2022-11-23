@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
+
+    <AssemblyName>Elastic.Apm.Azure.Functions</AssemblyName>
+    <RootNamespace>Elastic.Apm.Azure.Functions</RootNamespace>
+    <PackageId>Elastic.Apm.Azure.Functions</PackageId>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

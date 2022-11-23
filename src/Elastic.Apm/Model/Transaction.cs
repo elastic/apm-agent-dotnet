@@ -431,6 +431,11 @@ namespace Elastic.Apm.Model
 		public OTel Otel { get; set; }
 
 		/// <summary>
+		/// Contains data related to FaaS (Function as a Service) events.
+		/// </summary>
+		public Faas FaaS { get; set; }
+
+		/// <summary>
 		/// The outcome of the transaction: success, failure, or unknown.
 		/// This is similar to 'result', but has a limited set of permitted values describing the success or failure of the
 		/// transaction from the service's perspective.
