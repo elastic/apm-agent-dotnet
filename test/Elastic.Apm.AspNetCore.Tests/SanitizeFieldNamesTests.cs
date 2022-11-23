@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -206,9 +207,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// </summary>
 		/// <param name="useDiagnosticSourceOnly"></param>
 		/// <returns></returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task ChangeSanitizeFieldNamesAfterStart(bool useDiagnosticSourceOnly)
 		{
 			var startConfigSnapshot = new MockConfiguration(new NoopLogger());

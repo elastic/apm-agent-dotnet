@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -61,9 +62,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// </summary>
 		/// <param name="useDiagnosticSourceOnly"></param>
 		/// <returns></returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task ChangeTransactionIgnoreUrlsAfterStart(bool useDiagnosticSourceOnly)
 		{
 			// Start with default config
@@ -118,9 +118,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// In the ctor we add `*SimplePage` to the ignoreUrl list. This test makes sure that /home/SimplePage is indeed ignored.
 		/// </summary>
 		/// <returns></returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task IgnoreSimplePage(bool useOnlyDiagnosticSource)
 		{
 			Setup(useOnlyDiagnosticSource);

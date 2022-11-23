@@ -29,9 +29,8 @@ namespace Elastic.Apm.Grpc.Tests
 		/// </summary>
 		/// <param name="withDiagnosticSource"></param>
 		/// <returns></returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task BasicGrpcTest(bool withDiagnosticSource)
 		{
 			var payloadSender = new MockPayloadSender { IsStrictSpanCheckEnabled = true };
@@ -95,14 +94,10 @@ namespace Elastic.Apm.Grpc.Tests
 		/// </summary>
 		/// <param name="withDiagnosticSource"></param>
 		/// <returns></returns>
-		// [InlineData(true)]
-		// [InlineData(false)]
-		[DisabledTestFact("Flaky in CI")]
-		public async Task FailingGrpcCallTest()
+		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
+		public async Task FailingGrpcCallTest(bool withDiagnosticSource)
 		{
-			//TODO: once test re-enabled move this into a method parameter
-			var withDiagnosticSource = false;
-
 			var payloadSender = new MockPayloadSender();
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
