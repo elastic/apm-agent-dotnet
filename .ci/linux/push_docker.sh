@@ -23,7 +23,7 @@ readonly RETRIES=3
 # This script is intended to be run from a CI job and will not work if run in
 # standalone manner unless certain envrionment variables are set.
 
-# 1. Grab the tag we are working with
+# Grab the tag we are working with
 
 echo "INFO: Determining latest tag"
 if [ ! -z ${TAG_NAME+x} ]
@@ -36,20 +36,32 @@ else
 fi
 
 readonly CUR_TAG=${CUR_TAG:-$GIT_TAG_DEFAULT}
+readonly DOCKER_REGISTRY_URL="docker.elastic.co"
+readonly DOCKER_IMAGE_NAME="observability/apm-agent-dotnet"
+readonly DOCKER_PUSH_IMAGE="$DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:$CUR_TAG"
+readonly DOCKER_PUSH_IMAGE_LATEST="$DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:latest"
 
-# 2. Construct the image:tag that we are working with
-# This is roughly <repo>/<namespace>/image
-readonly DOCKER_PUSH_IMAGE="docker.elastic.co/observability/apm-agent-dotnet:$CUR_TAG"
-
-# 3. Proceed with pushing to the registry
-readonly DOCKER_REGISTRY_URL=`echo $DOCKER_PUSH_IMAGE|cut -f1 -d/`
+# Proceed with pushing to the registry
 echo "INFO: Pushing image $DOCKER_PUSH_IMAGE to $DOCKER_REGISTRY_URL"
 
 if [ ${WORKERS+x} ]  # We are on a CI worker
 then
-  retry $RETRIES docker push $DOCKER_PUSH_IMAGE || echo "Push failed after 5 \
-   retries"
+  retry $RETRIES docker push $DOCKER_PUSH_IMAGE || echo "Push failed after $RETRIES retries"
 else  # We are in a local (non-CI) environment
-  docker push $DOCKER_PUSH_IMAGE || echo "You may need to run 'docker login' \
-  first and then re-run this script"
+  docker push $DOCKER_PUSH_IMAGE || echo "You may need to run 'docker login' first and then re-run this script"
+fi
+
+readonly LATEST_TAG=$(git tag --list --sort=version:refname "v*" | grep -v RC | sed s/^v// | tail -n 1)
+
+if [ "$CUR_TAG" = "$LATEST_TAG" ]
+then
+  echo "INFO: Current version ($CUR_TAG) is the latest version. Tagging and pushing $DOCKER_PUSH_IMAGE_LATEST ..."
+  docker tag $DOCKER_PUSH_IMAGE $DOCKER_PUSH_IMAGE_LATEST
+
+  if [ ${WORKERS+x} ]  # We are on a CI worker
+  then
+    retry $RETRIES docker push $DOCKER_PUSH_IMAGE_LATEST || echo "Push failed after $RETRIES retries"
+  else  # We are in a local (non-CI) environment
+    docker push $DOCKER_PUSH_IMAGE_LATEST || echo "You may need to run 'docker login' first and then re-run this script"
+  fi
 fi
