@@ -114,6 +114,14 @@ namespace Elastic.Apm.BackendComm
 
 		private static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
 		{
+			// Is NOT intended for production - this is just a debug build
+			ServicePointManager.ServerCertificateValidationCallback +=
+				(sender, cert, chain, sslPolicyErrors) =>
+				{
+					logger?.Debug()?.Log("ServerCertificateValidationCallback running - returning true");
+					return true;
+				};
+
 			Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback = null;
 			var useWindowsCredentials = configuration.UseWindowsCredentials;
 			if (!configuration.VerifyServerCert)
@@ -178,7 +186,8 @@ namespace Elastic.Apm.BackendComm
 				};
 			}
 
-			return new HttpClientHandler { ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback, UseDefaultCredentials = useWindowsCredentials };
+			return new HttpClientHandler
+				{ ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback, UseDefaultCredentials = useWindowsCredentials };
 		}
 
 		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfiguration configuration, Service service, string dbgCallerDesc
