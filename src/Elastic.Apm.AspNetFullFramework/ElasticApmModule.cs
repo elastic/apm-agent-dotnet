@@ -146,8 +146,8 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 
 			var transactionName = $"{request.HttpMethod} {request.Unvalidated.Path}";
-			if (SoapRequest.TryExtractSoapAction(_logger, request, out var soapAction))
-				transactionName += $" {soapAction}";
+			//if (SoapRequest.TryExtractSoapAction(_logger, request, out var soapAction))
+			//	transactionName += $" {soapAction}";
 
 			var distributedTracingData = ExtractIncomingDistributedTracingData(request);
 			ITransaction transaction;
