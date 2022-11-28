@@ -23,7 +23,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		private static readonly TimeSpan ShortTimeAfterTaskStarted = 10.Milliseconds();
 		private static readonly TimeSpan VeryLongTimeout = 1.Days();
-		private static readonly TimeSpan ShortTimeout = 100.Milliseconds();
+		private static readonly TimeSpan ShortTimeout = 200.Milliseconds();
 		private readonly IApmLogger _logger;
 
 		public AgentTimerTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
