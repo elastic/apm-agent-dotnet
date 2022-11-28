@@ -627,7 +627,7 @@ impl Profiler {
         // Store the profiler and runtime info for later use
         self.profiler_info.replace(Some(profiler_info));
         self.runtime_info.replace(Some(runtime_info));
-        self.logger.replace(Some(logger));
+        self.logger.replace(logger);
 
         IS_ATTACHED.store(true, Ordering::SeqCst);
         IS_DESKTOP_CLR.store(is_desktop_clr, Ordering::SeqCst);
