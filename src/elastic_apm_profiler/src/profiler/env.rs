@@ -21,6 +21,7 @@ use log4rs::{
     Config, Handle,
 };
 use once_cell::sync::Lazy;
+use std::time::SystemTime;
 use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
 
 const APP_POOL_ID_ENV_VAR: &str = "APP_POOL_ID";
@@ -296,7 +297,14 @@ fn get_log_dir() -> PathBuf {
     }
 }
 
-pub fn initialize_logging(process_name: &str) -> Handle {
+fn get_sys_time_in_seconds() -> u64 {
+    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(n) => n.as_secs(),
+        Err(_) => 0,
+    }
+}
+
+pub fn initialize_logging(process_name: &str) -> Option<Handle> {
     let targets = read_log_targets_from_env_var();
     let level = read_log_level_from_env_var(LevelFilter::Warn);
     let mut root_builder = Root::builder();
@@ -315,6 +323,7 @@ pub fn initialize_logging(process_name: &str) -> Handle {
 
     if targets.contains("file") {
         let pid = std::process::id();
+        let timestamp = get_sys_time_in_seconds();
         let mut log_dir = get_log_dir();
         let mut valid_log_dir = true;
 
@@ -346,39 +355,44 @@ pub fn initialize_logging(process_name: &str) -> Handle {
 
         if valid_log_dir {
             let log_file_name = log_dir
-                .join(format!("elastic_apm_profiler_{}_{}.log", process_name, pid))
+                .join(format!(
+                    "elastic_apm_profiler_{}_{}_{}.log",
+                    process_name, pid, timestamp
+                ))
                 .to_string_lossy()
                 .to_string();
             let rolling_log_file_name = log_dir
                 .join(format!(
-                    "elastic_apm_profiler_{}_{}_{{}}.log",
-                    process_name, pid
+                    "elastic_apm_profiler_{}_{}_{}_{{}}.log",
+                    process_name, pid, timestamp
                 ))
                 .to_string_lossy()
                 .to_string();
 
             let trigger = SizeTrigger::new(5 * 1024 * 1024);
-            let roller = FixedWindowRoller::builder()
-                .build(&rolling_log_file_name, 10)
-                .unwrap();
-
-            let policy = CompoundPolicy::new(Box::new(trigger), Box::new(roller));
-            let pattern = PatternEncoder::new(log_pattern);
-            let file = RollingFileAppender::builder()
-                .append(true)
-                .encoder(Box::new(pattern))
-                .build(&log_file_name, Box::new(policy))
-                .unwrap();
-
-            config_builder =
-                config_builder.appender(Appender::builder().build("file", Box::new(file)));
-            root_builder = root_builder.appender("file");
+            let roller_result = FixedWindowRoller::builder().build(&rolling_log_file_name, 10);
+            if let Ok(roller) = roller_result {
+                let policy = CompoundPolicy::new(Box::new(trigger), Box::new(roller));
+                let pattern = PatternEncoder::new(log_pattern);
+                let file_result = RollingFileAppender::builder()
+                    .append(true)
+                    .encoder(Box::new(pattern))
+                    .build(&log_file_name, Box::new(policy));
+                if let Ok(file) = file_result {
+                    config_builder =
+                        config_builder.appender(Appender::builder().build("file", Box::new(file)));
+                    root_builder = root_builder.appender("file");
+                }
+            }
         }
     }
 
     let root = root_builder.build(level);
-    let config = config_builder.build(root).unwrap();
-    log4rs::init_config(config).unwrap()
+    let config = config_builder.build(root);
+    return match config {
+        Ok(c) => log4rs::init_config(c).ok(),
+        Err(_) => None,
+    };
 }
 
 /// Loads the integrations by reading the yml file pointed to
