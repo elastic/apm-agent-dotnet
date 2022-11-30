@@ -97,19 +97,19 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 				return null;
 			}
 
-			return GetSoap12ActionFromInputStream(stream);
+			return GetSoap12ActionFromInputStream(logger, stream);
 		}
 
-		internal static string GetSoap12ActionFromInputStream(Stream stream)
+		internal static string GetSoap12ActionFromInputStream(IApmLogger logger, Stream stream)
 		{ 
 			var shared = ArrayPool<byte>.Shared;
 			var bytes = shared.Rent((int)stream.Length);
 			try
 			{
+				stream.Position = 0;
 				stream.Read(bytes, 0, bytes.Length);
 				stream.Position = 0;
 				var content = Encoding.ASCII.GetString(bytes);
-					content.ToString();
 
 				var settings = new XmlReaderSettings
 				{
@@ -132,11 +132,12 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 						return reader.LocalName;
 				}
 			}
-			catch (XmlException)
+			catch (XmlException e)
 			{
 				// The previous code will skip some errors, but some others can raise an exception
 				// for instance undeclared namespaces, typographical quotes, etc...
 				// If that's the case we don't need to care about them here. They will flow somewhere else.
+				logger?.Trace()?.LogException(e, "Error while trying to read SOAP 1.2 action");
 			}
 			finally
 			{
