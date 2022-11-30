@@ -109,7 +109,6 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 				stream.Position = 0;
 				stream.Read(bytes, 0, bytes.Length);
 				stream.Position = 0;
-				var content = Encoding.ASCII.GetString(bytes);
 
 				var settings = new XmlReaderSettings
 				{
@@ -137,7 +136,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 				// The previous code will skip some errors, but some others can raise an exception
 				// for instance undeclared namespaces, typographical quotes, etc...
 				// If that's the case we don't need to care about them here. They will flow somewhere else.
-				logger?.Trace()?.LogException(e, "Error while trying to read SOAP 1.2 action");
+				logger.Trace()?.LogException(e, "Error while trying to read SOAP 1.2 action");
 			}
 			finally
 			{

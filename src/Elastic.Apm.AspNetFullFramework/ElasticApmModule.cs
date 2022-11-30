@@ -291,9 +291,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			var context = application.Context;
 			var response = context.Response;
 
-			if (SoapRequest.TryExtractSoapAction(_logger, context.Request, out var soapAction))
-				transaction.Name += $" {soapAction}";
-
 			// update the transaction name based on route values, if applicable
 			if (transaction is Transaction t && !t.HasCustomName)
 			{
@@ -372,11 +369,17 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 
 			transaction.Result = Transaction.StatusCodeToResult("HTTP", response.StatusCode);
-			if (transaction is Transaction realTransaction)
-			{
-				realTransaction.SetOutcome(response.StatusCode >= 500
+
+			var realTransaction = transaction as Transaction;
+			realTransaction?.SetOutcome(response.StatusCode >= 500
 					? Outcome.Failure
 					: Outcome.Success);
+
+			// Try and update transaction name with SOAP action if applicable.
+			if (realTransaction == null || !realTransaction.HasCustomName)
+			{
+				if (SoapRequest.TryExtractSoapAction(_logger, context.Request, out var soapAction))
+					transaction.Name += $" {soapAction}";
 			}
 
 			if (transaction.IsSampled)
