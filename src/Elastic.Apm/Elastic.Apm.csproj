@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net5.0;net6.0;net7.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0;net461</TargetFrameworks>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
@@ -71,7 +71,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0"/>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net7.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0"/>
   </ItemGroup>
   <ItemGroup>
