@@ -85,13 +85,7 @@ namespace Elastic.Apm.SqlClient
 				{
 					if (!_spans.TryRemove(operationId, out var span)) return;
 
-					TimeSpan? duration = null;
-
-					if (propertyFetcherSet.Statistics.Fetch(payloadData) is IDictionary<object, object> statistics &&
-						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs && durationInMs > 0)
-						duration = TimeSpan.FromMilliseconds(durationInMs);
-
-					_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success, duration);
+					_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success);
 				}
 			}
 			catch (Exception ex)

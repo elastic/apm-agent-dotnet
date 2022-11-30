@@ -42,10 +42,6 @@ namespace Elastic.Apm.Tests
 			var targetName = span.Context?.Service?.Target?.Name;
 			if (input.ExpectedServiceTarget?.Name != null)
 			{
-				//
-				// TODO: Remove this workaround as soon as https://github.com/elastic/apm/issues/703 is resolved.
-				//
-				targetName = targetName.Replace(":443", string.Empty);
 				targetName.Should().Be(input.ExpectedServiceTarget.Name, input.FailureMessage);
 			}
 			else
@@ -54,10 +50,6 @@ namespace Elastic.Apm.Tests
 			var resource = span.Context?.Destination?.Service?.Resource;
 			if (input.ExpectedResource != null)
 			{
-				//
-				// TODO: Remove this workaround as soon as https://github.com/elastic/apm/issues/703 is resolved.
-				//
-				resource = resource.Replace(":443", string.Empty);
 				resource.Should().Be(input.ExpectedResource, input.FailureMessage);
 			}
 			else
@@ -87,10 +79,7 @@ namespace Elastic.Apm.Tests
 
 			if (testDataSpan.Context?.Http != null)
 			{
-				var url = $"https://{testDataSpan.Context.Http.Url.Host}";
-				if (testDataSpan.Context.Http.Url.Port > 0)
-					url += $":{testDataSpan.Context.Http.Url.Port}";
-				span.Context.Http = new Http { Url = url };
+				span.Context.Http = new Http { Url = testDataSpan.Context.Http.Url };
 			}
 
 			if (testDataSpan.Context?.Service != null)
@@ -139,7 +128,7 @@ namespace TestData
 
 	public class Http
 	{
-		public Url Url { get; set; }
+		public string Url { get; set; }
 	}
 
 	public class Message
@@ -170,11 +159,5 @@ namespace TestData
 	{
 		public string Type { get; set; }
 		public string Name { get; set; }
-	}
-
-	public class Url
-	{
-		public string Host { get; set; }
-		public int Port { get; set; }
 	}
 }
