@@ -23,8 +23,6 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		private static readonly TimeSpan ShortTimeAfterTaskStarted = 10.Milliseconds();
 		private static readonly TimeSpan VeryLongTimeout = 1.Days();
-
-		private static readonly TimeSpan VeryShortTimeout = 20.Milliseconds();
 		private readonly IApmLogger _logger;
 
 		public AgentTimerTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
@@ -146,6 +144,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			tryAwaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			cts.Cancel();
+			WaitForTaskCancelled(tryAwaitOrTimeoutTask);
 
 			sutEnv.VerifyDelayCancelled(tryAwaitOrTimeoutTask, delayTask);
 		}
@@ -211,8 +210,22 @@ namespace Elastic.Apm.Tests.HelpersTests
 			awaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			cts.Cancel();
+			WaitForTaskCancelled(awaitOrTimeoutTask);
 
 			sutEnv.VerifyDelayCancelled(awaitOrTimeoutTask, delayTask);
+		}
+
+		private static void WaitForTaskCancelled(Task task)
+		{
+			try
+			{
+				if (!task.IsCanceled)
+					Task.WaitAll(new [] { task });
+			}
+			catch
+			{
+				// Might throw if task goes into cancelled state just as we call "WaitAll".
+			}
 		}
 
 		private class SutEnv<TResult> : ISutEnv

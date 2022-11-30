@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -137,17 +138,25 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// Add true and false to the end of each test data, so we test it both with middleware and with diagnosticsource
 			foreach (var testDataItem in testData)
 			{
-				var newItem = new List<object>();
-				foreach (var item in testDataItem) newItem.Add(item);
-				newItem.Add(true);
+				//
+				// Skip "DiagnosticSourceOnly" tests on .NET 7
+				// until https://github.com/dotnet/aspnetcore/issues/45233 is resolved.
+				//
+				if (Environment.Version.Major < 7)
+				{
+					var newItem = new List<object>();
+					foreach (var item in testDataItem) newItem.Add(item);
+					newItem.Add(true);
 
-				retVal.Add(newItem.ToArray());
+					retVal.Add(newItem.ToArray());
+				}
+				{
+					var newItem = new List<object>();
+					foreach (var item in testDataItem) newItem.Add(item);
+					newItem.Add(false);
 
-				newItem = new List<object>();
-				foreach (var item in testDataItem) newItem.Add(item);
-				newItem.Add(false);
-
-				retVal.Add(newItem.ToArray());
+					retVal.Add(newItem.ToArray());
+				}
 			}
 
 			return retVal;
@@ -206,9 +215,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// </summary>
 		/// <param name="useDiagnosticSourceOnly"></param>
 		/// <returns></returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task ChangeSanitizeFieldNamesAfterStart(bool useDiagnosticSourceOnly)
 		{
 			var startConfigSnapshot = new MockConfiguration(new NoopLogger());

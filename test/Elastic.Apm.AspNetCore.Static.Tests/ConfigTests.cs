@@ -11,6 +11,7 @@ using Elastic.Apm.AspNetCore.Tests;
 using Elastic.Apm.Config;
 using Elastic.Apm.Extensions.Hosting.Config;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -34,9 +35,8 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 		/// Tests for: https://github.com/elastic/apm-agent-dotnet/issues/1077
 		/// </summary>
 		/// <param name="withDiagnosticSourceOnly"></param>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task AgentDisabledInAppConfig(bool withDiagnosticSourceOnly)
 		{
 			var defaultServerUrlConnectionMade = false;

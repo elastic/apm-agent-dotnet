@@ -12,6 +12,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -37,9 +38,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// and makes sure that the error is captured.
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
 		{
 			var capturedPayload = new MockPayloadSender();
@@ -81,9 +81,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// retrieved from the HttpRequest
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore(bool useOnlyDiagnosticSource)
 		{
 			var capturedPayload = new MockPayloadSender();
