@@ -3,8 +3,10 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Buffers;
 using System.Collections.Specialized;
 using System.IO;
+using System.Text;
 using System.Web;
 using System.Xml;
 using Elastic.Apm.Logging;
@@ -29,35 +31,25 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		/// <returns><c>true</c> if a soap action can be extracted, <c>false</c> otherwise.</returns>
 		public static bool TryExtractSoapAction(IApmLogger logger, HttpRequest request, out string soapAction)
 		{
+			soapAction = null;
 			try
 			{
 				var headers = request.Unvalidated.Headers;
 				soapAction = GetSoap11Action(headers);
-				if (soapAction != null) return true;
-
-				// if the input stream has already been read bufferless, we can't inspect it
-				if (request.ReadEntityBodyMode == ReadEntityBodyMode.Bufferless)
-				{
-					soapAction = null;
-					return false;
-				}
+				if (soapAction != null)
+					return true;
 
 				if (IsSoap12Action(headers))
 				{
-					// use request.GetBufferedInputStream() which causes the framework to buffer what is read
-					// so that subsequent reads can read from the beginning.
-					// ASMX SOAP services by default deserialize the SOAP message in the input stream into
-					// the parameters for the method.
-					soapAction = GetSoap12ActionFromInputStream(request.GetBufferedInputStream());
-					if (soapAction != null) return true;
+					soapAction = GetSoap12ActionFromHttpRequest(logger, request);
+					if (soapAction != null)
+						return true;
 				}
 			}
 			catch (Exception e)
 			{
 				logger.Error()?.LogException(e, "Error extracting soap action");
 			}
-
-			soapAction = null;
 			return false;
 		}
 
@@ -82,19 +74,49 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 			return contentType != null && contentType.Contains(SoapAction12ContentType);
 		}
 
-		internal static string GetSoap12ActionFromInputStream(Stream stream)
+		internal static string GetSoap12ActionFromHttpRequest(IApmLogger logger, HttpRequest request)
 		{
-			StreamReader streamReader = null;
+			//
+			// If the input stream has already been read bufferless, we can't inspect it
+			//
+			if (request.ReadEntityBodyMode == ReadEntityBodyMode.Bufferless)
+			{
+				logger.Debug()?.Log("Request.ReadEntityBodyMode is 'Bufferless'");
+				return null;
+			}
+			//
+			// SOAP 1.2 action must be read from body data.
+			// Using the buffered input stream can have side effects with application code that
+			// runs before or after this.
+			// To be safe, we only access the stream directly if we have random access to it.
+			//
+			var stream = request.InputStream;
+			if (!stream.CanSeek)
+			{
+				logger.Debug()?.Log("Request.InputStream is not seekable");
+				return null;
+			}
+
+			return GetSoap12ActionFromInputStream(logger, stream);
+		}
+
+		internal static string GetSoap12ActionFromInputStream(IApmLogger logger, Stream stream)
+		{ 
+			var shared = ArrayPool<byte>.Shared;
+			var bytes = shared.Rent((int)stream.Length);
 			try
 			{
-				streamReader = new StreamReader(stream);
+				stream.Position = 0;
+				stream.Read(bytes, 0, bytes.Length);
+				stream.Position = 0;
+
 				var settings = new XmlReaderSettings
 				{
 					IgnoreProcessingInstructions = true,
 					IgnoreComments = true,
 					IgnoreWhitespace = true
 				};
-
+				using var streamReader = new StreamReader(new MemoryStream(bytes));
 				using var reader = XmlReader.Create(streamReader, settings);
 				reader.MoveToContent();
 				if (reader.LocalName != "Envelope")
@@ -108,20 +130,19 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 					if (reader.Read())
 						return reader.LocalName;
 				}
-
-				return null;
 			}
-			catch (XmlException)
+			catch (XmlException e)
 			{
-				//previous code will skip some errors, but some others can raise an exception
-				//for instance undeclared namespaces, typographical quotes, etc...
-				//If that's the case we don't need to care about them here. They will flow somewhere else.
-				return null;
+				// The previous code will skip some errors, but some others can raise an exception
+				// for instance undeclared namespaces, typographical quotes, etc...
+				// If that's the case we don't need to care about them here. They will flow somewhere else.
+				logger.Trace()?.LogException(e, "Error while trying to read SOAP 1.2 action");
 			}
 			finally
 			{
-				streamReader?.ReadToEnd();
+				shared.Return(bytes);
 			}
+			return null;
 		}
 	}
 }

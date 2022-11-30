@@ -1,6 +1,7 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using Elastic.Apm.AspNetFullFramework.Extensions;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -184,7 +185,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests.Soap
 		public void Soap12Parser_ParsesHeaderAndBody(string soap, string expectedAction)
 		{
 			var requestStream = new MemoryStream(Encoding.UTF8.GetBytes(soap));
-			var action = SoapRequest.GetSoap12ActionFromInputStream(requestStream);
+			var action = SoapRequest.GetSoap12ActionFromInputStream(new NoopLogger(), requestStream);
 
 			action.Should().Be(expectedAction);
 		}
