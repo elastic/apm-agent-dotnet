@@ -32,6 +32,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		[InlineData("netcoreapp3.1")]
 		[InlineData("net5.0")]
 		[InlineData("net6.0")]
+		[InlineData("net7.0")]
 		public async Task Auto_Instrument_With_StartupHook_Should_Capture_Transaction(string targetFramework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
@@ -74,6 +75,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		[InlineData("netcoreapp3.1")]
 		[InlineData("net5.0")]
 		[InlineData("net6.0")]
+		[InlineData("net7.0")]
 		public async Task Auto_Instrument_With_StartupHook_Should_Capture_Error(string targetFramework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
@@ -126,6 +128,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		[InlineData("netcoreapp3.1", ".NET Core", "3.1.0.0")]
 		[InlineData("net5.0", ".NET 5", "5.0.0.0")]
 		[InlineData("net6.0", ".NET 6", "6.0.0.0")]
+		[InlineData("net7.0", ".NET 7", "7.0.0.0")]
 		public async Task Auto_Instrument_With_StartupHook_Should_Capture_Metadata(
 			string targetFramework,
 			string expectedRuntimeName,
@@ -172,12 +175,16 @@ namespace Elastic.Apm.StartupHook.Tests
 		[Theory]
 		[InlineData("webapi", "WebApi31", "netcoreapp3.1", "weatherforecast")]
 		[InlineData("webapi", "WebApi50", "net5.0", "weatherforecast")]
+		[InlineData("webapi", "WebApi60", "net6.0", "weatherforecast")]
+		[InlineData("webapi", "WebApi70", "net7.0", "weatherforecast")]
 		[InlineData("webapp", "WebApp31", "netcoreapp3.1", "")]
 		[InlineData("webapp", "WebApp50", "net5.0", "")]
 		[InlineData("webapp", "WebApp60", "net6.0", "")]
+		[InlineData("webapp", "WebApp70", "net7.0", "")]
 		[InlineData("mvc", "Mvc31", "netcoreapp3.1", "")]
 		[InlineData("mvc", "Mvc50", "net5.0", "")]
 		[InlineData("mvc", "Mvc60", "net6.0", "")]
+		[InlineData("mvc", "Mvc70", "net7.0", "")]
 		public async Task Auto_Instrument_With_StartupHook(string template, string name, string targetFramework, string path)
 		{
 			var apmLogger = new InMemoryBlockingLogger(LogLevel.Trace);
