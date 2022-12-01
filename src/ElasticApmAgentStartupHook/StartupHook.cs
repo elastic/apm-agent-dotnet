@@ -94,8 +94,9 @@ internal class StartupHook
 
 			var diagnosticSourceVersion = diagnosticSourceAssemblyName.Version;
 			_logger.WriteLine($"{SystemDiagnosticsDiagnosticsource} {diagnosticSourceVersion} loaded");
-
-			loaderDirectory = Path.Combine(startupHookDirectory, $"{diagnosticSourceVersion.Major}.0.0");
+			// .NET 7 still uses LoaderDll version 6.
+			var majorVersion = Math.Min(6, diagnosticSourceVersion.Major);
+			loaderDirectory = Path.Combine(startupHookDirectory, $"{majorVersion}.0.0");
 			if (Directory.Exists(loaderDirectory))
 			{
 				loaderAssembly = AssemblyLoadContext.Default
