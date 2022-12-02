@@ -24,13 +24,17 @@ namespace Elastic.Apm.OpenTelemetry
 		private readonly ConcurrentDictionary<string, Span> ActiveSpans = new();
 		private readonly ConcurrentDictionary<string, Transaction> ActiveTransactions = new();
 
-		internal ElasticActivityListener(IApmAgent agent) => _logger = agent.Logger?.Scoped(nameof(ElasticActivityListener));
+		internal ElasticActivityListener(IApmAgent agent, HttpTraceConfiguration httpTraceConfiguration) => (_logger, _httpTraceConfiguration) =
+			(agent.Logger?.Scoped(nameof(ElasticActivityListener)), httpTraceConfiguration);
 
 		private readonly IApmLogger _logger;
 		private Tracer _tracer;
+		private HttpTraceConfiguration _httpTraceConfiguration;
 
 		internal void Start(Tracer tracerInternal)
 		{
+			_httpTraceConfiguration?.AddTracer(new ElasticSearchHttpNonTracer());
+
 			_tracer = tracerInternal;
 			Listener = new ActivityListener
 			{

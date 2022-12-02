@@ -3,6 +3,7 @@ using Elastic.Apm.Tests.Utilities;
 using Xunit;
 using Elastic.Apm;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Model;
 using Elastic.Clients.Elasticsearch.Aggregations;
@@ -28,11 +29,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 	[Fact]
 	public async Task IndexDataTest()
 	{
-		var payloadSender = new MockPayloadSender();
-		var apmAgent = new ApmAgent(new TestAgentComponents(
-			new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
-			payloadSender: payloadSender, configuration: new MockConfiguration(enableOpenTelemetryBridge: "true"),
-			apmServerInfo: MockApmServerInfo.Version80));
+		var (payloadSender, apmAgent) = SetUpAgent();
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", async () =>
 		{
@@ -172,6 +169,9 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 			new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
 			payloadSender: payloadSender, configuration: new MockConfiguration(enableOpenTelemetryBridge: "true"),
 			apmServerInfo: MockApmServerInfo.Version80));
+
+		// Enable outgoing HTTP capturing and later assert that no HTTP span is captured for the es calls as defined in our spec.
+		agent.Subscribe(new HttpDiagnosticsSubscriber());
 
 		return (payloadSender, agent);
 	}

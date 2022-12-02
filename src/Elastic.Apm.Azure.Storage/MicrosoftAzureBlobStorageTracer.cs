@@ -126,5 +126,7 @@ namespace Elastic.Apm.Azure.Storage
 
 			return span;
 		}
+
+		public bool SuppressSpanCreation() => false;
 	}
 }

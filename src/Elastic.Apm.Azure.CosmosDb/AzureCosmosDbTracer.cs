@@ -150,6 +150,8 @@ namespace Elastic.Apm.Azure.CosmosDb
 			return span;
 		}
 
+		public bool SuppressSpanCreation() => false;
+
 		private static string GetOperationName(string operation) =>
 			OperationNames.TryGetValue(operation, out var operationName) ? operationName : operation;
 
