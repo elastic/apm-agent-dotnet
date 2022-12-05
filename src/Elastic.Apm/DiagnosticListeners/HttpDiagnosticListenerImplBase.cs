@@ -168,12 +168,13 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (span is null)
 			{
-				if (_configuration?.CaptureSpan ?? false )
+				if (_configuration?.CaptureSpan ?? false)
 				{
 					if (suppressSpanCreation)
 					{
 						Logger.Trace()
-							?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as it was suppressed by an HttpSpanTracer", requestUrl.Sanitize());
+							?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as it was suppressed by an HttpSpanTracer",
+								requestUrl.Sanitize());
 						return;
 					}
 
