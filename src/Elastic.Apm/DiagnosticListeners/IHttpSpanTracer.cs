@@ -32,7 +32,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// <param name="method">the HTTP method</param>
 		/// <param name="requestUrl">the HTTP request url</param>
 		/// <param name="headerGetter">A delegate to retrieve a HTTP header</param>
-		/// <returns>A new instance of a <see cref="ISpan" />. Can return null</returns>
+		/// <returns>A new instance of a <see cref="ISpan"/>. Can return null</returns>
 		ISpan StartSpan(IApmAgent agent, string method, Uri requestUrl, Func<string, string> headerGetter);
 
 		/// <summary>
