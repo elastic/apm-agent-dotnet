@@ -1,16 +1,9 @@
-﻿using System.Runtime.Serialization;
-using Elastic.Apm.Tests.Utilities;
+﻿using Elastic.Apm.Tests.Utilities;
 using Xunit;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Model;
-using Elastic.Clients.Elasticsearch.Aggregations;
-using Elastic.Clients.Elasticsearch.IndexManagement;
-using Elastic.Transport;
 using FluentAssertions;
-using Moq;
 using Xunit.Abstractions;
 
 namespace Elastic.Clients.Elasticsearch.Tests;
@@ -19,11 +12,13 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 {
 	private readonly ITestOutputHelper _testOutputHelper;
 	private readonly ElasticSearchTestFixture _esClientListenerFixture;
+	private ElasticsearchClient _client;
 
 	public ElasticSearchTests(ITestOutputHelper testOutputHelper, ElasticSearchTestFixture esClientListenerFixture)
 	{
 		_testOutputHelper = testOutputHelper;
 		_esClientListenerFixture = esClientListenerFixture;
+		_client = _esClientListenerFixture.Cleint ?? throw new Exception("ElasticsearchClient is `null`");
 	}
 
 	[Fact]
@@ -39,6 +34,8 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		payloadSender.Spans.Should().HaveCount(1);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: PUT /{index}/_doc/{id}");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
+		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
+		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
 
 		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("db.system", "elasticsearch"));
@@ -65,6 +62,8 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		payloadSender.Spans.Should().HaveCount(1);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: GET /{index}/_doc/{id}");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
+		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
+		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
 
 		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("db.system", "elasticsearch"));
@@ -90,6 +89,8 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		payloadSender.Spans.Should().HaveCount(1);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: POST /{index}/_search");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
+		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
+		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
 
 		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("db.system", "elasticsearch"));
@@ -104,13 +105,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 	{
 		// make sure data is present
 		await IndexData();
-
-		if (_esClientListenerFixture.Cleint == null)
-		{
-			_testOutputHelper.WriteLine("ES Client is null - exiting test");
-			return;
-		}
-		var response = await _esClientListenerFixture.Cleint.GetAsync<Tweet>("my-tweet-index", 1);
+		var response = await _client.GetAsync<Tweet>("my-tweet-index", 1);
 
 		var tweet = response.Source;
 		tweet.Should().NotBeNull();
@@ -123,10 +118,13 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 			await UpdateDocument(tweet);
 		});
 
-		var updateSpan = payloadSender.FirstSpan;
-		updateSpan.Should().NotBeNull();
-
 		payloadSender.Spans.Should().HaveCount(1);
+
+		var updateSpan = payloadSender.FirstSpan;
+
+		updateSpan.Should().NotBeNull();
+		updateSpan.Type = ApiConstants.TypeDb;
+		updateSpan.Subtype = ApiConstants.SubtypeElasticsearch;
 		updateSpan.Name.Should().Be("Elasticsearch: POST /{index}/_update/{id}");
 		updateSpan.Outcome.Should().Be(Outcome.Success);
 		updateSpan.Otel.SpanKind.ToLower().Should().Be("client");
@@ -153,6 +151,9 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		payloadSender.Spans.Should().HaveCount(1);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: DELETE /{index}/_doc/{id}");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
+		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
+		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+
 
 		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("db.system", "elasticsearch"));
@@ -191,25 +192,14 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 			Id = 1, User = "stevejgordon", PostDate = new DateTime(2009, 11, 15), Message = "Trying out the client, so far so good?"
 		};
 
-		if (_esClientListenerFixture.Cleint == null)
-		{
-			_testOutputHelper.WriteLine("ES Client is null - exiting test");
-			return;
-		}
-
-		var response = await _esClientListenerFixture.Cleint.IndexAsync(tweet, request => request.Index("my-tweet-index"));
+		var response = await _client.IndexAsync(tweet, request => request.Index("my-tweet-index"));
 
 		response.IsSuccess().Should().BeTrue();
 	}
 
 	private async Task GetDocument()
 	{
-		if (_esClientListenerFixture.Cleint == null)
-		{
-			_testOutputHelper.WriteLine("ES Client is null - exiting test");
-			return;
-		}
-		var response = await _esClientListenerFixture.Cleint.GetAsync<Tweet>(1, idx => idx.Index("my-tweet-index"));
+		var response = await _client.GetAsync<Tweet>(1, idx => idx.Index("my-tweet-index"));
 
 		response.IsSuccess().Should().BeTrue();
 		var tweet = response.Source;
@@ -218,12 +208,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 
 	private async Task SearchDocument()
 	{
-		if (_esClientListenerFixture.Cleint == null)
-		{
-			_testOutputHelper.WriteLine("ES Client is null - exiting test");
-			return;
-		}
-		var response = await _esClientListenerFixture.Cleint.SearchAsync<Tweet>(s => s
+		var response = await _client.SearchAsync<Tweet>(s => s
 			.Index("my-tweet-index")
 			.From(0)
 			.Size(1)
@@ -241,27 +226,15 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 
 	private async Task UpdateDocument(Tweet tweet)
 	{
-		if (_esClientListenerFixture.Cleint == null)
-		{
-			_testOutputHelper.WriteLine("ES Client is null - exiting test");
-			return;
-		}
-
 		tweet.Message = "This is a new message";
-		var response2 = await _esClientListenerFixture.Cleint.UpdateAsync<Tweet, object>("my-tweet-index", 1, u => u
+		var response2 = await _client.UpdateAsync<Tweet, object>("my-tweet-index", 1, u => u
 			.Doc(tweet));
 		response2.IsValidResponse.Should().BeTrue();
 	}
 
 	private async Task DeleteDocument()
 	{
-		if (_esClientListenerFixture.Cleint == null)
-		{
-			_testOutputHelper.WriteLine("ES Client is null - exiting test");
-			return;
-		}
-
-		var response = await _esClientListenerFixture.Cleint.DeleteAsync("my-tweet-index", 1);
+		var response = await _client.DeleteAsync("my-tweet-index", 1);
 		response.IsValidResponse.Should().BeTrue();
 	}
 }
