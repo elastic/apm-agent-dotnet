@@ -23,6 +23,25 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.19.0]]
+==== 1.19.0
+
+===== Features
+- {pull}1867[#1867] Improve handling of multiple agent initialization.
+- {pull}1877[#1877] Enable CloudMetadataProvider on Azure Functions.
+- {pull}1892[#1892] CentralConfig: handle MaxAge header with less than 5 sec according to spec (issue: {issue}1831[#1831]).
+- {pull}1897[#1897] Add basic agent logging preamble.
+- {pull}1907[#1907] Publish docker image with agent (issue: {issue}1665[#1665]).
+- {pull}1917[#1917] Add .NET 7 support (issue: {issue}1860[#1860]).
+- {pull}1930[#1930] Improve SOAP action parsing.
+
+===== Bug fixes
+- {pull}1882[#1882] Fix transaction trace id not aligned when transaction is created from OTel bridge without parent (issue: {issue}1881[#1881]).
+- {pull}1905[#1905] Avoid NRE during startup hook init (issue: {issue}1904[#1904]).
+- {pull}1927[#1927] Avoid panic in file-logging setup (issue: {issue}1918[#1918]).
+- {pull}1922[#1922] Use Span timing instead of cumulative SqlCommand statistics (issue: {issue}1869[#1869]).
+- {pull}1933[#1933] Enable DOTNET_STARTUP_HOOKS for .NET 7 (issue: {issue}1900[#1900]).
+
 [[release-notes-1.18.0]]
 ==== 1.18.0
 
