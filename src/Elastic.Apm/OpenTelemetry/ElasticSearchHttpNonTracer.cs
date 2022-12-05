@@ -2,6 +2,7 @@
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
+#if NET5_0_OR_GREATER
 
 using System;
 using System.Diagnostics;
@@ -25,11 +26,9 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			if (Activity.Current == null || Activity.Current.Parent == null)
 				return false;
-#if NETSTANDARD2_0
-			return Activity.Current.Parent.OperationName.StartsWith("Elasticsearch:") && Activity.Current.Parent.Tags.Any(n => n is { Key: "db.system", Value: "elasticsearch" });
-#else
 			return Activity.Current.Parent.DisplayName.StartsWith("Elasticsearch:") && Activity.Current.Parent.Tags.Any(n => n is { Key: "db.system", Value: "elasticsearch" });
-#endif
 		}
 	}
 }
+
+#endif
