@@ -3,6 +3,7 @@ using Xunit;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Tests.Utilities.Docker;
 using FluentAssertions;
 using Xunit.Abstractions;
 
@@ -21,7 +22,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		_client = _esClientListenerFixture.Cleint ?? throw new Exception("ElasticsearchClient is `null`");
 	}
 
-	[Fact]
+	[DockerFact]
 	public async Task IndexDataTest()
 	{
 		var (payloadSender, apmAgent) = SetUpAgent();
@@ -46,7 +47,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 	}
 
 
-	[Fact]
+	[DockerFact]
 	public async Task GetDocumentTest()
 	{
 		// make sure data is present
@@ -73,7 +74,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
 	}
 
-	[Fact]
+	[DockerFact]
 	public async Task SearchDocumentTest()
 	{
 		// make sure data is present
@@ -100,7 +101,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
 	}
 
-	[Fact]
+	[DockerFact]
 	public async Task UpdateDocumentTest()
 	{
 		// make sure data is present
@@ -135,7 +136,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 		updateSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
 	}
 
-	[Fact]
+	[DockerFact]
 	public async Task DeleteDocumentTest()
 	{
 		// make sure data is present
