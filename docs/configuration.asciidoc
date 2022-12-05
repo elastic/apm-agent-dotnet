@@ -974,7 +974,7 @@ Valid options: `continue`, `restart`, `restart_external`.
 [options="header"]
 |============
 | Default                 | Type
-| `true`                  | String
+| `continue`                  | String
 |============
 
 The `traceparent` header of requests that are traced by the Elastic APM .NET Agent might have been added by a 3rd party component.
