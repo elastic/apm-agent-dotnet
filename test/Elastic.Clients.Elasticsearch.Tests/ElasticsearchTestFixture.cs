@@ -11,14 +11,14 @@ using Xunit;
 
 namespace Elastic.Clients.Elasticsearch.Tests;
 
-public class ElasticSearchTestFixture : IAsyncDisposable, IAsyncLifetime
+public class ElasticsearchTestFixture : IAsyncDisposable, IAsyncLifetime
 {
 	public ElasticsearchTestcontainer Container { get; }
 	public ElasticsearchClient? Client { get; private set; }
 
 	private readonly TestcontainerDatabaseConfiguration _configuration = new ElasticsearchTestcontainerConfiguration { Password = "secret" };
 
-	public ElasticSearchTestFixture() =>
+	public ElasticsearchTestFixture() =>
 		Container = new TestcontainersBuilder<ElasticsearchTestcontainer>()
 			.WithDatabase(_configuration)
 			.Build();

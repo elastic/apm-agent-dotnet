@@ -9,13 +9,13 @@ using Xunit.Abstractions;
 
 namespace Elastic.Clients.Elasticsearch.Tests;
 
-public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
+public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 {
 	private readonly ITestOutputHelper _testOutputHelper;
-	private readonly ElasticSearchTestFixture _esClientListenerFixture;
-	private ElasticsearchClient _client;
+	private readonly ElasticsearchTestFixture _esClientListenerFixture;
+	private readonly ElasticsearchClient _client;
 
-	public ElasticSearchTests(ITestOutputHelper testOutputHelper, ElasticSearchTestFixture esClientListenerFixture)
+	public ElasticsearchTests(ITestOutputHelper testOutputHelper, ElasticsearchTestFixture esClientListenerFixture)
 	{
 		_testOutputHelper = testOutputHelper;
 		_esClientListenerFixture = esClientListenerFixture;
