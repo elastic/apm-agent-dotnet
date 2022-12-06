@@ -14,14 +14,23 @@ using GrpcServiceSample;
 using Microsoft.Extensions.Hosting;
 using Xunit;
 
-#pragma warning disable CS0436 // Type conflicts with imported type
-
 namespace Elastic.Apm.Grpc.Tests
 {
-	public class GrpcTests
+	public class GrpcTests : IAsyncLifetime
 	{
-		public GrpcTests() =>
+		private IHost _sampleAppHost;
+
+		public Task InitializeAsync()
+		{
 			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+			return Task.CompletedTask;
+		}
+
+		public async Task DisposeAsync()
+		{
+			await _sampleAppHost.StopAsync();
+			_sampleAppHost.Dispose();
+		}
 
 		/// <summary>
 		/// Creates a call to a simple gRPC service and asserts that all transactions, spans are captured
@@ -36,20 +45,18 @@ namespace Elastic.Apm.Grpc.Tests
 			var payloadSender = new MockPayloadSender { IsStrictSpanCheckEnabled = true };
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			IHost sampleAppHost;
-
 			if (withDiagnosticSource)
 			{
-				sampleAppHost = new SampleAppHostBuilder().BuildHost();
+				_sampleAppHost = new SampleAppHostBuilder().BuildHost();
 				apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber());
 			}
 			else
-				sampleAppHost = new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
+				_sampleAppHost = new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
 
 			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
 			apmAgent.Subscribe(grpcClientDiagnosticSubscriber, new HttpDiagnosticsSubscriber());
 
-			await sampleAppHost.StartAsync();
+			await _sampleAppHost.StartAsync();
 
 			var channel = GrpcChannel.ForAddress(SampleAppHostBuilder.SampleAppUrl);
 			var client = new Greeter.GreeterClient(channel);
@@ -83,9 +90,6 @@ namespace Elastic.Apm.Grpc.Tests
 				);
 
 			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
-
-			await sampleAppHost.StopAsync();
-			sampleAppHost.Dispose();
 		}
 
 		/// <summary>
@@ -101,12 +105,12 @@ namespace Elastic.Apm.Grpc.Tests
 			var payloadSender = new MockPayloadSender();
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
-			using var sampleAppHost = withDiagnosticSource
+			_sampleAppHost = withDiagnosticSource
 				? new SampleAppHostBuilder().BuildHost()
 				: new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
 			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), grpcClientDiagnosticSubscriber, new HttpDiagnosticsSubscriber());
 
-			await sampleAppHost.StartAsync();
+			await _sampleAppHost.StartAsync();
 
 			var channel = GrpcChannel.ForAddress(SampleAppHostBuilder.SampleAppUrl);
 			var client = new Greeter.GreeterClient(channel);
@@ -120,9 +124,9 @@ namespace Elastic.Apm.Grpc.Tests
 
 					Debug.WriteLine(response.Message);
 				}
-				catch
+				catch (Exception e)
 				{
-					//Ignore exception
+					Debug.WriteLine(e);
 				}
 			});
 
@@ -145,8 +149,6 @@ namespace Elastic.Apm.Grpc.Tests
 				);
 
 			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
-
-			await sampleAppHost.StopAsync();
 		}
 	}
 }
