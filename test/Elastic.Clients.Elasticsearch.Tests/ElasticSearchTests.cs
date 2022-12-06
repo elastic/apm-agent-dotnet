@@ -19,7 +19,7 @@ public class ElasticSearchTests : IClassFixture<ElasticSearchTestFixture>
 	{
 		_testOutputHelper = testOutputHelper;
 		_esClientListenerFixture = esClientListenerFixture;
-		_client = _esClientListenerFixture.Cleint ?? throw new Exception("ElasticsearchClient is `null`");
+		_client = _esClientListenerFixture.Client ?? throw new Exception("ElasticsearchClient is `null`");
 	}
 
 	[DockerFact]

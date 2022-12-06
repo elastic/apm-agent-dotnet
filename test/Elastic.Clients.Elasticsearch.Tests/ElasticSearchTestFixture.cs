@@ -14,7 +14,7 @@ namespace Elastic.Clients.Elasticsearch.Tests;
 public class ElasticSearchTestFixture : IAsyncDisposable, IAsyncLifetime
 {
 	public ElasticsearchTestcontainer Container { get; }
-	public ElasticsearchClient? Cleint { get; private set; }
+	public ElasticsearchClient? Client { get; private set; }
 
 	private readonly TestcontainerDatabaseConfiguration _configuration = new ElasticsearchTestcontainerConfiguration { Password = "secret" };
 
@@ -32,8 +32,8 @@ public class ElasticSearchTestFixture : IAsyncDisposable, IAsyncLifetime
 			.ServerCertificateValidationCallback(CertificateValidations.AllowAll)
 			.Authentication(new BasicAuthentication(Container.Username, Container.Password));
 
-		Cleint = new ElasticsearchClient(settings);
-		if (Cleint == null)
+		Client = new ElasticsearchClient(settings);
+		if (Client == null)
 			throw new Exception("`new ElasticsearchClient(settings)` returned `null`");
 	}
 
