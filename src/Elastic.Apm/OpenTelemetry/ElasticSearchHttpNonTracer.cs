@@ -22,7 +22,7 @@ namespace Elastic.Apm.OpenTelemetry
 		public bool IsMatch(string method, Uri requestUrl, Func<string, string> headerGetter) => false;
 		public ISpan StartSpan(IApmAgent agent, string method, Uri requestUrl, Func<string, string> headerGetter) => null;
 
-		public bool SuppressSpanCreation()
+		public bool ShouldSuppressSpanCreation()
 		{
 			if (Activity.Current == null || Activity.Current.Parent == null)
 				return false;

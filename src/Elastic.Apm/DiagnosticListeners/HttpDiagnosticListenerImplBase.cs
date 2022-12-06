@@ -150,7 +150,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				{
 					foreach (var httpSpanTracer in httpTracers)
 					{
-						suppressSpanCreation = httpSpanTracer.SuppressSpanCreation();
+						suppressSpanCreation = httpSpanTracer.ShouldSuppressSpanCreation();
 						if (suppressSpanCreation)
 							break;
 

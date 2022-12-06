@@ -43,6 +43,6 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// if it fails then by the generic HTTP listener). <c>false</c> if span creation should be suppressed for the given HTTP
 		/// call
 		/// </returns>
-		bool SuppressSpanCreation();
+		bool ShouldSuppressSpanCreation();
 	}
 }

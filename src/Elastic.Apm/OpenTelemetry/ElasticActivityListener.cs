@@ -29,7 +29,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 		private readonly IApmLogger _logger;
 		private Tracer _tracer;
-		private HttpTraceConfiguration _httpTraceConfiguration;
+		private readonly HttpTraceConfiguration _httpTraceConfiguration;
 
 		internal void Start(Tracer tracerInternal)
 		{
@@ -158,8 +158,6 @@ namespace Elastic.Apm.OpenTelemetry
 							case ActivityStatusCode.Error:
 								transaction.Outcome = Outcome.Failure;
 								break;
-							default:
-								break;
 						}
 #endif
 
@@ -191,8 +189,6 @@ namespace Elastic.Apm.OpenTelemetry
 							case ActivityStatusCode.Error:
 								span.Outcome = Outcome.Failure;
 								break;
-							default:
-								break;
 						}
 #endif
 						span.End();
@@ -207,17 +203,11 @@ namespace Elastic.Apm.OpenTelemetry
 			var isMessaging = activity.Tags.Any(n => n.Key == "messaging.system");
 
 			if (activity.Kind == ActivityKind.Server && (isRpc || isHttp))
-			{
 				transaction.Type = ApiConstants.TypeRequest;
-			}
 			else if (activity.Kind == ActivityKind.Consumer && isMessaging)
-			{
 				transaction.Type = ApiConstants.TypeMessaging;
-			}
 			else
-			{
 				transaction.Type = "unknown";
-			}
 		}
 
 		private ActivityListener Listener { get; set; }
