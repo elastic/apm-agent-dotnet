@@ -88,8 +88,8 @@ In this PR we need to update:
 
 ### Prepare the next (pre-release) version
 
-In order to better differentiate between pre-release builds and artifacts from the just-released ones,
-bump the agent version again by adding the `-alpha` suffix in these files:
+To clearly distinguish pre-release builds and artifacts from the newly released ones,
+bump the agent version again by adding the `-alpha` suffix to the following files:
 
 - `/src/Directory.Build.props`:
 
