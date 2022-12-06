@@ -73,7 +73,7 @@ Each major version has a `<major>.x` branch in the repository (e.g. for major ve
 In case of minor and patch releases we just need to update the `<major>.x` branch to the currently released tag:
 
  ```bash
-git checkout <major>.<minor>.<bug>(-<suffix>)? -b <major>.x
+git checkout v<major>.<minor>.<bug>(-<suffix>)? -b <major>.x
 
 git push --force  upstream
  ```
