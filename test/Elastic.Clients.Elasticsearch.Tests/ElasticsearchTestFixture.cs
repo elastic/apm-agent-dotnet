@@ -20,13 +20,13 @@ public class ElasticsearchTestFixture : IAsyncDisposable, IAsyncLifetime
 
 	public ElasticsearchTestFixture() =>
 		Container = new TestcontainersBuilder<ElasticsearchTestcontainer>()
+			.WithImage("docker.elastic.co/elasticsearch/elasticsearch:8.5")
 			.WithDatabase(_configuration)
 			.Build();
 
 	public async Task InitializeAsync()
 	{
 		await Container.StartAsync();
-
 
 		var settings = new ElasticsearchClientSettings(new Uri(Container.ConnectionString))
 			.ServerCertificateValidationCallback(CertificateValidations.AllowAll)
