@@ -212,11 +212,12 @@ module Build =
     /// Creates versioned ElasticApmAgent.zip file    
     let AgentZip (canary:bool) =        
         let name = "ElasticApmAgent"      
+        let currentAssemblyVersion = Versioning.CurrentVersion.VersionPrefix
         let versionedName =
             if canary then
-                sprintf "%s_%s-%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString()) versionSuffix
+                sprintf "%s_%s-%s" name (currentAssemblyVersion.ToString()) versionSuffix
             else
-                sprintf "%s_%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString())
+                sprintf "%s_%s" name (currentAssemblyVersion.ToString())
                 
         let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
@@ -271,7 +272,7 @@ module Build =
     /// Creates versioned elastic_apm_profiler.zip file containing all components needed for profiler auto-instrumentation  
     let ProfilerZip (canary:bool) =
         let name = "elastic_apm_profiler"
-        let currentAssemblyVersion = Versioning.CurrentVersion.AssemblyVersion
+        let currentAssemblyVersion = Versioning.CurrentVersion.VersionPrefix
         let versionedName =
             let os =
                 if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then "win-x64"

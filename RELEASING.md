@@ -73,7 +73,7 @@ Each major version has a `<major>.x` branch in the repository (e.g. for major ve
 In case of minor and patch releases we just need to update the `<major>.x` branch to the currently released tag:
 
  ```bash
-git checkout <major>.<minor>.<bug>(-<suffix>)? -b <major>.x
+git checkout v<major>.<minor>.<bug>(-<suffix>)? -b <major>.x
 
 git push --force  upstream
  ```
@@ -85,6 +85,30 @@ Additionally, in case of a major version release, we need to create a PR in [ela
 In this PR we need to update:
 - [`conf.yaml`](https://github.com/elastic/docs/blob/master/conf.yaml): Set the `current` part to the new `<major>.x` and add that to the `branches` and `live` parts. In addition, remove the previous major entry from the `live` key.
 - [`shared/versions/stack/*.asciidoc`](https://github.com/elastic/docs/tree/master/shared/versions/stack): This directory defines how links from stack-versioned documentation relate to links from non stack-versioned documentation. For example, in the `8.5` file, the variable `:apm-dotnet-branch:` is set to `1.x`. This means any links in the `8.5` stack docs (like the APM Guide) that point to the APM .NET Agent reference, will point to the `1.x` version of those docs. The number of files you update in this directory depends on version compatibility between stack docs and your APM agent. In general, we update as far back as the new version of the agent is compatible with the stack; this pushes new documentation to the user.
+
+### Prepare the next (pre-release) version
+
+To clearly distinguish pre-release builds and artifacts from the newly released ones,
+bump the agent version again by adding the `-alpha` suffix to the following files:
+
+- `/src/Directory.Build.props`:
+
+  ```xml
+  ...
+  <InformationalVersion>1.20.0-alpha</InformationalVersion>
+  <VersionPrefix>1.20.0-alpha</VersionPrefix>
+  ...
+  ```
+
+  **Note** that `AssemblyVersion` and `FileVersion` do not add the `-alpha` prefix.
+
+- `/src/elastic_apm_profiler/Cargo.toml`:
+
+  ```toml
+  ...
+  version = "1.20.0-alpha"
+  ...
+  ```
 
 ## Executing the release script locally
 
