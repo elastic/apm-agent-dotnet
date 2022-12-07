@@ -39,13 +39,19 @@ public class ElasticsearchTestFixture : IAsyncDisposable, IAsyncLifetime
 
 	async Task IAsyncLifetime.DisposeAsync()
 	{
-		await Container.StopAsync();
-		await Container.DisposeAsync();
+		if (Container.State == TestcontainersStates.Running)
+		{
+			await Container.StopAsync();
+			await Container.DisposeAsync();
+		}
 	}
 
 	async ValueTask IAsyncDisposable.DisposeAsync()
 	{
-		await Container.StopAsync();
-		await Container.DisposeAsync();
+		if (Container.State == TestcontainersStates.Running)
+		{
+			await Container.StopAsync();
+			await Container.DisposeAsync();
+		}
 	}
 }
