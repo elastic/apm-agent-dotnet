@@ -57,6 +57,7 @@ namespace Elastic.Apm
 				ConfigurationStore = new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
+				HttpTraceConfiguration = new HttpTraceConfiguration();
 
 				// Called by PayloadSenderV2 after the ServerInfo is fetched
 				Action<bool, IApmServerInfo> serverInfoCallback = null;
@@ -65,7 +66,7 @@ namespace Elastic.Apm
 				ElasticActivityListener activityListener = null;
 				if (ConfigurationReader.EnableOpenTelemetryBridge)
 				{
-					activityListener = new ElasticActivityListener(this);
+					activityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 
 					serverInfoCallback = (success, serverInfo) =>
 					{
@@ -103,7 +104,6 @@ namespace Elastic.Apm
 				if (ConfigurationReader.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
-				HttpTraceConfiguration = new HttpTraceConfiguration();
 				SubscribedListeners = new HashSet<Type>();
 
 				// initialize the tracer before central configuration or metric collection is started

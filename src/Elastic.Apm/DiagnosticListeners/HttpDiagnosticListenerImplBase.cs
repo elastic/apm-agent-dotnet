@@ -143,12 +143,17 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			var method = RequestGetMethod(request);
 			ISpan span = null;
+			var suppressSpanCreation = false;
 			if (_configuration?.HasTracers ?? false)
 			{
 				using (var httpTracers = _configuration.GetTracers())
 				{
 					foreach (var httpSpanTracer in httpTracers)
 					{
+						suppressSpanCreation = httpSpanTracer.ShouldSuppressSpanCreation();
+						if (suppressSpanCreation)
+							break;
+
 						if (httpSpanTracer.IsMatch(method, requestUrl,
 								header => RequestTryGetHeader(request, header, out var value) ? value : null))
 						{
@@ -165,6 +170,14 @@ namespace Elastic.Apm.DiagnosticListeners
 			{
 				if (_configuration?.CaptureSpan ?? false)
 				{
+					if (suppressSpanCreation)
+					{
+						Logger.Trace()
+							?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as it was suppressed by an HttpSpanTracer",
+								requestUrl.Sanitize());
+						return;
+					}
+
 					span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
 						ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true, true);
 

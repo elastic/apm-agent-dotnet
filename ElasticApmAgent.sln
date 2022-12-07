@@ -189,6 +189,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Functions
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.AzureFunctionApp.Isolated", "sample\Elastic.AzureFunctionApp.Isolated\Elastic.AzureFunctionApp.Isolated.csproj", "{9879E646-63ED-474C-905B-1B469403F0A5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Clients.Elasticsearch.Tests", "test\Elastic.Clients.Elasticsearch.Tests\Elastic.Clients.Elasticsearch.Tests.csproj", "{E6217549-8C21-4E95-BDF2-E782922CD104}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -495,6 +497,10 @@ Global
 		{9879E646-63ED-474C-905B-1B469403F0A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9879E646-63ED-474C-905B-1B469403F0A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9879E646-63ED-474C-905B-1B469403F0A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6217549-8C21-4E95-BDF2-E782922CD104}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6217549-8C21-4E95-BDF2-E782922CD104}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6217549-8C21-4E95-BDF2-E782922CD104}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6217549-8C21-4E95-BDF2-E782922CD104}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -575,6 +581,7 @@ Global
 		{A124FE13-1C70-4D59-8577-9BD4204923CA} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{8E3D94CD-3378-4431-8956-07644A64D4E8} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{9879E646-63ED-474C-905B-1B469403F0A5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{E6217549-8C21-4E95-BDF2-E782922CD104} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
