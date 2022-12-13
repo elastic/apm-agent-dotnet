@@ -12,6 +12,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.Features;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
@@ -137,9 +138,22 @@ namespace Elastic.Apm
 
 				if (ConfigurationReader.Enabled)
 				{
-					CentralConfigurationFetcher = centralConfigurationFetcher ?? new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
-					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationStore, breakdownMetricsProvider);
-					MetricsCollector.StartCollecting();
+					var agentFeatures = AgentFeatureProvider.Get(Logger);
+					//
+					// Central configuration
+					//
+					if (centralConfigurationFetcher != null)
+						CentralConfigurationFetcher = centralConfigurationFetcher;
+					else if (agentFeatures.Check(AgentFeature.RemoteConfiguration))
+						CentralConfigurationFetcher = new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
+					//
+					// Metrics collection
+					//
+					if (metricsCollector != null)
+						MetricsCollector = metricsCollector;
+					else if (agentFeatures.Check(AgentFeature.MetricsCollection))
+						MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationStore, breakdownMetricsProvider);
+					MetricsCollector?.StartCollecting();
 				}
 				else
 					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
