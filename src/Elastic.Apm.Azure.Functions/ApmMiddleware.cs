@@ -11,10 +11,8 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Cloud;
 using Elastic.Apm.Extensions;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
-using Elastic.Apm.Report;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
@@ -25,21 +23,18 @@ namespace Elastic.Apm.Azure.Functions;
 public class ApmMiddleware : IFunctionsWorkerMiddleware
 {
 	private static readonly IApmLogger Logger;
-	private static readonly string FunctionAppName;
-	private static readonly string FaasIdPrefix;
 	private static int ColdStart = 1;
+	private static readonly AzureFunctionsMetaData MetaData;
+	private static readonly string FaasIdPrefix;
 
 	static ApmMiddleware()
 	{
 		Logger = Agent.Instance.Logger.Scoped(nameof(ApmMiddleware));
-		var metaData = new AzureFunctionsMetadataProvider(Logger).GetMetadata();
-		FunctionAppName = metaData?.Instance?.Name ?? string.Empty;
+		MetaData = AzureFunctionsMetadataProvider.GetAzureFunctionsMetaData(Logger);
 		FaasIdPrefix =
-			$"/subscriptions/{metaData?.Account?.Id}/resourceGroups/{metaData?.Project?.Name}/providers/Microsoft.Web/sites/{FunctionAppName}/functions/";
+			$"/subscriptions/{MetaData.SubscriptionId}/resourceGroups/{MetaData.WebsiteResourceGroup}/providers/Microsoft.Web/sites/{MetaData.WebsiteSiteName}/functions/";
 		Logger.Trace()?.Log($"FaasIdPrefix: {FaasIdPrefix}");
 	}
-
-	private static bool IsColdStart() => Interlocked.Exchange(ref ColdStart, 0) == 1;
 
 	public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
 	{
@@ -51,13 +46,18 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			var success = true;
 			t.FaaS = new Faas
 			{
-				Name = $"{FunctionAppName}/{context.FunctionDefinition.Name}",
+				Name = $"{MetaData.WebsiteSiteName}/{context.FunctionDefinition.Name}",
 				Id = $"{FaasIdPrefix}{context.FunctionDefinition.Name}",
 				Trigger = new Trigger { Type = data.TriggerType },
 				Execution = context.InvocationId,
 				ColdStart = IsColdStart()
 			};
-
+			t.Context.Service = new Service(null, null)
+			{
+				Framework =
+					new Framework { Name = "Azure Functions", Version = MetaData.FunctionsExtensionVersion },
+				Runtime = new Runtime { Name = MetaData.FunctionsWorkerRuntime }
+			};
 			try
 			{
 				await next(context);
@@ -74,6 +74,8 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			}
 		}, data.TracingData);
 	}
+
+	private static bool IsColdStart() => Interlocked.Exchange(ref ColdStart, 0) == 1;
 
 	private static TriggerSpecificData GetTriggerSpecificData(FunctionContext context)
 	{
@@ -144,3 +146,8 @@ internal struct TriggerSpecificData
 
 	internal string Name { get; }
 }
+
+
+
+
+
