@@ -5,6 +5,7 @@
 
 using System.Linq;
 using Elastic.Apm.Cloud;
+using Elastic.Apm.Features;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -14,6 +15,19 @@ namespace Elastic.Apm.Tests.Cloud
 {
 	public class CloudMetadataProviderCollectionTests
 	{
+		[Fact]
+		public void AzureFunctionsAgentFeature_Overrules_CloudProviderConfigValue()
+		{
+			var logger = new NoopLogger();
+			using (new AgentFeaturesProviderScope(new AzureFunctionsAgentFeatures(logger)))
+			{
+				var providers = new CloudMetadataProviderCollection(DefaultValues.CloudProvider, logger);
+
+				providers.Count.Should().Be(1);
+				providers.First().Provider.Should().Be(AzureFunctionsMetadataProvider.Name);
+			}
+		}
+
 		[Fact]
 		public void DefaultCloudProvider_Registers_Aws_Gcp_Azure_Providers()
 		{

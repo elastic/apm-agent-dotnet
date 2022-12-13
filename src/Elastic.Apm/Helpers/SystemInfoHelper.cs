@@ -87,7 +87,7 @@ namespace Elastic.Apm.Helpers
 			var detectedHostName = GetHostName();
 			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
 
-			if (AgentFeatureProvider.Get(_logger).Check(AgentFeature.ContainerInfo))
+			if (AgentFeaturesProvider.Get(_logger).Check(AgentFeature.ContainerInfo))
 			{
 				ParseContainerInfo(system, string.IsNullOrEmpty(hostName) ? detectedHostName : hostName);
 				ParseKubernetesInfo(system);

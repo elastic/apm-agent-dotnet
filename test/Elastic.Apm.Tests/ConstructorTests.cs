@@ -5,9 +5,13 @@
 
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
+using Elastic.Apm.Features;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -30,6 +34,40 @@ namespace Elastic.Apm.Tests
 			logger.Should().NotBeNull();
 			logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
 			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
+		}
+
+		[Fact]
+		public void Ctor_MustHonor_AgentFeatures_WhenSettingUp_MetricsCollectorAndCentralConfig()
+		{
+			var logger = new NoopLogger();
+			//
+			// Default: MetricsCollector and CentralConfigurationFetcher are enabled (not null).
+			//
+			using (new AgentFeaturesProviderScope(new DefaultAgentFeatures(logger)))
+			{
+				var agentComponents = new AgentComponents();
+				agentComponents.MetricsCollector.Should().NotBeNull();
+				agentComponents.CentralConfigurationFetcher.Should().NotBeNull();
+			}
+			//
+			// On Azure Functions: MetricsCollector and CentralConfigurationFetcher are disabled (null).
+			//
+			using (new AgentFeaturesProviderScope(new AzureFunctionsAgentFeatures(logger)))
+			{
+				var agentComponents = new AgentComponents();
+				agentComponents.MetricsCollector.Should().BeNull();
+				agentComponents.CentralConfigurationFetcher.Should().BeNull();
+			}
+			//
+			// ... unless explicitly provided.
+			//
+			using (new AgentFeaturesProviderScope(new AzureFunctionsAgentFeatures(logger)))
+			{
+				var agentComponents = new AgentComponents(logger, null, null, new FakeMetricsCollector(), null,
+					new NoopCentralConfigurationFetcher(), null);
+				agentComponents.MetricsCollector.Should().NotBeNull();
+				agentComponents.CentralConfigurationFetcher.Should().NotBeNull();
+			}
 		}
 
 		private class LogConfiguration : IConfiguration, IConfigurationSnapshotDescription

@@ -4,8 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Api.Kubernetes;
+using Elastic.Apm.Features;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -30,6 +33,21 @@ namespace Elastic.Apm.Tests
 
 			system.ConfiguredHostName.Should().Be(hostName);
 			system.DetectedHostName.Should().NotBe(hostName);
+		}
+
+		[Fact]
+		public void Feature_ContainerInfo_ShouldBeDisabled_OnAzure()
+		{
+			var logger = new TestLogger(LogLevel.Trace);
+			using (new AgentFeaturesProviderScope(new AzureFunctionsAgentFeatures(logger)))
+			{
+				new SystemInfoHelper(logger).GetSystemInfo("bert");
+				//
+				// The actual parsing (not happening) is hard to test currently.
+				// Let's assert the log output that tells us that this part gets skipped.
+				//
+				logger.Lines.Should().Contain(line => line.Contains("[Agent Feature] 'ContainerInfo' enabled: False"));
+			}
 		}
 
 		[Fact]

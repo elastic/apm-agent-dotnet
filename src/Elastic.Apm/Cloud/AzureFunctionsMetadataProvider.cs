@@ -17,7 +17,7 @@ namespace Elastic.Apm.Cloud
 	{
 		internal const string Name = "azure-functions";
 
-		public AzureFunctionsMetadataProvider(IApmLogger logger, IDictionary environmentVariables) : base(Name, logger,
+		public AzureFunctionsMetadataProvider(IApmLogger logger, IDictionary environmentVariables = null) : base(Name, logger,
 			environmentVariables)
 		{
 		}

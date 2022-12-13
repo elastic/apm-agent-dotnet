@@ -138,7 +138,7 @@ namespace Elastic.Apm
 
 				if (ConfigurationReader.Enabled)
 				{
-					var agentFeatures = AgentFeatureProvider.Get(Logger);
+					var agentFeatures = AgentFeaturesProvider.Get(Logger);
 					//
 					// Central configuration
 					//
@@ -172,7 +172,7 @@ namespace Elastic.Apm
 
 		public IApmLogger Logger { get; }
 
-		private IMetricsCollector MetricsCollector { get; }
+		internal IMetricsCollector MetricsCollector { get; }
 
 		public IPayloadSender PayloadSender { get; }
 

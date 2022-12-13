@@ -6,6 +6,7 @@
 using System;
 using System.Collections;
 using System.Threading.Tasks;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Cloud
@@ -15,8 +16,8 @@ namespace Elastic.Apm.Cloud
 	/// </summary>
 	public abstract class EnvironmentBasedAzureMetadataProvider : ICloudMetadataProvider
 	{
-		protected readonly IApmLogger _logger;
-		protected readonly IDictionary _environmentVariables;
+		private readonly IApmLogger _logger;
+		private readonly IDictionary _environmentVariables;
 
 		/// <summary>
 		/// Value of the form {subscription id}+{app service plan resource group}-{region}webspace
@@ -40,19 +41,10 @@ namespace Elastic.Apm.Cloud
 		{
 			Provider = name;
 			_logger = logger;
-			_environmentVariables = environmentVariables;
-
-			if (_environmentVariables is null)
-			{
-				_logger.Trace()?.Log("Unable to get {Provider} cloud metadata as no environment variables available",
-					Provider);
-			}
+			_environmentVariables = environmentVariables ?? new EnvironmentVariables(logger).GetEnvironmentVariables();
 		}
-
 		protected string GetEnvironmentVariable(string key) =>
-			_environmentVariables != null && _environmentVariables.Contains(key)
-				? _environmentVariables[key]?.ToString()
-				: null;
+			_environmentVariables.Contains(key) ? _environmentVariables[key]?.ToString() : null;
 
 		protected bool NullOrEmptyVariable(string key, string value)
 		{

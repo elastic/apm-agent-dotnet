@@ -14,6 +14,7 @@ using Elastic.Apm.Extensions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+using Elastic.Apm.Report;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
@@ -24,16 +25,17 @@ namespace Elastic.Apm.Azure.Functions;
 public class ApmMiddleware : IFunctionsWorkerMiddleware
 {
 	private static readonly IApmLogger Logger;
+	private static readonly string FunctionAppName;
 	private static readonly string FaasIdPrefix;
 	private static int ColdStart = 1;
 
 	static ApmMiddleware()
 	{
 		Logger = Agent.Instance.Logger.Scoped(nameof(ApmMiddleware));
-		var metaData = new AzureFunctionsMetadataProvider(Logger,
-			new EnvironmentVariables(Logger).GetEnvironmentVariables()).GetMetadata();
+		var metaData = new AzureFunctionsMetadataProvider(Logger).GetMetadata();
+		FunctionAppName = metaData?.Instance?.Name ?? string.Empty;
 		FaasIdPrefix =
-			$"/subscriptions/{metaData?.Account?.Id}/resourceGroups/{metaData?.Project}/providers/Microsoft.Web/sites/{metaData?.Instance}/functions/";
+			$"/subscriptions/{metaData?.Account?.Id}/resourceGroups/{metaData?.Project?.Name}/providers/Microsoft.Web/sites/{FunctionAppName}/functions/";
 		Logger.Trace()?.Log($"FaasIdPrefix: {FaasIdPrefix}");
 	}
 
@@ -49,7 +51,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			var success = true;
 			t.FaaS = new Faas
 			{
-				Name = context.FunctionDefinition.Name,
+				Name = $"{FunctionAppName}/{context.FunctionDefinition.Name}",
 				Id = $"{FaasIdPrefix}{context.FunctionDefinition.Name}",
 				Trigger = new Trigger { Type = data.TriggerType },
 				Execution = context.InvocationId,
