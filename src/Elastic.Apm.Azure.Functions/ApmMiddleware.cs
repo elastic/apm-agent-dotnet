@@ -1,8 +1,3 @@
-// Licensed to Elasticsearch B.V under
-// one or more agreements.
-// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +26,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 	{
 		Logger = Agent.Instance.Logger.Scoped(nameof(ApmMiddleware));
 		MetaData = AzureFunctionsMetadataProvider.GetAzureFunctionsMetaData(Logger);
+		UpdateServiceInformation(Agent.Instance.Service);
 		FaasIdPrefix =
 			$"/subscriptions/{MetaData.SubscriptionId}/resourceGroups/{MetaData.WebsiteResourceGroup}/providers/Microsoft.Web/sites/{MetaData.WebsiteSiteName}/functions/";
 		Logger.Trace()?.Log($"FaasIdPrefix: {FaasIdPrefix}");
@@ -52,12 +48,6 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 				Execution = context.InvocationId,
 				ColdStart = IsColdStart()
 			};
-			t.Context.Service = new Service(null, null)
-			{
-				Framework =
-					new Framework { Name = "Azure Functions", Version = MetaData.FunctionsExtensionVersion },
-				Runtime = new Runtime { Name = MetaData.FunctionsWorkerRuntime }
-			};
 			try
 			{
 				await next(context);
@@ -73,6 +63,19 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 				SetTriggerSpecificResult(t, success, context);
 			}
 		}, data.TracingData);
+	}
+
+	private static void UpdateServiceInformation(Service service)
+	{
+		if (service == null)
+		{
+			Logger.Warning()?.Log($"{nameof(UpdateServiceInformation)}: service is null");
+			return;
+		}
+
+		service.Framework = new() { Name = "Azure Functions", Version = MetaData.FunctionsExtensionVersion };
+		var runtimeVersion = service.Runtime?.Version ?? "n/a";
+		service.Runtime = new() { Name = MetaData.FunctionsWorkerRuntime, Version = runtimeVersion };
 	}
 
 	private static bool IsColdStart() => Interlocked.Exchange(ref ColdStart, 0) == 1;
@@ -146,8 +149,3 @@ internal struct TriggerSpecificData
 
 	internal string Name { get; }
 }
-
-
-
-
-

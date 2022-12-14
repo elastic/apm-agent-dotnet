@@ -115,14 +115,15 @@ public class AzureFunctionsTests : IAsyncLifetime
 		transaction.Should().NotBeNull();
 		transaction.FaaS.Id.Should()
 			.Be(
-				"/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/unit_test/functions/SampleHttpTrigger");
-		transaction.FaaS.Name.Should().Be("unit_test/SampleHttpTrigger");
+				"/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/testfaas/functions/SampleHttpTrigger");
+		transaction.FaaS.Name.Should().Be("testfaas/SampleHttpTrigger");
 		transaction.FaaS.Trigger.Type.Should().Be("http");
 		transaction.FaaS.ColdStart.Should().BeTrue();
 		transaction.Outcome.Should().Be(Outcome.Success);
 		transaction.Result.Should().Be("HTTP 2xx");
 	}
 }
+
 
 
 
