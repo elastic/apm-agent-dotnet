@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using Elastic.Apm.Api;
 using FluentAssertions;
 using Xunit;
@@ -13,12 +14,12 @@ public class UrlTests
 {
 	[Theory]
 	[InlineData("http://localhost:7071/api/SampleHttpTrigger", "localhost", "/api/SampleHttpTrigger", "",
-		"http")]
+		"HTTP")]
 	[InlineData("https://example.com:7071/?foo", "example.com", "/", "foo",
-		"https")]
+		"HTTP")]
 	[InlineData("http://localhost:7071/api/SampleHttpTrigger?foo=bar", "localhost", "/api/SampleHttpTrigger",
 		"foo=bar",
-		"http")]
+		"HTTP")]
 	public void Test_FromUri(string uri, string host, string path, string query, string scheme)
 	{
 		var url = Url.FromUri(new(uri));
@@ -33,6 +34,6 @@ public class UrlTests
 	public void Test_FromUri_Invalid()
 	{
 		Url.FromUri(null).Should().Be(null);
-		Url.FromUri(new("/foo/bar")).Should().Be(null);
+		Url.FromUri(new("/foo/bar", UriKind.Relative)).Should().Be(null);
 	}
 }

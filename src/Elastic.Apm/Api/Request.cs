@@ -101,7 +101,7 @@ namespace Elastic.Apm.Api
 		public override string ToString() => new ToStringBuilder(nameof(Url)) { { "Full", Full } }.ToString();
 
 		public static Url FromUri(Uri url) =>
-			url != null && !url.IsFile && url.IsAbsoluteUri
+			url != null && url.IsAbsoluteUri && !url.IsFile
 				? new()
 				{
 					Full = url.AbsoluteUri,
