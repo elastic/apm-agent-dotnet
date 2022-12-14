@@ -31,7 +31,9 @@ namespace Elastic.Apm
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender, null, null, null, null) { }
+		) : this(logger, configurationReader, payloadSender, null, null, null, null)
+		{
+		}
 
 		internal AgentComponents(
 			IApmLogger logger,
@@ -55,7 +57,8 @@ namespace Elastic.Apm
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
-				ConfigurationStore = new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
+				ConfigurationStore =
+					new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
@@ -99,8 +102,9 @@ namespace Elastic.Apm
 				}
 #endif
 				PayloadSender = payloadSender
-					?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system, ApmServerInfo,
-						isEnabled: ConfigurationReader.Enabled, serverInfoCallback:serverInfoCallback);
+				                ?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
+					                ApmServerInfo,
+					                isEnabled: ConfigurationReader.Enabled, serverInfoCallback: serverInfoCallback);
 
 				if (ConfigurationReader.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
@@ -109,7 +113,8 @@ namespace Elastic.Apm
 
 				// initialize the tracer before central configuration or metric collection is started
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
-					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
+					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo,
+					breakdownMetricsProvider);
 
 #if NET5_0_OR_GREATER
 				if (ConfigurationReader.EnableOpenTelemetryBridge)
@@ -145,18 +150,23 @@ namespace Elastic.Apm
 					if (centralConfigurationFetcher != null)
 						CentralConfigurationFetcher = centralConfigurationFetcher;
 					else if (agentFeatures.Check(AgentFeature.RemoteConfiguration))
-						CentralConfigurationFetcher = new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
+						CentralConfigurationFetcher =
+							new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
 					//
 					// Metrics collection
 					//
 					if (metricsCollector != null)
 						MetricsCollector = metricsCollector;
 					else if (agentFeatures.Check(AgentFeature.MetricsCollection))
-						MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationStore, breakdownMetricsProvider);
+						MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationStore,
+							breakdownMetricsProvider);
 					MetricsCollector?.StartCollecting();
 				}
 				else
-					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+				{
+					Logger.Info()
+						?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+				}
 			}
 			catch (Exception e)
 			{
@@ -168,19 +178,21 @@ namespace Elastic.Apm
 
 		internal IConfigurationStore ConfigurationStore { get; }
 
-		public IConfigurationReader ConfigurationReader { get; }
-
-		public IApmLogger Logger { get; }
-
 		internal IMetricsCollector MetricsCollector { get; }
-
-		public IPayloadSender PayloadSender { get; }
 
 		internal IApmServerInfo ApmServerInfo { get; }
 
 		internal HttpTraceConfiguration HttpTraceConfiguration { get; }
 
 		internal HashSet<Type> SubscribedListeners { get; }
+
+		internal Tracer TracerInternal { get; }
+
+		public IConfigurationReader ConfigurationReader { get; }
+
+		public IApmLogger Logger { get; }
+
+		public IPayloadSender PayloadSender { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
@@ -190,8 +202,6 @@ namespace Elastic.Apm
 		public Service Service { get; }
 
 		public ITracer Tracer => TracerInternal;
-
-		internal Tracer TracerInternal { get; }
 
 		public void Dispose()
 		{

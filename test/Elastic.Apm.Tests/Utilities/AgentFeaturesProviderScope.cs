@@ -10,6 +10,8 @@ namespace Elastic.Apm.Tests.Utilities;
 
 internal class AgentFeaturesProviderScope : IDisposable
 {
-	internal AgentFeaturesProviderScope(AgentFeatures agentFeatures) => AgentFeaturesProvider.Set(agentFeatures);
+	internal AgentFeaturesProviderScope(AgentFeatures agentFeatures = null) => AgentFeaturesProvider.Set(agentFeatures);
 	public void Dispose() => AgentFeaturesProvider.Set(null);
 }
+
+

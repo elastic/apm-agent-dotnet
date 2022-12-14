@@ -19,14 +19,13 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
 
-
 [Collection("AzureFunctions")]
 public class AzureFunctionsTests : IAsyncLifetime
 {
-	private readonly Process _funcProcess;
-	private readonly AutoResetEvent _waitForTransactionDataEvent = new(false);
 	private readonly MockApmServer _apmServer;
+	private readonly Process _funcProcess;
 	private readonly ITestOutputHelper _output;
+	private readonly AutoResetEvent _waitForTransactionDataEvent = new(false);
 
 	public AzureFunctionsTests(ITestOutputHelper output)
 	{
@@ -55,10 +54,7 @@ public class AzureFunctionsTests : IAsyncLifetime
 				EnvironmentVariables =
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
-					["ELASTIC_APM_FLUSH_INTERVAL"] = "0",
-					["FUNCTIONS_EXTENSION_VERSION"] = "<dummy>",
-					["WEBSITE_OWNER_NAME"] = "abcd1234-abcd-acdc-1234-112233445566+testfaas_group-CentralUSwebspace-Linux",
-					["WEBSITE_SITE_NAME"] = "unit_test",
+					["ELASTIC_APM_FLUSH_INTERVAL"] = "0"
 				},
 				UseShellExecute = false
 			}
@@ -89,7 +85,11 @@ public class AzureFunctionsTests : IAsyncLifetime
 			{
 				var result = await httpClient.GetAsync(url);
 				if (result.IsSuccessStatusCode)
+				{
+					var s = await result.Content.ReadAsStringAsync();
+					_output.WriteLine(s);
 					break;
+				}
 			}
 			catch
 			{
@@ -113,7 +113,9 @@ public class AzureFunctionsTests : IAsyncLifetime
 		var transaction =
 			_apmServer.ReceivedData.Transactions.SingleOrDefault(t => t.Name == "GET /api/SampleHttpTrigger");
 		transaction.Should().NotBeNull();
-		transaction.FaaS.Id.Should().Be("/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/unit_test/functions/SampleHttpTrigger");
+		transaction.FaaS.Id.Should()
+			.Be(
+				"/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/unit_test/functions/SampleHttpTrigger");
 		transaction.FaaS.Name.Should().Be("unit_test/SampleHttpTrigger");
 		transaction.FaaS.Trigger.Type.Should().Be("http");
 		transaction.FaaS.ColdStart.Should().BeTrue();
@@ -121,3 +123,6 @@ public class AzureFunctionsTests : IAsyncLifetime
 		transaction.Result.Should().Be("HTTP 2xx");
 	}
 }
+
+
+

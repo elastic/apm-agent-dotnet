@@ -19,8 +19,6 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-			Environment.SetEnvironmentVariable("ELASTIC_APM_LOG_LEVEL", "Trace");
-
 			CompressionSample();
 
 			Console.ReadKey();

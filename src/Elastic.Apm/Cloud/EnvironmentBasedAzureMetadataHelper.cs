@@ -51,14 +51,8 @@ namespace Elastic.Apm.Cloud
 		{
 			if (!string.IsNullOrEmpty(value)) return false;
 
-			// TODO! Provoke that log!
-
 			_logger.Trace()?.Log(
-				"Unable to get {Provider} cloud metadata as no {EnvironmentVariable} environment variable exists. The application is likely not running in {Provider}",
-				_name,
-				key,
-				_name);
-
+				$"Unable to get '{_name}' cloud metadata as no '{key}' environment variable exists. The application is likely not running in '{_name}'");
 			return true;
 		}
 
@@ -67,10 +61,9 @@ namespace Elastic.Apm.Cloud
 			var websiteOwnerNameParts = websiteOwnerName.Split('+');
 			if (websiteOwnerNameParts.Length != 2)
 			{
-				_logger.Trace()?.Log(
-					"Unable to get {Provider} cloud metadata as {EnvironmentVariable} does not contain expected format",
-					_name,
-					AzureEnvironmentVariables.WebsiteOwnerName);
+				_logger.Trace()
+					?.Log(
+						$"Unable to get '{_name}' cloud metadata as '{AzureEnvironmentVariables.WebsiteOwnerName}' does not contain expected format");
 				return null;
 			}
 
@@ -83,10 +76,9 @@ namespace Elastic.Apm.Cloud
 			var lastHyphenIndex = websiteOwnerNameParts[1].LastIndexOf('-');
 			if (lastHyphenIndex == -1)
 			{
-				_logger.Trace()?.Log(
-					"Unable to get {Provider} cloud metadata as {EnvironmentVariable} does not contain expected format",
-					_name,
-					AzureEnvironmentVariables.WebsiteOwnerName);
+				_logger.Trace()
+					?.Log(
+						$"Unable to get '{_name}' cloud metadata as '{AzureEnvironmentVariables.WebsiteOwnerName}' does not contain expected format");
 				return null;
 			}
 
