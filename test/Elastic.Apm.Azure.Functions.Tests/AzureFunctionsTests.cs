@@ -54,15 +54,19 @@ public class AzureFunctionsTests : IAsyncLifetime
 				EnvironmentVariables =
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
+					["ELASTIC_APM_LOG_LEVEL"] = "Trace",
 					["ELASTIC_APM_FLUSH_INTERVAL"] = "0"
 				},
+				RedirectStandardOutput = true,
 				UseShellExecute = false
 			}
 		};
+		_funcProcess.OutputDataReceived += (sender, args) => _output.WriteLine("[func] " + args.Data);
 
-		_output.WriteLine($"{DateTime.Now}: starting func tool");
+		_output.WriteLine($"{DateTime.Now}: Starting func tool");
 		var isStarted = _funcProcess.Start();
 		isStarted.Should().BeTrue("Could not start Azure Functions Core Tools");
+		//_funcProcess.BeginOutputReadLine();
 	}
 
 	public Task InitializeAsync() => Task.CompletedTask;
@@ -76,20 +80,19 @@ public class AzureFunctionsTests : IAsyncLifetime
 
 	private async Task InvokeFunction(string url)
 	{
+		_output.WriteLine($"Invoking {url} ...");
 		var attempt = 0;
 		const int maxAttempts = 60;
 		using var httpClient = new HttpClient();
+		httpClient.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
 		while (++attempt < maxAttempts)
 		{
 			try
 			{
 				var result = await httpClient.GetAsync(url);
-				if (result.IsSuccessStatusCode)
-				{
-					var s = await result.Content.ReadAsStringAsync();
-					_output.WriteLine(s);
-					break;
-				}
+				var s = await result.Content.ReadAsStringAsync();
+				_output.WriteLine(s);
+				break;
 			}
 			catch
 			{
@@ -99,7 +102,7 @@ public class AzureFunctionsTests : IAsyncLifetime
 
 		attempt.Should().BeLessThan(maxAttempts, $"Could not connect to function running on {url}");
 
-		_output.WriteLine($"{DateTime.Now}: func tool ready");
+		_waitForTransactionDataEvent.WaitOne(TimeSpan.FromSeconds(30));
 	}
 
 	[Fact]
@@ -107,12 +110,11 @@ public class AzureFunctionsTests : IAsyncLifetime
 	{
 		await InvokeFunction("http://localhost:7071/api/SampleHttpTrigger");
 
-		_waitForTransactionDataEvent.WaitOne(TimeSpan.FromSeconds(30));
-
 		_apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
 		var transaction =
 			_apmServer.ReceivedData.Transactions.SingleOrDefault(t => t.Name == "GET /api/SampleHttpTrigger");
 		transaction.Should().NotBeNull();
+		transaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
 		transaction.FaaS.Id.Should()
 			.Be(
 				"/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/testfaas/functions/SampleHttpTrigger");
@@ -121,9 +123,83 @@ public class AzureFunctionsTests : IAsyncLifetime
 		transaction.FaaS.ColdStart.Should().BeTrue();
 		transaction.Outcome.Should().Be(Outcome.Success);
 		transaction.Result.Should().Be("HTTP 2xx");
+		transaction.Context.Request.Method.Should().Be("GET");
+		transaction.Context.Request.Url.Full.Should().Be("http://localhost:7071/api/SampleHttpTrigger");
+		transaction.Context.Response.StatusCode.Should().Be(200);
+	}
+
+	[Fact]
+	public async Task Invoke_Http_InternalServerError()
+	{
+		await InvokeFunction("http://localhost:7071/api/HttpTriggerWithInternalServerError");
+
+		_apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
+		var transaction =
+			_apmServer.ReceivedData.Transactions.SingleOrDefault(t =>
+				t.Name == "GET /api/HttpTriggerWithInternalServerError");
+		transaction.Should().NotBeNull();
+		transaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+		transaction.FaaS.Id.Should()
+			.Be(
+				"/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/testfaas/functions/HttpTriggerWithInternalServerError");
+		transaction.FaaS.Name.Should().Be("testfaas/HttpTriggerWithInternalServerError");
+		transaction.FaaS.Trigger.Type.Should().Be("http");
+		transaction.FaaS.ColdStart.Should().BeTrue();
+		transaction.Outcome.Should().Be(Outcome.Failure);
+		transaction.Result.Should().Be("HTTP 5xx");
+		transaction.Context.Request.Method.Should().Be("GET");
+		transaction.Context.Request.Url.Full.Should()
+			.Be("http://localhost:7071/api/HttpTriggerWithInternalServerError");
+		transaction.Context.Response.StatusCode.Should().Be(500);
+	}
+
+	[Fact]
+	public async Task Invoke_Http_FunctionThrowsException()
+	{
+		await InvokeFunction("http://localhost:7071/api/HttpTriggerWithException");
+
+		_apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
+		var transaction =
+			_apmServer.ReceivedData.Transactions.SingleOrDefault(t =>
+				t.Name == "GET /api/HttpTriggerWithException");
+		transaction.Should().NotBeNull();
+		transaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+		transaction.FaaS.Id.Should()
+			.Be(
+				"/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/testfaas/functions/HttpTriggerWithException");
+		transaction.FaaS.Name.Should().Be("testfaas/HttpTriggerWithException");
+		transaction.FaaS.Trigger.Type.Should().Be("http");
+		transaction.FaaS.ColdStart.Should().BeTrue();
+		transaction.Outcome.Should().Be(Outcome.Failure);
+		transaction.Result.Should().Be("failure");
+		transaction.Context.Request.Method.Should().Be("GET");
+		transaction.Context.Request.Url.Full.Should()
+			.Be("http://localhost:7071/api/HttpTriggerWithException");
+		transaction.Context.Response.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task Invoke_Http_NotFound()
+	{
+		await InvokeFunction("http://localhost:7071/api/HttpTriggerWithNotFound");
+
+		_apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
+		var transaction =
+			_apmServer.ReceivedData.Transactions.SingleOrDefault(t =>
+				t.Name == "GET /api/HttpTriggerWithNotFound");
+		transaction.Should().NotBeNull();
+		transaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+		transaction.FaaS.Id.Should()
+			.Be(
+				"/subscriptions/abcd1234-abcd-acdc-1234-112233445566/resourceGroups/testfaas_group/providers/Microsoft.Web/sites/testfaas/functions/HttpTriggerWithNotFound");
+		transaction.FaaS.Name.Should().Be("testfaas/HttpTriggerWithNotFound");
+		transaction.FaaS.Trigger.Type.Should().Be("http");
+		transaction.FaaS.ColdStart.Should().BeTrue();
+		transaction.Outcome.Should().Be(Outcome.Success);
+		transaction.Result.Should().Be("HTTP 4xx");
+		transaction.Context.Request.Method.Should().Be("GET");
+		transaction.Context.Request.Url.Full.Should()
+			.Be("http://localhost:7071/api/HttpTriggerWithNotFound");
+		transaction.Context.Response.StatusCode.Should().Be(404);
 	}
 }
-
-
-
-

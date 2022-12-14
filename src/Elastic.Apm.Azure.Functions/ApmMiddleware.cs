@@ -48,6 +48,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 				Execution = context.InvocationId,
 				ColdStart = IsColdStart()
 			};
+			t.Context.Request = data.Request;
 			try
 			{
 				await next(context);
@@ -83,17 +84,24 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 	private static TriggerSpecificData GetTriggerSpecificData(FunctionContext context)
 	{
 		var httpRequestData = GetHttpRequestData(context);
-		if (httpRequestData != null)
+		if (httpRequestData != null) // HTTP Trigger
 		{
 			Logger.Trace()?.Log("HTTP Trigger type detected.");
 
 			httpRequestData.Headers.TryGetValues("traceparent", out var traceparent);
 			httpRequestData.Headers.TryGetValues("tracestate", out var tracestate);
-			var name = $"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}";
-			return new TriggerSpecificData(name, Trigger.TypeHttp,
-				TraceContext.TryExtractTracingData(traceparent?.FirstOrDefault(), tracestate?.FirstOrDefault()));
+
+			return new($"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}", Trigger.TypeHttp,
+				TraceContext.TryExtractTracingData(traceparent?.FirstOrDefault(), tracestate?.FirstOrDefault()))
+			{
+				Request = new Request(httpRequestData.Method, Url.FromUri(httpRequestData.Url))
+				{
+					Headers = CreateHeadersDictionary(httpRequestData.Headers),
+				}
+			};
 		}
 
+		// Generic
 		return new TriggerSpecificData(context.FunctionDefinition.Name, Trigger.TypeOther, null);
 	}
 
@@ -105,6 +113,13 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			var httpStatusCode = (int)httpResponseData.StatusCode;
 			transaction.Result = Transaction.StatusCodeToResult("HTTP", httpStatusCode);
 			transaction.SetOutcomeForHttpResult(httpStatusCode);
+
+			transaction.Context.Response = new Response
+			{
+				Finished = true,
+				StatusCode = httpStatusCode,
+				Headers = CreateHeadersDictionary(httpResponseData.Headers)
+			};
 		}
 		else // Generic
 		{
@@ -120,6 +135,9 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			}
 		}
 	}
+
+	private static Dictionary<string, string> CreateHeadersDictionary(HttpHeadersCollection httpHeadersCollection) =>
+		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(',', h.Value));
 
 	private static HttpRequestData? GetHttpRequestData(FunctionContext functionContext)
 	{
@@ -148,4 +166,6 @@ internal struct TriggerSpecificData
 	internal string TriggerType { get; }
 
 	internal string Name { get; }
+
+	internal Request? Request { get; set; }
 }
