@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -26,9 +26,11 @@ public class AzureFunctionsTests : IAsyncLifetime
 	private readonly Process _funcProcess;
 	private readonly ITestOutputHelper _output;
 	private readonly AutoResetEvent _waitForTransactionDataEvent = new(false);
+	private readonly bool _logFuncOutput;
 
 	public AzureFunctionsTests(ITestOutputHelper output)
 	{
+		_logFuncOutput = false;
 		_output = output;
 		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsTests));
 		_apmServer.OnReceive += o =>
@@ -57,16 +59,18 @@ public class AzureFunctionsTests : IAsyncLifetime
 					["ELASTIC_APM_LOG_LEVEL"] = "Trace",
 					["ELASTIC_APM_FLUSH_INTERVAL"] = "0"
 				},
-				RedirectStandardOutput = true,
 				UseShellExecute = false
 			}
 		};
-		_funcProcess.OutputDataReceived += (sender, args) => _output.WriteLine("[func] " + args.Data);
-
+		if (_logFuncOutput)
+		{
+			_funcProcess.StartInfo.RedirectStandardOutput = true;
+			_funcProcess.OutputDataReceived += (sender, args) => _output.WriteLine("[func] " + args.Data);
+			_funcProcess.BeginOutputReadLine();
+		}
 		_output.WriteLine($"{DateTime.Now}: Starting func tool");
 		var isStarted = _funcProcess.Start();
 		isStarted.Should().BeTrue("Could not start Azure Functions Core Tools");
-		//_funcProcess.BeginOutputReadLine();
 	}
 
 	public Task InitializeAsync() => Task.CompletedTask;
