@@ -9,6 +9,7 @@ using Xunit;
 
 namespace Elastic.Apm.Tests.Features;
 
+[Collection("Agent Features")]
 public class AgentFeaturesProviderTests
 {
 	[Fact]
@@ -40,6 +41,3 @@ public class AgentFeaturesProviderTests
 		}
 	}
 }
-
-
-

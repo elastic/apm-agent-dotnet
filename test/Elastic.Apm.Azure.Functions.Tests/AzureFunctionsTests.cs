@@ -68,6 +68,7 @@ public class AzureFunctionsTests : IAsyncLifetime
 			_funcProcess.OutputDataReceived += (sender, args) => _output.WriteLine("[func] " + args.Data);
 			_funcProcess.BeginOutputReadLine();
 		}
+
 		_output.WriteLine($"{DateTime.Now}: Starting func tool");
 		var isStarted = _funcProcess.Start();
 		isStarted.Should().BeTrue("Could not start Azure Functions Core Tools");
@@ -106,7 +107,7 @@ public class AzureFunctionsTests : IAsyncLifetime
 
 		attempt.Should().BeLessThan(maxAttempts, $"Could not connect to function running on {url}");
 
-		_waitForTransactionDataEvent.WaitOne(TimeSpan.FromSeconds(30));
+		_waitForTransactionDataEvent.WaitOne(TimeSpan.FromSeconds(60));
 	}
 
 	[Fact]
