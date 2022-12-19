@@ -120,9 +120,8 @@ namespace Elastic.Apm.Tests.Config
 
 			logger.Lines.Should().NotBeEmpty();
 			// ReSharper disable once UseIndexFromEndExpression
-			logger.Lines[logger.Lines.Count - 1]
-				.Should()
-				.Contain($"{EnvVarNames.ServerUrls} is deprecated. Use {EnvVarNames.ServerUrl}");
+			logger.Lines.Should()
+				.Contain(l => l.Contains($"{EnvVarNames.ServerUrls} is deprecated. Use {EnvVarNames.ServerUrl}"));
 		}
 
 		[Fact]
@@ -1171,6 +1170,7 @@ namespace Elastic.Apm.Tests.Config
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, null);
 			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, null);
+			Environment.SetEnvironmentVariable(EnvVarNames.CloudProvider, null);
 		}
 
 		/// <summary>
