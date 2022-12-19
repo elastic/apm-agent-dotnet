@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
@@ -48,7 +47,7 @@ namespace Elastic.Apm
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
 				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
-				PrintAgentLogPreamble(Logger);
+				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
@@ -188,7 +187,7 @@ namespace Elastic.Apm
 			CentralConfigurationFetcher?.Dispose();
 		}
 
-		private static void PrintAgentLogPreamble(IApmLogger logger)
+		private static void PrintAgentLogPreamble(IApmLogger logger, IConfigurationReader configurationReader)
 		{
 			if (logger?.Info() != null)
 			{
@@ -206,6 +205,43 @@ namespace Elastic.Apm
 					info.Log($"Host: {Environment.MachineName}");
 					info.Log($"Time zone: {TimeZoneInfo.Local}");
 					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
+					info.Log("********************************************************************************");
+					info.Log($"Agent Configuration (via '{configurationReader.GetType()}'):");
+					var configurationMetaDataProvider = configurationReader as IConfigurationMetaDataProvider;
+					foreach (var item in ConfigurationMetaData.ConfigurationItems)
+					{
+						var origin = string.Empty;
+						var value = string.Empty;
+						if (configurationMetaDataProvider != null)
+						{
+							var ckv = configurationMetaDataProvider.Get(item);
+							origin = ckv.ReadFrom;
+							value = ckv.Value;
+						}
+						else
+						{
+							// The implementation of IConfigurationReader does not support "IConfigurationMetaDataProvider".
+							// Let's log the essential configuration items in that case.
+							if (item.IsEssentialForLogging)
+							{
+								origin = "unknown";
+								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
+							}
+						}
+
+						if (item.LogAlways || !string.IsNullOrEmpty(value))
+						{
+							if (string.IsNullOrEmpty(value))
+							{
+								origin = "default";
+								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
+							}
+
+							if (item.NeedsMasking) value = item.NeedsMasking ? Consts.Redacted : value;
+							info.Log($" - {item.NormalizedName}: '{value}' ({origin})");
+						}
+					}
+
 					info.Log("********************************************************************************");
 				}
 				catch (Exception e)

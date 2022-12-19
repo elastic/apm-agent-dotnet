@@ -19,7 +19,7 @@ using static Elastic.Apm.Config.ConfigConsts;
 // Disable warnings due to obsolete settings keys
 #pragma warning disable CS0618
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.Tests.Config
 {
 	/// <summary>
 	/// Tests the configuration through environment variables
@@ -1183,7 +1183,7 @@ namespace Elastic.Apm.Tests
 				logger, "test", nameof(ConcreteEmptyConfigurationWithEnvFallbackReader)) { }
 
 			protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName) =>
-				new ConfigurationKeyValue(key, string.Empty, "InMemmory");
+				new ConfigurationKeyValue(key, string.Empty, "InMemory");
 		}
 	}
 }
