@@ -160,8 +160,10 @@ namespace Elastic.Apm
 					if (metricsCollector != null)
 						MetricsCollector = metricsCollector;
 					else if (agentFeatures.Check(AgentFeature.MetricsCollection))
+					{
 						MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationStore,
 							breakdownMetricsProvider);
+					}
 					MetricsCollector?.StartCollecting();
 				}
 				else
