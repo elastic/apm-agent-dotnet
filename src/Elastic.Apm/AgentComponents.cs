@@ -150,8 +150,10 @@ namespace Elastic.Apm
 					if (centralConfigurationFetcher != null)
 						CentralConfigurationFetcher = centralConfigurationFetcher;
 					else if (agentFeatures.Check(AgentFeature.RemoteConfiguration))
+					{
 						CentralConfigurationFetcher =
 							new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
+					}
 					//
 					// Metrics collection
 					//
