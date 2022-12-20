@@ -117,7 +117,7 @@ namespace Elastic.Apm.Config
 					TransactionIgnoreUrls.Add(WildcardMatcher.ValueOf(item));
 			}
 
-			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
+			public static Uri ServerUri => new Uri($"http://127.0.0.1:{ApmServerPort}");
 		}
 
 		public static class EnvVarNames
@@ -153,7 +153,7 @@ namespace Elastic.Apm.Config
 			public const string ServerCert = Prefix + "SERVER_CERT";
 			public const string ServerUrl = Prefix + "SERVER_URL";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
-			public const string UseWindowsCredentials = Prefix + "USE_WINDOWS_CREDENTIALS";			
+			public const string UseWindowsCredentials = Prefix + "USE_WINDOWS_CREDENTIALS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
