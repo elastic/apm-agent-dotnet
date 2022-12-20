@@ -66,7 +66,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 		}, data.TracingData);
 	}
 
-	private static void UpdateServiceInformation(Service service)
+	private static void UpdateServiceInformation(Service? service)
 	{
 		if (service == null)
 		{
