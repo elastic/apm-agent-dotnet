@@ -10,14 +10,13 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfiguration, IConfigurationSnapshotDescription
+	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfiguration,
+		IConfigurationSnapshotDescription, IConfigurationMetaDataProvider
 	{
 		internal const string Origin = "environment variables";
 		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
-
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 		private readonly Lazy<double> _spanStackTraceMinDurationInMilliseconds;
-
 		private readonly Lazy<int> _stackTraceLimit;
 
 		public EnvironmentConfigurationReader(IApmLogger logger = null) : base(logger, ThisClassName)
@@ -148,7 +147,8 @@ namespace Elastic.Apm.Config
 
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
 
-		private ConfigurationKeyValue Read(string key) =>
-			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);
+		private ConfigurationKeyValue Read(string key) => new(key, ReadEnvVarValue(key), Origin);
+
+		public ConfigurationKeyValue Get(ConfigurationItem item) => Read(item.EnvironmentVariableName);
 	}
 }
