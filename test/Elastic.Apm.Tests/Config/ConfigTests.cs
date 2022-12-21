@@ -19,7 +19,7 @@ using static Elastic.Apm.Config.ConfigConsts;
 // Disable warnings due to obsolete settings keys
 #pragma warning disable CS0618
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.Tests.Config
 {
 	/// <summary>
 	/// Tests the configuration through environment variables
@@ -120,9 +120,8 @@ namespace Elastic.Apm.Tests
 
 			logger.Lines.Should().NotBeEmpty();
 			// ReSharper disable once UseIndexFromEndExpression
-			logger.Lines[logger.Lines.Count - 1]
-				.Should()
-				.Contain($"{EnvVarNames.ServerUrls} is deprecated. Use {EnvVarNames.ServerUrl}");
+			logger.Lines.Should()
+				.Contain(l => l.Contains($"{EnvVarNames.ServerUrls} is deprecated. Use {EnvVarNames.ServerUrl}"));
 		}
 
 		[Fact]
@@ -1171,6 +1170,7 @@ namespace Elastic.Apm.Tests
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, null);
 			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, null);
+			Environment.SetEnvironmentVariable(EnvVarNames.CloudProvider, null);
 		}
 
 		/// <summary>
@@ -1183,7 +1183,7 @@ namespace Elastic.Apm.Tests
 				logger, "test", nameof(ConcreteEmptyConfigurationWithEnvFallbackReader)) { }
 
 			protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName) =>
-				new ConfigurationKeyValue(key, string.Empty, "InMemmory");
+				new ConfigurationKeyValue(key, string.Empty, "InMemory");
 		}
 	}
 }

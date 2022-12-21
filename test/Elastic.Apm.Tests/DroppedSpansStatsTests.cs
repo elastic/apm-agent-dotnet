@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -22,7 +23,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DroppedSpanStats_MustReflect_ExitSpanMinDuration_Configuration()
 		{
-			Helper_CreateSpanWithDuration(Config.ConfigConsts.DefaultValues.ExitSpanMinDuration, 0).Should().BeNull();
+			Helper_CreateSpanWithDuration(ConfigConsts.DefaultValues.ExitSpanMinDuration, 0).Should().BeNull();
 			Helper_CreateSpanWithDuration("Oms", 0).Should().BeNull();
 			Helper_CreateSpanWithDuration("10ms", 0).Count().Should().Be(1);
 		}

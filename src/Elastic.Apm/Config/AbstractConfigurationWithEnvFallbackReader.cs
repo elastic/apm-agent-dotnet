@@ -11,13 +11,12 @@ using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Config
 {
-	internal abstract class AbstractConfigurationWithEnvFallbackReader : AbstractConfigurationReader, IConfigurationReader
+	internal abstract class AbstractConfigurationWithEnvFallbackReader : AbstractConfigurationReader,
+		IConfigurationReader, IConfigurationMetaDataProvider
 	{
 		private readonly string _defaultEnvironmentName;
-
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 		private readonly Lazy<double> _spanStackTraceMinDurationInMilliseconds;
-
 		private readonly Lazy<int> _stackTraceLimit;
 
 		internal AbstractConfigurationWithEnvFallbackReader(IApmLogger logger, string defaultEnvironmentName, string dbgDerivedClassName)
@@ -177,5 +176,8 @@ namespace Elastic.Apm.Config
 
 		public bool EnableOpenTelemetryBridge =>
 			ParseEnableOpenTelemetryBridge(Read(KeyNames.EnableOpenTelemetryBridge, EnvVarNames.EnableOpenTelemetryBridge));
+
+		public ConfigurationKeyValue Get(ConfigurationItem item) =>
+			Read(item.ConfigurationKeyName, item.ConfigurationKeyName);
 	}
 }
