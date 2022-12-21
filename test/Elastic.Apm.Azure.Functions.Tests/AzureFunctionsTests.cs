@@ -30,7 +30,7 @@ public class AzureFunctionsTests : IAsyncLifetime
 
 	public AzureFunctionsTests(ITestOutputHelper output)
 	{
-		_logFuncOutput = false;
+		_logFuncOutput = true;
 		_output = output;
 		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsTests));
 		_apmServer.OnReceive += o =>
@@ -66,11 +66,14 @@ public class AzureFunctionsTests : IAsyncLifetime
 		{
 			_funcProcess.StartInfo.RedirectStandardOutput = true;
 			_funcProcess.OutputDataReceived += (sender, args) => _output.WriteLine("[func] " + args.Data);
-			_funcProcess.BeginOutputReadLine();
 		}
 		_output.WriteLine($"{DateTime.Now}: Starting func tool");
 		var isStarted = _funcProcess.Start();
 		isStarted.Should().BeTrue("Could not start Azure Functions Core Tools");
+		if (_logFuncOutput)
+		{
+			_funcProcess.BeginOutputReadLine();
+		}
 	}
 
 	public Task InitializeAsync() => Task.CompletedTask;
