@@ -27,11 +27,11 @@ public class AzureFunctionsMetadataProviderTests
 	{
 		var environmentVariables = new Hashtable
 		{
-			{ EnvironmentBasedAzureMetadataProvider.FunctionsExtensionVersion, functionsExtensionVersion },
-			{ EnvironmentBasedAzureMetadataProvider.WebsiteOwnerName, websiteOwnerName },
-			{ EnvironmentBasedAzureMetadataProvider.WebsiteSiteName, websiteName },
-			{ EnvironmentBasedAzureMetadataProvider.WebsiteResourceGroup, resourceGroup },
-			{ EnvironmentBasedAzureMetadataProvider.RegionName, regionName }
+			{ AzureEnvironmentVariables.FunctionsExtensionVersion, functionsExtensionVersion },
+			{ AzureEnvironmentVariables.WebsiteOwnerName, websiteOwnerName },
+			{ AzureEnvironmentVariables.WebsiteSiteName, websiteName },
+			{ AzureEnvironmentVariables.WebsiteResourceGroup, resourceGroup },
+			{ AzureEnvironmentVariables.RegionName, regionName }
 		};
 
 		var provider = new AzureFunctionsMetadataProvider(new NoopLogger(), environmentVariables);
@@ -66,11 +66,11 @@ public class AzureFunctionsMetadataProviderTests
 	{
 		var environmentVariables = new Hashtable
 		{
-			{ EnvironmentBasedAzureMetadataProvider.FunctionsExtensionVersion, functionsExtensionVersion },
-			{ EnvironmentBasedAzureMetadataProvider.WebsiteOwnerName, websiteOwnerName },
-			{ EnvironmentBasedAzureMetadataProvider.WebsiteSiteName, websiteName },
-			{ EnvironmentBasedAzureMetadataProvider.WebsiteResourceGroup, resourceGroup },
-			{ EnvironmentBasedAzureMetadataProvider.RegionName, regionName }
+			{ AzureEnvironmentVariables.FunctionsExtensionVersion, functionsExtensionVersion },
+			{ AzureEnvironmentVariables.WebsiteOwnerName, websiteOwnerName },
+			{ AzureEnvironmentVariables.WebsiteSiteName, websiteName },
+			{ AzureEnvironmentVariables.WebsiteResourceGroup, resourceGroup },
+			{ AzureEnvironmentVariables.RegionName, regionName }
 		};
 
 		var provider = new AzureFunctionsMetadataProvider(new NoopLogger(), environmentVariables);
@@ -88,3 +88,4 @@ public class AzureFunctionsMetadataProviderTests
 		metadata.Should().BeNull();
 	}
 }
+
