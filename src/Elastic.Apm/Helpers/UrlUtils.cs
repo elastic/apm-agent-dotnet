@@ -15,7 +15,8 @@ namespace Elastic.Apm.Helpers
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
 		internal static Destination ExtractDestination(Uri url, IApmLogger logger)
 		{
-			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic || url.HostNameType == UriHostNameType.Unknown)
+			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic ||
+			    url.HostNameType == UriHostNameType.Unknown)
 			{
 				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}")
 					.Debug()
@@ -27,12 +28,28 @@ namespace Elastic.Apm.Helpers
 			}
 
 			var host = url.Host;
-			if (url.HostNameType == UriHostNameType.IPv6 && host.Length > 2 && host[0] == '[' && host[host.Length - 1] == ']')
+			if (url.HostNameType == UriHostNameType.IPv6 && host.Length > 2 && host[0] == '[' &&
+			    host[host.Length - 1] == ']')
 				host = host.Substring(1, host.Length - 2);
 
-			return new Destination { Address = host, Port = url.Port == -1 ? (int?)null : url.Port };
+			return new Destination { Address = host, Port = url.Port == -1 ? null : url.Port };
 		}
 
 		internal static string ExtractService(Uri url, ISpan span) => $"{url.Host}:{url.Port}";
+
+		internal static string GetProtocolName(string protocol)
+		{
+			switch (protocol)
+			{
+				case { } s when string.IsNullOrEmpty(s):
+					return string.Empty;
+				case { } s
+					when s.StartsWith("HTTP", StringComparison.InvariantCultureIgnoreCase):
+					// in case of HTTP/2.x we only need HTTP
+					return "HTTP";
+				default:
+					return protocol;
+			}
+		}
 	}
 }

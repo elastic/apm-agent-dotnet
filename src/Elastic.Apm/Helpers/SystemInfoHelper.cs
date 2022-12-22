@@ -8,6 +8,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
+using Elastic.Apm.Features;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
@@ -85,8 +86,12 @@ namespace Elastic.Apm.Helpers
 		{
 			var detectedHostName = GetHostName();
 			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
-			ParseContainerInfo(system, string.IsNullOrEmpty(hostName) ? detectedHostName : hostName);
-			ParseKubernetesInfo(system);
+
+			if (AgentFeaturesProvider.Get(_logger).Check(AgentFeature.ContainerInfo))
+			{
+				ParseContainerInfo(system, string.IsNullOrEmpty(hostName) ? detectedHostName : hostName);
+				ParseKubernetesInfo(system);
+			}
 
 			return system;
 		}

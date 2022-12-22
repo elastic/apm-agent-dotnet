@@ -3,6 +3,7 @@ using Xunit;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.Tests.Utilities.Docker;
 using FluentAssertions;
 using Xunit.Abstractions;
@@ -110,7 +111,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		var tweet = response.Source;
 		tweet.Should().NotBeNull();
-		if(tweet ==null)return;
+		if (tweet == null) return;
 
 		var (payloadSender, apmAgent) = SetUpAgent();
 
@@ -174,6 +175,10 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		// Enable outgoing HTTP capturing and later assert that no HTTP span is captured for the es calls as defined in our spec.
 		agent.Subscribe(new HttpDiagnosticsSubscriber());
+
+		// `ElasticsearchDiagnosticsSubscriber` is for the old Elasticsearch client, in these tests with the new client it does not create any spans.
+		// Let's turn it on and make sure it doesn't cause any trouble with the new client.
+		agent.Subscribe(new ElasticsearchDiagnosticsSubscriber());
 
 		return (payloadSender, agent);
 	}

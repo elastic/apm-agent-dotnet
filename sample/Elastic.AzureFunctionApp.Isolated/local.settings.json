@@ -2,6 +2,9 @@
   "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "FUNCTIONS_EXTENSION_VERSION": "4",
+    "WEBSITE_OWNER_NAME": "abcd1234-abcd-acdc-1234-112233445566+testfaas_group-CentralUSwebspace-Linux",
+    "WEBSITE_SITE_NAME": "testfaas"
   }
 }

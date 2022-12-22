@@ -5,19 +5,13 @@
 
 using System;
 using System.Collections;
-using System.Threading.Tasks;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Cloud
 {
-	/// <summary>
-	/// Base blass for Azure metadata providers that operate on environment variables.
-	/// </summary>
-	public abstract class EnvironmentBasedAzureMetadataProvider : ICloudMetadataProvider
+	internal static class AzureEnvironmentVariables
 	{
-		protected readonly IApmLogger _logger;
-		protected readonly IDictionary _environmentVariables;
-
 		/// <summary>
 		/// Value of the form {subscription id}+{app service plan resource group}-{region}webspace
 		/// </summary>
@@ -25,45 +19,40 @@ namespace Elastic.Apm.Cloud
 		/// f5940f10-2e30-3e4d-a259-63451ba6dae4+elastic-apm-AustraliaEastwebspace
 		/// </example>
 		internal const string WebsiteOwnerName = "WEBSITE_OWNER_NAME";
+
 		internal const string WebsiteResourceGroup = "WEBSITE_RESOURCE_GROUP";
 		internal const string WebsiteSiteName = "WEBSITE_SITE_NAME";
 		internal const string WebsiteInstanceId = "WEBSITE_INSTANCE_ID";
 		internal const string RegionName = "REGION_NAME";
 		internal const string FunctionsExtensionVersion = "FUNCTIONS_EXTENSION_VERSION";
+		internal const string FunctionsWorkerRuntime = "FUNCTIONS_WORKER_RUNTIME";
+	}
 
-		public string Provider { get; }
+	/// <summary>
+	/// Helper type for Azure metadata providers that operate on environment variables.
+	/// </summary>
+	internal struct EnvironmentBasedAzureMetadataHelper
+	{
+		private readonly string _name;
+		private readonly IApmLogger _logger;
+		private readonly IDictionary _environmentVariables;
 
-		public abstract Task<Api.Cloud> GetMetadataAsync();
-
-		protected EnvironmentBasedAzureMetadataProvider(string name, IApmLogger logger,
-			IDictionary environmentVariables)
+		internal EnvironmentBasedAzureMetadataHelper(string name, IApmLogger logger, IDictionary environmentVariables)
 		{
-			Provider = name;
+			_name = name;
 			_logger = logger;
-			_environmentVariables = environmentVariables;
-
-			if (_environmentVariables is null)
-			{
-				_logger.Trace()?.Log("Unable to get {Provider} cloud metadata as no environment variables available",
-					Provider);
-			}
+			_environmentVariables = environmentVariables ?? new EnvironmentVariables(_logger).GetEnvironmentVariables();
 		}
 
-		protected string GetEnvironmentVariable(string key) =>
-			_environmentVariables != null && _environmentVariables.Contains(key)
-				? _environmentVariables[key]?.ToString()
-				: null;
+		internal string GetEnvironmentVariable(string key) =>
+			_environmentVariables.Contains(key) ? _environmentVariables[key]?.ToString() : null;
 
-		protected bool NullOrEmptyVariable(string key, string value)
+		internal bool NullOrEmptyVariable(string key, string value)
 		{
 			if (!string.IsNullOrEmpty(value)) return false;
 
 			_logger.Trace()?.Log(
-				"Unable to get {Provider} cloud metadata as no {EnvironmentVariable} environment variable exists. The application is likely not running in {Provider}",
-				Provider,
-				key,
-				Provider);
-
+				$"Unable to get '{_name}' cloud metadata as no '{key}' environment variable exists. The application is likely not running in '{_name}'");
 			return true;
 		}
 
@@ -72,10 +61,9 @@ namespace Elastic.Apm.Cloud
 			var websiteOwnerNameParts = websiteOwnerName.Split('+');
 			if (websiteOwnerNameParts.Length != 2)
 			{
-				_logger.Trace()?.Log(
-					"Unable to get {Provider} cloud metadata as {EnvironmentVariable} does not contain expected format",
-					Provider,
-					WebsiteOwnerName);
+				_logger.Trace()
+					?.Log(
+						$"Unable to get '{_name}' cloud metadata as '{AzureEnvironmentVariables.WebsiteOwnerName}' does not contain expected format");
 				return null;
 			}
 
@@ -88,10 +76,9 @@ namespace Elastic.Apm.Cloud
 			var lastHyphenIndex = websiteOwnerNameParts[1].LastIndexOf('-');
 			if (lastHyphenIndex == -1)
 			{
-				_logger.Trace()?.Log(
-					"Unable to get {Provider} cloud metadata as {EnvironmentVariable} does not contain expected format",
-					Provider,
-					WebsiteOwnerName);
+				_logger.Trace()
+					?.Log(
+						$"Unable to get '{_name}' cloud metadata as '{AzureEnvironmentVariables.WebsiteOwnerName}' does not contain expected format");
 				return null;
 			}
 
