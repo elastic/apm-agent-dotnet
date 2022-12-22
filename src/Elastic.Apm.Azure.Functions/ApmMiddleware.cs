@@ -75,7 +75,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			return;
 		}
 
-		if (service.Name == AbstractConfigurationReader.GetDefaultNameServiceName())
+		if (service.Name == AbstractConfigurationReader.AdaptServiceName(AbstractConfigurationReader.DiscoverDefaultServiceName()))
 		{
 			// Only override the service name if it was set to default.
 			service.Name = MetaData.WebsiteSiteName;
