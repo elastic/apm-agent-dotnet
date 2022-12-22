@@ -132,6 +132,7 @@ namespace Elastic.Apm.Report
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
 			errorFilters.Add(new ErrorContextSanitizerFilter().Filter);
+			errorFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
 		}
 
 		private bool _getApmServerVersion;
