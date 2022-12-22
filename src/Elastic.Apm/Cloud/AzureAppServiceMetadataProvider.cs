@@ -13,30 +13,35 @@ namespace Elastic.Apm.Cloud
 	/// <summary>
 	/// Provides cloud metadata for Microsoft Azure App Services
 	/// </summary>
-	public class AzureAppServiceMetadataProvider : EnvironmentBasedAzureMetadataProvider
+	public class AzureAppServiceMetadataProvider : ICloudMetadataProvider
 	{
 		internal const string Name = "azure-app-service";
+		private readonly IDictionary _environmentVariables;
+		private readonly IApmLogger _logger;
 
-		internal AzureAppServiceMetadataProvider(IApmLogger logger, IDictionary environmentVariables) : base(Name,
-			logger,
-			environmentVariables)
+		internal AzureAppServiceMetadataProvider(IApmLogger logger, IDictionary environmentVariables)
 		{
+			_logger = logger;
+			_environmentVariables = environmentVariables;
 		}
 
-		public override Task<Api.Cloud> GetMetadataAsync()
-		{
-			var websiteOwnerName = GetEnvironmentVariable(WebsiteOwnerName);
-			var websiteResourceGroup = GetEnvironmentVariable(WebsiteResourceGroup);
-			var websiteSiteName = GetEnvironmentVariable(WebsiteSiteName);
-			var websiteInstanceId = GetEnvironmentVariable(WebsiteInstanceId);
+		public string Provider => Name;
 
-			if (NullOrEmptyVariable(WebsiteOwnerName, websiteOwnerName) ||
-				NullOrEmptyVariable(WebsiteResourceGroup, websiteResourceGroup) ||
-				NullOrEmptyVariable(WebsiteSiteName, websiteSiteName) ||
-				NullOrEmptyVariable(WebsiteInstanceId, websiteInstanceId))
+		public Task<Api.Cloud> GetMetadataAsync()
+		{
+			var helper = new EnvironmentBasedAzureMetadataHelper(Provider, _logger, _environmentVariables);
+			var websiteOwnerName = helper.GetEnvironmentVariable(AzureEnvironmentVariables.WebsiteOwnerName);
+			var websiteResourceGroup = helper.GetEnvironmentVariable(AzureEnvironmentVariables.WebsiteResourceGroup);
+			var websiteSiteName = helper.GetEnvironmentVariable(AzureEnvironmentVariables.WebsiteSiteName);
+			var websiteInstanceId = helper.GetEnvironmentVariable(AzureEnvironmentVariables.WebsiteInstanceId);
+
+			if (helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteOwnerName, websiteOwnerName) ||
+			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteResourceGroup, websiteResourceGroup) ||
+			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteSiteName, websiteSiteName) ||
+			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteInstanceId, websiteInstanceId))
 				return Task.FromResult<Api.Cloud>(null);
 
-			var tokens = TokenizeWebSiteOwnerName(websiteOwnerName);
+			var tokens = helper.TokenizeWebSiteOwnerName(websiteOwnerName);
 			if (!tokens.HasValue)
 				return Task.FromResult<Api.Cloud>(null);
 
