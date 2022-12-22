@@ -43,7 +43,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should()
 			.Contain(new KeyValuePair<string, string>("http.url",
 				$"{_esClientListenerFixture.Container.ConnectionString}/my-tweet-index/_doc/1"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
+		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
 
@@ -71,7 +71,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should()
 			.Contain(new KeyValuePair<string, string>("http.url",
 				$"{_esClientListenerFixture.Container.ConnectionString}/my-tweet-index/_doc/1"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
+		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
 	[DockerFact]
@@ -98,7 +98,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should()
 			.Contain(new KeyValuePair<string, string>("http.url",
 				$"{_esClientListenerFixture.Container.ConnectionString}/my-tweet-index/_search"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
+		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
 	[DockerFact]
@@ -133,7 +133,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		updateSpan.Otel.Attributes.Should()
 			.Contain(new KeyValuePair<string, string>("http.url",
 				$"{_esClientListenerFixture.Container.ConnectionString}/my-tweet-index/_update/1"));
-		updateSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
+		updateSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
 	[DockerFact]
@@ -161,7 +161,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should()
 			.Contain(new KeyValuePair<string, string>("http.url",
 				$"{_esClientListenerFixture.Container.ConnectionString}/my-tweet-index/_doc/1"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", "localhost"));
+		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
 	private (MockPayloadSender, ApmAgent) SetUpAgent()
