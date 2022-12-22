@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Cloud;
+using Elastic.Apm.Config;
 using Elastic.Apm.Extensions;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -74,9 +75,16 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			return;
 		}
 
+		if (service.Name == AbstractConfigurationReader.GetDefaultNameServiceName())
+		{
+			// Only override the service name if it was set to default.
+			service.Name = MetaData.WebsiteSiteName;
+		}
 		service.Framework = new() { Name = "Azure Functions", Version = MetaData.FunctionsExtensionVersion };
 		var runtimeVersion = service.Runtime?.Version ?? "n/a";
 		service.Runtime = new() { Name = MetaData.FunctionsWorkerRuntime, Version = runtimeVersion };
+		service.Node ??= new Node();
+		service.Node.ConfiguredName = MetaData.WebsiteInstanceId;
 	}
 
 	private static bool IsColdStart() => Interlocked.Exchange(ref ColdStart, 0) == 1;

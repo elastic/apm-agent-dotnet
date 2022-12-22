@@ -41,6 +41,7 @@ public class AzureFunctionsMetadataProviderTests
 		metadata.Account.Should().NotBeNull();
 		metadata.Account.Id.Should().Be("d2cd53b3-acdc-4964-9563-3f5201556a81");
 		metadata.Provider.Should().Be("azure");
+		metadata.Service.Name.Should().Be("functions");
 		metadata.Instance.Name.Should().Be("wolfgangfaas");
 		metadata.Project.Should().NotBeNull();
 		metadata.Project.Name.Should().Be("wolfgangfaas_group");

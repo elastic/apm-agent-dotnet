@@ -786,7 +786,7 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		private AssemblyName DiscoverEntryAssemblyName()
+		private static AssemblyName DiscoverEntryAssemblyName()
 		{
 			var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName();
 			if (entryAssemblyName != null && !IsMsOrElastic(entryAssemblyName.GetPublicKeyToken()))
@@ -795,7 +795,9 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		protected virtual string DiscoverServiceName()
+		protected virtual string DiscoverServiceName() => DiscoverDefaultServiceName();
+
+		private static string DiscoverDefaultServiceName()
 		{
 			var entryAssemblyName = DiscoverEntryAssemblyName();
 			if (entryAssemblyName != null) return entryAssemblyName.Name;
@@ -812,10 +814,12 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		internal static string AdaptServiceName(string originalName) =>
+		private static string AdaptServiceName(string originalName) =>
 			originalName != null
 				? Regex.Replace(originalName, "[^a-zA-Z0-9 _-]", "_")
 				: null;
+
+		internal static string GetDefaultNameServiceName() => AdaptServiceName(DiscoverDefaultServiceName());
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
@@ -837,7 +841,7 @@ namespace Elastic.Apm.Config
 
 			_logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
 
-			var discoveredName = AdaptServiceName(DiscoverServiceName());
+			var discoveredName = GetDefaultNameServiceName();
 			if (discoveredName != null)
 			{
 				_logger?.Info()

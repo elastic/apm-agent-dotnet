@@ -98,4 +98,5 @@ public class AzureFunctionsTestFixture : IDisposable
 	}
 
 	internal void ClearTransaction() => _apmServer.ClearState();
+	internal MetadataDto GetMetaData() => _apmServer.ReceivedData.Metadata.First();
 }
