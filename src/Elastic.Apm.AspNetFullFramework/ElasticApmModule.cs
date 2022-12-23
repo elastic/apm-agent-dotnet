@@ -430,7 +430,8 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
 			InitOnceHelper.IfNotInited?.Init(() =>
 			{
-				SafeAgentSetup(dbgInstanceName);
+				var agentComponents = CreateAgentComponents(dbgInstanceName);
+				Agent.Setup(agentComponents);
 
 				if (!Agent.Instance.ConfigurationReader.Enabled)
 					return;
@@ -465,15 +466,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
 
 			return agentComponents;
-		}
-
-		private static void SafeAgentSetup(string dbgInstanceName)
-		{
-			var agentComponents = CreateAgentComponents(dbgInstanceName);
-			if (!agentComponents.ConfigurationReader.Enabled)
-				return;
-
-			Agent.Setup(agentComponents);
 		}
 
 		/// <summary>
