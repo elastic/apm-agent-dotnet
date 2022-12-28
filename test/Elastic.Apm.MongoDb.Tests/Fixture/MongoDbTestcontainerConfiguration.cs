@@ -4,9 +4,8 @@
 // See the LICENSE file in the project root for more information
 
 using System.IO;
-using DotNet.Testcontainers.Containers.Configurations.Abstractions;
-using DotNet.Testcontainers.Containers.OutputConsumers;
-using DotNet.Testcontainers.Containers.WaitStrategies;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
 
 namespace Elastic.Apm.MongoDb.Tests.Fixture
 {

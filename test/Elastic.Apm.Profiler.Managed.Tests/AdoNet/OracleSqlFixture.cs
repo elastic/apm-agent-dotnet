@@ -23,7 +23,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		public OracleSqlFixture()
 		{
 			var builder = new TestcontainersBuilder<OracleTestcontainer>()
-				.WithDatabase(new OracleTestcontainerConfiguration());
+				.WithDatabase(new OracleTestcontainerConfiguration { Password = "oracle" });
 
 			_container = builder.Build();
 		}

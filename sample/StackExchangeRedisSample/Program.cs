@@ -1,8 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using DotNet.Testcontainers.Containers.Builders;
-using DotNet.Testcontainers.Containers.Configurations.Databases;
-using DotNet.Testcontainers.Containers.Modules.Databases;
+﻿using System.Threading.Tasks;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
+using DotNet.Testcontainers.Containers;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.StackExchange.Redis;

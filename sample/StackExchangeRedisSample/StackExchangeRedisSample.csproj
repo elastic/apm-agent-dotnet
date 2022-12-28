@@ -9,7 +9,7 @@
       <PackageReference Include="StackExchange.Redis" Version="2.0.495" />
       <!-- Strong name any assemblies that aren't i.e. DotNet.Testcontainers -->
       <PackageReference Include="StrongNamer" Version="0.2.5" />
-      <PackageReference Include="DotNet.Testcontainers" Version="1.4.0" />
+      <PackageReference Include="Testcontainers" Version="2.3.0" />
     </ItemGroup>
   
     <ItemGroup>
