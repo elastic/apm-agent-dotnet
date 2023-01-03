@@ -7,7 +7,7 @@ endif::[]
 == OpenTelemetry Bridge
 
 NOTE: Added as experimental in v1.13.0.
-To enable it, set <<opentelemetry-bridge-enabled, `opentelemetryBridgeEnabled`>> to `true`.
+To enable it, set <<config-enable-open-telemetry-bridge, `OpentelemetryBridgeEnabled`>> to `true`.
 
 NOTE: The OpenTelemetry bridge is supported on .NET 5 and newer versions.
 
