@@ -19,7 +19,6 @@ In .NET, there is an https://opentelemetry.io/docs/instrumentation/net/shim/[Ope
 
 The OpenTelemetry bridge in the Elastic .NET APM Agent targets the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API]. Since the https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry .NET shim] builds on top of the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API], the shim is implicitly supported as well, although we don't directly test it, because the Activity API is the recommended API.
 
-
 [float]
 [[otel-getting-started]]
 === Getting started
@@ -47,7 +46,6 @@ If you configured the agent via the `appsettings.json` file, then set `ElasticAp
     }
 }
 ----
-
 
 [float]
 [[create-activity-source-and-spans]]
