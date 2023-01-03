@@ -20,6 +20,8 @@ include::./configuration.asciidoc[]
 
 include::./public-api.asciidoc[]
 
+include::./api-opentelemetry.asciidoc[]
+
 include::./metrics.asciidoc[]
 
 include::./log-correlation.asciidoc[]

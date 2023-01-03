@@ -1,0 +1,123 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet[elastic.co]
+endif::[]
+
+[[opentelemetry-bridge]]
+== OpenTelemetry Bridge
+
+NOTE: Added as experimental in v1.13.0.
+To enable it, set <<opentelemetry-bridge-enabled, `opentelemetryBridgeEnabled`>> to `true`.
+
+NOTE: The OpenTelemetry bridge is supported on .NET 5 and newer versions.
+
+The OpenTelemetry Bridge in the Elastic .NET APM Agent bridges OpenTelemetry spans into Elastic APM transactions and spans. The Elastic APM OpenTelemetry bridge allows one to use the vendor-neutral OpenTelemetry Tracing API to manually instrument one's code, and have the Elastic .NET APM agent handle those API calls. This allows one to use the Elastic APM agent for tracing, without any vendor lock-in from adding manual tracing using the APM agent’s own <<public-api, Public API>>.
+
+OpenTelemetry in .NET is implemented via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API].
+
+In .NET, there is an https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry shim] which is built on top of the Activity API. 
+
+The OpenTelemetry bridge in the Elastic .NET APM Agent targets the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API]. Since the https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry .NET shim] builds on top of the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API], the shim is implicitly supported as well, although we don't directly test it, because the Activity API is the recommended API.
+
+
+[float]
+[[otel-getting-started]]
+=== Getting started
+
+The OpenTelemetry bridge is part of the core agent pacakge (https://www.nuget.org/packages/Elastic.Apm[`Elastic.Apm`]), so you don't need to add any additional dependency.
+
+[float]
+[[otel-enable-bridge]]
+==== Enable the OpenTelemetry Bridge
+
+Currently the bridge is opt-in, so you need to enable it.
+
+If you configured the agent via environment variables, set the `ELASTIC_APM_ENABLEOPENTELEMETRYBRIDGE` environment variable to `true``.
+
+If you configured the agent via the `appsettings.json` file, then set `ElasticApm:EnableOpenTelemetryBridge` to `true`.
+
+[source,js]
+----
+{
+  "ElasticApm":
+    {
+      "ServerUrl":  "http://myapmserver:8200",
+      "SecretToken":  "apm-server-secret-token",
+      "EnableOpenTelemetryBridge": true
+    }
+}
+----
+
+
+[float]
+[[create-activity-source-and-spans]]
+==== Create an ActivitySource and start spans
+
+Once you enabled the bridge, you can create OpenTelemetry spans, or in .NET terminology you can start created new activities via the activity source and the agent will bridge those spans automatically.
+
+[source,csharp]
+----
+public static void Sample()
+{
+	var src = new ActivitySource("Test");
+	using var activity1 = src.StartActivity(nameof(Sample), ActivityKind.Server);
+	Thread.Sleep(100);
+	using var activity2 = src.StartActivity("foo");
+	Thread.Sleep(150);
+}
+----
+
+The code-snippet above creates a span called `Sample` and a child span on `Sample` called `foo`. The bridge will create a transaction from `Sample` and a child span called `foo`.
+
+[float]
+[[mixing-apis]]
+==== Mixing OpenTelemetry and the Elastic APM Public API
+
+You can also mix the Activity API with the <<public-api, Public API>>, the OpenTelemetry bridge will take care of putting the spans into the right place. The advantage of this is that if you already have some libraries that you instrumented via the <<public-api, Public API>>, but going forward, you'd like to use the vendor-independent OpenTelemetry API, you don't need to replace all Public API calls in one go.
+
+[source,csharp]
+----
+/// ElasticTransaction
+/// -
+/// ---> OTelSpan
+///           -
+///           ---> ElasticSpan
+
+var src = new ActivitySource("Test");
+tracer.CaptureTransaction( nameof(Sample4), "test", t =>
+{
+	Thread.Sleep(100);
+	using (var activity = src.StartActivity("foo"))
+	{
+		tracer.CurrentSpan.CaptureSpan("ElasticApmSpan", "test", () => Thread.Sleep(50));
+		Thread.Sleep(150);
+	}
+});
+----
+
+The code-snippet above creates a transaction with the Elastic .NET APM Agent's <<public-api, Public API>>. Then it creates an activity called `foo`. This activity is going to be a child of the previously created transaction. Then finally, a span is created again by using the Elastic .NET APM Agent's <<public-api, Public API>>. This span is going to be a child span of the OpenTelemetry span.
+
+Of course these calls don't have to be in the same method. The concept described here works across different methods, types, or libraries.
+
+[float]
+[[otel-caveats]]
+=== Caveats
+Not all features of the OpenTelemetry API are supported.
+
+[float]
+[[otel-metrics]]
+===== Metrics
+This bridge only supports the tracing API.
+The Metrics API is currently not supported.
+
+[float]
+[[otel-span-events]]
+===== Span Events
+Span events (https://open-telemetry.github.io/opentelemetry-js-api/interfaces/span.html#addevent[`Span#addEvent()`])
+is not currently supported. Events will be silently dropped.
+
+[float]
+[[otel-baggage]]
+===== Baggage
+https://open-telemetry.github.io/opentelemetry-js-api/classes/propagationapi.html[Propagating baggage]
+within or outside the process is not supported. Baggage items are silently dropped.
