@@ -16,8 +16,6 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		public const int DbRunnerExpectedRunAllAsyncSpans = 111;
 		public const int DbRunnerExpectedRunBaseTypesAsyncSpans = 68;
 
-		// frequent commands are executed to retrieve session parameters. we should ignore these
-		public const int OracleProviderExpectedSpans = 63;
 		public const string OracleProviderSpanNameStart = "DECLARE";
 
 		public IEnumerator<object[]> GetEnumerator()

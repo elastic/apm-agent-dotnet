@@ -20,7 +20,6 @@ public class ElasticsearchTestFixture : IAsyncDisposable, IAsyncLifetime
 
 	public ElasticsearchTestFixture() =>
 		Container = new TestcontainersBuilder<ElasticsearchTestcontainer>()
-			.WithImage("docker.elastic.co/elasticsearch/elasticsearch:8.5")
 			.WithDatabase(_configuration)
 			.Build();
 
