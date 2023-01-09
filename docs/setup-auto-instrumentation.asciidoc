@@ -120,19 +120,18 @@ can be used as part of a https://docs.docker.com/develop/develop-images/multista
 
 [source,sh]
 ----
-ARG AGENT_VERSION=1.11.1
+ARG AGENT_VERSION=1.19.0
 
 FROM alpine:latest AS build
 ARG AGENT_VERSION
 WORKDIR /source
 
 # install unzip
-RUN apt-get -y update && apt-get -yq install unzip
+RUN apk update && apk add zip curl
 
 # pull down the zip file based on ${AGENT_VERSION} ARG and unzip
-RUN curl -L -o elastic_apm_profiler_${AGENT_VERSION}.zip https://github.com/elastic/apm-agent-dotnet/releases/download/${AGENT_VERSION}/elastic_apm_profiler_${AGENT_VERSION}.zip && \ 
+RUN curl -L -o elastic_apm_profiler_${AGENT_VERSION}.zip https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/elastic_apm_profiler_${AGENT_VERSION}.zip && \ 
     unzip elastic_apm_profiler_${AGENT_VERSION}.zip -d /elastic_apm_profiler_${AGENT_VERSION}
-
 ----
 
 The files can then be copied into a subsequent stage
