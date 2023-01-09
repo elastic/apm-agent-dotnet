@@ -5,7 +5,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Builders;
 using MongoDB.Driver;
 using Xunit;
 
