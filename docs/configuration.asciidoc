@@ -597,7 +597,7 @@ Additionally, spans that lead to an error can't be discarded.
 [[config-enable-open-telemetry-bridge]]
 ==== `EnableOpenTelemetryBridge` (added[1.13])
 
-Setting this option to true will enable the <<opentelemetry-bridge, OpenTelemetry Bridge>>. Briefly, the OpenTelemetry Bridge allows one to use the vendor-neutral OpenTelemetry Tracing API (which is the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API] in .NET) to manually instrument your code, and have the Elastic .NET APM agent handle those API calls.
+Setting this option to true will enable the <<opentelemetry-bridge, OpenTelemetry Bridge>>. This enables the use of the vendor-neutral OpenTelemetry Tracing API (the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API] in .NET) to manually instrument your code, and have the Elastic .NET APM agent handle those API calls.
 
 [options="header"]
 |============

@@ -6,12 +6,11 @@ endif::[]
 [[opentelemetry-bridge]]
 == OpenTelemetry Bridge
 
-NOTE: Added as experimental in v1.13.0.
-To enable it, set <<config-enable-open-telemetry-bridge, `OpentelemetryBridgeEnabled`>> to `true`.
+preview::[]
 
-NOTE: The OpenTelemetry bridge is supported on .NET 5 and newer versions.
+NOTE: This feature was added in v1.13.0. It is supported on .NET 5 and newer versions.
 
-The OpenTelemetry Bridge in the Elastic .NET APM Agent bridges OpenTelemetry spans into Elastic APM transactions and spans. The Elastic APM OpenTelemetry bridge allows one to use the vendor-neutral OpenTelemetry Tracing API to manually instrument one's code, and have the Elastic .NET APM agent handle those API calls. This allows one to use the Elastic APM agent for tracing, without any vendor lock-in from adding manual tracing using the APM agent’s own <<public-api, Public API>>.
+The OpenTelemetry Bridge in the Elastic .NET APM Agent bridges OpenTelemetry spans into Elastic APM transactions and spans. The Elastic APM OpenTelemetry bridge allows you to use the vendor-neutral OpenTelemetry Tracing API to manually instrument your code and have the Elastic .NET APM agent handle those API calls. This means you can use the Elastic APM agent for tracing, without any vendor lock-in from adding manual tracing using the APM agent’s own <<public-api, Public API>>.
 
 OpenTelemetry in .NET is implemented via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API].
 
@@ -23,7 +22,7 @@ The OpenTelemetry bridge in the Elastic .NET APM Agent targets the https://learn
 [[otel-getting-started]]
 === Getting started
 
-The OpenTelemetry bridge is part of the core agent pacakge (https://www.nuget.org/packages/Elastic.Apm[`Elastic.Apm`]), so you don't need to add any additional dependency.
+The OpenTelemetry bridge is part of the core agent package (https://www.nuget.org/packages/Elastic.Apm[`Elastic.Apm`]), so you don't need to add an additional dependency.
 
 [float]
 [[otel-enable-bridge]]
@@ -51,7 +50,7 @@ If you configured the agent via the `appsettings.json` file, then set `ElasticAp
 [[create-activity-source-and-spans]]
 ==== Create an ActivitySource and start spans
 
-Once you enabled the bridge, you can create OpenTelemetry spans, or in .NET terminology you can start created new activities via the activity source and the agent will bridge those spans automatically.
+After enabling the bridge, you can create OpenTelemetry spans, or in .NET terminology, you can start creating new activities via the activity source, and the agent will bridge those spans automatically.
 
 [source,csharp]
 ----
@@ -65,7 +64,7 @@ public static void Sample()
 }
 ----
 
-The code-snippet above creates a span called `Sample` and a child span on `Sample` called `foo`. The bridge will create a transaction from `Sample` and a child span called `foo`.
+The code snippet above creates a span named `Sample` and a child span on `Sample` named `foo`. The bridge will create a transaction from `Sample` and a child span named `foo`.
 
 [float]
 [[mixing-apis]]
@@ -93,7 +92,7 @@ tracer.CaptureTransaction( nameof(Sample4), "test", t =>
 });
 ----
 
-The code-snippet above creates a transaction with the Elastic .NET APM Agent's <<public-api, Public API>>. Then it creates an activity called `foo`. This activity is going to be a child of the previously created transaction. Then finally, a span is created again by using the Elastic .NET APM Agent's <<public-api, Public API>>. This span is going to be a child span of the OpenTelemetry span.
+The code snippet above creates a transaction with the Elastic .NET APM Agent's <<public-api, Public API>>. Then it creates an activity called `foo`; this activity will be a child of the previously created transaction. Finally, a span is created again using the Elastic .NET APM Agent's <<public-api, Public API>>; this span will be a child span of the OpenTelemetry span.
 
 Of course these calls don't have to be in the same method. The concept described here works across different methods, types, or libraries.
 
