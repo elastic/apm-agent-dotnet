@@ -12,12 +12,6 @@ NOTE: This feature was added in v1.13.0. It is supported on .NET 5 and newer ver
 
 The OpenTelemetry Bridge in the Elastic .NET APM Agent bridges OpenTelemetry spans into Elastic APM transactions and spans. The Elastic APM OpenTelemetry bridge allows you to use the vendor-neutral OpenTelemetry Tracing API to manually instrument your code and have the Elastic .NET APM agent handle those API calls. This means you can use the Elastic APM agent for tracing, without any vendor lock-in from adding manual tracing using the APM agent’s own <<public-api, Public API>>.
 
-OpenTelemetry in .NET is implemented via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API].
-
-In .NET, there is an https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry shim] which is built on top of the Activity API. 
-
-The OpenTelemetry bridge in the Elastic .NET APM Agent targets the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API]. Since the https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry .NET shim] builds on top of the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API], the shim is implicitly supported as well, although we don't directly test it, because the Activity API is the recommended API.
-
 [float]
 [[otel-getting-started]]
 === Getting started
@@ -95,6 +89,14 @@ tracer.CaptureTransaction( nameof(Sample4), "test", t =>
 The code snippet above creates a transaction with the Elastic .NET APM Agent's <<public-api, Public API>>. Then it creates an activity called `foo`; this activity will be a child of the previously created transaction. Finally, a span is created again using the Elastic .NET APM Agent's <<public-api, Public API>>; this span will be a child span of the OpenTelemetry span.
 
 Of course these calls don't have to be in the same method. The concept described here works across different methods, types, or libraries.
+
+[float]
+[[supported-opentelemetry-implementations]]
+==== Supported OpenTelemetry implementations
+
+OpenTelemetry in .NET is implemented via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API] and there is an https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry shim] which follows the OpenTelemetry specification more closer. This shim is built on top of the Activity API.
+
+The OpenTelemetry bridge in the Elastic .NET APM Agent targets the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API]. Since the https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry .NET shim] builds on top of the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API], the shim is implicitly supported as well, although we don't directly test it, because the Activity API is the recommended OpenTelemetry API for .NET.
 
 [float]
 [[otel-caveats]]
