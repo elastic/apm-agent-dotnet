@@ -2,7 +2,7 @@
 
     <PropertyGroup>
       <!-- needed because of MockApmServer version -->
-      <TargetFramework>net5.0</TargetFramework>
+      <TargetFramework>net7.0</TargetFramework>
       <IsPackable>false</IsPackable>
       <!-- Don't run Roslyn analyzers as part of build. The StyleCop analyzers conflict with editorconfig -->
       <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
