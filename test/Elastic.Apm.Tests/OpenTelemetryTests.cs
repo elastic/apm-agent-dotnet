@@ -188,6 +188,21 @@ namespace Elastic.Apm.Tests
 			using (var activity = src.StartActivity("foo", ActivityKind.Server)) traceId = activity.TraceId.ToString();
 			payloadSender.FirstTransaction.TraceId.Should().Be(traceId);
 		}
+
+		[Fact]
+		public void ResourceIsRequiredWhenSpanDestinationServiceIsNotNull()
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+					   configuration: new MockConfiguration(enableOpenTelemetryBridge: "true"))))
+				OTSamples.TwoSpansWithAttributes();
+
+			payloadSender.Spans.Should().NotContain(span =>
+				span.Context.Destination != null
+				&& span.Context.Destination.Service != null
+				&& span.Context.Destination.Service.Resource == null,
+				because: "Resource is required in Destination Serivce");
+		}
 	}
 }
 
