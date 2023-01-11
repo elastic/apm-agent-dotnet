@@ -21,6 +21,7 @@ using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
 using Elastic.Apm.Extensions;
+using System.Diagnostics;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -422,6 +423,26 @@ namespace Elastic.Apm.AspNetFullFramework
 			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 		}
 
+		private static void CheckProfilerLogSettings(IApmLogger logger)
+		{
+			try
+			{
+				var profilerLogConfig = ProfilerLogConfig.Check(logger);
+				if (profilerLogConfig.LogLevel != LogLevel.None)
+				{
+					profilerLogConfig.TryApplyLogLevel(logger);
+					if (profilerLogConfig.LogTarget == ProfilerLogTarget.File)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(profilerLogConfig.LogFilePath));
+					if (profilerLogConfig.LogTarget == ProfilerLogTarget.StdOut)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
+				}
+			}
+			catch (Exception e)
+			{
+				logger.Warning()?.LogException(e, "Evaluating profiler logging settings failed");
+			}
+		}
+
 		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
 			InitOnceHelper.IfNotInited?.Init(() =>
 			{
@@ -452,6 +473,9 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static AgentComponents CreateAgentComponents(string dbgInstanceName)
 		{
 			var rootLogger = AgentDependencies.Logger ?? CreateDefaultLogger();
+
+			CheckProfilerLogSettings(rootLogger);
+
 			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
 			var agentComponents = new FullFrameworkAgentComponents(rootLogger, reader);
 

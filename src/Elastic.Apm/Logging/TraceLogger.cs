@@ -18,7 +18,7 @@ namespace Elastic.Apm.Logging
 	{
 		private const string SourceName = "Elastic.Apm";
 
-		private static readonly TraceSource TraceSource;
+		internal static readonly TraceSource TraceSource;
 
 		static TraceLogger() => TraceSource = new TraceSource(SourceName);
 
