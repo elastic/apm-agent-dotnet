@@ -29,7 +29,7 @@ namespace Elastic.Apm.Logging
 
 		internal LogLevel Level => LogLevelSwitch.Level;
 
-		public static ConsoleLogger LoggerOrDefault(LogLevel? level)
+		internal static ConsoleLogger LoggerOrDefault(LogLevel? level)
 		{
 			if (level.HasValue && level.Value != DefaultValues.LogLevel)
 				return new ConsoleLogger(level.Value);

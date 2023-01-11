@@ -5,7 +5,6 @@
 using System.Collections;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -16,11 +15,11 @@ namespace Elastic.Apm.Tests.Config
 		[Fact]
 		public void Check_Defaults()
 		{
-			var config = ProfilerLogConfig.Check(new NoopLogger(), new Hashtable());
+			var config = ProfilerLogConfig.Check(new Hashtable());
 			config.LogLevel.Should().Be(LogLevel.None);
 			config.LogFilePath.Should().StartWith(ProfilerLogConfig.GetDefaultProfilerLogDirectory());
 			config.LogFilePath.Should().EndWith(".agent.log");
-			config.LogTarget.Should().Be(ProfilerLogTarget.File);
+			config.LogTargets.Should().Be(ProfilerLogTarget.File);
 		}
 
 		[Theory]
@@ -35,7 +34,7 @@ namespace Elastic.Apm.Tests.Config
 		public void Check_LogLevelValues_AreMappedCorrectly(string envVarValue, LogLevel logLevel)
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG", envVarValue } };
-			var config = ProfilerLogConfig.Check(new NoopLogger(), environment);
+			var config = ProfilerLogConfig.Check(environment);
 			config.LogLevel.Should().Be(logLevel);
 		}
 
@@ -46,7 +45,7 @@ namespace Elastic.Apm.Tests.Config
 		public void Check_InvalidLogLevelValues_AreMappedToNone(string envVarValue)
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG", envVarValue } };
-			var config = ProfilerLogConfig.Check(new NoopLogger(), environment);
+			var config = ProfilerLogConfig.Check(environment);
 			config.LogLevel.Should().Be(LogLevel.None);
 		}
 
@@ -54,7 +53,7 @@ namespace Elastic.Apm.Tests.Config
 		public void Check_LogDir_IsEvaluatedCorrectly()
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG_DIR", "/foo/bar" } };
-			var config = ProfilerLogConfig.Check(new NoopLogger(), environment);
+			var config = ProfilerLogConfig.Check(environment);
 			config.LogFilePath.Should().StartWith("/foo/bar");
 			config.LogFilePath.Should().EndWith(".agent.log");
 		}
@@ -76,18 +75,8 @@ namespace Elastic.Apm.Tests.Config
 		internal void Check_LogTargets_AreEvaluatedCorrectly(string envVarValue, ProfilerLogTarget targets)
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG_TARGETS", envVarValue } };
-			var config = ProfilerLogConfig.Check(new NoopLogger(), environment);
-			config.LogTarget.Should().Be(targets);
-		}
-
-		[Fact]
-		public void TryApplyLogLevel_Overrides_SetLogLegel()
-		{
-			var logger = new TestLogger(LogLevel.Warning);
-			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "trace" } };
-			var config = ProfilerLogConfig.Check(new NoopLogger(), environment);
-			config.TryApplyLogLevel(logger);
-			logger.Level.Should().Be(LogLevel.Trace);
+			var config = ProfilerLogConfig.Check(environment);
+			config.LogTargets.Should().Be(targets);
 		}
 	}
 }

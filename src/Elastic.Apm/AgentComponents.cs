@@ -49,7 +49,7 @@ namespace Elastic.Apm
 			{
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
-				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
+				Logger = logger ?? GetLoggerOrDefault(ConfigurationReader.LogLevel);
 				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
@@ -175,6 +175,47 @@ namespace Elastic.Apm
 			{
 				Logger.Error()?.LogException(e, "Failed initializing agent.");
 			}
+		}
+
+		private static IApmLogger GetLoggerOrDefault(LogLevel level)
+		{
+			var consoleLogger = ConsoleLogger.LoggerOrDefault(level);
+			//
+			// This is the hooking point that checks for the existence of profiler-related
+			// logging settings.
+			// If no agent logging is configured but we detect profiler logging settings, those
+			// will be honoured.
+			// This has the benefit that users will also get agent logs in addition to profiler-only
+			// logs.
+			//
+			try
+			{
+				if (level == ConfigConsts.DefaultValues.LogLevel)
+				{
+					var profilerLogConfig = ProfilerLogConfig.Check();
+					Console.WriteLine("**** " + profilerLogConfig);
+					if (profilerLogConfig.LogLevel != LogLevel.None)
+					{
+						if ((profilerLogConfig.LogTargets & ProfilerLogTarget.File) == ProfilerLogTarget.File)
+						{
+							TraceLogger.TraceSource.Listeners.Add(
+								new TextWriterTraceListener(profilerLogConfig.LogFilePath));
+						}
+
+						if ((profilerLogConfig.LogTargets & ProfilerLogTarget.StdOut) == ProfilerLogTarget.StdOut)
+							TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
+						var logger = new TraceLogger(profilerLogConfig.LogLevel);
+						logger.Info()?.Log($"{nameof(ProfilerLogConfig)} - {profilerLogConfig}");
+						return logger;
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				consoleLogger.Warning()?.LogException(e, "Error in GetLoggerOrDefault");
+			}
+
+			return consoleLogger;
 		}
 
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
