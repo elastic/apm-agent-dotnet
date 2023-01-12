@@ -16,7 +16,8 @@ namespace Elastic.Apm.Tests.Config
 		public void Check_Defaults()
 		{
 			var config = ProfilerLogConfig.Check(new Hashtable());
-			config.LogLevel.Should().Be(LogLevel.None);
+			config.IsActive.Should().BeFalse();
+			config.LogLevel.Should().Be(LogLevel.Warning);
 			config.LogFilePath.Should().StartWith(ProfilerLogConfig.GetDefaultProfilerLogDirectory());
 			config.LogFilePath.Should().EndWith(".agent.log");
 			config.LogTargets.Should().Be(ProfilerLogTarget.File);
@@ -35,18 +36,21 @@ namespace Elastic.Apm.Tests.Config
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG", envVarValue } };
 			var config = ProfilerLogConfig.Check(environment);
+			config.IsActive.Should().BeTrue();
 			config.LogLevel.Should().Be(logLevel);
 		}
 
 		[Theory]
-		[InlineData("foo")]
-		[InlineData("tracing")]
-		[InlineData(null)]
-		public void Check_InvalidLogLevelValues_AreMappedToNone(string envVarValue)
+		[InlineData(null, false)]
+		[InlineData("", false)]
+		[InlineData("foo", true)]
+		[InlineData("tracing", true)]
+		public void Check_InvalidLogLevelValues_AreMappedToDefaultWarn(string envVarValue, bool isActive)
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG", envVarValue } };
 			var config = ProfilerLogConfig.Check(environment);
-			config.LogLevel.Should().Be(LogLevel.None);
+			config.LogLevel.Should().Be(LogLevel.Warning);
+			config.IsActive.Should().Be(isActive);
 		}
 
 		[Fact]

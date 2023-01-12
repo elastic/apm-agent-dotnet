@@ -13,19 +13,21 @@ namespace Elastic.Apm.Config
 {
 	internal readonly struct ProfilerLogConfig
 	{
-		private ProfilerLogConfig(LogLevel logLevel, ProfilerLogTarget logTarget, string logFilePath) : this()
+		private ProfilerLogConfig(bool isActive, LogLevel logLevel, ProfilerLogTarget logTarget, string logFilePath) : this()
 		{
+			IsActive = isActive;
 			LogLevel = logLevel;
 			LogTargets = logTarget;
 			LogFilePath = logFilePath;
 		}
 
+		internal bool IsActive { get; }
 		internal ProfilerLogTarget LogTargets { get; }
 		internal string LogFilePath { get; }
 		internal LogLevel LogLevel { get; }
 
 		public override string ToString() =>
-			$"LogLevel: '{LogLevel}',  LogTargets: '{LogTargets}', LogFilePath: '{LogFilePath}'";
+			$"IsActive: '{IsActive}', LogLevel: '{LogLevel}',  LogTargets: '{LogTargets}', LogFilePath: '{LogFilePath}'";
 
 		internal static string GetDefaultProfilerLogDirectory() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
 			? Path.Combine(Environment.GetEnvironmentVariable("PROGRAMDATA"), "elastic", "apm-agent-dotnet", "logs")
@@ -41,14 +43,19 @@ namespace Elastic.Apm.Config
 				return value ?? string.Empty;
 			}
 
-			var logLevel = GetSafeEnvironmentVariable("ELASTIC_APM_PROFILER_LOG").ToLowerInvariant() switch
+			var v = GetSafeEnvironmentVariable("ELASTIC_APM_PROFILER_LOG");
+
+			var isActive = !string.IsNullOrEmpty(v);
+
+			var logLevel = v.ToLowerInvariant() switch
 			{
 				"trace" => LogLevel.Trace,
-				"debug" => LogLevel.Debug,
+				"debug" =>LogLevel.Debug,
 				"info" => LogLevel.Information,
 				"warn" => LogLevel.Warning,
 				"error" => LogLevel.Error,
-				_ => LogLevel.None,
+				"none" => LogLevel.None,
+				_ => LogLevel.Warning,
 			};
 
 			var logFilePath = GetSafeEnvironmentVariable("ELASTIC_APM_PROFILER_LOG_DIR");
@@ -69,7 +76,7 @@ namespace Elastic.Apm.Config
 			if (logTargets == ProfilerLogTarget.None)
 				logTargets = ProfilerLogTarget.File;
 
-			return new(logLevel, logTargets, logFileName);
+			return new(isActive, logLevel, logTargets, logFileName);
 		}
 	}
 

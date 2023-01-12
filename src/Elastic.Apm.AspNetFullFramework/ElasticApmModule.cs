@@ -21,7 +21,6 @@ using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
 using Elastic.Apm.Extensions;
-using System.Diagnostics;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -447,7 +446,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			if (!string.IsNullOrEmpty(logLevel))
 				Enum.TryParse(logLevel, true, out level);
 
-			return new TraceLogger(level);
+			return AgentComponents.CheckForProfilerLogger(new TraceLogger(level), level);
 		}
 
 		private static AgentComponents CreateAgentComponents(string dbgInstanceName)

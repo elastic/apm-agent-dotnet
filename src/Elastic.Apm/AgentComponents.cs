@@ -1,11 +1,13 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
@@ -49,7 +51,7 @@ namespace Elastic.Apm
 			{
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
-				Logger = logger ?? GetLoggerOrDefault(ConfigurationReader.LogLevel);
+				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
 				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
@@ -177,45 +179,39 @@ namespace Elastic.Apm
 			}
 		}
 
-		private static IApmLogger GetLoggerOrDefault(LogLevel level)
+		//
+		// This is the hooking point that checks for the existence of profiler-related
+		// logging settings.
+		// If no agent logging is configured but we detect profiler logging settings, those
+		// will be honoured.
+		// The finer-grained log-level (agent vs profiler) will be used.
+		// This has the benefit that users will also get agent logs in addition to profiler-only
+		// logs.
+		//
+		internal static IApmLogger CheckForProfilerLogger(IApmLogger fallbackLogger, LogLevel agentLogLevel, IDictionary environmentVariables = null)
 		{
-			var consoleLogger = ConsoleLogger.LoggerOrDefault(level);
-			//
-			// This is the hooking point that checks for the existence of profiler-related
-			// logging settings.
-			// If no agent logging is configured but we detect profiler logging settings, those
-			// will be honoured.
-			// This has the benefit that users will also get agent logs in addition to profiler-only
-			// logs.
-			//
 			try
 			{
-				if (level == ConfigConsts.DefaultValues.LogLevel)
+				var profilerLogConfig = ProfilerLogConfig.Check(environmentVariables);
+				if (profilerLogConfig.IsActive)
 				{
-					var profilerLogConfig = ProfilerLogConfig.Check();
-					Console.WriteLine("**** " + profilerLogConfig);
-					if (profilerLogConfig.LogLevel != LogLevel.None)
-					{
-						if ((profilerLogConfig.LogTargets & ProfilerLogTarget.File) == ProfilerLogTarget.File)
-						{
-							TraceLogger.TraceSource.Listeners.Add(
-								new TextWriterTraceListener(profilerLogConfig.LogFilePath));
-						}
+					var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, profilerLogConfig.LogLevel);
 
-						if ((profilerLogConfig.LogTargets & ProfilerLogTarget.StdOut) == ProfilerLogTarget.StdOut)
-							TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
-						var logger = new TraceLogger(profilerLogConfig.LogLevel);
-						logger.Info()?.Log($"{nameof(ProfilerLogConfig)} - {profilerLogConfig}");
-						return logger;
-					}
+					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.File) == ProfilerLogTarget.File)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(profilerLogConfig.LogFilePath));
+					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.StdOut) == ProfilerLogTarget.StdOut)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
+
+					var logger = new TraceLogger(effectiveLogLevel);
+					logger.Info()?.Log($"{nameof(ProfilerLogConfig)} - {profilerLogConfig}");
+					return logger;
 				}
 			}
 			catch (Exception e)
 			{
-				consoleLogger.Warning()?.LogException(e, "Error in GetLoggerOrDefault");
+				fallbackLogger.Warning()?.LogException(e, "Error in CheckForProfilerLogger");
 			}
-
-			return consoleLogger;
+			return fallbackLogger;
 		}
 
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
