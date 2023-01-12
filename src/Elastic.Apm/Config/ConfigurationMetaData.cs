@@ -130,7 +130,7 @@ namespace Elastic.Apm.Config
 				ConfigConsts.KeyNames.DisableMetrics),
 			new(ConfigurationItemId.Enabled, ConfigConsts.EnvVarNames.Enabled, ConfigConsts.KeyNames.Enabled), new(
 				ConfigurationItemId.EnableOpenTelemetryBridge, ConfigConsts.EnvVarNames.EnableOpenTelemetryBridge,
-				ConfigConsts.KeyNames.EnableOpenTelemetryBridge),
+				ConfigConsts.KeyNames.OpentelemetryBridgeEnabled),
 			new(ConfigurationItemId.Environment, ConfigConsts.EnvVarNames.Environment,
 				ConfigConsts.KeyNames.Environment),
 			new(ConfigurationItemId.ExcludedNamespaces, ConfigConsts.EnvVarNames.ExcludedNamespaces,

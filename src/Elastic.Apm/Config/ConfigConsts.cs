@@ -131,7 +131,7 @@ namespace Elastic.Apm.Config
 			public const string CloudProvider = Prefix + "CLOUD_PROVIDER";
 			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
 			public const string Enabled = Prefix + "ENABLED";
-			public const string EnableOpenTelemetryBridge = Prefix + "ENABLEOPENTELEMETRYBRIDGE";
+			public const string EnableOpenTelemetryBridge = Prefix + "OPENTELEMETRY_BRIDGE_ENABLED";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
 			public const string ExitSpanMinDuration = Prefix + "EXIT_SPAN_MIN_DURATION";
@@ -183,7 +183,7 @@ namespace Elastic.Apm.Config
 			public const string CloudProvider = Prefix + nameof(CloudProvider);
 			public const string DisableMetrics = Prefix + nameof(DisableMetrics);
 			public const string Enabled = Prefix + nameof(Enabled);
-			public const string EnableOpenTelemetryBridge = Prefix + nameof(EnableOpenTelemetryBridge);
+			public const string OpentelemetryBridgeEnabled = Prefix + nameof(OpentelemetryBridgeEnabled);
 			public const string Environment = Prefix + nameof(Environment);
 			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
 			public const string ExitSpanMinDuration = Prefix + nameof(ExitSpanMinDuration);
