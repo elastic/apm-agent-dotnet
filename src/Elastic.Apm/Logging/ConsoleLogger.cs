@@ -65,6 +65,18 @@ namespace Elastic.Apm.Logging
 			var dateTime = DateTime.Now;
 			var message = formatter(state, e);
 
+			static void PrintException(TextWriter writer, Exception exception, string caption)
+			{
+				if (exception == null) return;
+
+				writer.Write($"+-> {caption}: ");
+				writer.Write(exception.GetType().FullName);
+				writer.Write(": ");
+				writer.WriteLine(exception.Message);
+				writer.WriteLine(exception.StackTrace);
+				PrintException(writer, exception.InnerException, "Inner Exception");
+			}
+
 			lock (SyncRoot)
 			{
 				writer.Write('[');
@@ -75,14 +87,8 @@ namespace Elastic.Apm.Logging
 				writer.Write(LevelToString(level));
 				writer.Write("] - ");
 				writer.WriteLine(message);
-				if (e != null)
-				{
-					writer.Write("+-> Exception: ");
-					writer.Write(e.GetType().FullName);
-					writer.Write(": ");
-					writer.WriteLine(e.Message);
-					writer.WriteLine(e.StackTrace);
-				}
+
+				PrintException(writer, e, "Exception");
 
 				writer.Flush();
 			}
