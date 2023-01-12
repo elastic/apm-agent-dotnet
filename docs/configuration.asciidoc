@@ -594,15 +594,15 @@ Additionally, spans that lead to an error can't be discarded.
 
 
 [float]
-[[config-enable-open-telemetry-bridge]]
-==== `EnableOpenTelemetryBridge` (added[1.13])
+[[config-opentelemetry-bridge-enabled]]
+==== `OpentelemetryBridgeEnabled` (added[1.13])
 
 Setting this option to true will enable the <<opentelemetry-bridge, OpenTelemetry Bridge>>. This enables the use of the vendor-neutral OpenTelemetry Tracing API (the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API] in .NET) to manually instrument your code, and have the Elastic .NET APM agent handle those API calls.
 
 [options="header"]
 |============
-| Environment variable name            | IConfiguration key
-| `ELASTIC_APM_ENABLEOPENTELEMETRYBRIDGE` | `ElasticApm:EnableOpenTelemetryBridge`
+| Environment variable name                  | IConfiguration key
+| `ELASTIC_APM_OPENTELEMETRY_BRIDGE_ENABLED` | `ElasticApm:OpentelemetryBridgeEnabled`
 |============
 
 [options="header"]
@@ -1301,7 +1301,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-cloud-provider,`CloudProvider`>> | No | Reporter
 | <<config-disable-metrics,`DisableMetrics`>> | No | Reporter
 | <<config-enabled,`Enabled`>> | No | Core
-| <<config-enable-open-telemetry-bridge, `EnableOpenTelemetryBridge`>> | No | Core
+| <<config-opentelemetry-bridge-enabled, `OpentelemetryBridgeEnabled`>> | No | Core
 | <<config-environment,`Environment`>> | No | Core
 | <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace
 | <<config-exit-span-min-duration,`ExitSpanMinDuration`>> | Yes | Core, Performance
