@@ -67,7 +67,8 @@ namespace Elastic.Apm.Logging
 
 			static void PrintException(TextWriter writer, Exception exception, string caption)
 			{
-				if (exception == null) return;
+				if (exception == null)
+					return;
 
 				writer.Write($"+-> {caption}: ");
 				writer.Write(exception.GetType().FullName);
