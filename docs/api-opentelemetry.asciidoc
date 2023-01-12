@@ -24,7 +24,7 @@ The OpenTelemetry bridge is part of the core agent package (https://www.nuget.or
 
 Currently the bridge is opt-in, so you need to enable it.
 
-If you configured the agent via environment variables, set the `ELASTIC_APM_ENABLEOPENTELEMETRYBRIDGE` environment variable to `true``.
+If you configured the agent via environment variables, set the `ELASTIC_APM_OPENTELEMETRY_BRIDGE_ENABLED ` environment variable to `true``.
 
 If you configured the agent via the `appsettings.json` file, then set `ElasticApm:EnableOpenTelemetryBridge` to `true`.
 
