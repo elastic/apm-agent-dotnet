@@ -24,13 +24,17 @@ namespace Elastic.Apm.OpenTelemetry
 		private readonly ConcurrentDictionary<string, Span> ActiveSpans = new();
 		private readonly ConcurrentDictionary<string, Transaction> ActiveTransactions = new();
 
-		internal ElasticActivityListener(IApmAgent agent) => _logger = agent.Logger?.Scoped(nameof(ElasticActivityListener));
+		internal ElasticActivityListener(IApmAgent agent, HttpTraceConfiguration httpTraceConfiguration) => (_logger, _httpTraceConfiguration) =
+			(agent.Logger?.Scoped(nameof(ElasticActivityListener)), httpTraceConfiguration);
 
 		private readonly IApmLogger _logger;
 		private Tracer _tracer;
+		private readonly HttpTraceConfiguration _httpTraceConfiguration;
 
 		internal void Start(Tracer tracerInternal)
 		{
+			_httpTraceConfiguration?.AddTracer(new ElasticSearchHttpNonTracer());
+
 			_tracer = tracerInternal;
 			Listener = new ActivityListener
 			{
@@ -154,8 +158,6 @@ namespace Elastic.Apm.OpenTelemetry
 							case ActivityStatusCode.Error:
 								transaction.Outcome = Outcome.Failure;
 								break;
-							default:
-								break;
 						}
 #endif
 
@@ -187,8 +189,6 @@ namespace Elastic.Apm.OpenTelemetry
 							case ActivityStatusCode.Error:
 								span.Outcome = Outcome.Failure;
 								break;
-							default:
-								break;
 						}
 #endif
 						span.End();
@@ -203,17 +203,11 @@ namespace Elastic.Apm.OpenTelemetry
 			var isMessaging = activity.Tags.Any(n => n.Key == "messaging.system");
 
 			if (activity.Kind == ActivityKind.Server && (isRpc || isHttp))
-			{
 				transaction.Type = ApiConstants.TypeRequest;
-			}
 			else if (activity.Kind == ActivityKind.Consumer && isMessaging)
-			{
 				transaction.Type = ApiConstants.TypeMessaging;
-			}
 			else
-			{
 				transaction.Type = "unknown";
-			}
 		}
 
 		private ActivityListener Listener { get; set; }
@@ -327,8 +321,11 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 
 			span.Context.Service = new SpanService(new Target(serviceTargetType, serviceTargetName));
-			span.Context.Destination ??= new Destination();
-			span.Context.Destination.Service = new Destination.DestinationService { Resource = resource };
+			if (resource != null)
+			{
+				span.Context.Destination ??= new Destination();
+				span.Context.Destination.Service = new Destination.DestinationService { Resource = resource };
+			}
 		}
 
 		public void Dispose() => Listener?.Dispose();

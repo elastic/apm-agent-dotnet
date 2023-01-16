@@ -2,9 +2,10 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Collections.Generic;
-using Elastic.Apm.Api.Constraints;
 using System.Linq;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
@@ -30,14 +31,11 @@ namespace Elastic.Apm.Api
 		[MaxLength]
 		public string HttpVersion { get; set; }
 
-		[MaxLength]
-		[Required]
-		public string Method { get; set; }
+		[MaxLength] [Required] public string Method { get; set; }
 
 		public Socket Socket { get; set; }
 
-		[Required]
-		public Url Url { get; set; }
+		[Required] public Url Url { get; set; }
 
 		internal Request DeepCopy()
 		{
@@ -51,13 +49,13 @@ namespace Elastic.Apm.Api
 		}
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(Request)) { { "Method", Method }, { "Url", Url }, { "Socket", Socket } }.ToString();
+			new ToStringBuilder(nameof(Request)) { { "Method", Method }, { "Url", Url }, { "Socket", Socket } }
+				.ToString();
 	}
 
 	public class Socket
 	{
-		[JsonProperty("remote_address")]
-		public string RemoteAddress { get; set; }
+		[JsonProperty("remote_address")] public string RemoteAddress { get; set; }
 
 		internal Socket DeepCopy() => (Socket)MemberwiseClone();
 
@@ -77,16 +75,11 @@ namespace Elastic.Apm.Api
 			set => _full = Sanitization.TrySanitizeUrl(value, out var newValue, out _) ? newValue : value;
 		}
 
-		[MaxLength]
-		[JsonProperty("hostname")]
-		public string HostName { get; set; }
+		[MaxLength] [JsonProperty("hostname")] public string HostName { get; set; }
 
-		[MaxLength]
-		[JsonProperty("pathname")]
-		public string PathName { get; set; }
+		[MaxLength] [JsonProperty("pathname")] public string PathName { get; set; }
 
-		[MaxLength]
-		public string Protocol { get; set; }
+		[MaxLength] public string Protocol { get; set; }
 
 		[MaxLength]
 		public string Raw
@@ -106,5 +99,17 @@ namespace Elastic.Apm.Api
 		internal Url DeepCopy() => (Url)MemberwiseClone();
 
 		public override string ToString() => new ToStringBuilder(nameof(Url)) { { "Full", Full } }.ToString();
+
+		public static Url FromUri(Uri url) =>
+			url != null && url.IsAbsoluteUri && !url.IsFile
+				? new()
+				{
+					Full = url.AbsoluteUri,
+					HostName = url.Host,
+					Protocol = UrlUtils.GetProtocolName(url.Scheme),
+					PathName = url.AbsolutePath,
+					Search = url.Query.Length > 0 ? url.Query.Substring(1) : string.Empty,
+				}
+				: null;
 	}
 }

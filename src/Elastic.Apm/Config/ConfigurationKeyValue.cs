@@ -12,5 +12,7 @@ namespace Elastic.Apm.Config
 		public string Key { get; }
 		public string ReadFrom { get; }
 		public string Value { get; }
+
+		public override string ToString() => $"{Key} : {Value} ({ReadFrom})";
 	}
 }

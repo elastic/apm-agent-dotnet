@@ -146,8 +146,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 
 			var transactionName = $"{request.HttpMethod} {request.Unvalidated.Path}";
-			if (SoapRequest.TryExtractSoapAction(_logger, request, out var soapAction))
-				transactionName += $" {soapAction}";
 
 			var distributedTracingData = ExtractIncomingDistributedTracingData(request);
 			ITransaction transaction;
@@ -232,9 +230,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Socket = new Socket { RemoteAddress = request.UserHostAddress },
 				HttpVersion = GetHttpVersion(request.ServerVariables["SERVER_PROTOCOL"]),
-				Headers = _isCaptureHeadersEnabled
-					? ConvertHeaders(request.Unvalidated.Headers, (transaction as Transaction)?.Configuration)
-					: null
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(request.Unvalidated.Headers) : null
 			};
 		}
 
@@ -253,17 +249,14 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 		}
 
-		private static Dictionary<string, string> ConvertHeaders(NameValueCollection headers, IConfiguration configuration)
+		private static Dictionary<string, string> ConvertHeaders(NameValueCollection headers)
 		{
 			var convertedHeaders = new Dictionary<string, string>(headers.Count);
 			foreach (var key in headers.AllKeys)
 			{
 				var value = headers.Get(key);
 				if (value != null)
-				{
-					convertedHeaders.Add(key,
-						WildcardMatcher.IsAnyMatch(configuration?.SanitizeFieldNames, key) ? Consts.Redacted : value);
-				}
+					convertedHeaders.Add(key,value);
 			}
 			return convertedHeaders;
 		}
@@ -371,11 +364,17 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 
 			transaction.Result = Transaction.StatusCodeToResult("HTTP", response.StatusCode);
-			if (transaction is Transaction realTransaction)
-			{
-				realTransaction.SetOutcome(response.StatusCode >= 500
+
+			var realTransaction = transaction as Transaction;
+			realTransaction?.SetOutcome(response.StatusCode >= 500
 					? Outcome.Failure
 					: Outcome.Success);
+
+			// Try and update transaction name with SOAP action if applicable.
+			if (realTransaction == null || !realTransaction.HasCustomName)
+			{
+				if (SoapRequest.TryExtractSoapAction(_logger, context.Request, out var soapAction))
+					transaction.Name += $" {soapAction}";
 			}
 
 			if (transaction.IsSampled)
@@ -394,7 +393,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Finished = true,
 				StatusCode = response.StatusCode,
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers, (transaction as Transaction)?.Configuration) : null
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
@@ -426,7 +425,8 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
 			InitOnceHelper.IfNotInited?.Init(() =>
 			{
-				SafeAgentSetup(dbgInstanceName);
+				var agentComponents = CreateAgentComponents(dbgInstanceName);
+				Agent.Setup(agentComponents);
 
 				if (!Agent.Instance.ConfigurationReader.Enabled)
 					return;
@@ -461,15 +461,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
 
 			return agentComponents;
-		}
-
-		private static void SafeAgentSetup(string dbgInstanceName)
-		{
-			var agentComponents = CreateAgentComponents(dbgInstanceName);
-			if (!agentComponents.ConfigurationReader.Enabled)
-				return;
-
-			Agent.Setup(agentComponents);
 		}
 
 		/// <summary>

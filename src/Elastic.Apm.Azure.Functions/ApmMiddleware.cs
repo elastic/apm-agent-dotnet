@@ -1,8 +1,3 @@
-// Licensed to Elasticsearch B.V under
-// one or more agreements.
-// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Cloud;
+using Elastic.Apm.Config;
 using Elastic.Apm.Extensions;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.Azure.Functions.Worker;
@@ -24,20 +19,19 @@ namespace Elastic.Apm.Azure.Functions;
 public class ApmMiddleware : IFunctionsWorkerMiddleware
 {
 	private static readonly IApmLogger Logger;
-	private static readonly string FaasIdPrefix;
 	private static int ColdStart = 1;
+	private static readonly AzureFunctionsMetaData MetaData;
+	private static readonly string FaasIdPrefix;
 
 	static ApmMiddleware()
 	{
 		Logger = Agent.Instance.Logger.Scoped(nameof(ApmMiddleware));
-		var metaData = new AzureFunctionsMetadataProvider(Logger,
-			new EnvironmentVariables(Logger).GetEnvironmentVariables()).GetMetadata();
+		MetaData = AzureFunctionsMetadataProvider.GetAzureFunctionsMetaData(Logger);
+		UpdateServiceInformation(Agent.Instance.Service);
 		FaasIdPrefix =
-			$"/subscriptions/{metaData?.Account?.Id}/resourceGroups/{metaData?.Project}/providers/Microsoft.Web/sites/{metaData?.Instance}/functions/";
+			$"/subscriptions/{MetaData.SubscriptionId}/resourceGroups/{MetaData.WebsiteResourceGroup}/providers/Microsoft.Web/sites/{MetaData.WebsiteSiteName}/functions/";
 		Logger.Trace()?.Log($"FaasIdPrefix: {FaasIdPrefix}");
 	}
-
-	private static bool IsColdStart() => Interlocked.Exchange(ref ColdStart, 0) == 1;
 
 	public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
 	{
@@ -49,13 +43,13 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			var success = true;
 			t.FaaS = new Faas
 			{
-				Name = context.FunctionDefinition.Name,
+				Name = $"{MetaData.WebsiteSiteName}/{context.FunctionDefinition.Name}",
 				Id = $"{FaasIdPrefix}{context.FunctionDefinition.Name}",
 				Trigger = new Trigger { Type = data.TriggerType },
 				Execution = context.InvocationId,
 				ColdStart = IsColdStart()
 			};
-
+			t.Context.Request = data.Request;
 			try
 			{
 				await next(context);
@@ -73,20 +67,53 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 		}, data.TracingData);
 	}
 
+	private static void UpdateServiceInformation(Service? service)
+	{
+		if (service == null)
+		{
+			Logger.Warning()?.Log($"{nameof(UpdateServiceInformation)}: service is null");
+			return;
+		}
+
+		if (service.Name == AbstractConfigurationReader.AdaptServiceName(AbstractConfigurationReader.DiscoverDefaultServiceName()))
+		{
+			// Only override the service name if it was set to default.
+			service.Name = MetaData.WebsiteSiteName;
+		}
+		service.Framework = new() { Name = "Azure Functions", Version = MetaData.FunctionsExtensionVersion };
+		var runtimeVersion = service.Runtime?.Version ?? "n/a";
+		service.Runtime = new() { Name = MetaData.FunctionsWorkerRuntime, Version = runtimeVersion };
+		service.Node ??= new Node();
+		if (!string.IsNullOrEmpty(Agent.Config.ServiceNodeName))
+			Logger.Warning()
+				?.Log(
+					$"The configured {ConfigConsts.EnvVarNames.ServiceNodeName} value '{Agent.Config.ServiceNodeName}' will be overwritten with '{MetaData.WebsiteInstanceId}'");
+		service.Node.ConfiguredName = MetaData.WebsiteInstanceId;
+	}
+
+	private static bool IsColdStart() => Interlocked.Exchange(ref ColdStart, 0) == 1;
+
 	private static TriggerSpecificData GetTriggerSpecificData(FunctionContext context)
 	{
 		var httpRequestData = GetHttpRequestData(context);
-		if (httpRequestData != null)
+		if (httpRequestData != null) // HTTP Trigger
 		{
 			Logger.Trace()?.Log("HTTP Trigger type detected.");
 
 			httpRequestData.Headers.TryGetValues("traceparent", out var traceparent);
 			httpRequestData.Headers.TryGetValues("tracestate", out var tracestate);
-			var name = $"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}";
-			return new TriggerSpecificData(name, Trigger.TypeHttp,
-				TraceContext.TryExtractTracingData(traceparent?.FirstOrDefault(), tracestate?.FirstOrDefault()));
+
+			return new($"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}", Trigger.TypeHttp,
+				TraceContext.TryExtractTracingData(traceparent?.FirstOrDefault(), tracestate?.FirstOrDefault()))
+			{
+				Request = new Request(httpRequestData.Method, Url.FromUri(httpRequestData.Url))
+				{
+					Headers = CreateHeadersDictionary(httpRequestData.Headers),
+				}
+			};
 		}
 
+		// Generic
 		return new TriggerSpecificData(context.FunctionDefinition.Name, Trigger.TypeOther, null);
 	}
 
@@ -98,6 +125,13 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			var httpStatusCode = (int)httpResponseData.StatusCode;
 			transaction.Result = Transaction.StatusCodeToResult("HTTP", httpStatusCode);
 			transaction.SetOutcomeForHttpResult(httpStatusCode);
+
+			transaction.Context.Response = new Response
+			{
+				Finished = true,
+				StatusCode = httpStatusCode,
+				Headers = CreateHeadersDictionary(httpResponseData.Headers)
+			};
 		}
 		else // Generic
 		{
@@ -113,6 +147,9 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			}
 		}
 	}
+
+	private static Dictionary<string, string> CreateHeadersDictionary(HttpHeadersCollection httpHeadersCollection) =>
+		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(',', h.Value));
 
 	private static HttpRequestData? GetHttpRequestData(FunctionContext functionContext)
 	{
@@ -141,4 +178,6 @@ internal struct TriggerSpecificData
 	internal string TriggerType { get; }
 
 	internal string Name { get; }
+
+	internal Request? Request { get; set; }
 }

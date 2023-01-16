@@ -786,7 +786,7 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		private AssemblyName DiscoverEntryAssemblyName()
+		private static AssemblyName DiscoverEntryAssemblyName()
 		{
 			var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName();
 			if (entryAssemblyName != null && !IsMsOrElastic(entryAssemblyName.GetPublicKeyToken()))
@@ -795,7 +795,9 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		protected virtual string DiscoverServiceName()
+		protected virtual string DiscoverServiceName() => DiscoverDefaultServiceName();
+
+		internal static string DiscoverDefaultServiceName()
 		{
 			var entryAssemblyName = DiscoverEntryAssemblyName();
 			if (entryAssemblyName != null) return entryAssemblyName.Name;

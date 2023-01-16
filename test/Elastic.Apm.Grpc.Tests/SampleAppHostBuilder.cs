@@ -38,8 +38,8 @@ namespace Elastic.Apm.Grpc.Tests
 
 	public class SampleAppHostBuilder
 	{
-		public static int SampleAppPort = 5866;
-		public static string SampleAppUrl = $"http://localhost:{SampleAppPort}";
+		public static readonly int SampleAppPort = 5866;
+		public static readonly string SampleAppUrl = $"http://localhost:{SampleAppPort}";
 
 		public IHost BuildHost()
 		{

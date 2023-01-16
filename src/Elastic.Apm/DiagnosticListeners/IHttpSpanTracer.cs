@@ -8,6 +8,11 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
+	/// <summary>
+	/// Utility interface for the generic HTTP request capturing mechanism.
+	/// For specific HTTP calls, it can handle the creation of the span and it
+	/// can also completely suppress span creation.
+	/// </summary>
 	internal interface IHttpSpanTracer
 	{
 		/// <summary>
@@ -29,5 +34,15 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// <param name="headerGetter">A delegate to retrieve a HTTP header</param>
 		/// <returns>A new instance of a <see cref="ISpan"/>. Can return null</returns>
 		ISpan StartSpan(IApmAgent agent, string method, Uri requestUrl, Func<string, string> headerGetter);
+
+		/// <summary>
+		/// Determines if a span should be captured for the given HTTP all.
+		/// </summary>
+		/// <returns>
+		/// <c>true</c> if a span should be captured for a given call (either created in the <see cref="StartSpan" /> or
+		/// if it fails then by the generic HTTP listener). <c>false</c> if span creation should be suppressed for the given HTTP
+		/// call
+		/// </returns>
+		bool ShouldSuppressSpanCreation();
 	}
 }

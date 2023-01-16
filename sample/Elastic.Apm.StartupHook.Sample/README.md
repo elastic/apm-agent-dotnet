@@ -6,7 +6,9 @@ configured to run with
 - `netcoreapp3.0`
 - `netcoreapp3.1`
 - `net5.0` 
-  
+- `net6.0`
+- `net7.0`
+
 target frameworks that can be used to try out the [Elastic APM
 startup hooks implementation](../../src/ElasticApmAgentStartupHook).
 
@@ -18,7 +20,11 @@ startup hooks implementation](../../src/ElasticApmAgentStartupHook).
     ```
     set DOTNET_STARTUP_HOOKS=[pathToAgent]\ElasticApmAgentStartupHook.dll
     ```
-3. Set any other APM agent configuration using environment variables. For example,
+3. (optional) Enable logging.
+   ```
+   set ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
+   ```
+4. Set any other APM agent configuration using environment variables. For example,
 
     ```
     set ELASTIC_APM_SERVER_URL=http://localhost:8200
@@ -27,6 +33,6 @@ startup hooks implementation](../../src/ElasticApmAgentStartupHook).
 4. Start the sample application with the specified target framework. From the `sample/Elastic.Apm.StartupHook.Sample` directory
 
     ```
-    dotnet run -f net5.0
+    dotnet run -f net7.0
     ```
 5. Observe APM data collected.

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -17,6 +18,7 @@ using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -62,13 +64,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private HttpClient _client;
 
-
 		/// <summary>
 		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task HomeSimplePageTransactionTest(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
@@ -98,6 +98,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 5");
 #elif NET6_0
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
+#elif NET7_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 7");
 #else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 #endif
@@ -154,9 +156,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// </summary>
 		/// <param name="withDiagnosticSourceOnly"></param>
 		/// <returns></returns>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task HomeIndexTransactionWithEnabledFalse(bool withDiagnosticSourceOnly)
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
@@ -175,9 +176,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
 		}
 
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task HomeIndexTransactionWithToggleRecording(bool withDiagnosticSourceOnly)
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
@@ -215,9 +215,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP POST call to /home/simplePage and asserts on what the agent should send to the server
 		/// to test the 'CaptureBody' configuration option
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task HomeSimplePagePostTransactionTest(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
@@ -249,6 +248,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 5");
 #elif NET6_0
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
+#elif NET7_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 7");
 #else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 #endif
@@ -309,9 +310,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP GET call to /home/index and asserts that the agent captures spans.
 		/// Prerequisite: The /home/index has to generate spans (which should be the case).
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task HomeIndexSpanTest(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
@@ -329,9 +329,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Prerequisite: The /home/index has to generate spans (which should be the case).
 		/// It also assumes that /home/index makes a requrst to github.com
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task HomeIndexDestinationTest(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
@@ -354,9 +353,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP GET call to /Home/Index?captureControllerActionAsSpan=true
 		/// and asserts that all automatically captured spans are children of the span for controller's action.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
@@ -393,9 +391,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task FailingRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(false, withDiagnosticSourceOnly, _agent, _factory);
@@ -430,9 +427,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request along with the request body
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task FailingPostRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(false, withDiagnosticSourceOnly, _agent, _factory);
@@ -485,9 +481,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// An HTTP call to an action method which manually sets <see cref="IExecutionSegment.Outcome"/>.
 		/// Makes sure auto instrumentation does not overwrite the outcome.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task ManualTransactionOutcomeTest(bool withDiagnosticSourceOnly)
 		{
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);

@@ -65,7 +65,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			}
 
 			apmServer.ReceivedData.Transactions.Should().HaveCount(2);
-			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans + AdoNetTestData.OracleProviderExpectedSpans);
+			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
 
 			var testSpans = apmServer.ReceivedData.Spans
 				.Where(s => !s.Name.StartsWith(AdoNetTestData.OracleProviderSpanNameStart))

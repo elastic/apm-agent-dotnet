@@ -5,13 +5,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.Features;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
@@ -30,7 +30,9 @@ namespace Elastic.Apm
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender, null, null, null, null) { }
+		) : this(logger, configurationReader, payloadSender, null, null, null, null)
+		{
+		}
 
 		internal AgentComponents(
 			IApmLogger logger,
@@ -48,15 +50,17 @@ namespace Elastic.Apm
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
 				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
-				PrintAgentLogPreamble(Logger);
+				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
-				ConfigurationStore = new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
+				ConfigurationStore =
+					new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
+				HttpTraceConfiguration = new HttpTraceConfiguration();
 
 				// Called by PayloadSenderV2 after the ServerInfo is fetched
 				Action<bool, IApmServerInfo> serverInfoCallback = null;
@@ -65,7 +69,7 @@ namespace Elastic.Apm
 				ElasticActivityListener activityListener = null;
 				if (ConfigurationReader.EnableOpenTelemetryBridge)
 				{
-					activityListener = new ElasticActivityListener(this);
+					activityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 
 					serverInfoCallback = (success, serverInfo) =>
 					{
@@ -97,18 +101,19 @@ namespace Elastic.Apm
 				}
 #endif
 				PayloadSender = payloadSender
-					?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system, ApmServerInfo,
-						isEnabled: ConfigurationReader.Enabled, serverInfoCallback:serverInfoCallback);
+				                ?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
+					                ApmServerInfo,
+					                isEnabled: ConfigurationReader.Enabled, serverInfoCallback: serverInfoCallback);
 
 				if (ConfigurationReader.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
-				HttpTraceConfiguration = new HttpTraceConfiguration();
 				SubscribedListeners = new HashSet<Type>();
 
 				// initialize the tracer before central configuration or metric collection is started
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
-					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo, breakdownMetricsProvider);
+					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo,
+					breakdownMetricsProvider);
 
 #if NET5_0_OR_GREATER
 				if (ConfigurationReader.EnableOpenTelemetryBridge)
@@ -137,12 +142,34 @@ namespace Elastic.Apm
 
 				if (ConfigurationReader.Enabled)
 				{
-					CentralConfigurationFetcher = centralConfigurationFetcher ?? new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
-					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationStore, breakdownMetricsProvider);
-					MetricsCollector.StartCollecting();
+					var agentFeatures = AgentFeaturesProvider.Get(Logger);
+					//
+					// Central configuration
+					//
+					if (centralConfigurationFetcher != null)
+						CentralConfigurationFetcher = centralConfigurationFetcher;
+					else if (agentFeatures.Check(AgentFeature.RemoteConfiguration))
+					{
+						CentralConfigurationFetcher =
+							new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
+					}
+					//
+					// Metrics collection
+					//
+					if (metricsCollector != null)
+						MetricsCollector = metricsCollector;
+					else if (agentFeatures.Check(AgentFeature.MetricsCollection))
+					{
+						MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationStore,
+							breakdownMetricsProvider);
+					}
+					MetricsCollector?.StartCollecting();
 				}
 				else
-					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+				{
+					Logger.Info()
+						?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+				}
 			}
 			catch (Exception e)
 			{
@@ -154,19 +181,21 @@ namespace Elastic.Apm
 
 		internal IConfigurationStore ConfigurationStore { get; }
 
-		public IConfigurationReader ConfigurationReader { get; }
-
-		public IApmLogger Logger { get; }
-
-		private IMetricsCollector MetricsCollector { get; }
-
-		public IPayloadSender PayloadSender { get; }
+		internal IMetricsCollector MetricsCollector { get; }
 
 		internal IApmServerInfo ApmServerInfo { get; }
 
 		internal HttpTraceConfiguration HttpTraceConfiguration { get; }
 
 		internal HashSet<Type> SubscribedListeners { get; }
+
+		internal Tracer TracerInternal { get; }
+
+		public IConfigurationReader ConfigurationReader { get; }
+
+		public IApmLogger Logger { get; }
+
+		public IPayloadSender PayloadSender { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
@@ -177,8 +206,6 @@ namespace Elastic.Apm
 
 		public ITracer Tracer => TracerInternal;
 
-		internal Tracer TracerInternal { get; }
-
 		public void Dispose()
 		{
 			if (MetricsCollector is IDisposable disposableMetricsCollector) disposableMetricsCollector.Dispose();
@@ -188,7 +215,7 @@ namespace Elastic.Apm
 			CentralConfigurationFetcher?.Dispose();
 		}
 
-		private static void PrintAgentLogPreamble(IApmLogger logger)
+		private static void PrintAgentLogPreamble(IApmLogger logger, IConfigurationReader configurationReader)
 		{
 			if (logger?.Info() != null)
 			{
@@ -197,14 +224,52 @@ namespace Elastic.Apm
 					var info = logger.Info().Value;
 					info.Log("********************************************************************************");
 					info.Log(
-						$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetName().Version}, file creation time: {File.GetCreationTime(Assembly.GetExecutingAssembly().Location).ToUniversalTime()} UTC");
+						$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}");
 					info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
 					info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
+					info.Log($"Command line arguments: '{string.Join(", ", Environment.GetCommandLineArgs())}'");
 					info.Log($"Operating System: {RuntimeInformation.OSDescription}");
 					info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
 					info.Log($"Host: {Environment.MachineName}");
-					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
 					info.Log($"Time zone: {TimeZoneInfo.Local}");
+					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
+					info.Log("********************************************************************************");
+					info.Log($"Agent Configuration (via '{configurationReader.GetType()}'):");
+					var configurationMetaDataProvider = configurationReader as IConfigurationMetaDataProvider;
+					foreach (var item in ConfigurationMetaData.ConfigurationItems)
+					{
+						var origin = string.Empty;
+						var value = string.Empty;
+						if (configurationMetaDataProvider != null)
+						{
+							var ckv = configurationMetaDataProvider.Get(item);
+							origin = ckv.ReadFrom;
+							value = ckv.Value;
+						}
+						else
+						{
+							// The implementation of IConfigurationReader does not support "IConfigurationMetaDataProvider".
+							// Let's log the essential configuration items in that case.
+							if (item.IsEssentialForLogging)
+							{
+								origin = "unknown";
+								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
+							}
+						}
+
+						if (item.LogAlways || !string.IsNullOrEmpty(value))
+						{
+							if (string.IsNullOrEmpty(value))
+							{
+								origin = "default";
+								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
+							}
+
+							if (item.NeedsMasking) value = item.NeedsMasking ? Consts.Redacted : value;
+							info.Log($" - {item.NormalizedName}: '{value}' ({origin})");
+						}
+					}
+
 					info.Log("********************************************************************************");
 				}
 				catch (Exception e)

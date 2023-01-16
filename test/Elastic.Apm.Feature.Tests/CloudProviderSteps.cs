@@ -31,7 +31,13 @@ namespace Elastic.Apm.Feature.Tests
 
 		[Given(@"an agent configured with")]
 		[Scope(Feature = "Extracting Metadata for Azure App Service")]
-		public void GivenAnAgentConfiguredWith(Table table)
+		public void AzureAppService_GivenAnAgentConfiguredWith(Table table) => Helper_GivenAnAgentConfiguredWith(table);
+
+		[Given(@"an agent configured with")]
+		[Scope(Feature = "Extracting Metadata for Azure Function Apps")]
+		public void AzureFunctions_GivenAnAgentConfiguredWith(Table table) => Helper_GivenAnAgentConfiguredWith(table);
+
+		private void Helper_GivenAnAgentConfiguredWith(Table table)
 		{
 			var cloudProvider = table.Rows[0][1];
 

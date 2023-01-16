@@ -99,7 +99,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					Full = context.Request.GetEncodedUrl(),
 					HostName = context.Request.Host.Host,
-					Protocol = GetProtocolName(context.Request.Protocol),
+					Protocol = UrlUtils.GetProtocolName(context.Request.Protocol),
 					Raw = GetRawUrl(context.Request, logger) ?? context.Request.GetEncodedUrl(),
 					PathName = context.Request.Path,
 					Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
@@ -123,13 +123,9 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfiguration configuration) =>
-			configuration.CaptureHeaders && headers != null
-				? headers.ToDictionary(header => header.Key,
-					header => WildcardMatcher.IsAnyMatch(configuration.SanitizeFieldNames, header.Key)
-						? Apm.Consts.Redacted
-						: header.Value.ToString())
-				: null;
+		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers,
+			IConfigurationReader configuration) =>
+			configuration.CaptureHeaders ? headers.ToDictionary(h => h.Key, h => h.Value.ToString()) : null;
 
 		private static string GetRawUrl(HttpRequest httpRequest, IApmLogger logger)
 		{
@@ -137,7 +133,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				var rawPathAndQuery = httpRequest.HttpContext.Features.Get<IHttpRequestFeature>()?.RawTarget;
 
-				if (!string.IsNullOrEmpty(rawPathAndQuery) && rawPathAndQuery.Count() > 0 && rawPathAndQuery[0] != '/')
+				if (!string.IsNullOrEmpty(rawPathAndQuery) && rawPathAndQuery.Any() && rawPathAndQuery[0] != '/')
 					return rawPathAndQuery;
 
 				return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
@@ -146,19 +142,6 @@ namespace Elastic.Apm.AspNetCore
 			{
 				logger.Warning()?.LogException(e, "Failed reading RawUrl");
 				return null;
-			}
-		}
-
-		private static string GetProtocolName(string protocol)
-		{
-			switch (protocol)
-			{
-				case { } s when string.IsNullOrEmpty(s):
-					return string.Empty;
-				case { } s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
-					return "HTTP";
-				default:
-					return protocol;
 			}
 		}
 
@@ -210,7 +193,7 @@ namespace Elastic.Apm.AspNetCore
 
 				if (grpcCallInfo == default)
 				{
-					transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
+					transaction.Result = Transaction.StatusCodeToResult(UrlUtils.GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
 					transaction.SetOutcomeForHttpResult(context.Response.StatusCode);
 				}
 				else

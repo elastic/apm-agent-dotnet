@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Model;
@@ -126,5 +125,7 @@ namespace Elastic.Apm.Azure.Storage
 
 			return span;
 		}
+
+		public bool ShouldSuppressSpanCreation() => false;
 	}
 }

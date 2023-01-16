@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -48,9 +49,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls a URL that maps to a route with optional parameter (id).
 		/// Makes sure the Transaction.Name contains "{id}" instead of the value.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task OptionalRouteParameter(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
@@ -64,9 +64,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls a URL and sets custom transaction name.
 		/// Makes sure the Transaction.Name can be set to custom name.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task CustomTransactionName(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
@@ -82,9 +81,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// change that.
 		/// See: https://github.com/elastic/apm-agent-dotnet/pull/258#discussion_r291025014
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task CustomTransactionNameWithNameUsingRequestInfo(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
@@ -101,9 +99,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls a URL that would map to a route with optional parameter (id), but does not pass the id value.
 		/// Makes sure no template value is captured in Transaction.Name.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task OptionalRouteParameterWithNull(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
@@ -117,9 +114,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Tests a URL that maps to a route with default values. Calls "/", which maps to "home/index".
 		/// Makes sure "Home/Index" is in the Transaction.Name.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task DefaultRouteParameterValues(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
@@ -134,9 +130,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Tests a URL that maps to an area route with an area route value and default values. Calls "/MyArea", which maps to "MyArea/Home/Index".
 		/// Makes sure "GET MyArea/Home/Index" is the Transaction.Name.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task Name_Should_Be_Area_Controller_Action_When_Mvc_Area_Controller_Action(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
@@ -151,9 +146,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Tests a URL that maps to an explicit area route with default values. Calls "/MyOtherArea", which maps to "MyOtherArea/Home/Index".
 		/// Makes sure "GET MyOtherArea/Home/Index" is the Transaction.Name.
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task Name_Should_Be_Area_Controller_Action_When_Mvc_Area_Controller_Action_With_Area_Route(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
@@ -187,9 +181,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// If a URL matches a route, but the controller method returns e.g. HTTP 404,
 		/// the method name should be the real route and not "unknown route".
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
 		[Theory]
+		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
 		public async Task Http404WithValidRoute(bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);

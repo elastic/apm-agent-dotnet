@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;
@@ -22,6 +23,32 @@ namespace Elastic.Apm.StartupHook.Tests
 {
 	public class StartupHookTests
 	{
+		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
+		{
+			yield return ("netcoreapp3.1", ".NET Core", "3.1.0.0","31");
+			yield return ("net5.0", ".NET 5", "5.0.0.0", "50");
+			yield return ("net6.0", ".NET 6", "6.0.0.0", "60");
+			yield return ("net7.0", ".NET 7", "7.0.0.0", "70");
+		}
+
+		public static IEnumerable<object[]> DotNetFrameworkVersionInfos()
+			=> GetDotNetFrameworkVersionInfos().Select(i => new[] { i.TargetFramework, i.RuntimeName, i.Version });
+
+		public static IEnumerable<object[]> DotNetFrameworks()
+			=> DotNetFrameworkVersionInfos().Select(o => o[0 .. 1]);
+
+		public static IEnumerable<object[]> WebAppInfos()
+		{
+			var testData = new List<object[]>();
+			foreach (var i in GetDotNetFrameworkVersionInfos())
+			{
+				testData.Add(new []{ "webapi", $"WebApi{i.ShortVersion}", i.TargetFramework, "weatherforecast"});
+				testData.Add(new []{ "webapp", $"WebApp{i.ShortVersion}", i.TargetFramework, ""});
+				testData.Add(new []{ "mvc", $"Mvc{i.ShortVersion}", i.TargetFramework, ""});
+			}
+			return testData;
+		}
+
 		/// <summary>
 		/// Asserts that startup hooks successfully hook up the APM agent and
 		/// send data to mock APM server for the supported framework versions
@@ -29,9 +56,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <param name="targetFramework"></param>
 		/// <returns></returns>
 		[Theory]
-		[InlineData("netcoreapp3.1")]
-		[InlineData("net5.0")]
-		[InlineData("net6.0")]
+		[MemberData(nameof(DotNetFrameworks))]
 		public async Task Auto_Instrument_With_StartupHook_Should_Capture_Transaction(string targetFramework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
@@ -71,9 +96,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		}
 
 		[Theory]
-		[InlineData("netcoreapp3.1")]
-		[InlineData("net5.0")]
-		[InlineData("net6.0")]
+		[MemberData(nameof(DotNetFrameworks))]
 		public async Task Auto_Instrument_With_StartupHook_Should_Capture_Error(string targetFramework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
@@ -123,9 +146,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		}
 
 		[Theory]
-		[InlineData("netcoreapp3.1", ".NET Core", "3.1.0.0")]
-		[InlineData("net5.0", ".NET 5", "5.0.0.0")]
-		[InlineData("net6.0", ".NET 6", "6.0.0.0")]
+		[MemberData(nameof(DotNetFrameworkVersionInfos))]
 		public async Task Auto_Instrument_With_StartupHook_Should_Capture_Metadata(
 			string targetFramework,
 			string expectedRuntimeName,
@@ -170,14 +191,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		}
 
 		[Theory]
-		[InlineData("webapi", "WebApi31", "netcoreapp3.1", "weatherforecast")]
-		[InlineData("webapi", "WebApi50", "net5.0", "weatherforecast")]
-		[InlineData("webapp", "WebApp31", "netcoreapp3.1", "")]
-		[InlineData("webapp", "WebApp50", "net5.0", "")]
-		[InlineData("webapp", "WebApp60", "net6.0", "")]
-		[InlineData("mvc", "Mvc31", "netcoreapp3.1", "")]
-		[InlineData("mvc", "Mvc50", "net5.0", "")]
-		[InlineData("mvc", "Mvc60", "net6.0", "")]
+		[MemberData(nameof(WebAppInfos))]
 		public async Task Auto_Instrument_With_StartupHook(string template, string name, string targetFramework, string path)
 		{
 			var apmLogger = new InMemoryBlockingLogger(LogLevel.Trace);

@@ -33,7 +33,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 		public async Task DisposeAsync()
 		{
-			if (_container.State == TestcontainersState.Running)
+			if (_container.State == TestcontainersStates.Running)
 			{
 				await _container.StopAsync();
 				await _container.DisposeAsync();

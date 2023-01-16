@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
@@ -176,6 +177,42 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Destination.Service.Resource.Should().Be($"{ApiConstants.SubtypeMssql}/{span.Context.Db.Instance}");
 			span.Context.Service.Target.Type.Should().Be(ApiConstants.SubtypeMssql);
 			span.Context.Service.Target.Name.Should().Be(span.Context.Db.Instance);
+		}
+
+		[Theory]
+		[MemberData(nameof(Connections))]
+		public async Task SqlClientDiagnosticListener_ShouldNotUseCumulativeDurations(string providerName, Func<string, DbConnection> connectionCreator)
+		{
+			const string commandText = "SELECT getdate(); WAITFOR DELAY '00:00:00.010';";
+
+			// Arrange + Act
+			_testOutputHelper.WriteLine(providerName);
+
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
+			{
+				using var dbConnection = connectionCreator.Invoke(_connectionString);
+				await dbConnection.OpenAsync();
+
+				for (var i = 0; i < 100; i++)
+				{
+					using var sqlCommand = dbConnection.CreateCommand();
+					sqlCommand.CommandText = commandText;
+
+					// ReSharper disable once MethodHasAsyncOverload
+					using (sqlCommand.ExecuteReader())
+					{
+						// ignore
+					}
+				}
+			});
+
+			// Assert
+			_payloadSender.WaitForSpans();
+			_payloadSender.Spans.Count.Should().Be(100);
+			_payloadSender.Errors.Count.Should().Be(0);
+
+			// Cumulative would mean the last span takes 100 * 10ms = 1000ms
+			_payloadSender.Spans.Last().Duration.Should().BeLessThan(1000);
 		}
 
 		public void Dispose()

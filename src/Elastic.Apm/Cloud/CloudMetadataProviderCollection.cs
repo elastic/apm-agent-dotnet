@@ -6,6 +6,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Elastic.Apm.Features;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using static Elastic.Apm.Config.ConfigConsts;
@@ -27,7 +28,17 @@ namespace Elastic.Apm.Cloud
 		internal CloudMetadataProviderCollection(string cloudProvider, IApmLogger logger, IEnvironmentVariables environmentVariables)
 		{
 			environmentVariables ??= new EnvironmentVariables(logger);
-
+			//
+			// First check, whether we are in a specific habitat (e.g. Azure Functions).
+			//
+			if (AgentFeaturesProvider.Get(logger).Check(AgentFeature.AzureFunctionsCloudMetaDataDiscovery))
+			{
+				Add(new AzureFunctionsMetadataProvider(logger, environmentVariables.GetEnvironmentVariables()));
+				return;
+			}
+			//
+			// Now, let's look at the (generic) configuration.
+			//
 			switch (cloudProvider?.ToLowerInvariant())
 			{
 				case SupportedValues.CloudProviderAws:
