@@ -185,6 +185,8 @@ namespace Elastic.Apm.BackendComm
 				UseDefaultCredentials = useWindowsCredentials
 			};
 #if NETFRAMEWORK
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+#else
 			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
 #endif
 			return httpClientHandler;
