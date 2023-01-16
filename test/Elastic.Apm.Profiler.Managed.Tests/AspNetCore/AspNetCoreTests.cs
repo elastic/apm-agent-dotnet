@@ -2,20 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using Elastic.Apm.Profiler.Managed.Tests.AdoNet;
+using Elastic.Apm.Api;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.Docker;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 {
-	public class AspNetCoreTests 
+	public class AspNetCoreTests
 	{
 		private readonly ITestOutputHelper _output;
 
@@ -31,7 +28,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 		[InlineData("net5.0")]
 		public async void AspNetCoreTest(string framework)
 		{
-			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
+			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(AspNetCoreTests));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
@@ -75,6 +72,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 
 				waitForEventsSentToServer.WaitOne(TimeSpan.FromSeconds(30));
 			}
+
+			apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
+			apmServer.ReceivedData.Metadata.First().Service.Agent.ActivationMethod.Should()
+				.Be(ApiConstants.ActivationMethodProfiler);
 
 			apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
 			apmServer.ReceivedData.Spans.Should().HaveCountGreaterOrEqualTo(1);

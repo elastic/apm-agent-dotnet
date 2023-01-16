@@ -11,13 +11,13 @@ using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;
-using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.StartupHook.Tests
 {
@@ -182,6 +182,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
 
 				var metadata = apmServer.ReceivedData.Metadata.First();
+				metadata.Service.Agent.ActivationMethod.Should().Be(ApiConstants.ActivationMethodStartupHook);
 				metadata.Service.Runtime.Name.Should().Be(expectedRuntimeName);
 				metadata.Service.Framework.Name.Should().Be("ASP.NET Core");
 				metadata.Service.Framework.Version.Should().Be(expectedFrameworkVersion);
@@ -288,6 +289,7 @@ namespace Elastic.Apm.StartupHook.Tests
 
 				apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
 				var metadata = apmServer.ReceivedData.Metadata.First();
+				metadata.Service.Agent.ActivationMethod.Should().Be(ApiConstants.ActivationMethodStartupHook);
 				metadata.Service.Runtime.Name.Should().NotBeNullOrEmpty();
 				metadata.Service.Framework.Name.Should().Be("ASP.NET Core");
 				metadata.Service.Framework.Version.Should().NotBeNullOrEmpty();
