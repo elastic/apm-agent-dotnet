@@ -113,7 +113,7 @@ The Metrics API is currently not supported.
 [[otel-span-events]]
 ===== Span Events
 Span events (https://open-telemetry.github.io/opentelemetry-js-api/interfaces/span.html#addevent[`Span#addEvent()`])
-is not currently supported. Events will be silently dropped.
+are not currently supported. Events will be silently dropped.
 
 [float]
 [[otel-baggage]]
