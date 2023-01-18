@@ -19,6 +19,7 @@ namespace Elastic.Apm.Cloud
 		internal string WebsiteResourceGroup { get; set; }
 		internal string SubscriptionId { get; set; }
 		internal string FunctionsWorkerRuntime { get; set; }
+		internal string WebsiteInstanceId { get; set; }
 	}
 
 	/// <summary>
@@ -52,6 +53,7 @@ namespace Elastic.Apm.Cloud
 			var regionName = helper.GetEnvironmentVariable(AzureEnvironmentVariables.RegionName);
 			var functionsWorkerRuntime =
 				helper.GetEnvironmentVariable(AzureEnvironmentVariables.FunctionsWorkerRuntime);
+			var websiteInstanceId = helper.GetEnvironmentVariable(AzureEnvironmentVariables.WebsiteInstanceId);
 
 			if (helper.NullOrEmptyVariable(AzureEnvironmentVariables.FunctionsExtensionVersion,
 				    functionsExtensionVersion) ||
@@ -76,7 +78,8 @@ namespace Elastic.Apm.Cloud
 				FunctionsWorkerRuntime = functionsWorkerRuntime,
 				WebsiteSiteName = websiteSiteName,
 				WebsiteResourceGroup = websiteResourceGroup,
-				SubscriptionId = tokens.Value.SubscriptionId
+				SubscriptionId = tokens.Value.SubscriptionId,
+				WebsiteInstanceId = websiteInstanceId,
 			};
 		}
 
@@ -87,10 +90,11 @@ namespace Elastic.Apm.Cloud
 				? new Api.Cloud
 				{
 					Provider = "azure",
+					Service = new CloudService { Name = "functions" },
 					Account = new CloudAccount { Id = data.SubscriptionId },
 					Instance = new CloudInstance { Name = data.WebsiteSiteName },
 					Project = new CloudProject { Name = data.WebsiteResourceGroup },
-					Region = data.RegionName
+					Region = data.RegionName,
 				}
 				: null;
 		}

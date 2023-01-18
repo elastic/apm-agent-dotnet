@@ -34,6 +34,24 @@ namespace Elastic.Apm.Api
 		[MaxLength]
 		public string Region { get; set; }
 		public CloudProject Project { get; set; }
+
+		/// <summary>
+		/// The service that is monitored on cloud.
+		/// </summary>
+		public CloudService Service { get; set; }
+	}
+
+	/// <summary>
+	/// The service that is monitored on cloud.
+	/// </summary>
+	public class CloudService
+	{
+		/// <summary>
+		/// Name of the cloud service, intended to distinguish services running on different
+		/// platforms within a provider, eg AWS EC2 vs Lambda, GCP GCE vs App Engine, Azure VM vs App Server.
+		/// </summary>
+		[MaxLength]
+		public string Name { get; set; }
 	}
 
 	public class CloudProject
