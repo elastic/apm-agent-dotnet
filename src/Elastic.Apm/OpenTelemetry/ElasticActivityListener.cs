@@ -321,8 +321,11 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 
 			span.Context.Service = new SpanService(new Target(serviceTargetType, serviceTargetName));
-			span.Context.Destination ??= new Destination();
-			span.Context.Destination.Service = new Destination.DestinationService { Resource = resource };
+			if (resource != null)
+			{
+				span.Context.Destination ??= new Destination();
+				span.Context.Destination.Service = new Destination.DestinationService { Resource = resource };
+			}
 		}
 
 		public void Dispose() => Listener?.Dispose();

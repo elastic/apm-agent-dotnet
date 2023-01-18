@@ -56,6 +56,7 @@ public class AzureFunctionsTests : IClassFixture<AzureFunctionsTestFixture>, IDi
 
 		attempt.Should().BeLessThan(maxAttempts, $"Could not connect to function running on {url}");
 		var transaction = _azureFunctionsTestFixture.WaitForTransaction(transactionName);
+		Assert_MetaData(_azureFunctionsTestFixture.GetMetaData());
 		Assert_ColdStart(transaction);
 		return transaction;
 	}
@@ -84,6 +85,17 @@ public class AzureFunctionsTests : IClassFixture<AzureFunctionsTestFixture>, IDi
 	{
 		transaction.FaaS.ColdStart.Should().Be(_isFirst);
 		_isFirst = false;
+	}
+
+	private void Assert_MetaData(MetadataDto metaData)
+	{
+		metaData.Cloud.Provider.Should().Be("azure");
+		metaData.Cloud.Service.Name.Should().Be("functions");
+		metaData.Service.Name.Should().Be("testfaas");
+		metaData.Service.Runtime.Name.Should().Be("dotnet-isolated");
+		metaData.Service.Framework.Name.Should().Be("Azure Functions");
+		metaData.Service.Framework.Version.Should().Be("4");
+		metaData.Service.Node.ConfiguredName.Should().Be("20367ea8-70b9-41b4-a552-b2a826b3aa0b");
 	}
 
 	[Fact]

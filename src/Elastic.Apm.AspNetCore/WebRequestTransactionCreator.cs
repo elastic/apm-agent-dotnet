@@ -123,13 +123,9 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfiguration configuration) =>
-			configuration.CaptureHeaders && headers != null
-				? headers.ToDictionary(header => header.Key,
-					header => WildcardMatcher.IsAnyMatch(configuration.SanitizeFieldNames, header.Key)
-						? Apm.Consts.Redacted
-						: header.Value.ToString())
-				: null;
+		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers,
+			IConfigurationReader configuration) =>
+			configuration.CaptureHeaders ? headers.ToDictionary(h => h.Key, h => h.Value.ToString()) : null;
 
 		private static string GetRawUrl(HttpRequest httpRequest, IApmLogger logger)
 		{
@@ -137,7 +133,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				var rawPathAndQuery = httpRequest.HttpContext.Features.Get<IHttpRequestFeature>()?.RawTarget;
 
-				if (!string.IsNullOrEmpty(rawPathAndQuery) && rawPathAndQuery.Count() > 0 && rawPathAndQuery[0] != '/')
+				if (!string.IsNullOrEmpty(rawPathAndQuery) && rawPathAndQuery.Any() && rawPathAndQuery[0] != '/')
 					return rawPathAndQuery;
 
 				return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);

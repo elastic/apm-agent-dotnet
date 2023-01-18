@@ -229,6 +229,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			lock (_errorLock)
 			{
+				error = _errorFilters.Aggregate(error,
+					(current, filter) => filter(current));
 				_errors.Add(error);
 				_errorWaitHandle.Set();
 			}
