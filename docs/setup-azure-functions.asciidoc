@@ -2,7 +2,7 @@
 [[setup-azure-functions]]
 === Azure Functions
 
-The .NET APM Agent can trace function invocations in an https://learn.microsoft.com/en-us/azure/azure-functions [Azure Functions] app.
+The .NET APM Agent can trace function invocations in an https://learn.microsoft.com/en-us/azure/azure-functions[Azure Functions] app.
 
 [float]
 ==== Prerequisites
