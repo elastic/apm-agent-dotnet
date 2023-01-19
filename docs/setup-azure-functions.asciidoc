@@ -61,7 +61,7 @@ host.Run();
 [float]
 ==== Step 3: Configure the APM agent
 
-The APM agent can be with environment variables. Using environment variables
+The APM agent can be configured with environment variables. Using environment variables
 allows one to use https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#settings[application settings in the Azure Portal] which allows hiding values and updating settings
 without needing to re-deploy code.
 
