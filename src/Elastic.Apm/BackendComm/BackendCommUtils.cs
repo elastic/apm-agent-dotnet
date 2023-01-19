@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Reflection;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -178,7 +179,17 @@ namespace Elastic.Apm.BackendComm
 				};
 			}
 
-			return new HttpClientHandler { ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback, UseDefaultCredentials = useWindowsCredentials };
+			var httpClientHandler = new HttpClientHandler
+			{
+				ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback,
+				UseDefaultCredentials = useWindowsCredentials
+			};
+#if NETFRAMEWORK
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+#else
+			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
+#endif
+			return httpClientHandler;
 		}
 
 		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfiguration configuration, Service service, string dbgCallerDesc
