@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Elastic.Apm.Api;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
@@ -57,7 +56,7 @@ public class BasicTests
 		// Asserts that Agent.Version ends with `p`, signaling profiler based agent
 		var metaData = apmServer.ReceivedData.Metadata.First();
 		metaData.Service.Agent.Version.Should().EndWith("p");
-		metaData.Service.Agent.ActivationMethod.Should().Be(ApiConstants.ActivationMethodProfiler);
+		metaData.Service.Agent.ActivationMethod.Should().Be(Consts.ActivationMethodProfiler);
 
 		await apmServer.StopAsync();
 	}

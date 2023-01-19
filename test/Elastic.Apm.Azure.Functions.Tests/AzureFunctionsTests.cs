@@ -89,7 +89,7 @@ public class AzureFunctionsTests : IClassFixture<AzureFunctionsTestFixture>, IDi
 
 	private void Assert_MetaData(MetadataDto metaData)
 	{
-		metaData.Service.Agent.ActivationMethod.Should().Be(ApiConstants.ActivationMethodNuGet);
+		metaData.Service.Agent.ActivationMethod.Should().Be(Consts.ActivationMethodNuGet);
 		metaData.Cloud.Provider.Should().Be("azure");
 		metaData.Cloud.Service.Name.Should().Be("functions");
 		metaData.Service.Name.Should().Be("testfaas");

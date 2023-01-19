@@ -89,15 +89,19 @@ namespace Elastic.Apm.Api
 			}
 
 			// Assume NuGet as the default.
-			var activationMethod = ApiConstants.ActivationMethodNuGet;
+			var activationMethod = Consts.ActivationMethodNuGet;
 			if (CheckForLoadedAssembly("Elastic.Apm.Profiler.Managed"))
 			{
 				// Legacy mechanism: if the profiler is loaded add a `p` suffix to Agent.Version
 				service.Agent.Version += "-p";
-				activationMethod = ApiConstants.ActivationMethodProfiler;
+				// Check if profiler was injected via K8S hook.
+				if (new EnvironmentVariables(logger).SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S"))
+					activationMethod = Consts.ActivationK8SAttach;
+				else
+					activationMethod = Consts.ActivationMethodProfiler;
 			}
 			else if (CheckForLoadedAssembly("Elastic.Apm.StartupHook.Loader"))
-				activationMethod = ApiConstants.ActivationMethodStartupHook;
+				activationMethod = Consts.ActivationMethodStartupHook;
 
 			logger.Info()?.Log($"Detected agent activation method: {activationMethod}");
 			service.Agent.ActivationMethod = activationMethod;

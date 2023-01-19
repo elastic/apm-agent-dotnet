@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
-using Elastic.Apm.Api;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -75,7 +74,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 
 			apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
 			apmServer.ReceivedData.Metadata.First().Service.Agent.ActivationMethod.Should()
-				.Be(ApiConstants.ActivationMethodProfiler);
+				.Be(Consts.ActivationMethodProfiler);
 
 			apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
 			apmServer.ReceivedData.Spans.Should().HaveCountGreaterOrEqualTo(1);

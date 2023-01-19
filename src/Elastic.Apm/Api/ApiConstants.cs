@@ -29,9 +29,5 @@ namespace Elastic.Apm.Api
 		public const string TypeStorage = "storage";
 		public const string TypeApp = "app";
 		public const string TypeUnknown = "unknown";
-
-		public const string ActivationMethodNuGet = "nuget";
-		public const string ActivationMethodProfiler = "profiler";
-		public const string ActivationMethodStartupHook = "startup-hook";
 	}
 }

@@ -9,6 +9,25 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
 {
+	internal static class EnvironmentVariablesExtensions
+	{
+		internal static string SafeGetValue(this IEnvironmentVariables environmentVariables, string name)
+		{
+			string value = null;
+			var variables = environmentVariables.GetEnvironmentVariables();
+			if (variables != null)
+				value = variables[name]?.ToString();
+			return value ?? string.Empty;
+		}
+
+		internal static bool SafeCheckValue(this IEnvironmentVariables environmentVariables, string name,
+			string value)
+			=> SafeGetValue(environmentVariables, name).Equals(value, StringComparison.InvariantCultureIgnoreCase);
+
+		internal static bool SafeCheckExists(this IEnvironmentVariables environmentVariables, string name)
+			=> !string.IsNullOrEmpty(SafeGetValue(environmentVariables, name));
+	}
+
 	internal interface IEnvironmentVariables
 	{
 		IDictionary GetEnvironmentVariables();
