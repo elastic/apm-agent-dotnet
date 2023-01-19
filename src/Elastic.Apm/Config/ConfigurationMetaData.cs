@@ -17,7 +17,7 @@ namespace Elastic.Apm.Config
 		CloudProvider,
 		DisableMetrics,
 		Enabled,
-		EnableOpenTelemetryBridge,
+		OpenTelemetryBridgeEnabled,
 		Environment,
 		ExcludedNamespaces,
 		ExitSpanMinDuration,
@@ -129,7 +129,7 @@ namespace Elastic.Apm.Config
 			new(ConfigurationItemId.DisableMetrics, ConfigConsts.EnvVarNames.DisableMetrics,
 				ConfigConsts.KeyNames.DisableMetrics),
 			new(ConfigurationItemId.Enabled, ConfigConsts.EnvVarNames.Enabled, ConfigConsts.KeyNames.Enabled), new(
-				ConfigurationItemId.EnableOpenTelemetryBridge, ConfigConsts.EnvVarNames.EnableOpenTelemetryBridge,
+				ConfigurationItemId.OpenTelemetryBridgeEnabled, ConfigConsts.EnvVarNames.OpenTelemetryBridgeEnabled,
 				ConfigConsts.KeyNames.OpentelemetryBridgeEnabled),
 			new(ConfigurationItemId.Environment, ConfigConsts.EnvVarNames.Environment,
 				ConfigConsts.KeyNames.Environment),

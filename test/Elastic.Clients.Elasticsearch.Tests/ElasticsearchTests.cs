@@ -1,11 +1,11 @@
-﻿using Elastic.Apm.Tests.Utilities;
-using Xunit;
-using Elastic.Apm;
+﻿using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
+using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Docker;
 using FluentAssertions;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Elastic.Clients.Elasticsearch.Tests;
@@ -170,7 +170,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		var payloadSender = new MockPayloadSender();
 		var agent = new ApmAgent(new TestAgentComponents(
 			new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
-			payloadSender: payloadSender, configuration: new MockConfiguration(enableOpenTelemetryBridge: "true"),
+			payloadSender: payloadSender, configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"),
 			apmServerInfo: MockApmServerInfo.Version80));
 
 		// Enable outgoing HTTP capturing and later assert that no HTTP span is captured for the es calls as defined in our spec.

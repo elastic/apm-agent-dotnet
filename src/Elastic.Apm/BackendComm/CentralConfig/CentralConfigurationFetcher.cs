@@ -264,7 +264,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
 			public bool Enabled => _wrapped.Enabled;
-			public bool EnableOpenTelemetryBridge => _wrapped.EnableOpenTelemetryBridge;
+			public bool OpenTelemetryBridgeEnabled => _wrapped.OpenTelemetryBridgeEnabled;
 
 			public string Environment => _wrapped.Environment;
 			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;

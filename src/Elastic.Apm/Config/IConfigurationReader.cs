@@ -80,7 +80,7 @@ namespace Elastic.Apm.Config
 		/// Enables OpenTelemetry bridging. If this is set to <code>true</code>, the agent will automatically capture every
 		/// <see cref="System.Diagnostics.Activity" /> as part of a trace captured in Elastic APM.
 		/// </summary>
-		bool EnableOpenTelemetryBridge { get; }
+		bool OpenTelemetryBridgeEnabled { get; }
 
 		/// <summary>
 		/// The name of the environment this service is deployed in.

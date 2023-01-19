@@ -67,7 +67,7 @@ namespace Elastic.Apm
 
 #if NET5_0_OR_GREATER
 				ElasticActivityListener activityListener = null;
-				if (ConfigurationReader.EnableOpenTelemetryBridge)
+				if (ConfigurationReader.OpenTelemetryBridgeEnabled)
 				{
 					activityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 
@@ -116,7 +116,7 @@ namespace Elastic.Apm
 					breakdownMetricsProvider);
 
 #if NET5_0_OR_GREATER
-				if (ConfigurationReader.EnableOpenTelemetryBridge)
+				if (ConfigurationReader.OpenTelemetryBridgeEnabled)
 				{
 					// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version
 					if (ApmServerInfo.Version == null || ApmServerInfo?.Version == new ElasticVersion(0, 0, 0, null))

@@ -174,8 +174,9 @@ namespace Elastic.Apm.Config
 		public virtual bool VerifyServerCert =>
 			ParseVerifyServerCert(Read(KeyNames.VerifyServerCert, EnvVarNames.VerifyServerCert));
 
-		public bool EnableOpenTelemetryBridge =>
-			ParseEnableOpenTelemetryBridge(Read(KeyNames.OpentelemetryBridgeEnabled, EnvVarNames.EnableOpenTelemetryBridge));
+		public bool OpenTelemetryBridgeEnabled =>
+			ParseOpenTelemetryBridgeEnabled(Read(KeyNames.OpentelemetryBridgeEnabled,
+				EnvVarNames.OpenTelemetryBridgeEnabled));
 
 		public ConfigurationKeyValue Get(ConfigurationItem item) =>
 			Read(item.ConfigurationKeyName, item.ConfigurationKeyName);
