@@ -7,7 +7,11 @@
     <AssemblyName>Elastic.Apm.Azure.Functions</AssemblyName>
     <RootNamespace>Elastic.Apm.Azure.Functions</RootNamespace>
     <PackageId>Elastic.Apm.Azure.Functions</PackageId>
-    <IsPackable>false</IsPackable>
+    <Description>Elastic APM for Azure Functions. This package contains a middleware for tracing Azure Functions
+      in worker (dotnet-isolated) processes.
+    </Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, azure, functions, serverless, faas</PackageTags>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
