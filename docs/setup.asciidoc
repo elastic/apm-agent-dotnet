@@ -28,12 +28,14 @@ for more details.
 * <<setup-asp-net-core>>
 * <<setup-dotnet-net-core>>
 * <<setup-asp-dot-net>>
+* <<setup-azure-functions>>
 * <<setup-general, Manual instrumentation>>
 
 include::./setup-auto-instrumentation.asciidoc[]
 include::./setup-asp-net-core.asciidoc[]
 include::./setup-dotnet-net-core.asciidoc[]
 include::./setup-asp-dot-net.asciidoc[]
+include::./setup-azure-functions.asciidoc[]
 
 [[setup-general]]
 === Other .NET applications
