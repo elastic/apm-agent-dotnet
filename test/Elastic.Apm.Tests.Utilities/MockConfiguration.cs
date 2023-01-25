@@ -26,7 +26,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _description;
 		private readonly string _disableMetrics;
 		private readonly string _enabled;
-		private readonly string _enableOpenTelemetryBridge;
+		private readonly string _openTelemetryBridgeEnabled;
 		private readonly string _environment;
 		private readonly string _excludedNamespaces;
 		private readonly string _exitSpanMinDuration;
@@ -74,7 +74,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string captureHeaders = null,
 			string centralConfig = null,
 			string description = null,
-			string enableOpenTelemetryBridge = null,
+			string openTelemetryBridgeEnabled = null,
 			string exitSpanMinDuration = null,
 			string transactionSampleRate = null,
 			string transactionMaxSpans = null,
@@ -122,7 +122,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_captureHeaders = captureHeaders;
 			_centralConfig = centralConfig;
 			_description = description;
-			_enableOpenTelemetryBridge = enableOpenTelemetryBridge;
+			_openTelemetryBridgeEnabled = openTelemetryBridgeEnabled;
 			_transactionSampleRate = transactionSampleRate;
 			_transactionMaxSpans = transactionMaxSpans;
 			_metricsInterval = metricsInterval;
@@ -179,8 +179,9 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public bool Enabled => ParseEnabled(Kv(EnvVarNames.Enabled, _enabled, Origin));
 
-		public bool EnableOpenTelemetryBridge =>
-			ParseEnableOpenTelemetryBridge(Kv(EnvVarNames.EnableOpenTelemetryBridge, _enableOpenTelemetryBridge, Origin));
+		public bool OpenTelemetryBridgeEnabled =>
+			ParseOpenTelemetryBridgeEnabled(Kv(EnvVarNames.OpenTelemetryBridgeEnabled, _openTelemetryBridgeEnabled,
+				Origin));
 
 		public string Environment => ParseEnvironment(Kv(EnvVarNames.Environment, _environment, Origin));
 
