@@ -49,7 +49,9 @@ namespace Elastic.Apm.Config
 		public string Description => Origin;
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => ParseDisableMetrics(Read(ConfigConsts.EnvVarNames.DisableMetrics));
 		public bool Enabled => ParseEnabled(Read(ConfigConsts.EnvVarNames.Enabled));
-		public bool EnableOpenTelemetryBridge => ParseEnableOpenTelemetryBridge(Read(ConfigConsts.EnvVarNames.EnableOpenTelemetryBridge));
+
+		public bool OpenTelemetryBridgeEnabled =>
+			ParseOpenTelemetryBridgeEnabled(Read(ConfigConsts.EnvVarNames.OpenTelemetryBridgeEnabled));
 
 		public string Environment => ParseEnvironment(Read(ConfigConsts.EnvVarNames.Environment));
 
