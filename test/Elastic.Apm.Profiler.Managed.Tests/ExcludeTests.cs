@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -69,12 +69,10 @@ public class ExcludeTests
 	public static IEnumerable<object[]> TargetFrameworks()
 	{
 		if (TestEnvironment.IsWindows)
-		{
-			yield return new object[] { "net5.0", "dotnet.exe" };
 			yield return new object[] { "net461", "SqliteSample.exe" };
-		}
-		else
-			yield return new object[] { "net5.0", "dotnet" };
+		yield return new object[] { "net5.0", "dotnet.exe" };
+		yield return new object[] { "net6.0", "dotnet.exe" };
+		yield return new object[] { "net7.0", "dotnet.exe" };
 	}
 
 	[Theory]
