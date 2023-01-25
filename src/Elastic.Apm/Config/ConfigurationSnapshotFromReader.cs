@@ -31,7 +31,7 @@ namespace Elastic.Apm.Config
 		public string Description { get; }
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => _content.DisableMetrics;
 		public bool Enabled => _content.Enabled;
-		public bool EnableOpenTelemetryBridge => _content.EnableOpenTelemetryBridge;
+		public bool OpenTelemetryBridgeEnabled => _content.OpenTelemetryBridgeEnabled;
 		public string Environment => _content.Environment;
 		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
 		public double ExitSpanMinDuration => _content.ExitSpanMinDuration;

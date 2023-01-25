@@ -131,7 +131,7 @@ public class ConstructorTests
 
 		public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
 
-		public bool EnableOpenTelemetryBridge => ConfigConsts.DefaultValues.EnableOpenTelemetryBridge;
+		public bool OpenTelemetryBridgeEnabled => ConfigConsts.DefaultValues.OpenTelemetryBridgeEnabled;
 
 		public bool TraceContextIgnoreSampledFalse => ConfigConsts.DefaultValues.TraceContextIgnoreSampledFalse;
 
