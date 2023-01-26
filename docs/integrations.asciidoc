@@ -49,8 +49,8 @@
 |Microsoft.Data.SqlClient 1.0.0 - 2.{star}.{star}
 
 .2+.^|SqliteCommand
-|{nuget}/Microsoft.Data.Sqlite[Microsoft.Data.Sqlite 2.0.0 - 5.{star}.{star}]
-|Microsoft.Data.Sqlite 2.0.0 - 5.{star}.{star}
+|{nuget}/Microsoft.Data.Sqlite[Microsoft.Data.Sqlite 2.0.0 - 7.{star}.{star}]
+|Microsoft.Data.Sqlite 2.0.0 - 7.{star}.{star}
 
 |{nuget}/System.Data.SQLite[System.Data.SQLite 1.0.0 - 2.{star}.{star}]
 |System.Data.SQLite 1.0.0 - 2.{star}.{star}
