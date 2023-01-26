@@ -27,7 +27,9 @@ defaults:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # as long as Version=v4.6.1 were not found
+    # then let's use windows-2019. Further details https://github.com/actions/runner-images/issues/5055
+    runs-on: windows-2019
 
     steps:
     - uses: actions/checkout@v3
