@@ -11,5 +11,11 @@ namespace Elastic.Apm
 		internal const string AgentName = "dotnet";
 
 		internal const string Redacted = "[REDACTED]";
+
+
+		internal const string ActivationK8SAttach = "k8s-attach";
+		internal const string ActivationMethodNuGet = "nuget";
+		internal const string ActivationMethodProfiler = "profiler";
+		internal const string ActivationMethodStartupHook = "startup-hook";
 	}
 }

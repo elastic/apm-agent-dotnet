@@ -225,16 +225,18 @@ namespace Elastic.Apm.Config
 			return true;
 		}
 
-		protected bool ParseEnableOpenTelemetryBridge(ConfigurationKeyValue kv)
+		protected bool ParseOpenTelemetryBridgeEnabled(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.EnableOpenTelemetryBridge;
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.OpenTelemetryBridgeEnabled;
 
 			if (bool.TryParse(kv.Value, out var isOTelEnabled))
 				return isOTelEnabled;
 
 			_logger?.Warning()
-				?.Log("Failed parsing value for 'EnableOpenTelemetryBridge' setting to 'bool'. Received value: {receivedValue}", kv.Value);
-			return DefaultValues.EnableOpenTelemetryBridge;
+				?.Log(
+					"Failed parsing value for 'OpenTelemetryBridgeEnabled' setting to 'bool'. Received value: {receivedValue}",
+					kv.Value);
+			return DefaultValues.OpenTelemetryBridgeEnabled;
 		}
 
 		protected bool ParseRecording(ConfigurationKeyValue kv)
