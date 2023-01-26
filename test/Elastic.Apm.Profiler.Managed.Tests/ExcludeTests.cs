@@ -68,11 +68,15 @@ public class ExcludeTests
 
 	public static IEnumerable<object[]> TargetFrameworks()
 	{
+		var dotnet = "dotnet";
 		if (TestEnvironment.IsWindows)
+		{
 			yield return new object[] { "net461", "SqliteSample.exe" };
-		yield return new object[] { "net5.0", "dotnet.exe" };
-		yield return new object[] { "net6.0", "dotnet.exe" };
-		yield return new object[] { "net7.0", "dotnet.exe" };
+			dotnet = "dotnet.exe";
+		}
+		yield return new object[] { "net5.0", dotnet };
+		yield return new object[] { "net6.0", dotnet };
+		yield return new object[] { "net7.0", dotnet };
 	}
 
 	[Theory]
