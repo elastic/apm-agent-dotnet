@@ -38,9 +38,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: snapshoty-linux
-        path: |
-          build/output/
-          .ci/snapshoty.yml
+        path: build/output/
 
   windows-package:
     runs-on: windows-latest
@@ -73,30 +71,16 @@ jobs:
     needs: [linux-package, windows-package]
     steps:
 
+    - uses: actions/checkout@v3
+
     - uses: actions/download-artifact@v3
       with:
         name: snapshoty-linux
-
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: build/output/
-
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: .ci
 
     - uses: actions/download-artifact@v3
       with:
         name: snapshoty-windows
         
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: build/output/
-
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: .ci
-
     - name: Publish snaphosts
       uses: elastic/apm-pipeline-library/.github/actions/snapshoty-simple@current
       with:
