@@ -21,6 +21,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+defaults:
+  run:
+    shell: cmd
+
 jobs:
   build:
     runs-on: windows-latest
@@ -30,18 +34,16 @@ jobs:
 
     - name: Tools
       run: .ci\\windows\\tools.ps1
+      shell: pwsh
 
     - name: Build
       run: .ci\\windows\\dotnet.bat
-      shell: cmd
 
     - name: Build agent
       run: .\\build.bat agent-zip
-      shell: cmd
 
     - name: Build profiler
       run: .\\build.bat profiler-zip
-      shell: cmd
 
   test:
     runs-on: windows-latest
@@ -51,10 +53,10 @@ jobs:
 
     - name: Tools
       run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
 
     - name: Test & coverage
       run: .ci\\windows\\test.bat
-      shell: cmd
 
   startup-hook-test:
     runs-on: windows-latest
@@ -64,14 +66,13 @@ jobs:
 
     - name: Tools
       run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
 
     - name: Build
       run: .\\build.bat agent-zip
-      shell: cmd
 
     - name: Test & coverage
       run: .ci\\windows\\test-startuphooks.bat
-      shell: cmd
 
     - name: Store test results
       if: success() || failure()
@@ -81,21 +82,20 @@ jobs:
         path: test/**/junit-*.xml
 
   profiler-test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Tools
       run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
 
     - name: Build
       run: .\\build.bat profiler-zip
-      shell: cmd
 
     - name: Test & coverage
       run: .ci\\windows\\test-profiler.bat
-      shell: cmd
 
     - name: Store test results
       if: success() || failure()
