@@ -23,7 +23,83 @@ concurrency:
 
 jobs:
   build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Tools
+      run: .ci\\windows\\tools.ps1
+
+    - name: Build
+      run: .ci\\windows\\dotnet.bat
+      shell: cmd
+
+    - name: Build agent
+      run: .\\build.bat agent-zip
+      shell: cmd
+
+    - name: Build profiler
+      run: .\\build.bat profiler-zip
+      shell: cmd
+
+  test:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Tools
+      run: .ci\\windows\\test-tools.ps1
+
+    - name: Test & coverage
+      run: .ci\\windows\\test.bat
+      shell: cmd
+
+  startup-hook-test:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Tools
+      run: .ci\\windows\\test-tools.ps1
+
+    - name: Build
+      run: .\\build.bat agent-zip
+      shell: cmd
+
+    - name: Test & coverage
+      run: .ci\\windows\\test-startuphooks.bat
+      shell: cmd
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
+
+  profiler-test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Tools
+      run: .ci\\windows\\test-tools.ps1
+
+    - name: Build
+      run: .\\build.bat profiler-zip
+      shell: cmd
+
+    - name: Test & coverage
+      run: .ci\\windows\\test-profiler.bat
+      shell: cmd
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
