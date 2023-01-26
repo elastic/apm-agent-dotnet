@@ -512,118 +512,6 @@ pipeline {
         }
       }
     }
-    stage('Release to feedz.io') {
-      options { skipDefaultCheckout() }
-      when {
-        beforeAgent true
-        anyOf {
-          branch 'main'
-          expression { return params.Run_As_Main_Branch }
-        }
-      }
-      steps {
-        deleteDir()
-        unstash 'source'
-        dir("${BASE_DIR}"){
-          release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io', withSuffix: true)
-        }
-      }
-      post{
-        success {
-          archiveArtifacts(allowEmptyArchive: true,
-            artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg")
-        }
-      }
-    }
-    stage('Release') {
-      options {
-        skipDefaultCheckout()
-      }
-      when {
-        beforeInput true
-        beforeAgent true
-        // Tagged release events ONLY
-        tag pattern: 'v\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
-      }
-      stages {
-        stage('Notify') {
-          steps {
-            notifyStatus(slackStatus: 'warning', subject: "[${env.REPO}] Release ready to be pushed",
-                         body: "Please (<${env.BUILD_URL}input|approve>) it or reject within 12 hours.\n Changes: ${env.TAG_NAME}")
-          }
-        }
-        stage('Release to NuGet') {
-          input {
-            message 'Should we release a new version?'
-            ok 'Yes, we should.'
-          }
-          environment {
-            RELEASE_URL_MESSAGE = "(<https://github.com/elastic/apm-agent-dotnet/releases/tag/${env.TAG_NAME}|${env.TAG_NAME}>)"
-          }
-          steps {
-            deleteDir()
-            unstash 'source'
-            dir("${BASE_DIR}") {
-              release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
-            }
-          }
-          post {
-            failure {
-              notifyStatus(slackStatus: 'danger', subject: "[${env.REPO}] Release *${env.TAG_NAME}* failed", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)")
-            }
-            success {
-              notifyStatus(slackStatus: 'good', subject: "[${env.REPO}] Release *${env.TAG_NAME}* published", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)\nRelease URL: ${env.RELEASE_URL_MESSAGE}")
-            }
-          }
-        }
-        stage('Publish Docker image') {
-          environment {
-            DOCKER_SECRET = 'secret/apm-team/ci/docker-registry/prod'
-            DOCKER_REGISTRY = 'docker.elastic.co'
-            HOME = "${env.WORKSPACE}"
-          }
-          steps {
-            withGithubNotify(context: 'Create Docker image - Linux') {
-              dir("${BASE_DIR}"){
-                dockerLogin(secret: env.DOCKER_SECRET, registry: env.DOCKER_REGISTRY)
-                sh(script: 'chmod +x .ci/linux/push_docker.sh')
-                sh(label: 'Publish Docker Image', script: '.ci/linux/push_docker.sh')
-              }
-            }
-          }
-        }
-      }
-    }
-    stage('AfterRelease') {
-      options {
-        skipDefaultCheckout()
-      }
-      when {
-        anyOf {
-          tag pattern: 'v\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
-        }
-      }
-      stages {
-        stage('Opbeans') {
-          environment {
-            REPO_NAME = "${OPBEANS_REPO}"
-          }
-          steps {
-            deleteDir()
-            dir("${OPBEANS_REPO}"){
-              git(credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                  url: "git@github.com:elastic/${OPBEANS_REPO}.git",
-                  branch: 'main')
-              sh script: ".ci/bump-version.sh ${env.BRANCH_NAME.replaceAll('^v', '')}", label: 'Bump version'
-              // The opbeans pipeline will trigger a release for the main branch
-              gitPush()
-              // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
-              gitCreateTag(tag: "${env.BRANCH_NAME}")
-            }
-          }
-        }
-      }
-    }
   }
   post {
     cleanup {
@@ -678,7 +566,7 @@ def testTools(Closure body){
       | jq -r '.[].assets[].browser_download_url' \
       | grep 'Azure.Functions.Cli.linux-x64.4.*zip\$' \
       | head -n 1)
-    
+
     # Preserve only the filename component of the URL
     latest_v4_release_file=\${latest_v4_release_url##*/}
 
@@ -719,35 +607,9 @@ def cleanupAzureResources(){
     }
 }
 
-def release(Map args = [:]){
-  def secret = args.secret
-  def withSuffix = args.get('withSuffix', false)
-  dotnet(){
-    sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
-    def repo = getVaultSecret(secret: secret)
-    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
-      [var: 'REPO_API_KEY', password: repo.data.apiKey],
-      [var: 'REPO_API_URL', password: repo.data.url],
-      ]]) {
-      withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
-        sh(label: 'Deploy', script: '.ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}')
-      }
-    }
-  }
-}
-
 def reportTests() {
   dir("${BASE_DIR}"){
     archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/Sequence_*.xml,target/**/testhost*.dmp')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
-}
-
-def notifyStatus(def args = [:]) {
-  releaseNotification(slackChannel: "${env.SLACK_CHANNEL}",
-                      slackColor: args.slackStatus,
-                      slackCredentialsId: 'jenkins-slack-integration-token',
-                      to: "${env.NOTIFY_TO}",
-                      subject: args.subject,
-                      body: args.body)
 }
