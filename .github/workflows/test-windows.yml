@@ -32,10 +32,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Add cargo make to the PATH
-      run: Add-Content $env:GITHUB_PATH "C:\tools\cargo"
-      shell: pwsh
-
     - name: Tools
       run: .ci\\windows\\tools.ps1
       shell: pwsh
