@@ -163,6 +163,60 @@ pipeline {
                 }
               }
             }
+            // Enable this stage to support Snapshoty for the time being.
+            stage('Windows .NET Core'){
+              agent { label 'windows-2019 && immutable' }
+              options { skipDefaultCheckout() }
+              environment {
+                HOME = "${env.WORKSPACE}"
+                DOTNET_ROOT = "C:\\Program Files\\dotnet"
+                CARGO_MAKE_HOME = "C:\\tools\\cargo"
+                PATH = "${PATH};${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;${env.CARGO_MAKE_HOME};${env.USERPROFILE}\\.cargo\\bin"
+                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+              }
+              stages{
+                /**
+                Install the required tools
+                */
+                stage('Install tools') {
+                  steps {
+                    cleanDir("${WORKSPACE}/*")
+                    unstash 'source'
+                    dir("${HOME}"){
+                      powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                    }
+                  }
+                }
+                /**
+                Build the project from code..
+                */
+                stage('Build - dotnet') {
+                  steps {
+                    withGithubNotify(context: 'Build dotnet - Windows') {
+                      retry(3) {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          bat(label: 'Build agent', script: './build.bat agent-zip')
+                          bat(label: 'Build profiler', script: './build.bat profiler-zip')
+                        }
+                      }
+                    }
+                  }
+                  post {
+                    success {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
+                      stash(allowEmpty: true, name: 'snapshoty-windows', includes: "${BASE_DIR}/.ci/snapshoty.yml,${BASE_DIR}/build/output/**", useDefaultExcludes: false)
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+              }
+            }
             stage('Benchmarks') {
               agent { label 'microbenchmarks-pool' }
               environment {
