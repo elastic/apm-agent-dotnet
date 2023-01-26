@@ -90,6 +90,15 @@ jobs:
     - name: Cargo make
       run: cargo install --force cargo-make
 
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: |
+          3.1.100
+          5.0.100
+          6.0.100
+          7.0.100
+
     - name: Build profiler
       run: ./build.sh profiler-zip
 
