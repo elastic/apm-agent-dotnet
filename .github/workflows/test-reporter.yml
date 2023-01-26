@@ -6,6 +6,7 @@ on:
     workflows:
       - test-linux
       - test-windows
+      - test-windows-net
     types:
       - completed
 

@@ -1,0 +1,94 @@
+name: test-windows-net
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+defaults:
+  run:
+    shell: cmd
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install tools
+      run: .ci\\windows\\tools.ps1
+      shell: pwsh
+
+    - name: Install msbuild tools
+      run: .ci\\windows\\msbuild-tools.ps1
+      shell: pwsh
+
+    - name: Build
+      run:  .ci\\windows\\msbuild.bat
+
+  test:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install test tools
+      run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
+
+    - name: Test & coverage
+      run: .ci\\windows\\testnet461.bat
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
+
+  iis-test:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install test tools
+      run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
+
+    - name: Build
+      run: .ci\\windows\\msbuild.bat
+
+    - name: Test IIS
+      run: .ci\\windows\\test-iis.bat
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
