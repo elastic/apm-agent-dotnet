@@ -56,182 +56,47 @@ pipeline {
             }
           }
         }
-        stage('Parallel'){
+        stage('Benchmarks') {
+          agent { label 'microbenchmarks-pool' }
+          environment {
+            REPORT_FILE = 'apm-agent-benchmark-results.json'
+            HOME = "${env.WORKSPACE}"
+          }
           when {
             beforeAgent true
             allOf {
-              expression { return env.ONLY_DOCS == "false" }
               anyOf {
-                changeRequest()
-                branch '**/*'
+                branch 'main'
+                tag pattern: 'v\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
+                expression { return params.Run_As_Main_Branch }
+                expression { return env.BENCHMARK_UPDATED != "false" }
+                expression { return env.GITHUB_COMMENT?.contains('benchmark tests') }
               }
+              expression { return env.ONLY_DOCS == "false" }
             }
           }
-          parallel{
-            stage('Windows .NET Framework'){
-              agent { label 'windows-2019 && immutable' }
-              options { skipDefaultCheckout() }
-              environment {
-                HOME = "${env.WORKSPACE}"
-                DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
-                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
-              }
-              stages{
-                /**
-                Install the required tools
-                */
-                stage('Install tools') {
-                  steps {
-                    cleanDir("${WORKSPACE}/*")
-                    unstash 'source'
-                    dir("${HOME}"){
-                      powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                      powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools.ps1"
-                    }
-                  }
-                }
-                /**
-                Build the project from code..
-                */
-                stage('Build - MSBuild') {
-                  steps {
-                    withGithubNotify(context: 'Build MSBuild - Windows') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        bat '.ci/windows/msbuild.bat'
-                      }
-                    }
-                  }
-                  post {
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                /**
-                Execute unit tests.
-                */
-                stage('Test') {
-                  steps {
-                    withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                /**
-                Execute IIS tests.
-                */
-                stage('IIS Tests') {
-                  steps {
-                    withGithubNotify(context: 'IIS Tests', tab: 'tests') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                        bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                  }
-                }
-              }
-              post {
-                always {
-                  cleanWs(disableDeferredWipeout: true, notFailBuild: true)
-                }
-              }
-            }
-            stage('Benchmarks') {
-              agent { label 'microbenchmarks-pool' }
-              environment {
-                REPORT_FILE = 'apm-agent-benchmark-results.json'
-                HOME = "${env.WORKSPACE}"
-              }
-              when {
-                beforeAgent true
-                allOf {
-                  anyOf {
-                    branch 'main'
-                    tag pattern: 'v\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
-                    expression { return params.Run_As_Main_Branch }
-                    expression { return env.BENCHMARK_UPDATED != "false" }
-                    expression { return env.GITHUB_COMMENT?.contains('benchmark tests') }
-                  }
-                  expression { return env.ONLY_DOCS == "false" }
-                }
-              }
-              options {
-                warnError('Benchmark failed')
-                timeout(time: 1, unit: 'HOURS')
-              }
-              steps {
-                withGithubNotify(context: 'Benchmarks') {
-                  deleteDir()
-                  unstash 'source'
-                  dir("${BASE_DIR}") {
-                    script {
-                      sendBenchmarks.prepareAndRun(secret: env.BENCHMARK_SECRET, url_var: 'ES_URL',
-                                                   user_var: 'ES_USER', pass_var: 'ES_PASS') {
-                        sh '.ci/linux/benchmark.sh'
-                      }
-                    }
-                  }
-                }
-              }
-              post {
-                always {
-                  catchError(message: 'deleteDir failed', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    deleteDir()
-                  }
-                }
-              }
-            }
+          options {
+            warnError('Benchmark failed')
+            timeout(time: 1, unit: 'HOURS')
           }
-        }
-        stage('Publish snapshots') {
-          agent { label 'linux && immutable' }
-          options { skipDefaultCheckout() }
-          environment {
-            BUCKET_NAME = 'oblt-artifacts'
-            DOCKER_REGISTRY = 'docker.elastic.co'
-            DOCKER_REGISTRY_SECRET = 'secret/observability-team/ci/docker-registry/prod'
-            GCS_ACCOUNT_SECRET = 'secret/observability-team/ci/snapshoty'
-          }
-          when { branch 'main' }
           steps {
-            withGithubNotify(context: 'Publish snapshot packages') {
+            withGithubNotify(context: 'Benchmarks') {
               deleteDir()
-              unstash(name: 'snapshoty-linux')
-              unstash(name: 'snapshoty-windows')
-              dir(env.BASE_DIR) {
-                snapshoty(
-                  bucket: env.BUCKET_NAME,
-                  gcsAccountSecret: env.GCS_ACCOUNT_SECRET,
-                  dockerRegistry: env.DOCKER_REGISTRY,
-                  dockerSecret: env.DOCKER_REGISTRY_SECRET
-                )
+              unstash 'source'
+              dir("${BASE_DIR}") {
+                script {
+                  sendBenchmarks.prepareAndRun(secret: env.BENCHMARK_SECRET, url_var: 'ES_URL',
+                                               user_var: 'ES_USER', pass_var: 'ES_PASS') {
+                    sh '.ci/linux/benchmark.sh'
+                  }
+                }
+              }
+            }
+          }
+          post {
+            always {
+              catchError(message: 'deleteDir failed', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                deleteDir()
               }
             }
           }
