@@ -118,7 +118,6 @@ pipeline {
                     }
                     success {
                       archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
-                      stash(allowEmpty: true, name: 'snapshoty-linux', includes: "${BASE_DIR}/.ci/snapshoty.yml,${BASE_DIR}/build/output/**", useDefaultExcludes: false)
                     }
                   }
                 }
@@ -349,7 +348,6 @@ pipeline {
                   post {
                     success {
                       archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
-                      stash(allowEmpty: true, name: 'snapshoty-windows', includes: "${BASE_DIR}/.ci/snapshoty.yml,${BASE_DIR}/build/output/**", useDefaultExcludes: false)
                     }
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
@@ -480,32 +478,6 @@ pipeline {
                     deleteDir()
                   }
                 }
-              }
-            }
-          }
-        }
-        stage('Publish snapshots') {
-          agent { label 'linux && immutable' }
-          options { skipDefaultCheckout() }
-          environment {
-            BUCKET_NAME = 'oblt-artifacts'
-            DOCKER_REGISTRY = 'docker.elastic.co'
-            DOCKER_REGISTRY_SECRET = 'secret/observability-team/ci/docker-registry/prod'
-            GCS_ACCOUNT_SECRET = 'secret/observability-team/ci/snapshoty'
-          }
-          when { branch 'main' }
-          steps {
-            withGithubNotify(context: 'Publish snapshot packages') {
-              deleteDir()
-              unstash(name: 'snapshoty-linux')
-              unstash(name: 'snapshoty-windows')
-              dir(env.BASE_DIR) {
-                snapshoty(
-                  bucket: env.BUCKET_NAME,
-                  gcsAccountSecret: env.GCS_ACCOUNT_SECRET,
-                  dockerRegistry: env.DOCKER_REGISTRY,
-                  dockerSecret: env.DOCKER_REGISTRY_SECRET
-                )
               }
             }
           }
@@ -678,7 +650,7 @@ def testTools(Closure body){
       | jq -r '.[].assets[].browser_download_url' \
       | grep 'Azure.Functions.Cli.linux-x64.4.*zip\$' \
       | head -n 1)
-    
+
     # Preserve only the filename component of the URL
     latest_v4_release_file=\${latest_v4_release_url##*/}
 

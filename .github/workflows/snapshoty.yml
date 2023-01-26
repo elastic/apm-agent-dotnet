@@ -1,0 +1,106 @@
+---
+# Publish a snapshot. A "snapshot" is a packaging of the latest *unreleased* APM agent,
+# published to a known GCS bucket for use in edge demo/test environments.
+name: Snapshoty
+
+on:
+  push:
+    branches:
+    - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  ## NOTE: for testing purposes
+  pull_request:
+
+jobs:
+  linux-package:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: .ci/linux/build.sh
+
+    - name: Package
+      run: .ci/linux/release.sh true
+
+    - name: Rustup
+      run: rustup default 1.59.0
+
+    - name: Cargo make
+      run: cargo install --force cargo-make
+
+    - name: Build profiler
+      run: ./build.sh profiler-zip
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: snapshoty-linux
+        path: |
+          build/output/
+          .ci/snapshoty.yml
+
+  windows-package:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Tools
+      run: .ci\\windows\\tools.ps1
+
+    - name: Build
+      run: .ci\\windows\\dotnet.bat
+      shell: cmd
+
+    - name: Build agent
+      run: .\\build.bat agent-zip
+      shell: cmd
+
+    - name: Build profiler
+      run: .\\build.bat profiler-zip
+      shell: cmd
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: snapshoty-windows
+        path: build/output/
+  
+  upload:
+    runs-on: ubuntu-latest
+    needs: [linux-package, windows-package]
+    steps:
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: snapshoty-linux
+
+    - name: Display structure of downloaded files
+      run: ls -R
+      working-directory: build/output/
+
+    - name: Display structure of downloaded files
+      run: ls -R
+      working-directory: .ci
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: snapshoty-windows
+        
+    - name: Display structure of downloaded files
+      run: ls -R
+      working-directory: build/output/
+
+    - name: Display structure of downloaded files
+      run: ls -R
+      working-directory: .ci
+
+    - name: Publish snaphosts
+      uses: elastic/apm-pipeline-library/.github/actions/snapshoty-simple@current
+      with:
+        config: '.ci/snapshoty.yml'
+        vaultUrl: ${{ secrets.VAULT_ADDR }}
+        vaultRoleId: ${{ secrets.VAULT_ROLE_ID }}
+        vaultSecretId: ${{ secrets.VAULT_SECRET_ID }}
