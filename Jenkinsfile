@@ -11,7 +11,6 @@ pipeline {
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
-    OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
     AZURE_RESOURCE_GROUP_PREFIX = "ci-dotnet-${env.BUILD_ID}"
