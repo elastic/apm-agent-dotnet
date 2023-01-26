@@ -87,12 +87,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Tools
-      run: .ci\\windows\\test-tools.ps1
+    - name: Install tools
+      run: .ci\\windows\\tools.ps1
       shell: pwsh
 
     - name: Build
       run: .\\build.bat profiler-zip
+
+    - name: Install test tools
+      run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
 
     - name: Test & coverage
       run: .ci\\windows\\test-profiler.bat
