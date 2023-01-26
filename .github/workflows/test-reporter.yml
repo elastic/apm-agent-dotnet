@@ -4,7 +4,8 @@ name: test-reporter
 on:
   workflow_run:
     workflows:
-      - test
+      - test-linux
+      - test-windows
     types:
       - completed
 

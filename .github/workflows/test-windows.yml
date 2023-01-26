@@ -1,0 +1,29 @@
+name: test-windows
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
