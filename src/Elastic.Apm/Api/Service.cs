@@ -8,6 +8,7 @@ using System.Reflection;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Api
@@ -64,7 +65,7 @@ namespace Elastic.Apm.Api
 				Node = new Node { ConfiguredName = configurationReader.ServiceNodeName }
 			};
 
-			CheckIfProfiler(service);
+			SetAgentActivationMethod(logger, service);
 
 			//see https://github.com/elastic/apm-agent-dotnet/issues/859
 			try
@@ -79,15 +80,31 @@ namespace Elastic.Apm.Api
 			return service;
 		}
 
-		/// <summary>
-		/// Checks if the profiler is loaded and if so, it adds a `p` suffix to Agent.Version
-		/// </summary>
-		/// <param name="service"></param>
-		private static void CheckIfProfiler(Service service)
+		private static void SetAgentActivationMethod(IApmLogger logger, Service service)
 		{
-			if (AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name
-			.Equals("Elastic.Apm.Profiler.Managed", StringComparison.OrdinalIgnoreCase)).Any())
+			static bool CheckForLoadedAssembly(string name)
+			{
+				return AppDomain.CurrentDomain.GetAssemblies().Any(n =>
+					n.GetName().Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+			}
+
+			// Assume NuGet as the default.
+			var activationMethod = Consts.ActivationMethodNuGet;
+			if (CheckForLoadedAssembly("Elastic.Apm.Profiler.Managed"))
+			{
+				// Legacy mechanism: if the profiler is loaded add a `p` suffix to Agent.Version
 				service.Agent.Version += "-p";
+				// Check if profiler was injected via K8S hook.
+				if (new EnvironmentVariables(logger).SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S"))
+					activationMethod = Consts.ActivationK8SAttach;
+				else
+					activationMethod = Consts.ActivationMethodProfiler;
+			}
+			else if (CheckForLoadedAssembly("Elastic.Apm.StartupHook.Loader"))
+				activationMethod = Consts.ActivationMethodStartupHook;
+
+			logger.Info()?.Log($"Detected agent activation method: {activationMethod}");
+			service.Agent.ActivationMethod = activationMethod;
 		}
 
 		public class AgentC
@@ -97,6 +114,10 @@ namespace Elastic.Apm.Api
 
 			[MaxLength]
 			public string Version { get; set; }
+
+			[MaxLength]
+			[JsonProperty("activation_method")]
+			public string ActivationMethod { get; set; }
 
 			public override string ToString() =>
 				new ToStringBuilder(nameof(AgentC)) { { nameof(Name), Name }, { nameof(Version), Version } }.ToString();
