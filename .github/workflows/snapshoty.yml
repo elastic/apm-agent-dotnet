@@ -11,8 +11,6 @@ on:
     - '*.md'
     - '*.asciidoc'
     - 'docs/**'
-  ## NOTE: for testing purposes
-  pull_request:
 
 jobs:
   linux-package:
