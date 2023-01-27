@@ -1,0 +1,123 @@
+name: test-linux
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: .ci/linux/build.sh
+
+    - name: Package
+      run: .ci/linux/release.sh true
+
+    - name: Rustup
+      run: rustup default 1.59.0
+
+    - name: Cargo make
+      run: cargo install --force cargo-make
+
+    - name: Build profiler
+      run: ./build.sh profiler-zip
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Test & coverage
+      run: .ci/linux/test.sh
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
+
+  startup-hook-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build agent-zip
+      run: ./build.sh agent-zip
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: |
+          3.1.100
+          5.0.100
+          6.0.100
+          7.0.100
+    - name: Startup Hook Tests
+      run: .ci/linux/test-startuphooks.sh
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
+
+  profiler-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Rustup
+      run: rustup default 1.59.0
+
+    - name: Cargo make
+      run: cargo install --force cargo-make
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: |
+          3.1.100
+          5.0.100
+          6.0.100
+          7.0.100
+    - name: Build profiler
+      run: ./build.sh profiler-zip
+
+    - name: Profiler Tests
+      run: .ci/linux/test-profiler.sh
+
+    - name: Create Docker Image
+      run: .ci/linux/build_docker.sh
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
