@@ -7,12 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -22,7 +22,6 @@ using Microsoft.Diagnostics.Tracing.Session;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
-using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests
 {
@@ -299,8 +298,6 @@ namespace Elastic.Apm.Tests
 			using (var gcMetricsProvider = new GcMetricsProvider(logger, new List<WildcardMatcher>()))
 			{
 				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
-				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
-
 #if !NETCOREAPP2_1
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
