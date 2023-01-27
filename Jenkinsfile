@@ -211,44 +211,6 @@ pipeline {
                 }
               }
             }
-            stage('Windows .NET Framework'){
-              agent { label 'windows-2019 && immutable' }
-              options { skipDefaultCheckout() }
-              environment {
-                HOME = "${env.WORKSPACE}"
-                DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
-                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
-              }
-              stages{
-                /**
-                Execute IIS tests.
-                */
-                stage('IIS Tests') {
-                  steps {
-                    withGithubNotify(context: 'IIS Tests', tab: 'tests') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                        bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                  }
-                }
-              }
-              post {
-                always {
-                  cleanWs(disableDeferredWipeout: true, notFailBuild: true)
-                }
-              }
-            }
             stage('Windows .NET Core'){
               agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }

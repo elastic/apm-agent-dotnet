@@ -56,3 +56,34 @@ jobs:
       with:
         name: test-results
         path: test/**/junit-*.xml
+
+  iis-test:
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install tools
+      run: .ci\\windows\\tools.ps1
+      shell: pwsh
+
+    - name: Install msbuild tools
+      run: .ci\\windows\\msbuild-tools.ps1
+      shell: pwsh
+
+    - name: Build msbuild
+      run: .ci\\windows\\msbuild.bat
+
+    - name: Install test tools
+      run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
+
+    - name: Test & coverage
+      run: .ci\\windows\\test-iis.bat
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
