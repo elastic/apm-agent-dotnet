@@ -222,63 +222,6 @@ pipeline {
               }
               stages{
                 /**
-                Install the required tools
-                */
-                stage('Install tools') {
-                  steps {
-                    cleanDir("${WORKSPACE}/*")
-                    unstash 'source'
-                    dir("${HOME}"){
-                      powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                      powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools.ps1"
-                    }
-                  }
-                }
-                /**
-                Build the project from code..
-                */
-                stage('Build - MSBuild') {
-                  steps {
-                    withGithubNotify(context: 'Build MSBuild - Windows') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        bat '.ci/windows/msbuild.bat'
-                      }
-                    }
-                  }
-                  post {
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                /**
-                Execute unit tests.
-                */
-                stage('Test') {
-                  steps {
-                    withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                /**
                 Execute IIS tests.
                 */
                 stage('IIS Tests') {
@@ -678,7 +621,7 @@ def testTools(Closure body){
       | jq -r '.[].assets[].browser_download_url' \
       | grep 'Azure.Functions.Cli.linux-x64.4.*zip\$' \
       | head -n 1)
-    
+
     # Preserve only the filename component of the URL
     latest_v4_release_file=\${latest_v4_release_url##*/}
 
