@@ -26,7 +26,7 @@ defaults:
     shell: cmd
 
 jobs:
-  build:
+  build-and-profiler:
     runs-on: windows-2022
 
     steps:
@@ -44,6 +44,22 @@ jobs:
 
     - name: Build profiler
       run: .\\build.bat profiler-zip
+
+    # Run test profiler in this job so
+    # there is no need to build profiler again in a different job
+    - name: Install test tools
+      run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
+
+    - name: Test profiler
+      run: .ci\\windows\\test-profiler.bat
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml
 
   startup-hook-test:
     runs-on: windows-2022

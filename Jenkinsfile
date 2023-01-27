@@ -356,29 +356,6 @@ pipeline {
                     }
                   }
                 }
-                stage('Profiler Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test profiler - Windows', tab: 'tests') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        retry(3) {
-                          bat label: 'Build', script: './build.bat profiler-zip'
-                        }
-                        bat label: 'Test & coverage', script: '.ci/windows/test-profiler.bat'
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
               }
               post {
                 always {

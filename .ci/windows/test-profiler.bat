@@ -1,3 +1,5 @@
+REM Use the installed cargo that happened when runnin .ci/windows/tools.ps1
+SET PATH=%PATH%;C:\tools\cargo
 cargo make test
 
 dotnet test -c Release test\Elastic.Apm.Profiler.Managed.Tests\Elastic.Apm.Profiler.Managed.Tests.csproj ^
