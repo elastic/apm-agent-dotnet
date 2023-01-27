@@ -1,0 +1,69 @@
+name: test-windows-core
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+defaults:
+  run:
+    shell: cmd
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install tools
+      run: .ci\\windows\\tools.ps1
+      shell: pwsh
+
+    - name: Build dotnet
+      run: .ci\\windows\\dotnet.bat
+
+    - name: Build agent
+      run: .\\build.bat agent-zip
+
+    - name: Build profiler
+      run: .\\build.bat profiler-zip
+
+  startup-hook-test:
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install test tools
+      run: .ci\\windows\\test-tools.ps1
+      shell: pwsh
+
+    - name: Build agent
+      run: .\\build.bat agent-zip
+
+    - name: Test & coverage
+      run: .ci\\windows\\test-startuphooks.bat
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test/**/junit-*.xml

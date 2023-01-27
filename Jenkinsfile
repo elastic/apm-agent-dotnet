@@ -330,34 +330,6 @@ pipeline {
                   }
                 }
                 /**
-                Build the project from code..
-                */
-                stage('Build - dotnet') {
-                  steps {
-                    withGithubNotify(context: 'Build dotnet - Windows') {
-                      retry(3) {
-                        cleanDir("${WORKSPACE}/${BASE_DIR}")
-                        unstash 'source'
-                        dir("${BASE_DIR}"){
-                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                          bat(label: 'Build agent', script: './build.bat agent-zip')
-                          bat(label: 'Build profiler', script: './build.bat profiler-zip')
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    success {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/*.zip")
-                      stash(allowEmpty: true, name: 'snapshoty-windows', includes: "${BASE_DIR}/.ci/snapshoty.yml,${BASE_DIR}/build/output/**", useDefaultExcludes: false)
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                /**
                 Execute unit tests.
                 */
                 stage('Test') {
@@ -372,29 +344,6 @@ pipeline {
                             bat(label: 'Test & coverage', script: '.ci/windows/test.bat')
                           }
                         }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Startup Hook Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test startup hooks - Windows', tab: 'tests') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        retry(3) {
-                          bat label: 'Build', script: './build.bat agent-zip'
-                        }
-                        bat label: 'Test & coverage', script: '.ci/windows/test-startuphooks.bat'
                       }
                     }
                   }
@@ -678,7 +627,7 @@ def testTools(Closure body){
       | jq -r '.[].assets[].browser_download_url' \
       | grep 'Azure.Functions.Cli.linux-x64.4.*zip\$' \
       | head -n 1)
-    
+
     # Preserve only the filename component of the URL
     latest_v4_release_file=\${latest_v4_release_url##*/}
 
