@@ -52,7 +52,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			Assembly = "Oracle.ManagedDataAccess";
 			Type = "Oracle.ManagedDataAccess.Client.OracleCommand";
 			MinimumVersion = "2.0.0";
-			MaximumVersion = "2.*.*";
+			MaximumVersion = "3.*.*";
 			Group = "OracleCommand";
 		}
 	}
