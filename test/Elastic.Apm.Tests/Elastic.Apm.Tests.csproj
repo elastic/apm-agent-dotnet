@@ -7,6 +7,10 @@
   <PropertyGroup>
     <RootNamespace>Elastic.Apm.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">
+    <!-- Make sure InvariantGlobalization scenario is tested for frameworks that support it -->
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 

@@ -27,4 +27,5 @@ widestring = "0.4.2"
 [lib]
 crate-type = ["cdylib"]
 
-
+[build-dependencies]
+static_vcruntime = "2.0"
