@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -27,9 +27,9 @@ namespace Elastic.Apm.Logging
 
 		public LogLevelSwitch LogLevelSwitch { get; }
 
-		private LogLevel Level => LogLevelSwitch.Level;
+		internal LogLevel Level => LogLevelSwitch.Level;
 
-		public static ConsoleLogger LoggerOrDefault(LogLevel? level)
+		internal static ConsoleLogger LoggerOrDefault(LogLevel? level)
 		{
 			if (level.HasValue && level.Value != DefaultValues.LogLevel)
 				return new ConsoleLogger(level.Value);
@@ -65,6 +65,19 @@ namespace Elastic.Apm.Logging
 			var dateTime = DateTime.Now;
 			var message = formatter(state, e);
 
+			static void PrintException(TextWriter writer, Exception exception, string caption)
+			{
+				if (exception == null)
+					return;
+
+				writer.Write($"+-> {caption}: ");
+				writer.Write(exception.GetType().FullName);
+				writer.Write(": ");
+				writer.WriteLine(exception.Message);
+				writer.WriteLine(exception.StackTrace);
+				PrintException(writer, exception.InnerException, "Inner Exception");
+			}
+
 			lock (SyncRoot)
 			{
 				writer.Write('[');
@@ -75,14 +88,8 @@ namespace Elastic.Apm.Logging
 				writer.Write(LevelToString(level));
 				writer.Write("] - ");
 				writer.WriteLine(message);
-				if (e != null)
-				{
-					writer.Write("+-> Exception: ");
-					writer.Write(e.GetType().FullName);
-					writer.Write(": ");
-					writer.WriteLine(e.Message);
-					writer.WriteLine(e.StackTrace);
-				}
+
+				PrintException(writer, e, "Exception");
 
 				writer.Flush();
 			}

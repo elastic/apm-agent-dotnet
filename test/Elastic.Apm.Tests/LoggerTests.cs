@@ -1,14 +1,16 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Utilities;
@@ -19,6 +21,43 @@ namespace Elastic.Apm.Tests
 {
 	public class LoggerTests
 	{
+		[Fact]
+		public void CheckForProfilerLogger_ReturnsExpectedLoggers()
+		{
+			var fallbackLogger = new NoopLogger();
+
+			var logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Trace, new Hashtable());
+			logger.Should().NotBeNull();
+			logger.Should().Be(fallbackLogger);
+			logger.IsEnabled(LogLevel.Trace).Should().BeFalse();
+
+			logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Trace, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "trace" } });
+			logger.Should().NotBeNull();
+			logger.Should().NotBe(fallbackLogger);
+			logger.IsEnabled(LogLevel.Trace).Should().BeTrue();
+
+			logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Error, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "trace" } });
+			logger.Should().NotBeNull();
+			logger.Should().NotBe(fallbackLogger);
+			logger.IsEnabled(LogLevel.Trace).Should().BeTrue();
+
+			logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Error, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "warn" } });
+			logger.Should().NotBeNull();
+			logger.Should().NotBe(fallbackLogger);
+			logger.IsEnabled(LogLevel.Trace).Should().BeFalse();
+		}
+
+		[Theory]
+		[InlineData(LogLevel.Trace, LogLevel.Trace, LogLevel.Trace)]
+		[InlineData(LogLevel.Warning, LogLevel.Warning, LogLevel.Warning)]
+		[InlineData(LogLevel.None, LogLevel.None, LogLevel.None)]
+		[InlineData(LogLevel.Trace, LogLevel.Warning, LogLevel.Trace)]
+		[InlineData(LogLevel.Warning, LogLevel.Trace, LogLevel.Trace)]
+		[InlineData(LogLevel.Warning, LogLevel.None, LogLevel.Warning)]
+		[InlineData(LogLevel.None, LogLevel.Warning, LogLevel.Warning)]
+		public void Test_LogLevelUtils_GetFinest(LogLevel level1, LogLevel level2, LogLevel effectiveLogLevel) =>
+			LogLevelUtils.GetFinest(level1, level2).Should().Be(effectiveLogLevel);
+
 		[Fact]
 		public void TestLogError()
 		{

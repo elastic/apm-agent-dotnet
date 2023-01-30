@@ -446,7 +446,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			if (!string.IsNullOrEmpty(logLevel))
 				Enum.TryParse(logLevel, true, out level);
 
-			return new TraceLogger(level);
+			return AgentComponents.CheckForProfilerLogger(new TraceLogger(level), level);
 		}
 
 		private static AgentComponents CreateAgentComponents(string dbgInstanceName)

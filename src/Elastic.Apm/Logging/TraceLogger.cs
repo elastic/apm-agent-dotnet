@@ -5,6 +5,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace Elastic.Apm.Logging
 	{
 		private const string SourceName = "Elastic.Apm";
 
-		private static readonly TraceSource TraceSource;
+		internal static readonly TraceSource TraceSource;
 
 		static TraceLogger() => TraceSource = new TraceSource(SourceName);
 
@@ -58,14 +59,21 @@ namespace Elastic.Apm.Logging
 				.Append("] - ")
 				.Append(message);
 
-			if (e != null)
+			static void PrintException(StringBuilder builder, Exception exception, string caption)
 			{
-				builder.Append("+-> Exception: ")
-					.Append(exceptionType)
+				if (exception == null)
+					return;
+
+				builder.Append($"+-> {caption}: ")
+					.Append(exception.GetType().FullName)
 					.Append(": ")
-					.AppendLine(e.Message)
-					.AppendLine(e.StackTrace);
+					.AppendLine(exception.Message)
+					.AppendLine(exception.StackTrace);
+
+				PrintException(builder, exception.InnerException, "Inner Exception");
 			}
+
+			PrintException(builder, e, "Exception");
 
 			var logMessage = builder.ToString();
 			for (var i = 0; i < TraceSource.Listeners.Count; i++)
