@@ -186,8 +186,10 @@ namespace Elastic.Apm.BackendComm
 			};
 #if NETFRAMEWORK
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {ServicePointManager.SecurityProtocol}");
 #else
 			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
+			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {httpClientHandler.SslProtocols}");
 #endif
 			return httpClientHandler;
 		}
