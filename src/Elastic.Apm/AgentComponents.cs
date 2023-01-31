@@ -1,11 +1,13 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
@@ -49,7 +51,7 @@ namespace Elastic.Apm
 			{
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
-				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
+				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
 				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
@@ -67,7 +69,7 @@ namespace Elastic.Apm
 
 #if NET5_0_OR_GREATER
 				ElasticActivityListener activityListener = null;
-				if (ConfigurationReader.EnableOpenTelemetryBridge)
+				if (ConfigurationReader.OpenTelemetryBridgeEnabled)
 				{
 					activityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 
@@ -116,7 +118,7 @@ namespace Elastic.Apm
 					breakdownMetricsProvider);
 
 #if NET5_0_OR_GREATER
-				if (ConfigurationReader.EnableOpenTelemetryBridge)
+				if (ConfigurationReader.OpenTelemetryBridgeEnabled)
 				{
 					// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version
 					if (ApmServerInfo.Version == null || ApmServerInfo?.Version == new ElasticVersion(0, 0, 0, null))
@@ -175,6 +177,41 @@ namespace Elastic.Apm
 			{
 				Logger.Error()?.LogException(e, "Failed initializing agent.");
 			}
+		}
+
+		//
+		// This is the hooking point that checks for the existence of profiler-related
+		// logging settings.
+		// If no agent logging is configured but we detect profiler logging settings, those
+		// will be honoured.
+		// The finer-grained log-level (agent vs profiler) will be used.
+		// This has the benefit that users will also get agent logs in addition to profiler-only
+		// logs.
+		//
+		internal static IApmLogger CheckForProfilerLogger(IApmLogger fallbackLogger, LogLevel agentLogLevel, IDictionary environmentVariables = null)
+		{
+			try
+			{
+				var profilerLogConfig = ProfilerLogConfig.Check(environmentVariables);
+				if (profilerLogConfig.IsActive)
+				{
+					var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, profilerLogConfig.LogLevel);
+
+					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.File) == ProfilerLogTarget.File)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(profilerLogConfig.LogFilePath));
+					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.StdOut) == ProfilerLogTarget.StdOut)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
+
+					var logger = new TraceLogger(effectiveLogLevel);
+					logger.Info()?.Log($"{nameof(ProfilerLogConfig)} - {profilerLogConfig}");
+					return logger;
+				}
+			}
+			catch (Exception e)
+			{
+				fallbackLogger.Warning()?.LogException(e, "Error in CheckForProfilerLogger");
+			}
+			return fallbackLogger;
 		}
 
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
