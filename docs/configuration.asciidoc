@@ -562,7 +562,7 @@ This reduces the collection, processing, and storage overhead, and removes clutt
 [options="header"]
 |============
 | Default | Type
-| `5ms`   | TimeDuration
+| `0ms`   | TimeDuration
 |============
 
 
