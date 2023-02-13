@@ -1296,7 +1296,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-application-namespaces,`ApplicationNamespaces`>> | No | Stacktrace
 | <<config-capture-body,`CaptureBody`>> | Yes | HTTP, Performance
 | <<config-capture-body-content-types,`CaptureBodyContentTypes`>> | Yes | HTTP, Performance
-| <<config-capture-headers,`CaptureHeaders`>> | No | HTTP, Performance
+| <<config-capture-headers,`CaptureHeaders`>> | Yes | HTTP, Performance
 | <<config-central-config,`CentralConfig`>> | No | Core
 | <<config-cloud-provider,`CloudProvider`>> | No | Reporter
 | <<config-disable-metrics,`DisableMetrics`>> | No | Reporter
