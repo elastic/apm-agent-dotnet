@@ -57,9 +57,8 @@ public abstract class AzureFunctionsTestFixtureBase : IDisposable
 		};
 		_funcProcess.StartInfo.RedirectStandardOutput = true;
 		_funcProcess.StartInfo.RedirectStandardError = true;
-		_funcProcess.ErrorDataReceived += (_, args) => LogLines.Add("[func] [ERROR] " + args.Data);
-
-		_funcProcess.OutputDataReceived += (_, args) =>
+		_funcProcess.ErrorDataReceived += (sender, args) => LogLines.Add("[func] [ERROR] " + args.Data);
+		_funcProcess.OutputDataReceived += (sender, args) =>
 		{
 			if (args.Data != null)
 			{
