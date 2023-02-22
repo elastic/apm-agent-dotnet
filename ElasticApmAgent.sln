@@ -1,6 +1,7 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30309.148
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
 	ProjectSection(SolutionItems) = preProject
@@ -135,61 +136,63 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.MongoDb", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.MongoDb.Tests", "test\Elastic.Apm.MongoDb.Tests\Elastic.Apm.MongoDb.Tests.csproj", "{FB07C133-C353-4061-A308-B9A6EF48AB7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus", "src\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj", "{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.ServiceBus", "src\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj", "{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus.Tests", "test\Elastic.Apm.Azure.ServiceBus.Tests\Elastic.Apm.Azure.ServiceBus.Tests.csproj", "{D9CC53B2-5F6B-434B-8689-2350F3A9FB2D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.ServiceBus.Tests", "test\Elastic.Apm.Azure.ServiceBus.Tests\Elastic.Apm.Azure.ServiceBus.Tests.csproj", "{D9CC53B2-5F6B-434B-8689-2350F3A9FB2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus.Sample", "sample\Elastic.Apm.Azure.ServiceBus.Sample\Elastic.Apm.Azure.ServiceBus.Sample.csproj", "{27563B4E-ECB1-4F1B-B9F1-22C2C165B270}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.ServiceBus.Sample", "sample\Elastic.Apm.Azure.ServiceBus.Sample\Elastic.Apm.Azure.ServiceBus.Sample.csproj", "{27563B4E-ECB1-4F1B-B9F1-22C2C165B270}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage", "src\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj", "{E9C84C9D-7BEB-49E2-A955-04AD999C4266}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.Storage", "src\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj", "{E9C84C9D-7BEB-49E2-A955-04AD999C4266}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage.Tests", "test\Elastic.Apm.Azure.Storage.Tests\Elastic.Apm.Azure.Storage.Tests.csproj", "{37BD6194-A47B-4D17-BB9A-642E8909DED9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.Storage.Tests", "test\Elastic.Apm.Azure.Storage.Tests\Elastic.Apm.Azure.Storage.Tests.csproj", "{37BD6194-A47B-4D17-BB9A-642E8909DED9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.CosmosDb", "src\Elastic.Apm.Azure.CosmosDb\Elastic.Apm.Azure.CosmosDb.csproj", "{FC0276AB-9063-4DB9-9078-DCEF1F1091A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.CosmosDb", "src\Elastic.Apm.Azure.CosmosDb\Elastic.Apm.Azure.CosmosDb.csproj", "{FC0276AB-9063-4DB9-9078-DCEF1F1091A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.CosmosDb.Tests", "test\Elastic.Apm.Azure.CosmosDb.Tests\Elastic.Apm.Azure.CosmosDb.Tests.csproj", "{0EEA16C4-C7DF-4D90-94C2-009417D765AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.CosmosDb.Tests", "test\Elastic.Apm.Azure.CosmosDb.Tests\Elastic.Apm.Azure.CosmosDb.Tests.csproj", "{0EEA16C4-C7DF-4D90-94C2-009417D765AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Managed", "src\Elastic.Apm.Profiler.Managed\Elastic.Apm.Profiler.Managed.csproj", "{A88A3877-05D6-45B2-94E4-5C583BD6EEDC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Profiler.Managed", "src\Elastic.Apm.Profiler.Managed\Elastic.Apm.Profiler.Managed.csproj", "{A88A3877-05D6-45B2-94E4-5C583BD6EEDC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Managed.Loader", "src\Elastic.Apm.Profiler.Managed.Loader\Elastic.Apm.Profiler.Managed.Loader.csproj", "{F1DD170E-2DD8-4CBD-A2BB-C19CF0033982}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Profiler.Managed.Loader", "src\Elastic.Apm.Profiler.Managed.Loader\Elastic.Apm.Profiler.Managed.Loader.csproj", "{F1DD170E-2DD8-4CBD-A2BB-C19CF0033982}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NpgsqlSample", "sample\NpgsqlSample\NpgsqlSample.csproj", "{BA2D3FCD-C25E-4E34-9A30-BE1FB16E1841}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NpgsqlSample", "sample\NpgsqlSample\NpgsqlSample.csproj", "{BA2D3FCD-C25E-4E34-9A30-BE1FB16E1841}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Managed.Tests", "test\Elastic.Apm.Profiler.Managed.Tests\Elastic.Apm.Profiler.Managed.Tests.csproj", "{4983083A-87AD-496E-B0BC-84C8097D0590}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Profiler.Managed.Tests", "test\Elastic.Apm.Profiler.Managed.Tests\Elastic.Apm.Profiler.Managed.Tests.csproj", "{4983083A-87AD-496E-B0BC-84C8097D0590}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AdoNet", "sample\Elastic.Apm.AdoNet\Elastic.Apm.AdoNet.csproj", "{14BEE605-6180-4B9E-87F5-A24BA79461B5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AdoNet", "sample\Elastic.Apm.AdoNet\Elastic.Apm.AdoNet.csproj", "{14BEE605-6180-4B9E-87F5-A24BA79461B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AdoNet.NetStandard", "sample\Elastic.Apm.AdoNet.NetStandard\Elastic.Apm.AdoNet.NetStandard.csproj", "{AAB983A1-6080-449D-95D8-7E7BA05DDFAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AdoNet.NetStandard", "sample\Elastic.Apm.AdoNet.NetStandard\Elastic.Apm.AdoNet.NetStandard.csproj", "{AAB983A1-6080-449D-95D8-7E7BA05DDFAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySqlDataSample", "sample\MySqlDataSample\MySqlDataSample.csproj", "{346D3A9A-1296-4915-BB6C-8533731D3B3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MySqlDataSample", "sample\MySqlDataSample\MySqlDataSample.csproj", "{346D3A9A-1296-4915-BB6C-8533731D3B3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqliteSample", "sample\SqliteSample\SqliteSample.csproj", "{F72182DC-A933-4C4B-8321-830D0DFB857C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqliteSample", "sample\SqliteSample\SqliteSample.csproj", "{F72182DC-A933-4C4B-8321-830D0DFB857C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OracleManagedDataAccessSample", "sample\OracleManagedDataAccessSample\OracleManagedDataAccessSample.csproj", "{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OracleManagedDataAccessSample", "sample\OracleManagedDataAccessSample\OracleManagedDataAccessSample.csproj", "{FFA9A7E4-954F-47A1-A9FD-0FE07EB846C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OracleManagedDataAccessCoreSample", "sample\OracleManagedDataAccessCoreSample\OracleManagedDataAccessCoreSample.csproj", "{8CF18906-150C-4AD9-B108-2A39B31105C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OracleManagedDataAccessCoreSample", "sample\OracleManagedDataAccessCoreSample\OracleManagedDataAccessCoreSample.csproj", "{8CF18906-150C-4AD9-B108-2A39B31105C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.IntegrationsGenerator", "src\Elastic.Apm.Profiler.IntegrationsGenerator\Elastic.Apm.Profiler.IntegrationsGenerator.csproj", "{B7B0104C-CADC-42E0-B08B-5187926BFF6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Profiler.IntegrationsGenerator", "src\Elastic.Apm.Profiler.IntegrationsGenerator\Elastic.Apm.Profiler.IntegrationsGenerator.csproj", "{B7B0104C-CADC-42E0-B08B-5187926BFF6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Managed.Core", "src\Elastic.Apm.Profiler.Managed.Core\Elastic.Apm.Profiler.Managed.Core.csproj", "{4E235C21-5637-4498-8335-134ACAA4884E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Profiler.Managed.Core", "src\Elastic.Apm.Profiler.Managed.Core\Elastic.Apm.Profiler.Managed.Core.csproj", "{4E235C21-5637-4498-8335-134ACAA4884E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlClientSample", "sample\SqlClientSample\SqlClientSample.csproj", "{456A8639-FE1B-426A-9C72-5252AB4D3AD5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlClientSample", "sample\SqlClientSample\SqlClientSample.csproj", "{456A8639-FE1B-426A-9C72-5252AB4D3AD5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaSample", "sample\KafkaSample\KafkaSample.csproj", "{2B23487A-B340-4F5C-A49B-9B829F437A5A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KafkaSample", "sample\KafkaSample\KafkaSample.csproj", "{2B23487A-B340-4F5C-A49B-9B829F437A5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqSample", "sample\RabbitMqSample\RabbitMqSample.csproj", "{1D6B0C67-42C8-4AB4-A795-B6FF8EF7196E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqSample", "sample\RabbitMqSample\RabbitMqSample.csproj", "{1D6B0C67-42C8-4AB4-A795-B6FF8EF7196E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTelemetrySample", "sample\OpenTelemetrySample\OpenTelemetrySample.csproj", "{3D31589A-CA44-4D6D-9944-26CE9640A283}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTelemetrySample", "sample\OpenTelemetrySample\OpenTelemetrySample.csproj", "{3D31589A-CA44-4D6D-9944-26CE9640A283}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SatelliteAssemblySample", "sample\SatelliteAssemblySample\SatelliteAssemblySample.csproj", "{2B62E740-A493-42D6-BE5E-709BD07F877E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SatelliteAssemblySample", "sample\SatelliteAssemblySample\SatelliteAssemblySample.csproj", "{2B62E740-A493-42D6-BE5E-709BD07F877E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Functions", "src\Elastic.Apm.Azure.Functions\Elastic.Apm.Azure.Functions.csproj", "{A124FE13-1C70-4D59-8577-9BD4204923CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.Functions", "src\Elastic.Apm.Azure.Functions\Elastic.Apm.Azure.Functions.csproj", "{A124FE13-1C70-4D59-8577-9BD4204923CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Functions.Tests", "test\Elastic.Apm.Azure.Functions.Tests\Elastic.Apm.Azure.Functions.Tests.csproj", "{8E3D94CD-3378-4431-8956-07644A64D4E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Azure.Functions.Tests", "test\Elastic.Apm.Azure.Functions.Tests\Elastic.Apm.Azure.Functions.Tests.csproj", "{8E3D94CD-3378-4431-8956-07644A64D4E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.AzureFunctionApp.Isolated", "sample\Elastic.AzureFunctionApp.Isolated\Elastic.AzureFunctionApp.Isolated.csproj", "{9879E646-63ED-474C-905B-1B469403F0A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.AzureFunctionApp.Isolated", "sample\Elastic.AzureFunctionApp.Isolated\Elastic.AzureFunctionApp.Isolated.csproj", "{9879E646-63ED-474C-905B-1B469403F0A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Clients.Elasticsearch.Tests", "test\Elastic.Clients.Elasticsearch.Tests\Elastic.Clients.Elasticsearch.Tests.csproj", "{E6217549-8C21-4E95-BDF2-E782922CD104}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Clients.Elasticsearch.Tests", "test\Elastic.Clients.Elasticsearch.Tests\Elastic.Clients.Elasticsearch.Tests.csproj", "{E6217549-8C21-4E95-BDF2-E782922CD104}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.AzureFunctionApp.InProcess", "sample\Elastic.AzureFunctionApp.InProcess\Elastic.AzureFunctionApp.InProcess.csproj", "{3E9CEA31-DB67-40E7-B524-F5EF1FF448F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "elastic_apm_profiler", "src\elastic_apm_profiler\elastic_apm_profiler.csproj", "{236B392A-53BE-46FD-9831-C66AE0A962F1}"
 EndProject
@@ -383,6 +386,14 @@ Global
 		{B235B13F-42AE-42DA-A3C8-20D047F38685}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B235B13F-42AE-42DA-A3C8-20D047F38685}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B235B13F-42AE-42DA-A3C8-20D047F38685}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -403,14 +414,6 @@ Global
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11C16D17-C0D0-48C3-B3A6-E9248C515976}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FB07C133-C353-4061-A308-B9A6EF48AB7E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FC0276AB-9063-4DB9-9078-DCEF1F1091A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FC0276AB-9063-4DB9-9078-DCEF1F1091A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC0276AB-9063-4DB9-9078-DCEF1F1091A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -503,8 +506,10 @@ Global
 		{E6217549-8C21-4E95-BDF2-E782922CD104}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6217549-8C21-4E95-BDF2-E782922CD104}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6217549-8C21-4E95-BDF2-E782922CD104}.Release|Any CPU.Build.0 = Release|Any CPU
-		{236B392A-53BE-46FD-9831-C66AE0A962F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{236B392A-53BE-46FD-9831-C66AE0A962F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E9CEA31-DB67-40E7-B524-F5EF1FF448F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E9CEA31-DB67-40E7-B524-F5EF1FF448F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E9CEA31-DB67-40E7-B524-F5EF1FF448F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E9CEA31-DB67-40E7-B524-F5EF1FF448F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -556,13 +561,13 @@ Global
 		{9AE4805D-2586-4FA5-A0D0-885264EBC565} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{B235B13F-42AE-42DA-A3C8-20D047F38685} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{11C16D17-C0D0-48C3-B3A6-E9248C515976} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{FB07C133-C353-4061-A308-B9A6EF48AB7E} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{1D43C8C5-4116-45C5-9F4B-56C1D926ED29} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{D9CC53B2-5F6B-434B-8689-2350F3A9FB2D} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{27563B4E-ECB1-4F1B-B9F1-22C2C165B270} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{E9C84C9D-7BEB-49E2-A955-04AD999C4266} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{11C16D17-C0D0-48C3-B3A6-E9248C515976} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
-		{FB07C133-C353-4061-A308-B9A6EF48AB7E} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{FC0276AB-9063-4DB9-9078-DCEF1F1091A9} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{0EEA16C4-C7DF-4D90-94C2-009417D765AC} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{A88A3877-05D6-45B2-94E4-5C583BD6EEDC} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
@@ -586,7 +591,7 @@ Global
 		{8E3D94CD-3378-4431-8956-07644A64D4E8} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{9879E646-63ED-474C-905B-1B469403F0A5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{E6217549-8C21-4E95-BDF2-E782922CD104} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{236B392A-53BE-46FD-9831-C66AE0A962F1} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{3E9CEA31-DB67-40E7-B524-F5EF1FF448F4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
