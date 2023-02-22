@@ -1348,7 +1348,7 @@
       - System.Threading.Tasks.Task`1<System.Int32>
       - System.Threading.CancellationToken
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
@@ -1373,7 +1373,7 @@
       signature_types:
       - System.Int32
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
@@ -1398,7 +1398,7 @@
       - System.Int32
       - System.Data.CommandBehavior
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
@@ -1424,7 +1424,7 @@
       - System.Threading.Tasks.Task`1<Microsoft.Data.Sqlite.SqliteDataReader>
       - System.Threading.CancellationToken
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
@@ -1449,7 +1449,7 @@
       signature_types:
       - Microsoft.Data.Sqlite.SqliteDataReader
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
@@ -1475,7 +1475,7 @@
       - System.Data.CommandBehavior
       - System.Threading.CancellationToken
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
@@ -1503,7 +1503,7 @@
       - System.Data.CommandBehavior
       - System.Threading.CancellationToken
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
@@ -1516,7 +1516,7 @@
       - Microsoft.Data.Sqlite.SqliteDataReader
       - System.Data.CommandBehavior
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
@@ -1542,7 +1542,7 @@
       - System.Data.Common.DbDataReader
       - System.Data.CommandBehavior
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
@@ -1555,7 +1555,7 @@
       - System.Threading.Tasks.Task`1<System.Object>
       - System.Threading.CancellationToken
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
@@ -1580,7 +1580,7 @@
       signature_types:
       - System.Object
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
@@ -1605,7 +1605,7 @@
       - System.Object
       - System.Data.CommandBehavior
       minimum_version: 2.0.0
-      maximum_version: 5.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.20.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration

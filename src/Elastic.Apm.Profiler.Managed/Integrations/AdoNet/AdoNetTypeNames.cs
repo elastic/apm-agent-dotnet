@@ -64,7 +64,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			Assembly = "Microsoft.Data.Sqlite";
 			Type = "Microsoft.Data.Sqlite.SqliteCommand";
 			MinimumVersion = "2.0.0";
-			MaximumVersion = "5.*.*";
+			MaximumVersion = "7.*.*";
 			Group = "SqliteCommand";
 		}
 	}
