@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' != 'WINDOWS_NT'">
+    <Compile Remove="**\*" />
     <Compile Remove="*" />
     <Compile Include="Program-Unix.cs" />
   </ItemGroup>
