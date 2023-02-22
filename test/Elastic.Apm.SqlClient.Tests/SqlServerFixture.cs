@@ -33,7 +33,7 @@ namespace Elastic.Apm.SqlClient.Tests
 		public async Task InitializeAsync()
 		{
 			await _container.StartAsync();
-			ConnectionString = _container.ConnectionString;
+			ConnectionString = _container.ConnectionString + ";TrustServerCertificate=True";;
 		}
 
 		public async Task DisposeAsync()
