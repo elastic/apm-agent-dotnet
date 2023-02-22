@@ -13,6 +13,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
 
+<<<<<<<< HEAD:test/azure/Elastic.Apm.Azure.Functions.Tests/AzureFunctionsTests.cs
 [Collection("AzureFunctions")]
 public class AzureFunctionsTests : IClassFixture<AzureFunctionsTestFixture>, IDisposable
 {
@@ -21,6 +22,16 @@ public class AzureFunctionsTests : IClassFixture<AzureFunctionsTestFixture>, IDi
 	private static bool _isFirst = true;
 
 	public AzureFunctionsTests(ITestOutputHelper output, AzureFunctionsTestFixture azureFunctionsTestFixture)
+========
+[Collection("AzureFunctions-Isolated")]
+public class AzureFunctionsIsolatedTests : IClassFixture<AzureFunctionsTestFixtureIsolated>, IDisposable
+{
+	private readonly AzureFunctionsTestFixtureBase _azureFunctionsTestFixture;
+	private readonly ITestOutputHelper _output;
+	private static bool _isFirst = true;
+
+	public AzureFunctionsIsolatedTests(ITestOutputHelper output, AzureFunctionsTestFixtureIsolated azureFunctionsTestFixture)
+>>>>>>>> 023886e5 (Trace in-process Azure Functions):test/azure/Elastic.Apm.Azure.Functions.Tests/AzureFunctionsIsolatedTests.cs
 	{
 		_output = output;
 		_azureFunctionsTestFixture = azureFunctionsTestFixture;

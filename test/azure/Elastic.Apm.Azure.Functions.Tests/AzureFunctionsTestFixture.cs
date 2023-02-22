@@ -15,16 +15,16 @@ using FluentAssertions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
 
-public class AzureFunctionsTestFixture : IDisposable
+public abstract class AzureFunctionsTestFixtureBase : IDisposable
 {
 	private readonly AutoResetEvent _waitForTransactionDataEvent = new(false);
 	private readonly MockApmServer _apmServer;
 	private readonly Process _funcProcess;
 
-	public AzureFunctionsTestFixture()
+	internal AzureFunctionsTestFixtureBase(string funcAppDir)
 	{
-		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsTests));
-		_apmServer.OnReceive += _ =>
+		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsIsolatedTests));
+		_apmServer.OnReceive += o =>
 		{
 			if (!_apmServer.ReceivedData.Transactions.IsEmpty)
 				_waitForTransactionDataEvent.Set();
@@ -57,14 +57,14 @@ public class AzureFunctionsTestFixture : IDisposable
 		};
 		_funcProcess.StartInfo.RedirectStandardOutput = true;
 		_funcProcess.StartInfo.RedirectStandardError = true;
-		_funcProcess.OutputDataReceived += (_, args) => LogLines.Add("[func] [ERROR] " + args.Data);
+		_funcProcess.ErrorDataReceived += (_, args) => LogLines.Add("[func] [ERROR] " + args.Data);
 
 		_funcProcess.OutputDataReceived += (_, args) =>
 		{
 			if (args.Data != null)
 			{
 				LogLines.Add("[func] " + args.Data);
-				if (args.Data != null && args.Data.Contains("Worker process started and initialized"))
+				if (args.Data != null && args.Data.Contains("Host lock lease acquired by instance ID"))
 					funcToolIsReady = true;
 			}
 		};
@@ -100,4 +100,14 @@ public class AzureFunctionsTestFixture : IDisposable
 
 	internal void ClearTransaction() => _apmServer.ClearState();
 	internal MetadataDto GetMetaData() => _apmServer.ReceivedData.Metadata.First();
+}
+
+public class AzureFunctionsTestFixtureIsolated : AzureFunctionsTestFixtureBase
+{
+	public AzureFunctionsTestFixtureIsolated() : base("../../../../../sample/Elastic.AzureFunctionApp.Isolated") { }
+}
+
+public class AzureFunctionsTestFixtureInProcess : AzureFunctionsTestFixtureBase
+{
+	public AzureFunctionsTestFixtureInProcess() : base("../../../../../sample/Elastic.AzureFunctionApp.InProcess") { }
 }
