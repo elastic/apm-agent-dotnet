@@ -18,8 +18,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         [Fact]
         public void EqualsTupleTest()
         {
-            TypesTuple tuple1 = new TypesTuple(typeof(string), typeof(int));
-            TypesTuple tuple2 = new TypesTuple(typeof(string), typeof(int));
+            var tuple1 = new TypesTuple(typeof(string), typeof(int));
+            var tuple2 = new TypesTuple(typeof(string), typeof(int));
 
             Assert.True(tuple1.Equals(tuple2));
             Assert.True(tuple1.Equals((object)tuple2));

@@ -17,37 +17,31 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Fields.ReferenceType
 {
     public class ReferenceTypeFieldTests
     {
-        public static IEnumerable<object[]> Data()
-        {
-            return new[]
-            {
-                new object[] { ObscureObject.GetFieldPublicObject() },
-                new object[] { ObscureObject.GetFieldInternalObject() },
-                new object[] { ObscureObject.GetFieldPrivateObject() },
-            };
-        }
+        public static IEnumerable<object[]> Data() =>
+			new[]
+			{
+				new object[] { ObscureObject.GetFieldPublicObject() },
+				new object[] { ObscureObject.GetFieldInternalObject() },
+				new object[] { ObscureObject.GetFieldPrivateObject() },
+			};
 
-        [Theory]
+		[Theory]
         [MemberData(nameof(Data))]
-        public void StaticReadonlyFieldsSetException(object obscureObject)
-        {
-            Assert.Throws<DuckTypeFieldIsReadonlyException>(() =>
-            {
-                obscureObject.DuckCast<IObscureStaticReadonlyErrorDuckType>();
-            });
-        }
+        public void StaticReadonlyFieldsSetException(object obscureObject) =>
+			Assert.Throws<DuckTypeFieldIsReadonlyException>(() =>
+			{
+				obscureObject.DuckCast<IObscureStaticReadonlyErrorDuckType>();
+			});
 
-        [Theory]
+		[Theory]
         [MemberData(nameof(Data))]
-        public void ReadonlyFieldsSetException(object obscureObject)
-        {
-            Assert.Throws<DuckTypeFieldIsReadonlyException>(() =>
-            {
-                obscureObject.DuckCast<IObscureReadonlyErrorDuckType>();
-            });
-        }
+        public void ReadonlyFieldsSetException(object obscureObject) =>
+			Assert.Throws<DuckTypeFieldIsReadonlyException>(() =>
+			{
+				obscureObject.DuckCast<IObscureReadonlyErrorDuckType>();
+			});
 
-        [Theory]
+		[Theory]
         [MemberData(nameof(Data))]
         public void StaticReadonlyFields(object obscureObject)
         {

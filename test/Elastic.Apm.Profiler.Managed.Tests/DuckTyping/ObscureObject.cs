@@ -470,19 +470,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
             private int InternalSum(int a, int b) => a + b;
 
-            public TestEnum ShowEnum(TestEnum val)
-            {
-                return val;
-            }
+            public TestEnum ShowEnum(TestEnum val) => val;
 
-            public T GetDefault<T>() => default;
+			public T GetDefault<T>() => default;
 
-            public Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b)
-            {
-                return new Tuple<T1, T2>(a, b);
-            }
+            public Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b) => new Tuple<T1, T2>(a, b);
 
-            public void Add(string name, DummyFieldObject obj)
+			public void Add(string name, DummyFieldObject obj)
             {
             }
 
@@ -494,28 +488,19 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
             {
             }
 
-            public void Pow2(ref int value)
-            {
-                value *= value;
-            }
+            public void Pow2(ref int value) => value *= value;
 
-            public void GetOutput(out int value)
-            {
-                value = 42;
-            }
+			public void GetOutput(out int value) => value = 42;
 
-            private bool TryGetObscure(out DummyFieldObject obj)
+			private bool TryGetObscure(out DummyFieldObject obj)
             {
                 obj = new DummyFieldObject { MagicNumber = 99 };
                 return true;
             }
 
-            public void GetReference(ref int value)
-            {
-                value *= value;
-            }
+            public void GetReference(ref int value) => value *= value;
 
-            private bool TryGetReference(ref DummyFieldObject obj)
+			private bool TryGetReference(ref DummyFieldObject obj)
             {
                 obj = new DummyFieldObject { MagicNumber = (obj?.MagicNumber ?? 99) + 1 };
                 return true;
@@ -533,11 +518,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
                 return true;
             }
 
-            private DummyFieldObject Bypass(DummyFieldObject obj)
-            {
-                return obj;
-            }
-        }
+            private DummyFieldObject Bypass(DummyFieldObject obj) => obj;
+		}
 
         internal class PropertyInternalObject
         {
@@ -705,19 +687,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
             private int InternalSum(int a, int b) => a + b;
 
-            public TestEnum ShowEnum(TestEnum val)
-            {
-                return val;
-            }
+            public TestEnum ShowEnum(TestEnum val) => val;
 
-            public T GetDefault<T>() => default;
+			public T GetDefault<T>() => default;
 
-            public Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b)
-            {
-                return new Tuple<T1, T2>(a, b);
-            }
+            public Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b) => new Tuple<T1, T2>(a, b);
 
-            public void Add(string name, DummyFieldObject obj)
+			public void Add(string name, DummyFieldObject obj)
             {
             }
 
@@ -729,28 +705,19 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
             {
             }
 
-            public void Pow2(ref int value)
-            {
-                value *= value;
-            }
+            public void Pow2(ref int value) => value *= value;
 
-            public void GetOutput(out int value)
-            {
-                value = 42;
-            }
+			public void GetOutput(out int value) => value = 42;
 
-            private bool TryGetObscure(out DummyFieldObject obj)
+			private bool TryGetObscure(out DummyFieldObject obj)
             {
                 obj = new DummyFieldObject { MagicNumber = 99 };
                 return true;
             }
 
-            public void GetReference(ref int value)
-            {
-                value *= value;
-            }
+            public void GetReference(ref int value) => value *= value;
 
-            private bool TryGetReference(ref DummyFieldObject obj)
+			private bool TryGetReference(ref DummyFieldObject obj)
             {
                 obj = new DummyFieldObject { MagicNumber = (obj?.MagicNumber ?? 99) + 1 };
                 return true;
@@ -768,11 +735,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
                 return true;
             }
 
-            private DummyFieldObject Bypass(DummyFieldObject obj)
-            {
-                return obj;
-            }
-        }
+            private DummyFieldObject Bypass(DummyFieldObject obj) => obj;
+		}
 
         private class PropertyPrivateObject
         {
@@ -939,19 +903,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
             private int InternalSum(int a, int b) => a + b;
 
-            public TestEnum ShowEnum(TestEnum val)
-            {
-                return val;
-            }
+            public TestEnum ShowEnum(TestEnum val) => val;
 
-            public T GetDefault<T>() => default;
+			public T GetDefault<T>() => default;
 
-            public Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b)
-            {
-                return new Tuple<T1, T2>(a, b);
-            }
+            public Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b) => new Tuple<T1, T2>(a, b);
 
-            public void Add(string name, DummyFieldObject obj)
+			public void Add(string name, DummyFieldObject obj)
             {
             }
 
@@ -963,28 +921,19 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
             {
             }
 
-            public void Pow2(ref int value)
-            {
-                value *= value;
-            }
+            public void Pow2(ref int value) => value *= value;
 
-            public void GetOutput(out int value)
-            {
-                value = 42;
-            }
+			public void GetOutput(out int value) => value = 42;
 
-            private bool TryGetObscure(out DummyFieldObject obj)
+			private bool TryGetObscure(out DummyFieldObject obj)
             {
                 obj = new DummyFieldObject { MagicNumber = 99 };
                 return true;
             }
 
-            public void GetReference(ref int value)
-            {
-                value *= value;
-            }
+            public void GetReference(ref int value) => value *= value;
 
-            private bool TryGetReference(ref DummyFieldObject obj)
+			private bool TryGetReference(ref DummyFieldObject obj)
             {
                 obj = new DummyFieldObject { MagicNumber = (obj?.MagicNumber ?? 99) + 1 };
                 return true;
@@ -1002,11 +951,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
                 return true;
             }
 
-            private DummyFieldObject Bypass(DummyFieldObject obj)
-            {
-                return obj;
-            }
-        }
+            private DummyFieldObject Bypass(DummyFieldObject obj) => obj;
+		}
 
         // ***
 

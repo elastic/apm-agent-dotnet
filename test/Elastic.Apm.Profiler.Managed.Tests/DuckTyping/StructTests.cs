@@ -19,7 +19,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructCopyTest()
         {
             PrivateStruct instance = default;
-            CopyStruct copy = instance.DuckCast<CopyStruct>();
+            var copy = instance.DuckCast<CopyStruct>();
             Assert.Equal(instance.Value, copy.Value);
         }
 
@@ -27,7 +27,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructInterfaceProxyTest()
         {
             PrivateStruct instance = default;
-            IPrivateStruct proxy = instance.DuckCast<IPrivateStruct>();
+            var proxy = instance.DuckCast<IPrivateStruct>();
             Assert.Equal(instance.Value, proxy.Value);
         }
 
@@ -35,7 +35,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructAbstractProxyTest()
         {
             PrivateStruct instance = default;
-            AbstractPrivateProxy proxy = instance.DuckCast<AbstractPrivateProxy>();
+            var proxy = instance.DuckCast<AbstractPrivateProxy>();
             Assert.Equal(instance.Value, proxy.Value);
         }
 
@@ -43,7 +43,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructVirtualProxyTest()
         {
             PrivateStruct instance = default;
-            VirtualPrivateProxy proxy = instance.DuckCast<VirtualPrivateProxy>();
+            var proxy = instance.DuckCast<VirtualPrivateProxy>();
             Assert.Equal(instance.Value, proxy.Value);
         }
 
@@ -76,14 +76,14 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         [Fact]
         public void DuckChainingStructInterfaceProxyTest()
         {
-            PrivateDuckChainingTarget instance = new PrivateDuckChainingTarget();
-            IPrivateDuckChainingTarget proxy = instance.DuckCast<IPrivateDuckChainingTarget>();
+            var instance = new PrivateDuckChainingTarget();
+            var proxy = instance.DuckCast<IPrivateDuckChainingTarget>();
             Assert.Equal(instance.ChainingTestField.Name, proxy.ChainingTestField.Name);
             Assert.Equal(instance.ChainingTest.Name, proxy.ChainingTest.Name);
             Assert.Equal(instance.ChainingTestMethod().Name, proxy.ChainingTestMethod().Name);
 
-            PublicDuckChainingTarget instance2 = new PublicDuckChainingTarget();
-            IPrivateDuckChainingTarget proxy2 = instance2.DuckCast<IPrivateDuckChainingTarget>();
+            var instance2 = new PublicDuckChainingTarget();
+            var proxy2 = instance2.DuckCast<IPrivateDuckChainingTarget>();
             Assert.Equal(instance2.ChainingTestField.Name, proxy2.ChainingTestField.Name);
             Assert.Equal(instance2.ChainingTest.Name, proxy2.ChainingTest.Name);
             Assert.Equal(instance2.ChainingTestMethod().Name, proxy2.ChainingTestMethod().Name);

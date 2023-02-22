@@ -41,7 +41,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
                 return returnValue;
             }
 
-            Task previousTask = FromTReturn<Task>(returnValue);
+            var previousTask = FromTReturn<Task>(returnValue);
             if (previousTask.Status == TaskStatus.RanToCompletion)
             {
                 _continuation(instance, default, null, state);

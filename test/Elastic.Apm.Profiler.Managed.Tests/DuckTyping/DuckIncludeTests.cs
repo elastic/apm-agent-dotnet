@@ -41,19 +41,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public class SomeClassWithDuckInclude
         {
             [DuckInclude]
-            public override string ToString()
-            {
-                return "OK";
-            }
-        }
+            public override string ToString() => "OK";
+		}
 
         public class SomeClassWithoutDuckInclude
         {
-            public override string ToString()
-            {
-                return "OK";
-            }
-        }
+            public override string ToString() => "OK";
+		}
 
         public interface IInterface
         {

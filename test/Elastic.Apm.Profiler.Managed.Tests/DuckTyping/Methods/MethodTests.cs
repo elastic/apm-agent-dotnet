@@ -18,17 +18,15 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 {
     public class MethodTests
     {
-        public static IEnumerable<object[]> Data()
-        {
-            return new[]
-            {
-                new object[] { ObscureObject.GetPropertyPublicObject() },
-                new object[] { ObscureObject.GetPropertyInternalObject() },
-                new object[] { ObscureObject.GetPropertyPrivateObject() },
-            };
-        }
+        public static IEnumerable<object[]> Data() =>
+			new[]
+			{
+				new object[] { ObscureObject.GetPropertyPublicObject() },
+				new object[] { ObscureObject.GetPropertyInternalObject() },
+				new object[] { ObscureObject.GetPropertyPrivateObject() },
+			};
 
-        [Theory]
+		[Theory]
         [MemberData(nameof(Data))]
         public void ReturnMethods(object obscureObject)
         {
@@ -106,7 +104,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
             var duckVirtual = obscureObject.DuckCast<ObscureDuckTypeVirtualClass>();
 
             // Ref parameter
-            int value = 4;
+            var value = 4;
             duckInterface.Pow2(ref value);
             duckAbstract.Pow2(ref value);
             duckVirtual.Pow2(ref value);
@@ -120,7 +118,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 
             // Ref object parameter
             object objValue = 4;
-            object objValue2 = objValue;
+			// ReSharper disable once SuggestVarOrType_BuiltInTypes
+			object objValue2 = objValue;
             duckInterface.GetReferenceObject(ref objValue);
             duckAbstract.GetReferenceObject(ref objValue);
             duckVirtual.GetReferenceObject(ref objValue);
@@ -249,7 +248,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
         [Fact]
         public void DictionaryDuckTypeExample()
         {
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            var dictionary = new Dictionary<string, string>();
 
             var duckInterface = dictionary.DuckCast<IDictioDuckType>();
 
@@ -263,7 +262,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
                 Assert.True(duckInterface.Remove("K"));
             }
 
-            if (duckInterface.TryGetValue("Key01", out string value))
+            if (duckInterface.TryGetValue("Key01", out var value))
             {
                 Assert.Equal("Value01", value);
             }
@@ -272,17 +271,17 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 
             Assert.Equal(2, duckInterface.Count);
 
-            foreach (KeyValuePair<string, string> val in duckInterface)
+            foreach (var val in duckInterface)
             {
                 Assert.NotNull(val.Key);
             }
 
-            if (duckInterface.TryGetValueInObject("Key02", out object objValue))
+            if (duckInterface.TryGetValueInObject("Key02", out var objValue))
             {
                 Assert.NotNull(objValue);
             }
 
-            if (duckInterface.TryGetValueInDuckChaining("Key02", out IDictioValue dictioValue))
+            if (duckInterface.TryGetValueInDuckChaining("Key02", out var dictioValue))
             {
                 Assert.NotNull(dictioValue);
             }
@@ -334,17 +333,17 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
             Assert.Null(duckVirtual.GetDefault<string>());
 
             // Wrap ints
-            Tuple<int, int> wrapper = duckInterface.Wrap(10, 20);
+            var wrapper = duckInterface.Wrap(10, 20);
             Assert.Equal(10, wrapper.Item1);
             Assert.Equal(20, wrapper.Item2);
 
             // Wrap string
-            Tuple<string, string> wrapper2 = duckAbstract.Wrap("Hello", "World");
+            var wrapper2 = duckAbstract.Wrap("Hello", "World");
             Assert.Equal("Hello", wrapper2.Item1);
             Assert.Equal("World", wrapper2.Item2);
 
             // Wrap object
-            Tuple<object, string> wrapper3 = duckAbstract.Wrap<object, string>(null, "World");
+            var wrapper3 = duckAbstract.Wrap<object, string>(null, "World");
             Assert.Null(wrapper3.Item1);
             Assert.Equal("World", wrapper3.Item2);
         }
