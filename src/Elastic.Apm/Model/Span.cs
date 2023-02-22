@@ -577,6 +577,7 @@ namespace Elastic.Apm.Model
 
 			if (!isAlreadyComposite)
 			{
+				Composite ??= new Composite();
 				Composite.Count = 1;
 				Composite.Sum = Duration!.Value;
 			}
