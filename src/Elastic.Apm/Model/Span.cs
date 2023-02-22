@@ -613,7 +613,7 @@ namespace Elastic.Apm.Model
 			{
 				Composite ??= new Composite();
 				Composite.CompressionStrategy = "same_kind";
-				if (_context.IsValueCreated)
+				if (_context.IsValueCreated && Context.Service?.Target != null)
 					Name = "Calls to " + Context.Service.Target.ToDestinationServiceResource();
 				return true;
 			}
