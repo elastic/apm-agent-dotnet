@@ -5,9 +5,6 @@
 #
 set -euxo pipefail
 
-# Remove projects
-.ci/linux/remove-projects.sh
-
 # Run tests for all solution
 dotnet test -c Release ElasticApmAgent.sln \
 	--verbosity normal \

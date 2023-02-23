@@ -339,9 +339,6 @@ _TEMP/
 html_docs
 build/output/
 
-# Generated .NET core sln file
-ElasticApmAgent.NetCore.sln
-
 # Terraform configuration state files
 .terraform
 .terraform.lock.hcl
