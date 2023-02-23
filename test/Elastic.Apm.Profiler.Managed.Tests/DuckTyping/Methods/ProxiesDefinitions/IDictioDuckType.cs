@@ -13,30 +13,30 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitions
 {
-    public interface IDictioDuckType
-    {
-        public ICollection<string> Keys { get; }
+	public interface IDictioDuckType
+	{
+		public ICollection<string> Keys { get; }
 
-        public ICollection<string> Values { get; }
+		public ICollection<string> Values { get; }
 
-        int Count { get; }
+		int Count { get; }
 
-        public string this[string key] { get; set; }
+		public string this[string key] { get; set; }
 
-        void Add(string key, string value);
+		void Add(string key, string value);
 
-        bool ContainsKey(string key);
+		bool ContainsKey(string key);
 
-        bool Remove(string key);
+		bool Remove(string key);
 
-        bool TryGetValue(string key, out string value);
+		bool TryGetValue(string key, out string value);
 
-        [Duck(Name = "TryGetValue")]
-        bool TryGetValueInObject(string key, out object value);
+		[Duck(Name = "TryGetValue")]
+		bool TryGetValueInObject(string key, out object value);
 
-        [Duck(Name = "TryGetValue")]
-        bool TryGetValueInDuckChaining(string key, out IDictioValue value);
+		[Duck(Name = "TryGetValue")]
+		bool TryGetValueInDuckChaining(string key, out IDictioValue value);
 
-        IEnumerator<KeyValuePair<string, string>> GetEnumerator();
-    }
+		IEnumerator<KeyValuePair<string, string>> GetEnumerator();
+	}
 }

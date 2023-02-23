@@ -562,7 +562,7 @@ This reduces the collection, processing, and storage overhead, and removes clutt
 [options="header"]
 |============
 | Default | Type
-| `5ms`   | TimeDuration
+| `0ms`   | TimeDuration
 |============
 
 
@@ -1296,7 +1296,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-application-namespaces,`ApplicationNamespaces`>> | No | Stacktrace
 | <<config-capture-body,`CaptureBody`>> | Yes | HTTP, Performance
 | <<config-capture-body-content-types,`CaptureBodyContentTypes`>> | Yes | HTTP, Performance
-| <<config-capture-headers,`CaptureHeaders`>> | No | HTTP, Performance
+| <<config-capture-headers,`CaptureHeaders`>> | Yes | HTTP, Performance
 | <<config-central-config,`CentralConfig`>> | No | Core
 | <<config-cloud-provider,`CloudProvider`>> | No | Reporter
 | <<config-disable-metrics,`DisableMetrics`>> | No | Reporter
@@ -1324,8 +1324,8 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-span-compression-enabled,`SpanCompressionEnabled`>> | Yes | Core, Performance
 | <<config-span-compression-exact-match-max-duration,`SpanCompressionExactMatchMaxDuration`>> | Yes | Core, Performance
 | <<config-span-compression-same-kind-max-duration,`SpanCompressionSameKindMaxDuration`>> | Yes | Core, Performance
-| <<config-span-stack-trace-min-duration,`SpanStackTraceMinDuration`>> | No | Stacktrace, Performance
-| <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
+| <<config-span-stack-trace-min-duration,`SpanStackTraceMinDuration`>> | Yes | Stacktrace, Performance
+| <<config-stack-trace-limit,`StackTraceLimit`>> | Yes | Stacktrace, Performance
 | <<config-trace-context-ignore-sampled-false,`TraceContextIgnoreSampledFalse`>> | No | Core
 | <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | Yes | HTTP, Performance
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance

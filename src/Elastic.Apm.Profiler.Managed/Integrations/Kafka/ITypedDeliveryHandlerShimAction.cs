@@ -13,17 +13,17 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 {
-    /// <summary>
-    /// TypedDeliveryHandlerShim_Action for duck-typing
-    /// </summary>
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface ITypedDeliveryHandlerShimAction
-    {
-        /// <summary>
-        /// Sets the delivery report handler
-        /// </summary>
-        [DuckField]
-        public object Handler { set; }
-    }
+	/// <summary>
+	/// TypedDeliveryHandlerShim_Action for duck-typing
+	/// </summary>
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public interface ITypedDeliveryHandlerShimAction
+	{
+		/// <summary>
+		/// Sets the delivery report handler
+		/// </summary>
+		[DuckField]
+		public object Handler { set; }
+	}
 }

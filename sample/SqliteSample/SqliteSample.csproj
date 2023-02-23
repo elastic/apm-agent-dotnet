@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <SqliteVersion Condition="'$(SqliteVersion)'==''">5.0.8</SqliteVersion>
+    <SqliteVersion Condition="'$(SqliteVersion)'==''">7.0.2</SqliteVersion>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net461;netcoreapp3.1;net5.0;</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>

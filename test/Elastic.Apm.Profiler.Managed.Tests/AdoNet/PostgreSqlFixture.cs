@@ -12,9 +12,7 @@ using Xunit;
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("Postgres")]
-	public class PostgresCollection : ICollectionFixture<PostgreSqlFixture>
-	{
-	}
+	public class PostgresCollection : ICollectionFixture<PostgreSqlFixture> { }
 
 	public class PostgreSqlFixture : IAsyncLifetime
 	{
@@ -28,9 +26,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			var postgresBuilder = new TestcontainersBuilder<PostgreSqlTestcontainer>()
 				.WithDatabase(new PostgreSqlTestcontainerConfiguration
 				{
-					Database = PostgresDatabase,
-					Username = PostgresUserName,
-					Password = PostgresPassword
+					Database = PostgresDatabase, Username = PostgresUserName, Password = PostgresPassword
 				});
 
 			_container = postgresBuilder.Build();

@@ -12,26 +12,26 @@ using System.ComponentModel;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 {
-    /// <summary>
-    /// Message interface for duck-typing
-    /// </summary>
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface IMessage
-    {
-        /// <summary>
-        /// Gets the value of the message
-        /// </summary>
-        public object Value { get; }
+	/// <summary>
+	/// Message interface for duck-typing
+	/// </summary>
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public interface IMessage
+	{
+		/// <summary>
+		/// Gets the value of the message
+		/// </summary>
+		public object Value { get; }
 
-        /// <summary>
-        /// Gets the timestamp that the message was produced
-        /// </summary>
-        public ITimestamp Timestamp { get; }
+		/// <summary>
+		/// Gets the timestamp that the message was produced
+		/// </summary>
+		public ITimestamp Timestamp { get; }
 
-        /// <summary>
-        /// Gets or sets the headers for the record
-        /// </summary>
-        public IHeaders Headers { get; set; }
-    }
+		/// <summary>
+		/// Gets or sets the headers for the record
+		/// </summary>
+		public IHeaders Headers { get; set; }
+	}
 }

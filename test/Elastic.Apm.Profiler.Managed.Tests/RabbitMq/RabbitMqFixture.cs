@@ -13,9 +13,7 @@ using Xunit;
 namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 {
 	[CollectionDefinition("RabbitMq")]
-	public class RabbitMqCollection : ICollectionFixture<RabbitMqFixture>
-	{
-	}
+	public class RabbitMqCollection : ICollectionFixture<RabbitMqFixture> { }
 
 	public class RabbitMqFixture : IAsyncLifetime
 	{

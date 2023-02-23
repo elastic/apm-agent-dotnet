@@ -15,18 +15,18 @@ using System.Text;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 {
-    internal static class ContextPropagation
-    {
+	internal static class ContextPropagation
+	{
 		public static Action<IDictionary<string, object>, string, string> HeadersSetter = (carrier, key, value) =>
-        {
-            carrier[key] = Encoding.UTF8.GetBytes(value);
-        };
+		{
+			carrier[key] = Encoding.UTF8.GetBytes(value);
+		};
 
-        public static Func<IDictionary<string, object>, string, IEnumerable<string>> HeadersGetter = ((carrier, key) =>
+		public static Func<IDictionary<string, object>, string, IEnumerable<string>> HeadersGetter = ((carrier, key) =>
 		{
 			return carrier.TryGetValue(key, out var value) && value is byte[] bytes
 				? new[] { Encoding.UTF8.GetString(bytes) }
 				: Enumerable.Empty<string>();
 		});
-    }
+	}
 }

@@ -16,33 +16,33 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 {
-    internal static class BeginMethodHandler<TIntegration, TTarget>
-    {
-        private static readonly InvokeDelegate _invokeDelegate;
+	internal static class BeginMethodHandler<TIntegration, TTarget>
+	{
+		private static readonly InvokeDelegate _invokeDelegate;
 
-        static BeginMethodHandler()
-        {
-            try
-            {
-                var dynMethod = IntegrationMapper.CreateBeginMethodDelegate(typeof(TIntegration), typeof(TTarget), Array.Empty<Type>());
-                if (dynMethod != null)
+		static BeginMethodHandler()
+		{
+			try
+			{
+				var dynMethod = IntegrationMapper.CreateBeginMethodDelegate(typeof(TIntegration), typeof(TTarget), Array.Empty<Type>());
+				if (dynMethod != null)
 					_invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
 			}
-            catch (Exception ex)
-            {
-                throw new CallTargetInvokerException(ex);
-            }
-            finally
-            {
-                if (_invokeDelegate is null)
+			catch (Exception ex)
+			{
+				throw new CallTargetInvokerException(ex);
+			}
+			finally
+			{
+				if (_invokeDelegate is null)
 					_invokeDelegate = instance => CallTargetState.GetDefault();
 			}
-        }
+		}
 
-        internal delegate CallTargetState InvokeDelegate(TTarget instance);
+		internal delegate CallTargetState InvokeDelegate(TTarget instance);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static CallTargetState Invoke(TTarget instance) =>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static CallTargetState Invoke(TTarget instance) =>
 			new CallTargetState(Agent.IsConfigured ? Agent.Tracer.CurrentExecutionSegment() : null, _invokeDelegate(instance));
 	}
 }

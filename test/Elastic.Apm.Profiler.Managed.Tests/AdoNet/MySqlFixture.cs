@@ -12,9 +12,7 @@ using Xunit;
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("MySql")]
-	public class MySqlCollection : ICollectionFixture<MySqlFixture>
-	{
-	}
+	public class MySqlCollection : ICollectionFixture<MySqlFixture> { }
 
 	public class MySqlFixture : IAsyncLifetime
 	{
@@ -28,9 +26,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			var builder = new TestcontainersBuilder<MySqlTestcontainer>()
 				.WithDatabase(new MySqlTestcontainerConfiguration
 				{
-					Database = MySqlDatabaseName,
-					Username = MySqlUsername,
-					Password = MySqlPassword
+					Database = MySqlDatabaseName, Username = MySqlUsername, Password = MySqlPassword
 				});
 
 			_container = builder.Build();

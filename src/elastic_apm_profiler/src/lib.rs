@@ -11,11 +11,11 @@ extern crate com;
 #[macro_use]
 extern crate num_derive;
 
-mod error;
 mod ffi;
 mod profiler;
 
 pub mod cil;
+mod error;
 pub mod interfaces;
 
 use com::CLSID;

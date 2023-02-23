@@ -12,10 +12,10 @@ using System;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitions
 {
-    public interface IDefaultGenericMethodDuckType
-    {
-        T GetDefault<T>();
+	public interface IDefaultGenericMethodDuckType
+	{
+		T GetDefault<T>();
 
-        Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b);
-    }
+		Tuple<T1, T2> Wrap<T1, T2>(T1 a, T2 b);
+	}
 }

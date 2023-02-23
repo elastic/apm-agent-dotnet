@@ -12,9 +12,7 @@ using Xunit;
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("Oracle")]
-	public class OracleCollection : ICollectionFixture<OracleSqlFixture>
-	{
-	}
+	public class OracleCollection : ICollectionFixture<OracleSqlFixture> { }
 
 	public class OracleSqlFixture : IAsyncLifetime
 	{

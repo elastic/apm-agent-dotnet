@@ -24,9 +24,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 
 		public NoThrowAwaiter GetAwaiter() => this;
 
-		public void GetResult()
-		{
-		}
+		public void GetResult() { }
 
 		public void OnCompleted(Action continuation) => _task.ConfigureAwait(_preserveContext).GetAwaiter().OnCompleted(continuation);
 
