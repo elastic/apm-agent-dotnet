@@ -33,7 +33,7 @@ namespace Elastic.Apm.SqlClient.Tests
 		public async Task InitializeAsync()
 		{
 			await _container.StartAsync();
-			ConnectionString = _container.ConnectionString + ";TrustServerCertificate=True";;
+			ConnectionString = _container.ConnectionString + ";TrustServerCertificate=True";
 		}
 
 		public async Task DisposeAsync()
@@ -46,11 +46,7 @@ namespace Elastic.Apm.SqlClient.Tests
 		{
 			if (_container != null)
 				return _container.DisposeAsync();
-#if NET5_0_OR_GREATER
-			return ValueTask.CompletedTask;
-#else
 			return default;
-#endif
 		}
 	}
 }
