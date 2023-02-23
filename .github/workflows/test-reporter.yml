@@ -12,7 +12,7 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
+      - uses: elastic/apm-pipeline-library/.github/actions/test-report@feature/update-test-reporter-action
         with:
           artifact: test-results            # artifact name
           name: JUnit Tests                 # Name of the check run which will be created
