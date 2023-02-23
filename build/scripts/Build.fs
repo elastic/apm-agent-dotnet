@@ -118,7 +118,7 @@ module Build =
                              "-c"; "Release"
                              "-f"; framework
                              "-v"; "q"
-                             "-o"; output
+                             $"--property:PublishDir=%s{output}"
                              "--nologo"; "--force"]
             )
         )
@@ -174,7 +174,7 @@ module Build =
                     |> Path.GetFullPath
                 
                 printfn "Publishing %s %s..." proj framework
-                DotNet.Exec ["publish" ; proj; "-c"; "Release"; "-f"; framework; "-v"; "q"; "--nologo"; "-o"; output]
+                DotNet.Exec ["publish" ; proj; "-c"; "Release"; "-f"; framework; "-v"; "q"; "--nologo"; $"--property:PublishDir=%s{output}"]
             )
         )
         
@@ -186,7 +186,7 @@ module Build =
     /// Packages projects into nuget packages
     let Pack (canary:bool) =
         let arguments =
-            let a = ["pack" ; Paths.Solution; "-c"; "Release"; "-o"; Paths.NugetOutput]
+            let a = ["pack" ; Paths.Solution; "-c"; "Release"; $"--property:PackageOutputPath=%s{Paths.NugetOutput}"]
             if canary then List.append a ["--version-suffix"; versionSuffix]
             else a      
         DotNet.Exec arguments
