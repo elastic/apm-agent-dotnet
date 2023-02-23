@@ -15,4 +15,4 @@ dotnet sln remove test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tes
 dotnet sln remove test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj
 
 :: Build solution. Add `--verbosity detailed` for more detailed logs
-dotnet build -c Release
+dotnet build -c Release --force
