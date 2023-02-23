@@ -18,152 +18,150 @@ using Xunit;
 namespace Elastic.Apm.Profiler.Managed.Tests.Continuations
 {
 	public class TaskContinuationGeneratorTests
-    {
-        public static TReturn OnAsyncMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state) =>
+	{
+		public static TReturn OnAsyncMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state) =>
 			returnValue;
 
 		[Fact]
-        public async Task SuccessTest()
-        {
-            var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task>();
-            var cTask = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
+		public async Task SuccessTest()
+		{
+			var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task>();
+			var cTask = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
 
-            await cTask;
+			await cTask;
 
-            async Task GetPreviousTask()
-            {
-                await Task.Delay(1000).ConfigureAwait(false);
-            }
-        }
+			async Task GetPreviousTask()
+			{
+				await Task.Delay(1000).ConfigureAwait(false);
+			}
+		}
 
-        [Fact]
-        public async Task ExceptionTest()
-        {
-            Exception ex = null;
+		[Fact]
+		public async Task ExceptionTest()
+		{
+			Exception ex = null;
 
-            // Normal
-            ex = await Assert.ThrowsAsync<CustomException>(() => GetPreviousTask());
-            Assert.Equal("Internal Test Exception", ex.Message);
+			// Normal
+			ex = await Assert.ThrowsAsync<CustomException>(() => GetPreviousTask());
+			Assert.Equal("Internal Test Exception", ex.Message);
 
-            // Using the continuation
-            var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task>();
-            ex = await Assert.ThrowsAsync<CustomException>(() => tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault()));
-            Assert.Equal("Internal Test Exception", ex.Message);
+			// Using the continuation
+			var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task>();
+			ex = await Assert.ThrowsAsync<CustomException>(() => tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault()));
+			Assert.Equal("Internal Test Exception", ex.Message);
 
-            async Task GetPreviousTask()
-            {
-                await Task.Delay(1000).ConfigureAwait(false);
-                throw new CustomException("Internal Test Exception");
-            }
-        }
+			async Task GetPreviousTask()
+			{
+				await Task.Delay(1000).ConfigureAwait(false);
+				throw new CustomException("Internal Test Exception");
+			}
+		}
 
-        [Fact]
-        public async Task CancelledTest()
-        {
-            // Normal
-            var task = GetPreviousTask();
-            await Assert.ThrowsAsync<CustomCancellationException>(() => task);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+		[Fact]
+		public async Task CancelledTest()
+		{
+			// Normal
+			var task = GetPreviousTask();
+			await Assert.ThrowsAsync<CustomCancellationException>(() => task);
+			Assert.Equal(TaskStatus.Canceled, task.Status);
 
-            // Using the continuation
-            var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task>();
-            task = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
-            await Assert.ThrowsAsync<CustomCancellationException>(() => task);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+			// Using the continuation
+			var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task>();
+			task = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
+			await Assert.ThrowsAsync<CustomCancellationException>(() => task);
+			Assert.Equal(TaskStatus.Canceled, task.Status);
 
-            static Task GetPreviousTask()
-            {
-                var cts = new CancellationTokenSource();
+			static Task GetPreviousTask()
+			{
+				var cts = new CancellationTokenSource();
 
-                return Task.FromResult(true).ContinueWith(
-                    _ =>
-                    {
-                        cts.Cancel();
-                        throw new CustomCancellationException(cts.Token);
-                    },
-                    cts.Token);
-            }
-        }
+				return Task.FromResult(true)
+					.ContinueWith(
+						_ =>
+						{
+							cts.Cancel();
+							throw new CustomCancellationException(cts.Token);
+						},
+						cts.Token);
+			}
+		}
 
-        [Fact]
-        public async Task SuccessGenericTest()
-        {
-            var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task<bool>, bool>();
-            var cTask = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
+		[Fact]
+		public async Task SuccessGenericTest()
+		{
+			var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task<bool>, bool>();
+			var cTask = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
 
-            await cTask;
+			await cTask;
 
-            async Task<bool> GetPreviousTask()
-            {
-                await Task.Delay(1000).ConfigureAwait(false);
-                return true;
-            }
-        }
+			async Task<bool> GetPreviousTask()
+			{
+				await Task.Delay(1000).ConfigureAwait(false);
+				return true;
+			}
+		}
 
-        [Fact]
-        public async Task ExceptionGenericTest()
-        {
-            Exception ex = null;
+		[Fact]
+		public async Task ExceptionGenericTest()
+		{
+			Exception ex = null;
 
-            // Normal
-            ex = await Assert.ThrowsAsync<CustomException>(() => GetPreviousTask());
-            Assert.Equal("Internal Test Exception", ex.Message);
+			// Normal
+			ex = await Assert.ThrowsAsync<CustomException>(() => GetPreviousTask());
+			Assert.Equal("Internal Test Exception", ex.Message);
 
-            // Using the continuation
-            var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task<bool>, bool>();
-            ex = await Assert.ThrowsAsync<CustomException>(() => tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault()));
-            Assert.Equal("Internal Test Exception", ex.Message);
+			// Using the continuation
+			var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task<bool>, bool>();
+			ex = await Assert.ThrowsAsync<CustomException>(() => tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault()));
+			Assert.Equal("Internal Test Exception", ex.Message);
 
-            async Task<bool> GetPreviousTask()
-            {
-                await Task.Delay(1000).ConfigureAwait(false);
-                throw new CustomException("Internal Test Exception");
-            }
-        }
+			async Task<bool> GetPreviousTask()
+			{
+				await Task.Delay(1000).ConfigureAwait(false);
+				throw new CustomException("Internal Test Exception");
+			}
+		}
 
-        [Fact]
-        public async Task CancelledGenericTest()
-        {
-            // Normal
-            var task = GetPreviousTask();
-            await Assert.ThrowsAsync<CustomCancellationException>(() => task);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+		[Fact]
+		public async Task CancelledGenericTest()
+		{
+			// Normal
+			var task = GetPreviousTask();
+			await Assert.ThrowsAsync<CustomCancellationException>(() => task);
+			Assert.Equal(TaskStatus.Canceled, task.Status);
 
-            // Using the continuation
-            var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task<bool>, bool>();
-            task = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
-            await Assert.ThrowsAsync<CustomCancellationException>(() => task);
+			// Using the continuation
+			var tcg = new TaskContinuationGenerator<TaskContinuationGeneratorTests, TaskContinuationGeneratorTests, Task<bool>, bool>();
+			task = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());
+			await Assert.ThrowsAsync<CustomCancellationException>(() => task);
 
 			task.Status.Should().Be(TaskStatus.Canceled);
 
-            static Task<bool> GetPreviousTask()
-            {
-                var cts = new CancellationTokenSource();
+			static Task<bool> GetPreviousTask()
+			{
+				var cts = new CancellationTokenSource();
 
-                return Task.FromResult(true).ContinueWith<bool>(
-                    _ =>
-                    {
-                        cts.Cancel();
-                        throw new CustomCancellationException(cts.Token);
-                    },
-                    cts.Token);
-            }
-        }
+				return Task.FromResult(true)
+					.ContinueWith<bool>(
+						_ =>
+						{
+							cts.Cancel();
+							throw new CustomCancellationException(cts.Token);
+						},
+						cts.Token);
+			}
+		}
 
-        internal class CustomException : Exception
-        {
-            public CustomException(string message)
-                : base(message)
-            {
-            }
-        }
+		internal class CustomException : Exception
+		{
+			public CustomException(string message)
+				: base(message) { }
+		}
 
-        internal class CustomCancellationException : OperationCanceledException
-        {
-            public CustomCancellationException(CancellationToken token)
-                : base(token)
-            {
-            }
-        }
-    }
+		internal class CustomCancellationException : OperationCanceledException
+		{
+			public CustomCancellationException(CancellationToken token)
+				: base(token) { }
+		}
+	}
 }

@@ -12,9 +12,9 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Fields.ReferenceType.ProxiesDefinitions
 {
-    public interface IObscureStaticReadonlyErrorDuckType
-    {
-        [Duck(Name = "_publicStaticReadonlyReferenceTypeField", Kind = DuckKind.Field)]
-        string PublicStaticReadonlyReferenceTypeField { get; set; }
-    }
+	public interface IObscureStaticReadonlyErrorDuckType
+	{
+		[Duck(Name = "_publicStaticReadonlyReferenceTypeField", Kind = DuckKind.Field)]
+		string PublicStaticReadonlyReferenceTypeField { get; set; }
+	}
 }

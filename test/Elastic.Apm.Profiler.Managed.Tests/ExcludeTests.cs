@@ -72,6 +72,7 @@ public class ExcludeTests
 		if (TestEnvironment.IsWindows)
 		{
 			yield return new object[] { "net461", "SqliteSample.exe" };
+
 			dotnet = "dotnet.exe";
 		}
 		yield return new object[] { "net5.0", dotnet };
@@ -115,8 +116,9 @@ public class ExcludeTests
 				exception => _output.WriteLine($"{exception}"));
 		}
 
-		logs.Should().Contain(line =>
-			line.Contains($"process name {excludeProcess} matches excluded name {excludeProcess}. Profiler disabled"));
+		logs.Should()
+			.Contain(line =>
+				line.Contains($"process name {excludeProcess} matches excluded name {excludeProcess}. Profiler disabled"));
 
 		// count of manual spans without any auto instrumented spans
 		apmServer.ReceivedData.Spans.Should().HaveCount(32);
@@ -162,8 +164,9 @@ public class ExcludeTests
 				exception => _output.WriteLine($"{exception}"));
 		}
 
-		logs.Should().Contain(line =>
-			line.Contains($"service name {serviceName} matches excluded name {serviceName}. Profiler disabled"));
+		logs.Should()
+			.Contain(line =>
+				line.Contains($"service name {serviceName} matches excluded name {serviceName}. Profiler disabled"));
 
 		// count of manual spans without any auto instrumented spans
 		apmServer.ReceivedData.Spans.Should().HaveCount(32);

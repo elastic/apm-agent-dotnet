@@ -12,9 +12,7 @@ using Xunit;
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("SqlServer")]
-	public class SqlServerCollection : ICollectionFixture<SqlServerFixture>
-	{
-	}
+	public class SqlServerCollection : ICollectionFixture<SqlServerFixture> { }
 
 	public class SqlServerFixture : IAsyncLifetime
 	{
@@ -23,10 +21,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		public SqlServerFixture()
 		{
 			var containerBuilder = new TestcontainersBuilder<MsSqlTestcontainer>()
-				.WithDatabase(new MsSqlTestcontainerConfiguration
-				{
-					Password = "StrongPassword(!)!!!1"
-				});
+				.WithDatabase(new MsSqlTestcontainerConfiguration { Password = "StrongPassword(!)!!!1" });
 
 			_container = containerBuilder.Build();
 		}

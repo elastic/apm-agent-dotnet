@@ -12,22 +12,22 @@ using System.ComponentModel;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 {
-    /// <summary>
-    /// BasicGetResult interface for ducktyping
-    /// </summary>
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface IBasicGetResult
-    {
-        /// <summary>
-        /// Gets the message body of the result
-        /// </summary>
-        IBody Body { get; }
+	/// <summary>
+	/// BasicGetResult interface for ducktyping
+	/// </summary>
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public interface IBasicGetResult
+	{
+		/// <summary>
+		/// Gets the message body of the result
+		/// </summary>
+		IBody Body { get; }
 
-        /// <summary>
-        /// Gets the message properties
-        /// </summary>
-        IBasicProperties BasicProperties { get; }
+		/// <summary>
+		/// Gets the message properties
+		/// </summary>
+		IBasicProperties BasicProperties { get; }
 
 		/// <summary>
 		/// Retrieve the exchange this message was published to.
@@ -38,5 +38,5 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 		/// Retrieve the routing key with which this message was published.
 		/// </summary>
 		public string RoutingKey { get; }
-    }
+	}
 }

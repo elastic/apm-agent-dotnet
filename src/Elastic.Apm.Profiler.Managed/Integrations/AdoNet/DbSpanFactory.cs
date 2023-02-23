@@ -33,10 +33,10 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			// 2. for the same command text
 			// skip creating another db span for it, to prevent instrumenting delegated methods.
 			if (agent.GetCurrentExecutionSegment() is Span span &&
-				(span.InstrumentationFlag.HasFlag(_instrumentationFlag) ||
-					span.Type == ApiConstants.TypeDb &&
-						(_instrumentationFlag == InstrumentationFlag.AdoNet || span.InstrumentationFlag == InstrumentationFlag.AdoNet)) &&
-				span.Name == DbSpanCommon.GetDbSpanName(command))
+			    (span.InstrumentationFlag.HasFlag(_instrumentationFlag) ||
+				    span.Type == ApiConstants.TypeDb &&
+				    (_instrumentationFlag == InstrumentationFlag.AdoNet || span.InstrumentationFlag == InstrumentationFlag.AdoNet)) &&
+			    span.Name == DbSpanCommon.GetDbSpanName(command))
 				return null;
 
 			return agent.TracerInternal.DbSpanCommon.StartSpan(agent, command, _instrumentationFlag);
