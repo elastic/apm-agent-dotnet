@@ -15,7 +15,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		public static System.Type GetInstrumentedType(
 			this object runtimeObject,
 			string instrumentedNamespace,
-			string instrumentedTypeName)
+			string instrumentedTypeName
+		)
 		{
 			if (runtimeObject == null)
 			{
@@ -36,6 +37,5 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 			return null;
 		}
-
 	}
 }

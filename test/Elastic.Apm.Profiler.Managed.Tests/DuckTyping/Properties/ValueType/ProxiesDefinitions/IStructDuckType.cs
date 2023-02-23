@@ -12,10 +12,10 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.ValueType.ProxiesDefinitions
 {
-    public interface IStructDuckType : IDuckType
-    {
-        int PublicGetSetValueType { get; }
+	public interface IStructDuckType : IDuckType
+	{
+		int PublicGetSetValueType { get; }
 
-        int PrivateGetSetValueType { get; }
-    }
+		int PrivateGetSetValueType { get; }
+	}
 }

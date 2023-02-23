@@ -20,48 +20,50 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 {
-    /// <summary>
-    /// RabbitMQ.Client BasicGet calltarget instrumentation
-    /// </summary>
-    [Instrument(
-        Assembly = "RabbitMQ.Client",
-        Type = "RabbitMQ.Client.Impl.ModelBase",
-        Method = "BasicGet",
-        ReturnType = "RabbitMQ.Client.BasicGetResult",
-        ParameterTypes = new[] { ClrTypeNames.String, ClrTypeNames.Bool },
-        MinimumVersion = "3.6.9",
-        MaximumVersion = "6.*.*",
-        Group = RabbitMqIntegration.Name)]
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public class BasicGetIntegration
-    {
+	/// <summary>
+	/// RabbitMQ.Client BasicGet calltarget instrumentation
+	/// </summary>
+	[Instrument(
+		Assembly = "RabbitMQ.Client",
+		Type = "RabbitMQ.Client.Impl.ModelBase",
+		Method = "BasicGet",
+		ReturnType = "RabbitMQ.Client.BasicGetResult",
+		ParameterTypes = new[] { ClrTypeNames.String, ClrTypeNames.Bool },
+		MinimumVersion = "3.6.9",
+		MaximumVersion = "6.*.*",
+		Group = RabbitMqIntegration.Name)]
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class BasicGetIntegration
+	{
 		/// <summary>
-        /// OnMethodBegin callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <param name="queue">The queue name of the message</param>
-        /// <param name="autoAck">The original autoAck argument</param>
-        /// <returns>Calltarget state value</returns>
-        public static CallTargetState OnMethodBegin<TTarget>(TTarget instance, string queue, bool autoAck) =>
+		/// OnMethodBegin callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <param name="queue">The queue name of the message</param>
+		/// <param name="autoAck">The original autoAck argument</param>
+		/// <returns>Calltarget state value</returns>
+		public static CallTargetState OnMethodBegin<TTarget>(TTarget instance, string queue, bool autoAck) =>
 			new CallTargetState(segment: null, state: queue, startTime: DateTimeOffset.UtcNow);
 
 		/// <summary>
-        /// OnMethodEnd callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <typeparam name="TResult">Type of the BasicGetResult</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <param name="basicGetResult">BasicGetResult instance</param>
-        /// <param name="exception">Exception instance in case the original code threw an exception.</param>
-        /// <param name="state">Calltarget state value</param>
-        /// <returns>A default CallTargetReturn to satisfy the CallTarget contract</returns>
-        public static CallTargetReturn<TResult> OnMethodEnd<TTarget, TResult>(TTarget instance, TResult basicGetResult, Exception exception, CallTargetState state)
-            where TResult : IBasicGetResult, IDuckType
-        {
-            var queue = (string)state.State;
-            var startTime = state.StartTime;
+		/// OnMethodEnd callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <typeparam name="TResult">Type of the BasicGetResult</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <param name="basicGetResult">BasicGetResult instance</param>
+		/// <param name="exception">Exception instance in case the original code threw an exception.</param>
+		/// <param name="state">Calltarget state value</param>
+		/// <returns>A default CallTargetReturn to satisfy the CallTarget contract</returns>
+		public static CallTargetReturn<TResult> OnMethodEnd<TTarget, TResult>(TTarget instance, TResult basicGetResult, Exception exception,
+			CallTargetState state
+		)
+			where TResult : IBasicGetResult, IDuckType
+		{
+			var queue = (string)state.State;
+			var startTime = state.StartTime;
 			var agent = Agent.Instance;
 			var transaction = agent.Tracer.CurrentTransaction;
 			if (transaction is null)
@@ -99,10 +101,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 			}
 
 			var normalizedQueue = RabbitMqIntegration.NormalizeQueueName(queue);
-			var span = agent.Tracer.CurrentExecutionSegment().StartSpan(
-				$"{RabbitMqIntegration.Name} POLL from {normalizedQueue}",
-				ApiConstants.TypeMessaging,
-				RabbitMqIntegration.Subtype);
+			var span = agent.Tracer.CurrentExecutionSegment()
+				.StartSpan(
+					$"{RabbitMqIntegration.Name} POLL from {normalizedQueue}",
+					ApiConstants.TypeMessaging,
+					RabbitMqIntegration.Subtype);
 
 			if (startTime.HasValue && span is Span realSpan)
 				realSpan.Timestamp = TimeUtils.ToTimestamp(startTime.Value);
@@ -119,6 +122,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 
 			span.EndCapturingException(exception);
 			return new CallTargetReturn<TResult>(basicGetResult);
-        }
+		}
 	}
 }
