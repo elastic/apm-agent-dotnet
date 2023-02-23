@@ -152,13 +152,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         [Fact]
         public void PropertyOrFieldNotFoundException()
         {
-            object[] targets = new object[]
+            var targets = new object[]
             {
                 new PropertyOrFieldNotFoundExceptionClass(),
                 (PropertyOrFieldNotFoundExceptionTargetStruct)default
             };
 
-            foreach (object target in targets)
+            foreach (var target in targets)
             {
                 Assert.Throws<DuckTypePropertyOrFieldNotFoundException>(() =>
                 {
@@ -256,7 +256,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void StructMembersCannotBeChangedException()
         {
             StructMembersCannotBeChangedExceptionStruct targetStruct = default;
-            object target = (object)targetStruct;
+            var target = (object)targetStruct;
 
             Assert.Throws<DuckTypeStructMembersCannotBeChangedException>(() =>
             {
@@ -280,7 +280,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void StructMembersCannotBeChanged2Exception()
         {
             StructMembersCannotBeChanged2ExceptionStruct targetStruct = default;
-            object target = (object)targetStruct;
+            var target = (object)targetStruct;
 
             Assert.Throws<DuckTypeStructMembersCannotBeChangedException>(() =>
             {
@@ -473,26 +473,22 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         // *
 
         [Fact]
-        public void ProxyTypeDefinitionIsNull()
-        {
-            Assert.Throws<DuckTypeProxyTypeDefinitionIsNull>(() =>
-            {
-                DuckType.Create(null, new object());
-            });
-        }
+        public void ProxyTypeDefinitionIsNull() =>
+			Assert.Throws<DuckTypeProxyTypeDefinitionIsNull>(() =>
+			{
+				DuckType.Create(null, new object());
+			});
 
-        // *
+		// *
 
         [Fact]
-        public void TargetObjectInstanceIsNull()
-        {
-            Assert.Throws<DuckTypeTargetObjectInstanceIsNull>(() =>
-            {
-                DuckType.Create(typeof(ITargetObjectInstanceIsNull), null);
-            });
-        }
+        public void TargetObjectInstanceIsNull() =>
+			Assert.Throws<DuckTypeTargetObjectInstanceIsNull>(() =>
+			{
+				DuckType.Create(typeof(ITargetObjectInstanceIsNull), null);
+			});
 
-        public interface ITargetObjectInstanceIsNull
+		public interface ITargetObjectInstanceIsNull
         {
         }
 
@@ -516,11 +512,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
         public class InvalidTypeConversionExceptionClass
         {
-            public int Sum(int a, int b)
-            {
-                return a + b;
-            }
-        }
+            public int Sum(int a, int b) => a + b;
+		}
 
         // *
 

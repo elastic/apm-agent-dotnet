@@ -19,7 +19,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructCopyTest()
         {
             PrivateStruct instance = default;
-            CopyStruct copy = instance.DuckCast<CopyStruct>();
+            var copy = instance.DuckCast<CopyStruct>();
             Assert.Equal((int)instance.Value, (int)copy.Value);
             Assert.Equal(ValuesDuckType.Third.ToString(), copy.GetValue());
             Assert.Equal(ValuesDuckType.Third.ToString(), ((IGetValue)copy).GetValueProp);
@@ -30,7 +30,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructInterfaceProxyTest()
         {
             PrivateStruct instance = default;
-            IPrivateStruct proxy = instance.DuckCast<IPrivateStruct>();
+            var proxy = instance.DuckCast<IPrivateStruct>();
             Assert.Equal((int)instance.Value, (int)proxy.Value);
             Assert.Equal(ValuesDuckType.Third.ToString(), proxy.GetValue());
             Assert.Equal(ValuesDuckType.Third.ToString(), proxy.GetValueProp);
@@ -41,7 +41,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructAbstractProxyTest()
         {
             PrivateStruct instance = default;
-            AbstractPrivateProxy proxy = instance.DuckCast<AbstractPrivateProxy>();
+            var proxy = instance.DuckCast<AbstractPrivateProxy>();
             Assert.Equal((int)instance.Value, (int)proxy.Value);
             Assert.Equal(ValuesDuckType.Third.ToString(), proxy.GetValue());
             Assert.Equal(ValuesDuckType.Third.ToString(), ((IGetValue)proxy).GetValueProp);
@@ -52,7 +52,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
         public void NonPublicStructVirtualProxyTest()
         {
             PrivateStruct instance = default;
-            VirtualPrivateProxy proxy = instance.DuckCast<VirtualPrivateProxy>();
+            var proxy = instance.DuckCast<VirtualPrivateProxy>();
             Assert.Equal((int)instance.Value, (int)proxy.Value);
             Assert.Equal(ValuesDuckType.Third.ToString(), proxy.GetValue());
             Assert.Equal(ValuesDuckType.Third.ToString(), ((IGetValue)proxy).GetValueProp);

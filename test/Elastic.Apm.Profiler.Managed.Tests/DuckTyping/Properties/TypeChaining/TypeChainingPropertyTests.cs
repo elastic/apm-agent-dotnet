@@ -17,37 +17,31 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.TypeChaining
 {
     public class TypeChainingPropertyTests
     {
-        public static IEnumerable<object[]> Data()
-        {
-            return new[]
-            {
-                new object[] { ObscureObject.GetPropertyPublicObject() },
-                new object[] { ObscureObject.GetPropertyInternalObject() },
-                new object[] { ObscureObject.GetPropertyPrivateObject() },
-            };
-        }
+        public static IEnumerable<object[]> Data() =>
+			new[]
+			{
+				new object[] { ObscureObject.GetPropertyPublicObject() },
+				new object[] { ObscureObject.GetPropertyInternalObject() },
+				new object[] { ObscureObject.GetPropertyPrivateObject() },
+			};
 
-        [Theory]
+		[Theory]
         [MemberData(nameof(Data))]
-        public void StaticGetOnlyPropertyException(object obscureObject)
-        {
-            Assert.Throws<DuckTypePropertyCantBeWrittenException>(() =>
-            {
-                obscureObject.DuckCast<IObscureStaticErrorDuckType>();
-            });
-        }
+        public void StaticGetOnlyPropertyException(object obscureObject) =>
+			Assert.Throws<DuckTypePropertyCantBeWrittenException>(() =>
+			{
+				obscureObject.DuckCast<IObscureStaticErrorDuckType>();
+			});
 
-        [Theory]
+		[Theory]
         [MemberData(nameof(Data))]
-        public void GetOnlyPropertyException(object obscureObject)
-        {
-            Assert.Throws<DuckTypePropertyCantBeWrittenException>(() =>
-            {
-                obscureObject.DuckCast<IObscureErrorDuckType>();
-            });
-        }
+        public void GetOnlyPropertyException(object obscureObject) =>
+			Assert.Throws<DuckTypePropertyCantBeWrittenException>(() =>
+			{
+				obscureObject.DuckCast<IObscureErrorDuckType>();
+			});
 
-        [Theory]
+		[Theory]
         [MemberData(nameof(Data))]
         public void StaticGetOnlyProperties(object obscureObject)
         {

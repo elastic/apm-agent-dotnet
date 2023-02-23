@@ -43,18 +43,12 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitio
         {
         }
 
-        public virtual void GetOutput(out int value)
-        {
-            value = default;
-        }
+        public virtual void GetOutput(out int value) => value = default;
 
-        [Duck(Name = "GetOutput")]
-        public virtual void GetOutputObject(out object value)
-        {
-            value = default;
-        }
+		[Duck(Name = "GetOutput")]
+        public virtual void GetOutputObject(out object value) => value = default;
 
-        public virtual bool TryGetObscure(out IDummyFieldObject obj)
+		public virtual bool TryGetObscure(out IDummyFieldObject obj)
         {
             obj = default;
             return false;
@@ -76,18 +70,12 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitio
         {
         }
 
-        public virtual bool TryGetReference(ref IDummyFieldObject obj)
-        {
-            return false;
-        }
+        public virtual bool TryGetReference(ref IDummyFieldObject obj) => false;
 
-        [Duck(Name = "TryGetReference")]
-        public virtual bool TryGetReferenceObject(ref object obj)
-        {
-            return false;
-        }
+		[Duck(Name = "TryGetReference")]
+        public virtual bool TryGetReferenceObject(ref object obj) => false;
 
-        public virtual bool TryGetPrivateObscure(out IDummyFieldObject obj)
+		public virtual bool TryGetPrivateObscure(out IDummyFieldObject obj)
         {
             obj = default;
             return false;
@@ -100,18 +88,12 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitio
             return false;
         }
 
-        public virtual bool TryGetPrivateReference(ref IDummyFieldObject obj)
-        {
-            return false;
-        }
+        public virtual bool TryGetPrivateReference(ref IDummyFieldObject obj) => false;
 
-        [Duck(Name = "TryGetPrivateReference")]
-        public virtual bool TryGetPrivateReferenceObject(ref object obj)
-        {
-            return false;
-        }
+		[Duck(Name = "TryGetPrivateReference")]
+        public virtual bool TryGetPrivateReferenceObject(ref object obj) => false;
 
-        public void NormalMethod()
+		public void NormalMethod()
         {
             // .
         }
