@@ -92,9 +92,7 @@ module Main =
                     Build.CleanProfiler()
             )
             
-            Targets.Target("netcore-sln", Build.GenerateNetCoreSln)
-            
-            Targets.Target("restore", ["netcore-sln"], Build.Restore)
+            Targets.Target("restore", Build.Restore)
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
