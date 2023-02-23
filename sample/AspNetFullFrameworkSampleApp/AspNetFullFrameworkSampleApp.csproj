@@ -2,6 +2,14 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="Build" Condition="'$(OS)' != 'WINDOWS_NT'">
   </Target>
+  <!-- prevents NU1503 -->
+  <Target Name="_IsProjectRestoreSupported" Condition="'$(OS)' != 'WINDOWS_NT'"
+          Returns="@(_ValidProjectsForRestore)">
+    <ItemGroup>
+      <_ValidProjectsForRestore Include="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="Restore" Condition="'$(OS)' != 'WINDOWS_NT'"/>
   <Target Name="Clean" Condition="'$(OS)' != 'WINDOWS_NT'">
   </Target>
   <!-- dummy Pack target to allow dotnet pack to be called on solution file to package all <IsPackable>true</IsPackable> projects. 
