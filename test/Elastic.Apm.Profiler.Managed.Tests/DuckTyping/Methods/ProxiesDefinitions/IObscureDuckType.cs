@@ -12,63 +12,66 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitions
 {
-    public interface IObscureDuckType
-    {
+	public interface IObscureDuckType
+	{
 #if INTERFACE_DEFAULTS
         int Sum(int a, int b) => a + b;
 #else
-        int Sum(int a, int b);
+		int Sum(int a, int b);
 #endif
 
-        float Sum(float a, float b);
+		float Sum(float a, float b);
 
-        double Sum(double a, double b);
+		double Sum(double a, double b);
 
-        short Sum(short a, short b);
+		short Sum(short a, short b);
 
-        TestEnum2 ShowEnum(TestEnum2 val);
+		TestEnum2 ShowEnum(TestEnum2 val);
 
-        object InternalSum(int a, int b);
+		object InternalSum(int a, int b);
 
-        [Duck(ParameterTypeNames = new string[] { "System.String", "Elastic.Apm.Profiler.Managed.Tests.DuckTyping.ObscureObject+DummyFieldObject, Elastic.Apm.Profiler.Managed.Tests" })]
-        void Add(string name, object obj);
+		[Duck(ParameterTypeNames = new string[]
+		{
+			"System.String", "Elastic.Apm.Profiler.Managed.Tests.DuckTyping.ObscureObject+DummyFieldObject, Elastic.Apm.Profiler.Managed.Tests"
+		})]
+		void Add(string name, object obj);
 
-        void Add(string name, int obj);
+		void Add(string name, int obj);
 
-        void Add(string name, string obj = "none");
+		void Add(string name, string obj = "none");
 
-        void Pow2(ref int value);
+		void Pow2(ref int value);
 
-        void GetOutput(out int value);
+		void GetOutput(out int value);
 
-        [Duck(Name = "GetOutput")]
-        void GetOutputObject(out object value);
+		[Duck(Name = "GetOutput")]
+		void GetOutputObject(out object value);
 
-        bool TryGetObscure(out IDummyFieldObject obj);
+		bool TryGetObscure(out IDummyFieldObject obj);
 
-        [Duck(Name = "TryGetObscure")]
-        bool TryGetObscureObject(out object obj);
+		[Duck(Name = "TryGetObscure")]
+		bool TryGetObscureObject(out object obj);
 
-        void GetReference(ref int value);
+		void GetReference(ref int value);
 
-        [Duck(Name = "GetReference")]
-        void GetReferenceObject(ref object value);
+		[Duck(Name = "GetReference")]
+		void GetReferenceObject(ref object value);
 
-        bool TryGetReference(ref IDummyFieldObject obj);
+		bool TryGetReference(ref IDummyFieldObject obj);
 
-        [Duck(Name = "TryGetReference")]
-        bool TryGetReferenceObject(ref object obj);
+		[Duck(Name = "TryGetReference")]
+		bool TryGetReferenceObject(ref object obj);
 
-        bool TryGetPrivateObscure(out IDummyFieldObject obj);
+		bool TryGetPrivateObscure(out IDummyFieldObject obj);
 
-        [Duck(Name = "TryGetPrivateObscure")]
-        bool TryGetPrivateObscureObject(out object obj);
+		[Duck(Name = "TryGetPrivateObscure")]
+		bool TryGetPrivateObscureObject(out object obj);
 
-        bool TryGetPrivateReference(ref IDummyFieldObject obj);
+		bool TryGetPrivateReference(ref IDummyFieldObject obj);
 
-        [Duck(Name = "TryGetPrivateReference")]
-        bool TryGetPrivateReferenceObject(ref object obj);
+		[Duck(Name = "TryGetPrivateReference")]
+		bool TryGetPrivateReferenceObject(ref object obj);
 
-        IDummyFieldObject Bypass(IDummyFieldObject obj);
-    }
+		IDummyFieldObject Bypass(IDummyFieldObject obj);
+	}
 }

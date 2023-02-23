@@ -10,9 +10,10 @@
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 {
-    internal static class RabbitMqIntegration
-    {
-        internal const string Name = "RabbitMQ";
+	internal static class RabbitMqIntegration
+	{
+		internal const string Name = "RabbitMQ";
+
 		// ReSharper disable once InconsistentNaming
 		internal const string IBasicPropertiesTypeName = "RabbitMQ.Client.IBasicProperties";
 		internal const string Subtype = "rabbitmq";

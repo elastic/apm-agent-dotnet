@@ -15,44 +15,44 @@ using Elastic.Apm.Profiler.Managed.Core;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 {
-    /// <summary>
-    /// Confluent.Kafka Consumer.Consume calltarget instrumentation
-    /// </summary>
-    [Instrument(
-        Assembly = "Confluent.Kafka",
-        Type= "Confluent.Kafka.Consumer`2",
-        Method = "Unsubscribe",
-        ReturnType = ClrTypeNames.Void,
-        ParameterTypes = new string[0],
-        MinimumVersion = "1.4.0",
-        MaximumVersion = "1.*.*",
-        Group = KafkaIntegration.Name)]
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public class KafkaConsumerUnsubscribeIntegration
-    {
-        /// <summary>
-        /// OnMethodBegin callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <returns>Calltarget state value</returns>
-        public static CallTargetState OnMethodBegin<TTarget>(TTarget instance)
-        {
-            // If we are already in a consumer scope, close it.
-            KafkaIntegration.CloseConsumerTransaction(Agent.Instance);
-            return CallTargetState.GetDefault();
-        }
+	/// <summary>
+	/// Confluent.Kafka Consumer.Consume calltarget instrumentation
+	/// </summary>
+	[Instrument(
+		Assembly = "Confluent.Kafka",
+		Type = "Confluent.Kafka.Consumer`2",
+		Method = "Unsubscribe",
+		ReturnType = ClrTypeNames.Void,
+		ParameterTypes = new string[0],
+		MinimumVersion = "1.4.0",
+		MaximumVersion = "1.*.*",
+		Group = KafkaIntegration.Name)]
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class KafkaConsumerUnsubscribeIntegration
+	{
+		/// <summary>
+		/// OnMethodBegin callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <returns>Calltarget state value</returns>
+		public static CallTargetState OnMethodBegin<TTarget>(TTarget instance)
+		{
+			// If we are already in a consumer scope, close it.
+			KafkaIntegration.CloseConsumerTransaction(Agent.Instance);
+			return CallTargetState.GetDefault();
+		}
 
-        /// <summary>
-        /// OnMethodEnd callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <param name="exception">Exception instance in case the original code threw an exception.</param>
-        /// <param name="state">Calltarget state value</param>
-        /// <returns>A response value, in an async scenario will be T of Task of T</returns>
-        public static CallTargetReturn OnMethodEnd<TTarget>(TTarget instance, Exception exception, CallTargetState state) =>
+		/// <summary>
+		/// OnMethodEnd callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <param name="exception">Exception instance in case the original code threw an exception.</param>
+		/// <param name="state">Calltarget state value</param>
+		/// <returns>A response value, in an async scenario will be T of Task of T</returns>
+		public static CallTargetReturn OnMethodEnd<TTarget>(TTarget instance, Exception exception, CallTargetState state) =>
 			CallTargetReturn.GetDefault();
 	}
 }

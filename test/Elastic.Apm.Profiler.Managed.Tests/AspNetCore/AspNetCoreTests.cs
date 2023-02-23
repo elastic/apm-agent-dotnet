@@ -54,9 +54,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 					line =>
 					{
 						_output.WriteLine(line.Line);
-						if(line.Line.ToLower().Contains("application started"))
+						if (line.Line.ToLower().Contains("application started"))
 							waitForAppStart.Set();
-						if(line.Line.ToLower().Contains("sent items to server:") && line.Line.ToLower().Contains("transaction"))
+						if (line.Line.ToLower().Contains("sent items to server:") && line.Line.ToLower().Contains("transaction"))
 							waitForEventsSentToServer.Set();
 					},
 					exception => _output.WriteLine($"{exception}"),
@@ -73,7 +73,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 			}
 
 			apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
-			apmServer.ReceivedData.Metadata.First().Service.Agent.ActivationMethod.Should()
+			apmServer.ReceivedData.Metadata.First()
+				.Service.Agent.ActivationMethod.Should()
 				.Be(Consts.ActivationMethodProfiler);
 
 			apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
@@ -81,7 +82,6 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 
 			apmServer.ReceivedData.Spans.Any(span => span.Context.Db != null).Should().BeTrue();
 			apmServer.ReceivedData.Spans.Any(span => span.Context.Http != null).Should().BeTrue();
-
 		}
 	}
 }

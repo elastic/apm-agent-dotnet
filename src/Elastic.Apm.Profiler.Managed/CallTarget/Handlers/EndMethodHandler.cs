@@ -13,33 +13,33 @@ using System.Runtime.CompilerServices;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 {
-    internal static class EndMethodHandler<TIntegration, TTarget>
-    {
-        private static readonly InvokeDelegate _invokeDelegate;
+	internal static class EndMethodHandler<TIntegration, TTarget>
+	{
+		private static readonly InvokeDelegate _invokeDelegate;
 
-        static EndMethodHandler()
-        {
-            try
-            {
-                var dynMethod = IntegrationMapper.CreateEndMethodDelegate(typeof(TIntegration), typeof(TTarget));
-                if (dynMethod != null)
+		static EndMethodHandler()
+		{
+			try
+			{
+				var dynMethod = IntegrationMapper.CreateEndMethodDelegate(typeof(TIntegration), typeof(TTarget));
+				if (dynMethod != null)
 					_invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
 			}
-            catch (Exception ex)
-            {
-                throw new CallTargetInvokerException(ex);
-            }
-            finally
-            {
-                if (_invokeDelegate is null)
+			catch (Exception ex)
+			{
+				throw new CallTargetInvokerException(ex);
+			}
+			finally
+			{
+				if (_invokeDelegate is null)
 					_invokeDelegate = (instance, exception, state) => CallTargetReturn.GetDefault();
 			}
-        }
+		}
 
-        internal delegate CallTargetReturn InvokeDelegate(TTarget instance, Exception exception, CallTargetState state);
+		internal delegate CallTargetReturn InvokeDelegate(TTarget instance, Exception exception, CallTargetState state);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static CallTargetReturn Invoke(TTarget instance, Exception exception, CallTargetState state) =>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static CallTargetReturn Invoke(TTarget instance, Exception exception, CallTargetState state) =>
 			_invokeDelegate(instance, exception, state);
 	}
 }

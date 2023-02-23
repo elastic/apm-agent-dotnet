@@ -14,38 +14,38 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 {
-    internal static class CachedMessageHeadersHelper<TMarkerType>
-    {
-        private static readonly Func<object> _activator;
+	internal static class CachedMessageHeadersHelper<TMarkerType>
+	{
+		private static readonly Func<object> _activator;
 
-        static CachedMessageHeadersHelper()
-        {
-            var headersType = typeof(TMarkerType).Assembly.GetType("Confluent.Kafka.Headers");
+		static CachedMessageHeadersHelper()
+		{
+			var headersType = typeof(TMarkerType).Assembly.GetType("Confluent.Kafka.Headers");
 
-            var ctor = headersType.GetConstructor(System.Type.EmptyTypes);
+			var ctor = headersType.GetConstructor(System.Type.EmptyTypes);
 
-            var createHeadersMethod = new DynamicMethod(
-                $"KafkaCachedMessageHeadersHelpers",
-                headersType,
-                null,
-                typeof(DuckType).Module,
-                true);
+			var createHeadersMethod = new DynamicMethod(
+				$"KafkaCachedMessageHeadersHelpers",
+				headersType,
+				null,
+				typeof(DuckType).Module,
+				true);
 
-            var il = createHeadersMethod.GetILGenerator();
-            il.Emit(OpCodes.Newobj, ctor);
-            il.Emit(OpCodes.Ret);
+			var il = createHeadersMethod.GetILGenerator();
+			il.Emit(OpCodes.Newobj, ctor);
+			il.Emit(OpCodes.Ret);
 
-            _activator = (Func<object>)createHeadersMethod.CreateDelegate(typeof(Func<object>));
-        }
+			_activator = (Func<object>)createHeadersMethod.CreateDelegate(typeof(Func<object>));
+		}
 
-        /// <summary>
-        /// Creates a Confluent.Kafka.Headers object and assigns it to an `IMessage` proxy
-        /// </summary>
-        /// <returns>A proxy for the new Headers object</returns>
-        public static IHeaders CreateHeaders()
-        {
-            var headers = _activator();
-            return headers.DuckCast<IHeaders>();
-        }
-    }
+		/// <summary>
+		/// Creates a Confluent.Kafka.Headers object and assigns it to an `IMessage` proxy
+		/// </summary>
+		/// <returns>A proxy for the new Headers object</returns>
+		public static IHeaders CreateHeaders()
+		{
+			var headers = _activator();
+			return headers.DuckCast<IHeaders>();
+		}
+	}
 }

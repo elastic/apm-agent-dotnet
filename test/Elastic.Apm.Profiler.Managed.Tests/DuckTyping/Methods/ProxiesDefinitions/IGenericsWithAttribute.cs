@@ -13,15 +13,15 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitions
 {
-    public interface IGenericsWithAttribute
-    {
-        [Duck(Name = "GetDefault", GenericParameterTypeNames = new[] { "System.Int32" })]
-        int GetDefaultInt();
+	public interface IGenericsWithAttribute
+	{
+		[Duck(Name = "GetDefault", GenericParameterTypeNames = new[] { "System.Int32" })]
+		int GetDefaultInt();
 
-        [Duck(Name = "GetDefault", GenericParameterTypeNames = new[] { "System.String" })]
-        string GetDefaultString();
+		[Duck(Name = "GetDefault", GenericParameterTypeNames = new[] { "System.String" })]
+		string GetDefaultString();
 
-        [Duck(Name = "Wrap", GenericParameterTypeNames = new[] { "System.Int32", "System.String" })]
-        Tuple<int, string> WrapIntString(int a, string b);
-    }
+		[Duck(Name = "Wrap", GenericParameterTypeNames = new[] { "System.Int32", "System.String" })]
+		Tuple<int, string> WrapIntString(int a, string b);
+	}
 }

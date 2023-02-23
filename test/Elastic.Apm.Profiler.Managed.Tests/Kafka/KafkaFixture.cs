@@ -38,19 +38,17 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 			writer.WriteLine("echo 'dataDir=/var/lib/zookeeper/data' >> zookeeper.properties");
 			writer.WriteLine("echo 'dataLogDir=/var/lib/zookeeper/log' >> zookeeper.properties");
 			writer.WriteLine("zookeeper-server-start zookeeper.properties &");
-			writer.WriteLine($"export KAFKA_ADVERTISED_LISTENERS='PLAINTEXT://{container.Hostname}:{container.GetMappedPublicPort(DefaultPort)},BROKER://localhost:{BrokerPort}'");
+			writer.WriteLine(
+				$"export KAFKA_ADVERTISED_LISTENERS='PLAINTEXT://{container.Hostname}:{container.GetMappedPublicPort(DefaultPort)},BROKER://localhost:{BrokerPort}'");
 			writer.WriteLine(". /etc/confluent/docker/bash-config");
 			writer.WriteLine("/etc/confluent/docker/configure");
 			writer.WriteLine("/etc/confluent/docker/launch");
 			return container.CopyFileAsync(StartupScriptPath, Encoding.UTF8.GetBytes(writer.ToString()), 0x1ff, ct: ct);
 		};
-
 	}
 
 	[CollectionDefinition("Kafka")]
-	public class KafkaCollection : ICollectionFixture<KafkaFixture>
-	{
-	}
+	public class KafkaCollection : ICollectionFixture<KafkaFixture> { }
 
 	public class KafkaFixture : IAsyncLifetime
 	{

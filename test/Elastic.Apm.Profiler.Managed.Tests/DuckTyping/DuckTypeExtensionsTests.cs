@@ -15,75 +15,75 @@ using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 {
-    public class DuckTypeExtensionsTests
-    {
-        [Fact]
-        public void DuckCastTest()
-        {
-            var task = (Task)Task.FromResult("Hello World");
+	public class DuckTypeExtensionsTests
+	{
+		[Fact]
+		public void DuckCastTest()
+		{
+			var task = (Task)Task.FromResult("Hello World");
 
-            var iTaskString = task.DuckCast<ITaskString>();
-            var objTaskString = task.DuckCast(typeof(ITaskString));
+			var iTaskString = task.DuckCast<ITaskString>();
+			var objTaskString = task.DuckCast(typeof(ITaskString));
 
 			iTaskString.Result.Should().Be("Hello World");
 			(iTaskString.GetType() == objTaskString.GetType()).Should().BeTrue();
 		}
 
-        [Fact]
-        public void NullCheck()
-        {
-            object obj = null;
-            var iTaskString = obj.DuckCast<ITaskString>();
+		[Fact]
+		public void NullCheck()
+		{
+			object obj = null;
+			var iTaskString = obj.DuckCast<ITaskString>();
 
 			iTaskString.Should().BeNull();
 		}
 
-        [Fact]
-        public void TryDuckCastTest()
-        {
-            var task = (Task)Task.FromResult("Hello World");
+		[Fact]
+		public void TryDuckCastTest()
+		{
+			var task = (Task)Task.FromResult("Hello World");
 
-            var tskResultBool = task.TryDuckCast<ITaskString>(out var tskResult);
-            Assert.True(tskResultBool);
-            Assert.Equal("Hello World", tskResult.Result);
+			var tskResultBool = task.TryDuckCast<ITaskString>(out var tskResult);
+			Assert.True(tskResultBool);
+			Assert.Equal("Hello World", tskResult.Result);
 
-            var tskErrorBool = task.TryDuckCast<ITaskError>(out var tskResultError);
-            Assert.False(tskErrorBool);
-            Assert.Null(tskResultError);
-        }
+			var tskErrorBool = task.TryDuckCast<ITaskError>(out var tskResultError);
+			Assert.False(tskErrorBool);
+			Assert.Null(tskResultError);
+		}
 
-        [Fact]
-        public void DuckAsTest()
-        {
-            var task = (Task)Task.FromResult("Hello World");
+		[Fact]
+		public void DuckAsTest()
+		{
+			var task = (Task)Task.FromResult("Hello World");
 
-            var tskResult = task.DuckAs<ITaskString>();
-            var tskResultError = task.DuckAs<ITaskError>();
+			var tskResult = task.DuckAs<ITaskString>();
+			var tskResultError = task.DuckAs<ITaskError>();
 
 			tskResult.Result.Should().Be("Hello World");
 			tskResultError.Should().BeNull();
 		}
 
-        [Fact]
-        public void DuckIsTest()
-        {
-            var task = (Task)Task.FromResult("Hello World");
+		[Fact]
+		public void DuckIsTest()
+		{
+			var task = (Task)Task.FromResult("Hello World");
 
-            var bOk = task.DuckIs<ITaskString>();
-            var bError = task.DuckIs<ITaskError>();
+			var bOk = task.DuckIs<ITaskString>();
+			var bError = task.DuckIs<ITaskError>();
 
 			bOk.Should().BeTrue();
 			bError.Should().BeFalse();
 		}
 
-        public interface ITaskString
-        {
-            string Result { get; }
-        }
+		public interface ITaskString
+		{
+			string Result { get; }
+		}
 
-        public interface ITaskError
-        {
-            string ResultWrong { get; }
-        }
-    }
+		public interface ITaskError
+		{
+			string ResultWrong { get; }
+		}
+	}
 }

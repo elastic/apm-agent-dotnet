@@ -12,16 +12,16 @@ using System.ComponentModel;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 {
-    /// <summary>
-    /// Body interface for ducktyping
-    /// </summary>
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface IBody
-    {
-        /// <summary>
-        /// Gets the length of the message body
-        /// </summary>
-        int Length { get; }
-    }
+	/// <summary>
+	/// Body interface for ducktyping
+	/// </summary>
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public interface IBody
+	{
+		/// <summary>
+		/// Gets the length of the message body
+		/// </summary>
+		int Length { get; }
+	}
 }
