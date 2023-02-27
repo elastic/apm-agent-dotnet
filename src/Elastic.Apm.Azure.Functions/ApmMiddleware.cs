@@ -46,7 +46,11 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			{
 				success = false;
 				t.CaptureException(ex);
+<<<<<<< HEAD
 				Context.Logger.Error()?.LogException(ex, $"Exception was thrown during '{nameof(Invoke)}'");
+=======
+				Context.Logger.Log(LogLevel.Error, $"Exception was thrown during '{nameof(Invoke)}'", ex, null);
+>>>>>>> 147b47f39da7635500741760c827e90c219ed9dc
 				throw;
 			}
 			finally
