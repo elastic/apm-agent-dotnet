@@ -66,7 +66,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			var processInfo = new ProcessStartInfo
 			{
 				FileName = "dotnet",
-				Arguments = $"publish -c Release -f {targetFramework} -o {outputDirectory} {msBuildProperties}",
+				Arguments = $"publish -c Release -f {targetFramework} --property:PublishDir={outputDirectory} {msBuildProperties}",
 				WorkingDirectory = _projectDirectory
 			};
 

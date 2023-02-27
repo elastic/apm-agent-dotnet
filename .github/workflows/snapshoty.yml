@@ -25,7 +25,7 @@ jobs:
       run: .ci/linux/release.sh true
 
     - name: Rustup
-      run: rustup default 1.59.0
+      run: rustup default 1.67.1
 
     - name: Cargo make
       run: cargo install --force cargo-make

@@ -40,7 +40,7 @@ namespace Elastic.Apm.StartupHook.Tests
 			var processInfo = new ProcessStartInfo
 			{
 				FileName = "dotnet",
-				Arguments = $"publish -c Release -f {targetFramework} -o {Path.Combine(_publishDirectory, targetFramework)}",
+				Arguments = $"publish -c Release -f {targetFramework} --property:PublishDir={Path.Combine(_publishDirectory, targetFramework)}",
 				WorkingDirectory = projectDirectory
 			};
 
