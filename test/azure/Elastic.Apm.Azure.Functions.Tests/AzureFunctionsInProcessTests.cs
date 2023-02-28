@@ -13,7 +13,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
 
-[Collection("AzureFunctions-InProcess")]
+[Collection("AzureFunctions")]
 public class AzureFunctionsInProcessTests : IClassFixture<AzureFunctionsTestFixtureInProcess>, IDisposable
 {
 	private readonly AzureFunctionsTestFixtureBase _azureFunctionsTestFixture;
