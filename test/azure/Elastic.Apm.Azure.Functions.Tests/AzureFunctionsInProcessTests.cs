@@ -65,7 +65,7 @@ public class AzureFunctionsInProcessTests : IClassFixture<AzureFunctionsTestFixt
 	public async Task Invoke_Http_Ok()
 	{
 		var transaction =
-			await InvokeFunction("http://localhost:7071/api/SampleHttpTrigger", "GET /api/SampleHttpTrigger");
+			await InvokeFunction("http://localhost:17073/api/SampleHttpTrigger", "GET /api/SampleHttpTrigger");
 
 		transaction.Should().NotBeNull();
 		transaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
@@ -77,7 +77,7 @@ public class AzureFunctionsInProcessTests : IClassFixture<AzureFunctionsTestFixt
 		transaction.Outcome.Should().Be(Outcome.Success);
 		transaction.Result.Should().Be("HTTP 2xx");
 		transaction.Context.Request.Method.Should().Be("GET");
-		transaction.Context.Request.Url.Full.Should().Be("http://localhost:7071/api/SampleHttpTrigger");
+		transaction.Context.Request.Url.Full.Should().Be("http://localhost:17073/api/SampleHttpTrigger");
 		transaction.Context.Response.StatusCode.Should().Be(200);
 	}
 
