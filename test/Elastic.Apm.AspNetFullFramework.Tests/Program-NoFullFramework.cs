@@ -6,6 +6,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public static class Program
 	{
+		/// <summary>
+		/// Dummy program to compile this project when the visual studio build tools are
+		/// unavailable to compile AspNetFullFrameworkSampleApp
+		/// </summary>
+		/// <returns></returns>
 		public static int Main() => 0;
 	}
 }

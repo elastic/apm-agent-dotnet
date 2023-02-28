@@ -1,10 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
+    <BuildFullFrameworkAsp Condition="'$(OS)' != 'WINDOWS_NT'">false</BuildFullFrameworkAsp>
+    <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(VSToolsPath)' == ''">false</BuildFullFrameworkAsp>
+    <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(VSToolsPath)' != ''">true</BuildFullFrameworkAsp>
+  </PropertyGroup>
+  <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetFullFramework.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetFullFramework.Tests</RootNamespace>
   </PropertyGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <PackageReference Include="AngleSharp" Version="0.14.0" />
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
     <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
@@ -20,7 +25,7 @@
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.7.0" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <SetTargetFramework>TargetFramework=net461</SetTargetFramework>
     </ProjectReference>
@@ -28,12 +33,12 @@
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
     <ProjectReference Include="..\..\sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' != 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'false'">
     <Compile Remove="**\*" />
     <Compile Remove="*" />
-    <Compile Include="Program-Unix.cs" />
+    <Compile Include="Program-NoFullFramework.cs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
-    <Compile Remove="Program-Unix.cs" />
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
+    <Compile Remove="Program-NoFullFramework.cs" />
   </ItemGroup>
 </Project>
