@@ -38,16 +38,14 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				var npgSqlVersion = "5.0.7";
 
 				// TODO: Add x64/x86 options. macOS and Linux do not support x86
-				yield return new object[] { "net5.0", npgSqlVersion };
-				yield return new object[] { "netcoreapp3.1", npgSqlVersion };
+				yield return new object[] { "net7.0", npgSqlVersion };
 
 				if (TestEnvironment.IsWindows)
 					yield return new object[] { "net461", npgSqlVersion };
 
 				npgSqlVersion = "6.0.2";
 
-				yield return new object[] { "net5.0", npgSqlVersion };
-				yield return new object[] { "netcoreapp3.1", npgSqlVersion };
+				yield return new object[] { "net7.0", npgSqlVersion };
 			}
 		}
 

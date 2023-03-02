@@ -24,7 +24,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 		/// </summary>
 		/// <param name="framework"></param>
 		[Theory]
-		[InlineData("net5.0")]
+		[InlineData("net7.0")]
 		public async void AspNetCoreTest(string framework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);

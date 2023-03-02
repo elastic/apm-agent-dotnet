@@ -42,7 +42,7 @@ public class BasicTests
 			};
 
 			profiledApplication.Start(
-				"net5.0",
+				"net7.0",
 				TimeSpan.FromMinutes(2),
 				environmentVariables,
 				null,

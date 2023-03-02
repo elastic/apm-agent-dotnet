@@ -43,7 +43,7 @@ public class ExcludeTests
 			};
 
 			profiledApplication.Start(
-				"net5.0",
+				"net7.0",
 				TimeSpan.FromMinutes(2),
 				environmentVariables,
 				null,
@@ -75,8 +75,6 @@ public class ExcludeTests
 
 			dotnet = "dotnet.exe";
 		}
-		yield return new object[] { "net5.0", dotnet };
-		yield return new object[] { "net6.0", dotnet };
 		yield return new object[] { "net7.0", dotnet };
 	}
 
@@ -150,7 +148,7 @@ public class ExcludeTests
 			};
 
 			profiledApplication.Start(
-				"net5.0",
+				"net7.0",
 				TimeSpan.FromMinutes(2),
 				environmentVariables,
 				null,
@@ -205,7 +203,7 @@ public class ExcludeTests
 			};
 
 			profiledApplication.Start(
-				"net5.0",
+				"net7.0",
 				TimeSpan.FromMinutes(2),
 				environmentVariables,
 				null,

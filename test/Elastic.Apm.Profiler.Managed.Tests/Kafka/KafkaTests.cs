@@ -29,7 +29,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 		}
 
 		[DockerTheory]
-		[InlineData("net5.0")]
+		[InlineData("net7.0")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
