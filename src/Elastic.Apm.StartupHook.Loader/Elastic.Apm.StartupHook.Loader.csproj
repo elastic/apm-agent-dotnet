@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+      <!-- TODO make this netstandard 2.0 and ref System.Runtime.Loader -->
         <TargetFramework>netcoreapp2.2</TargetFramework>
         <IsPackable>false</IsPackable>
     </PropertyGroup>

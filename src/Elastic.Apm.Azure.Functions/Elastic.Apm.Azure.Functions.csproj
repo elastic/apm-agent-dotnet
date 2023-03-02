@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
 
     <AssemblyName>Elastic.Apm.Azure.Functions</AssemblyName>
@@ -19,9 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="1.6.0" />
   </ItemGroup>
 
 </Project>

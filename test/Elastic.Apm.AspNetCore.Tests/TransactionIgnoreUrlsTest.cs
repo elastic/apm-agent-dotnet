@@ -52,7 +52,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 #pragma warning disable IDE0022 // Use expression body for methods
 			_client = Helper.GetClient(_agent, _factory, useOnlyDiagnosticSource);
 #pragma warning restore IDE0022 // Use expression body for methods
-#if NETCOREAPP3_0 || NETCOREAPP3_1
+#if NET6_0_OR_GREATER
 			_client.DefaultRequestVersion = new Version(2, 0);
 #endif
 		}

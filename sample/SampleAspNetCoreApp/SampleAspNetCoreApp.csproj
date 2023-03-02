@@ -10,8 +10,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0"/>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0"/>
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.0"/>
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc6"/>
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc6"/>
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.14"/>
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.4.0"/>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0"/>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2"/>
   </ItemGroup>
