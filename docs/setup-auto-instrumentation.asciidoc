@@ -31,7 +31,10 @@ This approach works with the following
 .NET 5+
 |===
 
-and instruments the following assemblies
+NOTE: The Profiler based agent only supports 64 bit applications. 32 bit applications aren't supported.
+
+
+It instruments the following assemblies
 
 include::integrations.asciidoc[]
 
