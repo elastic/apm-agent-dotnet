@@ -18,7 +18,6 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using Microsoft.Diagnostics.Tracing.Session;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
@@ -291,13 +290,20 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void GcMetricsCanBeDisabled()
+		{
+			var logger = new TestLogger(LogLevel.Trace);
+			var disableGc = new List<WildcardMatcher>() { {WildcardMatcher.ValueOf("clr.gc.*")} };
+			using var gcMetricsProvider = new GcMetricsProvider(logger, disableGc);
+			gcMetricsProvider.IsEnabled(disableGc).Should().BeFalse();
+		}
+
+		[Fact]
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
-			string traceEventSessionName;
 			using (var gcMetricsProvider = new GcMetricsProvider(logger, new List<WildcardMatcher>()))
 			{
-				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
 #if !NETCOREAPP2_1
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
@@ -379,12 +385,6 @@ namespace Elastic.Apm.Tests
 
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
-			}
-
-			if (PlatformDetection.IsDotNetFullFramework)
-			{
-				var traceEventSession = TraceEventSession.GetActiveSession(traceEventSessionName);
-				traceEventSession.Should().BeNull();
 			}
 		}
 
