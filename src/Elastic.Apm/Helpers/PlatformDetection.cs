@@ -33,6 +33,9 @@ namespace Elastic.Apm.Helpers
 			RuntimeInformation.FrameworkDescription.Length >= 6
 			&& char.IsDigit(RuntimeInformation.FrameworkDescription[5]);
 
+		/// <summary> Checks if runtime is .NET Core or .NET 6 and up </summary>
+		internal static readonly bool IsModernDotnet = IsDotNetCore || IsDotNet;
+
 		internal static readonly string DotNetRuntimeDescription = RuntimeInformation.FrameworkDescription;
 
 		internal static string GetDotNetRuntimeVersionFromDescription(string frameworkDescription, IApmLogger loggerArg, string expectedPrefix)
