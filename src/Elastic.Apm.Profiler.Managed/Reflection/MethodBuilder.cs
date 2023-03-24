@@ -14,7 +14,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Profiler.Managed.Core;
 
 namespace Elastic.Apm.Profiler.Managed.Reflection
