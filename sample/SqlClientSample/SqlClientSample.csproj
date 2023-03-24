@@ -3,7 +3,7 @@
   <PropertyGroup>
     <SqlVersion Condition="'$(SqlVersion)'==''">4.7.0</SqlVersion>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net461;net7.0</TargetFrameworks>
+    <TargetFrameworks>net461;net6.0;net7.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
