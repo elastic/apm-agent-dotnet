@@ -64,7 +64,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_logger = logger.Scoped(DbgName);
 			if (!PlatformDetection.IsDotNetCore && !PlatformDetection.IsDotNet)
 			{
-				_logger.Info()?.Log("Gc metrics are only available on .NET Core, disabling metric collection");
+				_logger.Info()?.Log("GC metrics are only available on .NET Core, disabling metric collection");
 				_isEnabled = false;
 				return;
 			}
