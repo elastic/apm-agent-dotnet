@@ -38,6 +38,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 					["ELASTIC_APM_LOG_LEVEL"] = "Trace",
+					["ELASTIC_APM_CENTRAL_CONFIG"] = "false",
+					["ELASTIC_APM_CLOUD_PROVIDER"] = "none",
 					["SKIP_AGENT_REGISTRATION"] = "true"
 				};
 
@@ -62,14 +64,16 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 					exception => _output.WriteLine($"{exception}"),
 					true, true);
 
-				waitForAppStart.WaitOne(TimeSpan.FromSeconds(30));
+				if (!waitForAppStart.WaitOne(TimeSpan.FromSeconds(30)))
+					throw new Exception($"SampleAspNetCoreApp did not start within 30seconds, unable to profile");
 
 				var httpClient = new HttpClient();
 				var result = await httpClient.GetAsync("http://localhost:5000/home/index");
 				result.IsSuccessStatusCode.Should().BeTrue();
 				await result.Content.ReadAsStringAsync();
 
-				waitForEventsSentToServer.WaitOne(TimeSpan.FromSeconds(30));
+				if (!waitForEventsSentToServer.WaitOne(TimeSpan.FromSeconds(30)))
+					throw new Exception($"Waiting for events to be sent to the server took longer then 30 seconds");
 			}
 
 			apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
