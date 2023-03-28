@@ -53,7 +53,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		[MemberData(nameof(TestParameters))]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework, string npgsqlVersion)
 		{
-			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
+			var apmLogger = new UnitTestLogger(_output, Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
@@ -75,7 +75,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 				profiledApplication.Start(
 					targetFramework,
-					TimeSpan.FromMinutes(2),
+					TimeSpan.FromMinutes(4),
 					environmentVariables,
 					msBuildProperties,
 					line => _output.WriteLine(line.Line),

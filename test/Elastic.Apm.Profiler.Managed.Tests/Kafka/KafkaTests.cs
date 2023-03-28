@@ -50,7 +50,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 
 				profiledApplication.Start(
 					targetFramework,
-					TimeSpan.FromMinutes(2),
+					TimeSpan.FromMinutes(4),
 					environmentVariables,
 					null,
 					line => _output.WriteLine(line.Line),

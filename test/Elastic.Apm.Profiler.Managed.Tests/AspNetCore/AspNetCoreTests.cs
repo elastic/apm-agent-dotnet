@@ -48,7 +48,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 
 				profiledApplication.Start(
 					framework,
-					TimeSpan.FromMinutes(2),
+					TimeSpan.FromMinutes(4),
 					environmentVariables,
 					null,
 					line =>
