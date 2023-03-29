@@ -38,8 +38,6 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 					["ELASTIC_APM_LOG_LEVEL"] = "Trace",
-					["ELASTIC_APM_CENTRAL_CONFIG"] = "false",
-					["ELASTIC_APM_CLOUD_PROVIDER"] = "none",
 					["SKIP_AGENT_REGISTRATION"] = "true"
 				};
 
@@ -55,14 +53,15 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 					null,
 					line =>
 					{
-						_output.WriteLine(line.Line);
+						_output.WriteLine($"[SampleAspNetCoreApp] {line.Line}");
 						if (line.Line.ToLower().Contains("application started"))
 							waitForAppStart.Set();
 						if (line.Line.ToLower().Contains("sent items to server:") && line.Line.ToLower().Contains("transaction"))
 							waitForEventsSentToServer.Set();
 					},
-					exception => _output.WriteLine($"{exception}"),
-					true, true);
+					exception => _output.WriteLine($"[SampleAspNetCoreApp] Exception: {exception}"),
+					true,
+					true);
 
 				if (!waitForAppStart.WaitOne(TimeSpan.FromSeconds(30)))
 					throw new Exception($"SampleAspNetCoreApp did not start within 30seconds, unable to profile");
