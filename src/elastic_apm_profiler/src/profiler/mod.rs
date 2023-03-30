@@ -1120,6 +1120,13 @@ impl Profiler {
         if !IS_ATTACHED.load(Ordering::SeqCst) {
             return Ok(());
         }
+        if !MANAGED_PROFILER_LOADED.load(Ordering::SeqCst) {
+            log::warn!(
+                "JITCompilationStarted: Attempting to rejit while {} has not yet been loaded",
+                { MANAGED_PROFILER_ASSEMBLY }
+            )
+            // TODO determine if we need to early exit.
+        }
 
         let profiler_borrow = self.profiler_info.borrow();
         let profiler_info = profiler_borrow.as_ref().unwrap();
