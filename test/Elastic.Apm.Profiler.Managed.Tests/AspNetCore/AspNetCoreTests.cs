@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -46,6 +47,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 				// wait for the log that events are sent to server
 				var waitForEventsSentToServer = new AutoResetEvent(false);
 
+				var seenSentItems = false;
 				profiledApplication.Start(
 					framework,
 					TimeSpan.FromMinutes(4),
@@ -56,7 +58,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 						_output.WriteLine($"[SampleAspNetCoreApp] {line.Line}");
 						if (line.Line.ToLower().Contains("application started"))
 							waitForAppStart.Set();
-						if (line.Line.ToLower().Contains("sent items to server:") && line.Line.ToLower().Contains("transaction"))
+						if (line.Line.ToLower().Contains("sent items to server:"))
+							seenSentItems = true;
+						if (seenSentItems && line.Line.ToLower().Contains($"{TextUtils.Indentation}transaction"))
 							waitForEventsSentToServer.Set();
 					},
 					exception => _output.WriteLine($"[SampleAspNetCoreApp] Exception: {exception}"),

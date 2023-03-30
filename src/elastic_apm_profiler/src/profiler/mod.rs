@@ -106,6 +106,9 @@ pub static PROFILER_VERSION: Lazy<Version> = Lazy::new(|| {
     Version::new(major, minor, patch, 0)
 });
 
+/// Whether the managed profiler has been loaded
+static MANAGED_PROFILER_LOADED: AtomicBool = AtomicBool::new(false);
+
 /// Whether the managed profiler has been loaded as domain-neutral i.e.
 /// into the shared domain, which can be shared code among other app domains
 static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
@@ -750,6 +753,7 @@ impl Profiler {
                         );
                     }
                 }
+                MANAGED_PROFILER_LOADED.store(true, Ordering::SeqCst);
             } else {
                 log::warn!(
                     "AssemblyLoadFinished: {} {} did not match profiler version {}. Will not be marked as loaded",
