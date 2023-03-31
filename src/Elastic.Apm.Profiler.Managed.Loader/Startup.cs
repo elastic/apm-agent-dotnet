@@ -17,7 +17,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 	{
 		static Startup()
 		{
-			Console.WriteLine(" ==> Elastic.Apm.Profiler.Managed.Loader.Startup constructor");
+			Logger.Log(LogLevel.Info, "Elastic.Apm.Profiler.Managed.Loader.Startup: Invoked ");
 			Directory = ResolveDirectory();
 
 			try
@@ -34,7 +34,6 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 
 		private static void TryLoadManagedAssembly()
 		{
-			Console.WriteLine(" ==> Elastic.Apm.Profiler.Managed.Loader.Startup TryLoadManagedAssembly");
 			try
 			{
 				var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -48,21 +47,6 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			catch (Exception e)
 			{
 				Logger.Log(LogLevel.Error, e, "Error loading managed assemblies.");
-				Console.WriteLine($" ==> Elastic.Apm.Profiler.Managed.Loader. TryLoadManagedAssembly Exception {e}");
-
-				try
-				{
-					var dynamicallyLocatedAssembly = AppDomain.CurrentDomain.GetAssemblies()
-						.FirstOrDefault(a => a.GetName().Name == "Elastic.Apm.Profiler.Managed");
-					if (dynamicallyLocatedAssembly != null)
-						Console.WriteLine($" ==> AppDomain has managed profiler: {dynamicallyLocatedAssembly.FullName}");
-					else
-						Console.WriteLine($" ==> AppDomain has no Elastic.Apm.Profiler.Managed in its probing paths");
-				}
-				catch (Exception exception)
-				{
-					Console.WriteLine($" ==> AppDomain has no Elastic.Apm.Profiler.Managed in its probing paths: {exception}");
-				}
 			}
 		}
 
@@ -76,7 +60,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			}
 			catch (Exception e)
 			{
-				Logger.Log(LogLevel.Error, e, "Error reading environment variable.");
+				Logger.Log(LogLevel.Error, e, "Error reading environment variable: {0}", key);
 			}
 
 			return null;
