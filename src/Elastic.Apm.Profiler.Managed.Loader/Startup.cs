@@ -53,7 +53,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 				try
 				{
 					var dynamicallyLocatedAssembly = AppDomain.CurrentDomain.GetAssemblies()
-						.FirstOrDefault(a => a.GetName().Name == "Elastic.Apm.Profiler.Managed.Loader");
+						.FirstOrDefault(a => a.GetName().Name == "Elastic.Apm.Profiler.Managed");
 					if (dynamicallyLocatedAssembly != null)
 						Console.WriteLine($" ==> AppDomain has managed profiler: {dynamicallyLocatedAssembly.FullName}");
 					else

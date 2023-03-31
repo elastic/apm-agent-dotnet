@@ -23,11 +23,12 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         {
 			var version = Environment.Version;
 			// use netcoreapp3.1 for netcoreapp3.1 and later
-			var framework = version.Major == 3 && version.Minor >= 1 || version.Major >= 5
-				? "netcoreapp3.1"
+			var framework = version.Major == 3 && version.Minor >= 1 || version.Major >= 6
+				? "netstandard2.1"
 				: "netstandard2.0";
 
             var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
+			Console.WriteLine($" ==> ResolveDirectory {directory}, Exists: {System.IO.Directory.Exists(directory)}");
             return Path.Combine(directory, framework);
         }
 
