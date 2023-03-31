@@ -61,7 +61,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 				}
 				catch (Exception exception)
 				{
-					Console.WriteLine($" ==> AppDomain has no Elastic.Apm.Profiler.Managed in its probing paths");
+					Console.WriteLine($" ==> AppDomain has no Elastic.Apm.Profiler.Managed in its probing paths: {exception}");
 				}
 			}
 		}

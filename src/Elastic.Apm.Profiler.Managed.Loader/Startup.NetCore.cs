@@ -47,6 +47,8 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 
 			var path = Path.Combine(Directory, $"{assemblyName.Name}.dll");
 
+			Console.WriteLine($" ==> Probing {path}, Exists: {File.Exists(path)}");
+
             // Only load the main Elastic.Apm.Profiler.Managed.dll into the default Assembly Load Context.
             // If Elastic.Apm or other libraries are provided by the NuGet package, their loads are handled in the following two ways.
             // 1) The AssemblyVersion is greater than or equal to the version used by Elastic.Apm.Profiler.Managed, the assembly
