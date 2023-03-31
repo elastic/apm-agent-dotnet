@@ -1120,13 +1120,6 @@ impl Profiler {
         if !IS_ATTACHED.load(Ordering::SeqCst) {
             return Ok(());
         }
-        if !MANAGED_PROFILER_LOADED.load(Ordering::SeqCst) {
-            log::warn!(
-                "JITCompilationStarted: Attempting to rejit while {} has not yet been loaded",
-                { MANAGED_PROFILER_ASSEMBLY }
-            )
-            // TODO determine if we need to early exit.
-        }
 
         let profiler_borrow = self.profiler_info.borrow();
         let profiler_info = profiler_borrow.as_ref().unwrap();
@@ -1153,6 +1146,9 @@ impl Profiler {
                 .contains(&module_metadata.app_domain_id)
         };
 
+        // TODO investigate logging ONLY on MAIN() if MANAGED_PROFILER_LOADED is false
+
+        // TODO add MANAGED_PROFILER_LOADED and add same check for Elastic.Apm.dll
         if call_target_enabled && loader_injected_in_app_domain {
             return Ok(());
         }

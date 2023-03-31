@@ -16,6 +16,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 	{
 		static Startup()
 		{
+			Console.WriteLine(" ==> Elastic.Apm.Profiler.Managed.Loader.Startup constructor");
 			Directory = ResolveDirectory();
 
 			try
@@ -32,6 +33,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 
 		private static void TryLoadManagedAssembly()
 		{
+			Console.WriteLine(" ==> Elastic.Apm.Profiler.Managed.Loader.Startup TryLoadManagedAssembly");
 			try
 			{
 				var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -46,6 +48,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			catch (Exception e)
 			{
 				Logger.Log(LogLevel.Error, e, "Error loading managed assemblies.");
+				Console.WriteLine($" ==> Elastic.Apm.Profiler.Managed.Loader. TryLoadManagedAssembly Exception {e}");
 			}
 		}
 
