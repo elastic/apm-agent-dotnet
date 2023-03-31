@@ -8,6 +8,7 @@
 // </copyright>
 
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace Elastic.Apm.Profiler.Managed.Loader
@@ -38,17 +39,30 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			{
 				var version = Assembly.GetExecutingAssembly().GetName().Version;
 				var assembly = Assembly.Load($"Elastic.Apm.Profiler.Managed, Version={version}, Culture=neutral, PublicKeyToken=ae7400d2c189cf22");
-				if (assembly != null)
-				{
-					var type = assembly.GetType("Elastic.Apm.Profiler.Managed.AutoInstrumentation", throwOnError: false);
-					var method = type?.GetRuntimeMethod("Initialize", parameters: Type.EmptyTypes);
-					method?.Invoke(obj: null, parameters: null);
-				}
+				if (assembly == null) return;
+
+				var type = assembly.GetType("Elastic.Apm.Profiler.Managed.AutoInstrumentation", throwOnError: false);
+				var method = type?.GetRuntimeMethod("Initialize", parameters: Type.EmptyTypes);
+				method?.Invoke(obj: null, parameters: null);
 			}
 			catch (Exception e)
 			{
 				Logger.Log(LogLevel.Error, e, "Error loading managed assemblies.");
 				Console.WriteLine($" ==> Elastic.Apm.Profiler.Managed.Loader. TryLoadManagedAssembly Exception {e}");
+
+				try
+				{
+					var dynamicallyLocatedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+						.FirstOrDefault(a => a.GetName().Name == "Elastic.Apm.Profiler.Managed.Loader");
+					if (dynamicallyLocatedAssembly != null)
+						Console.WriteLine($" ==> AppDomain has managed profiler: {dynamicallyLocatedAssembly.FullName}");
+					else
+						Console.WriteLine($" ==> AppDomain has no Elastic.Apm.Profiler.Managed in its probing paths");
+				}
+				catch (Exception exception)
+				{
+					Console.WriteLine($" ==> AppDomain has no Elastic.Apm.Profiler.Managed in its probing paths");
+				}
 			}
 		}
 
