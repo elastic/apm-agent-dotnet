@@ -41,6 +41,8 @@ jobs:
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
         restore-keys: |
           ${{ runner.os }}-nuget-
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
             
     - name: Run tests
       shell: cmd
@@ -68,4 +70,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: test-results
-        path: build/output/junit-*.xml
+        https://github.com/elastic/apm-agent-dotnet/pull/2040path: build/output/junit-*.xml
