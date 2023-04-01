@@ -1,0 +1,20 @@
+---
+name: Bootstrap Checkout
+description: Ensures an action that needs to build has access to git tags
+
+runs:
+  using: "composite"
+  steps:
+    # Ensure we fetch all tags
+    - shell: bash
+      run: |
+        git fetch --prune --unshallow --tags
+        git tag --list
+          
+    # Install .NET version as mandated by global.json
+    - uses: actions/setup-dotnet@v3
+      with:
+          global-json-file: global.json
+      
+    # Setup git config
+    - uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
