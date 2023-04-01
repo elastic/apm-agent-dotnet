@@ -2,6 +2,7 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <HasWebTargets Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')" >true</HasWebTargets>
+    <HasWebTargets Condition="Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')">true</HasWebTargets>
     <BuildFullFrameworkAsp Condition="'$(OS)' != 'WINDOWS_NT'" >false</BuildFullFrameworkAsp>
     <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' != 'true'">false</BuildFullFrameworkAsp>
     <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' == 'true'">true</BuildFullFrameworkAsp>
