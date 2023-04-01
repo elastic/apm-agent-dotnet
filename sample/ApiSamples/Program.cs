@@ -308,7 +308,7 @@ namespace ApiSamples
 		}
 		// ReSharper restore ArrangeMethodOrOperatorBody
 
-#if NETCOREAPP3_0
+#if NET6_0_OR_GREATER
 		/// <summary>
 		/// Test for https://github.com/elastic/apm-agent-dotnet/issues/884
 		/// </summary>

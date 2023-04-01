@@ -35,9 +35,11 @@ public class AzureFunctionsTestFixture : IDisposable
 
 		var workingDir = Path.Combine(Directory.GetCurrentDirectory(),
 			"../../../../../sample/Elastic.AzureFunctionApp.Isolated");
+		workingDir = Path.GetFullPath(workingDir);
 		LogLines.Add($"func working directory: {workingDir}");
 		Directory.Exists(workingDir).Should().BeTrue();
 
+		// https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local
 		var funcToolIsReady = false;
 		_funcProcess = new Process
 		{
