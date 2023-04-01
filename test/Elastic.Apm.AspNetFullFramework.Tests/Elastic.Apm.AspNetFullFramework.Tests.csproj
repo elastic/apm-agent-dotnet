@@ -6,7 +6,7 @@
     <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' == 'true'">true</BuildFullFrameworkAsp>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetFullFramework.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetFullFramework.Tests</RootNamespace>
   </PropertyGroup>

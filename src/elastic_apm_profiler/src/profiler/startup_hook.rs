@@ -443,14 +443,17 @@ fn generate_void_il_startup_method(
         std::ptr::copy(method_bytes.as_ptr(), address, method_bytes.len());
     }
     log::trace!("generate_void_il_startup_method: write __ElasticVoidMethodCall__ body");
-    profiler_info
-        .set_il_function_body(module_id, new_method, address as *const _)
-        .map_err(|e| {
-            log::warn!(
-                "generate_void_il_startup_method: failed to set il for __ElasticVoidMethodCall__"
-            );
-            e
-        })?;
+    let generate_startup_body_result =
+        profiler_info.set_il_function_body(module_id, new_method, address as *const _);
+
+    match generate_startup_body_result {
+        Err(e) => log::warn!(
+            "generate_void_il_startup_method: failed to set il for __ElasticVoidMethodCall__"
+        ),
+        Ok(r) => {
+            log::info!( "generate_void_il_startup_method: sucessfully injected Elastic.Apm.Profiler.Managed.Loader.Startup");
+        }
+    }
 
     Ok(new_method)
 }

@@ -12,7 +12,6 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Profiler.Managed.Reflection
 {

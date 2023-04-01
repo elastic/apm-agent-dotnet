@@ -106,6 +106,9 @@ pub static PROFILER_VERSION: Lazy<Version> = Lazy::new(|| {
     Version::new(major, minor, patch, 0)
 });
 
+/// Whether the managed profiler has been loaded
+static MANAGED_PROFILER_LOADED: AtomicBool = AtomicBool::new(false);
+
 /// Whether the managed profiler has been loaded as domain-neutral i.e.
 /// into the shared domain, which can be shared code among other app domains
 static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
@@ -750,6 +753,7 @@ impl Profiler {
                         );
                     }
                 }
+                MANAGED_PROFILER_LOADED.store(true, Ordering::SeqCst);
             } else {
                 log::warn!(
                     "AssemblyLoadFinished: {} {} did not match profiler version {}. Will not be marked as loaded",
@@ -1142,6 +1146,9 @@ impl Profiler {
                 .contains(&module_metadata.app_domain_id)
         };
 
+        // TODO investigate logging ONLY on MAIN() if MANAGED_PROFILER_LOADED is false
+
+        // TODO add MANAGED_PROFILER_LOADED and add same check for Elastic.Apm.dll
         if call_target_enabled && loader_injected_in_app_domain {
             return Ok(());
         }

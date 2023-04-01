@@ -24,8 +24,6 @@ namespace Elastic.Apm.StartupHook.Tests
 	{
 		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
 		{
-			yield return ("netcoreapp3.1", ".NET Core", "3.1.0.0","31");
-			yield return ("net5.0", ".NET 5", "5.0.0.0", "50");
 			yield return ("net6.0", ".NET 6", "6.0.0.0", "60");
 			yield return ("net7.0", ".NET 7", "7.0.0.0", "70");
 		}

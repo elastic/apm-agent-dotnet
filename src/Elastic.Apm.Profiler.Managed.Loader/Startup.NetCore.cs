@@ -23,11 +23,12 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         {
 			var version = Environment.Version;
 			// use netcoreapp3.1 for netcoreapp3.1 and later
-			var framework = version.Major == 3 && version.Minor >= 1 || version.Major >= 5
-				? "netcoreapp3.1"
+			var framework = version.Major == 3 && version.Minor >= 1 || version.Major >= 6
+				? "netstandard2.1"
 				: "netstandard2.0";
 
             var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
+			Logger.Log(LogLevel.Debug, "Resolving assemblies from {0}", directory);
             return Path.Combine(directory, framework);
         }
 
@@ -46,6 +47,9 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 				return null;
 
 			var path = Path.Combine(Directory, $"{assemblyName.Name}.dll");
+			var exists = File.Exists(path);
+
+			Logger.Log(LogLevel.Trace, "Probing: {0}, exists on disk: {1}", path, exists);
 
             // Only load the main Elastic.Apm.Profiler.Managed.dll into the default Assembly Load Context.
             // If Elastic.Apm or other libraries are provided by the NuGet package, their loads are handled in the following two ways.
@@ -54,7 +58,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
             // 2) The AssemblyVersion is lower than the version used by Elastic.Apm.Profiler.Managed, the assembly will fail to load
             //    and invoke this resolve event. It must be loaded in a separate AssemblyLoadContext since the application will only
             //    load the originally referenced version
-			if (File.Exists(path))
+			if (exists)
 			{
 				if (assemblyName.Name.StartsWith("Elastic.Apm.Profiler.Managed", StringComparison.OrdinalIgnoreCase)
 					&& assemblyName.FullName.IndexOf("PublicKeyToken=ae7400d2c189cf22", StringComparison.OrdinalIgnoreCase) >= 0)

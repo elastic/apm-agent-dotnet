@@ -18,7 +18,6 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using Microsoft.Diagnostics.Tracing.Session;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
@@ -291,13 +290,20 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void GcMetricsCanBeDisabled()
+		{
+			var logger = new TestLogger(LogLevel.Trace);
+			var disableGc = new List<WildcardMatcher>() { {WildcardMatcher.ValueOf("clr.gc.*")} };
+			using var gcMetricsProvider = new GcMetricsProvider(logger, disableGc);
+			gcMetricsProvider.IsEnabled(disableGc).Should().BeFalse();
+		}
+
+		[Fact]
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
-			string traceEventSessionName;
 			using (var gcMetricsProvider = new GcMetricsProvider(logger, new List<WildcardMatcher>()))
 			{
-				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
 #if !NETCOREAPP2_1
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
@@ -353,24 +359,16 @@ namespace Elastic.Apm.Tests
 				// In order to make sure allocations above isn't optimized away, let's use arrayLength:
 				_output.WriteLine($"GC test, multiple int[] instances allocated with length: {arrayLength}");
 
-				if (PlatformDetection.IsDotNetFullFramework)
-				{
-					if (logger.Lines.Any(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")))
-					{
-						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
-						_output.WriteLine("Initialization failed. don't make assertions");
-						return;
-					}
-				}
+				// GC metrics only available on .NET Core
+				// see: https://github.com/elastic/apm-agent-dotnet/pull/2036
+				if (!PlatformDetection.IsModernDotnet)
+					return;
 
-				if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet)
+				if (!logger.Lines.Any(n => n.Contains("OnEventWritten with GC")))
 				{
-					if (!logger.Lines.Any(n => n.Contains("OnEventWritten with GC")))
-					{
-						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
-						_output.WriteLine("Initialization failed. don't make assertions");
-						return;
-					}
+					// If no OnWritten with a GC event was called then initialization failed -> we don't assert
+					_output.WriteLine("Initialization failed. don't make assertions");
+					return;
 				}
 
 				containsValue.Should().BeTrue();
@@ -379,12 +377,6 @@ namespace Elastic.Apm.Tests
 
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
-			}
-
-			if (PlatformDetection.IsDotNetFullFramework)
-			{
-				var traceEventSession = TraceEventSession.GetActiveSession(traceEventSessionName);
-				traceEventSession.Should().BeNull();
 			}
 		}
 

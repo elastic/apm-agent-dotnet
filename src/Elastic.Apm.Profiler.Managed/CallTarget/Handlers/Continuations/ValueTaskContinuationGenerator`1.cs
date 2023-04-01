@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 {
-#if NETCOREAPP3_1
+#if NETSTANDARD2_1_OR_GREATER
 	internal class ValueTaskContinuationGenerator<TIntegration, TTarget, TReturn, TResult> : ContinuationGenerator<TTarget, TReturn>
 	{
 		private static readonly Func<TTarget, TResult, Exception, CallTargetState, TResult> _continuation;
