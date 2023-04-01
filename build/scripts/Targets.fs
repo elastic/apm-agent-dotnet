@@ -101,6 +101,8 @@ module Main =
             Targets.Target("profiler-integrations", ["build-profiler"], Build.ProfilerIntegrations)
             
             Targets.Target("profiler-zip", ["profiler-integrations"], fun _ ->
+                
+                printfn "Running profiler-zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
                 Build.Publish (Some projs)
                 Build.ProfilerZip (cmdLine.ValueForOption<bool>("canary"))
@@ -108,9 +110,10 @@ module Main =
             
             Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
                   
-            Targets.Target("pack", ["agent-zip", "profiler-zip"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
+            Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
             
             Targets.Target("agent-zip", ["build"], fun _ ->
+                printfn "Running profiler-zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm")
                             ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
                 
