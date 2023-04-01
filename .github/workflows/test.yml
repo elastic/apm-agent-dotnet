@@ -43,6 +43,15 @@ jobs:
           ${{ runner.os }}-nuget-
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
+
+    - name: Setup VS Dev Environment
+      uses: seanmiddleditch/gha-setup-vsdevenv@v4
+
+    - name: Restore NuGet Packages
+      run: msbuild /t:Restore
+
+    - name: Build the application
+      run: msbuild /t:Build /p:Configuration=Release
             
     - name: Run tests
       shell: cmd
@@ -58,7 +67,7 @@ jobs:
         REM enable permissions for the anonymous access group
         icacls %cd% /t /q /grant "IUSR:(OI)(CI)(IO)(RX)"
         
-        dotnet test -c Release test\Elastic.Apm.AspNetFullFramework.Tests^
+        dotnet test -c Release test\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
          --verbosity normal ^
          --results-directory build/output ^
          --diag target\diag-iis.log ^
