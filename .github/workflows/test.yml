@@ -79,4 +79,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: test-results
-        https://github.com/elastic/apm-agent-dotnet/pull/2040path: build/output/junit-*.xml
+        path: build/output/junit-*.xml
