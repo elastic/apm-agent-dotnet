@@ -6,11 +6,13 @@ using System;
 using System.Data.Common;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.EntityFrameworkCore.Tests
 {
@@ -20,24 +22,30 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		private readonly DbConnection _connection;
 		private readonly FakeDbContext _dbContext;
 		private readonly MockPayloadSender _payloadSender;
+		private readonly DbContextOptions<FakeDbContext> _options;
 
-		public EfCoreDiagnosticListenerTests()
+		public EfCoreDiagnosticListenerTests(ITestOutputHelper output)
 		{
 			// default EfCore in-memory isn't relational, this is why we're using sqlite in-memory
 			// https://docs.microsoft.com/en-us/ef/core/miscellaneous/testing/in-memory#inmemory-is-not-a-relational-database
 			_connection = new SqliteConnection("DataSource=:memory:");
 			_connection.Open();
 
-			var options = new DbContextOptionsBuilder<FakeDbContext>()
+			_options = new DbContextOptionsBuilder<FakeDbContext>()
 				.UseSqlite(_connection)
 				.Options;
 
-			_dbContext = new FakeDbContext(options);
+			_dbContext = new FakeDbContext(_options);
 			_dbContext.Database.EnsureCreated();
 
 			_payloadSender = new MockPayloadSender();
-			_apmAgent = new ApmAgent(new AgentComponents(payloadSender: _payloadSender, configurationReader: new MockConfiguration(exitSpanMinDuration:"0")));
+			_apmAgent = new ApmAgent(new AgentComponents(
+				payloadSender: _payloadSender,
+				configurationReader: new MockConfiguration(exitSpanMinDuration: "0", centralConfig: "false"),
+				logger: new UnitTestLogger(output, LogLevel.Trace)
+			));
 			_apmAgent.Subscribe(new EfCoreDiagnosticsSubscriber());
+
 		}
 
 		public void Dispose()
@@ -51,12 +59,12 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		[Fact]
 		public async Task EfCoreDiagnosticListener_ShouldCaptureException_WhenCommandFailed()
 		{
-			// Arrange + Act
+			await using var context = new FakeDbContext(_options);
 			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
 			{
 				try
 				{
-					await _dbContext.Database.ExecuteSqlCommandAsync("SELECT * FROM FakeTable");
+					await context.Database.ExecuteSqlRawAsync("SELECT * FROM FakeTable");
 				}
 				catch
 				{
@@ -64,7 +72,6 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 				}
 			});
 
-			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.FirstSpan.Should().NotBeNull();
 			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Failure);
@@ -77,12 +84,12 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		[Fact]
 		public async Task EfCoreDiagnosticListener_ShouldCaptureSpan_WhenCommandSucceed()
 		{
-			// Arrange + Act
+			await using var context = new FakeDbContext(_options);
 			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
 			{
 				try
 				{
-					await _dbContext.Database.ExecuteSqlCommandAsync("SELECT date('now')");
+					await context.Database.ExecuteSqlRawAsync("SELECT date('now')");
 				}
 				catch
 				{
@@ -90,7 +97,6 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 				}
 			});
 
-			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(0);
 
@@ -101,10 +107,10 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		[Fact]
 		public async Task EfCoreDiagnosticListener_ShouldNotStartSpan_WhenCurrentTransactionIsNull()
 		{
-			// Arrange + Act
+			await using var context = new FakeDbContext(_options);
 			try
 			{
-				await _dbContext.Database.ExecuteSqlCommandAsync("SELECT date('now')");
+				await context.Database.ExecuteSqlRawAsync("SELECT date('now')");
 			}
 			catch
 			{
@@ -116,14 +122,14 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			_payloadSender.Errors.Count.Should().Be(0);
 		}
 
-
 		[Fact]
 		public async Task EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext()
 		{
-			// Arrange + Act
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction => { await _dbContext.Data.FirstOrDefaultAsync(); });
+			await using var context = new FakeDbContext(_options);
 
-			// Assert
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type",
+				async transaction => await context.Data.FirstOrDefaultAsync());
+
 			_payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
 			_payloadSender.FirstSpan.StackTrace.Should()
 				.Contain(n => n.Function.Contains(nameof(EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext)));

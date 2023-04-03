@@ -38,7 +38,11 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			}
 
 			var path = Path.Combine(Directory, $"{assemblyName}.dll");
-			if (File.Exists(path))
+			var exists = File.Exists(path);
+
+			Logger.Log(LogLevel.Trace, "Probing: {0}, exists on disk: {1}", path, exists);
+
+			if (exists)
 			{
 				Logger.Log(LogLevel.Debug, "Loading {0} assembly", assemblyName);
 				return Assembly.LoadFrom(path);

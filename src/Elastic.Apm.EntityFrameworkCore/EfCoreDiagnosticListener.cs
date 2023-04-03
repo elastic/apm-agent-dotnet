@@ -26,11 +26,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			// check for competing instrumentation
-			if (_agent?.TracerInternal.CurrentSpan is Span currentSpan)
-			{
-				if (currentSpan.InstrumentationFlag == InstrumentationFlag.SqlClient)
-					return;
-			}
+			if (_agent?.TracerInternal.CurrentSpan is Span { InstrumentationFlag: InstrumentationFlag.SqlClient })
+				return;
 
 			switch (kv.Key)
 			{

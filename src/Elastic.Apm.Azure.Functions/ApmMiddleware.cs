@@ -150,7 +150,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 	}
 
 	private static Dictionary<string, string> CreateHeadersDictionary(HttpHeadersCollection httpHeadersCollection) =>
-		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(',', h.Value));
+		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(",", h.Value));
 
 	private static HttpRequestData? GetHttpRequestData(FunctionContext functionContext)
 	{

@@ -8,6 +8,7 @@
 // </copyright>
 
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace Elastic.Apm.Profiler.Managed.Loader
@@ -16,6 +17,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 	{
 		static Startup()
 		{
+			Logger.Log(LogLevel.Info, "Elastic.Apm.Profiler.Managed.Loader.Startup: Invoked ");
 			Directory = ResolveDirectory();
 
 			try
@@ -36,12 +38,11 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			{
 				var version = Assembly.GetExecutingAssembly().GetName().Version;
 				var assembly = Assembly.Load($"Elastic.Apm.Profiler.Managed, Version={version}, Culture=neutral, PublicKeyToken=ae7400d2c189cf22");
-				if (assembly != null)
-				{
-					var type = assembly.GetType("Elastic.Apm.Profiler.Managed.AutoInstrumentation", throwOnError: false);
-					var method = type?.GetRuntimeMethod("Initialize", parameters: Type.EmptyTypes);
-					method?.Invoke(obj: null, parameters: null);
-				}
+				if (assembly == null) return;
+
+				var type = assembly.GetType("Elastic.Apm.Profiler.Managed.AutoInstrumentation", throwOnError: false);
+				var method = type?.GetRuntimeMethod("Initialize", parameters: Type.EmptyTypes);
+				method?.Invoke(obj: null, parameters: null);
 			}
 			catch (Exception e)
 			{
@@ -59,7 +60,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			}
 			catch (Exception e)
 			{
-				Logger.Log(LogLevel.Error, e, "Error reading environment variable.");
+				Logger.Log(LogLevel.Error, e, "Error reading environment variable: {0}", key);
 			}
 
 			return null;
