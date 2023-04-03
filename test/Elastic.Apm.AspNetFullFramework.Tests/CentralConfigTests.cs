@@ -270,6 +270,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						{
 							receivedData.Spans.Should().Contain(s => s.Name == $"Span_#{i}_name");
 							receivedData.Spans.Should().Contain(s => s.Type == $"Span_#{i}_type");
+							
 						}
 					},  /* shouldGatherDiagnostics: */ false);
 				}

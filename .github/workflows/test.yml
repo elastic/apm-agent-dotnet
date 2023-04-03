@@ -70,8 +70,8 @@ jobs:
         dotnet test -c Release test\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
          --verbosity normal ^
          --results-directory build/output ^
-         --diag target\diag-iis.log ^
-         --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+         --diag build/output/diag-iis.log ^
+         --logger:"junit;LogFilePath=build/output/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
 
     - name: Store test results
