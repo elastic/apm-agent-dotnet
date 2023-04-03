@@ -17,7 +17,7 @@ dotnet sln remove test/Elastic.Apm.StaticExplicitInitialization.Tests/Elastic.Ap
 :: LogFilePath property
 ::
 dotnet test -c Release ^
- --filter "(FullyQualifiedName!~Elastic.Apm.StartupHook.Tests) | (FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests)"
+ --filter "(FullyQualifiedName!~Elastic.Apm.StartupHook.Tests) | (FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests)" ^
  --verbosity normal ^
  --results-directory target ^
  --diag target\diag.log ^
