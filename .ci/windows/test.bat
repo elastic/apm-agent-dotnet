@@ -8,12 +8,6 @@ dotnet sln remove test/Elastic.Apm.SqlClient.Tests/Elastic.Apm.SqlClient.Tests.c
 dotnet sln remove test/Elastic.Apm.EntityFramework6.Tests/Elastic.Apm.EntityFramework6.Tests.csproj
 dotnet sln remove test/Elastic.Apm.MongoDb.Tests/Elastic.Apm.MongoDb.Tests.csproj
 
-:: Remove startup hooks tests, which are tested separately- require agent zip to be built
-dotnet sln remove test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj
-
-:: Remove profiler tests, which are tested separately- require profiler to be built
-dotnet sln remove test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj
-
 :: TODO: Test only - building this seems to fail
 dotnet sln remove test/Elastic.Apm.StaticImplicitInitialization.Tests/Elastic.Apm.StaticImplicitInitialization.Tests.csproj
 dotnet sln remove test/Elastic.Apm.StaticExplicitInitialization.Tests/Elastic.Apm.StaticExplicitInitialization.Tests.csproj
@@ -23,6 +17,7 @@ dotnet sln remove test/Elastic.Apm.StaticExplicitInitialization.Tests/Elastic.Ap
 :: LogFilePath property
 ::
 dotnet test -c Release ^
+ --filter "(FullyQualifiedName!~Elastic.Apm.StartupHook.Tests) | (FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests) "
  --verbosity normal ^
  --results-directory target ^
  --diag target\diag.log ^
