@@ -7,27 +7,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
-using Elastic.Apm.Config;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
-using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
-using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
-using MockHttpMessageHandler = Elastic.Apm.Tests.Utilities.MockHttpMessageHandler;
 using RichardSzalay.MockHttp;
-using System = Elastic.Apm.Api.System;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {
@@ -48,7 +39,6 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			requests.Count.Should().Be(3);
 
 			requests.Last().Should().NotContain("activation_method");
-
 		}
 
 		[Fact]
@@ -58,7 +48,6 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			requests.Count.Should().Be(3);
 
 			requests.Last().Should().Contain("activation_method");
-
 		}
 
 		private List<string> FakeServerInformationCallAndEnqueue(string version)
