@@ -37,7 +37,7 @@ namespace Elastic.Apm.BackendComm
 				CombineAbsoluteAndRelativeUrls(baseUrl, "intake/v2/events");
 
 			/// <summary>
-			/// Builds the absolute URL that points to APM server's intake API endpoint which is used by agents to send events.
+			/// Builds the absolute URL that points to APM server information API endpoint
 			/// </summary>
 			/// <param name="baseUrl">Absolute URL pointing to APM Server's base for API endpoints.</param>
 			internal static Uri BuildApmServerInformationUrl(Uri baseUrl) =>
