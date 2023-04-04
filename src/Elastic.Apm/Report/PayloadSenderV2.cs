@@ -56,8 +56,8 @@ namespace Elastic.Apm.Report
 		private string _cachedMetadataJsonLine;
 		private long _eventQueueCount;
 
-		private ElasticVersion _brokenActivationMethodVersion;
-		private string _cachedActionvationMethod;
+		private readonly ElasticVersion _brokenActivationMethodVersion;
+		private readonly string _cachedActivationMethod
 
 		public PayloadSenderV2(
 			IApmLogger logger,
@@ -91,7 +91,7 @@ namespace Elastic.Apm.Report
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
-			_cachedActionvationMethod = _metadata.Service?.Agent.ActivationMethod;
+			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
 			ResetActivationMethodIfKnownBrokenApmServer();
 
 			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
@@ -245,7 +245,7 @@ namespace Elastic.Apm.Report
 
 		private void ResetActivationMethodIfKnownBrokenApmServer()
 		{
-			// if we are on a known apm-server version that breaks metrics intake wit activation method
+			// if we are on a known apm-server version that breaks metrics intake with activation method
 			if (_apmServerInfo?.Version == _brokenActivationMethodVersion)
 			{
 				// remove activation method since we know apm-server 8.7.0 rejects it
@@ -254,9 +254,9 @@ namespace Elastic.Apm.Report
 				_cachedMetadataJsonLine = null;
 			}
 			// else if activation method was unset but now the server has been upgraded re-apply activation method
-			else if (_metadata.Service.Agent.ActivationMethod == null && _cachedActionvationMethod != null)
+			else if (_metadata.Service.Agent.ActivationMethod == null && _cachedActivationMethod != null)
 			{
-				_metadata.Service.Agent.ActivationMethod = _cachedActionvationMethod;
+				_metadata.Service.Agent.ActivationMethod = _cachedActivationMethod;
 				_cachedMetadataJsonLine = null;
 			}
 		}
