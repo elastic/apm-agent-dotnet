@@ -57,7 +57,7 @@ namespace Elastic.Apm.Report
 		private long _eventQueueCount;
 
 		private readonly ElasticVersion _brokenActivationMethodVersion;
-		private readonly string _cachedActivationMethod
+		private readonly string _cachedActivationMethod;
 
 		public PayloadSenderV2(
 			IApmLogger logger,
