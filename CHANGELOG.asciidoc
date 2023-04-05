@@ -28,9 +28,9 @@ endif::[]
 
 This release includes two breaking changes that have minimal impact.
 
-- We removed support for target frameworks have gone into end-of-life support by Microsoft.
-The impact should be minimal however as we continue to support `netstandard2.0` and `netstandard2.1` where applicable.
-- We removed the collection of GC metrics over ETW on .NET Full Framework. The collection over ETW requires elevated privileges, Especially in IIS deployments this runs counter to best practices.
+- We removed support for target frameworks which have gone into end-of-life support by Microsoft.
+The impact should be minimal, however as we continue to support `netstandard2.0` and `netstandard2.1` where applicable.
+- We removed the collection of GC metrics over ETW on .NET Full Framework. The collection over ETW requires elevated privileges, especially in IIS deployments. This runs counter to best practices.
 Since these are currently not displayed in the APM UI, while technically breaking, the impact should be minimal. The GC metric collection on modern .NET platforms is not impacted.
 
 
