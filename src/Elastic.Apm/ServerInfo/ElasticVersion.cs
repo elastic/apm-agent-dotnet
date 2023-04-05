@@ -68,12 +68,12 @@ namespace Elastic.Apm.ServerInfo
 			Prerelease = prerelease;
 		}
 
-		public ElasticVersion(int major, int minor, int patch, string prerelease)
+		public ElasticVersion(int major, int minor, int patch, string prerelease = null)
 		{
 			Major = major;
 			Minor = minor;
 			Patch = patch;
-			Prerelease = prerelease;
+			Prerelease = prerelease ?? string.Empty;
 		}
 
 		public int Major { get; }
