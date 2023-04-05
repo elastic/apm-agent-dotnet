@@ -137,16 +137,10 @@ module Build =
             
         publishProjectsWithDiagnosticSourceVersion elasticApmProj diagnosticSourceVersion6
      
-    /// Generates a new .sln file that contains only .NET Core projects  
-    let GenerateNetCoreSln () =
-        File.Copy(Paths.Solution, Paths.SolutionNetCore, true)
-        fullFrameworkProjects
-        |> Seq.iter (fun proj -> DotNet.Exec ["sln" ; Paths.SolutionNetCore; "remove"; proj])
-        
     /// Runs dotnet build on all .NET core projects in the solution.
     /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
     let Build () =
-        dotnet "build" Paths.SolutionNetCore
+        dotnet "build" Paths.Solution
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
         
@@ -193,7 +187,7 @@ module Build =
           
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder
-        dotnet "clean" Paths.SolutionNetCore       
+        dotnet "clean" Paths.Solution       
         if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
         
     let CleanProfiler () =
@@ -201,7 +195,7 @@ module Build =
 
     /// Restores all packages for the solution
     let Restore () =
-        DotNet.Exec ["restore" ; Paths.SolutionNetCore; "-v"; "q"]
+        DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
             
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
