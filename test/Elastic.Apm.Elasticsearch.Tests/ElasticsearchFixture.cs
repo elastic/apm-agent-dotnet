@@ -3,49 +3,28 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Containers;
+using Testcontainers.Elasticsearch;
 using Xunit;
 
 namespace Elastic.Apm.Elasticsearch.Tests
 {
-	public class ElasticsearchFixture : IAsyncDisposable, IAsyncLifetime
+	public sealed class ElasticsearchFixture : IAsyncLifetime
 	{
-		private readonly ElasticsearchTestContainer _container;
+		private const string ElasticsearchImage = "docker.elastic.co/elasticsearch/elasticsearch:7.12.1";
 
-		public ElasticsearchFixture()
+		private readonly ElasticsearchContainer _container = new ElasticsearchBuilder().Build();
+
+		public string ConnectionString => _container.GetConnectionString();
+
+		public Task InitializeAsync()
 		{
-			var containerBuilder = new TestcontainersBuilder<ElasticsearchTestContainer>()
-				.WithElasticsearch(new ElasticsearchTestContainerConfiguration());
-
-			_container = containerBuilder.Build();
+			return _container.StartAsync();
 		}
 
-		public string ConnectionString { get; private set; }
-
-		public async Task InitializeAsync()
+		public Task DisposeAsync()
 		{
-			await _container.StartAsync();
-			ConnectionString = _container.ConnectionString;
-		}
-
-		public async Task DisposeAsync()
-		{
-			if (_container.State == TestcontainersStates.Running)
-			{
-				await _container.StopAsync();
-				await _container.DisposeAsync();
-			}
-		}
-
-		ValueTask IAsyncDisposable.DisposeAsync()
-		{
-			if (_container != null)
-				return _container.DisposeAsync();
-
-			return default;
+			return _container.DisposeAsync().AsTask();
 		}
 	}
 }
