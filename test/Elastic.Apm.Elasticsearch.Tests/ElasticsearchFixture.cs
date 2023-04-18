@@ -11,8 +11,6 @@ namespace Elastic.Apm.Elasticsearch.Tests
 {
 	public sealed class ElasticsearchFixture : IAsyncLifetime
 	{
-		private const string ElasticsearchImage = "docker.elastic.co/elasticsearch/elasticsearch:7.12.1";
-
 		private readonly ElasticsearchContainer _container = new ElasticsearchBuilder().Build();
 
 		public string ConnectionString => _container.GetConnectionString();

@@ -14,7 +14,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 	public sealed class MySqlFixture : IAsyncLifetime
 	{
-		private readonly MySqlContainer _container = new MySqlBuilder().Build();
+		private readonly MySqlContainer _container = new MySqlBuilder().WithImage("mysql:8.0.32").Build();
 
 		public string ConnectionString => _container.GetConnectionString();
 
