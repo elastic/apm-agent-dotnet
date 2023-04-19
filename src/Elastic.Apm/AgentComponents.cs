@@ -50,7 +50,7 @@ namespace Elastic.Apm
 			try
 			{
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
-				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
+				ConfigurationReader = configurationReader ?? new EnvironmentConfiguration(tempLogger);
 				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
 				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
@@ -272,25 +272,25 @@ namespace Elastic.Apm
 					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
 					info.Log("********************************************************************************");
 					info.Log($"Agent Configuration (via '{configurationReader.GetType()}'):");
-					var configurationMetaDataProvider = configurationReader as IConfigurationMetaDataProvider;
-					foreach (var item in ConfigurationMetaData.ConfigurationItems)
+					var configLogger = configurationReader as IConfigurationLoggingPreambleProvider;
+					foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems)
 					{
 						var origin = string.Empty;
 						var value = string.Empty;
-						if (configurationMetaDataProvider != null)
+						if (configLogger != null)
 						{
-							var ckv = configurationMetaDataProvider.Get(item);
+							var ckv = configLogger.Get(item);
 							origin = ckv.ReadFrom;
 							value = ckv.Value;
 						}
 						else
 						{
-							// The implementation of IConfigurationReader does not support "IConfigurationMetaDataProvider".
+							// The implementation of IConfigurationReader does not support "IConfigurationLoggingPreambleProvider".
 							// Let's log the essential configuration items in that case.
 							if (item.IsEssentialForLogging)
 							{
 								origin = "unknown";
-								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
+								value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configurationReader);
 							}
 						}
 
@@ -299,7 +299,7 @@ namespace Elastic.Apm
 							if (string.IsNullOrEmpty(value))
 							{
 								origin = "default";
-								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
+								value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configurationReader);
 							}
 
 							if (item.NeedsMasking) value = item.NeedsMasking ? Consts.Redacted : value;

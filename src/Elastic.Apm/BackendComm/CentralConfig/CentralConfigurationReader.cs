@@ -92,11 +92,11 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				ParseStackTraceLimit);
 			Recording = GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.Recording, ParseRecording);
 			SanitizeFieldNames =
-				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNamesImpl);
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNames);
 			TransactionIgnoreUrls =
-				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrlsImpl);
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrls);
 			IgnoreMessageQueues =
-				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueuesImpl);
+				GetConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueues);
 			SpanCompressionEnabled =
 				GetSimpleConfigurationValue(CentralConfigurationResponseParser.CentralConfigPayload.SpanCompressionEnabled,
 					ParseSpanCompressionEnabled);

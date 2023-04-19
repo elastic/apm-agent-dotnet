@@ -76,7 +76,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ContainAll(
 					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
-					MicrosoftExtensionsConfig.Origin,
+					MicrosoftExtensionsConfigReader.Origin,
 					ConfigConsts.KeyNames.LogLevel,
 					"Defaulting to "
 				);
@@ -104,7 +104,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ContainAll(
 					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
-					MicrosoftExtensionsConfig.Origin,
+					MicrosoftExtensionsConfigReader.Origin,
 					ConfigConsts.KeyNames.LogLevel,
 					"Defaulting to ",
 					"DbeugMisspelled"
@@ -206,7 +206,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate,
 				transactionSampleRateEnvVarValue.ToString(CultureInfo.InvariantCulture));
-			new EnvironmentConfigurationReader(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
+			new EnvironmentConfiguration(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
 
 			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");

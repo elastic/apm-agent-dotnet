@@ -223,9 +223,9 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		public void Dispose_stops_the_thread()
 		{
 			CentralConfigurationFetcher lastCentralConfigurationFetcher;
-			var configSnapshotFromReader = new ConfigurationSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
+			var configSnapshotFromReader = new ConfigurationSnapshotFromReader(new EnvironmentConfiguration(), "local");
 			var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
-			var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
+			var service = Service.GetDefaultService(new EnvironmentConfiguration(), LoggerBase);
 			var handler = new MockHttpMessageHandler();
 			var configUrl = BackendCommUtils.ApmServerEndpoints
 				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
@@ -264,8 +264,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 			numberOfAgentInstances.Repeat(i =>
 			{
-				var configSnapshotFromReader = new ConfigurationSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
-				var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
+				var configSnapshotFromReader = new ConfigurationSnapshotFromReader(new EnvironmentConfiguration(), "local");
+				var service = Service.GetDefaultService(new EnvironmentConfiguration(), LoggerBase);
 				var configStore = new ConfigurationStore(configSnapshotFromReader, LoggerBase);
 
 				var handler = new MockHttpMessageHandler();

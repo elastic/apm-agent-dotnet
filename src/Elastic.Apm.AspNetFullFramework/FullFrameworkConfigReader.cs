@@ -7,37 +7,43 @@ using System.Configuration;
 using System.Text;
 using System.Web.Hosting;
 using Elastic.Apm.Config;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class FullFrameworkConfigReader : AbstractConfigurationWithEnvFallbackReader
+	internal class AppSettingsConfigurationProvider : IConfigurationKeyValueProvider
 	{
-		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
-		private const string ThisClassName = nameof(FullFrameworkConfigReader);
-
 		private readonly IApmLogger _logger;
 
-		public FullFrameworkConfigReader(IApmLogger logger = null)
-			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName) => _logger = logger?.Scoped(ThisClassName);
+		public AppSettingsConfigurationProvider(IApmLogger logger) => _logger = logger?.Scoped(nameof(AppSettingsConfigurationProvider));
 
-		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
+		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
 
-		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
+		public ConfigurationKeyValue Read(string key)
 		{
 			try
 			{
 				var value = ConfigurationManager.AppSettings[key];
-				if (value != null) return Kv(key, value, Origin);
+				if (value != null) return new ConfigurationKeyValue(key, value, Origin);
 			}
 			catch (ConfigurationErrorsException ex)
 			{
 				_logger.Error()?.LogException(ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
 			}
-
-			return Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
+			return null;
 		}
+	}
+
+	internal class FullFrameworkConfigReader : FallbackToEnvironmentConfigurationBase
+	{
+		private const string ThisClassName = nameof(FullFrameworkConfigReader);
+
+		private readonly IApmLogger _logger;
+
+		public FullFrameworkConfigReader(IApmLogger logger = null)
+			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName, new AppSettingsConfigurationProvider(logger)) => _logger = logger?.Scoped(ThisClassName);
+
+		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
 
 		private string DiscoverFullFrameworkServiceName()
 		{
@@ -62,7 +68,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			try
 			{
-				return ReadEnvVarValue("APP_POOL_ID");
+				return EnvironmentConfiguration.Read("APP_POOL_ID")?.Value;
 			}
 			catch (Exception ex)
 			{
