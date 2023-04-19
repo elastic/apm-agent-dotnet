@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -392,7 +393,7 @@ namespace Elastic.Apm.Tests
 			noopConfigReader.SetupGet(n => n.MetricsIntervalInMilliseconds).Returns(1);
 
 			var _ = new MetricsCollector(new NoopLogger(), new NoopPayloadSender(),
-				new ConfigurationStore(new ConfigurationSnapshotFromReader(noopConfigReader.Object, ""), new NoopLogger()));
+				new ConfigurationStore(new RuntimeConfigurationSnapshot(noopConfigReader.Object, ""), new NoopLogger()));
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider

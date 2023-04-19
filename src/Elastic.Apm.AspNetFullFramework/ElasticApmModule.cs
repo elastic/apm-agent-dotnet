@@ -452,7 +452,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static AgentComponents CreateAgentComponents(string dbgInstanceName)
 		{
 			var rootLogger = AgentDependencies.Logger ?? CreateDefaultLogger();
-			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
+			var reader = ConfigHelper.CreateReader(rootLogger) ?? new ElasticApmModuleConfiguration(rootLogger);
 			var agentComponents = new FullFrameworkAgentComponents(rootLogger, reader);
 
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);

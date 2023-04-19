@@ -52,7 +52,7 @@ namespace Elastic.Apm.AspNetCore
 
 			var configReader = configuration == null
 				? new EnvironmentConfiguration(logger)
-				: new MicrosoftExtensionsConfig(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
+				: new ApmConfiguration(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
 
 			var config = new AgentComponents(configurationReader: configReader, logger: logger);
 			HostBuilderExtensions.UpdateServiceInformation(config.Service);

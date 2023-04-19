@@ -59,7 +59,7 @@ namespace Elastic.Apm
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
 				ConfigurationStore =
-					new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
+					new ConfigurationStore(new RuntimeConfigurationSnapshot(ConfigurationReader, "local"), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();

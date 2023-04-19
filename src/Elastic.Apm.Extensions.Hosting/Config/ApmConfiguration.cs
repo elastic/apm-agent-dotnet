@@ -9,15 +9,15 @@ using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace Elastic.Apm.Extensions.Hosting.Config
 {
-	internal class MicrosoftExtensionsConfigReader : IConfigurationKeyValueProvider
+	internal class ConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 	{
 		internal const string Origin = "Microsoft.Extensions.Configuration";
 		private readonly ScopedLogger _logger;
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfigReader(IConfiguration configuration, IApmLogger logger)
+		public ConfigurationKeyValueProvider(IConfiguration configuration, IApmLogger logger)
 		{
-			_logger = logger?.Scoped(nameof(MicrosoftExtensionsConfigReader));
+			_logger = logger?.Scoped(nameof(ConfigurationKeyValueProvider));
 			_configuration = configuration;
 		}
 
@@ -28,17 +28,16 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 		}
 	}
 
-
 	/// <summary>
 	/// An agent-config provider based on Microsoft.Extensions.Configuration.IConfiguration.
 	/// It uses environment variables as fallback
 	/// </summary>
-	internal class MicrosoftExtensionsConfig : FallbackToEnvironmentConfigurationBase
+	internal class ApmConfiguration : FallbackToEnvironmentConfigurationBase
 	{
-		private const string ThisClassName = nameof(MicrosoftExtensionsConfig);
+		private const string ThisClassName = nameof(ApmConfiguration);
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger, string defaultEnvironmentName)
-			: base(logger, defaultEnvironmentName, ThisClassName, new MicrosoftExtensionsConfigReader(configuration, logger)) =>
+		public ApmConfiguration(IConfiguration configuration, IApmLogger logger, string defaultEnvironmentName)
+			: base(logger, defaultEnvironmentName, ThisClassName, new ConfigurationKeyValueProvider(configuration, logger)) =>
 			configuration.GetSection("ElasticApm")
 				?
 				.GetReloadToken()

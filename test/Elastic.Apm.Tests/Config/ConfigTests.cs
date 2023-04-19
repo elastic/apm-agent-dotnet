@@ -1151,7 +1151,7 @@ namespace Elastic.Apm.Tests.Config
 		[Fact]
 		public void DefaultApplicationNamespaceConfig()
 		{
-			var config = new ConcreteEmptyConfigurationWithEnvFallbackReader(new NoopLogger());
+			var config = new AlwaysEmptyStringConfiguration(new NoopLogger());
 			var appNamespaces = config.ApplicationNamespaces;
 			appNamespaces.Should().BeNullOrEmpty();
 			var excludedNamespaces = config.ExcludedNamespaces;
@@ -1173,20 +1173,19 @@ namespace Elastic.Apm.Tests.Config
 			Environment.SetEnvironmentVariable(EnvVarNames.CloudProvider, null);
 		}
 
-		private class EmptyConfigurationKeyValueProvider : IConfigurationKeyValueProvider
-		{
-			public ConfigurationKeyValue Read(string key) => new ConfigurationKeyValue(key, string.Empty, "InMemory");
-		}
-
 		/// <summary>
 		/// An implementation of <see cref="FallbackToEnvironmentConfigurationBase"/> which always returns an empty string for each config.
 		/// With this implementation we can test default values.
 		/// </summary>
-		private class ConcreteEmptyConfigurationWithEnvFallbackReader : FallbackToEnvironmentConfigurationBase
+		private class AlwaysEmptyStringConfiguration : FallbackToEnvironmentConfigurationBase
 		{
-			public ConcreteEmptyConfigurationWithEnvFallbackReader(IApmLogger logger)
-				: base(logger, "test", nameof(ConcreteEmptyConfigurationWithEnvFallbackReader), new EmptyConfigurationKeyValueProvider())
-			{ }
+			private class EmptyConfigurationKeyValueProvider : IConfigurationKeyValueProvider
+			{
+				public ConfigurationKeyValue Read(string key) => new ConfigurationKeyValue(key, string.Empty, "InMemory");
+			}
+
+			public AlwaysEmptyStringConfiguration(IApmLogger logger)
+				: base(logger, "test", nameof(AlwaysEmptyStringConfiguration), new EmptyConfigurationKeyValueProvider()) { }
 		}
 	}
 }

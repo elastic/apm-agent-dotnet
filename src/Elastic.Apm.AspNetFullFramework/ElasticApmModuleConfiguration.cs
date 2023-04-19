@@ -11,11 +11,12 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class AppSettingsConfigurationProvider : IConfigurationKeyValueProvider
+	internal class AppSettingsConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 	{
 		private readonly IApmLogger _logger;
 
-		public AppSettingsConfigurationProvider(IApmLogger logger) => _logger = logger?.Scoped(nameof(AppSettingsConfigurationProvider));
+		public AppSettingsConfigurationKeyValueProvider(IApmLogger logger) =>
+			_logger = logger?.Scoped(nameof(AppSettingsConfigurationKeyValueProvider));
 
 		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
 
@@ -34,14 +35,15 @@ namespace Elastic.Apm.AspNetFullFramework
 		}
 	}
 
-	internal class FullFrameworkConfigReader : FallbackToEnvironmentConfigurationBase
+	internal class ElasticApmModuleConfiguration : FallbackToEnvironmentConfigurationBase
 	{
-		private const string ThisClassName = nameof(FullFrameworkConfigReader);
+		private const string ThisClassName = nameof(ElasticApmModuleConfiguration);
 
 		private readonly IApmLogger _logger;
 
-		public FullFrameworkConfigReader(IApmLogger logger = null)
-			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName, new AppSettingsConfigurationProvider(logger)) => _logger = logger?.Scoped(ThisClassName);
+		public ElasticApmModuleConfiguration(IApmLogger logger = null)
+			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName, new AppSettingsConfigurationKeyValueProvider(logger)) =>
+			_logger = logger?.Scoped(ThisClassName);
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
 
