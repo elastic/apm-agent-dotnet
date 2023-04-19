@@ -1547,6 +1547,7 @@ impl Profiler {
 
             let method_defs =
                 metadata_import.enum_methods_with_name(type_def, target.method_name())?;
+            let mut rejit_target_found = false;
             for method_def in method_defs {
                 let caller: FunctionInfo = match metadata_import.get_function_info(method_def) {
                     Ok(c) => c,
@@ -1582,8 +1583,10 @@ impl Profiler {
 
                 if parsed_signature.arg_len as usize != signature_types.len() - 1 {
                     log::debug!(
-                        "The caller for method_def {} does not have expected number of arguments",
-                        target.method_name()
+                        "The caller for method_def {} expected {} arguments while integration has {}",
+                        target.method_name(),
+                        parsed_signature.arg_len as usize,
+                        signature_types.len() - 1
                     );
                     continue;
                 }
@@ -1623,6 +1626,8 @@ impl Profiler {
                     continue;
                 }
 
+                rejit_target_found = true;
+
                 let mut borrow = self.rejit_handler.borrow_mut();
                 let rejit_handler: &mut RejitHandler = borrow.as_mut().unwrap();
                 let rejit_module = rejit_handler.get_or_add_module(module_id);
@@ -1652,6 +1657,13 @@ impl Profiler {
                         &caller.signature.bytes()
                     );
                 }
+            }
+            if !rejit_target_found {
+                log::error!(
+                    "No rejit method found for target: {}.{}",
+                    target.type_name(),
+                    target.method_name()
+                )
             }
         }
 
