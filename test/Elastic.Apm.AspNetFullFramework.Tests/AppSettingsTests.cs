@@ -35,15 +35,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public void CustomEnvironmentTest()
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
-
-			var config = new ElasticApmModuleConfiguration();
-
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "Development");
-
+			var config = new ElasticApmModuleConfiguration();
 			config.Environment.Should().Be("Development");
 
 			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.Environment, "Staging" } });
+			config = new ElasticApmModuleConfiguration();
 
+			// app-settings should have priority over environment variables
 			config.Environment.Should().Be("Staging");
 		}
 
@@ -52,14 +51,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
 
-			var config = new ElasticApmModuleConfiguration();
-
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
-
+			var config = new ElasticApmModuleConfiguration();
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(10));
 
 			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.FlushInterval, "20ms" } });
+			config = new ElasticApmModuleConfiguration();
 
+			// app-settings should have priority over environment variables
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(20));
 		}
 

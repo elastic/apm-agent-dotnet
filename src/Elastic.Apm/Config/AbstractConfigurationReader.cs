@@ -742,8 +742,6 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		protected virtual string DiscoverServiceName() => DiscoverDefaultServiceName();
-
 		internal static string DiscoverDefaultServiceName()
 		{
 			var entryAssemblyName = DiscoverEntryAssemblyName();
@@ -786,7 +784,7 @@ namespace Elastic.Apm.Config
 
 			_logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
 
-			var discoveredName = AdaptServiceName(DiscoverServiceName());
+			var discoveredName = AdaptServiceName(DiscoverDefaultServiceName());
 			if (discoveredName != null)
 			{
 				_logger?.Info()

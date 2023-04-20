@@ -42,17 +42,28 @@ namespace Elastic.Apm.AspNetFullFramework
 		private readonly IApmLogger _logger;
 
 		public ElasticApmModuleConfiguration(IApmLogger logger = null)
-			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName, new AppSettingsConfigurationKeyValueProvider(logger)) =>
+			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName, new AppSettingsConfigurationKeyValueProvider(logger))
+		{
 			_logger = logger?.Scoped(ThisClassName);
-
-		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
+			var defaultElasticApmModuleServiceName = DiscoverFullFrameworkServiceName();
+			if (!string.IsNullOrEmpty(defaultElasticApmModuleServiceName))
+				ServiceName = defaultElasticApmModuleServiceName;
+		}
 
 		private string DiscoverFullFrameworkServiceName()
 		{
 			var retVal = new StringBuilder();
-			AppendIfNotNull(FindSiteName());
-			AppendIfNotNull(FindAppPoolName());
-			return retVal.ToString();
+			try
+			{
+				AppendIfNotNull(FindSiteName());
+				AppendIfNotNull(FindAppPoolName());
+				return retVal.ToString();
+			}
+			catch (Exception ex)
+			{
+				_logger?.Error()?.Log("Failed to find default site and app_pool name, falling back to default service name detection: {Exception}", ex);
+				return null;
+			}
 
 			void AppendIfNotNull(string nameToAppend)
 			{
@@ -74,7 +85,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
+				_logger?.Error()?.Log("Failed to get app pool name: {Exception}", ex);
 				return null;
 			}
 		}
@@ -87,7 +98,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.Log("Failed to get site name: {Exception}", ex);
+				_logger?.Error()?.Log("Failed to get site name: {Exception}", ex);
 				return null;
 			}
 		}

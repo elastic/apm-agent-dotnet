@@ -150,7 +150,7 @@ namespace Elastic.Apm.Config
 
 		public bool UseWindowsCredentials { get;  }
 
-		public string ServiceName { get;  }
+		public string ServiceName { get; protected set; }
 
 		public string ServiceNodeName { get;  }
 
