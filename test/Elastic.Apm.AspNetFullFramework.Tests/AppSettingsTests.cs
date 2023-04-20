@@ -11,31 +11,11 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	internal class ConfigTestReader : AbstractConfigurationWithEnvFallbackReader
+	internal class ConfigTestReader : FallbackToEnvironmentConfigurationBase
 	{
-		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
-
-		private readonly IApmLogger _logger;
-		private const string ThisClassName = nameof(ConfigTestReader);
-
-
 		public ConfigTestReader(IApmLogger logger = null)
-			: base(logger, null, null) => _logger = logger?.Scoped(ThisClassName);
-
-		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
-		{
-			try
-			{
-				var value = ConfigurationManager.AppSettings[key];
-				if (value != null) return Kv(key, value, Origin);
-			}
-			catch (ConfigurationErrorsException ex)
-			{
-				_logger.Error()?.LogException(ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
-			}
-
-			return Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
-		}
+			: base(logger, null, nameof(ConfigTestReader), new AppSettingsConfigurationKeyValueProvider(logger))
+		{ }
 	}
 
 	[Collection("UsesEnvironmentVariables")]
@@ -56,7 +36,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
 
-			var config = new FullFrameworkConfigReader();
+			var config = new ElasticApmModuleConfiguration();
 
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "Development");
 
@@ -72,7 +52,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
 
-			var config = new FullFrameworkConfigReader();
+			var config = new ElasticApmModuleConfiguration();
 
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
 
