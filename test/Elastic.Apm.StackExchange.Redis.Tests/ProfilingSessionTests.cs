@@ -6,14 +6,12 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Docker;
 using StackExchange.Redis;
 using FluentAssertions;
+using Testcontainers.Redis;
 
 namespace Elastic.Apm.StackExchange.Redis.Tests
 {
@@ -22,13 +20,10 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 		[DockerFact]
 		public async Task Capture_Redis_Commands_On_Transaction()
 		{
-			var containerBuilder = new TestcontainersBuilder<RedisTestcontainer>()
-				.WithDatabase(new RedisTestcontainerConfiguration());
-
-			await using var container = containerBuilder.Build();
+			await using var container = new RedisBuilder().Build();
 			await container.StartAsync();
 
-			var connection = await ConnectionMultiplexer.ConnectAsync(container.ConnectionString);
+			var connection = await ConnectionMultiplexer.ConnectAsync(container.GetConnectionString());
 			var count = 0;
 
 			while (!connection.IsConnected)
@@ -80,13 +75,10 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 		[DockerFact]
 		public async Task Capture_Redis_Commands_On_Span()
 		{
-			var containerBuilder = new TestcontainersBuilder<RedisTestcontainer>()
-				.WithDatabase(new RedisTestcontainerConfiguration());
-
-			await using var container = containerBuilder.Build();
+			await using var container = new RedisBuilder().Build();
 			await container.StartAsync();
 
-			var connection = await ConnectionMultiplexer.ConnectAsync(container.ConnectionString);
+			var connection = await ConnectionMultiplexer.ConnectAsync(container.GetConnectionString());
 			var count = 0;
 
 			while (!connection.IsConnected)
