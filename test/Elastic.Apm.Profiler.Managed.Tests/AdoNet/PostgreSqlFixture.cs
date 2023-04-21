@@ -4,42 +4,28 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
+using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("Postgres")]
-	public class PostgresCollection : ICollectionFixture<PostgreSqlFixture> { }
+	public sealed class PostgresCollection : ICollectionFixture<PostgreSqlFixture> { }
 
-	public class PostgreSqlFixture : IAsyncLifetime
+	public sealed class PostgreSqlFixture : IAsyncLifetime
 	{
-		private readonly PostgreSqlTestcontainer _container;
-		private const string PostgresUserName = "postgres";
-		private const string PostgresPassword = "mysecretpassword";
-		private const string PostgresDatabase = "db";
+		private readonly PostgreSqlContainer _container = new PostgreSqlBuilder().Build();
 
-		public PostgreSqlFixture()
+		public string ConnectionString => _container.GetConnectionString();
+
+		public Task InitializeAsync()
 		{
-			var postgresBuilder = new TestcontainersBuilder<PostgreSqlTestcontainer>()
-				.WithDatabase(new PostgreSqlTestcontainerConfiguration
-				{
-					Database = PostgresDatabase, Username = PostgresUserName, Password = PostgresPassword
-				});
-
-			_container = postgresBuilder.Build();
+			return _container.StartAsync();
 		}
 
-		public async Task InitializeAsync()
+		public Task DisposeAsync()
 		{
-			await _container.StartAsync();
-			ConnectionString = _container.ConnectionString;
+			return _container.DisposeAsync().AsTask();
 		}
-
-		public async Task DisposeAsync() => await _container.DisposeAsync();
-
-		public string ConnectionString { get; private set; }
 	}
 }
