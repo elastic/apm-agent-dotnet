@@ -26,6 +26,15 @@ namespace Elastic.Apm.Config
 		public string DebugName { get; internal set; }
 	}
 
+	internal class EnvironmentKeyValueProvider : IConfigurationKeyValueProvider
+	{
+		internal const string Origin = "environment variables";
+
+		public ConfigurationKeyValue Read(string key) => new(key, ReadEnvVarValue(key), Origin);
+
+		private static string ReadEnvVarValue(string variable) => Environment.GetEnvironmentVariable(variable)?.Trim();
+	}
+
 	internal abstract class FallbackToEnvironmentConfigurationBase : AbstractConfigurationReader, IConfigurationReader, IConfigurationLoggingPreambleProvider
 	{
 		internal FallbackToEnvironmentConfigurationBase(
@@ -35,7 +44,7 @@ namespace Elastic.Apm.Config
 		)
 			: base(logger, defaults)
 		{
-			ActiveConfiguration = configKeyValueProvider;
+			KeyValueProvider = configKeyValueProvider;
 			EnvironmentConfiguration = new EnvironmentKeyValueProvider();
 
 			LogLevel = ParseLogLevel(Read(KeyNames.LogLevel, EnvVarNames.LogLevel));
@@ -98,13 +107,13 @@ namespace Elastic.Apm.Config
 #pragma warning restore CS0618
 		}
 
-		private IConfigurationKeyValueProvider ActiveConfiguration { get; }
+		private IConfigurationKeyValueProvider KeyValueProvider { get; }
 
 		protected EnvironmentKeyValueProvider EnvironmentConfiguration { get; }
 
-		public ConfigurationKeyValue Get(ConfigurationItem item) => ActiveConfiguration.Read(item.ConfigurationKeyName) ?? EnvironmentConfiguration.Read(item.EnvironmentVariableName);
+		public ConfigurationKeyValue Get(ConfigurationItem item) => KeyValueProvider.Read(item.ConfigurationKeyName) ?? EnvironmentConfiguration.Read(item.EnvironmentVariableName);
 
-		protected ConfigurationKeyValue Read(string key, string envFallback) => ActiveConfiguration.Read(key) ?? EnvironmentConfiguration.Read(envFallback);
+		protected ConfigurationKeyValue Read(string key, string envFallback) => KeyValueProvider.Read(key) ?? EnvironmentConfiguration.Read(envFallback);
 
 		public string ApiKey { get;  }
 
