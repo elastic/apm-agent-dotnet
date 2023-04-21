@@ -47,7 +47,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			_logger = logger?.Scoped(ThisClassName);
 			var defaultElasticApmModuleServiceName = DiscoverFullFrameworkServiceName();
 			if (!string.IsNullOrEmpty(defaultElasticApmModuleServiceName))
-				ServiceName = defaultElasticApmModuleServiceName;
+				ServiceName = AdaptServiceName(defaultElasticApmModuleServiceName);
 		}
 
 		private string DiscoverFullFrameworkServiceName()
