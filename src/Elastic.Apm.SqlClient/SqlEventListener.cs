@@ -30,6 +30,7 @@ namespace Elastic.Apm.SqlClient
 
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
+			EventSource.SendCommand(eventSource, (EventCommand)8192, null);
 			switch (eventSource)
 			{
 				// `Microsoft-AdoNet-SystemData` used to be emitted by both by System.Data.SqlClient and Microsoft.Data.SqlClient.
@@ -76,10 +77,13 @@ namespace Elastic.Apm.SqlClient
 
 		private void ProcessBeginExecute(IReadOnlyList<object> payload)
 		{
-			if (payload.Count != 4)
+			// https://github.com/dotnet/SqlClient/blob/3a41288f2b67307a1f816761deb73785247c85c9/src/Microsoft.Data.SqlClient/src/Microsoft/Data/SqlClient/SqlClientEventSource.cs#L1009
+			// SqlClient reserves the first 4 payload items, at the time of writing they've added a 5th (message).
+			// int objectId, string dataSource, string database, string commandText, string message
+			if (payload.Count < 4)
 			{
 				_logger?.Debug()
-					?.Log("BeginExecute event has {PayloadCount} payload items instead of 4. Event processing is skipped.", payload.Count);
+					?.Log("BeginExecute event has {PayloadCount} payload items, expecting at least 4. Event processing is skipped.", payload.Count);
 				return;
 			}
 
@@ -122,10 +126,13 @@ namespace Elastic.Apm.SqlClient
 
 		private void ProcessEndExecute(IReadOnlyList<object> payload)
 		{
-			if (payload.Count != 3)
+			// https://github.com/dotnet/SqlClient/blob/3a41288f2b67307a1f816761deb73785247c85c9/src/Microsoft.Data.SqlClient/src/Microsoft/Data/SqlClient/SqlClientEventSource.cs#L1017
+			// SqlClient EventSource reserves the first 3 payload items but may extend this further in the future.
+			// At the time of writing this event includes an additional 4th (message).
+			if (payload.Count < 3)
 			{
 				_logger?.Debug()
-					?.Log("EndExecute event has {PayloadCount} payload items instead of 3. Event processing is skipped.", payload.Count);
+					?.Log("EndExecute event has {PayloadCount} payload items, expecting at least 3. Event processing is skipped.", payload.Count);
 				return;
 			}
 

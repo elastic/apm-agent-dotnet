@@ -59,6 +59,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.StaticExplicitInitialization.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Clients.Elasticsearch.Tests" Key="$(ExposedPublicKey)"/>
+    <InternalsVisibleTo Include="Sample.Microsoft.Data.SqlClient" Key="$(ExposedPublicKeySampleApps)"/>
   </ItemGroup>
 
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
