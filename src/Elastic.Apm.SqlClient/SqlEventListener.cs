@@ -30,7 +30,6 @@ namespace Elastic.Apm.SqlClient
 
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
-			EventSource.SendCommand(eventSource, (EventCommand)8192, null);
 			switch (eventSource)
 			{
 				// `Microsoft-AdoNet-SystemData` used to be emitted by both by System.Data.SqlClient and Microsoft.Data.SqlClient.
