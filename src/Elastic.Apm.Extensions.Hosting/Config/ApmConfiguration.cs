@@ -37,7 +37,9 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 		private const string ThisClassName = nameof(ApmConfiguration);
 
 		public ApmConfiguration(IConfiguration configuration, IApmLogger logger, string defaultEnvironmentName)
-			: base(logger, defaultEnvironmentName, ThisClassName, new ConfigurationKeyValueProvider(configuration, logger)) =>
+			: base(logger,
+				new ConfigurationDefaults { EnvironmentName = defaultEnvironmentName, DebugName = ThisClassName },
+				new ConfigurationKeyValueProvider(configuration, logger)) =>
 			configuration.GetSection("ElasticApm")
 				?
 				.GetReloadToken()

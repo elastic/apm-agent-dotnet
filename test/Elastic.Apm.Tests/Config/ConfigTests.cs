@@ -1184,8 +1184,11 @@ namespace Elastic.Apm.Tests.Config
 				public ConfigurationKeyValue Read(string key) => new ConfigurationKeyValue(key, string.Empty, "InMemory");
 			}
 
+			private static readonly ConfigurationDefaults EmptyConfigurationDefaults =
+				new() { DebugName = nameof(AlwaysEmptyStringConfiguration), EnvironmentName = "test" };
+
 			public AlwaysEmptyStringConfiguration(IApmLogger logger)
-				: base(logger, "test", nameof(AlwaysEmptyStringConfiguration), new EmptyConfigurationKeyValueProvider()) { }
+				: base(logger, EmptyConfigurationDefaults, new EmptyConfigurationKeyValueProvider()) { }
 		}
 	}
 }

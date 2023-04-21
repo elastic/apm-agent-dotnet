@@ -22,8 +22,17 @@ namespace Elastic.Apm.Config
 		private const string ThisClassName = nameof(AbstractConfigurationReader);
 
 		private readonly IApmLogger _logger;
+		private readonly ConfigurationDefaults _defaults;
 
-		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) => _logger = logger?.Scoped($"{ThisClassName} ({dbgDerivedClassName})");
+		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) : this(logger,
+			new ConfigurationDefaults { DebugName = dbgDerivedClassName }) { }
+
+		internal AbstractConfigurationReader(IApmLogger logger, ConfigurationDefaults defaults)
+		{
+			_logger = logger?.Scoped($"{ThisClassName} ({defaults?.DebugName})");
+			_defaults = defaults;
+		}
+
 
 		protected bool ParseUseElasticTraceparentHeader(ConfigurationKeyValue kv) =>
 			ParseBoolOption(kv, DefaultValues.UseElasticTraceparentHeader, "UseElasticTraceparentHeader");
@@ -784,7 +793,7 @@ namespace Elastic.Apm.Config
 
 			_logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
 
-			var discoveredName = AdaptServiceName(DiscoverDefaultServiceName());
+			var discoveredName = AdaptServiceName(_defaults?.ServiceName ?? DiscoverDefaultServiceName());
 			if (discoveredName != null)
 			{
 				_logger?.Info()
@@ -1158,4 +1167,3 @@ namespace Elastic.Apm.Config
 			S
 		}
 	}
-}

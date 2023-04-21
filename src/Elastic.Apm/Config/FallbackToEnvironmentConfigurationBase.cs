@@ -17,17 +17,30 @@ namespace Elastic.Apm.Config
 		ConfigurationKeyValue Read(string key);
 	}
 
+	internal class ConfigurationDefaults
+	{
+		public string ServiceName { get; internal set; }
+
+		public string EnvironmentName { get; internal set; }
+
+		public string DebugName { get; internal set; }
+	}
+
 	internal abstract class FallbackToEnvironmentConfigurationBase : AbstractConfigurationReader, IConfigurationReader, IConfigurationLoggingPreambleProvider
 	{
-		internal FallbackToEnvironmentConfigurationBase(IApmLogger logger, string defaultEnvironmentName, string dbgDerivedClassName, IConfigurationKeyValueProvider configKeyValueProvider)
-			: base(logger, dbgDerivedClassName)
+		internal FallbackToEnvironmentConfigurationBase(
+			IApmLogger logger,
+			ConfigurationDefaults defaults,
+			IConfigurationKeyValueProvider configKeyValueProvider
+		)
+			: base(logger, defaults)
 		{
 			ActiveConfiguration = configKeyValueProvider;
 			EnvironmentConfiguration = new EnvironmentKeyValueProvider();
 
 			LogLevel = ParseLogLevel(Read(KeyNames.LogLevel, EnvVarNames.LogLevel));
 
-			Environment = ParseEnvironment(Read(KeyNames.Environment, EnvVarNames.Environment)) ?? defaultEnvironmentName;
+			Environment = ParseEnvironment(Read(KeyNames.Environment, EnvVarNames.Environment)) ?? defaults?.EnvironmentName;
 
 			ApiKey = ParseApiKey(Read(KeyNames.ApiKey, EnvVarNames.ApiKey));
 			ApplicationNamespaces = ParseApplicationNamespaces(Read(KeyNames.ApplicationNamespaces, EnvVarNames.ApplicationNamespaces));

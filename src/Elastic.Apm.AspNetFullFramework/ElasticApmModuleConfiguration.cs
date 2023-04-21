@@ -37,31 +37,29 @@ namespace Elastic.Apm.AspNetFullFramework
 
 	internal class ElasticApmModuleConfiguration : FallbackToEnvironmentConfigurationBase
 	{
-		private const string ThisClassName = nameof(ElasticApmModuleConfiguration);
-
-		private readonly IApmLogger _logger;
-
 		public ElasticApmModuleConfiguration(IApmLogger logger = null)
-			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName, new AppSettingsConfigurationKeyValueProvider(logger))
-		{
-			_logger = logger?.Scoped(ThisClassName);
-			var defaultElasticApmModuleServiceName = DiscoverFullFrameworkServiceName();
-			if (!string.IsNullOrEmpty(defaultElasticApmModuleServiceName))
-				ServiceName = AdaptServiceName(defaultElasticApmModuleServiceName);
-		}
+			: base(logger,
+				new ConfigurationDefaults
+				{
+						DebugName = nameof(ElasticApmModuleConfiguration),
+						ServiceName = DiscoverFullFrameworkServiceName(logger?.Scoped(nameof(ElasticApmModuleConfiguration)))
+				},
+				new AppSettingsConfigurationKeyValueProvider(logger)
+			)
+		{ }
 
-		private string DiscoverFullFrameworkServiceName()
+		private static string DiscoverFullFrameworkServiceName(IApmLogger logger)
 		{
 			var retVal = new StringBuilder();
 			try
 			{
-				AppendIfNotNull(FindSiteName());
-				AppendIfNotNull(FindAppPoolName());
+				AppendIfNotNull(FindSiteName(logger));
+				AppendIfNotNull(FindAppPoolName(logger));
 				return retVal.ToString();
 			}
 			catch (Exception ex)
 			{
-				_logger?.Error()?.Log("Failed to find default site and app_pool name, falling back to default service name detection: {Exception}", ex);
+				logger?.Error()?.Log("Failed to find default site and app_pool name, falling back to default service name detection: {Exception}", ex);
 				return null;
 			}
 
@@ -77,20 +75,20 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 		}
 
-		private string FindAppPoolName()
+		private static string FindAppPoolName(IApmLogger logger)
 		{
 			try
 			{
-				return EnvironmentConfiguration.Read("APP_POOL_ID")?.Value;
+				return System.Environment.GetEnvironmentVariable("APP_POOL_ID")?.Trim();
 			}
 			catch (Exception ex)
 			{
-				_logger?.Error()?.Log("Failed to get app pool name: {Exception}", ex);
+				logger?.Error()?.Log("Failed to get app pool name: {Exception}", ex);
 				return null;
 			}
 		}
 
-		private string FindSiteName()
+		private static string FindSiteName(IApmLogger logger)
 		{
 			try
 			{
@@ -98,7 +96,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				_logger?.Error()?.Log("Failed to get site name: {Exception}", ex);
+				logger?.Error()?.Log("Failed to get site name: {Exception}", ex);
 				return null;
 			}
 		}

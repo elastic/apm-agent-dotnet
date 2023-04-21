@@ -13,8 +13,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	internal class ConfigTestReader : FallbackToEnvironmentConfigurationBase
 	{
+		private static readonly ConfigurationDefaults ConfigurationDefaults = new() { DebugName = nameof(ConfigTestReader) };
+
 		public ConfigTestReader(IApmLogger logger = null)
-			: base(logger, null, nameof(ConfigTestReader), new AppSettingsConfigurationKeyValueProvider(logger))
+			: base(logger, ConfigurationDefaults, new AppSettingsConfigurationKeyValueProvider(logger))
 		{ }
 	}
 
