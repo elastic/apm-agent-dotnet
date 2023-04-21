@@ -1167,3 +1167,4 @@ namespace Elastic.Apm.Config
 			S
 		}
 	}
+}
