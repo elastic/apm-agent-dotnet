@@ -21,6 +21,8 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 			_configuration = configuration;
 		}
 
+		public string Description => Origin;
+
 		public ConfigurationKeyValue Read(string key)
 		{
 			var value = _configuration[key];

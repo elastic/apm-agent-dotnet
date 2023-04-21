@@ -1181,7 +1181,9 @@ namespace Elastic.Apm.Tests.Config
 		{
 			private class EmptyConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 			{
-				public ConfigurationKeyValue Read(string key) => new ConfigurationKeyValue(key, string.Empty, "InMemory");
+				public ConfigurationKeyValue Read(string key) => new ConfigurationKeyValue(key, string.Empty, Description);
+
+				public string Description { get; } = "InMemory";
 			}
 
 			private static readonly ConfigurationDefaults EmptyConfigurationDefaults =

@@ -12,7 +12,7 @@ using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Config
 {
-	internal interface IConfigurationKeyValueProvider
+	internal interface IConfigurationKeyValueProvider : IConfigurationDescription
 	{
 		ConfigurationKeyValue Read(string key);
 	}
@@ -30,6 +30,8 @@ namespace Elastic.Apm.Config
 	{
 		internal const string Origin = "environment variables";
 
+		public string Description => Origin;
+
 		public ConfigurationKeyValue Read(string key) => new(key, ReadEnvVarValue(key), Origin);
 
 		private static string ReadEnvVarValue(string variable) => Environment.GetEnvironmentVariable(variable)?.Trim();
@@ -46,6 +48,7 @@ namespace Elastic.Apm.Config
 		{
 			KeyValueProvider = configKeyValueProvider;
 			EnvironmentConfiguration = new EnvironmentKeyValueProvider();
+			Description = configKeyValueProvider.Description ?? EnvironmentConfiguration.Description;
 
 			LogLevel = ParseLogLevel(Read(KeyNames.LogLevel, EnvVarNames.LogLevel));
 
@@ -114,6 +117,8 @@ namespace Elastic.Apm.Config
 		public ConfigurationKeyValue Get(ConfigurationItem item) => KeyValueProvider.Read(item.ConfigurationKeyName) ?? EnvironmentConfiguration.Read(item.EnvironmentVariableName);
 
 		protected ConfigurationKeyValue Read(string key, string envFallback) => KeyValueProvider.Read(key) ?? EnvironmentConfiguration.Read(envFallback);
+
+		public string Description { get; }
 
 		public string ApiKey { get;  }
 

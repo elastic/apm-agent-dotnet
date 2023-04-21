@@ -15,7 +15,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 	/// <summary>
 	/// Represents an active configuration snapshot with potential overrides from an updated <see cref="CentralConfiguration"/>
 	/// </summary>
-	internal class RuntimeConfigurationSnapshot : IConfiguration, IConfigurationSnapshotDescription
+	internal class RuntimeConfigurationSnapshot : IConfiguration, IConfigurationDescription
 	{
 		private readonly CentralConfiguration? _dynamicConfiguration;
 		private readonly IConfigurationReader _mainConfiguration;

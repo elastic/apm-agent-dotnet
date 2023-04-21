@@ -14,7 +14,7 @@ using static Elastic.Apm.Config.ConfigConsts;
 namespace Elastic.Apm.Tests.Utilities
 {
 
-	public class MockConfiguration : AbstractConfigurationReader, IConfiguration, IConfigurationSnapshotDescription
+	public class MockConfiguration : AbstractConfigurationReader, IConfiguration, IConfigurationDescription
 	{
 		public const string Origin = "unit test configuration";
 		private const string ThisClassName = nameof(MockConfiguration);

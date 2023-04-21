@@ -15,18 +15,17 @@ namespace Elastic.Apm.Config
 
 	internal class NullConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 	{
+		public string Description => null;
+
 		public ConfigurationKeyValue Read(string key) => null;
 	}
 
-	internal class EnvironmentConfiguration : FallbackToEnvironmentConfigurationBase, IConfiguration, IConfigurationSnapshotDescription
+	internal class EnvironmentConfiguration : FallbackToEnvironmentConfigurationBase, IConfiguration
 	{
 		private static readonly ConfigurationDefaults ConfigurationDefaults = new () { DebugName = nameof(EnvironmentConfiguration) };
 		// We force base.KeyValueProvider to always return null so the base class always falls back to environment variables
 		private static readonly NullConfigurationKeyValueProvider NullProvider = new ();
 
-		public EnvironmentConfiguration(IApmLogger logger = null) : base(logger, ConfigurationDefaults, NullProvider) =>
-			Description = EnvironmentKeyValueProvider.Origin;
-
-		public string Description { get; }
+		public EnvironmentConfiguration(IApmLogger logger = null) : base(logger, ConfigurationDefaults, NullProvider) { }
 	}
 }
