@@ -4,22 +4,26 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Elastic.Apm.Config;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Tests.Utilities
 {
+	public class MockConfigurationEnvironmentProvider : IConfigurationEnvironmentValueProvider
+	{
+		private readonly Func<string, string> _reader;
+		public string Description => MockConfiguration.Origin;
 
-	public class MockConfiguration : AbstractConfigurationReader, IConfiguration, IConfigurationDescription
+		public MockConfigurationEnvironmentProvider(Func<string, string> reader) => _reader = reader;
+
+		public ConfigurationKeyValue Read(string variable) => new(variable, _reader(variable)?.Trim(), Description);
+	}
+
+	internal class MockConfiguration : FallbackConfigurationBase, IConfiguration
 	{
 		public const string Origin = "unit test configuration";
 		private const string ThisClassName = nameof(MockConfiguration);
-
-		public ConfigurationKeyValue Read(string key, string value) => new(key, value, Origin);
 
 		public MockConfiguration(IApmLogger logger = null,
 			string logLevel = null,
@@ -68,113 +72,60 @@ namespace Elastic.Apm.Tests.Utilities
 			string spanCompressionExactMatchMaxDuration = null,
 			string spanCompressionSameKindMaxDuration = null,
 			string traceContinuationStrategy = null
-		) : base(logger, ThisClassName)
-		{
-			Description = description;
-
-			LogLevel = ParseLogLevel(Read(EnvVarNames.LogLevel, logLevel));
-
-			ApiKey = ParseApiKey(Read(EnvVarNames.ApiKey, apiKey));
-			ApplicationNamespaces = ParseApplicationNamespaces(Read(EnvVarNames.ApplicationNamespaces, applicationNamespaces));
-			CaptureBody = ParseCaptureBody(Read(EnvVarNames.CaptureBody, captureBody));
-			CaptureBodyContentTypes = ParseCaptureBodyContentTypes(Read(EnvVarNames.CaptureBodyContentTypes, captureBodyContentTypes));
-			CaptureHeaders = ParseCaptureHeaders(Read(EnvVarNames.CaptureHeaders, captureHeaders));
-			CentralConfig = ParseCentralConfig(Read(EnvVarNames.CentralConfig, centralConfig));
-			CloudProvider = ParseCloudProvider(Read(EnvVarNames.CloudProvider, cloudProvider));
-			DisableMetrics = ParseDisableMetrics(Read(EnvVarNames.DisableMetrics, disableMetrics));
-			Enabled = ParseEnabled(Read(EnvVarNames.Enabled, enabled));
-			OpenTelemetryBridgeEnabled = ParseOpenTelemetryBridgeEnabled(Read(EnvVarNames.OpenTelemetryBridgeEnabled, openTelemetryBridgeEnabled));
-			Environment = ParseEnvironment(Read(EnvVarNames.Environment, environment));
-			ExcludedNamespaces = ParseExcludedNamespaces(Read(EnvVarNames.ExcludedNamespaces, excludedNamespaces));
-			ExitSpanMinDuration = ParseExitSpanMinDuration(Read(EnvVarNames.ExitSpanMinDuration, exitSpanMinDuration));
-			FlushInterval = ParseFlushInterval(Read(EnvVarNames.FlushInterval, flushInterval));
-			GlobalLabels = ParseGlobalLabels(Read(EnvVarNames.GlobalLabels, globalLabels));
-			HostName = ParseHostName(Read(EnvVarNames.HostName, hostName));
-			IgnoreMessageQueues = ParseIgnoreMessageQueues(Read(EnvVarNames.IgnoreMessageQueues, ignoreMessageQueues));
-			MaxBatchEventCount = ParseMaxBatchEventCount(Read(EnvVarNames.MaxBatchEventCount, maxBatchEventCount));
-			MaxQueueEventCount = ParseMaxQueueEventCount(Read(EnvVarNames.MaxQueueEventCount, maxQueueEventCount));
-			MetricsIntervalInMilliseconds = ParseMetricsInterval(Read(EnvVarNames.MetricsInterval, metricsInterval));
-			Recording = ParseRecording(Read(EnvVarNames.Recording, recording));
-			SanitizeFieldNames = ParseSanitizeFieldNames(Read(EnvVarNames.SanitizeFieldNames, sanitizeFieldNames));
-			SecretToken = ParseSecretToken(Read(EnvVarNames.SecretToken, secretToken));
-			ServerCert = ParseServerCert(Read(EnvVarNames.ServerCert, serverCert));
-			UseWindowsCredentials = ParseUseWindowsCredentials(Read(EnvVarNames.UseWindowsCredentials, useWindowsCredentials));
-			ServiceName = ParseServiceName(Read(EnvVarNames.ServiceName, serviceName));
-			ServiceNodeName = ParseServiceNodeName(Read(EnvVarNames.ServiceNodeName, serviceNodeName));
-			ServiceVersion = ParseServiceVersion(Read(EnvVarNames.ServiceVersion, serviceVersion));
-			SpanCompressionEnabled = ParseSpanCompressionEnabled(Read(EnvVarNames.SpanCompressionEnabled, spanCompressionEnabled));
-			SpanCompressionExactMatchMaxDuration =
-				ParseSpanCompressionExactMatchMaxDuration(Read(EnvVarNames.SpanCompressionExactMatchMaxDuration, spanCompressionExactMatchMaxDuration));
-			SpanCompressionSameKindMaxDuration =
-				ParseSpanCompressionSameKindMaxDuration(Read(EnvVarNames.SpanCompressionSameKindMaxDuration, spanCompressionSameKindMaxDuration));
-#pragma warning disable CS0618
-			SpanFramesMinDurationInMilliseconds = ParseSpanFramesMinDurationInMilliseconds(Read(EnvVarNames.SpanFramesMinDuration, spanFramesMinDurationInMilliseconds));
-#pragma warning restore CS0618
-			SpanStackTraceMinDurationInMilliseconds =
-				ParseSpanStackTraceMinDurationInMilliseconds(Read(EnvVarNames.SpanStackTraceMinDuration, spanStackTraceMinDurationInMilliseconds));
-			StackTraceLimit = ParseStackTraceLimit(Read(EnvVarNames.StackTraceLimit, stackTraceLimit));
-			TraceContextIgnoreSampledFalse =
-				ParseTraceContextIgnoreSampledFalse(Read(EnvVarNames.TraceContextIgnoreSampledFalse, traceContextIgnoreSampledFalse));
-			TraceContinuationStrategy = ParseTraceContinuationStrategy(Read(EnvVarNames.TraceContinuationStrategy, traceContinuationStrategy));
-			TransactionIgnoreUrls =
-				ParseTransactionIgnoreUrls(Read(EnvVarNames.TransactionIgnoreUrls, transactionIgnoreUrls));
-			TransactionMaxSpans = ParseTransactionMaxSpans(Read(EnvVarNames.TransactionMaxSpans, transactionMaxSpans));
-			TransactionSampleRate = ParseTransactionSampleRate(Read(EnvVarNames.TransactionSampleRate, transactionSampleRate));
-			UseElasticTraceparentHeader = ParseUseElasticTraceparentHeader(Read(EnvVarNames.UseElasticTraceparentHeader, useElasticTraceparentHeader));
-			VerifyServerCert = ParseVerifyServerCert(Read(EnvVarNames.VerifyServerCert, verifyServerCert));
-
-			var urls = Read(EnvVarNames.ServerUrls, serverUrls);
-			var url = Read(EnvVarNames.ServerUrl, serverUrl);
-#pragma warning disable CS0618
-			ServerUrls = ParseServerUrls(!string.IsNullOrEmpty(urls.Value) ? urls : url);
-			ServerUrl = !string.IsNullOrEmpty(url.Value) ? ParseServerUrl(url) : ServerUrls.FirstOrDefault();
-#pragma warning restore CS0618
-		}
-
-		public string ApiKey { get; }
-		public IReadOnlyCollection<string> ApplicationNamespaces { get; }
-		public string CaptureBody { get; }
-		public List<string> CaptureBodyContentTypes { get; }
-		public bool CaptureHeaders { get; }
-		public bool CentralConfig { get; }
-		public string CloudProvider { get; }
-		public IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
-		public bool Enabled { get; }
-		public bool OpenTelemetryBridgeEnabled { get; }
-		public string Environment { get; }
-		public IReadOnlyCollection<string> ExcludedNamespaces { get; }
-		public double ExitSpanMinDuration { get; }
-		public TimeSpan FlushInterval { get; }
-		public IReadOnlyDictionary<string, string> GlobalLabels { get; }
-		public string HostName { get; }
-		public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues { get; }
-		public LogLevel LogLevel { get; }
-		public int MaxBatchEventCount { get; }
-		public int MaxQueueEventCount { get; }
-		public double MetricsIntervalInMilliseconds { get; }
-		public bool Recording { get; }
-		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; }
-		public string SecretToken { get; }
-		public string ServerCert { get; }
-		public Uri ServerUrl { get; }
-		public IReadOnlyList<Uri> ServerUrls { get; }
-		public bool UseWindowsCredentials { get; }
-		public string ServiceName { get; }
-		public string ServiceNodeName { get; }
-		public string ServiceVersion { get; }
-		public bool SpanCompressionEnabled { get; }
-		public double SpanCompressionExactMatchMaxDuration { get; }
-		public double SpanCompressionSameKindMaxDuration { get; }
-		public double SpanStackTraceMinDurationInMilliseconds { get; }
-		public double SpanFramesMinDurationInMilliseconds { get; }
-		public int StackTraceLimit { get; }
-		public bool TraceContextIgnoreSampledFalse { get; }
-		public string TraceContinuationStrategy { get; }
-		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
-		public int TransactionMaxSpans { get; }
-		public double TransactionSampleRate { get; }
-		public bool UseElasticTraceparentHeader { get; }
-		public bool VerifyServerCert { get; }
-		public string Description { get; }
+		) : base(
+			logger,
+			new ConfigurationDefaults { DebugName = ThisClassName },
+			new NullConfigurationKeyValueProvider(),
+			new MockConfigurationEnvironmentProvider(key => key switch
+			{
+				EnvVarNames.ApiKey => apiKey,
+				EnvVarNames.ApplicationNamespaces => applicationNamespaces,
+				EnvVarNames.CaptureBody => captureBody,
+				EnvVarNames.CaptureBodyContentTypes => captureBodyContentTypes,
+				EnvVarNames.CaptureHeaders => captureHeaders,
+				EnvVarNames.CentralConfig => centralConfig,
+				EnvVarNames.CloudProvider => cloudProvider,
+				EnvVarNames.DisableMetrics => disableMetrics,
+				EnvVarNames.Enabled => enabled,
+				EnvVarNames.OpenTelemetryBridgeEnabled => openTelemetryBridgeEnabled,
+				EnvVarNames.Environment => environment,
+				EnvVarNames.ExcludedNamespaces => excludedNamespaces,
+				EnvVarNames.ExitSpanMinDuration => exitSpanMinDuration,
+				EnvVarNames.FlushInterval => flushInterval,
+				EnvVarNames.GlobalLabels => globalLabels,
+				EnvVarNames.HostName => hostName,
+				EnvVarNames.IgnoreMessageQueues => ignoreMessageQueues,
+				EnvVarNames.LogLevel => logLevel,
+				EnvVarNames.MaxBatchEventCount => maxBatchEventCount,
+				EnvVarNames.MaxQueueEventCount => maxQueueEventCount,
+				EnvVarNames.MetricsInterval => metricsInterval,
+				EnvVarNames.Recording => recording,
+				EnvVarNames.SanitizeFieldNames => sanitizeFieldNames,
+				EnvVarNames.SecretToken => secretToken,
+				EnvVarNames.ServerCert => serverCert,
+				EnvVarNames.ServerUrl => serverUrl,
+				EnvVarNames.ServerUrls => serverUrls,
+				EnvVarNames.UseWindowsCredentials => useWindowsCredentials,
+				EnvVarNames.ServiceName => serviceName,
+				EnvVarNames.ServiceNodeName => serviceNodeName,
+				EnvVarNames.ServiceVersion => serviceVersion,
+				EnvVarNames.SpanCompressionEnabled => spanCompressionEnabled,
+				EnvVarNames.SpanCompressionExactMatchMaxDuration => spanCompressionExactMatchMaxDuration,
+				EnvVarNames.SpanCompressionSameKindMaxDuration => spanCompressionSameKindMaxDuration,
+				EnvVarNames.SpanStackTraceMinDuration => spanStackTraceMinDurationInMilliseconds,
+				EnvVarNames.SpanFramesMinDuration => spanFramesMinDurationInMilliseconds,
+				EnvVarNames.StackTraceLimit => stackTraceLimit,
+				EnvVarNames.TraceContextIgnoreSampledFalse => traceContextIgnoreSampledFalse,
+				EnvVarNames.TraceContinuationStrategy => traceContinuationStrategy,
+				EnvVarNames.TransactionIgnoreUrls => transactionIgnoreUrls,
+				EnvVarNames.TransactionMaxSpans => transactionMaxSpans,
+				EnvVarNames.TransactionSampleRate => transactionSampleRate,
+				EnvVarNames.UseElasticTraceparentHeader => useElasticTraceparentHeader,
+				EnvVarNames.VerifyServerCert => verifyServerCert,
+				_ => throw new Exception($"{nameof(MockConfiguration)} does not have implementation for configuration : {key}")
+			}),
+			description
+		)
+		{ }
 	}
 }
