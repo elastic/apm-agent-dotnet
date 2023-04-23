@@ -28,17 +28,17 @@ public class ConfigurationLoggingPreambleTests
 			// Lowercase and concat all tokens of Id, EnvironmentVariableName and ConfigKeyName. They must match then.
 
 			// Id
-			var flatId = CamelCaseRegex(item.Id.ToString());
+			var flatId = CamelCaseRegex(item.Option.ToString());
 
 			// EnvironmentVariableName
 			var flatEnvVar = string.Join("",
-				item.EnvironmentVariableName.Substring(ConfigConsts.EnvVarNames.Prefix.Length).Split('_')
+				item.EnvironmentVariableName.Substring(ConfigurationOptionExtensions.EnvPrefix.Length).Split('_')
 					.Select(t => t.ToLower()));
 			flatId.Should().Be(flatEnvVar);
 
 			// ConfigurationKeyName
 			var flatConfigKey =
-				CamelCaseRegex(item.ConfigurationKeyName.Substring(ConfigConsts.KeyNames.Prefix.Length));
+				CamelCaseRegex(item.ConfigurationKeyName.Substring(ConfigurationOptionExtensions.KeyPrefix.Length));
 			flatEnvVar.Should().Be(flatConfigKey);
 		}
 	}
@@ -51,7 +51,7 @@ public class ConfigurationLoggingPreambleTests
 			// Extra treatment required?
 			var n = propertyName;
 			if (n.EndsWith("InMilliseconds")) n = propertyName.Replace("InMilliseconds", string.Empty);
-			ConfigurationLoggingPreamble.ConfigurationItems.Should().Contain(i => i.Id.ToString() == n);
+			ConfigurationLoggingPreamble.ConfigurationItems.Should().Contain(i => i.Option.ToString() == n);
 		}
 	}
 
@@ -61,9 +61,9 @@ public class ConfigurationLoggingPreambleTests
 		var configuration = new MockConfiguration(serviceVersion: "42");
 		foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems.Where(i => i.LogAlways))
 		{
-			var value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configuration);
-			value.Should().NotBeNullOrEmpty($"for {item}");
-			value.Should().NotBe("UnknownDefaultValue");
+			var kv = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Option, configuration, "unknown");
+			kv.Value.Should().NotBeNullOrEmpty($"for {item}");
+			kv.Value.Should().NotBe("UnknownDefaultValue");
 		}
 	}
 }

@@ -8,29 +8,24 @@ using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Config
 {
-	/// <summary>
-	/// An implementation that looks up configuration keys in an external configuration system <see cref="Config.ConfigConsts.KeyNames"/>
-	/// </summary>
+	/// <summary> An implementation that looks up configuration keys in an external configuration system </summary>
 	internal interface IConfigurationKeyValueProvider : IConfigurationDescription
 	{
 		/// <summary> Reads a configuration value, may return null to indicate no configuration is provided </summary>
-		/// <param name="key"><see cref="ConfigConsts.KeyNames"/></param>
-		ConfigurationKeyValue Read(string key);
+		ApplicationKeyValue Read(ConfigurationOption option);
 	}
 
-	/// <summary> An interface that looks up configuration based on environment variables <see cref="Config.ConfigConsts.EnvVarNames"/> </summary>
+	/// <summary> An interface that looks up configuration based on environment variables</summary>
 	internal interface IConfigurationEnvironmentValueProvider : IConfigurationDescription
 	{
 		/// <summary>
 		/// Returns the environment configuration value for a particular config, implementations should always return an
-		/// <see cref="ConfigurationKeyValue"/> instance even if no environment variable is set.
+		/// <see cref="EnvironmentKeyValue"/> instance even if no environment variable is set.
 		/// </summary>
-		/// <param name="variable"><see cref="ConfigConsts.EnvVarNames"/></param>
-		ConfigurationKeyValue Read(string variable);
+		EnvironmentKeyValue Read(ConfigurationOption option);
 	}
 
 	internal class EnvironmentKeyValueProvider : IConfigurationEnvironmentValueProvider
@@ -39,9 +34,12 @@ namespace Elastic.Apm.Config
 
 		public string Description => Origin;
 
-		public ConfigurationKeyValue Read(string key) => new(key, ReadEnvVarValue(key), Origin);
-
-		private static string ReadEnvVarValue(string variable) => Environment.GetEnvironmentVariable(variable)?.Trim();
+		public EnvironmentKeyValue Read(ConfigurationOption option)
+		{
+			var variable = option.ToEnvironmentVariable();
+			var value = Environment.GetEnvironmentVariable(variable)?.Trim();
+			return new(option, value, Origin);
+		}
 	}
 
 	internal class ConfigurationDefaults
@@ -64,7 +62,7 @@ namespace Elastic.Apm.Config
 			: base(logger, defaults, configKeyValueProvider, new EnvironmentKeyValueProvider()) { }
 	}
 
-	internal abstract class FallbackConfigurationBase : AbstractConfigurationReader, IConfigurationReader, IConfigurationLoggingPreambleProvider
+	internal abstract class FallbackConfigurationBase : AbstractConfigurationReader, IConfigurationReader, IConfigurationLogger
 	{
 		internal FallbackConfigurationBase(
 			IApmLogger logger,
@@ -79,66 +77,64 @@ namespace Elastic.Apm.Config
 			EnvironmentProvider = environmentValueProvider;
 			Description = description ?? configKeyValueProvider.Description ?? EnvironmentProvider.Description;
 
-			LogLevel = ParseLogLevel(Read(KeyNames.LogLevel, EnvVarNames.LogLevel));
+			LogLevel = ParseLogLevel(Read(ConfigurationOption.LogLevel));
 
-			Environment = ParseEnvironment(Read(KeyNames.Environment, EnvVarNames.Environment)) ?? defaults?.EnvironmentName;
+			Environment = ParseEnvironment(Read(ConfigurationOption.Environment)) ?? defaults?.EnvironmentName;
 
-			ApiKey = ParseApiKey(Read(KeyNames.ApiKey, EnvVarNames.ApiKey));
-			ApplicationNamespaces = ParseApplicationNamespaces(Read(KeyNames.ApplicationNamespaces, EnvVarNames.ApplicationNamespaces));
-			CaptureBody = ParseCaptureBody(Read(KeyNames.CaptureBody, EnvVarNames.CaptureBody));
-			CaptureBodyContentTypes = ParseCaptureBodyContentTypes(Read(KeyNames.CaptureBodyContentTypes, EnvVarNames.CaptureBodyContentTypes));
-			CaptureHeaders = ParseCaptureHeaders(Read(KeyNames.CaptureHeaders, EnvVarNames.CaptureHeaders));
-			CentralConfig = ParseCentralConfig(Read(KeyNames.CentralConfig, EnvVarNames.CentralConfig));
-			CloudProvider = ParseCloudProvider(Read(KeyNames.CloudProvider, EnvVarNames.CloudProvider));
-			DisableMetrics = ParseDisableMetrics(Read(KeyNames.DisableMetrics, EnvVarNames.DisableMetrics));
-			Enabled = ParseEnabled(Read(KeyNames.Enabled, EnvVarNames.Enabled));
+			ApiKey = ParseApiKey(Read(ConfigurationOption.ApiKey));
+			ApplicationNamespaces = ParseApplicationNamespaces(Read(ConfigurationOption.ApplicationNamespaces));
+			CaptureBody = ParseCaptureBody(Read(ConfigurationOption.CaptureBody));
+			CaptureBodyContentTypes = ParseCaptureBodyContentTypes(Read(ConfigurationOption.CaptureBodyContentTypes));
+			CaptureHeaders = ParseCaptureHeaders(Read(ConfigurationOption.CaptureHeaders));
+			CentralConfig = ParseCentralConfig(Read(ConfigurationOption.CentralConfig));
+			CloudProvider = ParseCloudProvider(Read(ConfigurationOption.CloudProvider));
+			DisableMetrics = ParseDisableMetrics(Read(ConfigurationOption.DisableMetrics));
+			Enabled = ParseEnabled(Read(ConfigurationOption.Enabled));
 			OpenTelemetryBridgeEnabled =
-				ParseOpenTelemetryBridgeEnabled(Read(KeyNames.OpentelemetryBridgeEnabled, EnvVarNames.OpenTelemetryBridgeEnabled));
-			ExcludedNamespaces = ParseExcludedNamespaces(Read(KeyNames.ExcludedNamespaces, EnvVarNames.ExcludedNamespaces));
-			ExitSpanMinDuration = ParseExitSpanMinDuration(Read(KeyNames.ExitSpanMinDuration, EnvVarNames.ExitSpanMinDuration));
-			FlushInterval = ParseFlushInterval(Read(KeyNames.FlushInterval, EnvVarNames.FlushInterval));
-			GlobalLabels = ParseGlobalLabels(Read(KeyNames.GlobalLabels, EnvVarNames.GlobalLabels));
-			HostName = ParseHostName(Read(KeyNames.HostName, EnvVarNames.HostName));
-			IgnoreMessageQueues = ParseIgnoreMessageQueues(Read(KeyNames.IgnoreMessageQueues, EnvVarNames.IgnoreMessageQueues));
-			MaxBatchEventCount = ParseMaxBatchEventCount(Read(KeyNames.MaxBatchEventCount, EnvVarNames.MaxBatchEventCount));
-			MaxQueueEventCount = ParseMaxQueueEventCount(Read(KeyNames.MaxQueueEventCount, EnvVarNames.MaxQueueEventCount));
-			MetricsIntervalInMilliseconds = ParseMetricsInterval(Read(KeyNames.MetricsInterval, EnvVarNames.MetricsInterval));
-			Recording = ParseRecording(Read(KeyNames.Recording, EnvVarNames.Recording));
-			SanitizeFieldNames = ParseSanitizeFieldNames(Read(KeyNames.SanitizeFieldNames, EnvVarNames.SanitizeFieldNames));
-			SecretToken = ParseSecretToken(Read(KeyNames.SecretToken, EnvVarNames.SecretToken));
-			ServerCert = ParseServerCert(Read(KeyNames.ServerCert, EnvVarNames.ServerCert));
-			UseWindowsCredentials = ParseUseWindowsCredentials(Read(KeyNames.UseWindowsCredentials, EnvVarNames.UseWindowsCredentials));
-			ServiceName = ParseServiceName(Read(KeyNames.ServiceName, EnvVarNames.ServiceName));
-			ServiceNodeName = ParseServiceNodeName(Read(KeyNames.ServiceNodeName, EnvVarNames.ServiceNodeName));
-			ServiceVersion = ParseServiceVersion(Read(KeyNames.ServiceVersion, EnvVarNames.ServiceVersion));
-			SpanCompressionEnabled = ParseSpanCompressionEnabled(Read(KeyNames.SpanCompressionEnabled, EnvVarNames.SpanCompressionEnabled));
+				ParseOpenTelemetryBridgeEnabled(Read(ConfigurationOption.OpenTelemetryBridgeEnabled));
+			ExcludedNamespaces = ParseExcludedNamespaces(Read(ConfigurationOption.ExcludedNamespaces));
+			ExitSpanMinDuration = ParseExitSpanMinDuration(Read(ConfigurationOption.ExitSpanMinDuration));
+			FlushInterval = ParseFlushInterval(Read(ConfigurationOption.FlushInterval));
+			GlobalLabels = ParseGlobalLabels(Read(ConfigurationOption.GlobalLabels));
+			HostName = ParseHostName(Read(ConfigurationOption.HostName));
+			IgnoreMessageQueues = ParseIgnoreMessageQueues(Read(ConfigurationOption.IgnoreMessageQueues));
+			MaxBatchEventCount = ParseMaxBatchEventCount(Read(ConfigurationOption.MaxBatchEventCount));
+			MaxQueueEventCount = ParseMaxQueueEventCount(Read(ConfigurationOption.MaxQueueEventCount));
+			MetricsIntervalInMilliseconds = ParseMetricsInterval(Read(ConfigurationOption.MetricsInterval));
+			Recording = ParseRecording(Read(ConfigurationOption.Recording));
+			SanitizeFieldNames = ParseSanitizeFieldNames(Read(ConfigurationOption.SanitizeFieldNames));
+			SecretToken = ParseSecretToken(Read(ConfigurationOption.SecretToken));
+			ServerCert = ParseServerCert(Read(ConfigurationOption.ServerCert));
+			UseWindowsCredentials = ParseUseWindowsCredentials(Read(ConfigurationOption.UseWindowsCredentials));
+			ServiceName = ParseServiceName(Read(ConfigurationOption.ServiceName));
+			ServiceNodeName = ParseServiceNodeName(Read(ConfigurationOption.ServiceNodeName));
+			ServiceVersion = ParseServiceVersion(Read(ConfigurationOption.ServiceVersion));
+			SpanCompressionEnabled = ParseSpanCompressionEnabled(Read(ConfigurationOption.SpanCompressionEnabled));
 			SpanCompressionExactMatchMaxDuration =
-				ParseSpanCompressionExactMatchMaxDuration(Read(KeyNames.SpanCompressionExactMatchMaxDuration,
-					EnvVarNames.SpanCompressionExactMatchMaxDuration));
+				ParseSpanCompressionExactMatchMaxDuration(Read(ConfigurationOption.SpanCompressionExactMatchMaxDuration));
 			SpanCompressionSameKindMaxDuration =
-				ParseSpanCompressionSameKindMaxDuration(Read(KeyNames.SpanCompressionSameKindMaxDuration,
-					EnvVarNames.SpanCompressionSameKindMaxDuration));
+				ParseSpanCompressionSameKindMaxDuration(Read(ConfigurationOption.SpanCompressionSameKindMaxDuration));
 #pragma warning disable CS0618
 			SpanFramesMinDurationInMilliseconds =
-				ParseSpanFramesMinDurationInMilliseconds(Read(KeyNames.SpanFramesMinDuration, EnvVarNames.SpanFramesMinDuration));
+				ParseSpanFramesMinDurationInMilliseconds(Read(ConfigurationOption.SpanFramesMinDuration));
 #pragma warning restore CS0618
 			SpanStackTraceMinDurationInMilliseconds =
-				ParseSpanStackTraceMinDurationInMilliseconds(Read(KeyNames.SpanStackTraceMinDuration, EnvVarNames.SpanStackTraceMinDuration));
-			StackTraceLimit = ParseStackTraceLimit(Read(KeyNames.StackTraceLimit, EnvVarNames.StackTraceLimit));
+				ParseSpanStackTraceMinDurationInMilliseconds(Read(ConfigurationOption.SpanStackTraceMinDuration));
+			StackTraceLimit = ParseStackTraceLimit(Read(ConfigurationOption.StackTraceLimit));
 			TraceContextIgnoreSampledFalse =
-				ParseTraceContextIgnoreSampledFalse(Read(KeyNames.TraceContextIgnoreSampledFalse, EnvVarNames.TraceContextIgnoreSampledFalse));
+				ParseTraceContextIgnoreSampledFalse(Read(ConfigurationOption.TraceContextIgnoreSampledFalse));
 			TraceContinuationStrategy =
-				ParseTraceContinuationStrategy(Read(KeyNames.TraceContinuationStrategy, EnvVarNames.TraceContinuationStrategy));
+				ParseTraceContinuationStrategy(Read(ConfigurationOption.TraceContinuationStrategy));
 			TransactionIgnoreUrls =
-				ParseTransactionIgnoreUrls(Read(KeyNames.TransactionIgnoreUrls, EnvVarNames.TransactionIgnoreUrls));
-			TransactionMaxSpans = ParseTransactionMaxSpans(Read(KeyNames.TransactionMaxSpans, EnvVarNames.TransactionMaxSpans));
-			TransactionSampleRate = ParseTransactionSampleRate(Read(KeyNames.TransactionSampleRate, EnvVarNames.TransactionSampleRate));
+				ParseTransactionIgnoreUrls(Read(ConfigurationOption.TransactionIgnoreUrls));
+			TransactionMaxSpans = ParseTransactionMaxSpans(Read(ConfigurationOption.TransactionMaxSpans));
+			TransactionSampleRate = ParseTransactionSampleRate(Read(ConfigurationOption.TransactionSampleRate));
 			UseElasticTraceparentHeader =
-				ParseUseElasticTraceparentHeader(Read(KeyNames.UseElasticTraceparentHeader, EnvVarNames.UseElasticTraceparentHeader));
-			VerifyServerCert = ParseVerifyServerCert(Read(KeyNames.VerifyServerCert, EnvVarNames.VerifyServerCert));
+				ParseUseElasticTraceparentHeader(Read(ConfigurationOption.UseElasticTraceparentHeader));
+			VerifyServerCert = ParseVerifyServerCert(Read(ConfigurationOption.VerifyServerCert));
 
-			var urlConfig = Read(KeyNames.ServerUrl, EnvVarNames.ServerUrl);
-			var urlsConfig = Read(KeyNames.ServerUrls, EnvVarNames.ServerUrls);
+			var urlConfig = Read(ConfigurationOption.ServerUrl);
+			var urlsConfig = Read(ConfigurationOption.ServerUrls);
 #pragma warning disable CS0618
 			ServerUrls = ParseServerUrls(!string.IsNullOrEmpty(urlsConfig.Value) ? urlsConfig : urlConfig);
 			ServerUrl = !string.IsNullOrEmpty(urlConfig.Value) ? ParseServerUrl(urlConfig) : ServerUrls.FirstOrDefault();
@@ -149,10 +145,11 @@ namespace Elastic.Apm.Config
 
 		protected IConfigurationEnvironmentValueProvider EnvironmentProvider { get; }
 
-		public ConfigurationKeyValue Get(ConfigurationItem item) =>
-			KeyValueProvider.Read(item.ConfigurationKeyName) ?? EnvironmentProvider.Read(item.EnvironmentVariableName);
+		public ConfigurationKeyValue GetConfiguration(ConfigurationOption option) =>
+			KeyValueProvider.Read(option) as ConfigurationKeyValue ?? EnvironmentProvider.Read(option);
 
-		protected ConfigurationKeyValue Read(string key, string envFallback) => KeyValueProvider.Read(key) ?? EnvironmentProvider.Read(envFallback);
+		protected ConfigurationKeyValue Read(ConfigurationOption option) =>
+			KeyValueProvider.Read(option) as ConfigurationKeyValue ?? EnvironmentProvider.Read(option);
 
 		public string Description { get; }
 

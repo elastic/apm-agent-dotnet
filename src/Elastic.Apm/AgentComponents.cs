@@ -272,39 +272,18 @@ namespace Elastic.Apm
 					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
 					info.Log("********************************************************************************");
 					info.Log($"Agent Configuration (via '{configurationReader.GetType()}'):");
-					var configLogger = configurationReader as IConfigurationLoggingPreambleProvider;
 					foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems)
 					{
-						var origin = string.Empty;
-						var value = string.Empty;
-						if (configLogger != null)
-						{
-							var ckv = configLogger.Get(item);
-							origin = ckv.ReadFrom;
-							value = ckv.Value;
-						}
-						else
-						{
-							// The implementation of IConfigurationReader does not support "IConfigurationLoggingPreambleProvider".
-							// Let's log the essential configuration items in that case.
-							if (item.IsEssentialForLogging)
-							{
-								origin = "unknown";
-								value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configurationReader);
-							}
-						}
+						var ckv = configurationReader.GetConfiguration(item.Option);
 
-						if (item.LogAlways || !string.IsNullOrEmpty(value))
-						{
-							if (string.IsNullOrEmpty(value))
-							{
-								origin = "default";
-								value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configurationReader);
-							}
+						if (ckv == null || string.IsNullOrEmpty(ckv.Value))
+							ckv = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Option, configurationReader, "default");
 
-							if (item.NeedsMasking) value = item.NeedsMasking ? Consts.Redacted : value;
-							info.Log($" - {item.NormalizedName}: '{value}' ({origin})");
-						}
+						if (string.IsNullOrEmpty(ckv?.Value) && !item.LogAlways) continue;
+
+						var origin = ckv?.ReadFrom ?? "unknown";
+						var value = item.NeedsMasking ? Consts.Redacted : ckv?.Value;
+						info.Log($" - {item.NormalizedName}: '{value}' ({origin})");
 					}
 
 					info.Log("********************************************************************************");

@@ -23,10 +23,11 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 
 		public string Description => Origin;
 
-		public ConfigurationKeyValue Read(string key)
+		public ApplicationKeyValue Read(ConfigurationOption option)
 		{
+			var key = option.ToConfigKey();
 			var value = _configuration[key];
-			return value != null ? new ConfigurationKeyValue(key, value, Origin) : null;
+			return value != null ? new ApplicationKeyValue(option, value, Origin) : null;
 		}
 	}
 
@@ -51,7 +52,7 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 		{
 			if (obj is not IConfigurationSection) return;
 
-			var newLogLevel = ParseLogLevel(Read(ConfigConsts.KeyNames.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
+			var newLogLevel = ParseLogLevel(Read(ConfigurationOption.LogLevel));
 			if (LogLevel == newLogLevel) return;
 			LogLevel = newLogLevel;
 		}

@@ -29,6 +29,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			Description = description;
 		}
 
+		public ConfigurationKeyValue GetConfiguration(ConfigurationOption option) =>
+			_dynamicConfiguration?.GetConfiguration(option) ?? _mainConfiguration.GetConfiguration(option);
+
 		public string ApiKey => _mainConfiguration.ApiKey;
 		public IReadOnlyCollection<string> ApplicationNamespaces => _mainConfiguration.ApplicationNamespaces;
 
@@ -116,5 +119,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public bool UseElasticTraceparentHeader => _mainConfiguration.UseElasticTraceparentHeader;
 
 		public bool VerifyServerCert => _mainConfiguration.VerifyServerCert;
+
 	}
 }

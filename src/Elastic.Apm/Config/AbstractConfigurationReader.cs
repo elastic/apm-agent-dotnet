@@ -14,6 +14,8 @@ using System.Text.RegularExpressions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using static Elastic.Apm.Config.ConfigConsts;
+using static Elastic.Apm.Config.ConfigurationOption;
+using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.Config
 {
@@ -248,7 +250,8 @@ namespace Elastic.Apm.Config
 			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.TraceContextIgnoreSampledFalse;
 		}
 
-		protected bool ParseUseWindowsCredentials(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureHeaders, "UseWindowsCredentials");
+		protected bool ParseUseWindowsCredentials(ConfigurationKeyValue kv) =>
+			ParseBoolOption(kv, DefaultValues.CaptureHeaders, "UseWindowsCredentials");
 
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
@@ -298,18 +301,13 @@ namespace Elastic.Apm.Config
 			if (kv == null || string.IsNullOrEmpty(kv.Value))
 				return LogAndReturnDefault().AsReadOnly();
 
-			switch (kv.Key)
+			if (kv.Option == ServerUrls)
 			{
-				case EnvVarNames.ServerUrls:
-					_logger?.Info()
-						?.Log(
-							"{ServerUrls} is deprecated. Use {ServerUrl}", EnvVarNames.ServerUrls, EnvVarNames.ServerUrl);
-					break;
-				case KeyNames.ServerUrls:
-					_logger?.Info()
-						?.Log(
-							"{ServerUrls} is deprecated. Use {ServerUrl}", KeyNames.ServerUrls, KeyNames.ServerUrl);
-					break;
+				_logger?.Info()
+					?.Log("{ServerUrls} is deprecated. Use {ServerUrl}",
+						ServerUrls.ToConfigurationName(kv.Origin),
+						ServerUrl.ToConfigurationName(kv.Origin)
+					);
 			}
 
 			var uriStrings = kv.Value.Split(',');
@@ -327,7 +325,7 @@ namespace Elastic.Apm.Config
 			if (list.Count > 1)
 			{
 				_logger?.Warning()
-					?.Log(nameof(EnvVarNames.ServerUrls)
+					?.Log(nameof(ServerUrls)
 						+ " configuration option contains more than one URL which is not supported by the agent"
 						+ " - only the first URL will be used."
 						+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
@@ -540,7 +538,7 @@ namespace Elastic.Apm.Config
 				{
 					_logger?.Error()
 						?.Log("Failed to parse provided span stack trace minimum duration `{ProvidedSpanStackTraceMinDuration}' - " +
-									"using default: {DefaultSpanStackTraceMinDuration}",
+							"using default: {DefaultSpanStackTraceMinDuration}",
 							value,
 							DefaultValues.SpanStackTraceMinDuration);
 					return DefaultValues.SpanStackTraceMinDurationInMilliseconds;
@@ -550,7 +548,7 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Critical()
 					?.LogException(e, nameof(ArgumentException) + " thrown from TryParseTimeInterval which means a programming bug - " +
-														"using default: {DefaultSpanStackTraceMinDuration}",
+						"using default: {DefaultSpanStackTraceMinDuration}",
 						DefaultValues.SpanStackTraceMinDuration);
 				return DefaultValues.SpanStackTraceMinDurationInMilliseconds;
 			}
@@ -630,7 +628,8 @@ namespace Elastic.Apm.Config
 		protected int ParseMaxBatchEventCount(ConfigurationKeyValue kv) =>
 			ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount");
 
-		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) => ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount");
+		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) =>
+			ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount");
 
 		protected TimeSpan ParseFlushInterval(ConfigurationKeyValue kv) =>
 			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S,
@@ -804,7 +803,7 @@ namespace Elastic.Apm.Config
 			_logger?.Error()
 				?.Log("Failed to discover service name, the service name will be '{DefaultServiceName}'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
-					DefaultValues.UnknownServiceName, EnvVarNames.ServiceName);
+					DefaultValues.UnknownServiceName, ServiceName.ToEnvironmentVariable());
 			return DefaultValues.UnknownServiceName;
 		}
 

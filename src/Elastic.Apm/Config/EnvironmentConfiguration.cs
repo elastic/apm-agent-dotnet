@@ -17,7 +17,7 @@ namespace Elastic.Apm.Config
 	{
 		public string Description => null;
 
-		public ConfigurationKeyValue Read(string key) => null;
+		public ApplicationKeyValue Read(ConfigurationOption key) => null;
 	}
 
 	internal class EnvironmentConfiguration : FallbackToEnvironmentConfigurationBase, IConfiguration

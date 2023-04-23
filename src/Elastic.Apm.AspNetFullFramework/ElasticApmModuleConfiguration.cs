@@ -22,12 +22,13 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public string Description => Origin;
 
-		public ConfigurationKeyValue Read(string key)
+		public ApplicationKeyValue Read(ConfigurationOption option)
 		{
 			try
 			{
+				var key = option.ToConfigKey();
 				var value = ConfigurationManager.AppSettings[key];
-				if (value != null) return new ConfigurationKeyValue(key, value, Origin);
+				if (value != null) return new ApplicationKeyValue(option, value, Origin);
 			}
 			catch (ConfigurationErrorsException ex)
 			{

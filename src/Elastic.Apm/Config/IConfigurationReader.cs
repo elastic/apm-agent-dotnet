@@ -13,7 +13,7 @@ namespace Elastic.Apm.Config
 	/// <summary>
 	/// Reads configuration values used to configure the agent
 	/// </summary>
-	public interface IConfigurationReader : IConfigurationDescription
+	public interface IConfigurationReader : IConfigurationDescription, IConfigurationLogger
 	{
 		/// <summary>
 		/// The API key used to send data to the APM server.
