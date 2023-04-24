@@ -19,6 +19,7 @@ using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -39,9 +40,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				xUnitOutputHelper,
 				envVarsToSetForSampleAppPool: new Dictionary<string, string>
 				{
-					{ ConfigConsts.EnvVarNames.ServiceName, CustomServiceName },
-					{ ConfigConsts.EnvVarNames.Environment, CustomEnvironment },
-					{ ConfigConsts.EnvVarNames.HostName, CustomHostName },
+					{ ServiceName.ToEnvironmentVariable(), CustomServiceName },
+					{ ConfigurationOption.Environment.ToEnvironmentVariable(), CustomEnvironment },
+					{ HostName.ToEnvironmentVariable(), CustomHostName },
 				})
 		{
 			ConfigState = new ConfigStateC(LoggerBase);
@@ -64,7 +65,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						CurrentXunitTest.TestCase.TestMethodArguments.Length.Should().Be(1);
 						var transactionMaxSpansLocalConfig = (int?)CurrentXunitTest.TestCase.TestMethodArguments[0];
 						if (transactionMaxSpansLocalConfig.HasValue)
-							EnvVarsToSetForSampleAppPool[ConfigConsts.EnvVarNames.TransactionMaxSpans] = transactionMaxSpansLocalConfig.ToString();
+							EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] = transactionMaxSpansLocalConfig.ToString();
 						break;
 					}
 
@@ -74,7 +75,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						var transactionSampleRateLocalConfig = (bool?)CurrentXunitTest.TestCase.TestMethodArguments[0];
 						if (transactionSampleRateLocalConfig.HasValue)
 						{
-							EnvVarsToSetForSampleAppPool[ConfigConsts.EnvVarNames.TransactionSampleRate] =
+							EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] =
 								transactionSampleRateLocalConfig.Value ? "1" : "0";
 						}
 						break;
@@ -86,10 +87,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						var transactionMaxSpansLocalConfig = (int?)CurrentXunitTest.TestCase.TestMethodArguments[0];
 						var transactionSampleRateLocalConfig = (bool?)CurrentXunitTest.TestCase.TestMethodArguments[1];
 						if (transactionMaxSpansLocalConfig.HasValue)
-							EnvVarsToSetForSampleAppPool[ConfigConsts.EnvVarNames.TransactionMaxSpans] = transactionMaxSpansLocalConfig.ToString();
+							EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] = transactionMaxSpansLocalConfig.ToString();
 						if (transactionSampleRateLocalConfig.HasValue)
 						{
-							EnvVarsToSetForSampleAppPool[ConfigConsts.EnvVarNames.TransactionSampleRate] =
+							EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] =
 								transactionSampleRateLocalConfig.Value ? "1" : "0";
 						}
 						break;
@@ -97,13 +98,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 					case nameof(SampleRate_invalid_value):
 					{
-						EnvVarsToSetForSampleAppPool[ConfigConsts.EnvVarNames.TransactionSampleRate] = "0";
+						EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] = "0";
 						break;
 					}
 
 					case nameof(MaxSpans_invalid_value):
 					{
-						EnvVarsToSetForSampleAppPool[ConfigConsts.EnvVarNames.TransactionMaxSpans] =
+						EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] =
 							MaxSpansLocalConfigForInvalidValueTest.ToString();
 						break;
 					}

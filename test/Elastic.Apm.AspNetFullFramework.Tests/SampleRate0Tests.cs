@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -14,7 +15,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	public class SampleRate0Tests : TestsBase
 	{
 		public SampleRate0Tests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper,
-			envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.TransactionSampleRate, "0" } }) { }
+			envVarsToSetForSampleAppPool: new Dictionary<string, string> { { TransactionSampleRate.ToEnvironmentVariable(), "0" } }) { }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]

@@ -99,13 +99,11 @@ namespace Elastic.Apm.Config
 		SpanFramesMinDuration,
 		/// <inheritdoc cref="IConfigurationReader.TraceContextIgnoreSampledFalse"/>
 		TraceContextIgnoreSampledFalse,
-#if NET46_OR_GREATER
 		//TODO this feature would work better if it allows a custom IConfigurationKeyValueProvider
 		/// <summary>
 		/// Allows users to provide a different IConfigurationReader on .NET full framework in case lookups should not go to AppSettings
 		/// </summary>
 		FullFrameworkConfigurationReaderType,
-#endif
 	}
 
 	public enum ConfigurationType { Environment, Application, CentralConfig }
@@ -182,9 +180,7 @@ namespace Elastic.Apm.Config
 				TransactionSampleRate => EnvPrefix + "TRANSACTION_SAMPLE_RATE",
 				UseElasticTraceparentHeader => EnvPrefix + "USE_ELASTIC_TRACEPARENT_HEADER",
 				VerifyServerCert => EnvPrefix + "VERIFY_SERVER_CERT",
-#if NET46_OR_GREATER
 				FullFrameworkConfigurationReaderType => EnvPrefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE",
-#endif
 				_ => throw new System.ArgumentOutOfRangeException(nameof(option), option, null)
 			};
 
@@ -235,9 +231,7 @@ namespace Elastic.Apm.Config
 				ServerUrls => KeyPrefix + nameof(ServerUrls),
 				SpanFramesMinDuration => KeyPrefix + nameof(SpanFramesMinDuration),
 				TraceContextIgnoreSampledFalse => KeyPrefix + nameof(TraceContextIgnoreSampledFalse),
-#if NET46_OR_GREATER
 				FullFrameworkConfigurationReaderType => KeyPrefix + nameof(FullFrameworkConfigurationReaderType),
-#endif
 				_ => throw new System.ArgumentOutOfRangeException(nameof(option), option, null)
 			};
 	}
