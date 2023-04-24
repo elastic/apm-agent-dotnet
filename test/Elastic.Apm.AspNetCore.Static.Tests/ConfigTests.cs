@@ -61,7 +61,7 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 			var capturedPayload = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(
 				new NoopLogger(),
-				new RuntimeConfigurationSnapshot(configReader, "ApmConfiguration")));
+				new RuntimeConfigurationSnapshot(configReader)));
 
 			var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, _factory);
 			if (withDiagnosticSourceOnly)

@@ -393,7 +393,7 @@ namespace Elastic.Apm.Tests
 			noopConfigReader.SetupGet(n => n.MetricsIntervalInMilliseconds).Returns(1);
 
 			var _ = new MetricsCollector(new NoopLogger(), new NoopPayloadSender(),
-				new ConfigurationStore(new RuntimeConfigurationSnapshot(noopConfigReader.Object, ""), new NoopLogger()));
+				new ConfigurationStore(new RuntimeConfigurationSnapshot(noopConfigReader.Object), new NoopLogger()));
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider

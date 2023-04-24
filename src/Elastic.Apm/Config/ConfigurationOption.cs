@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.BackendComm.CentralConfig;
 using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.Config
@@ -106,7 +107,7 @@ namespace Elastic.Apm.Config
 		FullFrameworkConfigurationReaderType,
 	}
 
-	public enum ConfigurationType { Environment, Application, CentralConfig }
+	public enum ConfigurationType { Environment, Application, CentralConfig, Default }
 
 	internal static class ConfigurationOptionExtensions
 	{
@@ -121,15 +122,14 @@ namespace Elastic.Apm.Config
 		public static string ToNormalizedName(this ConfigurationOption option) =>
 			option.ToEnvironmentVariable().Substring(EnvPrefix.Length).ToLower();
 
-		public static string ToNamedString(this ConfigurationOption option) =>
-			option.ToConfigKey().Substring(KeyPrefix.Length);
-
 		public static string ToConfigurationName(this ConfigurationOption option, ConfigurationType type) =>
 			type switch
 			{
 				ConfigurationType.Environment => option.ToEnvironmentVariable(),
 				ConfigurationType.Application => option.ToConfigKey(),
-				ConfigurationType.CentralConfig => option.ToConfigKey(),
+				ConfigurationType.Default => option.ToNormalizedName(),
+				ConfigurationType.CentralConfig =>
+					option.ToDynamicConfigurationOption()?.ToJsonKey() ?? $"{option.ToNormalizedName()}_NOT_DYNAMIC",
 				_ => throw new System.ArgumentOutOfRangeException(nameof(type), type, null)
 			};
 

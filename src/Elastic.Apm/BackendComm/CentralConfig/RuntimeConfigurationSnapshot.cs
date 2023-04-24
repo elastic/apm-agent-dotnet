@@ -20,13 +20,15 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly CentralConfiguration? _dynamicConfiguration;
 		private readonly IConfigurationReader _mainConfiguration;
 
-		internal RuntimeConfigurationSnapshot(IConfigurationReader mainConfiguration, string description)
-			: this(mainConfiguration, description, null) {}
-		internal RuntimeConfigurationSnapshot(IConfigurationReader mainConfiguration, string description, CentralConfiguration? dynamicConfiguration)
+		internal RuntimeConfigurationSnapshot(IConfigurationReader mainConfiguration)
+			: this(mainConfiguration, null) {}
+		internal RuntimeConfigurationSnapshot(IConfigurationReader mainConfiguration, CentralConfiguration? dynamicConfiguration)
 		{
 			_mainConfiguration = mainConfiguration;
 			_dynamicConfiguration = dynamicConfiguration;
-			Description = description;
+			Description = _dynamicConfiguration != null
+				? $"Central Config (Etag: {_dynamicConfiguration.ETag}) + {_mainConfiguration.Description}"
+				: _mainConfiguration.Description;
 		}
 
 		public ConfigurationKeyValue Lookup(ConfigurationOption option) =>
