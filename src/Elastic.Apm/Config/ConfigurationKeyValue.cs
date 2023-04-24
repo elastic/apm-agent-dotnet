@@ -1,6 +1,10 @@
 // Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
+
+using System;
+using System.Linq;
+using Elastic.Apm.Helpers;
 using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.Config
@@ -25,8 +29,23 @@ namespace Elastic.Apm.Config
 		public string Value { get; }
 		public bool NeedsMasking { get; }
 
-		private string ValueForLogging =>
-			string.IsNullOrWhiteSpace(Value) ? Consts.NotProvided : (NeedsMasking ? Consts.Redacted : Value);
+		private string ValueForLogging
+		{
+			get
+			{
+				if (string.IsNullOrWhiteSpace(Value)) return Consts.NotProvided;
+
+				string UrlString(string value) => Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri.Sanitize().ToString() : value;
+
+				return Option switch
+				{
+					ServerUrl => UrlString(Value),
+					ServerUrls => string.Join(",", Value.Split(',').Select(UrlString)),
+					_ => NeedsMasking ? Consts.Redacted : Value
+				};
+			}
+		}
+
 
 		public override string ToString() => $"{Type,13}->{Option.ToNormalizedName()}: '{ValueForLogging}' ({ReadFrom})";
 	}

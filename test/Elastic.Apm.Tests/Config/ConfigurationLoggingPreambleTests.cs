@@ -64,7 +64,11 @@ public class ConfigurationLoggingPreambleTests
 	[Fact]
 	public void PrintAgentLogPreamble_RedactsSensitiveInformation()
 	{
-		var configuration = new MockConfiguration(secretToken: "42");
+		var configuration = new MockConfiguration(
+			secretToken: "42",
+			serverUrl:$"http://abc:def@localhost:8123",
+			serverUrls:$"http://ghi:jkl@localhost:8124,http://mno:pqr@localhost:8125"
+		);
 		var logger = new TestLogger(LogLevel.Information);
 		ConfigurationLogger.PrintAgentLogPreamble(logger, configuration);
 		logger.Lines.Should().NotContain(s => s.Contains("[Warning]"));
@@ -72,6 +76,14 @@ public class ConfigurationLoggingPreambleTests
 		logger.Lines.Should().NotContain(s => s.Contains("Environment->secret_token: '42'"), logger.Log);
 		logger.Lines.Should().NotContain(s => s.Contains("Default->secret_token: '42'"), logger.Log);
 		logger.Lines.Should().Contain(s => s.Contains("Environment->secret_token: '[REDACTED]'"), logger.Log);
+
+		logger.Lines.Should().NotContain(s => s.Contains("server_url: 'http://abc:def"), logger.Log);
+		logger.Lines.Should().Contain(s => s.Contains("server_url: 'http://[REDACTED]:[REDACTED]"), logger.Log);
+
+		logger.Lines.Should().NotContain(s => s.Contains("server_url: 'http://abc:def"), logger.Log);
+		logger.Lines.Should().Contain(s => s.Contains("server_url: 'http://[REDACTED]:[REDACTED]"), logger.Log);
+		var redactedServerUrls = "server_urls: 'http://[REDACTED]:[REDACTED]@localhost:8124/,http://[REDACTED]:[REDACTED]";
+		logger.Lines.Should().Contain(s => s.Contains(redactedServerUrls), logger.Log);
 	}
 
 	[Fact]
