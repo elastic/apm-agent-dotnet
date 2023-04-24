@@ -79,7 +79,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ContainAll(
 					nameof(ApmConfiguration),
 					"Failed parsing log level from",
-					ConfigurationKeyValueProvider.Origin,
+					nameof(ConfigurationKeyValueProvider),
 					ConfigurationOption.LogLevel.ToConfigKey(),
 					"Defaulting to "
 				);
@@ -107,7 +107,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ContainAll(
 					nameof(ApmConfiguration),
 					"Failed parsing log level from",
-					ConfigurationKeyValueProvider.Origin,
+					nameof(ConfigurationKeyValueProvider),
 					ConfigurationOption.LogLevel.ToConfigKey(),
 					"Defaulting to ",
 					"DbeugMisspelled"

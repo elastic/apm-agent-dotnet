@@ -68,6 +68,6 @@ namespace Elastic.Apm.Feature.Tests
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
 		public bool OpenTelemetryBridgeEnabled { get; set; }
 
-		public ConfigurationKeyValue GetConfiguration(ConfigurationOption option) => null;
+		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }

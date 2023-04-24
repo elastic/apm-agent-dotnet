@@ -106,7 +106,6 @@ namespace Elastic.Apm.Tests.Config
 				.ContainAll(
 					nameof(MockConfiguration),
 					"Failed parsing server URL from",
-					MockConfiguration.Origin,
 					ServerUrls.ToEnvironmentVariable(),
 					serverUrl
 				);
@@ -163,7 +162,6 @@ namespace Elastic.Apm.Tests.Config
 				.ContainAll(
 					nameof(MockConfiguration),
 					"Failed parsing server URL from",
-					MockConfiguration.Origin,
 					ServerUrl.ToEnvironmentVariable(),
 					serverUrl
 				);
@@ -308,7 +306,6 @@ namespace Elastic.Apm.Tests.Config
 				.ContainAll(
 					nameof(MockConfiguration),
 					"Failed parsing server URL from",
-					MockConfiguration.Origin,
 					ServerUrls.ToEnvironmentVariable(),
 					serverUrl2
 				);
@@ -532,7 +529,6 @@ namespace Elastic.Apm.Tests.Config
 				.ContainAll(
 					nameof(MockConfiguration),
 					"Failed parsing log level from",
-					MockConfiguration.Origin,
 					ConfigurationOption.LogLevel.ToEnvironmentVariable(),
 					"Defaulting to "
 				);
@@ -1186,7 +1182,7 @@ namespace Elastic.Apm.Tests.Config
 			{
 				public ApplicationKeyValue Read(ConfigurationOption option) => new(option, string.Empty, Description);
 
-				public string Description { get; } = "InMemory";
+				public string Description => nameof(EmptyConfigurationKeyValueProvider);
 			}
 
 			private static readonly ConfigurationDefaults EmptyConfigurationDefaults =

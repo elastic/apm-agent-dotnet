@@ -21,8 +21,6 @@ namespace Elastic.Apm.Config
 {
 	public abstract class AbstractConfigurationReader
 	{
-		private const string ThisClassName = nameof(AbstractConfigurationReader);
-
 		private readonly IApmLogger _logger;
 		private readonly ConfigurationDefaults _defaults;
 
@@ -31,10 +29,9 @@ namespace Elastic.Apm.Config
 
 		internal AbstractConfigurationReader(IApmLogger logger, ConfigurationDefaults defaults)
 		{
-			_logger = logger?.Scoped($"{ThisClassName} ({defaults?.DebugName})");
+			_logger = logger?.Scoped($"{nameof(AbstractConfigurationReader)} ({defaults?.DebugName})");
 			_defaults = defaults;
 		}
-
 
 		protected bool ParseUseElasticTraceparentHeader(ConfigurationKeyValue kv) =>
 			ParseBoolOption(kv, DefaultValues.UseElasticTraceparentHeader, "UseElasticTraceparentHeader");
@@ -305,8 +302,8 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Info()
 					?.Log("{ServerUrls} is deprecated. Use {ServerUrl}",
-						ServerUrls.ToConfigurationName(kv.Origin),
-						ServerUrl.ToConfigurationName(kv.Origin)
+						ServerUrls.ToConfigurationName(kv.Type),
+						ServerUrl.ToConfigurationName(kv.Type)
 					);
 			}
 

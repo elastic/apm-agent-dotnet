@@ -46,11 +46,6 @@ namespace Elastic.Apm.Config
 			LogAlways || Option is SecretToken or ApiKey;
 	}
 
-	public interface IConfigurationLogger
-	{
-		ConfigurationKeyValue GetConfiguration(ConfigurationOption option);
-	}
-
 	internal static class ConfigurationLoggingPreamble
 	{
 		internal static ApplicationKeyValue GetDefaultValueForLogging(ConfigurationOption option, IConfigurationReader config, string origin) =>

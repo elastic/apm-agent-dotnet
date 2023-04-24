@@ -13,7 +13,7 @@ using static Elastic.Apm.BackendComm.CentralConfig.CentralConfigurationResponseP
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal class CentralConfiguration : AbstractConfigurationReader, IConfigurationLogger, IConfigurationDescription
+	internal class CentralConfiguration : AbstractConfigurationReader, IConfigurationLookup, IConfigurationDescription
 	{
 		private const string ThisClassName = nameof(CentralConfigurationFetcher) + "." + nameof(CentralConfiguration);
 
@@ -120,7 +120,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			return builder.ToString();
 		}
 
-		public ConfigurationKeyValue GetConfiguration(ConfigurationOption option)
+		public ConfigurationKeyValue Lookup(ConfigurationOption option)
 		{
 			var dynamicOption = option.ToDynamicConfigurationOption();
 			return !dynamicOption.HasValue

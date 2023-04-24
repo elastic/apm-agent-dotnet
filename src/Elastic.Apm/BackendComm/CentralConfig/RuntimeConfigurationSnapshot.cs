@@ -29,8 +29,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			Description = description;
 		}
 
-		public ConfigurationKeyValue GetConfiguration(ConfigurationOption option) =>
-			_dynamicConfiguration?.GetConfiguration(option) ?? _mainConfiguration.GetConfiguration(option);
+		public ConfigurationKeyValue Lookup(ConfigurationOption option) =>
+			_dynamicConfiguration?.Lookup(option) ?? _mainConfiguration.Lookup(option);
 
 		public string ApiKey => _mainConfiguration.ApiKey;
 		public IReadOnlyCollection<string> ApplicationNamespaces => _mainConfiguration.ApplicationNamespaces;

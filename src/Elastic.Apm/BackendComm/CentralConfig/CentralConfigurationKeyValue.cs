@@ -10,6 +10,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 	internal class CentralConfigurationKeyValue : ConfigurationKeyValue
 	{
 		public CentralConfigurationKeyValue(DynamicConfigurationOption option, string value, string readFrom)
-			: base(option.ToConfigurationOption(), ConfigurationOrigin.CentralConfig, value, readFrom) { }
+			: base(option.ToConfigurationOption(), ConfigurationType.CentralConfig, value, readFrom) { }
 	}
 }

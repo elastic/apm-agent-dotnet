@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests.Utilities
 	public class MockConfigurationEnvironmentProvider : IConfigurationEnvironmentValueProvider
 	{
 		private readonly Func<ConfigurationOption, string> _reader;
-		public string Description => MockConfiguration.Origin;
+		public string Description => nameof(MockConfigurationEnvironmentProvider);
 
 		public MockConfigurationEnvironmentProvider(Func<ConfigurationOption, string> reader) => _reader = reader;
 
@@ -22,9 +22,6 @@ namespace Elastic.Apm.Tests.Utilities
 
 	internal class MockConfiguration : FallbackConfigurationBase, IConfiguration
 	{
-		public const string Origin = "unit test configuration";
-		private const string ThisClassName = nameof(MockConfiguration);
-
 		public MockConfiguration(IApmLogger logger = null,
 			string logLevel = null,
 			string serverUrls = null,
@@ -36,7 +33,6 @@ namespace Elastic.Apm.Tests.Utilities
 			string apiKey = null,
 			string captureHeaders = null,
 			string centralConfig = null,
-			string description = null,
 			string openTelemetryBridgeEnabled = null,
 			string exitSpanMinDuration = null,
 			string transactionSampleRate = null,
@@ -74,7 +70,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string traceContinuationStrategy = null
 		) : base(
 			logger,
-			new ConfigurationDefaults { DebugName = ThisClassName },
+			new ConfigurationDefaults { DebugName = nameof(MockConfiguration) },
 			new NullConfigurationKeyValueProvider(),
 			new MockConfigurationEnvironmentProvider(key => key switch
 			{
@@ -123,8 +119,7 @@ namespace Elastic.Apm.Tests.Utilities
 				ConfigurationOption.UseElasticTraceparentHeader => useElasticTraceparentHeader,
 				ConfigurationOption.VerifyServerCert => verifyServerCert,
 				_ => throw new Exception($"{nameof(MockConfiguration)} does not have implementation for configuration : {key}")
-			}),
-			description
+			})
 		)
 		{ }
 	}

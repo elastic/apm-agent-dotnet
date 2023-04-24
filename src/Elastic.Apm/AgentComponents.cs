@@ -271,12 +271,12 @@ namespace Elastic.Apm
 					info.Log($"Time zone: {TimeZoneInfo.Local}");
 					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
 					info.Log("********************************************************************************");
-					info.Log($"Agent Configuration (via '{configurationReader.GetType()}'):");
+					info.Log($"Agent Configuration (via '{configurationReader.Description ?? configurationReader.GetType().ToString()}'):");
 					foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems)
 					{
-						var ckv = configurationReader.GetConfiguration(item.Option);
+						var ckv = configurationReader.Lookup(item.Option);
 
-						if (ckv == null || string.IsNullOrEmpty(ckv.Value))
+						if (ckv == null || (string.IsNullOrEmpty(ckv.Value) && item.IsEssentialForLogging))
 							ckv = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Option, configurationReader, "default");
 
 						if (string.IsNullOrEmpty(ckv?.Value) && !item.LogAlways) continue;

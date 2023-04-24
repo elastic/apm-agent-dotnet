@@ -11,56 +11,104 @@ namespace Elastic.Apm.Config
 {
 	public enum ConfigurationOption
 	{
+		/// <inheritdoc cref="IConfigurationReader.ApiKey"/>
 		ApiKey,
+		/// <inheritdoc cref="IConfigurationReader.ApplicationNamespaces"/>
 		ApplicationNamespaces,
+		/// <inheritdoc cref="IConfigurationReader.CaptureBody"/>
 		CaptureBody,
+		/// <inheritdoc cref="IConfigurationReader.CaptureBodyContentTypes"/>
 		CaptureBodyContentTypes,
+		/// <inheritdoc cref="IConfigurationReader.CaptureHeaders"/>
 		CaptureHeaders,
+		/// <inheritdoc cref="IConfigurationReader.CentralConfig"/>
 		CentralConfig,
+		/// <inheritdoc cref="IConfigurationReader.CloudProvider"/>
 		CloudProvider,
+		/// <inheritdoc cref="IConfigurationReader.DisableMetrics"/>
 		DisableMetrics,
+		/// <inheritdoc cref="IConfigurationReader.Enabled"/>
 		Enabled,
+		/// <inheritdoc cref="IConfigurationReader.OpenTelemetryBridgeEnabled"/>
 		OpenTelemetryBridgeEnabled,
+		/// <inheritdoc cref="IConfigurationReader.Environment"/>
 		Environment,
+		/// <inheritdoc cref="IConfigurationReader.ExcludedNamespaces"/>
 		ExcludedNamespaces,
+		/// <inheritdoc cref="IConfigurationReader.ExitSpanMinDuration"/>
 		ExitSpanMinDuration,
+		/// <inheritdoc cref="IConfigurationReader.FlushInterval"/>
 		FlushInterval,
+		/// <inheritdoc cref="IConfigurationReader.GlobalLabels"/>
 		GlobalLabels,
+		/// <inheritdoc cref="IConfigurationReader.HostName"/>
 		HostName,
+		/// <inheritdoc cref="IConfigurationReader.IgnoreMessageQueues"/>
 		IgnoreMessageQueues,
+		/// <inheritdoc cref="IConfigurationReader.LogLevel"/>
 		LogLevel,
+		/// <inheritdoc cref="IConfigurationReader.MaxBatchEventCount"/>
 		MaxBatchEventCount,
+		/// <inheritdoc cref="IConfigurationReader.MaxQueueEventCount"/>
 		MaxQueueEventCount,
+		/// <inheritdoc cref="IConfigurationReader.MetricsIntervalInMilliseconds"/>
 		MetricsInterval,
+		/// <inheritdoc cref="IConfigurationReader.Recording"/>
 		Recording,
+		/// <inheritdoc cref="IConfigurationReader.SanitizeFieldNames"/>
 		SanitizeFieldNames,
+		/// <inheritdoc cref="IConfigurationReader.SecretToken"/>
 		SecretToken,
+		/// <inheritdoc cref="IConfigurationReader.ServerCert"/>
 		ServerCert,
+		/// <inheritdoc cref="IConfigurationReader.ServerUrl"/>
 		ServerUrl,
+		/// <inheritdoc cref="IConfigurationReader.UseWindowsCredentials"/>
 		UseWindowsCredentials,
+		/// <inheritdoc cref="IConfigurationReader.ServiceName"/>
 		ServiceName,
+		/// <inheritdoc cref="IConfigurationReader.ServiceNodeName"/>
 		ServiceNodeName,
+		/// <inheritdoc cref="IConfigurationReader.ServiceVersion"/>
 		ServiceVersion,
+		/// <inheritdoc cref="IConfigurationReader.SpanCompressionEnabled"/>
 		SpanCompressionEnabled,
+		/// <inheritdoc cref="IConfigurationReader.SpanCompressionExactMatchMaxDuration"/>
 		SpanCompressionExactMatchMaxDuration,
+		/// <inheritdoc cref="IConfigurationReader.SpanCompressionSameKindMaxDuration"/>
 		SpanCompressionSameKindMaxDuration,
+		/// <inheritdoc cref="IConfigurationReader.SpanStackTraceMinDurationInMilliseconds"/>
 		SpanStackTraceMinDuration,
+		/// <inheritdoc cref="IConfigurationReader.StackTraceLimit"/>
 		StackTraceLimit,
+		/// <inheritdoc cref="IConfigurationReader.TraceContinuationStrategy"/>
 		TraceContinuationStrategy,
+		/// <inheritdoc cref="IConfigurationReader.TransactionIgnoreUrls"/>
 		TransactionIgnoreUrls,
+		/// <inheritdoc cref="IConfigurationReader.TransactionMaxSpans"/>
 		TransactionMaxSpans,
+		/// <inheritdoc cref="IConfigurationReader.TransactionSampleRate"/>
 		TransactionSampleRate,
+		/// <inheritdoc cref="IConfigurationReader.UseElasticTraceparentHeader"/>
 		UseElasticTraceparentHeader,
+		/// <inheritdoc cref="IConfigurationReader.VerifyServerCert"/>
 		VerifyServerCert,
+		/// <inheritdoc cref="IConfigurationReader.ServerUrls"/>
 		ServerUrls,
+		/// <inheritdoc cref="IConfigurationReader.SpanFramesMinDurationInMilliseconds"/>
 		SpanFramesMinDuration,
+		/// <inheritdoc cref="IConfigurationReader.TraceContextIgnoreSampledFalse"/>
 		TraceContextIgnoreSampledFalse,
 #if NET46_OR_GREATER
+		//TODO this feature would work better if it allows a custom IConfigurationKeyValueProvider
+		/// <summary>
+		/// Allows users to provide a different IConfigurationReader on .NET full framework in case lookups should not go to AppSettings
+		/// </summary>
 		FullFrameworkConfigurationReaderType,
 #endif
 	}
 
-	public enum ConfigurationOrigin { Environment, Application, CentralConfig }
+	public enum ConfigurationType { Environment, Application, CentralConfig }
 
 	internal static class ConfigurationOptionExtensions
 	{
@@ -78,13 +126,13 @@ namespace Elastic.Apm.Config
 		public static string ToNamedString(this ConfigurationOption option) =>
 			option.ToConfigKey().Substring(KeyPrefix.Length);
 
-		public static string ToConfigurationName(this ConfigurationOption option, ConfigurationOrigin origin) =>
-			origin switch
+		public static string ToConfigurationName(this ConfigurationOption option, ConfigurationType type) =>
+			type switch
 			{
-				ConfigurationOrigin.Environment => option.ToEnvironmentVariable(),
-				ConfigurationOrigin.Application => option.ToConfigKey(),
-				ConfigurationOrigin.CentralConfig => option.ToConfigKey(),
-				_ => throw new System.ArgumentOutOfRangeException(nameof(origin), origin, null)
+				ConfigurationType.Environment => option.ToEnvironmentVariable(),
+				ConfigurationType.Application => option.ToConfigKey(),
+				ConfigurationType.CentralConfig => option.ToConfigKey(),
+				_ => throw new System.ArgumentOutOfRangeException(nameof(type), type, null)
 			};
 
 		public static string ToEnvironmentVariable(this ConfigurationOption option) =>
