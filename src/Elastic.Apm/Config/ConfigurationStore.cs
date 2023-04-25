@@ -33,7 +33,7 @@ namespace Elastic.Apm.Config
 					_currentSnapshot = value;
 					_logger.Info()
 						?.Log("Replaced current snapshot. Old: {ConfigSnapshotDescription}. New: {ConfigSnapshotDescription}."
-							, oldSnapshot.Description(), _currentSnapshot.Description());
+							, oldSnapshot.Description, _currentSnapshot.Description);
 				}
 			}
 		}
