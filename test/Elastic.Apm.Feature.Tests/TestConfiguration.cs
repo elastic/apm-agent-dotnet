@@ -14,6 +14,8 @@ namespace Elastic.Apm.Feature.Tests
 {
 	public class TestConfiguration : IConfiguration
 	{
+		public string Description { get; } = "Elastic.Apm.Feature.Tests Configuration";
+
 		public string ApiKey { get; set; }
 		public IReadOnlyCollection<string> ApplicationNamespaces { get; set; } = DefaultValues.DefaultApplicationNamespaces;
 		public string CaptureBody { get; set; } = SupportedValues.CaptureBodyOff;

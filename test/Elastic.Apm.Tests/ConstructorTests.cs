@@ -70,7 +70,7 @@ public class ConstructorTests
 		}
 	}
 
-	private class LogConfiguration : IConfiguration, IConfigurationSnapshotDescription
+	private class LogConfiguration : IConfiguration, IConfigurationDescription
 	{
 		public LogConfiguration(LogLevel level) => LogLevel = level;
 

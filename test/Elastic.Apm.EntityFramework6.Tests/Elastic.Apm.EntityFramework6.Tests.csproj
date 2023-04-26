@@ -29,7 +29,6 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
     <PackageReference Include="EntityFramework" Version="6.2.0" />
-    <PackageReference Include="StrongNamer" Version="0.2.5" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' != 'net461' ">
     <PackageReference Include="EntityFramework" Version="6.3.0" />

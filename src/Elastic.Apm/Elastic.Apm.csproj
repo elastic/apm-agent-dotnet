@@ -39,7 +39,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.Specification" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.StackExchange.Redis" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.StackExchange.Redis.Tests" Key="$(ExposedPublicKey)" />
-    <InternalsVisibleTo Include="Elastic.Apm.StartupHook.Tests" Key="$(ExposedPublicKey)"/>
+    <InternalsVisibleTo Include="Elastic.Apm.StartupHook.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests.Utilities" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.StartupHook.Loader" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging" Key="$(ExposedPublicKey)" />
@@ -52,13 +52,14 @@
     <InternalsVisibleTo Include="Elastic.Apm.Azure.CosmosDb" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Azure.CosmosDb.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Azure.Functions" Key="$(ExposedPublicKey)" />
-    <InternalsVisibleTo Include="Elastic.Apm.Azure.Functions.Tests" Key="$(ExposedPublicKey)"/>
+    <InternalsVisibleTo Include="Elastic.Apm.Azure.Functions.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.MongoDb" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.MongoDb.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.StaticExplicitInitialization.Tests" Key="$(ExposedPublicKey)" />
-    <InternalsVisibleTo Include="Elastic.Clients.Elasticsearch.Tests" Key="$(ExposedPublicKey)"/>
+    <InternalsVisibleTo Include="Elastic.Clients.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Sample.Microsoft.Data.SqlClient" Key="$(ExposedPublicKeySampleApps)"/>
   </ItemGroup>
 
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">

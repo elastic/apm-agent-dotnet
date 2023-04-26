@@ -24,16 +24,16 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj"/>
-    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj"/>
-    <ProjectReference Include="..\..\sample\WebApiSample\WebApiSample.csproj"/>
-    <ProjectReference Include="..\..\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj"/>
-    <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj"/>
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\sample\WebApiSample\WebApiSample.csproj" />
+    <ProjectReference Include="..\..\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="TestConfigs\appsettings_valid.json">

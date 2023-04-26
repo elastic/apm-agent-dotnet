@@ -10,7 +10,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
     <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
-    <PackageReference Include="Testcontainers" Version="2.3.0" />
+    <PackageReference Include="Testcontainers.MongoDb" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

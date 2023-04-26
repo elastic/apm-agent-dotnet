@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Elastic.Apm.Tests.Config;
 
-public class ConfigurationMetaDataTests
+public class ConfigurationLoggingPreambleTests
 {
 	[Fact]
 	public void ConfigurationItemId_MapsCorrectly_ToEnvironmentVariable_And_ConfigKey()
@@ -23,7 +23,7 @@ public class ConfigurationMetaDataTests
 				.Select(m => m.Value.ToLower()));
 		}
 
-		foreach (var item in ConfigurationMetaData.ConfigurationItems)
+		foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems)
 		{
 			// Lowercase and concat all tokens of Id, EnvironmentVariableName and ConfigKeyName. They must match then.
 
@@ -51,7 +51,7 @@ public class ConfigurationMetaDataTests
 			// Extra treatment required?
 			var n = propertyName;
 			if (n.EndsWith("InMilliseconds")) n = propertyName.Replace("InMilliseconds", string.Empty);
-			ConfigurationMetaData.ConfigurationItems.Should().Contain(i => i.Id.ToString() == n);
+			ConfigurationLoggingPreamble.ConfigurationItems.Should().Contain(i => i.Id.ToString() == n);
 		}
 	}
 
@@ -59,9 +59,9 @@ public class ConfigurationMetaDataTests
 	public void ConfigurationItems_ThatAlwaysLog_MustProvideDefaultValue()
 	{
 		var configuration = new MockConfiguration(serviceVersion: "42");
-		foreach (var item in ConfigurationMetaData.ConfigurationItems.Where(i => i.LogAlways))
+		foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems.Where(i => i.LogAlways))
 		{
-			var value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configuration);
+			var value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configuration);
 			value.Should().NotBeNullOrEmpty($"for {item}");
 			value.Should().NotBe("UnknownDefaultValue");
 		}

@@ -402,6 +402,8 @@ pipeline {
         deleteDir()
         unstash 'source'
         dir("${BASE_DIR}"){
+          sh label: 'Rustup', script: 'rustup default 1.67.1'
+          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
           release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io', withSuffix: true)
         }
       }
@@ -441,6 +443,8 @@ pipeline {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}") {
+              sh label: 'Rustup', script: 'rustup default 1.67.1'
+              sh label: 'Cargo make', script: 'cargo install --force cargo-make'
               release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
             }
           }

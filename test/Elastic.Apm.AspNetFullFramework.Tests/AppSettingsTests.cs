@@ -11,31 +11,13 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	internal class ConfigTestReader : AbstractConfigurationWithEnvFallbackReader
+	internal class ConfigTestReader : FallbackToEnvironmentConfigurationBase
 	{
-		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
-
-		private readonly IApmLogger _logger;
-		private const string ThisClassName = nameof(ConfigTestReader);
-
+		private static readonly ConfigurationDefaults ConfigurationDefaults = new() { DebugName = nameof(ConfigTestReader) };
 
 		public ConfigTestReader(IApmLogger logger = null)
-			: base(logger, null, null) => _logger = logger?.Scoped(ThisClassName);
-
-		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
-		{
-			try
-			{
-				var value = ConfigurationManager.AppSettings[key];
-				if (value != null) return Kv(key, value, Origin);
-			}
-			catch (ConfigurationErrorsException ex)
-			{
-				_logger.Error()?.LogException(ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
-			}
-
-			return Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
-		}
+			: base(logger, ConfigurationDefaults, new AppSettingsConfigurationKeyValueProvider(logger))
+		{ }
 	}
 
 	[Collection("UsesEnvironmentVariables")]
@@ -55,15 +37,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public void CustomEnvironmentTest()
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
-
-			var config = new FullFrameworkConfigReader();
-
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "Development");
-
+			var config = new ElasticApmModuleConfiguration();
 			config.Environment.Should().Be("Development");
 
 			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.Environment, "Staging" } });
+			config = new ElasticApmModuleConfiguration();
 
+			// app-settings should have priority over environment variables
 			config.Environment.Should().Be("Staging");
 		}
 
@@ -72,14 +53,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
 
-			var config = new FullFrameworkConfigReader();
-
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
-
+			var config = new ElasticApmModuleConfiguration();
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(10));
 
 			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.FlushInterval, "20ms" } });
+			config = new ElasticApmModuleConfiguration();
 
+			// app-settings should have priority over environment variables
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(20));
 		}
 

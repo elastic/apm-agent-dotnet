@@ -4,36 +4,28 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
+using Testcontainers.MsSql;
 using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("SqlServer")]
-	public class SqlServerCollection : ICollectionFixture<SqlServerFixture> { }
+	public sealed class SqlServerCollection : ICollectionFixture<SqlServerFixture> { }
 
-	public class SqlServerFixture : IAsyncLifetime
+	public sealed class SqlServerFixture : IAsyncLifetime
 	{
-		private readonly MsSqlTestcontainer _container;
+		private readonly MsSqlContainer _container = new MsSqlBuilder().Build();
 
-		public SqlServerFixture()
+		public string ConnectionString => _container.GetConnectionString();
+
+		public Task InitializeAsync()
 		{
-			var containerBuilder = new TestcontainersBuilder<MsSqlTestcontainer>()
-				.WithDatabase(new MsSqlTestcontainerConfiguration { Password = "StrongPassword(!)!!!1" });
-
-			_container = containerBuilder.Build();
+			return _container.StartAsync();
 		}
 
-		public string ConnectionString { get; private set; }
-
-		public async Task InitializeAsync()
+		public Task DisposeAsync()
 		{
-			await _container.StartAsync();
-			ConnectionString = _container.ConnectionString;
+			return _container.DisposeAsync().AsTask();
 		}
-
-		public async Task DisposeAsync() => await _container.DisposeAsync();
 	}
 }

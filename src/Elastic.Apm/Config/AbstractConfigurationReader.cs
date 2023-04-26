@@ -21,36 +21,18 @@ namespace Elastic.Apm.Config
 	{
 		private const string ThisClassName = nameof(AbstractConfigurationReader);
 
-		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedApplicationNamespaces =
-			new LazyContextualInit<IReadOnlyList<string>>();
-
-		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedExcludedNamespaces =
-			new LazyContextualInit<IReadOnlyList<string>>();
-
-		private readonly LazyContextualInit<int> _cachedMaxBatchEventCount = new LazyContextualInit<int>();
-		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
-		private readonly LazyContextualInit<Uri> _cachedServerUrl = new LazyContextualInit<Uri>();
-		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
-
-		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
-			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
-
-		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersIgnoreMessageQueues =
-			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
-
-		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersSanitizeFieldNames =
-			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
-
-		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersTransactionIgnoreUrls =
-			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
-
 		private readonly IApmLogger _logger;
+		private readonly ConfigurationDefaults _defaults;
 
-		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) =>
-			_logger = logger?.Scoped($"{ThisClassName} ({dbgDerivedClassName})");
+		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) : this(logger,
+			new ConfigurationDefaults { DebugName = dbgDerivedClassName }) { }
 
-		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
-			new ConfigurationKeyValue(key, value, origin);
+		internal AbstractConfigurationReader(IApmLogger logger, ConfigurationDefaults defaults)
+		{
+			_logger = logger?.Scoped($"{ThisClassName} ({defaults?.DebugName})");
+			_defaults = defaults;
+		}
+
 
 		protected bool ParseUseElasticTraceparentHeader(ConfigurationKeyValue kv) =>
 			ParseBoolOption(kv, DefaultValues.UseElasticTraceparentHeader, "UseElasticTraceparentHeader");
@@ -85,11 +67,7 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNames(ConfigurationKeyValue kv) =>
-			_cachedWildcardMatchersSanitizeFieldNames.IfNotInited?.InitOrGet(() => ParseSanitizeFieldNamesImpl(kv))
-			?? _cachedWildcardMatchersSanitizeFieldNames.Value;
-
-		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNamesImpl(ConfigurationKeyValue kv)
+		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNames(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null) return DefaultValues.SanitizeFieldNames;
 
@@ -109,11 +87,7 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv) =>
-			_cachedWildcardMatchersDisableMetrics.IfNotInited?.InitOrGet(() => ParseDisableMetricsImpl(kv))
-			?? _cachedWildcardMatchersDisableMetrics.Value;
-
-		private IReadOnlyList<WildcardMatcher> ParseDisableMetricsImpl(ConfigurationKeyValue kv)
+		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null) return DefaultValues.DisableMetrics;
 
@@ -132,7 +106,6 @@ namespace Elastic.Apm.Config
 				return DefaultValues.DisableMetrics;
 			}
 		}
-
 
 		protected double ParseExitSpanMinDuration(ConfigurationKeyValue kv)
 		{
@@ -168,11 +141,7 @@ namespace Elastic.Apm.Config
 			return valueInMilliseconds;
 		}
 
-		protected IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueues(ConfigurationKeyValue kv) =>
-			_cachedWildcardMatchersIgnoreMessageQueues.IfNotInited?.InitOrGet(() => ParseIgnoreMessageQueuesImpl(kv))
-			?? _cachedWildcardMatchersIgnoreMessageQueues.Value;
-
-		internal IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueuesImpl(ConfigurationKeyValue kv)
+		protected IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueues(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null || string.IsNullOrWhiteSpace(kv.Value))
 				return DefaultValues.IgnoreMessageQueues;
@@ -307,10 +276,7 @@ namespace Elastic.Apm.Config
 			return DefaultValues.LogLevel;
 		}
 
-		protected Uri ParseServerUrl(ConfigurationKeyValue kv) =>
-			_cachedServerUrl.IfNotInited?.InitOrGet(() => ParseServerUrlImpl(kv)) ?? _cachedServerUrl.Value;
-
-		private Uri ParseServerUrlImpl(ConfigurationKeyValue kv)
+		protected Uri ParseServerUrl(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value))
 			{
@@ -326,10 +292,7 @@ namespace Elastic.Apm.Config
 			return DefaultValues.ServerUri;
 		}
 
-		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv) =>
-			_cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
-
-		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
+		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
 		{
 			var list = new List<Uri>();
 			if (kv == null || string.IsNullOrEmpty(kv.Value))
@@ -456,11 +419,7 @@ namespace Elastic.Apm.Config
 			return DefaultValues.StackTraceLimit;
 		}
 
-		protected IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrls(ConfigurationKeyValue kv) =>
-			_cachedWildcardMatchersTransactionIgnoreUrls.IfNotInited?.InitOrGet(() => ParseTransactionIgnoreUrlsImpl(kv))
-			?? _cachedWildcardMatchersTransactionIgnoreUrls.Value;
-
-		internal IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrlsImpl(ConfigurationKeyValue kv)
+		protected IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrls(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null) return DefaultValues.TransactionIgnoreUrls;
 
@@ -669,14 +628,9 @@ namespace Elastic.Apm.Config
 		}
 
 		protected int ParseMaxBatchEventCount(ConfigurationKeyValue kv) =>
-			_cachedMaxBatchEventCount.IfNotInited?.InitOrGet(() =>
-				ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount"))
-			?? _cachedMaxBatchEventCount.Value;
+			ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount");
 
-		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) =>
-			_cachedMaxQueueEventCount.IfNotInited?.InitOrGet(() =>
-				ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount"))
-			?? _cachedMaxQueueEventCount.Value;
+		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) => ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount");
 
 		protected TimeSpan ParseFlushInterval(ConfigurationKeyValue kv) =>
 			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S,
@@ -797,8 +751,6 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		protected virtual string DiscoverServiceName() => DiscoverDefaultServiceName();
-
 		internal static string DiscoverDefaultServiceName()
 		{
 			var entryAssemblyName = DiscoverEntryAssemblyName();
@@ -841,7 +793,7 @@ namespace Elastic.Apm.Config
 
 			_logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
 
-			var discoveredName = AdaptServiceName(DiscoverServiceName());
+			var discoveredName = AdaptServiceName(_defaults?.ServiceName ?? DiscoverDefaultServiceName());
 			if (discoveredName != null)
 			{
 				_logger?.Info()
@@ -1169,10 +1121,7 @@ namespace Elastic.Apm.Config
 			return result.ToString();
 		}
 
-		protected IReadOnlyList<string> ParseExcludedNamespaces(ConfigurationKeyValue kv) =>
-			_cachedExcludedNamespaces.IfNotInited?.InitOrGet(() => ParseExcludedNamespacesImpl(kv)) ?? _cachedExcludedNamespaces.Value;
-
-		private IReadOnlyList<string> ParseExcludedNamespacesImpl(ConfigurationKeyValue kv)
+		protected IReadOnlyList<string> ParseExcludedNamespaces(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
 
@@ -1187,10 +1136,7 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected IReadOnlyList<string> ParseApplicationNamespaces(ConfigurationKeyValue kv) =>
-			_cachedApplicationNamespaces.IfNotInited?.InitOrGet(() => ParseApplicationNamespacesImpl(kv)) ?? _cachedApplicationNamespaces.Value;
-
-		private IReadOnlyList<string> ParseApplicationNamespacesImpl(ConfigurationKeyValue kv)
+		protected IReadOnlyList<string> ParseApplicationNamespaces(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
 
@@ -1204,8 +1150,6 @@ namespace Elastic.Apm.Config
 				return DefaultValues.DefaultApplicationNamespaces.ToList();
 			}
 		}
-
-		protected string ReadEnvVarValue(string envVarName) => Environment.GetEnvironmentVariable(envVarName)?.Trim();
 
 		private static bool TryParseUri(string u, out Uri uri)
 		{
