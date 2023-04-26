@@ -293,7 +293,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, request.Unvalidated.Path))
 					return;
 
-				var hasHttpContext = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is null;
+				var hasHttpContext = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
 				_logger.Warning()
 					?.Log(
 						$"{nameof(ITracer.CurrentTransaction)} is null in {nameof(ProcessEndRequest)}. HttpContext for transaction: {hasHttpContext}"
