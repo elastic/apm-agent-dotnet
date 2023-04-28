@@ -14,6 +14,7 @@ module Versioning =
     
     /// Gets the current AssemblyInfo version from the Directory.Build.Props in /src
     let CurrentVersion =
+        Proc.Exec <| ExecArguments("dotnet", "tools",  "restore") |> ignore
         let version = Proc.Start <| StartArguments("dotnet", "minver",  "-t=v", "-p=canary.0", "-v=e")
         match Seq.toList version.ConsoleOut with
         | [ head ] ->
