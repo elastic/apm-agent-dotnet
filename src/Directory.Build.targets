@@ -1,22 +1,24 @@
 <Project>
-  <!-- If a project contains a LICENSE_LOCAL file, this target concatenates the main LICENSE file with the project's LICENSE_LOCAL
-   and outputs the concatenated string into a LICENSE file which will be included in the published NuGet package -->
-  <Target Name="ConcatenateLicenseFiles" Condition="Exists('LICENSE_LOCAL')">
-    <!-- Read the contents of the files (preserving tabs/spaces). -->
-    <ItemGroup>
-      <FileContents Include="$([System.IO.File]::ReadAllText($(SolutionRoot)/LICENSE))" />
-      <!--  Add a new line between the files-->
-      <FileContents Include="%0d" />
-      
-      <FileContents Include="$([System.IO.File]::ReadAllText(LICENSE_LOCAL))" />
-    </ItemGroup>
 
-    <!-- Write the result to the LICENSE file. -->
-    <WriteLinesToFile File="LICENSE" Lines="@(FileContents)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-  </Target>
 
-  <!-- Concatenate License files on AfterBuild. -->
-  <Target Name="AfterBuild">
-    <CallTarget Targets="ConcatenateLicenseFiles" />
+  <Target Name="MyTarget" AfterTargets="MinVer">
+    <!--
+    TODO: Remove this behavior when we bump to 2.x
+    Currently our apm agent libraries are not versioned according to 
+    https://learn.microsoft.com/en-ca/dotnet/standard/library-guidance/versioning#version-numbers
+    
+    The guidance is to anchor AssemblyVersion to M.0.0
+    So that strict assembly version loading on .NET full framework is more relaxed 
+    like the new behavior on .NET core. 
+    
+    We can't do so on 1.x.x because we already released 1.Minor.x versions. 
+    
+    So instead we will anchor to 1.Minor.0 instead
+    
+    Removing this will let MinVer handle the correct defaults should we release 2.0
+    -->
+    <PropertyGroup>
+      <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0</AssemblyVersion>
+    </PropertyGroup>
   </Target>
 </Project>
