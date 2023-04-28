@@ -11,6 +11,11 @@ fn main() {
     let git_hash = String::from_utf8(git_rev_parse.stdout).unwrap();
     println!("cargo:rustc-env=GIT_HASH={}", git_hash);
 
+    let _restore  = Command::new("dotnet")
+        .args(&["tool", "restore"])
+        .output()
+        .unwrap();
+
     let minver = Command::new("dotnet")
         .args(&["minver", "-t=v", "-p=canary.0", "-v=e"])
         .output()
