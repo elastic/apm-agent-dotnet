@@ -4,6 +4,8 @@
 
 using System;
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
@@ -84,7 +86,8 @@ namespace Elastic.Apm.Helpers
 		internal Api.System GetSystemInfo(string hostName)
 		{
 			var detectedHostName = GetHostName();
-			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
+			var detectedDomainName = GetHostDomainName(); 
+			var system = new Api.System { DetectedHostName = detectedHostName, DetectedDomainName = detectedDomainName, ConfiguredHostName = hostName };
 
 			if (AgentFeaturesProvider.Get(_logger).Check(AgentFeature.ContainerInfo))
 			{
@@ -99,11 +102,11 @@ namespace Elastic.Apm.Helpers
 		{
 			try
 			{
-				return Environment.MachineName;
+				var hostName = IPGlobalProperties.GetIPGlobalProperties().HostName;
 			}
 			catch (Exception e)
 			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via Dns.GetHostName - revert to environment variables");
+				_logger.Warning()?.LogException(e, "Failed to get hostname via GetIPGlobalProperties().HostName - reverting to environment variables.");
 
 				try
 				{
@@ -119,6 +122,41 @@ namespace Elastic.Apm.Helpers
 				catch (Exception exception)
 				{
 					_logger.Error()?.LogException(exception, "Failed to get hostname.");
+				}
+			}
+
+			return null;
+		}
+
+		internal string GetHostDomainName()
+		{
+			try
+			{
+				var domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
+
+				if (!string.IsNullOrEmpty(domainName))
+					return domainName.ToLowerInvariant();
+
+				domainName = Environment.UserDomainName;
+
+				return string.IsNullOrEmpty(domainName) ? null : domainName.ToLowerInvariant();
+			}
+			catch (Exception e)
+			{
+				_logger.Warning()?.LogException(e, "Failed to get host domain name via GetIPGlobalProperties().DomainName or Environment.UserDomainName - reverting to environment variables.");
+
+				try
+				{
+					// try environment variables
+					var domain = Environment.GetEnvironmentVariable("USERDOMAIN");
+
+					if (domain == null)
+						_logger.Error()?.Log("Failed to get host domain name via environment variables.");
+					return domain;
+				}
+				catch (Exception exception)
+				{
+					_logger.Error()?.LogException(exception, "Failed to get host domain name.");
 				}
 			}
 
