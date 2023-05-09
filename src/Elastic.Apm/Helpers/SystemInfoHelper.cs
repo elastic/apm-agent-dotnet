@@ -151,7 +151,7 @@ namespace Elastic.Apm.Helpers
 					var domain = Environment.GetEnvironmentVariable("USERDOMAIN");
 
 					if (domain == null)
-						_logger.Error()?.Log("Failed to get host domain name via environment variables.");
+						_logger.Error()?.Log("Failed to get host domain name from 'USERDOMAIN' environment variable.");
 					return domain;
 				}
 				catch (Exception exception)
