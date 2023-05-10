@@ -195,6 +195,7 @@ module Build =
 
     /// Restores all packages for the solution
     let Restore () =
+        DotNet.Exec ["tool" ; "restore"]
         DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
             
