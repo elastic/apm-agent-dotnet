@@ -109,7 +109,7 @@ module Main =
             
             Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
                   
-            Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack )
+            Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack())
             
             Targets.Target("agent-zip", ["build"], fun _ ->
                 printfn "Running profiler-zip..."

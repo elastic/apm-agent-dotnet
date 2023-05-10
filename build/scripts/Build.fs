@@ -175,7 +175,7 @@ module Build =
         publishElasticApmStartupHookWithDiagnosticSourceVersion()
     
     /// Packages projects into nuget packages
-    let Pack =
+    let Pack () =
         DotNet.Exec ["pack" ; Paths.Solution; "-c"; "Release"; $"--property:PackageOutputPath=%s{Paths.NugetOutput}"]
           
     let Clean () =
