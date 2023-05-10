@@ -9,7 +9,6 @@ module Versioning =
         AssemblyVersion: SemVerInfo
         InformationalVersion: SemVerInfo
         FileVersion: SemVerInfo
-        VersionPrefix: SemVerInfo
     }
     
     /// Gets the current AssemblyInfo version from the Directory.Build.Props in /src
@@ -23,7 +22,6 @@ module Versioning =
                 { AssemblyVersion = semver
                   InformationalVersion = semver
                   FileVersion = semver
-                  VersionPrefix = semver
                 }
             | false -> 
                 failwithf "First line from `dotnet-minver '%s' not a valid version`" head.Line;
