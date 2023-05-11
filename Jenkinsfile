@@ -104,8 +104,7 @@ pipeline {
                           sh '.ci/linux/build.sh'
                           sh label: 'Rustup', script: 'rustup default 1.67.1'
                           sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                          sh(label: 'Build profiler', script: './build.sh profiler-zip')
-                          // build nuget packages and profiler
+                          // build nuget packages, profiler, startuphook
                           sh(label: 'Package', script: '.ci/linux/release.sh true')
                         }
                       }

@@ -284,8 +284,12 @@ module Build =
         |> Seq.map DirectoryInfo
         |> Seq.iter (fun sourceDir -> copyDllsAndPdbs (profilerDir.CreateSubdirectory(sourceDir.Name)) sourceDir)
         
-        // include version in the zip file name    
-        ZipFile.CreateFromDirectory(profilerDir.FullName, Paths.BuildOutput versionedName + ".zip")
+        // include version in the zip file name and ensure the target zip is removed
+        let zip = Paths.BuildOutput versionedName + ".zip"
+        if File.exists zip  then
+            printf $"%s{zip} already exists on disk"
+            File.delete zip
+        ZipFile.CreateFromDirectory(profilerDir.FullName, zip)
         
         
         
