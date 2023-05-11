@@ -102,7 +102,7 @@ namespace Elastic.Apm.Helpers
 		{
 			try
 			{
-				var hostName = IPGlobalProperties.GetIPGlobalProperties().HostName;
+				return IPGlobalProperties.GetIPGlobalProperties().HostName;
 			}
 			catch (Exception e)
 			{
