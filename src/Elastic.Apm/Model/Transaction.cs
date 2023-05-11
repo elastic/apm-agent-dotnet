@@ -118,7 +118,7 @@ namespace Elastic.Apm.Model
 		)
 		{
 			Configuration = configuration;
-			Timestamp = timestamp ?? TimeUtils.TimestampNow();
+			Timestamp = timestamp ?? TimestampUtils.TimestampNow();
 
 			_logger = logger?.Scoped(nameof(Transaction));
 			_apmServerInfo = apmServerInfo;
@@ -311,7 +311,7 @@ namespace Elastic.Apm.Model
 						"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})."
 						+
 						" Start time: {Time} (as timestamp: {Timestamp})",
-						this, IsSampled, SampleRate, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+						this, IsSampled, SampleRate, distributedTracingData, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
 			else
 			{
@@ -319,7 +319,7 @@ namespace Elastic.Apm.Model
 					?.Log("New Transaction instance created: {Transaction}. " +
 						"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
 						" Start time: {Time} (as timestamp: {Timestamp})",
-						this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+						this, IsSampled, sampler, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
 		}
 
@@ -611,7 +611,7 @@ namespace Elastic.Apm.Model
 				_logger.Trace()
 					?.Log("Ended {Transaction} (with Duration already set)." +
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+						this, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 
 				ChildDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
 			}
@@ -623,14 +623,14 @@ namespace Elastic.Apm.Model
 					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
 					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
 
-				var endTimestamp = TimeUtils.TimestampNow();
+				var endTimestamp = TimestampUtils.TimestampNow();
 				ChildDurationTimer.OnSpanEnd(endTimestamp);
-				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				Duration = TimestampUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 				_logger.Trace()
 					?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
-						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+						this, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						TimestampUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
 			_activity?.Stop();

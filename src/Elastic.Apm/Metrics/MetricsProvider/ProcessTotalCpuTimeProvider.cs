@@ -90,7 +90,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			return new List<MetricSet>
 			{
-				new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample(ProcessCpuTotalPct, cpuUsageTotal) })
+				new MetricSet(TimestampUtils.TimestampNow(), new List<MetricSample> { new MetricSample(ProcessCpuTotalPct, cpuUsageTotal) })
 			};
 		}
 

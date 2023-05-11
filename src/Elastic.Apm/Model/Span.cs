@@ -73,7 +73,7 @@ namespace Elastic.Apm.Model
 		)
 		{
 			InstrumentationFlag = instrumentationFlag;
-			Timestamp = timestamp ?? TimeUtils.TimestampNow();
+			Timestamp = timestamp ?? TimestampUtils.TimestampNow();
 			Id = id ?? RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
 
@@ -124,7 +124,7 @@ namespace Elastic.Apm.Model
 
 			_logger.Trace()
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
+					this, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
 		}
 
 // Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
@@ -397,7 +397,7 @@ namespace Elastic.Apm.Model
 				_logger.Trace()
 					?.Log("Ended {Span} (with Duration already set)." +
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+						this, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 
 				if (_parentSpan != null)
 					_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
@@ -414,8 +414,8 @@ namespace Elastic.Apm.Model
 					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
 					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
 
-				var endTimestamp = TimeUtils.TimestampNow();
-				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				var endTimestamp = TimestampUtils.TimestampNow();
+				Duration = TimestampUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 
 				if (_parentSpan != null)
 					_parentSpan?._childDurationTimer.OnChildEnd(endTimestamp);
@@ -427,8 +427,8 @@ namespace Elastic.Apm.Model
 				_logger.Trace()
 					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
-						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+						this, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						TimestampUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
 			var isFirstEndCall = !_isEnded;
@@ -521,8 +521,8 @@ namespace Elastic.Apm.Model
 			{
 				if (span.Composite != null)
 				{
-					var endTimestamp = TimeUtils.TimestampNow();
-					span.Duration = TimeUtils.DurationBetweenTimestamps(span.Timestamp, endTimestamp);
+					var endTimestamp = TimestampUtils.TimestampNow();
+					span.Duration = TimestampUtils.DurationBetweenTimestamps(span.Timestamp, endTimestamp);
 				}
 
 				if (span.Discardable)
@@ -969,6 +969,6 @@ namespace Elastic.Apm.Model
 		}
 
 		private void IncrementDuration(long epochMicros)
-			=> Duration += TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
+			=> Duration += TimestampUtils.DurationBetweenTimestamps(_start, epochMicros);
 	}
 }

@@ -28,7 +28,7 @@ namespace Elastic.Apm.Model
 
 		private Error(Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
 		{
-			Timestamp = TimeUtils.TimestampNow();
+			Timestamp = TimestampUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
 
 			if (transaction != null)
@@ -55,7 +55,7 @@ namespace Elastic.Apm.Model
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
 			logger.Trace()
 				?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+					this, TimestampUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
 		// This constructor is meant for serialization

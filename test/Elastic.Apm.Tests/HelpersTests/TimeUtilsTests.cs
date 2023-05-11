@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
@@ -17,9 +18,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public static TheoryData TimestampAndDateTimeVariantsToTest => new TheoryData<long, DateTime>
 		{
 			{ 0, UnixEpochDateTime },
-			{ 1, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.001) },
-			{ 10, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.01) },
-			{ 100, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.1) },
+			{ 1, UnixEpochDateTime + DurationUtils.TimeSpanFromFractionalMilliseconds(0.001) },
+			{ 10, UnixEpochDateTime + DurationUtils.TimeSpanFromFractionalMilliseconds(0.01) },
+			{ 100, UnixEpochDateTime + DurationUtils.TimeSpanFromFractionalMilliseconds(0.1) },
 			{ 1_000, new DateTime(1970, 1, 1, 0, 0, 0, 1, DateTimeKind.Utc) },
 			{ 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 0, 2, 1, DateTimeKind.Utc) },
 			{ 3 * 60 * 1_000_000 + 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 3, 2, 1, DateTimeKind.Utc) },
@@ -29,7 +30,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 #if NETCOREAPP
 		[Fact]
-		public void TimeUtilsUnixEpochDateTimeEqualsDateTimeUnixEpoch() => TimeUtils.UnixEpochDateTime.Should().Be(DateTime.UnixEpoch);
+		public void TimeUtilsUnixEpochDateTimeEqualsDateTimeUnixEpoch() => TimestampUtils.UnixEpochDateTime.Should().Be(DateTime.UnixEpoch);
 #endif
 
 		[Theory]
@@ -42,7 +43,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData(-1.0 / TimeSpan.TicksPerMillisecond)]
 		[InlineData(-123.4567)]
 		public void TimeSpanFromFractionalMillisecondsExactTests(double fractionalMilliseconds) =>
-			ShouldBeWithTolerance(TimeUtils.TimeSpanFromFractionalMilliseconds(fractionalMilliseconds).TotalMilliseconds, fractionalMilliseconds);
+			ShouldBeWithTolerance(DurationUtils.TimeSpanFromFractionalMilliseconds(fractionalMilliseconds).TotalMilliseconds, fractionalMilliseconds);
 
 		[Theory]
 		[InlineData(0.00004, 0.0000)]
@@ -58,36 +59,54 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData(-123.45674, -123.4567)]
 		[InlineData(-123.45675, -123.4568)]
 		public void TimeSpanFromFractionalMillisecondsRoundedTests(double fractionalMilliseconds, double expectedRounded) =>
-			ShouldBeWithTolerance(TimeUtils.TimeSpanFromFractionalMilliseconds(fractionalMilliseconds).TotalMilliseconds, expectedRounded);
+			ShouldBeWithTolerance(DurationUtils.TimeSpanFromFractionalMilliseconds(fractionalMilliseconds).TotalMilliseconds, expectedRounded);
 
+		[Fact]
+		public void ToTimestamp_RoundTripsBackToDateTimeOffset()
+		{
+			var offset = DateTimeOffset.UtcNow;
+			var timestamp = TimestampUtils.ToTimestamp(offset);
+			var offSetFromTimestamp = TimestampUtils.ToDateTimeOffset(timestamp);
+			offSetFromTimestamp.Should().Be(offset);
+		}
 		[Fact]
 		public void TimestampNowShouldUseCurrentTime()
 		{
-			var beforeNowAsTimestamp = TimeUtils.ToTimestamp(DateTime.UtcNow);
-			var nowAsTimestamp = TimeUtils.TimestampNow();
-			var afterNowAsTimestamp = TimeUtils.ToTimestamp(DateTime.UtcNow);
+			var beforeNowAsTimestamp = TimestampUtils.ToTimestamp(DateTimeOffset.UtcNow);
+			var nowAsTimestamp = TimestampUtils.TimestampNow();
+			var afterNowAsTimestamp = TimestampUtils.ToTimestamp(DateTimeOffset.UtcNow);
 			nowAsTimestamp.Should().BeInRange(beforeNowAsTimestamp, afterNowAsTimestamp);
 		}
+
+		[Fact]
+		public void TimestampNowShouldUseCurrentTime_CheckedAgainstDateTimeNow()
+		{
+			var beforeNowAsTimestamp = TimestampUtils.ToTimestamp(DateTime.UtcNow);
+			var nowAsTimestamp = TimestampUtils.TimestampNow();
+			var afterNowAsTimestamp = TimestampUtils.ToTimestamp(DateTime.UtcNow);
+			nowAsTimestamp.Should().BeInRange(beforeNowAsTimestamp, afterNowAsTimestamp);
+		}
+
 
 		[Theory]
 		[MemberData(nameof(TimestampAndDateTimeVariantsToTest))]
 		public void TimestampToDateTimeTests(long timestamp, DateTime dateTime)
 		{
-			TimeUtils.ToDateTime(timestamp).Should().Be(dateTime);
-			TimeUtils.ToDateTime(timestamp).Kind.Should().Be(DateTimeKind.Utc);
+			TimestampUtils.ToDateTimeOffset(timestamp).Should().Be(dateTime);
+			TimestampUtils.ToDateTimeOffset(timestamp).Offset.Should().Be(TimeSpan.Zero);
 		}
 
 		[Theory]
 		[MemberData(nameof(TimestampAndDateTimeVariantsToTest))]
 		public void DateTimeToTimestampTests(long timestamp, DateTime dateTime) =>
-			TimeUtils.ToTimestamp(dateTime).Should().Be(timestamp);
+			TimestampUtils.ToTimestamp(dateTime).Should().Be(timestamp);
 
 		[Fact]
 		public void DateTimeToTimestampThrowsIfNotUtc()
 		{
 			var localNow = DateTime.Now;
 			localNow.Kind.Should().Be(DateTimeKind.Local);
-			AsAction(() => TimeUtils.ToTimestamp(localNow)).Should().ThrowExactly<ArgumentException>().WithMessage($"*{localNow.FormatForLog()}*");
+			AsAction(() => TimestampUtils.ToTimestamp(localNow)).Should().ThrowExactly<ArgumentException>().WithMessage($"*{localNow.FormatForLog()}*");
 		}
 
 		[Theory]
@@ -97,7 +116,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData(1561954166179856, 1561954166195481, 15.625)]
 		[InlineData(1561954166195481, 1561954166179856, -15.625)]
 		public void DurationBetweenTimestampsTests(long startTimestamp, long endTimestamp, double expectedDuration) =>
-			TimeUtils.DurationBetweenTimestamps(startTimestamp, endTimestamp).Should().Be(expectedDuration);
+			TimestampUtils.DurationBetweenTimestamps(startTimestamp, endTimestamp).Should().Be(expectedDuration);
 
 		private static void ShouldBeWithTolerance(double actual, double expected)
 		{

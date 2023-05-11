@@ -264,12 +264,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		protected async Task<SampleAppResponse> SendRequestToSampleAppAndVerifyResponse(HttpMethod httpMethod, Uri uri, int expectedStatusCode,
 			bool timeHttpCall = true, bool addTraceContextHeaders = false, HttpContent httpContent = null)
 		{
-			var startTime = DateTime.UtcNow;
+			var startTime = DateTimeOffset.UtcNow;
 			if (timeHttpCall)
 			{
 				_logger.Debug()
 					?.Log("HTTP call to sample application started at {Time} (as timestamp: {Timestamp})",
-						startTime, TimeUtils.ToTimestamp(startTime));
+						startTime, TimestampUtils.ToTimestamp(startTime));
 			}
 			try
 			{
@@ -292,11 +292,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				if (timeHttpCall)
 				{
 					_sampleAppClientCallTiming.Should().BeNull();
-					var endTime = DateTime.UtcNow;
+					var endTime = DateTimeOffset.UtcNow;
 					_logger.Debug()
 						?.Log("HTTP call to sample application ended at {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-							endTime, TimeUtils.ToTimestamp(endTime),
-							TimeUtils.DurationBetweenTimestamps(TimeUtils.ToTimestamp(startTime), TimeUtils.ToTimestamp(endTime)));
+							endTime, TimestampUtils.ToTimestamp(endTime),
+							TimestampUtils.DurationBetweenTimestamps(TimestampUtils.ToTimestamp(startTime), TimestampUtils.ToTimestamp(endTime)));
 					_sampleAppClientCallTiming = new TimedEvent(startTime, endTime);
 				}
 			}
@@ -501,7 +501,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			void AnalyzeDtoTimestamp(long dtoTimestamp, object dto)
 			{
-				var dtoStartTime = TimeUtils.ToDateTime(dtoTimestamp);
+				var dtoStartTime = TimestampUtils.ToDateTimeOffset(dtoTimestamp);
 
 				if (_testStartTime <= dtoStartTime) return;
 
@@ -770,10 +770,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected static bool OccursBetween(ITimedDto containedDto, ITimedDto containingDto) =>
 			containingDto.Timestamp <= containedDto.Timestamp
-			&&
-			TimeUtils.ToEndDateTime(containedDto.Timestamp, containedDto.Duration)
-			<=
-			TimeUtils.ToEndDateTime(containingDto.Timestamp, containingDto.Duration);
+			&& containedDto.EndDateTimeOffset() <= containingDto.EndDateTimeOffset();
 
 		protected void ClearState()
 		{

@@ -150,7 +150,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				return new List<MetricSet>
 				{
-					new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) })
+					new MetricSet(TimestampUtils.TimestampNow(), new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) })
 				};
 			}
 
@@ -168,7 +168,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				return new List<MetricSet>
 				{
-					new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample(SystemCpuTotalPct, notIdle) })
+					new MetricSet(TimestampUtils.TimestampNow(), new List<MetricSample> { new MetricSample(SystemCpuTotalPct, notIdle) })
 				};
 			}
 

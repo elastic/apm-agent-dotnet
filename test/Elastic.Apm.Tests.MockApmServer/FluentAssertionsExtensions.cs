@@ -10,22 +10,20 @@ namespace Elastic.Apm.Tests.MockApmServer
 	internal static class FluentAssertionsExtensions
 	{
 		internal static void ShouldOccurBetween(this ITimestampedDto child, ITimedDto containingAncestor) =>
-			TimeUtils.ToDateTime(child.Timestamp)
+			TimestampUtils.ToDateTimeOffset(child.Timestamp)
 				.Should()
-				.BeOnOrAfter(TimeUtils.ToDateTime(containingAncestor.Timestamp))
+				.BeOnOrAfter(containingAncestor.StartDateTimeOffset())
 				.And
-				.BeOnOrBefore(TimeUtils.ToEndDateTime(containingAncestor.Timestamp, containingAncestor.Duration));
+				.BeOnOrBefore(containingAncestor.EndDateTimeOffset());
 
 		internal static void ShouldOccurBetween(this ITimedDto child, ITimedDto containingAncestor)
 		{
 			((ITimestampedDto)child).ShouldOccurBetween(containingAncestor);
 
-			TimeUtils.ToEndDateTime(child.Timestamp, child.Duration)
-				.Should()
-				.BeOnOrBefore(TimeUtils.ToEndDateTime(containingAncestor.Timestamp, containingAncestor.Duration));
+			child.EndDateTimeOffset().Should().BeOnOrBefore(containingAncestor.EndDateTimeOffset());
 		}
 
 		internal static void ShouldOccurBefore(this ITimedDto first, ITimestampedDto second) =>
-			TimeUtils.ToEndDateTime(first.Timestamp, first.Duration).Should().BeOnOrBefore(TimeUtils.ToDateTime(second.Timestamp));
+			first.EndDateTimeOffset().Should().BeOnOrBefore(second.StartDateTimeOffset());
 	}
 }

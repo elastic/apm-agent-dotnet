@@ -126,7 +126,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				retVal = new List<MetricSet>(_itemsToSend.Count);
 
 				// According to the spec, timestampNow should be the time when we report the metrics.
-				var timestampNow = TimeUtils.TimestampNow();
+				var timestampNow = TimestampUtils.TimestampNow();
 
 				foreach (var item in _itemsToSend.Values.ToList())
 				{
