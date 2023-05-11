@@ -21,6 +21,8 @@ using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
 using Elastic.Apm.Extensions;
+using static Elastic.Apm.Config.ConfigurationOption;
+using Environment = System.Environment;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -454,9 +456,9 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static IApmLogger CreateDefaultLogger()
 		{
-			var logLevel = ConfigurationManager.AppSettings[ConfigConsts.KeyNames.LogLevel];
+			var logLevel = ConfigurationManager.AppSettings[ConfigurationOption.LogLevel.ToConfigKey()];
 			if (string.IsNullOrEmpty(logLevel))
-				logLevel = Environment.GetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel);
+				logLevel = Environment.GetEnvironmentVariable(ConfigurationOption.LogLevel.ToEnvironmentVariable());
 
 			var level = ConfigConsts.DefaultValues.LogLevel;
 			if (!string.IsNullOrEmpty(logLevel))

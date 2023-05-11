@@ -13,7 +13,7 @@ using static Elastic.Apm.BackendComm.CentralConfig.CentralConfigurationResponseP
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
-	internal class CentralConfiguration : AbstractConfigurationReader
+	internal class CentralConfiguration : AbstractConfigurationReader, IConfigurationLookup, IConfigurationDescription
 	{
 		private const string ThisClassName = nameof(CentralConfigurationFetcher) + "." + nameof(CentralConfiguration);
 
@@ -26,35 +26,37 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_configPayload = configPayload;
 			ETag = eTag;
 
-			CaptureBody = GetConfigurationValue(CentralConfigPayload.CaptureBodyKey, ParseCaptureBody);
-			CaptureBodyContentTypes = GetConfigurationValue(CentralConfigPayload.CaptureBodyContentTypesKey, ParseCaptureBodyContentTypes);
-			TransactionMaxSpans = GetSimpleConfigurationValue(CentralConfigPayload.TransactionMaxSpansKey, ParseTransactionMaxSpans);
-			TransactionSampleRate = GetSimpleConfigurationValue(CentralConfigPayload.TransactionSampleRateKey, ParseTransactionSampleRate);
-			CaptureHeaders = GetSimpleConfigurationValue(CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
-			LogLevel = GetSimpleConfigurationValue(CentralConfigPayload.LogLevelKey, ParseLogLevel);
+			CaptureBody = GetConfigurationValue(DynamicConfigurationOption.CaptureBody, ParseCaptureBody);
+			CaptureBodyContentTypes = GetConfigurationValue(DynamicConfigurationOption.CaptureBodyContentTypes, ParseCaptureBodyContentTypes);
+			TransactionMaxSpans = GetSimpleConfigurationValue(DynamicConfigurationOption.TransactionMaxSpans, ParseTransactionMaxSpans);
+			TransactionSampleRate = GetSimpleConfigurationValue(DynamicConfigurationOption.TransactionSampleRate, ParseTransactionSampleRate);
+			CaptureHeaders = GetSimpleConfigurationValue(DynamicConfigurationOption.CaptureHeaders, ParseCaptureHeaders);
+			LogLevel = GetSimpleConfigurationValue(DynamicConfigurationOption.LogLevel, ParseLogLevel);
 			SpanStackTraceMinDurationInMilliseconds =
-				GetSimpleConfigurationValue(CentralConfigPayload.SpanStackTraceMinDurationKey, ParseSpanStackTraceMinDurationInMilliseconds);
+				GetSimpleConfigurationValue(DynamicConfigurationOption.SpanStackTraceMinDuration, ParseSpanStackTraceMinDurationInMilliseconds);
 // Disable obsolete-warning
 #pragma warning disable CS0618
 			SpanFramesMinDurationInMilliseconds =
-				GetSimpleConfigurationValue(CentralConfigPayload.SpanFramesMinDurationKey, ParseSpanFramesMinDurationInMilliseconds);
+				GetSimpleConfigurationValue(DynamicConfigurationOption.SpanFramesMinDuration, ParseSpanFramesMinDurationInMilliseconds);
 // Disable obsolete-warning
 #pragma warning restore CS0618
-			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
-			Recording = GetSimpleConfigurationValue(CentralConfigPayload.Recording, ParseRecording);
-			SanitizeFieldNames = GetConfigurationValue(CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNames);
-			TransactionIgnoreUrls = GetConfigurationValue(CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrls);
-			IgnoreMessageQueues = GetConfigurationValue(CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueues);
-			SpanCompressionEnabled = GetSimpleConfigurationValue(CentralConfigPayload.SpanCompressionEnabled, ParseSpanCompressionEnabled);
+			StackTraceLimit = GetSimpleConfigurationValue(DynamicConfigurationOption.StackTraceLimit, ParseStackTraceLimit);
+			Recording = GetSimpleConfigurationValue(DynamicConfigurationOption.Recording, ParseRecording);
+			SanitizeFieldNames = GetConfigurationValue(DynamicConfigurationOption.SanitizeFieldNames, ParseSanitizeFieldNames);
+			TransactionIgnoreUrls = GetConfigurationValue(DynamicConfigurationOption.TransactionIgnoreUrls, ParseTransactionIgnoreUrls);
+			IgnoreMessageQueues = GetConfigurationValue(DynamicConfigurationOption.IgnoreMessageQueues, ParseIgnoreMessageQueues);
+			SpanCompressionEnabled = GetSimpleConfigurationValue(DynamicConfigurationOption.SpanCompressionEnabled, ParseSpanCompressionEnabled);
 			SpanCompressionExactMatchMaxDuration =
-				GetSimpleConfigurationValue(CentralConfigPayload.SpanCompressionExactMatchMaxDuration, ParseSpanCompressionExactMatchMaxDuration);
+				GetSimpleConfigurationValue(DynamicConfigurationOption.SpanCompressionExactMatchMaxDuration, ParseSpanCompressionExactMatchMaxDuration);
 			SpanCompressionSameKindMaxDuration =
-				GetSimpleConfigurationValue(CentralConfigPayload.SpanCompressionSameKindMaxDuration, ParseSpanCompressionSameKindMaxDuration);
+				GetSimpleConfigurationValue(DynamicConfigurationOption.SpanCompressionSameKindMaxDuration, ParseSpanCompressionSameKindMaxDuration);
 			ExitSpanMinDuration =
-				GetSimpleConfigurationValue(CentralConfigPayload.ExitSpanMinDuration, ParseExitSpanMinDuration);
+				GetSimpleConfigurationValue(DynamicConfigurationOption.ExitSpanMinDuration, ParseExitSpanMinDuration);
 			TraceContinuationStrategy =
-				GetConfigurationValue(CentralConfigPayload.TraceContinuationStrategy, ParseTraceContinuationStrategy);
+				GetConfigurationValue(DynamicConfigurationOption.TraceContinuationStrategy, ParseTraceContinuationStrategy);
 		}
+
+		public string Description => $"Central configuration (ETag: `{ETag}')";
 
 		internal string ETag { get; }
 
@@ -94,15 +96,15 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal double? TransactionSampleRate { get; private set; }
 
-		private ConfigurationKeyValue BuildKv(string key, string value) => new(key, value, /* readFrom */ $"Central configuration (ETag: `{ETag}')");
+		private CentralConfigurationKeyValue BuildKv(DynamicConfigurationOption option, string value) => new(option, value, Description);
 
-		private T GetConfigurationValue<T>(string configurationKey, Func<ConfigurationKeyValue, T> parser)
+		private T GetConfigurationValue<T>(DynamicConfigurationOption option, Func<ConfigurationKeyValue, T> parser)
 			where T : class =>
-			_configPayload[configurationKey]?.Let(value => parser(BuildKv(configurationKey, value)));
+			_configPayload[option.ToJsonKey()]?.Let(value => parser(BuildKv(option, value)));
 
-		private T? GetSimpleConfigurationValue<T>(string configurationKey, Func<ConfigurationKeyValue, T> parser)
+		private T? GetSimpleConfigurationValue<T>(DynamicConfigurationOption option, Func<ConfigurationKeyValue, T> parser)
 			where T : struct =>
-			_configPayload[configurationKey]?.Let(value => parser(BuildKv(configurationKey, value)));
+			_configPayload[option.ToJsonKey()]?.Let(value => parser(BuildKv(option, value)));
 
 		public override string ToString()
 		{
@@ -116,6 +118,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			if (Recording.HasValue) builder.Add(nameof(Recording), Recording.Value);
 
 			return builder.ToString();
+		}
+
+		public ConfigurationKeyValue Lookup(ConfigurationOption option)
+		{
+			var dynamicOption = option.ToDynamicConfigurationOption();
+			return !dynamicOption.HasValue
+				? null
+				: new CentralConfigurationKeyValue(dynamicOption.Value, _configPayload[dynamicOption.Value.ToJsonKey()], Description);
 		}
 	}
 }

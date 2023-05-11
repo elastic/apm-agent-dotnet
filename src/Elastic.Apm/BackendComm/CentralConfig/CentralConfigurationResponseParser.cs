@@ -147,51 +147,13 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			throw new CentralConfigurationFetcher.FailedToFetchConfigException(message, waitInfo, severity);
 		}
 
+		/*
+			 */
+
 		internal class CentralConfigPayload
 		{
-			internal const string CaptureBodyContentTypesKey = "capture_body_content_types";
-			internal const string CaptureBodyKey = "capture_body";
-			internal const string CaptureHeadersKey = "capture_headers";
-			internal const string ExitSpanMinDuration = "exit_span_min_duration";
-			internal const string IgnoreMessageQueues = "ignore_message_queues";
-			internal const string LogLevelKey = "log_level";
-			internal const string Recording = "recording";
-			internal const string SanitizeFieldNames = "sanitize_field_names";
-			internal const string SpanCompressionEnabled = "span_compression_enabled";
-			internal const string SpanCompressionExactMatchMaxDuration = "span_compression_exact_match_max_duration";
-			internal const string SpanCompressionSameKindMaxDuration = "span_compression_same_kind_max_duration";
-			internal const string SpanStackTraceMinDurationKey = "span_stack_trace_min_duration";
-			[Obsolete("Use SpanStackTraceMinDurationKey")]
-			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
-			internal const string StackTraceLimitKey = "stack_trace_limit";
-			internal const string TraceContinuationStrategy = "trace_continuation_strategy";
-			internal const string TransactionIgnoreUrls = "transaction_ignore_urls";
-			internal const string TransactionMaxSpansKey = "transaction_max_spans";
-			internal const string TransactionSampleRateKey = "transaction_sample_rate";
-
-			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
-			{
-				CaptureBodyKey,
-				CaptureBodyContentTypesKey,
-				CaptureHeadersKey,
-				IgnoreMessageQueues,
-				LogLevelKey,
-				Recording,
-				SanitizeFieldNames,
-				SpanStackTraceMinDurationKey,
-// Disable obsolete-warning
-#pragma warning disable CS0618
-				SpanFramesMinDurationKey,
-#pragma warning restore CS0618
-				StackTraceLimitKey,
-				TransactionIgnoreUrls,
-				TransactionMaxSpansKey,
-				TransactionSampleRateKey,
-				SpanCompressionEnabled,
-				SpanCompressionExactMatchMaxDuration,
-				SpanCompressionSameKindMaxDuration,
-				ExitSpanMinDuration
-			};
+			internal static readonly ISet<string> SupportedOptions =
+				new HashSet<string>(DynamicConfigurationExtensions.AllDynamicOptions().Select(o => o.ToJsonKey()));
 
 			private readonly IDictionary<string, string> _keyValues;
 
