@@ -105,7 +105,7 @@ pipeline {
                           sh label: 'Rustup', script: 'rustup default 1.67.1'
                           sh label: 'Cargo make', script: 'cargo install --force cargo-make'
                           // build nuget packages, profiler, startuphook
-                          sh(label: 'Package', script: '.ci/linux/release.sh true')
+                          sh(label: 'Package', script: '.ci/linux/release.sh')
                         }
                       }
                     }
@@ -496,7 +496,7 @@ pipeline {
         deleteDir()
         unstash 'source'
         dir("${BASE_DIR}"){
-          release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io', withSuffix: true)
+          release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io')
         }
       }
       post{
@@ -692,11 +692,10 @@ def cleanupAzureResources(){
 
 def release(Map args = [:]){
   def secret = args.secret
-  def withSuffix = args.get('withSuffix', false)
   dotnet(){
     sh label: 'Rustup', script: 'rustup default 1.67.1'
     sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-    sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
+    sh(label: 'Release', script: ".ci/linux/release.sh")
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
       [var: 'REPO_API_KEY', password: repo.data.apiKey],
