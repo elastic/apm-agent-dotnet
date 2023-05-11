@@ -23,6 +23,17 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.22.0]]
+==== 1.22.0
+
+===== Features
+- {pull}2050[#2050] Enable listening to `Microsoft.Data.SqlClient.EventSource` on .NET full framework.
+
+===== Bug fixes
+- {pull}2054[#2054] Eager load APM configuration.
+- {pull}2049[#2049] Increase logging of profiler if expected rejit target is not found.
+
+
 [[release-notes-1.21.0]]
 ==== 1.21.0
 

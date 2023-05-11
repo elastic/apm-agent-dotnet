@@ -402,8 +402,6 @@ pipeline {
         deleteDir()
         unstash 'source'
         dir("${BASE_DIR}"){
-          sh label: 'Rustup', script: 'rustup default 1.67.1'
-          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
           release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io', withSuffix: true)
         }
       }
@@ -443,8 +441,6 @@ pipeline {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}") {
-              sh label: 'Rustup', script: 'rustup default 1.67.1'
-              sh label: 'Cargo make', script: 'cargo install --force cargo-make'
               release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
             }
           }
@@ -604,6 +600,8 @@ def release(Map args = [:]){
   def secret = args.secret
   def withSuffix = args.get('withSuffix', false)
   dotnet(){
+    sh label: 'Rustup', script: 'rustup default 1.67.1'
+    sh label: 'Cargo make', script: 'cargo install --force cargo-make'
     sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
