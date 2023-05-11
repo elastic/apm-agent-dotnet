@@ -118,6 +118,10 @@ namespace Elastic.Apm.Tests.Utilities
 				ConfigurationOption.TransactionSampleRate => transactionSampleRate,
 				ConfigurationOption.UseElasticTraceparentHeader => useElasticTraceparentHeader,
 				ConfigurationOption.VerifyServerCert => verifyServerCert,
+
+#if NET461_OR_GREATER
+				ConfigurationOption.FullFrameworkConfigurationReaderType => null,
+#endif
 				_ => throw new Exception($"{nameof(MockConfiguration)} does not have implementation for configuration : {key}")
 			})
 		)

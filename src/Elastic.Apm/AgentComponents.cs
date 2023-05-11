@@ -52,14 +52,13 @@ namespace Elastic.Apm
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfiguration(tempLogger);
 				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
-				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
 				ConfigurationStore =
-					new ConfigurationStore(new RuntimeConfigurationSnapshot(ConfigurationReader, "local"), Logger);
+					new ConfigurationStore(new RuntimeConfigurationSnapshot(ConfigurationReader), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
@@ -252,47 +251,5 @@ namespace Elastic.Apm
 			CentralConfigurationFetcher?.Dispose();
 		}
 
-		private static void PrintAgentLogPreamble(IApmLogger logger, IConfigurationReader configurationReader)
-		{
-			if (logger?.Info() != null)
-			{
-				try
-				{
-					var info = logger.Info().Value;
-					info.Log("********************************************************************************");
-					info.Log(
-						$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}");
-					info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
-					info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
-					info.Log($"Command line arguments: '{string.Join(", ", Environment.GetCommandLineArgs())}'");
-					info.Log($"Operating System: {RuntimeInformation.OSDescription}");
-					info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
-					info.Log($"Host: {Environment.MachineName}");
-					info.Log($"Time zone: {TimeZoneInfo.Local}");
-					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
-					info.Log("********************************************************************************");
-					info.Log($"Agent Configuration (via '{configurationReader.Description ?? configurationReader.GetType().ToString()}'):");
-					foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems)
-					{
-						var ckv = configurationReader.Lookup(item.Option);
-
-						if (ckv == null || (string.IsNullOrEmpty(ckv.Value) && item.IsEssentialForLogging))
-							ckv = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Option, configurationReader, "default");
-
-						if (string.IsNullOrEmpty(ckv?.Value) && !item.LogAlways) continue;
-
-						var origin = ckv?.ReadFrom ?? "unknown";
-						var value = item.NeedsMasking ? Consts.Redacted : ckv?.Value;
-						info.Log($" - {item.NormalizedName}: '{value}' ({origin})");
-					}
-
-					info.Log("********************************************************************************");
-				}
-				catch (Exception e)
-				{
-					logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
-				}
-			}
-		}
 	}
 }

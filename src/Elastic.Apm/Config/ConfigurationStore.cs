@@ -17,6 +17,8 @@ namespace Elastic.Apm.Config
 		{
 			_logger = logger.Scoped(ThisClassName);
 			_currentSnapshot = initialSnapshot;
+
+			ConfigurationLogger.PrintAgentLogPreamble(_logger, _currentSnapshot);
 		}
 
 		private volatile IConfiguration _currentSnapshot;
@@ -34,6 +36,7 @@ namespace Elastic.Apm.Config
 					_logger.Info()
 						?.Log("Replaced current snapshot. Old: {ConfigSnapshotDescription}. New: {ConfigSnapshotDescription}."
 							, oldSnapshot.Description, _currentSnapshot.Description);
+					ConfigurationLogger.PrintAgentConfiguration(_logger, _currentSnapshot);
 				}
 			}
 		}
