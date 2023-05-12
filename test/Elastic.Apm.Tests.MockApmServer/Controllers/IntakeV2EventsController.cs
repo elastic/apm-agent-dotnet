@@ -69,6 +69,11 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 				_mockApmServer.AddInvalidPayload(ex.ToString());
 				return BadRequest(ex.ToString());
 			}
+			finally
+			{
+				_mockApmServer.WaitHandle.Set();
+				_mockApmServer.WaitHandle.Reset();
+			}
 		}
 
 		private async Task<int> ParsePayload()

@@ -36,7 +36,7 @@ namespace Elastic.Apm.Helpers
 					$". {nameof(dateTime)}'s value: {dateTime.FormatForLog()}", nameof(dateTime));
 			}
 			var diff = dateTime - UnixEpochDateTime;
-			return diff.Ticks / 10;
+			return DurationUtils.Round(diff.Ticks / 10);
 		}
 
 		internal static DateTimeOffset ToDateTimeOffset(long timestamp) => UnixEpochDateTime + TimeSpan.FromTicks(timestamp * 10);

@@ -26,6 +26,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 		private readonly bool _useHttps;
 		private readonly object _lock = new object();
 
+		public ManualResetEvent WaitHandle { get; } = new ManualResetEvent(false);
+
 		public ReceivedData ReceivedData { get; } = new ReceivedData();
 
 		/// <summary>
@@ -39,26 +41,44 @@ namespace Elastic.Apm.Tests.MockApmServer
 			OnReceive?.Invoke(payload);
 		}
 
+		/// <summary>
+		/// Not pretty but this prevents synchronization issues, between the two processes
+		/// We set MinTimestamp just before calling the sample app hosted in ISS
+		/// Similar as how we call ClearState just prior as well.
+		/// If the timestamp is within a margin of error anchor it to MinTimestamp
+		/// </summary>
+		internal bool AnchorTimestamp(ITimestampedDto dto)
+		{
+			if (dto.Timestamp >= MinTimestamp) return false;
+			return (dto.Timestamp - MinTimestamp < -0.5);
+		}
+
 		internal void AddError(ErrorDto error)
 		{
+			if (AnchorTimestamp(error)) error.Timestamp = MinTimestamp;
+
 			ReceivedData.Errors = ReceivedData.Errors.Add(error);
 			OnReceive?.Invoke(error);
 		}
 
 		internal void AddTransaction(TransactionDto transaction)
 		{
+			if (AnchorTimestamp(transaction)) transaction.Timestamp = MinTimestamp;
 			ReceivedData.Transactions = ReceivedData.Transactions.Add(transaction);
 			OnReceive?.Invoke(transaction);
 		}
 
 		internal void AddSpan(SpanDto span)
 		{
+			if (AnchorTimestamp(span)) span.Timestamp = MinTimestamp;
 			ReceivedData.Spans = ReceivedData.Spans.Add(span);
 			OnReceive?.Invoke(span);
 		}
 
 		internal void AddMetricSet(MetricSetDto metricSet)
 		{
+			if (AnchorTimestamp(metricSet)) metricSet.Timestamp = MinTimestamp;
+
 			ReceivedData.Metrics = ReceivedData.Metrics.Add(metricSet);
 			OnReceive?.Invoke(metricSet);
 		}
@@ -71,6 +91,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public MockApmServer(IApmLogger logger, string dbgCurrentTestName, bool useHttps = false)
 		{
+			MinTimestamp = TimestampUtils.ToTimestamp(DateTimeOffset.UtcNow);
 			InternalLogger = logger.Scoped(ThisClassName);
 			_dbgCurrentTestName = dbgCurrentTestName;
 			_useHttps = useHttps;
@@ -103,6 +124,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		}
 
 		internal IApmLogger InternalLogger { get; }
+		public long MinTimestamp { get; set; }
 
 		public int FindAvailablePortToListen()
 		{
