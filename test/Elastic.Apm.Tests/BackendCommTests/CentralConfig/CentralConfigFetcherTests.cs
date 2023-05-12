@@ -223,7 +223,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		public void Dispose_stops_the_thread()
 		{
 			CentralConfigurationFetcher lastCentralConfigurationFetcher;
-			var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration(), "local");
+			var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration());
 			var configStore = new ConfigurationStore(snapshot, LoggerBase);
 			var service = Service.GetDefaultService(new EnvironmentConfiguration(), LoggerBase);
 			var handler = new MockHttpMessageHandler();
@@ -264,7 +264,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 			numberOfAgentInstances.Repeat(i =>
 			{
-				var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration(), "local");
+				var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration());
 				var service = Service.GetDefaultService(new EnvironmentConfiguration(), LoggerBase);
 				var configStore = new ConfigurationStore(snapshot, LoggerBase);
 

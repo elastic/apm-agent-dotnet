@@ -8,6 +8,9 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using FluentAssertions;
 using Xunit;
+using static Elastic.Apm.Config.ConfigurationOption;
+using Environment = System.Environment;
+using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -16,19 +19,18 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private static readonly ConfigurationDefaults ConfigurationDefaults = new() { DebugName = nameof(ConfigTestReader) };
 
 		public ConfigTestReader(IApmLogger logger = null)
-			: base(logger, ConfigurationDefaults, new AppSettingsConfigurationKeyValueProvider(logger))
-		{ }
+			: base(logger, ConfigurationDefaults, new AppSettingsConfigurationKeyValueProvider(logger)) { }
 	}
 
 	[Collection("UsesEnvironmentVariables")]
 	public class AppSettingsTests
 	{
-		private static void UpdateAppSettings(Dictionary<string, string> values)
+		private static void UpdateAppSettings(Dictionary<ConfigurationOption, string> values)
 		{
 			var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 			var appSettings = (AppSettingsSection)config.GetSection("appSettings");
 			appSettings.Settings.Clear();
-			foreach (var v in values) appSettings.Settings.Add(v.Key, v.Value);
+			foreach (var v in values) appSettings.Settings.Add(v.Key.ToConfigKey(), v.Value);
 			config.Save();
 			ConfigurationManager.RefreshSection("appSettings");
 		}
@@ -36,12 +38,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[Fact]
 		public void CustomEnvironmentTest()
 		{
-			UpdateAppSettings(new Dictionary<string, string>());
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "Development");
+			UpdateAppSettings(new Dictionary<ConfigurationOption, string>());
+			Environment.SetEnvironmentVariable(ConfigurationOption.Environment.ToEnvironmentVariable(), "Development");
 			var config = new ElasticApmModuleConfiguration();
 			config.Environment.Should().Be("Development");
 
-			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.Environment, "Staging" } });
+			UpdateAppSettings(new Dictionary<ConfigurationOption, string> { { ConfigurationOption.Environment, "Staging" } });
 			config = new ElasticApmModuleConfiguration();
 
 			// app-settings should have priority over environment variables
@@ -51,13 +53,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[Fact]
 		public void CustomFlushIntervalTest()
 		{
-			UpdateAppSettings(new Dictionary<string, string>());
+			UpdateAppSettings(new Dictionary<ConfigurationOption, string>());
 
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
+			Environment.SetEnvironmentVariable(FlushInterval.ToEnvironmentVariable(), "10ms");
 			var config = new ElasticApmModuleConfiguration();
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(10));
 
-			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.FlushInterval, "20ms" } });
+			UpdateAppSettings(new Dictionary<ConfigurationOption, string> { { FlushInterval, "20ms" } });
 			config = new ElasticApmModuleConfiguration();
 
 			// app-settings should have priority over environment variables
@@ -68,11 +70,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public void CreateConfigurationReaderThroughApSettings()
 		{
 			var logger = new ConsoleLogger(LogLevel.Information);
-			var config = new Dictionary<string, string>();
+			var config = new Dictionary<ConfigurationOption, string>();
 
 			var type = "Elastic.Apm.AspNetFullFramework.Tests.ConfigTestReader, Elastic.Apm.AspNetFullFramework.Tests";
 
-			config.Add(ConfigConsts.KeyNames.FullFrameworkConfigurationReaderType, type);
+			config.Add(FullFrameworkConfigurationReaderType, type);
 
 			UpdateAppSettings(config);
 
@@ -85,10 +87,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public void CreateConfigurationReaderThroughEnvVar()
 		{
 			var logger = new ConsoleLogger(LogLevel.Information);
-			var config = new Dictionary<string, string>();
+			var config = new Dictionary<ConfigurationOption, string>();
 
 			var type = "Elastic.Apm.AspNetFullFramework.Tests.ConfigTestReader, Elastic.Apm.AspNetFullFramework.Tests";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FullFrameworkConfigurationReaderType, type);
+			Environment.SetEnvironmentVariable(FullFrameworkConfigurationReaderType.ToEnvironmentVariable(), type);
 
 			UpdateAppSettings(config);
 			var reader = Helper.ConfigHelper.CreateReader(logger);

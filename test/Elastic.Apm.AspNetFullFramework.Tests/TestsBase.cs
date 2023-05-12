@@ -26,6 +26,8 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using static Elastic.Apm.Config.ConfigurationOption;
+using Environment = System.Environment;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -79,12 +81,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			EnvVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
 				? new Dictionary<string, string>()
 				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
-			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
-			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.SpanCompressionEnabled, "false");
+			EnvVarsToSetForSampleAppPool.TryAdd(ServerUrls.ToEnvironmentVariable(), BuildApmServerUrl(_mockApmServerPort));
+			EnvVarsToSetForSampleAppPool.TryAdd(SpanCompressionEnabled.ToEnvironmentVariable(), "false");
 
 			if (_sampleAppLogEnabled) EnvVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
 
-			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.FlushInterval, "100ms");
+			EnvVarsToSetForSampleAppPool.TryAdd(FlushInterval.ToEnvironmentVariable(), "100ms");
+		}
+
+		private static class DataSentByAgentVerificationConsts
+		{
+			internal const int LogMessageAfterNInitialAttempts = 30; // i.e., log the first message after 3 seconds (if it's still failing)
+			internal const int LogMessageEveryNAttempts = 10; // i.e., log message every second (if it's still failing)
+			internal const int MaxNumberOfAttemptsToVerify = 100;
+			internal const int WaitBetweenVerifyAttemptsMs = 100;
 		}
 
 		internal static class SampleAppUrlPaths

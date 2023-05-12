@@ -11,22 +11,17 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 {
 	internal class ConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 	{
-		internal const string Origin = "Microsoft.Extensions.Configuration";
-		private readonly ScopedLogger _logger;
 		private readonly IConfiguration _configuration;
 
-		public ConfigurationKeyValueProvider(IConfiguration configuration, IApmLogger logger)
-		{
-			_logger = logger?.Scoped(nameof(ConfigurationKeyValueProvider));
-			_configuration = configuration;
-		}
+		public ConfigurationKeyValueProvider(IConfiguration configuration) => _configuration = configuration;
 
-		public string Description => Origin;
+		public string Description => nameof(ConfigurationKeyValueProvider);
 
-		public ConfigurationKeyValue Read(string key)
+		public ApplicationKeyValue Read(ConfigurationOption option)
 		{
+			var key = option.ToConfigKey();
 			var value = _configuration[key];
-			return value != null ? new ConfigurationKeyValue(key, value, Origin) : null;
+			return value != null ? new ApplicationKeyValue(option, value, Description) : null;
 		}
 	}
 
@@ -41,7 +36,7 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 		public ApmConfiguration(IConfiguration configuration, IApmLogger logger, string defaultEnvironmentName)
 			: base(logger,
 				new ConfigurationDefaults { EnvironmentName = defaultEnvironmentName, DebugName = ThisClassName },
-				new ConfigurationKeyValueProvider(configuration, logger)) =>
+				new ConfigurationKeyValueProvider(configuration)) =>
 			configuration.GetSection("ElasticApm")
 				?
 				.GetReloadToken()
@@ -51,7 +46,7 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 		{
 			if (obj is not IConfigurationSection) return;
 
-			var newLogLevel = ParseLogLevel(Read(ConfigConsts.KeyNames.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
+			var newLogLevel = ParseLogLevel(Lookup(ConfigurationOption.LogLevel));
 			if (LogLevel == newLogLevel) return;
 			LogLevel = newLogLevel;
 		}

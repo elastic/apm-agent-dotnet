@@ -14,13 +14,15 @@ namespace Elastic.Apm.AspNetFullFramework.Helper
 		/// <returns>The custom <see cref="IConfigurationReader"/> implementation if it can be initialized, <code>null</code> otherwise</returns>
 		public static IConfigurationReader CreateReader(IApmLogger logger)
 		{
-			var expectedTypeName = ConfigurationManager.AppSettings[ConfigConsts.KeyNames.FullFrameworkConfigurationReaderType];
+			var configKey = ConfigurationOption.FullFrameworkConfigurationReaderType.ToConfigKey();
+			var expectedTypeName = ConfigurationManager.AppSettings[configKey];
 			var isInEnvVarConfigured = false;
 
+			var envVariable = ConfigurationOption.FullFrameworkConfigurationReaderType.ToEnvironmentVariable();
 			//fall back to read from env.var.
 			if (string.IsNullOrEmpty(expectedTypeName))
 			{
-				expectedTypeName = Environment.GetEnvironmentVariable(ConfigConsts.EnvVarNames.FullFrameworkConfigurationReaderType);
+				expectedTypeName = Environment.GetEnvironmentVariable(envVariable);
 				if (string.IsNullOrEmpty(expectedTypeName))
 					return null;
 
@@ -32,7 +34,7 @@ namespace Elastic.Apm.AspNetFullFramework.Helper
 				var type = Type.GetType(expectedTypeName);
 				if (type == null)
 				{
-					var configName = isInEnvVarConfigured ? ConfigConsts.EnvVarNames.FullFrameworkConfigurationReaderType : ConfigConsts.KeyNames.FullFrameworkConfigurationReaderType;
+					var configName = isInEnvVarConfigured ? envVariable : configKey;
 					logger.Warning()?.Log("Failed loading type for configuration reader, {configName}: {configValue}",
 						configName, expectedTypeName);
 					return null;

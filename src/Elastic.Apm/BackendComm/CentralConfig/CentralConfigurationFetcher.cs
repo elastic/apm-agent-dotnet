@@ -207,8 +207,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger.Info()
 				?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfiguration);
 
-			var snapshotDescription = $"{_initialSnapshot.Description} + central (ETag: `{centralConfiguration.ETag}')";
-			_configurationStore.CurrentSnapshot = new RuntimeConfigurationSnapshot(_initialSnapshot, snapshotDescription, centralConfiguration);
+			_configurationStore.CurrentSnapshot = new RuntimeConfigurationSnapshot(_initialSnapshot, centralConfiguration);
 		}
 
 		internal class FailedToFetchConfigException : Exception

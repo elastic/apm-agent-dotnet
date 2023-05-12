@@ -88,7 +88,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 		if (!string.IsNullOrEmpty(Agent.Config.ServiceNodeName))
 			Logger.Warning()
 				?.Log(
-					$"The configured {ConfigConsts.EnvVarNames.ServiceNodeName} value '{Agent.Config.ServiceNodeName}' will be overwritten with '{MetaData.WebsiteInstanceId}'");
+					$"The configured {ConfigurationOption.ServiceNodeName.ToEnvironmentVariable()} value '{Agent.Config.ServiceNodeName}' will be overwritten with '{MetaData.WebsiteInstanceId}'");
 		service.Node.ConfiguredName = MetaData.WebsiteInstanceId;
 	}
 
