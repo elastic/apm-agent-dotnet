@@ -5,6 +5,8 @@
     <BuildFullFrameworkAsp Condition="'$(OS)' != 'WINDOWS_NT'" >false</BuildFullFrameworkAsp>
     <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' != 'true'">false</BuildFullFrameworkAsp>
     <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' == 'true'">true</BuildFullFrameworkAsp>
+    <!-- old style csproj not supported, we don't care about versioning this sample app though -->
+    <MinVerSkip>true</MinVerSkip>
   </PropertyGroup>
   <Target Name="Build" Condition="'$(BuildFullFrameworkAsp)' == 'false'">
   </Target>
