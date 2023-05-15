@@ -369,8 +369,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				throw new Exception($"Expected to receive the initial flush of events from {nameof(MockApmServer)} within 5s but none was received");
 
 			// wait for a flush to happen, if we don't see a flush three times assume the work is done.
+			// otherwise wait a max off 10s (50 * 200ms wait) to mimic the old behavior.
 			int notSignalled = 0, waited = 0;
-			while (notSignalled < 3 && waited < 10) {
+			while (notSignalled < 10 && waited < 50) {
 				signalled = MockApmServer.WaitHandle.WaitOne(TimeSpan.FromMilliseconds(200));
 				if (!signalled) notSignalled++;
 				waited++;
