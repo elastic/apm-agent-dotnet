@@ -1,18 +1,21 @@
 // Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using Elastic.Apm.Config;
-using Elastic.Apm.Logging;
+using Elastic.Apm.Config.Net4FullFramework;
 using FluentAssertions;
+using Elastic.Apm.Logging;
 using Xunit;
 using static Elastic.Apm.Config.ConfigurationOption;
+using static Elastic.Apm.Config.Net4FullFramework.FullFrameworkDefaultImplementations;
 using Environment = System.Environment;
 using LogLevel = Elastic.Apm.Logging.LogLevel;
 
-namespace Elastic.Apm.AspNetFullFramework.Tests
+namespace Elastic.Apm.Tests.Config
 {
 	internal class ConfigTestReader : FallbackToEnvironmentConfigurationBase
 	{
@@ -40,11 +43,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			UpdateAppSettings(new Dictionary<ConfigurationOption, string>());
 			Environment.SetEnvironmentVariable(ConfigurationOption.Environment.ToEnvironmentVariable(), "Development");
-			var config = new ElasticApmModuleConfiguration();
+			var config = new AppSettingsConfiguration();
 			config.Environment.Should().Be("Development");
 
 			UpdateAppSettings(new Dictionary<ConfigurationOption, string> { { ConfigurationOption.Environment, "Staging" } });
-			config = new ElasticApmModuleConfiguration();
+			config = new AppSettingsConfiguration();
 
 			// app-settings should have priority over environment variables
 			config.Environment.Should().Be("Staging");
@@ -56,11 +59,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			UpdateAppSettings(new Dictionary<ConfigurationOption, string>());
 
 			Environment.SetEnvironmentVariable(FlushInterval.ToEnvironmentVariable(), "10ms");
-			var config = new ElasticApmModuleConfiguration();
+			var config = new AppSettingsConfiguration();
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(10));
 
 			UpdateAppSettings(new Dictionary<ConfigurationOption, string> { { FlushInterval, "20ms" } });
-			config = new ElasticApmModuleConfiguration();
+			config = new AppSettingsConfiguration();
 
 			// app-settings should have priority over environment variables
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(20));
@@ -78,7 +81,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			UpdateAppSettings(config);
 
-			var reader = Helper.ConfigHelper.CreateReader(logger);
+			var reader = CreateConfigurationReaderFromConfiguredType(logger);
 
 			Assert.NotNull(reader);
 		}
@@ -93,9 +96,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			Environment.SetEnvironmentVariable(FullFrameworkConfigurationReaderType.ToEnvironmentVariable(), type);
 
 			UpdateAppSettings(config);
-			var reader = Helper.ConfigHelper.CreateReader(logger);
+			var reader = CreateConfigurationReaderFromConfiguredType(logger);
 
 			Assert.NotNull(reader);
 		}
 	}
 }
+#endif
