@@ -75,7 +75,9 @@ namespace Elastic.Apm.AspNetFullFramework
 		internal static AgentComponents CreateAgentComponents(string debugName)
 		{
 			var logger = AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
-			var config = new ElasticApmModuleConfiguration(logger);
+
+			var config = FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(logger)
+				?? new ElasticApmModuleConfiguration(logger);
 			var agentComponents = new AgentComponentsUsingHttpContext(logger, config);
 			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
 
