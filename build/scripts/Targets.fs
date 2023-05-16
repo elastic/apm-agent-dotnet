@@ -95,7 +95,7 @@ module Main =
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
-            Targets.Target("build-profiler", ["restore"; "clean"; "version"; "clean-profiler"], Build.BuildProfiler)
+            Targets.Target("build-profiler", ["build"; "clean-profiler"], Build.BuildProfiler)
                         
             Targets.Target("profiler-integrations", ["build-profiler"], Build.ProfilerIntegrations)
             

@@ -1,4 +1,5 @@
 use std::process::Command;
+use semver::{Version};
 
 fn main() {
     static_vcruntime::metabuild();
@@ -21,7 +22,26 @@ fn main() {
         .output()
         .unwrap();
 
-    let version = String::from_utf8(minver.stdout).unwrap();
-    println!("cargo:rustc-env=CARGO_PKG_VERSION={}", version);
-    println!("cargo:warning=CARGO_PKG_VERSION={}", version);
+    let full_version = String::from_utf8(minver.stdout).unwrap();
+    let fv = full_version.trim();
+    println!("cargo:rustc-env=CARGO_PKG_VERSION={}", &fv);
+    println!("cargo:warning=CARGO_PKG_VERSION={}", &fv);
+
+    let semver = Version::parse(&fv);
+    match semver {
+        Ok(v) => {
+            println!("cargo:rustc-env=CARGO_PKG_VERSION_MAJOR={}", v.major);
+            println!("cargo:rustc-env=CARGO_PKG_VERSION_MINOR={}", v.minor);
+            // anchoring patch version to 0 because that's what our packages do
+            // see: src/Directory.Build.targets
+            // TODO: starting 2.0 we want to anchor minor to zero to to follow
+            // best practices
+            println!("cargo:rustc-env=CARGO_PKG_VERSION_PATCH={}", "0");
+        },
+        Err(e) => {
+
+            println!("cargo:warning=SemverParsingError={}", e.to_string());
+        }
+    }
+
 }

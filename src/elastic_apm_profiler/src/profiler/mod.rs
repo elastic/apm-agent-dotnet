@@ -507,9 +507,10 @@ impl Profiler {
         let logger = env::initialize_logging(&process_name);
 
         log::trace!(
-            "Initialize: started. profiler package version {} (commit: {})",
+            "Initialize: started. profiler package version {} (commit: {}) (anchor version: {})",
             PROFILER_PACKAGE_VERSION,
-            GIT_HASH
+            GIT_HASH,
+            *PROFILER_VERSION
         );
 
         if log::log_enabled!(Level::Debug) {

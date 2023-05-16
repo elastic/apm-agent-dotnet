@@ -29,3 +29,4 @@ crate-type = ["cdylib"]
 
 [build-dependencies]
 static_vcruntime = "2.0"
+semver = "1.0.17"
