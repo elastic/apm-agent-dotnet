@@ -3,40 +3,15 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Configuration;
 using System.Text;
 using System.Web.Hosting;
 using Elastic.Apm.Config;
+using Elastic.Apm.Config.Net4FullFramework;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class AppSettingsConfigurationKeyValueProvider : IConfigurationKeyValueProvider
-	{
-		private readonly IApmLogger _logger;
-
-		public AppSettingsConfigurationKeyValueProvider(IApmLogger logger) =>
-			_logger = logger?.Scoped(nameof(AppSettingsConfigurationKeyValueProvider));
-
-		public string Description => nameof(AppSettingsConfigurationKeyValueProvider);
-
-		public ApplicationKeyValue Read(ConfigurationOption option)
-		{
-			try
-			{
-				var key = option.ToConfigKey();
-				var value = ConfigurationManager.AppSettings[key];
-				if (value != null) return new ApplicationKeyValue(option, value, Description);
-			}
-			catch (ConfigurationErrorsException ex)
-			{
-				_logger.Error()?.LogException(ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
-			}
-			return null;
-		}
-	}
-
-	internal class ElasticApmModuleConfiguration : FallbackToEnvironmentConfigurationBase
+	internal class ElasticApmModuleConfiguration : AppSettingsConfiguration
 	{
 		public ElasticApmModuleConfiguration(IApmLogger logger = null)
 			: base(logger,
@@ -44,8 +19,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				{
 						DebugName = nameof(ElasticApmModuleConfiguration),
 						ServiceName = DiscoverFullFrameworkServiceName(logger?.Scoped(nameof(ElasticApmModuleConfiguration)))
-				},
-				new AppSettingsConfigurationKeyValueProvider(logger)
+				}
 			)
 		{ }
 

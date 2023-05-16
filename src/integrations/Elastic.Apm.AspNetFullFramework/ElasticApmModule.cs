@@ -6,14 +6,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Linq;
 using System.Security.Claims;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
-using Elastic.Apm.AspNetFullFramework.Helper;
-using Elastic.Apm.Config;
+using Elastic.Apm.Config.Net4FullFramework;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -21,7 +19,6 @@ using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
 using Elastic.Apm.Extensions;
-using static Elastic.Apm.Config.ConfigurationOption;
 using Environment = System.Environment;
 
 namespace Elastic.Apm.AspNetFullFramework
@@ -74,6 +71,20 @@ namespace Elastic.Apm.AspNetFullFramework
 		/// </summary>
 		/// <returns>a new instance of <see cref="AgentComponents"/></returns>
 		public static AgentComponents CreateAgentComponents() => CreateAgentComponents($"{nameof(ElasticApmModule)}.#0");
+
+		internal static AgentComponents CreateAgentComponents(string debugName)
+		{
+			var logger = AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
+			var config = new ElasticApmModuleConfiguration(logger);
+			var agentComponents = new AgentComponentsUsingHttpContext(logger, config);
+			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
+
+			var scopedLogger = logger.Scoped(debugName);
+			var aspNetVersion = AspNetVersion.GetEngineVersion(scopedLogger);
+			if (aspNetVersion != null) agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion};
+
+			return agentComponents;
+		}
 
 		private void InitImpl(HttpApplication application)
 		{
@@ -453,33 +464,6 @@ namespace Elastic.Apm.AspNetFullFramework
 
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 			}) ?? false;
-
-		private static IApmLogger CreateDefaultLogger()
-		{
-			var logLevel = ConfigurationManager.AppSettings[ConfigurationOption.LogLevel.ToConfigKey()];
-			if (string.IsNullOrEmpty(logLevel))
-				logLevel = Environment.GetEnvironmentVariable(ConfigurationOption.LogLevel.ToEnvironmentVariable());
-
-			var level = ConfigConsts.DefaultValues.LogLevel;
-			if (!string.IsNullOrEmpty(logLevel))
-				Enum.TryParse(logLevel, true, out level);
-
-			return AgentComponents.CheckForProfilerLogger(new TraceLogger(level), level);
-		}
-
-		private static AgentComponents CreateAgentComponents(string dbgInstanceName)
-		{
-			var rootLogger = AgentDependencies.Logger ?? CreateDefaultLogger();
-			var reader = ConfigHelper.CreateReader(rootLogger) ?? new ElasticApmModuleConfiguration(rootLogger);
-			var agentComponents = new FullFrameworkAgentComponents(rootLogger, reader);
-
-			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
-			var aspNetVersion = AspNetVersion.GetEngineVersion(scopedLogger);
-			agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
-			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
-
-			return agentComponents;
-		}
 
 		/// <summary>
 		/// Compiles a delegate from a lambda expression to get a route's DataTokens property,
