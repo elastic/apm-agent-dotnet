@@ -622,7 +622,7 @@ def dotnet(Closure body){
     sh(label: 'Install dotnet SDK', script: """
     mkdir -p \${DOTNET_ROOT}
     # Download .Net SDK installer script
-    curl -s -O -L https://dot.net/v1/dotnet-install.sh
+    curl --retry 12 --retry-all-errors -s -O -L https://dot.net/v1/dotnet-install.sh
     chmod ugo+rx dotnet-install.sh
 
     # Install .Net SDKs
