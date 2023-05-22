@@ -15,6 +15,8 @@ jobs:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@feature/update-test-reporter-action
         with:
           artifact: test-results            # artifact name
-          name: JUnit Tests                 # Name of the check run which will be created
+          name: Tests Summary                 # Name of the check run which will be created
           path: "test/**/junit-*.xml"       # Path to test results (inside artifact .zip)
           reporter: java-junit              # Format of test results
+          list-suites: 'failed'
+          list-tests: 'failed'
