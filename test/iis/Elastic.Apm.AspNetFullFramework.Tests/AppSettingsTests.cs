@@ -75,8 +75,7 @@ namespace Elastic.Apm.Tests.Config
 			var logger = new ConsoleLogger(LogLevel.Information);
 			var config = new Dictionary<ConfigurationOption, string>();
 
-			var type = "Elastic.Apm.AspNetFullFramework.Tests.ConfigTestReader, Elastic.Apm.AspNetFullFramework.Tests";
-
+			var type = "Elastic.Apm.Tests.Config.ConfigTestReader, Elastic.Apm.Tests";
 			config.Add(FullFrameworkConfigurationReaderType, type);
 
 			UpdateAppSettings(config);
@@ -92,7 +91,7 @@ namespace Elastic.Apm.Tests.Config
 			var logger = new ConsoleLogger(LogLevel.Information);
 			var config = new Dictionary<ConfigurationOption, string>();
 
-			var type = "Elastic.Apm.AspNetFullFramework.Tests.ConfigTestReader, Elastic.Apm.AspNetFullFramework.Tests";
+			var type = "Elastic.Apm.Tests.Config.ConfigTestReader, Elastic.Apm.Tests";
 			Environment.SetEnvironmentVariable(FullFrameworkConfigurationReaderType.ToEnvironmentVariable(), type);
 
 			UpdateAppSettings(config);
