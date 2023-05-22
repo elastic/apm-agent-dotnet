@@ -1,8 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="Build" Condition="'$(OS)' != 'WINDOWS_NT'">
+  <PropertyGroup>
+    <HasWebTargets Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')" >true</HasWebTargets>
+    <BuildFullFrameworkAsp Condition="'$(OS)' != 'WINDOWS_NT'" >false</BuildFullFrameworkAsp>
+    <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' != 'true'">false</BuildFullFrameworkAsp>
+    <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' == 'true'">true</BuildFullFrameworkAsp>
+  </PropertyGroup>
+  <Target Name="Build" Condition="'$(BuildFullFrameworkAsp)' == 'false'">
   </Target>
-  <Target Name="Clean" Condition="'$(OS)' != 'WINDOWS_NT'">
+  <!-- prevents NU1503 -->
+  <Target Name="_IsProjectRestoreSupported" Condition="'$(BuildFullFrameworkAsp)' == 'false'"
+          Returns="@(_ValidProjectsForRestore)">
+    <ItemGroup>
+      <_ValidProjectsForRestore Include="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="Restore" Condition="'$(BuildFullFrameworkAsp)' == 'false'"/>
+  <Target Name="Clean" Condition="'$(BuildFullFrameworkAsp)' == 'false'">
   </Target>
   <!-- dummy Pack target to allow dotnet pack to be called on solution file to package all <IsPackable>true</IsPackable> projects. 
        Even though all sample apps inherit <IsPackable>false</IsPackable>, MSBuild still attempts to pack this project.
@@ -25,7 +39,7 @@
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <RuntimeIdentifier>win</RuntimeIdentifier>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <PropertyGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <MvcBuildViews>false</MvcBuildViews>
     <NuGetPackageImportStamp>
@@ -60,11 +74,17 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
   </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <PropertyGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapmsample.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(OS)' != 'WINDOWS_NT'">
+    <Content Include="LinuxReadme.md" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT' AND '$(BuildFullFrameworkAsp)' == 'false'">
+    <Content Include="WindowsReadme.md" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -89,7 +109,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.WebRequest" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <Compile Include="Consts.cs" />
     <Compile Include="App_Start\ApmLoggerToNLog.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
@@ -144,7 +164,7 @@
     <Compile Include="Mvc\StreamResult.cs" />
     <Compile Include="Controllers\AttributeRoutingWebApiController.cs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
     <Content Include="Content\bootstrap-reboot.css" />
@@ -238,13 +258,13 @@
     <Content Include="Scripts\popper-utils.min.js.map" />
     <Content Include="Scripts\popper-utils.js.map" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <TypeScriptCompile Include="Scripts\index.d.ts" />
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <Project>{d6ffddab-9d76-442f-8f1d-bd6f553f92fa}</Project>
       <Name>Elastic.Apm.AspNetFullFramework</Name>
@@ -258,10 +278,7 @@
       <Name>Elastic.Apm</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' != 'WINDOWS_NT'">
-    <Content Include="LinuxReadme.md" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <PackageReference Include="Antlr3.Runtime">
       <Version>3.5.1</Version>
     </PackageReference>
@@ -311,7 +328,7 @@
       <Version>5.0.0</Version>
     </PackageReference>
   </ItemGroup>
-  <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+  <PropertyGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <TypeScriptTarget>ES2016</TypeScriptTarget>
@@ -336,15 +353,15 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
   </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" Condition="'$(OS)' == 'WINDOWS_NT'" />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
-  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')" />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND false" />
-  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(OS)' == 'WINDOWS_NT' AND '$(MvcBuildViews)'=='true'">
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" Condition="'$(BuildFullFrameworkAsp)' == 'true'" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="'$(BuildFullFrameworkAsp)' == 'true' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(BuildFullFrameworkAsp)' == 'true' AND Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="'$(BuildFullFrameworkAsp)' == 'true' AND false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(BuildFullFrameworkAsp)' == 'true' AND '$(MvcBuildViews)'=='true'">
     <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
   </Target>
   <ProjectExtensions>
-    <VisualStudio Condition="'$(OS)' == 'WINDOWS_NT'">
+    <VisualStudio Condition="'$(BuildFullFrameworkAsp)' == 'true'">
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
           <UseIIS>True</UseIIS>

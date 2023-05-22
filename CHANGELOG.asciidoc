@@ -23,6 +23,56 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.22.0]]
+==== 1.22.0
+
+===== Features
+- {pull}2050[#2050] Enable listening to `Microsoft.Data.SqlClient.EventSource` on .NET full framework.
+
+===== Bug fixes
+- {pull}2054[#2054] Eager load APM configuration.
+- {pull}2049[#2049] Increase logging of profiler if expected rejit target is not found.
+
+
+[[release-notes-1.21.0]]
+==== 1.21.0
+
+This release includes two breaking changes that have minimal impact.
+
+- We removed support for target frameworks which have gone into end-of-life support by Microsoft.
+The impact should be minimal, however as we continue to support `netstandard2.0` and `netstandard2.1` where applicable.
+- We removed the collection of GC metrics over ETW on .NET Full Framework. The collection over ETW requires elevated privileges, especially in IIS deployments. This runs counter to best practices.
+Since these are currently not displayed in the APM UI, while technically breaking, the impact should be minimal. The GC metric collection on modern .NET platforms is not impacted.
+
+
+===== Breaking changes
+- {pull}2036[#2036] Remove ETW powered GC metrics on FullFramework
+- {pull}2027[#2027] Remove unsupported TFM's
+
+===== Bug fixes
+- {pull}2041[#2041] Prevent sending activation_method in metadata for 8.7.0 
+
+[[release-notes-1.20.0]]
+==== 1.20.0
+
+===== Features
+- {pull}1981[#1981] Support for Azure Functions through new `Elastic.Apm.Azure.Functions` nuget package!
+- {pull}1935[#1935] Support new Elasticsearch Client: `Elastic.Clients.Elasticsearch`
+- {pull}1988[#1988] Suppport latest version of Microsoft.Data.SqlClient
+- {pull}1968[#1988] Support latest version OracleManagedDataAccess
+- {pull}1983[#1983] Loose MSVC redistributable as requirement for the profiler
+- {pull}1976[#1983] Add support for sending agent activation method to the server
+
+
+===== Bug fixes
+- {pull}1999[#1999] NullReferenceException in span compression
+- {pull}1970[#1970] Improve profiler logging by always enabling agent logging too.
+- {pull}1972[#1972] Normalize OpenTelemetry Bridge config section to `OpenTelemetryBridgeEnabled`
+- {pull}1926[#1926] Try to enable TLS 1.2 in all scenarios.
+- {pull}1964[#1964] OTel bridge span's destination service may contain null resource
+- {pull}1961[#1961] AppSettings ElasticApm:Enabled is not fully honored in ASP.NET Classic
+
+
 [[release-notes-1.19.0]]
 ==== 1.19.0
 

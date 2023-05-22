@@ -51,8 +51,8 @@ namespace Elastic.Apm.AspNetCore
 			var logger = builder.ApplicationServices.GetApmLogger();
 
 			var configReader = configuration == null
-				? new EnvironmentConfigurationReader(logger)
-				: new MicrosoftExtensionsConfig(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
+				? new EnvironmentConfiguration(logger)
+				: new ApmConfiguration(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
 
 			var config = new AgentComponents(configurationReader: configReader, logger: logger);
 			HostBuilderExtensions.UpdateServiceInformation(config.Service);
@@ -89,7 +89,7 @@ namespace Elastic.Apm.AspNetCore
 		}
 
 		private static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
-#if NETCOREAPP3_0_OR_GREATER || NET5_0
+#if NET6_0_OR_GREATER
 			(serviceProvider.GetService(typeof(IWebHostEnvironment)) as IWebHostEnvironment)?.EnvironmentName;
 #else
 #pragma warning disable CS0246

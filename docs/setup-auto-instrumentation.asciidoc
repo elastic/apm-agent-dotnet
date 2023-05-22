@@ -31,7 +31,10 @@ This approach works with the following
 .NET 5+
 |===
 
-and instruments the following assemblies
+NOTE: The Profiler based agent only supports 64 bit applications. 32 bit applications aren't supported.
+
+
+It instruments the following assemblies
 
 include::integrations.asciidoc[]
 
@@ -92,6 +95,9 @@ export CORECLR_PROFILER_PATH="<unzipped directory>/libelastic_apm_profiler.so" <
 export ELASTIC_APM_PROFILER_HOME="<unzipped directory>"
 export ELASTIC_APM_PROFILER_INTEGRATIONS="<unzipped directory>/integrations.yml"
 ----
+
+NOTE: In most cases you want to specify a server URL and a secret token to connect to an APM Server. For a profiler based setup, every agent configuration can be specified by environment variables. The specific name for an environment variable can be found on the <<configuration, general configuration>> page. E.g. you can specify the <<config-server-url,server URL>> by `ELASTIC_APM_SERVER_URL` and the <<config-secret-token, secret token>> by `ELASTIC_APM_SECRET_TOKEN`.
+
 <1> `<unzipped directory>` is the directory to which the zip file
 was unzipped in step 2.
 . Start your application in a context where the set environment variables are visible.

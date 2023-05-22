@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -43,8 +43,8 @@ public class ExcludeTests
 			};
 
 			profiledApplication.Start(
-				"net5.0",
-				TimeSpan.FromMinutes(2),
+				"net7.0",
+				TimeSpan.FromMinutes(4),
 				environmentVariables,
 				null,
 				line =>
@@ -68,13 +68,14 @@ public class ExcludeTests
 
 	public static IEnumerable<object[]> TargetFrameworks()
 	{
+		var dotnet = "dotnet";
 		if (TestEnvironment.IsWindows)
 		{
-			yield return new object[] { "net5.0", "dotnet.exe" };
 			yield return new object[] { "net461", "SqliteSample.exe" };
+
+			dotnet = "dotnet.exe";
 		}
-		else
-			yield return new object[] { "net5.0", "dotnet" };
+		yield return new object[] { "net7.0", dotnet };
 	}
 
 	[Theory]
@@ -100,7 +101,7 @@ public class ExcludeTests
 
 			profiledApplication.Start(
 				targetFramework,
-				TimeSpan.FromMinutes(2),
+				TimeSpan.FromMinutes(4),
 				environmentVariables,
 				null,
 				line =>
@@ -113,8 +114,9 @@ public class ExcludeTests
 				exception => _output.WriteLine($"{exception}"));
 		}
 
-		logs.Should().Contain(line =>
-			line.Contains($"process name {excludeProcess} matches excluded name {excludeProcess}. Profiler disabled"));
+		logs.Should()
+			.Contain(line =>
+				line.Contains($"process name {excludeProcess} matches excluded name {excludeProcess}. Profiler disabled"));
 
 		// count of manual spans without any auto instrumented spans
 		apmServer.ReceivedData.Spans.Should().HaveCount(32);
@@ -146,8 +148,8 @@ public class ExcludeTests
 			};
 
 			profiledApplication.Start(
-				"net5.0",
-				TimeSpan.FromMinutes(2),
+				"net7.0",
+				TimeSpan.FromMinutes(4),
 				environmentVariables,
 				null,
 				line =>
@@ -160,8 +162,9 @@ public class ExcludeTests
 				exception => _output.WriteLine($"{exception}"));
 		}
 
-		logs.Should().Contain(line =>
-			line.Contains($"service name {serviceName} matches excluded name {serviceName}. Profiler disabled"));
+		logs.Should()
+			.Contain(line =>
+				line.Contains($"service name {serviceName} matches excluded name {serviceName}. Profiler disabled"));
 
 		// count of manual spans without any auto instrumented spans
 		apmServer.ReceivedData.Spans.Should().HaveCount(32);
@@ -200,8 +203,8 @@ public class ExcludeTests
 			};
 
 			profiledApplication.Start(
-				"net5.0",
-				TimeSpan.FromMinutes(2),
+				"net7.0",
+				TimeSpan.FromMinutes(4),
 				environmentVariables,
 				null,
 				line =>

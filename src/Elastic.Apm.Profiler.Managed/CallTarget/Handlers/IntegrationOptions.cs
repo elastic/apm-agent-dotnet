@@ -13,37 +13,37 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 {
-    internal static class IntegrationOptions<TIntegration, TTarget>
-    {
+	internal static class IntegrationOptions<TIntegration, TTarget>
+	{
 		private static volatile bool _disableIntegration;
 
-        internal static bool IsIntegrationEnabled => !_disableIntegration;
+		internal static bool IsIntegrationEnabled => !_disableIntegration;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void DisableIntegration() => _disableIntegration = true;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void DisableIntegration() => _disableIntegration = true;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogException(Exception exception, string message = null)
-        {
-            // ReSharper disable twice ExplicitCallerInfoArgument
-            Logger.Log(LogLevel.Error, exception, message ?? "exception whilst instrumenting integration <{0}, {1}>",
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void LogException(Exception exception, string message = null)
+		{
+			// ReSharper disable twice ExplicitCallerInfoArgument
+			Logger.Log(LogLevel.Error, exception, message ?? "exception whilst instrumenting integration <{0}, {1}>",
 				typeof(TIntegration).FullName,
 				typeof(TTarget).FullName);
 
-             if (exception is DuckTypeException)
-             {
-                 Logger.Log(LogLevel.Warn, "DuckTypeException has been detected, the integration <{0}, {1}> will be disabled.",
-					 typeof(TIntegration).FullName,
-					 typeof(TTarget).FullName);
-                 _disableIntegration = true;
-             }
-             else if (exception is CallTargetInvokerException)
-			 {
-				 Logger.Log(LogLevel.Warn, "CallTargetInvokerException has been detected, the integration <{0}, {1}> will be disabled.",
-					 typeof(TIntegration).FullName,
-					 typeof(TTarget).FullName);
-				 _disableIntegration = true;
-			 }
+			if (exception is DuckTypeException)
+			{
+				Logger.Log(LogLevel.Warn, "DuckTypeException has been detected, the integration <{0}, {1}> will be disabled.",
+					typeof(TIntegration).FullName,
+					typeof(TTarget).FullName);
+				_disableIntegration = true;
+			}
+			else if (exception is CallTargetInvokerException)
+			{
+				Logger.Log(LogLevel.Warn, "CallTargetInvokerException has been detected, the integration <{0}, {1}> will be disabled.",
+					typeof(TIntegration).FullName,
+					typeof(TTarget).FullName);
+				_disableIntegration = true;
+			}
 		}
-    }
+	}
 }

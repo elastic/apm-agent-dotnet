@@ -12,11 +12,9 @@ using System;
 
 namespace Elastic.Apm.Profiler.Managed.DuckTyping
 {
-    /// <summary>
-    /// Use to include a member that would normally be ignored
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class DuckIncludeAttribute : Attribute
-    {
-    }
+	/// <summary>
+	/// Use to include a member that would normally be ignored
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+	public class DuckIncludeAttribute : Attribute { }
 }

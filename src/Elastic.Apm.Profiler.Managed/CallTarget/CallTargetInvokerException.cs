@@ -11,11 +11,9 @@ using System;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget
 {
-    internal class CallTargetInvokerException : Exception
-    {
-        public CallTargetInvokerException(Exception innerException)
-            : base(innerException.Message, innerException)
-        {
-        }
-    }
+	internal class CallTargetInvokerException : Exception
+	{
+		public CallTargetInvokerException(Exception innerException)
+			: base(innerException.Message, innerException) { }
+	}
 }

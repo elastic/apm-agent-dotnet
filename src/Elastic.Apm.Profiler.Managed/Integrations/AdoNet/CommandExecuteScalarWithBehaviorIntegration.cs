@@ -16,49 +16,56 @@ using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
-    /// <summary>
-    /// CallTarget instrumentation for:
-    /// object [Command].ExecuteScalar(CommandBehavior)
-    /// </summary>
-	[InstrumentMySqlAttribute(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentNpgsql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentOracleManagedDataAccess(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentMicrosoftDataSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentSystemDataSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentSystemDataSql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentSystemDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentMicrosoftDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new [] { AdoNetTypeNames.CommandBehavior })]
-    public class CommandExecuteScalarWithBehaviorIntegration
-    {
-        /// <summary>
-        /// OnMethodBegin callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <typeparam name="TBehavior">Command Behavior type</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <param name="commandBehavior">Command behavior</param>
-        /// <returns>Calltarget state value</returns>
-        public static CallTargetState OnMethodBegin<TTarget, TBehavior>(TTarget instance, TBehavior commandBehavior)
-        {
+	/// <summary>
+	/// CallTarget instrumentation for:
+	/// object [Command].ExecuteScalar(CommandBehavior)
+	/// </summary>
+	[InstrumentMySqlAttribute(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentNpgsql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentOracleManagedDataAccess(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
+		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
+		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentMicrosoftDataSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
+		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentSystemDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
+		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	[InstrumentMicrosoftDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
+		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
+	public class CommandExecuteScalarWithBehaviorIntegration
+	{
+		/// <summary>
+		/// OnMethodBegin callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <typeparam name="TBehavior">Command Behavior type</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <param name="commandBehavior">Command behavior</param>
+		/// <returns>Calltarget state value</returns>
+		public static CallTargetState OnMethodBegin<TTarget, TBehavior>(TTarget instance, TBehavior commandBehavior)
+		{
 			var command = (IDbCommand)instance;
 			return new CallTargetState(DbSpanFactory<TTarget>.CreateSpan(Agent.Instance, command), command);
-        }
+		}
 
-        /// <summary>
-        /// OnMethodEnd callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <typeparam name="TReturn">Type of the return value</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <param name="returnValue">Task of HttpResponse message instance</param>
-        /// <param name="exception">Exception instance in case the original code threw an exception.</param>
-        /// <param name="state">Calltarget state value</param>
-        /// <returns>A response value, in an async scenario will be T of Task of T</returns>
-        public static CallTargetReturn<TReturn> OnMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state)
-        {
+		/// <summary>
+		/// OnMethodEnd callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <typeparam name="TReturn">Type of the return value</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <param name="returnValue">Task of HttpResponse message instance</param>
+		/// <param name="exception">Exception instance in case the original code threw an exception.</param>
+		/// <param name="state">Calltarget state value</param>
+		/// <returns>A response value, in an async scenario will be T of Task of T</returns>
+		public static CallTargetReturn<TReturn> OnMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception,
+			CallTargetState state
+		)
+		{
 			DbSpanFactory<TTarget>.EndSpan(Agent.Instance, (IDbCommand)instance, (ISpan)state.Segment, exception);
 			return new CallTargetReturn<TReturn>(returnValue);
-        }
-    }
+		}
+	}
 }

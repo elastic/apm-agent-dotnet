@@ -50,7 +50,7 @@ namespace Elastic.Apm.Benchmarks
 			}
 
 			var exporter = new ElasticsearchBenchmarkExporter(options);
-			var config = DefaultConfig.Instance.With(exporter);
+			var config = DefaultConfig.Instance.AddExporter(exporter);
 			BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 		}
 	}

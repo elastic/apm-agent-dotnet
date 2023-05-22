@@ -12,32 +12,30 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.ReferenceType.ProxiesDefinitions
 {
-    public interface IDuckTypeUnion :
-        IDuckType,
-        IPublicReferenceType,
-        IInternalReferenceType,
-        IProtectedReferenceType,
-        IPrivateReferenceType
-    {
-    }
+	public interface IDuckTypeUnion
+		: IDuckType,
+			IPublicReferenceType,
+			IInternalReferenceType,
+			IProtectedReferenceType,
+			IPrivateReferenceType { }
 
-    public interface IPublicReferenceType
-    {
-        string PublicGetSetReferenceType { get; set; }
-    }
+	public interface IPublicReferenceType
+	{
+		string PublicGetSetReferenceType { get; set; }
+	}
 
-    public interface IInternalReferenceType
-    {
-        string InternalGetSetReferenceType { get; set; }
-    }
+	public interface IInternalReferenceType
+	{
+		string InternalGetSetReferenceType { get; set; }
+	}
 
-    public interface IProtectedReferenceType
-    {
-        string ProtectedGetSetReferenceType { get; set; }
-    }
+	public interface IProtectedReferenceType
+	{
+		string ProtectedGetSetReferenceType { get; set; }
+	}
 
-    public interface IPrivateReferenceType
-    {
-        string PrivateGetSetReferenceType { get; set; }
-    }
+	public interface IPrivateReferenceType
+	{
+		string PrivateGetSetReferenceType { get; set; }
+	}
 }

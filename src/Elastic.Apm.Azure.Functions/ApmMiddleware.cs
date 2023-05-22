@@ -57,6 +57,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 			catch (Exception ex)
 			{
 				success = false;
+				t.CaptureException(ex);
 				Logger.Log(LogLevel.Error, $"Exception was thrown during '{nameof(Invoke)}'", ex, null);
 				throw;
 			}
@@ -87,7 +88,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 		if (!string.IsNullOrEmpty(Agent.Config.ServiceNodeName))
 			Logger.Warning()
 				?.Log(
-					$"The configured {ConfigConsts.EnvVarNames.ServiceNodeName} value '{Agent.Config.ServiceNodeName}' will be overwritten with '{MetaData.WebsiteInstanceId}'");
+					$"The configured {ConfigurationOption.ServiceNodeName.ToEnvironmentVariable()} value '{Agent.Config.ServiceNodeName}' will be overwritten with '{MetaData.WebsiteInstanceId}'");
 		service.Node.ConfiguredName = MetaData.WebsiteInstanceId;
 	}
 
@@ -149,7 +150,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 	}
 
 	private static Dictionary<string, string> CreateHeadersDictionary(HttpHeadersCollection httpHeadersCollection) =>
-		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(',', h.Value));
+		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(",", h.Value));
 
 	private static HttpRequestData? GetHttpRequestData(FunctionContext functionContext)
 	{

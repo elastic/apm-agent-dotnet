@@ -10,9 +10,9 @@
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitions
 {
-    public enum TestEnum2
-    {
-        Primero,
-        Segundo
-    }
+	public enum TestEnum2
+	{
+		Primero,
+		Segundo
+	}
 }

@@ -12,9 +12,9 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitions
 {
-    public interface IDummyFieldObject
-    {
-        [Duck(Kind = DuckKind.Field)]
-        int MagicNumber { get; set; }
-    }
+	public interface IDummyFieldObject
+	{
+		[Duck(Kind = DuckKind.Field)]
+		int MagicNumber { get; set; }
+	}
 }

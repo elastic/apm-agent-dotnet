@@ -1,0 +1,92 @@
+---
+# Publish a snapshot. A "snapshot" is a packaging of the latest *unreleased* APM agent,
+# published to a known GCS bucket for use in edge demo/test environments.
+name: snapshoty
+
+on:
+  push:
+    branches:
+    - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+jobs:
+  linux-package:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: .ci/linux/build.sh
+
+    - name: Rustup
+      run: rustup default 1.67.1
+
+    - name: Cargo make
+      run: cargo install --force cargo-make
+
+    - name: Package
+      run: .ci/linux/release.sh true
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: snapshoty-linux
+        path: build/output/*
+        retention-days: 1
+
+  windows-package:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Tools
+      run: .ci\\windows\\tools.ps1
+
+    - name: Build
+      run: .ci\\windows\\dotnet.bat
+      shell: cmd
+
+    - name: Build agent
+      run: .\\build.bat agent-zip
+      shell: cmd
+
+    - name: Build profiler
+      run: .\\build.bat profiler-zip
+      shell: cmd
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: snapshoty-windows
+        path: build/output/*
+        retention-days: 1
+
+  upload:
+    runs-on: ubuntu-latest
+    needs: [linux-package, windows-package]
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: snapshoty-linux
+        path: build/output
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: snapshoty-windows
+        path: build/output
+
+    - name: Display structure of downloaded files
+      run: find build -type f
+
+    - name: Publish snaphosts
+      uses: elastic/apm-pipeline-library/.github/actions/snapshoty-simple@current
+      with:
+        config: '.ci/snapshoty.yml'
+        vaultUrl: ${{ secrets.VAULT_ADDR }}
+        vaultRoleId: ${{ secrets.VAULT_ROLE_ID }}
+        vaultSecretId: ${{ secrets.VAULT_SECRET_ID }}

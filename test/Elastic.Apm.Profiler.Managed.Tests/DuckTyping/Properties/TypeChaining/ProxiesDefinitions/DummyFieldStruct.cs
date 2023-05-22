@@ -14,10 +14,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.TypeChaining.
 {
 #pragma warning disable 649
 
-    [DuckCopy]
-    public struct DummyFieldStruct
-    {
-        [Duck(Kind = DuckKind.Field)]
-        public int MagicNumber;
-    }
+	[DuckCopy]
+	public struct DummyFieldStruct
+	{
+		[Duck(Kind = DuckKind.Field)]
+		public int MagicNumber;
+	}
 }
