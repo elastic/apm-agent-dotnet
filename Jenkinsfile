@@ -553,6 +553,8 @@ def release(Map args = [:]){
   def secret = args.secret
   def withSuffix = args.get('withSuffix', false)
   dotnet(){
+    sh label: 'Rustup', script: 'rustup default 1.67.1'
+    sh label: 'Cargo make', script: 'cargo install --force cargo-make'
     sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [

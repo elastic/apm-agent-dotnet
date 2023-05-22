@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -304,7 +305,7 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger(LogLevel.Trace);
 			using (var gcMetricsProvider = new GcMetricsProvider(logger, new List<WildcardMatcher>()))
 			{
-#if !NETCOREAPP2_1
+#if NETCOREAPP2_2_OR_GREATER
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
 
@@ -392,7 +393,7 @@ namespace Elastic.Apm.Tests
 			noopConfigReader.SetupGet(n => n.MetricsIntervalInMilliseconds).Returns(1);
 
 			var _ = new MetricsCollector(new NoopLogger(), new NoopPayloadSender(),
-				new ConfigurationStore(new ConfigurationSnapshotFromReader(noopConfigReader.Object, ""), new NoopLogger()));
+				new ConfigurationStore(new RuntimeConfigurationSnapshot(noopConfigReader.Object), new NoopLogger()));
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider

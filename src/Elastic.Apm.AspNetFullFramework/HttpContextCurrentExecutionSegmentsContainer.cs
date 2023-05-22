@@ -20,7 +20,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private readonly AsyncLocal<ITransaction> _currentTransaction = new AsyncLocal<ITransaction>();
 
 		private const string CurrentSpanKey = "Elastic.Apm.Agent.CurrentSpan";
-		private const string CurrentTransactionKey = "Elastic.Apm.Agent.CurrentTransaction";
+		internal const string CurrentTransactionKey = "Elastic.Apm.Agent.CurrentTransaction";
 
 		public ISpan CurrentSpan
 		{

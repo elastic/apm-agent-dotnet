@@ -8,6 +8,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Tests;
+using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Extensions.Hosting.Config;
 using Elastic.Apm.Tests.Utilities;
@@ -53,14 +54,14 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 				if (body.ToLower().Contains("starttransactionwithagentapi")) defaultServerUrlConnectionMade = true;
 			});
 
-			var configReader = new MicrosoftExtensionsConfig(new ConfigurationBuilder()
+			var configReader = new ApmConfiguration(new ConfigurationBuilder()
 				.AddJsonFile($"TestConfigs{Path.DirectorySeparatorChar}appsettings_agentdisabled.json")
 				.Build(), new NoopLogger(), "test");
 
 			var capturedPayload = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(
 				new NoopLogger(),
-				new ConfigurationSnapshotFromReader(configReader, "MicrosoftExtensionsConfigReader")));
+				new RuntimeConfigurationSnapshot(configReader)));
 
 			var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, _factory);
 			if (withDiagnosticSourceOnly)

@@ -4,42 +4,28 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
+using Testcontainers.MySql;
 using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("MySql")]
-	public class MySqlCollection : ICollectionFixture<MySqlFixture> { }
+	public sealed class MySqlCollection : ICollectionFixture<MySqlFixture> { }
 
-	public class MySqlFixture : IAsyncLifetime
+	public sealed class MySqlFixture : IAsyncLifetime
 	{
-		private readonly MySqlTestcontainer _container;
-		private const string MySqlPassword = "Password123";
-		private const string MySqlDatabaseName = "db";
-		private const string MySqlUsername = "mysql";
+		private readonly MySqlContainer _container = new MySqlBuilder().WithImage("mysql:8.0.32").Build();
 
-		public MySqlFixture()
+		public string ConnectionString => _container.GetConnectionString();
+
+		public Task InitializeAsync()
 		{
-			var builder = new TestcontainersBuilder<MySqlTestcontainer>()
-				.WithDatabase(new MySqlTestcontainerConfiguration
-				{
-					Database = MySqlDatabaseName, Username = MySqlUsername, Password = MySqlPassword
-				});
-
-			_container = builder.Build();
+			return _container.StartAsync();
 		}
 
-		public async Task InitializeAsync()
+		public Task DisposeAsync()
 		{
-			await _container.StartAsync();
-			ConnectionString = _container.ConnectionString;
+			return _container.DisposeAsync().AsTask();
 		}
-
-		public async Task DisposeAsync() => await _container.DisposeAsync();
-
-		public string ConnectionString { get; private set; }
 	}
 }

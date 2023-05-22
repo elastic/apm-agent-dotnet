@@ -14,6 +14,8 @@ namespace Elastic.Apm.Feature.Tests
 {
 	public class TestConfiguration : IConfiguration
 	{
+		public string Description { get; } = "Elastic.Apm.Feature.Tests Configuration";
+
 		public string ApiKey { get; set; }
 		public IReadOnlyCollection<string> ApplicationNamespaces { get; set; } = DefaultValues.DefaultApplicationNamespaces;
 		public string CaptureBody { get; set; } = SupportedValues.CaptureBodyOff;
@@ -65,5 +67,7 @@ namespace Elastic.Apm.Feature.Tests
 		public bool UseElasticTraceparentHeader { get; set; } = DefaultValues.UseElasticTraceparentHeader;
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
 		public bool OpenTelemetryBridgeEnabled { get; set; }
+
+		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }

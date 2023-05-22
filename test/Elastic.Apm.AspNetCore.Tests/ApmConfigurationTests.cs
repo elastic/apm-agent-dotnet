@@ -20,16 +20,19 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SampleAspNetCoreApp;
 using Xunit;
+using static Elastic.Apm.Config.ConfigurationOption;
+using Environment = System.Environment;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="MicrosoftExtensionsConfig" /> class.
+	/// Tests the <see cref="ApmConfiguration" /> class.
 	/// It loads the json config files from the TestConfig folder
 	/// </summary>
 	[Collection("UsesEnvironmentVariables")]
-	public class MicrosoftExtensionsConfigTests
+	public class ApmConfigurationTests
 	{
 		/// <summary>
 		/// Builds an IConfiguration instance with the TestConfigs/appsettings_valid.json config file and passes it to the agent.
@@ -38,7 +41,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+			var config = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
 #pragma warning disable 618
@@ -65,19 +68,19 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "");
+			Environment.SetEnvironmentVariable(ConfigurationOption.Environment.ToEnvironmentVariable(), "");
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
+			var config = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
 				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					nameof(MicrosoftExtensionsConfig),
+					nameof(ApmConfiguration),
 					"Failed parsing log level from",
-					MicrosoftExtensionsConfig.Origin,
-					ConfigConsts.KeyNames.LogLevel,
+					nameof(ConfigurationKeyValueProvider),
+					ConfigurationOption.LogLevel.ToConfigKey(),
 					"Defaulting to "
 				);
 
@@ -94,7 +97,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadInvalidServerUrlsConfigFromAppsettingsJson()
 		{
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
+			var config = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
 				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 
@@ -102,10 +105,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					nameof(MicrosoftExtensionsConfig),
+					nameof(ApmConfiguration),
 					"Failed parsing log level from",
-					MicrosoftExtensionsConfig.Origin,
-					ConfigConsts.KeyNames.LogLevel,
+					nameof(ConfigurationKeyValueProvider),
+					ConfigurationOption.LogLevel.ToConfigKey(),
 					"Defaulting to ",
 					"DbeugMisspelled"
 				);
@@ -118,30 +121,30 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadConfingsFromEnvVarsViaIConfig()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel, "Debug");
+			Environment.SetEnvironmentVariable(ConfigurationOption.LogLevel.ToEnvironmentVariable(), "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, serverUrl);
+			Environment.SetEnvironmentVariable(ServerUrls.ToEnvironmentVariable(), serverUrl);
 			var useWindowsCredentials = "true";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.UseWindowsCredentials, useWindowsCredentials);
+			Environment.SetEnvironmentVariable(UseWindowsCredentials.ToEnvironmentVariable(), useWindowsCredentials);
 			var serviceName = "MyServiceName123";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
+			Environment.SetEnvironmentVariable(ServiceName.ToEnvironmentVariable(), serviceName);
 			var serviceNodeName = "Some service node name";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceNodeName, serviceNodeName);
+			Environment.SetEnvironmentVariable(ServiceNodeName.ToEnvironmentVariable(), serviceNodeName);
 			var serviceVersion = "2.1.0.5";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceVersion, serviceVersion);
+			Environment.SetEnvironmentVariable(ServiceVersion.ToEnvironmentVariable(), serviceVersion);
 			var environment = "staging";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, environment);
+			Environment.SetEnvironmentVariable(ConfigurationOption.Environment.ToEnvironmentVariable(), environment);
 			var secretToken = "SecretToken";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.SecretToken, secretToken);
+			Environment.SetEnvironmentVariable(SecretToken.ToEnvironmentVariable(), secretToken);
 			var apiKey = "apiKey";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ApiKey, apiKey);
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, false.ToString());
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.123");
+			Environment.SetEnvironmentVariable(ApiKey.ToEnvironmentVariable(), apiKey);
+			Environment.SetEnvironmentVariable(CaptureHeaders.ToEnvironmentVariable(), false.ToString());
+			Environment.SetEnvironmentVariable(TransactionSampleRate.ToEnvironmentVariable(), "0.123");
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
 
-			var config = new MicrosoftExtensionsConfig(configBuilder, new NoopLogger(), "test");
+			var config = new ApmConfiguration(configBuilder, new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
 #pragma warning disable 618
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
@@ -159,14 +162,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Makes sure that <see cref="MicrosoftExtensionsConfig" />  logs
+		/// Makes sure that <see cref="ApmConfiguration" />  logs
 		/// in case it reads an invalid URL.
 		/// </summary>
 		[Fact]
 		public void LoggerNotNull()
 		{
 			var testLogger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger,
+			var config = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger,
 				"test");
 #pragma warning disable 618
 			var serverUrl = config.ServerUrls.FirstOrDefault();
@@ -180,35 +183,35 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		[Fact]
-		public void MicrosoftExtensionsConfig_falls_back_on_env_vars()
+		public void ApmConfiguration_falls_back_on_env_vars()
 		{
-			var configBeforeEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+			var configBeforeEnvVarSet = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");
 			configBeforeEnvVarSet.FlushInterval.Should().Be(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds());
 
 			var flushIntervalVal = 98.Seconds();
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, (int)flushIntervalVal.TotalSeconds + "s");
+			Environment.SetEnvironmentVariable(FlushInterval.ToEnvironmentVariable(), (int)flushIntervalVal.TotalSeconds + "s");
 
-			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+			var configAfterEnvVarSet = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");
 			configAfterEnvVarSet.FlushInterval.Should().Be(flushIntervalVal);
 		}
 
 		[Fact]
-		public void MicrosoftExtensionsConfig_has_precedence_over_on_env_vars()
+		public void ApmConfiguration_has_precedence_over_on_env_vars()
 		{
 			const double transactionSampleRateEnvVarValue = 0.851;
 			const double transactionSampleRateValueInAppSettings = 0.456;
 
-			var configBeforeEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+			var configBeforeEnvVarSet = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");
 			configBeforeEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
 
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate,
+			Environment.SetEnvironmentVariable(TransactionSampleRate.ToEnvironmentVariable(),
 				transactionSampleRateEnvVarValue.ToString(CultureInfo.InvariantCulture));
-			new EnvironmentConfigurationReader(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
+			new EnvironmentConfiguration(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
 
-			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+			var configAfterEnvVarSet = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");
 			configAfterEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
 		}
@@ -223,7 +226,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Tests that use a real ASP.NET Core application.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class MicrosoftExtensionsConfigIntegrationTests
+	public class ApmConfigurationIntegrationTests
 		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
@@ -231,14 +234,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly WebApplicationFactory<Startup> _factory;
 		private readonly TestLogger _logger;
 
-		public MicrosoftExtensionsConfigIntegrationTests(WebApplicationFactory<Startup> factory)
+		public ApmConfigurationIntegrationTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
 			_logger = new TestLogger();
 			var capturedPayload = new MockPayloadSender();
 
-			var config = new MicrosoftExtensionsConfig(
-				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger, "test");
+			var config = new ApmConfiguration(
+				ApmConfigurationTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger, "test");
 
 			_agent = new ApmAgent(
 				new AgentComponents(payloadSender: capturedPayload, configurationReader: config, logger: _logger));
@@ -268,9 +271,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var logger = new TestLogger();
 
 			var configurationBuilder = new ConfigurationBuilder()
-				.AddInMemoryCollection(new Dictionary<string, string> { { ConfigConsts.KeyNames.TransactionMaxSpans, configurationValue } });
+				.AddInMemoryCollection(new Dictionary<string, string> { { TransactionMaxSpans.ToConfigKey(), configurationValue } });
 
-			var reader = new MicrosoftExtensionsConfig(configurationBuilder.Build(), logger, "test");
+			var reader = new ApmConfiguration(configurationBuilder.Build(), logger, "test");
 
 			// Act
 			var transactionMaxSpans = reader.TransactionMaxSpans;
