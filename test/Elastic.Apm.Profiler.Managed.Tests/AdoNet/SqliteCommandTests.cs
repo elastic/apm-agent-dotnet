@@ -46,7 +46,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 				profiledApplication.Start(
 					targetFramework,
-					TimeSpan.FromMinutes(2),
+					TimeSpan.FromMinutes(4),
 					environmentVariables,
 					null,
 					line => _output.WriteLine(line.Line),

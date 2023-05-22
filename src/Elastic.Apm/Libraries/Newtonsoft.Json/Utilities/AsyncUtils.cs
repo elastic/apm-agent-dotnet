@@ -97,11 +97,12 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
             return cancellationToken.IsCancellationRequested ? FromCanceled<int>(cancellationToken) : reader.ReadAsync(buffer, index, count);
         }
 
+		//TODO typo
         public static bool IsCompletedSucessfully(this Task task)
         {
-            // IsCompletedSucessfully is the faster method, but only currently exposed on .NET Core 2.0
-#if NETCOREAPP2_0
-            return task.IsCompletedSucessfully;
+            // IsCompletedSuccessfully is the faster method, but only currently exposed on .NET Core 2.0
+#if NET6_0_OR_GREATER
+            return task.IsCompletedSuccessfully;
 #else
             return task.Status == TaskStatus.RanToCompletion;
 #endif

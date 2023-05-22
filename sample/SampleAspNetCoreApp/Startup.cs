@@ -54,7 +54,7 @@ namespace SampleAspNetCoreApp
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 #else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)

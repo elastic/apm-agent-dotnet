@@ -113,7 +113,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 			Assembly = "Microsoft.Data.SqlClient";
 			Type = "Microsoft.Data.SqlClient.SqlCommand";
 			MinimumVersion = "1.0.0";
-			MaximumVersion = "2.*.*";
+			MaximumVersion = "5.*.*";
 			Group = "SqlCommand";
 		}
 	}

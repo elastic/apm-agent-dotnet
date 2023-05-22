@@ -27,18 +27,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      
+    - name: Rustup
+      run: rustup default 1.67.1
+
+    - name: Cargo make
+      run: cargo install --force cargo-make
 
     - name: Build
       run: .ci/linux/build.sh
 
     - name: Package
       run: .ci/linux/release.sh true
-
-    - name: Rustup
-      run: rustup default 1.59.0
-
-    - name: Cargo make
-      run: cargo install --force cargo-make
 
     - name: Build profiler
       run: ./build.sh profiler-zip
@@ -93,7 +93,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Rustup
-      run: rustup default 1.59.0
+      run: rustup default 1.67.1
 
     - name: Cargo make
       run: cargo install --force cargo-make

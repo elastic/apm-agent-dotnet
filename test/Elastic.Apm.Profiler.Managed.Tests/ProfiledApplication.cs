@@ -66,7 +66,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			var processInfo = new ProcessStartInfo
 			{
 				FileName = "dotnet",
-				Arguments = $"publish -c Release -f {targetFramework} -o {outputDirectory} {msBuildProperties}",
+				Arguments = $"publish -c Release -f {targetFramework} --property:PublishDir={outputDirectory} {msBuildProperties}",
 				WorkingDirectory = _projectDirectory
 			};
 
@@ -121,6 +121,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			environmentVariables["COR_PROFILER"] = ProfilerClassId;
 			environmentVariables["COR_PROFILER_PATH"] = _profilerPath;
 
+			//Temporarily disable since it does IO that fails on CI which is noisy
+			environmentVariables["ELASTIC_APM_CENTRAL_CONFIG"] = "false";
+			environmentVariables["ELASTIC_APM_CLOUD_PROVIDER"] = "none";
+
 			environmentVariables["ELASTIC_APM_PROFILER_HOME"] =
 				Path.Combine(SolutionPaths.Root, "src", "Elastic.Apm.Profiler.Managed", "bin", "Release");
 			environmentVariables["ELASTIC_APM_PROFILER_INTEGRATIONS"] =
@@ -130,7 +134,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			// log to relative logs directory for managed loader
 			environmentVariables["ELASTIC_APM_PROFILER_LOG_DIR"] = Path.Combine(SolutionPaths.Root, "logs");
 
-			//environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout";
+			environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout";
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_IL"] = "true";
 
 			// use the .exe for net461

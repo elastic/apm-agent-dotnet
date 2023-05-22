@@ -10,10 +10,16 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
+
+	public interface IConfigurationLookup
+	{
+		ConfigurationKeyValue Lookup(ConfigurationOption option);
+	}
+
 	/// <summary>
 	/// Reads configuration values used to configure the agent
 	/// </summary>
-	public interface IConfigurationReader
+	public interface IConfigurationReader : IConfigurationDescription, IConfigurationLookup
 	{
 		/// <summary>
 		/// The API key used to send data to the APM server.

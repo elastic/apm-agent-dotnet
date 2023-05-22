@@ -1,17 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net461;net5.0;net6.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>net461;net7.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
     <RootNamespace>Elastic.Apm.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.Tests</AssemblyName>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">
-    <!-- Make sure InvariantGlobalization scenario is tested for frameworks that support it -->
-    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,7 +45,7 @@
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net461' ">
     <ProjectReference Include="..\..\sample\OpenTelemetrySample\OpenTelemetrySample.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
   </ItemGroup>

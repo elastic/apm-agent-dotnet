@@ -4,8 +4,10 @@ name: OpenTelemetry Export Trace
 on:
   workflow_run:
     workflows:
+      - snapshoty
       - test-linux
       - test-reporter
+      - updatecli
     types: [completed]
 
 jobs:
