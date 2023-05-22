@@ -10,8 +10,8 @@
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.TypeChaining.ProxiesDefinitions
 {
-    public interface IObscureStaticErrorDuckType
-    {
-        IDummyFieldObject PublicStaticGetSelfType { get; set; }
-    }
+	public interface IObscureStaticErrorDuckType
+	{
+		IDummyFieldObject PublicStaticGetSelfType { get; set; }
+	}
 }

@@ -49,8 +49,8 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		void Remove(string name);
 	}
 
-    internal struct KafkaHeadersCollection : IHeadersCollection
-    {
+	internal struct KafkaHeadersCollection : IHeadersCollection
+	{
 		private readonly IHeaders _headers;
 		private readonly IApmLogger _logger;
 
@@ -60,31 +60,31 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 			_logger = logger.Scoped(nameof(KafkaHeadersCollection));
 		}
 
-        public IEnumerable<string> GetValues(string name)
-        {
-            // This only returns the _last_ bytes. Accessing other values is more expensive and should generally be unnecessary
-            if (_headers.TryGetLastBytes(name, out var bytes))
-            {
-                try
-                {
-                    return new[] { Encoding.UTF8.GetString(bytes) };
-                }
-                catch (Exception ex)
-                {
-                    _logger.Info()?.LogException(ex, "Could not deserialize Kafka header {headerName}", name);
-                }
-            }
+		public IEnumerable<string> GetValues(string name)
+		{
+			// This only returns the _last_ bytes. Accessing other values is more expensive and should generally be unnecessary
+			if (_headers.TryGetLastBytes(name, out var bytes))
+			{
+				try
+				{
+					return new[] { Encoding.UTF8.GetString(bytes) };
+				}
+				catch (Exception ex)
+				{
+					_logger.Info()?.LogException(ex, "Could not deserialize Kafka header {headerName}", name);
+				}
+			}
 
-            return Enumerable.Empty<string>();
-        }
+			return Enumerable.Empty<string>();
+		}
 
-        public void Set(string name, string value)
-        {
-            Remove(name);
-            Add(name, value);
-        }
+		public void Set(string name, string value)
+		{
+			Remove(name);
+			Add(name, value);
+		}
 
-        public void Add(string name, string value) => _headers.Add(name, Encoding.UTF8.GetBytes(value));
+		public void Add(string name, string value) => _headers.Add(name, Encoding.UTF8.GetBytes(value));
 
 		public void Remove(string name) => _headers.Remove(name);
 	}

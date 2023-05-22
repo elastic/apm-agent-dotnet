@@ -506,7 +506,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// <see cref="JsonSerializer.TypeNameHandling" /> should be used with caution when your application deserializes JSON from
 		/// an external source.
 		/// Incoming types should be validated with a custom <see cref="JsonSerializer.SerializationBinder" />
-		/// when deserializing with a value other than <see cref="TypeNameHandling.None" />.
+		/// when deserializing with a value other than <see cref="Elastic.Apm.Libraries.Newtonsoft.Json.TypeNameHandling.None" />.
 		/// </remarks>
 		public virtual TypeNameHandling TypeNameHandling
 		{

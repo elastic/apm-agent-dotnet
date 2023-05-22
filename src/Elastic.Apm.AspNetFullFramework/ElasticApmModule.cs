@@ -21,6 +21,8 @@ using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
 using Elastic.Apm.Extensions;
+using static Elastic.Apm.Config.ConfigurationOption;
+using Environment = System.Environment;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -36,7 +38,10 @@ namespace Elastic.Apm.AspNetFullFramework
 		private readonly string _dbgInstanceName;
 		private HttpApplication _application;
 		private IApmLogger _logger;
-		private readonly Lazy<Type> _httpRouteDataInterfaceType = new Lazy<Type>(() => Type.GetType("System.Web.Http.Routing.IHttpRouteData,System.Web.Http"));
+
+		private readonly Lazy<Type> _httpRouteDataInterfaceType =
+			new Lazy<Type>(() => Type.GetType("System.Web.Http.Routing.IHttpRouteData,System.Web.Http"));
+
 		private Func<object, string> _routeDataTemplateGetter;
 		private Func<object, decimal> _routePrecedenceGetter;
 
@@ -256,7 +261,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				var value = headers.Get(key);
 				if (value != null)
-					convertedHeaders.Add(key,value);
+					convertedHeaders.Add(key, value);
 			}
 			return convertedHeaders;
 		}
@@ -279,17 +284,30 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private void ProcessEndRequest(object sender)
 		{
-			var transaction = Agent.Instance.Tracer.CurrentTransaction;
-			if (transaction is null) return;
-
 			var application = (HttpApplication)sender;
 			var context = application.Context;
+			var request = context.Request;
+			var transaction = Agent.Instance.Tracer.CurrentTransaction;
+
+			if (transaction is null)
+			{
+				// We expect transaction to be null if `TransactionIgnoreUrls` matches
+				if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, request.Unvalidated.Path))
+					return;
+
+				var hasHttpContext = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
+				_logger.Warning()
+					?.Log(
+						$"{nameof(ITracer.CurrentTransaction)} is null in {nameof(ProcessEndRequest)}. HttpContext for transaction: {hasHttpContext}"
+					);
+				return;
+			}
+
 			var response = context.Response;
 
 			// update the transaction name based on route values, if applicable
 			if (transaction is Transaction t && !t.HasCustomName)
 			{
-				var request = application.Request;
 				var values = request.RequestContext?.RouteData?.Values;
 				if (values?.Count > 0)
 				{
@@ -335,7 +353,9 @@ namespace Elastic.Apm.AspNetFullFramework
 										var precedence = _routePrecedenceGetter(subRoute);
 										if (precedence < minPrecedence)
 										{
-											_logger?.Trace()?.Log($"Calculating transaction name from web api attribute routing (route precedence: {precedence})");
+											_logger?.Trace()
+												?.Log(
+													$"Calculating transaction name from web api attribute routing (route precedence: {precedence})");
 											minPrecedence = precedence;
 											name = _routeDataTemplateGetter(subRoute);
 										}
@@ -367,8 +387,8 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			var realTransaction = transaction as Transaction;
 			realTransaction?.SetOutcome(response.StatusCode >= 500
-					? Outcome.Failure
-					: Outcome.Success);
+				? Outcome.Failure
+				: Outcome.Success);
 
 			// Try and update transaction name with SOAP action if applicable.
 			if (realTransaction == null || !realTransaction.HasCustomName)
@@ -391,9 +411,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static void FillSampledTransactionContextResponse(HttpResponse response, ITransaction transaction) =>
 			transaction.Context.Response = new Response
 			{
-				Finished = true,
-				StatusCode = response.StatusCode,
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
+				Finished = true, StatusCode = response.StatusCode, Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
@@ -438,21 +456,21 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static IApmLogger CreateDefaultLogger()
 		{
-			var logLevel = ConfigurationManager.AppSettings[ConfigConsts.KeyNames.LogLevel];
+			var logLevel = ConfigurationManager.AppSettings[ConfigurationOption.LogLevel.ToConfigKey()];
 			if (string.IsNullOrEmpty(logLevel))
-				logLevel = Environment.GetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel);
+				logLevel = Environment.GetEnvironmentVariable(ConfigurationOption.LogLevel.ToEnvironmentVariable());
 
 			var level = ConfigConsts.DefaultValues.LogLevel;
 			if (!string.IsNullOrEmpty(logLevel))
 				Enum.TryParse(logLevel, true, out level);
 
-			return new TraceLogger(level);
+			return AgentComponents.CheckForProfilerLogger(new TraceLogger(level), level);
 		}
 
 		private static AgentComponents CreateAgentComponents(string dbgInstanceName)
 		{
 			var rootLogger = AgentDependencies.Logger ?? CreateDefaultLogger();
-			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
+			var reader = ConfigHelper.CreateReader(rootLogger) ?? new ElasticApmModuleConfiguration(rootLogger);
 			var agentComponents = new FullFrameworkAgentComponents(rootLogger, reader);
 
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);

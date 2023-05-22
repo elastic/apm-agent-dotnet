@@ -50,7 +50,7 @@ namespace Elastic.Apm.Extensions.Hosting
 				{
 					services.AddSingleton<IApmLogger, NetCoreLogger>();
 					services.AddSingleton<IConfigurationReader>(sp =>
-						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), GetHostingEnvironmentName(ctx, sp.GetService<IApmLogger>())));
+						new ApmConfiguration(ctx.Configuration, sp.GetService<IApmLogger>(), GetHostingEnvironmentName(ctx, sp.GetService<IApmLogger>())));
 				}
 				else
 				{

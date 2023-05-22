@@ -16,19 +16,10 @@ namespace Elastic.Apm.Config
 	}
 
 	/// <summary>
-	/// A description for the configuration snapshot
+	/// A description for the configuration
 	/// </summary>
-	internal interface IConfigurationSnapshotDescription
+	public interface IConfigurationDescription
 	{
 		public string Description { get; }
-	}
-
-	internal static class ConfigurationSnapshotExtensions
-	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Description(this IConfiguration snapshot) =>
-			snapshot is IConfigurationSnapshotDescription snapshotWithDescription
-				? snapshotWithDescription.Description
-				: null;
 	}
 }

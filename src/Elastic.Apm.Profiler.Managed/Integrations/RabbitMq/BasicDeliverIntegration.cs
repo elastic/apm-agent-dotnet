@@ -20,40 +20,46 @@ using Elastic.Apm.Profiler.Managed.Core;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 {
-    /// <summary>
-    /// RabbitMQ.Client BasicDeliver calltarget instrumentation
-    /// </summary>
-    [Instrument(
-        Assembly = "RabbitMQ.Client",
-        Type = "RabbitMQ.Client.Events.EventingBasicConsumer",
-        Method = "HandleBasicDeliver",
-        ReturnType = ClrTypeNames.Void,
-        ParameterTypes = new[] { ClrTypeNames.String, ClrTypeNames.UInt64, ClrTypeNames.Bool, ClrTypeNames.String, ClrTypeNames.String, RabbitMqIntegration.IBasicPropertiesTypeName, ClrTypeNames.Ignore },
-        MinimumVersion = "3.6.9",
-        MaximumVersion = "6.*.*",
-        Group = RabbitMqIntegration.Name)]
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public class BasicDeliverIntegration
-    {
+	/// <summary>
+	/// RabbitMQ.Client BasicDeliver calltarget instrumentation
+	/// </summary>
+	[Instrument(
+		Assembly = "RabbitMQ.Client",
+		Type = "RabbitMQ.Client.Events.EventingBasicConsumer",
+		Method = "HandleBasicDeliver",
+		ReturnType = ClrTypeNames.Void,
+		ParameterTypes = new[]
+		{
+			ClrTypeNames.String, ClrTypeNames.UInt64, ClrTypeNames.Bool, ClrTypeNames.String, ClrTypeNames.String,
+			RabbitMqIntegration.IBasicPropertiesTypeName, ClrTypeNames.Ignore
+		},
+		MinimumVersion = "3.6.9",
+		MaximumVersion = "6.*.*",
+		Group = RabbitMqIntegration.Name)]
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class BasicDeliverIntegration
+	{
 		/// <summary>
-        /// OnMethodBegin callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <typeparam name="TBasicProperties">Type of the message properties</typeparam>
-        /// <typeparam name="TBody">Type of the message body</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <param name="consumerTag">The original consumerTag argument</param>
-        /// <param name="deliveryTag">The original deliveryTag argument</param>
-        /// <param name="redelivered">The original redelivered argument</param>
-        /// <param name="exchange">Name of the exchange.</param>
-        /// <param name="routingKey">The routing key.</param>
-        /// <param name="basicProperties">The message properties.</param>
-        /// <param name="body">The message body.</param>
-        /// <returns>Calltarget state value</returns>
-        public static CallTargetState OnMethodBegin<TTarget, TBasicProperties, TBody>(TTarget instance, string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, TBasicProperties basicProperties, TBody body)
-            where TBasicProperties : IBasicProperties
-            where TBody : IBody // ReadOnlyMemory<byte> body in 6.0.0
+		/// OnMethodBegin callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <typeparam name="TBasicProperties">Type of the message properties</typeparam>
+		/// <typeparam name="TBody">Type of the message body</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <param name="consumerTag">The original consumerTag argument</param>
+		/// <param name="deliveryTag">The original deliveryTag argument</param>
+		/// <param name="redelivered">The original redelivered argument</param>
+		/// <param name="exchange">Name of the exchange.</param>
+		/// <param name="routingKey">The routing key.</param>
+		/// <param name="basicProperties">The message properties.</param>
+		/// <param name="body">The message body.</param>
+		/// <returns>Calltarget state value</returns>
+		public static CallTargetState OnMethodBegin<TTarget, TBasicProperties, TBody>(TTarget instance, string consumerTag, ulong deliveryTag,
+			bool redelivered, string exchange, string routingKey, TBasicProperties basicProperties, TBody body
+		)
+			where TBasicProperties : IBasicProperties
+			where TBody : IBody // ReadOnlyMemory<byte> body in 6.0.0
 		{
 			var agent = Agent.Instance;
 			if (agent.Tracer.CurrentTransaction is not null)
@@ -71,21 +77,21 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 				return default;
 			}
 
-            // try to extract propagated context values from headers
+			// try to extract propagated context values from headers
 			DistributedTracingData distributedTracingData = null;
-            if (basicProperties?.Headers != null)
-            {
-                try
-                {
+			if (basicProperties?.Headers != null)
+			{
+				try
+				{
 					var traceParent = string.Join(",", ContextPropagation.HeadersGetter(basicProperties.Headers, TraceContext.TraceParentHeaderName));
 					var traceState = ContextPropagation.HeadersGetter(basicProperties.Headers, TraceContext.TraceStateHeaderName).FirstOrDefault();
 					distributedTracingData = TraceContext.TryExtractTracingData(traceParent, traceState);
 				}
-                catch (Exception ex)
-                {
-                    Logger.Error(ex, "Error extracting propagated RabbitMQ headers.");
-                }
-            }
+				catch (Exception ex)
+				{
+					Logger.Error(ex, "Error extracting propagated RabbitMQ headers.");
+				}
+			}
 
 			var normalizedExchange = RabbitMqIntegration.NormalizeExchangeName(exchange);
 
@@ -101,20 +107,20 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 
 			transaction.SetLabel("message_size", body?.Length ?? 0);
 			return new CallTargetState(transaction);
-        }
+		}
 
-        /// <summary>
-        /// OnMethodEnd callback
-        /// </summary>
-        /// <typeparam name="TTarget">Type of the target</typeparam>
-        /// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
-        /// <param name="exception">Exception instance in case the original code threw an exception.</param>
-        /// <param name="state">Calltarget state value</param>
-        /// <returns>A default CallTargetReturn to satisfy the CallTarget contract</returns>
-        public static CallTargetReturn OnMethodEnd<TTarget>(TTarget instance, Exception exception, CallTargetState state)
-        {
-            state.Segment.EndCapturingException(exception);
-            return CallTargetReturn.GetDefault();
-        }
-    }
+		/// <summary>
+		/// OnMethodEnd callback
+		/// </summary>
+		/// <typeparam name="TTarget">Type of the target</typeparam>
+		/// <param name="instance">Instance value, aka `this` of the instrumented method.</param>
+		/// <param name="exception">Exception instance in case the original code threw an exception.</param>
+		/// <param name="state">Calltarget state value</param>
+		/// <returns>A default CallTargetReturn to satisfy the CallTarget contract</returns>
+		public static CallTargetReturn OnMethodEnd<TTarget>(TTarget instance, Exception exception, CallTargetState state)
+		{
+			state.Segment.EndCapturingException(exception);
+			return CallTargetReturn.GetDefault();
+		}
+	}
 }

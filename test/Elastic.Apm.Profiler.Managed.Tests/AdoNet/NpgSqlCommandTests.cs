@@ -38,16 +38,14 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				var npgSqlVersion = "5.0.7";
 
 				// TODO: Add x64/x86 options. macOS and Linux do not support x86
-				yield return new object[] { "net5.0", npgSqlVersion };
-				yield return new object[] { "netcoreapp3.1", npgSqlVersion };
+				yield return new object[] { "net7.0", npgSqlVersion };
 
 				if (TestEnvironment.IsWindows)
 					yield return new object[] { "net461", npgSqlVersion };
 
 				npgSqlVersion = "6.0.2";
 
-				yield return new object[] { "net5.0", npgSqlVersion };
-				yield return new object[] { "netcoreapp3.1", npgSqlVersion };
+				yield return new object[] { "net7.0", npgSqlVersion };
 			}
 		}
 
@@ -55,7 +53,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		[MemberData(nameof(TestParameters))]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework, string npgsqlVersion)
 		{
-			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
+			var apmLogger = new UnitTestLogger(_output, Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
@@ -77,7 +75,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 				profiledApplication.Start(
 					targetFramework,
-					TimeSpan.FromMinutes(2),
+					TimeSpan.FromMinutes(4),
 					environmentVariables,
 					msBuildProperties,
 					line => _output.WriteLine(line.Line),

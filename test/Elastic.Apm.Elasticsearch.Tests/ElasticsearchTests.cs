@@ -22,6 +22,8 @@ namespace Elastic.Apm.Elasticsearch.Tests
 		public ElasticsearchTests(ElasticsearchFixture fixture)
 		{
 			var settings = new ConnectionConfiguration(new Uri(fixture.ConnectionString));
+			settings.ServerCertificateValidationCallback(CertificateValidations.AllowAll);
+
 			_client = new ElasticLowLevelClient(settings);
 		}
 

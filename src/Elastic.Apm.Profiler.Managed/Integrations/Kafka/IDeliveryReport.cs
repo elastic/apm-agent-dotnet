@@ -12,16 +12,16 @@ using System.ComponentModel;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 {
-    /// <summary>
-    /// DeliveryReport interface for duck-typing
-    /// </summary>
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface IDeliveryReport : IDeliveryResult
-    {
-        /// <summary>
-        /// Gets the Error associated with the delivery report
-        /// </summary>
-        public IError Error { get; }
-    }
+	/// <summary>
+	/// DeliveryReport interface for duck-typing
+	/// </summary>
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public interface IDeliveryReport : IDeliveryResult
+	{
+		/// <summary>
+		/// Gets the Error associated with the delivery report
+		/// </summary>
+		public IError Error { get; }
+	}
 }

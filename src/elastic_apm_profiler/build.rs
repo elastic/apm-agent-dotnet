@@ -1,6 +1,8 @@
 use std::process::Command;
 
 fn main() {
+    static_vcruntime::metabuild();
+    
     let output = Command::new("git")
         .args(&["rev-parse", "HEAD"])
         .output()

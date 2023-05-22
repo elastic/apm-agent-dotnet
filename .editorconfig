@@ -21,6 +21,11 @@ indent_size = 4
 indent_style = space
 indent_size = 2
 
+[*.rs]
+indent_style = space
+indent_size = 4
+
+
 # Dotnet code style settings:
 [*.{cs,vb}]
 

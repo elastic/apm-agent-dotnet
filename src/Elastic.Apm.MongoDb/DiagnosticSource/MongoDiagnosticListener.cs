@@ -11,7 +11,6 @@ using System.Net;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 using MongoDB.Driver.Core.Events;
 
 namespace Elastic.Apm.MongoDb.DiagnosticSource
@@ -90,7 +89,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 			catch (Exception ex)
 			{
 				//ignore
-				Logger.Log(LogLevel.Error, "Exception was thrown while handling 'command started event'", ex, null);
+				Logger.Error()?.LogException(ex, "Exception was thrown while handling 'command started event'");
 			}
 		}
 
@@ -112,7 +111,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 			catch (Exception ex)
 			{
 				// ignore
-				Logger.Log(LogLevel.Error, "Exception was thrown while handling 'command succeeded event'", ex, null);
+				Logger.Error()?.LogException(ex, "Exception was thrown while handling 'command succeeded event'");
 			}
 		}
 
@@ -136,7 +135,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 			catch (Exception ex)
 			{
 				// ignore
-				Logger.Log(LogLevel.Error, "Exception was thrown while handling 'command failed event'", ex, null);
+				Logger.Error()?.LogException(ex, "Exception was thrown while handling 'command failed event'");
 			}
 		}
 	}

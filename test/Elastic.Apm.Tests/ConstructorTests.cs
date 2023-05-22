@@ -70,7 +70,7 @@ public class ConstructorTests
 		}
 	}
 
-	private class LogConfiguration : IConfiguration, IConfigurationSnapshotDescription
+	private class LogConfiguration : IConfiguration, IConfigurationDescription
 	{
 		public LogConfiguration(LogLevel level) => LogLevel = level;
 
@@ -144,5 +144,7 @@ public class ConstructorTests
 
 		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 		// ReSharper restore UnassignedGetOnlyAutoProperty
+
+		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }

@@ -10,7 +10,5 @@
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitions
 {
-    public interface IDictioValue
-    {
-    }
+	public interface IDictioValue { }
 }

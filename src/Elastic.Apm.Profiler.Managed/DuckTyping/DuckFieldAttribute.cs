@@ -10,14 +10,14 @@
 
 namespace Elastic.Apm.Profiler.Managed.DuckTyping
 {
-    /// <summary>
-    /// Duck attribute where the underlying member is a field
-    /// </summary>
-    public class DuckFieldAttribute : DuckAttribute
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DuckFieldAttribute"/> class.
-        /// </summary>
-        public DuckFieldAttribute() => Kind = DuckKind.Field;
+	/// <summary>
+	/// Duck attribute where the underlying member is a field
+	/// </summary>
+	public class DuckFieldAttribute : DuckAttribute
+	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DuckFieldAttribute"/> class.
+		/// </summary>
+		public DuckFieldAttribute() => Kind = DuckKind.Field;
 	}
 }

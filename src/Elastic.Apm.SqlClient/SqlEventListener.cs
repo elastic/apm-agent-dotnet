@@ -30,13 +30,17 @@ namespace Elastic.Apm.SqlClient
 
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
-			// Sql event source for Microsoft.Data.SqlClient has the same name as for System.Data.SqlClient
-			// Event source architecture doesn't allow to register two event sources with the same names
-			// As a result, we enable event listening via event source only for System.Data.SqlClient
-			// Event listening for Microsoft.Data.SqlClient will be enabled later after https://github.com/dotnet/SqlClient/issues/436 fix
-			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData"
-				&& eventSource.GetType().FullName == "System.Data.SqlEventSource")
-				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
+			switch (eventSource)
+			{
+				// `Microsoft-AdoNet-SystemData` used to be emitted by both by System.Data.SqlClient and Microsoft.Data.SqlClient.
+				// We only want to listen to it in case it's emitted by `System.Data.SqlEventSource` as we can only subscribe once to a name.
+				case { Name: "Microsoft-AdoNet-SystemData" } when eventSource.GetType().FullName == "System.Data.SqlEventSource":
+				// Always enable it for the new event source
+				// https://github.com/dotnet/SqlClient/issues/436
+				case { Name: "Microsoft.Data.SqlClient.EventSource" }:
+					EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
+					break;
+			}
 
 			base.OnEventSourceCreated(eventSource);
 		}
@@ -72,10 +76,13 @@ namespace Elastic.Apm.SqlClient
 
 		private void ProcessBeginExecute(IReadOnlyList<object> payload)
 		{
-			if (payload.Count != 4)
+			// https://github.com/dotnet/SqlClient/blob/3a41288f2b67307a1f816761deb73785247c85c9/src/Microsoft.Data.SqlClient/src/Microsoft/Data/SqlClient/SqlClientEventSource.cs#L1009
+			// SqlClient reserves the first 4 payload items, at the time of writing they've added a 5th (message).
+			// int objectId, string dataSource, string database, string commandText, string message
+			if (payload.Count < 4)
 			{
 				_logger?.Debug()
-					?.Log("BeginExecute event has {PayloadCount} payload items instead of 4. Event processing is skipped.", payload.Count);
+					?.Log("BeginExecute event has {PayloadCount} payload items, expecting at least 4. Event processing is skipped.", payload.Count);
 				return;
 			}
 
@@ -118,10 +125,13 @@ namespace Elastic.Apm.SqlClient
 
 		private void ProcessEndExecute(IReadOnlyList<object> payload)
 		{
-			if (payload.Count != 3)
+			// https://github.com/dotnet/SqlClient/blob/3a41288f2b67307a1f816761deb73785247c85c9/src/Microsoft.Data.SqlClient/src/Microsoft/Data/SqlClient/SqlClientEventSource.cs#L1017
+			// SqlClient EventSource reserves the first 3 payload items but may extend this further in the future.
+			// At the time of writing this event includes an additional 4th (message).
+			if (payload.Count < 3)
 			{
 				_logger?.Debug()
-					?.Log("EndExecute event has {PayloadCount} payload items instead of 3. Event processing is skipped.", payload.Count);
+					?.Log("EndExecute event has {PayloadCount} payload items, expecting at least 3. Event processing is skipped.", payload.Count);
 				return;
 			}
 

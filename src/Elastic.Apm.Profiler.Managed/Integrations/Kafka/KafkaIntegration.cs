@@ -18,8 +18,8 @@ using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 {
-    internal static class KafkaIntegration
-    {
+	internal static class KafkaIntegration
+	{
 		internal const string TopicPartitionTypeName = "Confluent.Kafka.TopicPartition";
 		internal const string MessageTypeName = "Confluent.Kafka.Message`2[!0,!1]";
 		internal const string ConsumeResultTypeName = "Confluent.Kafka.ConsumeResult`2[!0,!1]";
@@ -32,11 +32,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		private const double MaxAge = long.MaxValue;
 
 		internal static ISpan CreateProducerSpan(IApmAgent agent, ITopicPartition topicPartition, bool isTombstone, bool finishOnClose)
-        {
-            ISpan span = null;
+		{
+			ISpan span = null;
 
-            try
-            {
+			try
+			{
 				// no current transaction, don't create a span
 				var currentTransaction = agent.Tracer.CurrentTransaction;
 				if (currentTransaction is null)
@@ -59,40 +59,42 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 					? "Kafka SEND"
 					: $"Kafka SEND to {topic}";
 
-				span = agent.GetCurrentExecutionSegment().StartSpan(
-					spanName,
-					ApiConstants.TypeMessaging,
-					Subtype,
-					isExitSpan: true);
+				span = agent.GetCurrentExecutionSegment()
+					.StartSpan(
+						spanName,
+						ApiConstants.TypeMessaging,
+						Subtype,
+						isExitSpan: true);
 
 				if (!string.IsNullOrEmpty(topic))
 					span.Context.Message = new Message { Queue = new Queue { Name = topic } };
 
-                if (topicPartition?.Partition is not null && !topicPartition.Partition.IsSpecial)
+				if (topicPartition?.Partition is not null && !topicPartition.Partition.IsSpecial)
 					span.SetLabel("partition", topicPartition.Partition.ToString());
 
 				if (isTombstone)
 					span.SetLabel("tombstone", "true");
 			}
-            catch (Exception ex)
-            {
-                agent.Logger.Error()?.LogException(ex, "Error creating or populating kafka span.");
-            }
+			catch (Exception ex)
+			{
+				agent.Logger.Error()?.LogException(ex, "Error creating or populating kafka span.");
+			}
 
-            return span;
-        }
+			return span;
+		}
 
-        internal static ITransaction CreateConsumerTransaction(
-            IApmAgent agent,
-            string topic,
-            Partition? partition,
-            Offset? offset,
-            IMessage message)
-        {
-            ITransaction transaction = null;
+		internal static ITransaction CreateConsumerTransaction(
+			IApmAgent agent,
+			string topic,
+			Partition? partition,
+			Offset? offset,
+			IMessage message
+		)
+		{
+			ITransaction transaction = null;
 
-            try
-            {
+			try
+			{
 				if (agent.Tracer.CurrentTransaction is not null)
 					return null;
 
@@ -113,19 +115,19 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 
 				DistributedTracingData distributedTracingData = null;
 				if (message?.Headers != null)
-                {
-                    var headers = new KafkaHeadersCollection(message.Headers, agent.Logger);
+				{
+					var headers = new KafkaHeadersCollection(message.Headers, agent.Logger);
 					try
 					{
 						var traceParent = string.Join(",", headers.GetValues(TraceContext.TraceParentBinaryHeaderName));
 						var traceState = headers.GetValues(TraceContext.TraceStateHeaderName).FirstOrDefault();
 						distributedTracingData = TraceContext.TryExtractTracingData(traceParent, traceState);
-                    }
-                    catch (Exception ex)
-                    {
-                        agent.Logger.Error()?.LogException(ex, "Error extracting propagated headers from Kafka message");
-                    }
-                }
+					}
+					catch (Exception ex)
+					{
+						agent.Logger.Error()?.LogException(ex, "Error extracting propagated headers from Kafka message");
+					}
+				}
 
 				var name = string.IsNullOrEmpty(topic)
 					? "Kafka RECEIVE"
@@ -133,7 +135,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 
 				transaction = agent.Tracer.StartTransaction(name, ApiConstants.TypeMessaging, distributedTracingData);
 
-                if (partition is not null)
+				if (partition is not null)
 					transaction.SetLabel("partition", partition.ToString());
 
 				if (offset is not null)
@@ -144,39 +146,39 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 				if (transaction is Transaction realTransaction && message is not null && message.Timestamp.Type != 0)
 				{
 					var consumeTime = TimeUtils.ToDateTime(realTransaction.Timestamp);
-                    var produceTime = message.Timestamp.UtcDateTime;
+					var produceTime = message.Timestamp.UtcDateTime;
 
 					var age = Math.Max(0, (consumeTime - produceTime).TotalMilliseconds);
 					if (age > 0 && age < MaxAge)
 						transaction.Context.Message.Age = new Age { Ms = (long)age };
 				}
 
-                if (message is not null && message.Value is null)
+				if (message is not null && message.Value is null)
 					transaction.SetLabel("tombstone", "true");
 			}
-            catch (Exception ex)
-            {
+			catch (Exception ex)
+			{
 				agent.Logger.Error()?.LogException(ex, "Error creating or populating transaction.");
-            }
+			}
 
-            return transaction;
-        }
+			return transaction;
+		}
 
-        internal static void CloseConsumerTransaction(IApmAgent agent)
-        {
-            try
-            {
+		internal static void CloseConsumerTransaction(IApmAgent agent)
+		{
+			try
+			{
 				var transaction = agent.Tracer.CurrentTransaction;
 				if (transaction is null || !transaction.Name.StartsWith("Kafka RECEIVE"))
 					return;
 
-                transaction.End();
-            }
-            catch (Exception ex)
-            {
-                agent.Logger.Error()?.LogException(ex, "Error closing Kafka consumer transaction");
-            }
-        }
+				transaction.End();
+			}
+			catch (Exception ex)
+			{
+				agent.Logger.Error()?.LogException(ex, "Error closing Kafka consumer transaction");
+			}
+		}
 
 		/// <summary>
 		/// Try to inject the trace context into the Kafka message headers
@@ -187,25 +189,25 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <typeparam name="TTopicPartitionMarker">The TopicPartition type (used  optimisation purposes)</typeparam>
 		/// <typeparam name="TMessage">The type of the duck-type proxy</typeparam>
 		internal static void TryInjectHeaders<TTopicPartitionMarker, TMessage>(IApmAgent agent, IExecutionSegment segment, TMessage message)
-            where TMessage : IMessage
-        {
-            if (!HeadersInjectionEnabled)
+			where TMessage : IMessage
+		{
+			if (!HeadersInjectionEnabled)
 				return;
 
 			try
-            {
-                message.Headers ??= CachedMessageHeadersHelper<TTopicPartitionMarker>.CreateHeaders();
+			{
+				message.Headers ??= CachedMessageHeadersHelper<TTopicPartitionMarker>.CreateHeaders();
 				var adapter = new KafkaHeadersCollection(message.Headers, agent.Logger);
 				var distributedTracingData = segment.OutgoingDistributedTracingData;
 				adapter.Set(TraceContext.TraceParentBinaryHeaderName, distributedTracingData.SerializeToString());
 				adapter.Set(TraceContext.TraceStateHeaderName, distributedTracingData.TraceState.ToTextHeader());
 			}
-            catch (Exception ex)
-            {
-                // don't keep trying if we run into problems
-                HeadersInjectionEnabled = false;
-                agent.Logger.Warning()?.LogException(ex, "There was a problem injecting headers into the Kafka record. Disabling headers injection");
-            }
-        }
-    }
+			catch (Exception ex)
+			{
+				// don't keep trying if we run into problems
+				HeadersInjectionEnabled = false;
+				agent.Logger.Warning()?.LogException(ex, "There was a problem injecting headers into the Kafka record. Disabling headers injection");
+			}
+		}
+	}
 }

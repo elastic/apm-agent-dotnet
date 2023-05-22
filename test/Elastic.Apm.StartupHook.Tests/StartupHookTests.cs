@@ -11,12 +11,16 @@ using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;
+using static Elastic.Apm.Config.ConfigurationOption;
+using Environment = System.Environment;
+using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.StartupHook.Tests
 {
@@ -24,8 +28,6 @@ namespace Elastic.Apm.StartupHook.Tests
 	{
 		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
 		{
-			yield return ("netcoreapp3.1", ".NET Core", "3.1.0.0","31");
-			yield return ("net5.0", ".NET 5", "5.0.0.0", "50");
 			yield return ("net6.0", ".NET 6", "6.0.0.0", "60");
 			yield return ("net7.0", ".NET 7", "7.0.0.0", "70");
 		}
@@ -74,8 +76,8 @@ namespace Elastic.Apm.StartupHook.Tests
 			{
 				var environmentVariables = new Dictionary<string, string>
 				{
-					[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
-					[EnvVarNames.CloudProvider] = "none"
+					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
+					[CloudProvider.ToEnvironmentVariable()] = "none"
 				};
 
 				var uri = sampleApp.Start(targetFramework, environmentVariables);
@@ -117,8 +119,8 @@ namespace Elastic.Apm.StartupHook.Tests
 			{
 				var environmentVariables = new Dictionary<string, string>
 				{
-					[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
-					[EnvVarNames.CloudProvider] = "none"
+					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
+					[CloudProvider.ToEnvironmentVariable()] = "none"
 				};
 
 				var uri = sampleApp.Start(targetFramework, environmentVariables);
@@ -167,8 +169,8 @@ namespace Elastic.Apm.StartupHook.Tests
 			{
 				var environmentVariables = new Dictionary<string, string>
 				{
-					[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
-					[EnvVarNames.CloudProvider] = "none"
+					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
+					[CloudProvider.ToEnvironmentVariable()] = "none"
 				};
 
 				var uri = sampleApp.Start(targetFramework, environmentVariables);
@@ -214,8 +216,8 @@ namespace Elastic.Apm.StartupHook.Tests
 			using var project = DotnetProject.Create(name, template, targetFramework, "--no-https");
 			var environmentVariables = new Dictionary<string, string>
 			{
-				[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
-				[EnvVarNames.CloudProvider] = "none"
+				[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
+				[CloudProvider.ToEnvironmentVariable()] = "none"
 			};
 
 			using (var process = project.CreateProcess(SolutionPaths.AgentZip, environmentVariables))

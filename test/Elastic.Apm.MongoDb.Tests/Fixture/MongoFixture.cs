@@ -5,8 +5,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
 using MongoDB.Driver;
+using Testcontainers.MongoDb;
 using Xunit;
 
 namespace Elastic.Apm.MongoDb.Tests.Fixture
@@ -14,16 +14,15 @@ namespace Elastic.Apm.MongoDb.Tests.Fixture
 	public class MongoFixture<TConfiguration, TDocument> : IAsyncLifetime
 		where TConfiguration : IMongoConfiguration<TDocument>, new()
 	{
+		private const string MongoDbImage = "mongo:4.4.5";
+
 		private readonly TConfiguration _configuration;
-		private readonly MongoDbTestcontainer _container;
+
+		private readonly MongoDbContainer _container = new MongoDbBuilder().WithImage(MongoDbImage).Build();
 
 		public MongoFixture()
 		{
 			_configuration = new TConfiguration();
-
-			_container = new TestcontainersBuilder<MongoDbTestcontainer>()
-				.WithDatabase(new MongoDbTestcontainerConfiguration())
-				.Build();
 		}
 
 		public IMongoCollection<TDocument> Collection { get; private set; }
@@ -32,7 +31,7 @@ namespace Elastic.Apm.MongoDb.Tests.Fixture
 		{
 			await _container.StartAsync();
 
-			var mongoClient = _configuration.GetMongoClient(_container.ConnectionString);
+			var mongoClient = _configuration.GetMongoClient(_container.GetConnectionString());
 			Collection = mongoClient.GetDatabase(_configuration.DatabaseName)
 				.GetCollection<TDocument>(_configuration.CollectionName);
 

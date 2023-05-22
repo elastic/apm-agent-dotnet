@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -17,7 +18,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		public CustomEnvironmentViaSettings(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
-				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.Environment, CustomEnvironment } }) =>
+				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { Environment.ToEnvironmentVariable(), CustomEnvironment } }) =>
 			AgentConfig.Environment = CustomEnvironment;
 
 		[AspNetFullFrameworkTheory]

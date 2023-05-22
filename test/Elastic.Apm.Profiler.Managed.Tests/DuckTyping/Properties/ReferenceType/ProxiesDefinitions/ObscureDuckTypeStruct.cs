@@ -14,29 +14,29 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.ReferenceType
 {
 #pragma warning disable 649
 
-    [DuckCopy]
-    internal struct ObscureDuckTypeStruct
-    {
-        public readonly string ReadonlyFieldIgnored;
+	[DuckCopy]
+	internal struct ObscureDuckTypeStruct
+	{
+		public readonly string ReadonlyFieldIgnored;
 
-        public string PublicStaticGetReferenceType;
-        public string InternalStaticGetReferenceType;
-        public string ProtectedStaticGetReferenceType;
-        public string PrivateStaticGetReferenceType;
+		public string PublicStaticGetReferenceType;
+		public string InternalStaticGetReferenceType;
+		public string ProtectedStaticGetReferenceType;
+		public string PrivateStaticGetReferenceType;
 
-        public string PublicStaticGetSetReferenceType;
-        public string InternalStaticGetSetReferenceType;
-        public string ProtectedStaticGetSetReferenceType;
-        public string PrivateStaticGetSetReferenceType;
+		public string PublicStaticGetSetReferenceType;
+		public string InternalStaticGetSetReferenceType;
+		public string ProtectedStaticGetSetReferenceType;
+		public string PrivateStaticGetSetReferenceType;
 
-        public string PublicGetReferenceType;
-        public string InternalGetReferenceType;
-        public string ProtectedGetReferenceType;
-        public string PrivateGetReferenceType;
+		public string PublicGetReferenceType;
+		public string InternalGetReferenceType;
+		public string ProtectedGetReferenceType;
+		public string PrivateGetReferenceType;
 
-        public string PublicGetSetReferenceType;
-        public string InternalGetSetReferenceType;
-        public string ProtectedGetSetReferenceType;
-        public string PrivateGetSetReferenceType;
-    }
+		public string PublicGetSetReferenceType;
+		public string InternalGetSetReferenceType;
+		public string ProtectedGetSetReferenceType;
+		public string PrivateGetSetReferenceType;
+	}
 }

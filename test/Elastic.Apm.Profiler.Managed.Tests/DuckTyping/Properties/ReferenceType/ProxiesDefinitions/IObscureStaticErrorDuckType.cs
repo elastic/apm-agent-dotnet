@@ -10,8 +10,8 @@
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.ReferenceType.ProxiesDefinitions
 {
-    public interface IObscureStaticErrorDuckType
-    {
-        string PublicStaticGetReferenceType { get; set; }
-    }
+	public interface IObscureStaticErrorDuckType
+	{
+		string PublicStaticGetReferenceType { get; set; }
+	}
 }
