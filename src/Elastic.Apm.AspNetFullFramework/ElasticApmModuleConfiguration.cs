@@ -13,21 +13,20 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	internal class AppSettingsConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 	{
-		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
-
 		private readonly IApmLogger _logger;
 
 		public AppSettingsConfigurationKeyValueProvider(IApmLogger logger) =>
 			_logger = logger?.Scoped(nameof(AppSettingsConfigurationKeyValueProvider));
 
-		public string Description => Origin;
+		public string Description => nameof(AppSettingsConfigurationKeyValueProvider);
 
-		public ConfigurationKeyValue Read(string key)
+		public ApplicationKeyValue Read(ConfigurationOption option)
 		{
 			try
 			{
+				var key = option.ToConfigKey();
 				var value = ConfigurationManager.AppSettings[key];
-				if (value != null) return new ConfigurationKeyValue(key, value, Origin);
+				if (value != null) return new ApplicationKeyValue(option, value, Description);
 			}
 			catch (ConfigurationErrorsException ex)
 			{

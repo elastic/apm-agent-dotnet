@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -19,7 +20,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			: base(xUnitOutputHelper,
 				envVarsToSetForSampleAppPool: new Dictionary<string, string>
 				{
-					{ ConfigConsts.EnvVarNames.FlushInterval, CustomFlushIntervalValue }
+					{ FlushInterval.ToEnvironmentVariable(), CustomFlushIntervalValue }
 				})
 		{ }
 

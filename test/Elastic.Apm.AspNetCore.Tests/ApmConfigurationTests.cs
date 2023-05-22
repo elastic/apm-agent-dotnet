@@ -20,7 +20,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SampleAspNetCoreApp;
 using Xunit;
+using static Elastic.Apm.Config.ConfigurationOption;
+using Environment = System.Environment;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -65,7 +68,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "");
+			Environment.SetEnvironmentVariable(ConfigurationOption.Environment.ToEnvironmentVariable(), "");
 			var logger = new TestLogger();
 			var config = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
 				"test");
@@ -76,8 +79,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ContainAll(
 					nameof(ApmConfiguration),
 					"Failed parsing log level from",
-					ConfigurationKeyValueProvider.Origin,
-					ConfigConsts.KeyNames.LogLevel,
+					nameof(ConfigurationKeyValueProvider),
+					ConfigurationOption.LogLevel.ToConfigKey(),
 					"Defaulting to "
 				);
 
@@ -104,8 +107,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ContainAll(
 					nameof(ApmConfiguration),
 					"Failed parsing log level from",
-					ConfigurationKeyValueProvider.Origin,
-					ConfigConsts.KeyNames.LogLevel,
+					nameof(ConfigurationKeyValueProvider),
+					ConfigurationOption.LogLevel.ToConfigKey(),
 					"Defaulting to ",
 					"DbeugMisspelled"
 				);
@@ -118,25 +121,25 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadConfingsFromEnvVarsViaIConfig()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel, "Debug");
+			Environment.SetEnvironmentVariable(ConfigurationOption.LogLevel.ToEnvironmentVariable(), "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, serverUrl);
+			Environment.SetEnvironmentVariable(ServerUrls.ToEnvironmentVariable(), serverUrl);
 			var useWindowsCredentials = "true";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.UseWindowsCredentials, useWindowsCredentials);
+			Environment.SetEnvironmentVariable(UseWindowsCredentials.ToEnvironmentVariable(), useWindowsCredentials);
 			var serviceName = "MyServiceName123";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
+			Environment.SetEnvironmentVariable(ServiceName.ToEnvironmentVariable(), serviceName);
 			var serviceNodeName = "Some service node name";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceNodeName, serviceNodeName);
+			Environment.SetEnvironmentVariable(ServiceNodeName.ToEnvironmentVariable(), serviceNodeName);
 			var serviceVersion = "2.1.0.5";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceVersion, serviceVersion);
+			Environment.SetEnvironmentVariable(ServiceVersion.ToEnvironmentVariable(), serviceVersion);
 			var environment = "staging";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, environment);
+			Environment.SetEnvironmentVariable(ConfigurationOption.Environment.ToEnvironmentVariable(), environment);
 			var secretToken = "SecretToken";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.SecretToken, secretToken);
+			Environment.SetEnvironmentVariable(SecretToken.ToEnvironmentVariable(), secretToken);
 			var apiKey = "apiKey";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ApiKey, apiKey);
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, false.ToString());
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.123");
+			Environment.SetEnvironmentVariable(ApiKey.ToEnvironmentVariable(), apiKey);
+			Environment.SetEnvironmentVariable(CaptureHeaders.ToEnvironmentVariable(), false.ToString());
+			Environment.SetEnvironmentVariable(TransactionSampleRate.ToEnvironmentVariable(), "0.123");
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
@@ -187,7 +190,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			configBeforeEnvVarSet.FlushInterval.Should().Be(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds());
 
 			var flushIntervalVal = 98.Seconds();
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, (int)flushIntervalVal.TotalSeconds + "s");
+			Environment.SetEnvironmentVariable(FlushInterval.ToEnvironmentVariable(), (int)flushIntervalVal.TotalSeconds + "s");
 
 			var configAfterEnvVarSet = new ApmConfiguration(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");
@@ -204,7 +207,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new NoopLogger(), "test");
 			configBeforeEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
 
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate,
+			Environment.SetEnvironmentVariable(TransactionSampleRate.ToEnvironmentVariable(),
 				transactionSampleRateEnvVarValue.ToString(CultureInfo.InvariantCulture));
 			new EnvironmentConfiguration(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
 
@@ -268,7 +271,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var logger = new TestLogger();
 
 			var configurationBuilder = new ConfigurationBuilder()
-				.AddInMemoryCollection(new Dictionary<string, string> { { ConfigConsts.KeyNames.TransactionMaxSpans, configurationValue } });
+				.AddInMemoryCollection(new Dictionary<string, string> { { TransactionMaxSpans.ToConfigKey(), configurationValue } });
 
 			var reader = new ApmConfiguration(configurationBuilder.Build(), logger, "test");
 

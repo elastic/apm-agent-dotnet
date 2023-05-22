@@ -9,6 +9,7 @@ using Elastic.Apm.Config;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -17,7 +18,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	{
 		public TransactionIgnoreUrlsTest(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
-				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.TransactionIgnoreUrls, "/home" } }) { }
+				envVarsToSetForSampleAppPool: new Dictionary<string, string>
+				{
+					{ TransactionIgnoreUrls.ToEnvironmentVariable(), "/home" }
+				}) { }
 
 		[AspNetFullFrameworkFact]
 		public async Task Test()

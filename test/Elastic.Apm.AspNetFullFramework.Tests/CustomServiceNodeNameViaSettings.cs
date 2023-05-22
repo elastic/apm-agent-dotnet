@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -17,7 +18,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		public CustomServiceNodeNameSetViaSettings(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
-				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.ServiceNodeName, CustomServiceNodeName } }) =>
+				envVarsToSetForSampleAppPool: new Dictionary<string, string>
+				{
+					{ ServiceNodeName.ToEnvironmentVariable(), CustomServiceNodeName }
+				}) =>
 			AgentConfig.ServiceNodeName = CustomServiceNodeName;
 
 		[AspNetFullFrameworkTheory]

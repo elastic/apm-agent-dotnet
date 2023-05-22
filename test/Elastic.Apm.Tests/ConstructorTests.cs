@@ -144,5 +144,7 @@ public class ConstructorTests
 
 		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 		// ReSharper restore UnassignedGetOnlyAutoProperty
+
+		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -15,7 +16,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	{
 		public CaptureHeadersConfigDisabledTest(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
-				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.CaptureHeaders, "false" } }) =>
+				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { CaptureHeaders.ToEnvironmentVariable(), "false" } }) =>
 			AgentConfig.CaptureHeaders = false;
 
 		[AspNetFullFrameworkTheory]
