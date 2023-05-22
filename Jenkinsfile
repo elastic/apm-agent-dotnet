@@ -202,7 +202,10 @@ pipeline {
                   steps {
                     withGithubNotify(context: 'Create Docker image - Linux') {
                       dir("${BASE_DIR}"){
-                        sh(label: 'Create Docker Image', script: '.ci/linux/build_docker.sh')
+                        dotnet() {
+                          sh label: 'Restore', script: './build.sh restore'
+                          sh(label: 'Create Docker Image', script: '.ci/linux/build_docker.sh')
+                        }
                       }
                     }
                   }
