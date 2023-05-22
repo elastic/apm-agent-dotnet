@@ -5,11 +5,9 @@
 #
 set -euxo pipefail
 
-# Remove projects
-.ci/linux/remove-projects.sh
-
 # Run tests for all solution
 dotnet test -c Release ElasticApmAgent.sln \
+ 	--filter "FullyQualifiedName\!~Elastic.Apm.StartupHook.Tests & FullyQualifiedName\!~Elastic.Apm.Profiler.Managed.Tests" \
 	--verbosity normal \
 	--results-directory target \
 	--diag "target/diag-ElasticApmAgent.log" \

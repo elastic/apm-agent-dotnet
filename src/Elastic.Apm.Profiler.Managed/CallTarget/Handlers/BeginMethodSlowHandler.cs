@@ -13,37 +13,37 @@ using System.Runtime.CompilerServices;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 {
-    internal static class BeginMethodSlowHandler<TIntegration, TTarget>
-    {
-        private static readonly InvokeDelegate _invokeDelegate;
+	internal static class BeginMethodSlowHandler<TIntegration, TTarget>
+	{
+		private static readonly InvokeDelegate _invokeDelegate;
 
-        static BeginMethodSlowHandler()
-        {
-            try
-            {
-                var dynMethod = IntegrationMapper.CreateSlowBeginMethodDelegate(typeof(TIntegration), typeof(TTarget));
-                if (dynMethod != null)
-                {
-                    _invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new CallTargetInvokerException(ex);
-            }
-            finally
-            {
-                if (_invokeDelegate is null)
-                {
-                    _invokeDelegate = (instance, arguments) => CallTargetState.GetDefault();
-                }
-            }
-        }
+		static BeginMethodSlowHandler()
+		{
+			try
+			{
+				var dynMethod = IntegrationMapper.CreateSlowBeginMethodDelegate(typeof(TIntegration), typeof(TTarget));
+				if (dynMethod != null)
+				{
+					_invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new CallTargetInvokerException(ex);
+			}
+			finally
+			{
+				if (_invokeDelegate is null)
+				{
+					_invokeDelegate = (instance, arguments) => CallTargetState.GetDefault();
+				}
+			}
+		}
 
-        internal delegate CallTargetState InvokeDelegate(TTarget instance, object[] arguments);
+		internal delegate CallTargetState InvokeDelegate(TTarget instance, object[] arguments);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static CallTargetState Invoke(TTarget instance, object[] arguments) =>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static CallTargetState Invoke(TTarget instance, object[] arguments) =>
 			new CallTargetState(Agent.IsConfigured ? Agent.Tracer.CurrentExecutionSegment() : null, _invokeDelegate(instance, arguments));
 	}
 }

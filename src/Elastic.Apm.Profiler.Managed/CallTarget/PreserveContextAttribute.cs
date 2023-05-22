@@ -17,7 +17,5 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
 	/// should execute under the current synchronization context/task scheduler.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]
-	internal class PreserveContextAttribute : Attribute
-	{
-	}
+	internal class PreserveContextAttribute : Attribute { }
 }

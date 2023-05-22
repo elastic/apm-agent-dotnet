@@ -31,8 +31,8 @@
 |{nuget}/Oracle.ManagedDataAccess[Oracle.ManagedDataAccess 12.2.1100 - 21.{star}.{star}]
 |Oracle.ManagedDataAccess 4.122.0 - 4.122.{star}
 
-|{nuget}/Oracle.ManagedDataAccess.Core[Oracle.ManagedDataAccess.Core 2.0.0 - 2.{star}.{star}]
-|Oracle.ManagedDataAccess 2.0.0 - 2.{star}.{star}
+|{nuget}/Oracle.ManagedDataAccess.Core[Oracle.ManagedDataAccess.Core 2.0.0 - 3.{star}.{star}]
+|Oracle.ManagedDataAccess 2.0.0 - 3.{star}.{star}
 
 .1+.^|RabbitMQ
 |{nuget}/RabbitMQ.Client[RabbitMQ.Client 3.6.9 - 6.{star}.{star}]
@@ -45,12 +45,12 @@
 |{nuget}/System.Data.SqlClient[System.Data.SqlClient 4.0.0 - 4.{star}.{star}]
 |System.Data.SqlClient 4.0.0 - 4.{star}.{star}
 
-|{nuget}/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient 1.0.0 - 2.{star}.{star}]
-|Microsoft.Data.SqlClient 1.0.0 - 2.{star}.{star}
+|{nuget}/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient 1.0.0 - 5.{star}.{star}]
+|Microsoft.Data.SqlClient 1.0.0 - 5.{star}.{star}
 
 .2+.^|SqliteCommand
-|{nuget}/Microsoft.Data.Sqlite[Microsoft.Data.Sqlite 2.0.0 - 5.{star}.{star}]
-|Microsoft.Data.Sqlite 2.0.0 - 5.{star}.{star}
+|{nuget}/Microsoft.Data.Sqlite[Microsoft.Data.Sqlite 2.0.0 - 7.{star}.{star}]
+|Microsoft.Data.Sqlite 2.0.0 - 7.{star}.{star}
 
 |{nuget}/System.Data.SQLite[System.Data.SQLite 1.0.0 - 2.{star}.{star}]
 |System.Data.SQLite 1.0.0 - 2.{star}.{star}

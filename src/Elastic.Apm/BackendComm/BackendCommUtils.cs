@@ -37,6 +37,13 @@ namespace Elastic.Apm.BackendComm
 				CombineAbsoluteAndRelativeUrls(baseUrl, "intake/v2/events");
 
 			/// <summary>
+			/// Builds the absolute URL that points to APM server information API endpoint
+			/// </summary>
+			/// <param name="baseUrl">Absolute URL pointing to APM Server's base for API endpoints.</param>
+			internal static Uri BuildApmServerInformationUrl(Uri baseUrl) =>
+				CombineAbsoluteAndRelativeUrls(baseUrl, "/");
+
+			/// <summary>
 			/// Builds the absolute URL that points to APM server's central-config API endpoint which is used by agents to fetch configuration.
 			/// Configuration is selected by the backend based on the agent's service.name and service.environment.
 			/// </summary>
@@ -186,8 +193,10 @@ namespace Elastic.Apm.BackendComm
 			};
 #if NETFRAMEWORK
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {ServicePointManager.SecurityProtocol}");
 #else
 			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
+			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {httpClientHandler.SslProtocols}");
 #endif
 			return httpClientHandler;
 		}

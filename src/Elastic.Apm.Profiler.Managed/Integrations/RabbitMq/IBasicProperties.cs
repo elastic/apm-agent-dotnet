@@ -8,28 +8,28 @@ using System.ComponentModel;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 {
-    /// <summary>
-    /// BasicProperties interface for ducktyping
-    /// </summary>
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface IBasicProperties
-    {
-        /// <summary>
-        /// Gets or sets the headers of the message
-        /// </summary>
-        /// <returns>Message headers</returns>
-        IDictionary<string, object> Headers { get; set; }
+	/// <summary>
+	/// BasicProperties interface for ducktyping
+	/// </summary>
+	[Browsable(false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public interface IBasicProperties
+	{
+		/// <summary>
+		/// Gets or sets the headers of the message
+		/// </summary>
+		/// <returns>Message headers</returns>
+		IDictionary<string, object> Headers { get; set; }
 
-        /// <summary>
-        /// Gets the delivery mode of the message
-        /// </summary>
-        byte DeliveryMode { get; }
+		/// <summary>
+		/// Gets the delivery mode of the message
+		/// </summary>
+		byte DeliveryMode { get; }
 
-        /// <summary>
-        /// Returns true if the DeliveryMode property is present
-        /// </summary>
-        /// <returns>true if the DeliveryMode property is present</returns>
-        bool IsDeliveryModePresent();
-    }
+		/// <summary>
+		/// Returns true if the DeliveryMode property is present
+		/// </summary>
+		/// <returns>true if the DeliveryMode property is present</returns>
+		bool IsDeliveryModePresent();
+	}
 }

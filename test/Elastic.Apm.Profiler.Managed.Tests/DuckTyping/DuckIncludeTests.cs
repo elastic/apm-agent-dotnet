@@ -16,47 +16,39 @@ using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 {
-    public class DuckIncludeTests
-    {
-        [Fact]
-        public void ShouldOverrideToString()
-        {
-            var instance = new SomeClassWithDuckInclude();
+	public class DuckIncludeTests
+	{
+		[Fact]
+		public void ShouldOverrideToString()
+		{
+			var instance = new SomeClassWithDuckInclude();
 
-            var proxy = instance.DuckCast<IInterface>();
+			var proxy = instance.DuckCast<IInterface>();
 
-            proxy.ToString().Should().Be(instance.ToString());
-        }
+			proxy.ToString().Should().Be(instance.ToString());
+		}
 
-        [Fact]
-        public void ShouldNotOverrideToString()
-        {
-            var instance = new SomeClassWithoutDuckInclude();
+		[Fact]
+		public void ShouldNotOverrideToString()
+		{
+			var instance = new SomeClassWithoutDuckInclude();
 
-            var proxy = instance.DuckCast<IInterface>();
+			var proxy = instance.DuckCast<IInterface>();
 
-            proxy.ToString().Should().NotBe(instance.ToString());
-        }
+			proxy.ToString().Should().NotBe(instance.ToString());
+		}
 
-        public class SomeClassWithDuckInclude
-        {
-            [DuckInclude]
-            public override string ToString()
-            {
-                return "OK";
-            }
-        }
+		public class SomeClassWithDuckInclude
+		{
+			[DuckInclude]
+			public override string ToString() => "OK";
+		}
 
-        public class SomeClassWithoutDuckInclude
-        {
-            public override string ToString()
-            {
-                return "OK";
-            }
-        }
+		public class SomeClassWithoutDuckInclude
+		{
+			public override string ToString() => "OK";
+		}
 
-        public interface IInterface
-        {
-        }
-    }
+		public interface IInterface { }
+	}
 }

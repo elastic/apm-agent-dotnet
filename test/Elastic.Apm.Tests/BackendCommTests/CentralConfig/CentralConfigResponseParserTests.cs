@@ -197,8 +197,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				{
 					yield return new object[]
 					{
-						$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyKey}\": \"{value}\"}}",
-						new Action<CentralConfigurationReader>(cfg =>
+						$"{{\"{DynamicConfigurationOption.CaptureBody.ToJsonKey()}\": \"{value}\"}}",
+						new Action<CentralConfiguration>(cfg =>
 						{
 							cfg.CaptureBody.Should()
 								.NotBeNull()
@@ -209,8 +209,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionMaxSpansKey}\": \"{100}\"}}",
-					new Action<CentralConfigurationReader>(cfg =>
+					$"{{\"{DynamicConfigurationOption.TransactionMaxSpans.ToJsonKey()}\": \"{100}\"}}",
+					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.TransactionMaxSpans.Should()
 							.NotBeNull()
@@ -220,8 +220,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"0.75\"}}",
-					new Action<CentralConfigurationReader>(cfg =>
+					$"{{\"{DynamicConfigurationOption.TransactionSampleRate.ToJsonKey()}\": \"0.75\"}}",
+					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.TransactionSampleRate.Should()
 							.NotBeNull()
@@ -232,8 +232,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				var captureBodyContentTypes = "application/x-www-form-urlencoded*, application/json*";
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey}\": \"{captureBodyContentTypes}\"}}",
-					new Action<CentralConfigurationReader>(cfg =>
+					$"{{\"{DynamicConfigurationOption.CaptureBodyContentTypes.ToJsonKey()}\": \"{captureBodyContentTypes}\"}}",
+					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.CaptureBodyContentTypes.Should()
 							.NotBeNull()
@@ -243,8 +243,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.StackTraceLimitKey}\": \"{150}\"}}",
-					new Action<CentralConfigurationReader>(cfg =>
+					$"{{\"{DynamicConfigurationOption.StackTraceLimit.ToJsonKey()}\": \"{150}\"}}",
+					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.StackTraceLimit.Should()
 							.NotBeNull()
@@ -254,8 +254,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.SpanFramesMinDurationKey}\": \"{150}\"}}",
-					new Action<CentralConfigurationReader>(cfg =>
+					$"{{\"{DynamicConfigurationOption.SpanFramesMinDuration.ToJsonKey()}\": \"{150}\"}}",
+					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.SpanFramesMinDurationInMilliseconds.Should()
 							.NotBeNull()
@@ -265,8 +265,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{false}\"}}",
-					new Action<CentralConfigurationReader>(cfg =>
+					$"{{\"{DynamicConfigurationOption.CaptureHeaders.ToJsonKey()}\": \"{false}\"}}",
+					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
 							.NotBeNull()
@@ -276,8 +276,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{true}\"}}",
-					new Action<CentralConfigurationReader>(cfg =>
+					$"{{\"{DynamicConfigurationOption.CaptureHeaders.ToJsonKey()}\": \"{true}\"}}",
+					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
 							.NotBeNull()
@@ -288,7 +288,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				yield return new object[]
 				{
 					// making sure empty json does not cause any error.
-					"{}", new Action<CentralConfigurationReader>(cfg =>
+					"{}", new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.Should().NotBeNull();
 					})
@@ -298,8 +298,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				{
 					yield return new object[]
 					{
-						$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.LogLevelKey}\": \"{value}\"}}",
-						new Action<CentralConfigurationReader>(cfg =>
+						$"{{\"{DynamicConfigurationOption.LogLevel.ToJsonKey()}\": \"{value}\"}}",
+						new Action<CentralConfiguration>(cfg =>
 						{
 							cfg.LogLevel.Should()
 								.NotBeNull()
@@ -312,7 +312,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 		[Theory]
 		[MemberData(nameof(ConfigDeltaData))]
-		internal void ParseHttpResponse_ShouldCorrectlyCalculateConfigDelta(string httpResponseBody, Action<CentralConfigurationReader> assert)
+		internal void ParseHttpResponse_ShouldCorrectlyCalculateConfigDelta(string httpResponseBody, Action<CentralConfiguration> assert)
 		{
 			// Arrange + Act
 			var (configDelta, _) = _parser.ParseHttpResponse(_correctResponse, httpResponseBody);

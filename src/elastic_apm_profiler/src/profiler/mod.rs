@@ -106,6 +106,9 @@ pub static PROFILER_VERSION: Lazy<Version> = Lazy::new(|| {
     Version::new(major, minor, patch, 0)
 });
 
+/// Whether the managed profiler has been loaded
+static MANAGED_PROFILER_LOADED: AtomicBool = AtomicBool::new(false);
+
 /// Whether the managed profiler has been loaded as domain-neutral i.e.
 /// into the shared domain, which can be shared code among other app domains
 static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
@@ -750,6 +753,7 @@ impl Profiler {
                         );
                     }
                 }
+                MANAGED_PROFILER_LOADED.store(true, Ordering::SeqCst);
             } else {
                 log::warn!(
                     "AssemblyLoadFinished: {} {} did not match profiler version {}. Will not be marked as loaded",
@@ -1142,6 +1146,9 @@ impl Profiler {
                 .contains(&module_metadata.app_domain_id)
         };
 
+        // TODO investigate logging ONLY on MAIN() if MANAGED_PROFILER_LOADED is false
+
+        // TODO add MANAGED_PROFILER_LOADED and add same check for Elastic.Apm.dll
         if call_target_enabled && loader_injected_in_app_domain {
             return Ok(());
         }
@@ -1540,6 +1547,7 @@ impl Profiler {
 
             let method_defs =
                 metadata_import.enum_methods_with_name(type_def, target.method_name())?;
+            let mut rejit_target_found = false;
             for method_def in method_defs {
                 let caller: FunctionInfo = match metadata_import.get_function_info(method_def) {
                     Ok(c) => c,
@@ -1575,8 +1583,10 @@ impl Profiler {
 
                 if parsed_signature.arg_len as usize != signature_types.len() - 1 {
                     log::debug!(
-                        "The caller for method_def {} does not have expected number of arguments",
-                        target.method_name()
+                        "The caller for method_def {} expected {} arguments while integration has {}",
+                        target.method_name(),
+                        parsed_signature.arg_len as usize,
+                        signature_types.len() - 1
                     );
                     continue;
                 }
@@ -1616,6 +1626,8 @@ impl Profiler {
                     continue;
                 }
 
+                rejit_target_found = true;
+
                 let mut borrow = self.rejit_handler.borrow_mut();
                 let rejit_handler: &mut RejitHandler = borrow.as_mut().unwrap();
                 let rejit_module = rejit_handler.get_or_add_module(module_id);
@@ -1645,6 +1657,13 @@ impl Profiler {
                         &caller.signature.bytes()
                     );
                 }
+            }
+            if !rejit_target_found {
+                log::error!(
+                    "No rejit method found for target: {}.{}",
+                    target.type_name(),
+                    target.method_name()
+                )
             }
         }
 

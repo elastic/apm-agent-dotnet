@@ -68,149 +68,6 @@ pipeline {
             }
           }
           parallel{
-            stage('Linux'){
-              options { skipDefaultCheckout() }
-              environment {
-                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
-              }
-              /**
-              Make sure there are no code style violation in the repo.
-              */
-              stages{
-              //   Disable until https://github.com/elastic/apm-agent-dotnet/issues/563
-              //   stage('CodeStyleCheck') {
-              //     steps {
-              //       withGithubNotify(context: 'CodeStyle check') {
-              //         deleteDir()
-              //         unstash 'source'
-              //         dir("${BASE_DIR}"){
-              //           dotnet(){
-              //             sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
-              //           }
-              //         }
-              //       }
-              //     }
-              //   }
-                /**
-                Build the project from code..
-                */
-                stage('Build') {
-                  steps {
-                    withGithubNotify(context: 'Build - Linux') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh '.ci/linux/build.sh'
-                          // build nuget packages and profiler
-                          sh(label: 'Package', script: '.ci/linux/release.sh true')
-                          sh label: 'Rustup', script: 'rustup default 1.59.0'
-                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                          sh(label: 'Build profiler', script: './build.sh profiler-zip')
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                    success {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
-                      stash(allowEmpty: true, name: 'snapshoty-linux', includes: "${BASE_DIR}/.ci/snapshoty.yml,${BASE_DIR}/build/output/**", useDefaultExcludes: false)
-                    }
-                  }
-                }
-                /**
-                Execute unit tests.
-                */
-                stage('Test') {
-                  steps {
-                    withGithubNotify(context: 'Test - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      filebeat(output: "docker.log"){
-                        dir("${BASE_DIR}"){
-                          testTools(){
-                            dotnet(){
-                              sh label: 'Test & coverage', script: '.ci/linux/test.sh'
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                      publishCoverage(adapters: [coberturaAdapter("${BASE_DIR}/target/**/*coverage.cobertura.xml")],
-                                      sourceFileResolver: sourceFiles('STORE_ALL_BUILD'))
-                      codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Startup Hook Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test startup hooks - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Build', script: './build.sh agent-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-startuphooks.sh'
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Profiler Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test profiler - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.59.0'
-                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                          sh label: 'Build', script: './build.sh profiler-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Create Docker image') {
-                  steps {
-                    withGithubNotify(context: 'Create Docker image - Linux') {
-                      dir("${BASE_DIR}"){
-                        sh(label: 'Create Docker Image', script: '.ci/linux/build_docker.sh')
-                      }
-                    }
-                  }
-                }
-              }
-            }
             stage('Windows .NET Framework'){
               agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }
@@ -406,32 +263,6 @@ pipeline {
                     deleteDir()
                   }
                 }
-              }
-            }
-          }
-        }
-        stage('Publish snapshots') {
-          agent { label 'linux && immutable' }
-          options { skipDefaultCheckout() }
-          environment {
-            BUCKET_NAME = 'oblt-artifacts'
-            DOCKER_REGISTRY = 'docker.elastic.co'
-            DOCKER_REGISTRY_SECRET = 'secret/observability-team/ci/docker-registry/prod'
-            GCS_ACCOUNT_SECRET = 'secret/observability-team/ci/snapshoty'
-          }
-          when { branch 'main' }
-          steps {
-            withGithubNotify(context: 'Publish snapshot packages') {
-              deleteDir()
-              unstash(name: 'snapshoty-linux')
-              unstash(name: 'snapshoty-windows')
-              dir(env.BASE_DIR) {
-                snapshoty(
-                  bucket: env.BUCKET_NAME,
-                  gcsAccountSecret: env.GCS_ACCOUNT_SECRET,
-                  dockerRegistry: env.DOCKER_REGISTRY,
-                  dockerSecret: env.DOCKER_REGISTRY_SECRET
-                )
               }
             }
           }
@@ -649,6 +480,8 @@ def release(Map args = [:]){
   def secret = args.secret
   def withSuffix = args.get('withSuffix', false)
   dotnet(){
+    sh label: 'Rustup', script: 'rustup default 1.67.1'
+    sh label: 'Cargo make', script: 'cargo install --force cargo-make'
     sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [

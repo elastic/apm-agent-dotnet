@@ -13,12 +13,12 @@ using Elastic.Apm.Profiler.Managed.DuckTyping;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Properties.TypeChaining.ProxiesDefinitions
 {
-    public interface ITypesTuple
-    {
-        [Duck(Kind = DuckKind.Field)]
-        Type ProxyDefinitionType { get; }
+	public interface ITypesTuple
+	{
+		[Duck(Kind = DuckKind.Field)]
+		Type ProxyDefinitionType { get; }
 
-        [Duck(Kind = DuckKind.Field)]
-        Type TargetType { get; }
-    }
+		[Duck(Kind = DuckKind.Field)]
+		Type TargetType { get; }
+	}
 }

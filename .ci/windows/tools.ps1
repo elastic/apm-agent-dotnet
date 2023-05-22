@@ -22,12 +22,12 @@ choco install vswhere -y --no-progress -r --version 2.8.4
 
 # Install rust
 Write-Host "Install rust-ms"
-choco install rust-ms -y --no-progress -r --version 1.57.0
+choco install rust-ms -y --no-progress -r --version 1.67.1
 
 # Download and install cargo make
 Write-Host "Download cargo-make"
 Invoke-WebRequest -UseBasicParsing `
-    -Uri "https://github.com/sagiegurari/cargo-make/releases/download/0.35.0/cargo-make-v0.35.0-x86_64-pc-windows-msvc.zip" `
+    -Uri "https://github.com/sagiegurari/cargo-make/releases/download/0.36.5/cargo-make-v0.36.5-x86_64-pc-windows-msvc.zip" `
     -OutFile "C:\tools\cargo-make.zip"
 
 Write-Host "Unzip cargo-make"

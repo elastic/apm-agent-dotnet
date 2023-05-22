@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -24,7 +25,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 		/// </summary>
 		/// <param name="framework"></param>
 		[Theory]
-		[InlineData("net5.0")]
+		[InlineData("net7.0")]
 		public async void AspNetCoreTest(string framework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);
@@ -46,34 +47,41 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 				// wait for the log that events are sent to server
 				var waitForEventsSentToServer = new AutoResetEvent(false);
 
+				var seenSentItems = false;
 				profiledApplication.Start(
 					framework,
-					TimeSpan.FromMinutes(2),
+					TimeSpan.FromMinutes(4),
 					environmentVariables,
 					null,
 					line =>
 					{
-						_output.WriteLine(line.Line);
-						if(line.Line.ToLower().Contains("application started"))
+						_output.WriteLine($"[SampleAspNetCoreApp] {line.Line}");
+						if (line.Line.ToLower().Contains("application started"))
 							waitForAppStart.Set();
-						if(line.Line.ToLower().Contains("sent items to server:") && line.Line.ToLower().Contains("transaction"))
+						if (line.Line.ToLower().Contains("sent items to server:"))
+							seenSentItems = true;
+						if (seenSentItems && line.Line.ToLower().Contains($"{TextUtils.Indentation}transaction"))
 							waitForEventsSentToServer.Set();
 					},
-					exception => _output.WriteLine($"{exception}"),
-					true, true);
+					exception => _output.WriteLine($"[SampleAspNetCoreApp] Exception: {exception}"),
+					true,
+					true);
 
-				waitForAppStart.WaitOne(TimeSpan.FromSeconds(30));
+				if (!waitForAppStart.WaitOne(TimeSpan.FromSeconds(30)))
+					throw new Exception($"SampleAspNetCoreApp did not start within 30seconds, unable to profile");
 
 				var httpClient = new HttpClient();
 				var result = await httpClient.GetAsync("http://localhost:5000/home/index");
 				result.IsSuccessStatusCode.Should().BeTrue();
 				await result.Content.ReadAsStringAsync();
 
-				waitForEventsSentToServer.WaitOne(TimeSpan.FromSeconds(30));
+				if (!waitForEventsSentToServer.WaitOne(TimeSpan.FromSeconds(30)))
+					throw new Exception($"Waiting for events to be sent to the server took longer then 30 seconds");
 			}
 
 			apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
-			apmServer.ReceivedData.Metadata.First().Service.Agent.ActivationMethod.Should()
+			apmServer.ReceivedData.Metadata.First()
+				.Service.Agent.ActivationMethod.Should()
 				.Be(Consts.ActivationMethodProfiler);
 
 			apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
@@ -81,7 +89,6 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 
 			apmServer.ReceivedData.Spans.Any(span => span.Context.Db != null).Should().BeTrue();
 			apmServer.ReceivedData.Spans.Any(span => span.Context.Http != null).Should().BeTrue();
-
 		}
 	}
 }

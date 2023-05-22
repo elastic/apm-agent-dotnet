@@ -17,22 +17,21 @@ using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 
 namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 {
-    /// <summary>
-    /// CallTarget instrumentation for:
-    /// [*]DataReader [Command].ExecuteReader()
-    /// </summary>
+	/// <summary>
+	/// CallTarget instrumentation for:
+	/// [*]DataReader [Command].ExecuteReader()
+	/// </summary>
 	[InstrumentMySqlAttribute(Method = ExecuteReader, ReturnType = MySql.DataReader)]
 	[InstrumentNpgsql(Method = ExecuteReader, ReturnType = Npgsql.DataReader)]
 	[InstrumentOracleManagedDataAccess(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
 	[InstrumentMicrosoftDataSqlite(Method = ExecuteReader, ReturnType = MicrosoftDataSqlite.DataReader)]
 	[InstrumentSystemDataSqlite(Method = ExecuteReader, ReturnType = SystemDataSqlite.DataReader)]
-
 	[InstrumentSystemDataSql(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader)]
 	[InstrumentSystemDataSqlClient(Method = ExecuteReader, ReturnType = SystemDataSqlServer.DataReader)]
 	[InstrumentMicrosoftDataSqlClient(Method = ExecuteReader, ReturnType = MicrosoftDataSqlServer.DataReader)]
 	public class CommandExecuteReaderIntegration
-    {
+	{
 		/// <summary>
 		/// OnMethodBegin callback
 		/// </summary>
@@ -55,10 +54,12 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 		/// <param name="exception">Exception instance in case the original code threw an exception.</param>
 		/// <param name="state">Calltarget state value</param>
 		/// <returns>A response value, in an async scenario will be T of Task of T</returns>
-		public static CallTargetReturn<TReturn> OnMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state)
+		public static CallTargetReturn<TReturn> OnMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception,
+			CallTargetState state
+		)
 		{
 			DbSpanFactory<TTarget>.EndSpan(Agent.Instance, (IDbCommand)instance, (ISpan)state.Segment, exception);
 			return new CallTargetReturn<TReturn>(returnValue);
 		}
-    }
+	}
 }

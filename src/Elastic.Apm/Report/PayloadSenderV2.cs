@@ -56,6 +56,9 @@ namespace Elastic.Apm.Report
 		private string _cachedMetadataJsonLine;
 		private long _eventQueueCount;
 
+		private readonly ElasticVersion _brokenActivationMethodVersion;
+		private readonly string _cachedActivationMethod;
+
 		public PayloadSenderV2(
 			IApmLogger logger,
 			IConfiguration configuration,
@@ -76,17 +79,20 @@ namespace Elastic.Apm.Report
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer();
 			_configuration = configuration;
+			_brokenActivationMethodVersion = new ElasticVersion(8, 7, 0);
 
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(configuration.ServerUrl);
 
 			System = system;
 
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(configuration.CloudProvider, _logger, environmentVariables);
-			_apmServerInfo = apmServerInfo;
+			_apmServerInfo = apmServerInfo ?? new ApmServerInfo();
 			_serverInfoCallback = serverInfoCallback;
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
+			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
+			ResetActivationMethodIfKnownBrokenApmServer();
 
 			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
 			{
@@ -229,11 +235,30 @@ namespace Elastic.Apm.Report
 					.GetAwaiter()
 					.GetResult();
 				_getApmServerVersion = true;
+				ResetActivationMethodIfKnownBrokenApmServer();
 			}
 
 			var batch = ReceiveBatch();
 			if (batch != null)
 				ProcessQueueItems(batch);
+		}
+
+		private void ResetActivationMethodIfKnownBrokenApmServer()
+		{
+			// if we are on a known apm-server version that breaks metrics intake with activation method
+			if (_apmServerInfo?.Version == _brokenActivationMethodVersion)
+			{
+				// remove activation method since we know apm-server 8.7.0 rejects it
+				// and may cause metrics to be dropped
+				_metadata.Service.Agent.ActivationMethod = null;
+				_cachedMetadataJsonLine = null;
+			}
+			// else if activation method was unset but now the server has been upgraded re-apply activation method
+			else if (_metadata.Service.Agent.ActivationMethod == null && _cachedActivationMethod != null)
+			{
+				_metadata.Service.Agent.ActivationMethod = _cachedActivationMethod;
+				_cachedMetadataJsonLine = null;
+			}
 		}
 
 		private object[] ReceiveBatch()

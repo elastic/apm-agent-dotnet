@@ -54,6 +54,7 @@ namespace Elastic.Apm.Cloud
 					var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);
 					awsToken = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
 				}
+				if (string.IsNullOrWhiteSpace(awsToken)) return null;
 
 				JObject metadata;
 				using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, MetadataUri))

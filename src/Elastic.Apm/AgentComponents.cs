@@ -1,11 +1,13 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
@@ -48,16 +50,15 @@ namespace Elastic.Apm
 			try
 			{
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
-				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
-				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
-				PrintAgentLogPreamble(Logger, ConfigurationReader);
+				ConfigurationReader = configurationReader ?? new EnvironmentConfiguration(tempLogger);
+				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
 				ConfigurationStore =
-					new ConfigurationStore(new ConfigurationSnapshotFromReader(ConfigurationReader, "local"), Logger);
+					new ConfigurationStore(new RuntimeConfigurationSnapshot(ConfigurationReader), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
@@ -177,6 +178,41 @@ namespace Elastic.Apm
 			}
 		}
 
+		//
+		// This is the hooking point that checks for the existence of profiler-related
+		// logging settings.
+		// If no agent logging is configured but we detect profiler logging settings, those
+		// will be honoured.
+		// The finer-grained log-level (agent vs profiler) will be used.
+		// This has the benefit that users will also get agent logs in addition to profiler-only
+		// logs.
+		//
+		internal static IApmLogger CheckForProfilerLogger(IApmLogger fallbackLogger, LogLevel agentLogLevel, IDictionary environmentVariables = null)
+		{
+			try
+			{
+				var profilerLogConfig = ProfilerLogConfig.Check(environmentVariables);
+				if (profilerLogConfig.IsActive)
+				{
+					var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, profilerLogConfig.LogLevel);
+
+					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.File) == ProfilerLogTarget.File)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(profilerLogConfig.LogFilePath));
+					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.StdOut) == ProfilerLogTarget.StdOut)
+						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
+
+					var logger = new TraceLogger(effectiveLogLevel);
+					logger.Info()?.Log($"{nameof(ProfilerLogConfig)} - {profilerLogConfig}");
+					return logger;
+				}
+			}
+			catch (Exception e)
+			{
+				fallbackLogger.Warning()?.LogException(e, "Error in CheckForProfilerLogger");
+			}
+			return fallbackLogger;
+		}
+
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
 
 		internal IConfigurationStore ConfigurationStore { get; }
@@ -215,68 +251,5 @@ namespace Elastic.Apm
 			CentralConfigurationFetcher?.Dispose();
 		}
 
-		private static void PrintAgentLogPreamble(IApmLogger logger, IConfigurationReader configurationReader)
-		{
-			if (logger?.Info() != null)
-			{
-				try
-				{
-					var info = logger.Info().Value;
-					info.Log("********************************************************************************");
-					info.Log(
-						$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}");
-					info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
-					info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
-					info.Log($"Command line arguments: '{string.Join(", ", Environment.GetCommandLineArgs())}'");
-					info.Log($"Operating System: {RuntimeInformation.OSDescription}");
-					info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
-					info.Log($"Host: {Environment.MachineName}");
-					info.Log($"Time zone: {TimeZoneInfo.Local}");
-					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
-					info.Log("********************************************************************************");
-					info.Log($"Agent Configuration (via '{configurationReader.GetType()}'):");
-					var configurationMetaDataProvider = configurationReader as IConfigurationMetaDataProvider;
-					foreach (var item in ConfigurationMetaData.ConfigurationItems)
-					{
-						var origin = string.Empty;
-						var value = string.Empty;
-						if (configurationMetaDataProvider != null)
-						{
-							var ckv = configurationMetaDataProvider.Get(item);
-							origin = ckv.ReadFrom;
-							value = ckv.Value;
-						}
-						else
-						{
-							// The implementation of IConfigurationReader does not support "IConfigurationMetaDataProvider".
-							// Let's log the essential configuration items in that case.
-							if (item.IsEssentialForLogging)
-							{
-								origin = "unknown";
-								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
-							}
-						}
-
-						if (item.LogAlways || !string.IsNullOrEmpty(value))
-						{
-							if (string.IsNullOrEmpty(value))
-							{
-								origin = "default";
-								value = ConfigurationMetaData.GetDefaultValueForLogging(item.Id, configurationReader);
-							}
-
-							if (item.NeedsMasking) value = item.NeedsMasking ? Consts.Redacted : value;
-							info.Log($" - {item.NormalizedName}: '{value}' ({origin})");
-						}
-					}
-
-					info.Log("********************************************************************************");
-				}
-				catch (Exception e)
-				{
-					logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
-				}
-			}
-		}
 	}
 }

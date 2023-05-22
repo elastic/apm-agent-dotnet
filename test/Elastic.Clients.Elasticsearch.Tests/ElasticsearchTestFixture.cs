@@ -3,33 +3,27 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using Elastic.Transport;
+using Testcontainers.Elasticsearch;
 using Xunit;
 
 namespace Elastic.Clients.Elasticsearch.Tests;
 
-public class ElasticsearchTestFixture : IAsyncDisposable, IAsyncLifetime
+public sealed class ElasticsearchTestFixture : IAsyncLifetime
 {
-	public ElasticsearchTestcontainer Container { get; }
+	private const string ElasticsearchImage = "docker.elastic.co/elasticsearch/elasticsearch:7.12.1";
+
+	public ElasticsearchContainer Container { get; } = new ElasticsearchBuilder().Build();
+
 	public ElasticsearchClient? Client { get; private set; }
-
-	private readonly TestcontainerDatabaseConfiguration _configuration = new ElasticsearchTestcontainerConfiguration { Password = "secret" };
-
-	public ElasticsearchTestFixture() =>
-		Container = new TestcontainersBuilder<ElasticsearchTestcontainer>()
-			.WithDatabase(_configuration)
-			.Build();
 
 	public async Task InitializeAsync()
 	{
 		await Container.StartAsync();
 
-		var settings = new ElasticsearchClientSettings(new Uri(Container.ConnectionString))
-			.ServerCertificateValidationCallback(CertificateValidations.AllowAll)
-			.Authentication(new BasicAuthentication(Container.Username, Container.Password));
+		var settings = new ElasticsearchClientSettings(new Uri(Container.GetConnectionString()));
+		settings.ServerCertificateValidationCallback(CertificateValidations.AllowAll);
 
 		Client = new ElasticsearchClient(settings);
 		if (Client == null)
@@ -37,15 +31,6 @@ public class ElasticsearchTestFixture : IAsyncDisposable, IAsyncLifetime
 	}
 
 	async Task IAsyncLifetime.DisposeAsync()
-	{
-		if (Container.State == TestcontainersStates.Running)
-		{
-			await Container.StopAsync();
-			await Container.DisposeAsync();
-		}
-	}
-
-	async ValueTask IAsyncDisposable.DisposeAsync()
 	{
 		if (Container.State == TestcontainersStates.Running)
 		{

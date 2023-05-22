@@ -134,7 +134,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A JSON string representation of the <see cref="DateTimeOffset"/>.</returns>
         public static string ToString(DateTimeOffset value)
         {
-            return ToString(value, DateFormatHandling.IsoDateFormat);
+			return ToString(value, DateFormatHandling.IsoDateFormat);
         }
 
         /// <summary>

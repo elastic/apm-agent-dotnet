@@ -4,38 +4,28 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
+using Testcontainers.Oracle;
 using Xunit;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {
 	[CollectionDefinition("Oracle")]
-	public class OracleCollection : ICollectionFixture<OracleSqlFixture>
-	{
-	}
+	public sealed class OracleCollection : ICollectionFixture<OracleSqlFixture> { }
 
-	public class OracleSqlFixture : IAsyncLifetime
+	public sealed class OracleSqlFixture : IAsyncLifetime
 	{
-		private readonly OracleTestcontainer _container;
+		private readonly OracleContainer _container = new OracleBuilder().Build();
 
-		public OracleSqlFixture()
+		public string ConnectionString => _container.GetConnectionString();
+
+		public Task InitializeAsync()
 		{
-			var builder = new TestcontainersBuilder<OracleTestcontainer>()
-				.WithDatabase(new OracleTestcontainerConfiguration { Password = "oracle" });
-
-			_container = builder.Build();
+			return _container.StartAsync();
 		}
 
-		public async Task InitializeAsync()
+		public Task DisposeAsync()
 		{
-			await _container.StartAsync();
-			ConnectionString = _container.ConnectionString;
+			return _container.DisposeAsync().AsTask();
 		}
-
-		public async Task DisposeAsync() => await _container.DisposeAsync();
-
-		public string ConnectionString { get; private set; }
 	}
 }

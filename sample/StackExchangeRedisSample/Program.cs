@@ -1,11 +1,9 @@
 ﻿using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.StackExchange.Redis;
 using StackExchange.Redis;
+using Testcontainers.Redis;
 
 namespace StackExchangeRedisSample
 {
@@ -13,14 +11,10 @@ namespace StackExchangeRedisSample
 	{
 		public static async Task Main(string[] args)
 		{
-			// requires docker to run a redis container.
-			var containerBuilder = new TestcontainersBuilder<RedisTestcontainer>()
-				.WithDatabase(new RedisTestcontainerConfiguration());
-
-			await using var container = containerBuilder.Build();
+			await using var container = new RedisBuilder().Build();
 			await container.StartAsync();
 
-			var connection = await ConnectionMultiplexer.ConnectAsync(container.ConnectionString);
+			var connection = await ConnectionMultiplexer.ConnectAsync(container.GetConnectionString());
 			connection.UseElasticApm();
 
 			for (var i = 0; i < 10; i++)
