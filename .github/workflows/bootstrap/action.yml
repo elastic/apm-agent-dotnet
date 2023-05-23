@@ -12,9 +12,18 @@ runs:
         git tag --list
           
     # Install .NET version as mandated by global.json
-    - uses: actions/setup-dotnet@v3
-      with:
-          global-json-file: global.json
+    #- uses: actions/setup-dotnet@v3
+    #  with:
+    #      global-json-file: global.json
+
+    -   name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+            dotnet-version: |
+                3.1.100
+                5.0.100
+                6.0.100
+                7.0.100 
     - shell: bash
       run: |
         dotnet --list-sdks
