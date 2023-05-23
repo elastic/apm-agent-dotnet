@@ -35,7 +35,7 @@ jobs:
       run: cargo install --force cargo-make
 
     - name: Build
-      run: .ci/linux/build.sh
+      run: ./build.sh
 
     - name: Package
       run: .ci/linux/release.sh true
