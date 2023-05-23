@@ -71,7 +71,7 @@ public class ExcludeTests
 		var dotnet = "dotnet";
 		if (TestEnvironment.IsWindows)
 		{
-			yield return new object[] { "net461", "SqliteSample.exe" };
+			yield return new object[] { "net462", "SqliteSample.exe" };
 
 			dotnet = "dotnet.exe";
 		}

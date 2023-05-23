@@ -41,7 +41,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				yield return new object[] { "net7.0", npgSqlVersion };
 
 				if (TestEnvironment.IsWindows)
-					yield return new object[] { "net461", npgSqlVersion };
+					yield return new object[] { "net462", npgSqlVersion };
 
 				npgSqlVersion = "6.0.2";
 

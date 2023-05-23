@@ -137,8 +137,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout";
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_IL"] = "true";
 
-			// use the .exe for net461
-			var arguments = targetFramework == "net461"
+			// use the .exe for net462
+			var arguments = targetFramework == "net462"
 				? new StartArguments(Path.Combine(workingDirectory, $"{_projectName}.exe"))
 				: useLocalhostHttp5000
 					? new StartArguments("dotnet", $"{_projectName}.dll", "--urls", "http://localhost:5000")

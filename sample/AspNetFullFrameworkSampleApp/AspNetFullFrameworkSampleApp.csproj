@@ -1,22 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="Current" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <HasWebTargets Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')" >true</HasWebTargets>
+    <HasWebTargets Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')">true</HasWebTargets>
     <HasWebTargets Condition="Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')">true</HasWebTargets>
-    <BuildFullFrameworkAsp Condition="'$(OS)' != 'WINDOWS_NT'" >false</BuildFullFrameworkAsp>
+    <BuildFullFrameworkAsp Condition="'$(OS)' != 'WINDOWS_NT'">false</BuildFullFrameworkAsp>
     <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' != 'true'">false</BuildFullFrameworkAsp>
     <BuildFullFrameworkAsp Condition="'$(OS)' == 'WINDOWS_NT' AND '$(HasWebTargets)' == 'true'">true</BuildFullFrameworkAsp>
   </PropertyGroup>
   <Target Name="Build" Condition="'$(BuildFullFrameworkAsp)' == 'false'">
   </Target>
   <!-- prevents NU1503 -->
-  <Target Name="_IsProjectRestoreSupported" Condition="'$(BuildFullFrameworkAsp)' == 'false'"
-          Returns="@(_ValidProjectsForRestore)">
+  <Target Name="_IsProjectRestoreSupported" Condition="'$(BuildFullFrameworkAsp)' == 'false'" Returns="@(_ValidProjectsForRestore)">
     <ItemGroup>
       <_ValidProjectsForRestore Include="$(MSBuildProjectFullPath)" />
     </ItemGroup>
   </Target>
-  <Target Name="Restore" Condition="'$(BuildFullFrameworkAsp)' == 'false'"/>
+  <Target Name="Restore" Condition="'$(BuildFullFrameworkAsp)' == 'false'" />
   <Target Name="Clean" Condition="'$(BuildFullFrameworkAsp)' == 'false'">
   </Target>
   <!-- dummy Pack target to allow dotnet pack to be called on solution file to package all <IsPackable>true</IsPackable> projects. 
@@ -37,7 +36,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>AspNetFullFrameworkSampleApp</RootNamespace>
     <AssemblyName>AspNetFullFrameworkSampleApp</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <RuntimeIdentifier>win</RuntimeIdentifier>
   </PropertyGroup>
   <PropertyGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
