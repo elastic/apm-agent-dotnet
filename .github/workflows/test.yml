@@ -28,7 +28,7 @@ env:
 jobs:
 
   test-iis:
-    runs-on: windows-latest
+    runs-on: windows-2019
     
     steps:
     - uses: actions/checkout@v3
@@ -55,7 +55,7 @@ jobs:
       run: |
         msbuild ^
           /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
-           -clp:ForceConsoleColor -clp:Summary  -clp:PerformanceSummary -verbosity:minimal ^
+           -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
           /t:Build /p:Configuration=Release /restore
     #- name: Discover Windows Features
     # shell: cmd
