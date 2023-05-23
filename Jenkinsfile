@@ -28,7 +28,9 @@ pipeline {
   }
   stages {
     stage("NOOP") {
-      sh(label: 'Empty Stage', script: "echo Empty Stage")
+      steps {
+        sh(label: 'Empty Stage', script: "echo Empty Stage")
+      }
     }
   }
 }
