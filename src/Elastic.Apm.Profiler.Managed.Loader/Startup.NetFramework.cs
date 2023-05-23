@@ -18,7 +18,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 	{
 		private static string ResolveDirectory()
 		{
-			var framework = "net461";
+			var framework = "net462";
 			var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
 			return Path.Combine(directory, framework);
 		}

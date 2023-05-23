@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;net7.0</TargetFrameworks>
+    <TargetFrameworks>net462;net7.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -45,7 +45,7 @@
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'net461' ">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net462' ">
     <ProjectReference Include="..\..\sample\OpenTelemetrySample\OpenTelemetrySample.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
   </ItemGroup>

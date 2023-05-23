@@ -3,7 +3,7 @@
   <PropertyGroup>
     <SqliteVersion Condition="'$(SqliteVersion)'==''">7.0.2</SqliteVersion>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net461;net6.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>net462;net6.0;net7.0</TargetFrameworks>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 

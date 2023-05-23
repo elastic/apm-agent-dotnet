@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.1</TargetFrameworks>
     <RootNamespace>Elastic.Apm.EntityFramework6</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFramework6</AssemblyName>
     <PackageId>Elastic.Apm.EntityFramework6</PackageId>
@@ -8,7 +8,7 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframework6, ef6</PackageTags>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <PackageReference Include="EntityFramework" Version="6.2.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
