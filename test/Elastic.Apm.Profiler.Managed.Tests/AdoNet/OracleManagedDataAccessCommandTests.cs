@@ -31,7 +31,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		}
 
 		[DockerTheory]
-		[InlineData("net461")]
+		[InlineData("net462")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
 			if (!TestEnvironment.IsWindows)

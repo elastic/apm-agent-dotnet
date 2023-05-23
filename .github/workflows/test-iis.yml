@@ -1,0 +1,101 @@
+name: test-iis
+
+on:
+  push:
+    branches:
+      - main
+      - 1.*
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  ELASTIC_STACK_VERSION: '8.4.0'
+
+jobs:
+
+  test-iis:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+            
+    - uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.3.1
+
+    #- name: Setup VS Dev Environment
+    #  uses: seanmiddleditch/gha-setup-vsdevenv@v4
+
+    #- name: Restore NuGet Packages
+   #   run: msbuild /t:Restore
+
+    - name: Build the application
+      shell: cmd
+      run: |
+        msbuild ^
+          /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
+           -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
+          /t:Build /p:Configuration=Release /restore
+    #- name: Discover Windows Features
+    # shell: cmd
+    # run: |
+    #    DISM /online /get-features /format:table
+        
+    # TODO See if this really needed 
+    - name: Enable Windows Features
+      shell: cmd
+      run: |
+        DISM /online /enable-feature /featurename:IIS-HttpErrors
+        DISM /online /enable-feature /featurename:IIS-HttpRedirect
+            
+    - name: Ensure AppPool Permissions
+      shell: cmd
+      run: |
+        REM enable permissions for the Application Pool Identity group
+        icacls %cd% /t /q /grant "IIS_IUSRS:(OI)(CI)(IO)(RX)"
+        REM enable permissions for the anonymous access group
+        icacls %cd% /t /q /grant "IUSR:(OI)(CI)(IO)(RX)"
+    
+    - name: Run tests
+      shell: cmd
+      run: |
+        set ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED=true
+        set sample_app_log_dir=C:\Elastic_APM_TEMP
+        if not exist "%sample_app_log_dir%" mkdir "%sample_app_log_dir%"
+        icacls %sample_app_log_dir% /t /q /grant Everyone:F
+        set ELASTIC_APM_ASP_NET_FULL_FRAMEWORK_SAMPLE_APP_LOG_FILE=%sample_app_log_dir%\Elastic.Apm.AspNetFullFramework.Tests.SampleApp.log
+          
+        dotnet test -c Release test\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
+          --verbosity normal ^
+          --results-directory build/output ^
+          --diag build/output/diag-iis.log ^
+          --filter "FullyQualifiedName=Elastic.Apm.AspNetFullFramework.Tests.CustomServiceNodeNameSetViaSettings.Test" ^
+          --logger:"junit;LogFilePath=build/output/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: build/output/junit-*.xml

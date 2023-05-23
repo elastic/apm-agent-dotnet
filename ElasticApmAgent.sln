@@ -193,6 +193,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Clients.Elasticsear
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "elastic_apm_profiler", "src\elastic_apm_profiler\elastic_apm_profiler.csproj", "{236B392A-53BE-46FD-9831-C66AE0A962F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = ".github", ".github\.github.csproj", "{A880940E-31FC-4934-80FC-5A9E3DFED7CA}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Microsoft.Data.SqlClient", "sample\Sample.Microsoft.Data.SqlClient\Sample.Microsoft.Data.SqlClient.csproj", "{BCE93684-0A40-4F5F-8FB5-94DE94B111E1}"
 EndProject
 Global
@@ -509,6 +511,10 @@ Global
 		{E6217549-8C21-4E95-BDF2-E782922CD104}.Release|Any CPU.Build.0 = Release|Any CPU
 		{236B392A-53BE-46FD-9831-C66AE0A962F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{236B392A-53BE-46FD-9831-C66AE0A962F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A880940E-31FC-4934-80FC-5A9E3DFED7CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A880940E-31FC-4934-80FC-5A9E3DFED7CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A880940E-31FC-4934-80FC-5A9E3DFED7CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A880940E-31FC-4934-80FC-5A9E3DFED7CA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BCE93684-0A40-4F5F-8FB5-94DE94B111E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BCE93684-0A40-4F5F-8FB5-94DE94B111E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCE93684-0A40-4F5F-8FB5-94DE94B111E1}.Release|Any CPU.ActiveCfg = Release|Any CPU

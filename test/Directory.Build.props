@@ -19,8 +19,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <!-- Add coverlet collector for all platforms and frameworks, except net461 -->
-    <PackageReference Include="coverlet.collector" Version="3.0.2" Condition="'$(IsTestProject)' == 'true' AND '$(TargetFramework)' != 'net461'">
+    <!-- Add coverlet collector for all platforms and frameworks, except net462 -->
+    <PackageReference Include="coverlet.collector" Version="3.0.2" Condition="'$(IsTestProject)' == 'true' AND '$(TargetFramework)' != 'net462'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

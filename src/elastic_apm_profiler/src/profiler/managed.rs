@@ -65,7 +65,7 @@ pub extern "C" fn GetAssemblyAndSymbolsBytes(
     symbols_size: &mut i32,
 ) {
     let tfm = if IS_DESKTOP_CLR.load(Ordering::SeqCst) {
-        "net461"
+        "net462"
     } else {
         "netcoreapp2.0"
     };

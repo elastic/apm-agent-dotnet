@@ -2,7 +2,7 @@
     
     <PropertyGroup>
       <RootNamespace>Elastic.Apm.Profiler.Managed.Loader</RootNamespace>
-      <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
+      <TargetFrameworks>net462;netcoreapp2.0</TargetFrameworks>
       <CheckEolTargetFramework>false</CheckEolTargetFramework>
       <IsPackable>false</IsPackable>
     </PropertyGroup>

@@ -1,22 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'net461'">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net462'">
     <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
 
   <!-- ASP.NET integration -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <ProjectReference Include="..\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" />
     <Reference Include="System.Web" />
   </ItemGroup>
   <!-- ASP.NET Core integration -->
-  <ItemGroup  Condition="'$(TargetFramework)' != 'net461'">
+  <ItemGroup  Condition="'$(TargetFramework)' != 'net462'">
     <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
   </ItemGroup>
 
