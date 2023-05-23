@@ -13,18 +13,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Setup dotnet
-      uses: actions/setup-dotnet@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
       with:
-        dotnet-version: |
-          3.1.100
-          5.0.100
-          6.0.100
-          7.0.100
+          rust: 'true'
 
     - name: Package
-      run: .ci/linux/release.sh false
+      run: .ci/linux/release.sh 
 
     - name: Prepare Nuget
       uses: hashicorp/vault-action@v2.4.2

@@ -1,6 +1,12 @@
 ---
 name: Bootstrap Checkout
-description: Ensures an action that needs to build has access to git tags
+description: Ensures all actions bootstrap the same
+
+inputs:
+  rust:
+    description: 'Install rust toolchain ("true" or "false")'
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -31,3 +37,9 @@ runs:
       
     # Setup git config
     - uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
+    
+    # install common dependencies
+    - name: Install common dependencies
+      uses: ./.github/workflows/install-dependencies
+      with:
+          rust: '${{ inputs.rust }}'

@@ -34,6 +34,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+      
     - name: Install tools
       run: .ci\\windows\\tools.ps1
       shell: pwsh
@@ -68,6 +71,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
 
     - name: Install test tools
       run: .ci\\windows\\test-tools.ps1

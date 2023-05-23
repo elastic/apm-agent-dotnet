@@ -1,0 +1,23 @@
+---
+name: Install Dependencies
+description: Ensures an action has the appropiate non .NET dependencies installed
+
+inputs:
+  rust:
+    description: 'Install rust toolchain ("true" or "false")'
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Rustup
+      if: "${{ inputs.rust == 'true' }}"
+      shell: bash
+      run: rustup default 1.67.1
+
+    - name: Cargo make
+      if: "${{ inputs.rust == 'true' }}"
+      shell: bash
+      run: cargo install --force cargo-make
+
