@@ -55,6 +55,7 @@ jobs:
       run: |
         msbuild ^
           /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
+           -clp:ForceConsoleColor -clp:Summary  -clp:PerformanceSummary -verbosity:minimal ^
           /t:Build /p:Configuration=Release /restore
     #- name: Discover Windows Features
     # shell: cmd
