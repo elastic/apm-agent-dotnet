@@ -1,0 +1,52 @@
+name: release-main
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: |
+          3.1.100
+          5.0.100
+          6.0.100
+          7.0.100
+
+    - name: Package with canary suffix
+      run: .ci/linux/release.sh true
+
+    - name: Prepare feedz.io
+      uses: hashicorp/vault-action@v2.4.2
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        method: approle
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        secrets: |
+          secret/apm-team/ci/elastic-observability-feedz.io apiKey | REPO_API_KEY ;
+          secret/apm-team/ci/elastic-observability-feedz.io url | REPO_API_URL
+
+    - name: Release to feedz.io
+      run: .ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}
+
+    - if: ${{ failure() }}
+      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        channel: "#apm-agent-dotnet"
+        message: |
+          :large_yellow_circle: [${{ github.repository }}] Snapshot could not be published to feedz.io.
+          Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)

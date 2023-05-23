@@ -11,7 +11,6 @@ pipeline {
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
-    OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
     SLACK_CHANNEL = '#apm-agent-dotnet'
     AZURE_RESOURCE_GROUP_PREFIX = "ci-dotnet-${env.BUILD_ID}"
@@ -68,46 +67,39 @@ pipeline {
             }
           }
           parallel{
-            stage('Linux'){
+            stage('Windows .NET Framework'){
+              agent { label 'windows-2019 && immutable' }
               options { skipDefaultCheckout() }
               environment {
+                HOME = "${env.WORKSPACE}"
+                DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
-              /**
-              Make sure there are no code style violation in the repo.
-              */
               stages{
-              //   Disable until https://github.com/elastic/apm-agent-dotnet/issues/563
-              //   stage('CodeStyleCheck') {
-              //     steps {
-              //       withGithubNotify(context: 'CodeStyle check') {
-              //         deleteDir()
-              //         unstash 'source'
-              //         dir("${BASE_DIR}"){
-              //           dotnet(){
-              //             sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
-              //           }
-              //         }
-              //       }
-              //     }
-              //   }
+                /**
+                Install the required tools
+                */
+                stage('Install tools') {
+                  steps {
+                    cleanDir("${WORKSPACE}/*")
+                    unstash 'source'
+                    dir("${HOME}"){
+                      powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                      powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools.ps1"
+                    }
+                  }
+                }
                 /**
                 Build the project from code..
                 */
-                stage('Build') {
+                stage('Build - MSBuild') {
                   steps {
-                    withGithubNotify(context: 'Build - Linux') {
-                      deleteDir()
+                    withGithubNotify(context: 'Build MSBuild - Windows') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh '.ci/linux/build.sh'
-                          sh label: 'Rustup', script: 'rustup default 1.67.1'
-                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                          sh(label: 'Build profiler', script: './build.sh profiler-zip')
-                          // build nuget packages and profiler
-                          sh(label: 'Package', script: '.ci/linux/release.sh true')
-                        }
+                        bat '.ci/windows/msbuild.bat'
                       }
                     }
                   }
@@ -115,9 +107,6 @@ pipeline {
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
                         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                    success {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
                     }
                   }
                 }
@@ -126,26 +115,18 @@ pipeline {
                 */
                 stage('Test') {
                   steps {
-                    withGithubNotify(context: 'Test - Linux', tab: 'tests') {
-                      deleteDir()
+                    withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
-                      filebeat(output: "docker.log"){
-                        dir("${BASE_DIR}"){
-                          testTools(){
-                            dotnet(){
-                              sh label: 'Test & coverage', script: '.ci/linux/test.sh'
-                            }
-                          }
-                        }
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
                       }
                     }
                   }
                   post {
                     always {
                       reportTests()
-                      publishCoverage(adapters: [coberturaAdapter("${BASE_DIR}/target/**/*coverage.cobertura.xml")],
-                                      sourceFileResolver: sourceFiles('STORE_ALL_BUILD'))
-                      codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
                     }
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
@@ -153,16 +134,18 @@ pipeline {
                     }
                   }
                 }
-                stage('Startup Hook Tests') {
+                /**
+                Execute IIS tests.
+                */
+                stage('IIS Tests') {
                   steps {
-                    withGithubNotify(context: 'Test startup hooks - Linux', tab: 'tests') {
-                      deleteDir()
+                    withGithubNotify(context: 'IIS Tests', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Build', script: './build.sh agent-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-startuphooks.sh'
-                        }
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                        bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
                       }
                     }
                   }
@@ -170,43 +153,12 @@ pipeline {
                     always {
                       reportTests()
                     }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
                   }
                 }
-                stage('Profiler Tests') {
-                  steps {
-                    withGithubNotify(context: 'Test profiler - Linux', tab: 'tests') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Rustup', script: 'rustup default 1.67.1'
-                          sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-                          sh label: 'Build', script: './build.sh profiler-zip'
-                          sh label: 'Test & coverage', script: '.ci/linux/test-profiler.sh'
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    always {
-                      reportTests()
-                    }
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                  }
-                }
-                stage('Create Docker image') {
-                  steps {
-                    withGithubNotify(context: 'Create Docker image - Linux') {
-                      dir("${BASE_DIR}"){
-                        sh(label: 'Create Docker Image', script: '.ci/linux/build_docker.sh')
-                      }
-                    }
-                  }
+              }
+              post {
+                always {
+                  cleanWs(disableDeferredWipeout: true, notFailBuild: true)
                 }
               }
             }
@@ -389,118 +341,6 @@ pipeline {
         }
       }
     }
-    stage('Release to feedz.io') {
-      options { skipDefaultCheckout() }
-      when {
-        beforeAgent true
-        anyOf {
-          branch 'main'
-          expression { return params.Run_As_Main_Branch }
-        }
-      }
-      steps {
-        deleteDir()
-        unstash 'source'
-        dir("${BASE_DIR}"){
-          release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io', withSuffix: true)
-        }
-      }
-      post{
-        success {
-          archiveArtifacts(allowEmptyArchive: true,
-            artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg")
-        }
-      }
-    }
-    stage('Release') {
-      options {
-        skipDefaultCheckout()
-      }
-      when {
-        beforeInput true
-        beforeAgent true
-        // Tagged release events ONLY
-        tag pattern: 'v\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
-      }
-      stages {
-        stage('Notify') {
-          steps {
-            notifyStatus(slackStatus: 'warning', subject: "[${env.REPO}] Release ready to be pushed",
-                         body: "Please (<${env.BUILD_URL}input|approve>) it or reject within 12 hours.\n Changes: ${env.TAG_NAME}")
-          }
-        }
-        stage('Release to NuGet') {
-          input {
-            message 'Should we release a new version?'
-            ok 'Yes, we should.'
-          }
-          environment {
-            RELEASE_URL_MESSAGE = "(<https://github.com/elastic/apm-agent-dotnet/releases/tag/${env.TAG_NAME}|${env.TAG_NAME}>)"
-          }
-          steps {
-            deleteDir()
-            unstash 'source'
-            dir("${BASE_DIR}") {
-              release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
-            }
-          }
-          post {
-            failure {
-              notifyStatus(slackStatus: 'danger', subject: "[${env.REPO}] Release *${env.TAG_NAME}* failed", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)")
-            }
-            success {
-              notifyStatus(slackStatus: 'good', subject: "[${env.REPO}] Release *${env.TAG_NAME}* published", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)\nRelease URL: ${env.RELEASE_URL_MESSAGE}")
-            }
-          }
-        }
-        stage('Publish Docker image') {
-          environment {
-            DOCKER_SECRET = 'secret/apm-team/ci/docker-registry/prod'
-            DOCKER_REGISTRY = 'docker.elastic.co'
-            HOME = "${env.WORKSPACE}"
-          }
-          steps {
-            withGithubNotify(context: 'Create Docker image - Linux') {
-              dir("${BASE_DIR}"){
-                dockerLogin(secret: env.DOCKER_SECRET, registry: env.DOCKER_REGISTRY)
-                sh(script: 'chmod +x .ci/linux/push_docker.sh')
-                sh(label: 'Publish Docker Image', script: '.ci/linux/push_docker.sh')
-              }
-            }
-          }
-        }
-      }
-    }
-    stage('AfterRelease') {
-      options {
-        skipDefaultCheckout()
-      }
-      when {
-        anyOf {
-          tag pattern: 'v\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
-        }
-      }
-      stages {
-        stage('Opbeans') {
-          environment {
-            REPO_NAME = "${OPBEANS_REPO}"
-          }
-          steps {
-            deleteDir()
-            dir("${OPBEANS_REPO}"){
-              git(credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                  url: "git@github.com:elastic/${OPBEANS_REPO}.git",
-                  branch: 'main')
-              sh script: ".ci/bump-version.sh ${env.BRANCH_NAME.replaceAll('^v', '')}", label: 'Bump version'
-              // The opbeans pipeline will trigger a release for the main branch
-              gitPush()
-              // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
-              gitCreateTag(tag: "${env.BRANCH_NAME}")
-            }
-          }
-        }
-      }
-    }
   }
   post {
     cleanup {
@@ -596,37 +436,9 @@ def cleanupAzureResources(){
     }
 }
 
-def release(Map args = [:]){
-  def secret = args.secret
-  def withSuffix = args.get('withSuffix', false)
-  dotnet(){
-    sh label: 'Rustup', script: 'rustup default 1.67.1'
-    sh label: 'Cargo make', script: 'cargo install --force cargo-make'
-    sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
-    def repo = getVaultSecret(secret: secret)
-    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
-      [var: 'REPO_API_KEY', password: repo.data.apiKey],
-      [var: 'REPO_API_URL', password: repo.data.url],
-      ]]) {
-      withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
-        sh(label: 'Deploy', script: '.ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}')
-      }
-    }
-  }
-}
-
 def reportTests() {
   dir("${BASE_DIR}"){
     archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/Sequence_*.xml,target/**/testhost*.dmp')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
-}
-
-def notifyStatus(def args = [:]) {
-  releaseNotification(slackChannel: "${env.SLACK_CHANNEL}",
-                      slackColor: args.slackStatus,
-                      slackCredentialsId: 'jenkins-slack-integration-token',
-                      to: "${env.NOTIFY_TO}",
-                      subject: args.subject,
-                      body: args.body)
 }
