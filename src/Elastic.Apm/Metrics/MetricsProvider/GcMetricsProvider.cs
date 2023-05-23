@@ -109,7 +109,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						"Collected gc metrics values: gcCount: {gcCount}, gen0Size: {gen0Size},  gen1Size: {gen1Size}, gen2Size: {gen2Size}, gen1Size: {gen3Size}, gcTime: {gcTime}",
 						_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size, gcTimeInMs);
 
-				return new List<MetricSet> { new(TimestampUtils.TimestampNow(), samples) };
+				return new List<MetricSet> { new(TimeUtils.TimestampNow(), samples) };
 			}
 
 			return null;

@@ -10,10 +10,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public struct TimedEvent : ITimedDto
 	{
-		public TimedEvent(DateTimeOffset start, DateTimeOffset end)
+		public TimedEvent(DateTime start, DateTime end)
 		{
-			Timestamp = TimestampUtils.ToTimestamp(start);
-			Duration = TimestampUtils.DurationBetweenTimestamps(Timestamp, TimestampUtils.ToTimestamp(end));
+			Timestamp = TimeUtils.ToTimestamp(start);
+			Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, TimeUtils.ToTimestamp(end));
 
 			AssertValid();
 		}

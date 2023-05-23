@@ -59,7 +59,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					samples.Add(new MetricSample(ProcessWorkingSetMemory, workingSet));
 			}
 
-			return new List<MetricSet> { new MetricSet(TimestampUtils.TimestampNow(), samples) };
+			return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 		}
 	}
 }

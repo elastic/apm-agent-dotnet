@@ -270,7 +270,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (_collectMemLimitBytes)
 				GetMemoryMemLimitBytes(samples);
 
-			return new List<MetricSet> { new(TimestampUtils.TimestampNow(), samples) };
+			return new List<MetricSet> { new(TimeUtils.TimestampNow(), samples) };
 		}
 
 		// ReSharper disable once SuggestBaseTypeForParameter

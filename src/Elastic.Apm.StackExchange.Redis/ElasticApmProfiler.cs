@@ -184,7 +184,7 @@ namespace Elastic.Apm.StackExchange.Redis
 
 				// update the timestamp to reflect the point at which the command was created
 				if (span is Span realSpan)
-					realSpan.Timestamp = TimestampUtils.ToTimestamp(profiledCommand.CommandCreated);
+					realSpan.Timestamp = TimeUtils.ToTimestamp(profiledCommand.CommandCreated);
 
 				span.Duration = profiledCommand.ElapsedTime.TotalMilliseconds;
 

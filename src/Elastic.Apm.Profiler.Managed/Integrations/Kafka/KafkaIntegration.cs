@@ -145,7 +145,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 				transaction.Context.Message = new Message { Queue = new Queue { Name = topic } };
 				if (transaction is Transaction realTransaction && message is not null && message.Timestamp.Type != 0)
 				{
-					var consumeTime = TimestampUtils.ToDateTimeOffset(realTransaction.Timestamp);
+					var consumeTime = TimeUtils.ToDateTime(realTransaction.Timestamp);
 					var produceTime = message.Timestamp.UtcDateTime;
 
 					var age = Math.Max(0, (consumeTime - produceTime).TotalMilliseconds);

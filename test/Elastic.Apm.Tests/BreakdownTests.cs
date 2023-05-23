@@ -694,11 +694,11 @@ namespace Elastic.Apm.Tests
 			using (agent) agent.Tracer.CaptureTransaction("test", "test", () => { });
 			await Task.Delay(500);
 
-			var timeStampBeforeReporting = TimestampUtils.TimestampNow();
+			var timeStampBeforeReporting = TimeUtils.TimestampNow();
 			var metricTimestamp = breakdownMetricsProvider.GetSamples().First().Timestamp;
 
 			// assert that the timestamp of the MetricSet is close enough to the call of the `breakdownMetricsProvider.GetSamples()` method.
-			var diff = TimestampUtils.DurationBetweenTimestamps(timeStampBeforeReporting, metricTimestamp);
+			var diff = TimeUtils.DurationBetweenTimestamps(timeStampBeforeReporting, metricTimestamp);
 			Math.Abs(diff).Should().BeLessThan(100);
 		}
 

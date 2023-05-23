@@ -10,7 +10,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,7 +85,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			if (_sampleAppLogEnabled) EnvVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
 
-			EnvVarsToSetForSampleAppPool.TryAdd(FlushInterval.ToEnvironmentVariable(), "100ms");
+			EnvVarsToSetForSampleAppPool.TryAdd(FlushInterval.ToEnvironmentVariable(), "10ms");
 		}
 
 		private static class DataSentByAgentVerificationConsts
@@ -267,14 +266,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		protected async Task<SampleAppResponse> SendRequestToSampleAppAndVerifyResponse(HttpMethod httpMethod, Uri uri, int expectedStatusCode,
 			bool timeHttpCall = true, bool addTraceContextHeaders = false, HttpContent httpContent = null)
 		{
-			var startTime = DateTimeOffset.UtcNow;
-			MockApmServer.MinTimestamp = TimestampUtils.ToTimestamp(startTime);
-			// await Task.Delay(TimeSpan.FromMilliseconds(1));
+			var startTime = DateTime.UtcNow;
 			if (timeHttpCall)
 			{
 				_logger.Debug()
 					?.Log("HTTP call to sample application started at {Time} (as timestamp: {Timestamp})",
-						startTime, TimestampUtils.ToTimestamp(startTime));
+						startTime, TimeUtils.ToTimestamp(startTime));
 			}
 			try
 			{
@@ -297,11 +294,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				if (timeHttpCall)
 				{
 					_sampleAppClientCallTiming.Should().BeNull();
-					var endTime = DateTimeOffset.UtcNow;
+					var endTime = DateTime.UtcNow;
 					_logger.Debug()
 						?.Log("HTTP call to sample application ended at {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-							endTime, TimestampUtils.ToTimestamp(endTime),
-							TimestampUtils.DurationBetweenTimestamps(TimestampUtils.ToTimestamp(startTime), TimestampUtils.ToTimestamp(endTime)));
+							endTime, TimeUtils.ToTimestamp(endTime),
+							TimeUtils.DurationBetweenTimestamps(TimeUtils.ToTimestamp(startTime), TimeUtils.ToTimestamp(endTime)));
 					_sampleAppClientCallTiming = new TimedEvent(startTime, endTime);
 				}
 			}
@@ -356,49 +353,84 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			return response;
 		}
 
-		/// <summary>
-		/// The apm mock server flushes every 100ms, we can't really know when its done so we bake in an assumption that if
-		/// we've unsuccessfully waited 500ms after the first flush no more DTO's will be reported back to us.
-		/// </summary>
-		protected void WaitUntilNoMoreFlushesHappened()
-		{
-			// We expect the initial flush to happen much faster, just in case though we wait for 5 seconds.
-			// if it wasn't signalled fail early because we can not rely on MockApmServer.ReceivedData in further assertions
-			var signalled = MockApmServer.WaitHandle.WaitOne(TimeSpan.FromSeconds(5));
-			if (!signalled)
-				throw new Exception($"Expected to receive the initial flush of events from {nameof(MockApmServer)} within 5s but none was received");
-
-			// wait for a flush to happen, if we don't see a flush three times assume the work is done.
-			// otherwise wait a max off 10s (50 * 200ms wait) to mimic the old behavior.
-			int notSignalled = 0, waited = 0;
-			while (notSignalled < 10 && waited < 50) {
-				signalled = MockApmServer.WaitHandle.WaitOne(TimeSpan.FromMilliseconds(200));
-				if (!signalled) notSignalled++;
-				waited++;
-			}
-		}
-
 		protected async Task WaitAndCustomVerifyReceivedData(Action<ReceivedData> verifyAction, bool shouldGatherDiagnostics = true)
 		{
-			WaitUntilNoMoreFlushesHappened();
-			if (!MockApmServer.ReceivedData.InvalidPayloadErrors.IsEmpty)
+			var attemptNumber = 0;
+			var timerSinceStart = Stopwatch.StartNew();
+			while (true)
 			{
-				var messageBuilder = new StringBuilder();
-				messageBuilder.AppendLine("There is at least one invalid payload error - the test is considered as failed.");
-				messageBuilder.AppendLine("Invalid payload error(s):".Indent(1));
-				foreach (var invalidPayloadError in MockApmServer.ReceivedData.InvalidPayloadErrors)
-					messageBuilder.AppendLine(invalidPayloadError.Indent(2));
-				throw new XunitException(messageBuilder.ToString());
+				++attemptNumber;
+
+				if (!MockApmServer.ReceivedData.InvalidPayloadErrors.IsEmpty)
+				{
+					var messageBuilder = new StringBuilder();
+					messageBuilder.AppendLine("There is at least one invalid payload error - the test is considered as failed.");
+					messageBuilder.AppendLine("Invalid payload error(s):".Indent(1));
+					foreach (var invalidPayloadError in MockApmServer.ReceivedData.InvalidPayloadErrors)
+						messageBuilder.AppendLine(invalidPayloadError.Indent(2));
+					throw new XunitException(messageBuilder.ToString());
+				}
+
+				try
+				{
+					verifyAction(MockApmServer.ReceivedData);
+					timerSinceStart.Stop();
+					_logger.Debug()
+						?.Log("Data received from agent passed verification." +
+							" Time elapsed: {VerificationTimeSeconds}s." +
+							" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
+							timerSinceStart.Elapsed.TotalSeconds,
+							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
+					if (shouldGatherDiagnostics)
+					{
+						LogSampleAppLogFileContent();
+						await LogSampleAppDiagnosticsPage();
+					}
+					return;
+				}
+				catch (XunitException ex)
+				{
+					var logOnThisAttempt =
+						attemptNumber >= DataSentByAgentVerificationConsts.LogMessageAfterNInitialAttempts &&
+						attemptNumber % DataSentByAgentVerificationConsts.LogMessageEveryNAttempts == 0;
+
+					if (logOnThisAttempt)
+					{
+						_logger.Warning()
+							?.LogException(ex,
+								"Data received from agent did NOT pass verification." +
+								" Time elapsed: {VerificationTimeSeconds}s." +
+								" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}" +
+								" This message is printed only every {LogMessageEveryNAttempts} attempts",
+								timerSinceStart.Elapsed.TotalSeconds,
+								attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify,
+								DataSentByAgentVerificationConsts.LogMessageEveryNAttempts);
+					}
+
+					if (attemptNumber == DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify)
+					{
+						_logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
+						await PostTestFailureDiagnostics();
+						throw;
+					}
+
+					if (logOnThisAttempt)
+					{
+						_logger.Debug()
+							?.Log("Waiting {WaitBetweenVerifyAttemptsMs}ms before the next attempt..." +
+								" This message is printed only every {LogMessageEveryNAttempts} attempts",
+								DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs,
+								DataSentByAgentVerificationConsts.LogMessageEveryNAttempts);
+					}
+
+					Thread.Sleep(DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
+				}
+				catch (Exception ex)
+				{
+					_logger.Error()?.LogException(ex, "Exception escaped from verifier");
+					throw;
+				}
 			}
-
-			verifyAction(MockApmServer.ReceivedData);
-
-			if (shouldGatherDiagnostics)
-			{
-				LogSampleAppLogFileContent();
-				await LogSampleAppDiagnosticsPage();
-			}
-
 		}
 
 		// ReSharper disable once MemberCanBeProtected.Global
@@ -471,7 +503,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			void AnalyzeDtoTimestamp(long dtoTimestamp, object dto)
 			{
-				var dtoStartTime = TimestampUtils.ToDateTimeOffset(dtoTimestamp);
+				var dtoStartTime = TimeUtils.ToDateTime(dtoTimestamp);
 
 				if (_testStartTime <= dtoStartTime) return;
 
@@ -491,11 +523,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected void VerifyReceivedDataSharedConstraints(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
 		{
+			FullFwAssertValid(receivedData);
+
 			receivedData.Transactions.Count.Should().Be(sampleAppUrlPathData.TransactionsCount);
 			receivedData.Spans.Count.Should().Be(sampleAppUrlPathData.SpansCount);
 			receivedData.Errors.Count.Should().Be(sampleAppUrlPathData.ErrorsCount);
-
-			FullFwAssertValid(receivedData);
 
 			if (receivedData.Transactions.Count != 1)
 				return;
@@ -522,7 +554,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var httpStatusFirstDigit = sampleAppUrlPathData.StatusCode / 100;
 			transaction.Result.Should().Be($"HTTP {httpStatusFirstDigit}xx");
 			transaction.SpanCount.Started.Should().Be(sampleAppUrlPathData.SpansCount);
-
 		}
 
 		internal void VerifySpanNameTypeSubtypeAction(SpanDto span, string spanPrefix)
@@ -741,11 +772,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected static bool OccursBetween(ITimedDto containedDto, ITimedDto containingDto) =>
 			containingDto.Timestamp <= containedDto.Timestamp
-			&& containedDto.EndDateTimeOffset() <= containingDto.EndDateTimeOffset();
+			&&
+			TimeUtils.ToEndDateTime(containedDto.Timestamp, containedDto.Duration)
+			<=
+			TimeUtils.ToEndDateTime(containingDto.Timestamp, containingDto.Duration);
 
 		protected void ClearState()
 		{
 			_sampleAppClientCallTiming = null;
+
 			MockApmServer.ClearState();
 		}
 

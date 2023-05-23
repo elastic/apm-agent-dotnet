@@ -61,7 +61,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (_collectTotalMemory)
 					samples.Add(new MetricSample(TotalMemory, totalMemory));
 
-				return new List<MetricSet> { new MetricSet(TimestampUtils.TimestampNow(), samples) };
+				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 			}
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -100,7 +100,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				ConsecutiveNumberOfFailedReads = 0;
 
-				return new List<MetricSet> { new MetricSet(TimestampUtils.TimestampNow(), samples) };
+				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 			}
 
 			(bool, ulong) GetEntry(string line, string name)

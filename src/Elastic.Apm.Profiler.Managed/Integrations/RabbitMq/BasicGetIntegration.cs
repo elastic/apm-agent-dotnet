@@ -108,7 +108,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 					RabbitMqIntegration.Subtype);
 
 			if (startTime.HasValue && span is Span realSpan)
-				realSpan.Timestamp = TimestampUtils.ToTimestamp(startTime.Value);
+				realSpan.Timestamp = TimeUtils.ToTimestamp(startTime.Value);
 
 			span.Context.Message = new Message { Queue = new Queue { Name = queue } };
 
