@@ -41,11 +41,11 @@ jobs:
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
         restore-keys: |
           ${{ runner.os }}-nuget-
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
+    # - name: Add msbuild to PATH
+    #  uses: microsoft/setup-msbuild@v1.1
 
-    - name: Setup VS Dev Environment
-      uses: seanmiddleditch/gha-setup-vsdevenv@v4
+    #- name: Setup VS Dev Environment
+    #  uses: seanmiddleditch/gha-setup-vsdevenv@v4
 
     - name: Restore NuGet Packages
       run: msbuild /t:Restore
