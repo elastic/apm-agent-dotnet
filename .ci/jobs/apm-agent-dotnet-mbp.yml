@@ -1,5 +1,0 @@
----
-- job:
-    name: apm-agent-dotnet/apm-agent-dotnet-mbp
-    display-name: APM Agent .NET
-    description: APM Agent .NET
