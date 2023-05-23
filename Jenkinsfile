@@ -29,7 +29,5 @@ pipeline {
   stages {
   }
   post {
-    cleanup {
-    }
   }
 }
