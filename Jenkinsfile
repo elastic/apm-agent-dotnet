@@ -26,4 +26,7 @@ pipeline {
   parameters {
     booleanParam(name: 'Run_As_Main_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on main branch.')
   }
+  stages {
+    sh(label: 'Empty Stage', script: "echo Empty Stage")
+  }
 }
