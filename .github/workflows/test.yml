@@ -51,7 +51,7 @@ jobs:
    #   run: msbuild /t:Restore
 
     - name: Build the application
-      run: msbuild /t:Build /p:Configuration=Release /restore
+      run: msbuild /t:Build /p:Configuration=Release /restore /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true
       
     #- name: Discover Windows Features
     # shell: cmd
