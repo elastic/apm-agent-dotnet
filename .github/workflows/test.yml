@@ -47,8 +47,8 @@ jobs:
     #- name: Setup VS Dev Environment
     #  uses: seanmiddleditch/gha-setup-vsdevenv@v4
 
-    - name: Restore NuGet Packages
-      run: msbuild /t:Restore
+    #- name: Restore NuGet Packages
+   #   run: msbuild /t:Restore
 
     - name: Build the application
       run: msbuild /t:Build /p:Configuration=Release
