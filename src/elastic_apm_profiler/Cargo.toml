@@ -1,6 +1,6 @@
 [package]
 name = "elastic_apm_profiler"
-version = "1.23.0-alpha"
+version = "0.0.1-unversioned"
 edition = "2018"
 authors = ["Elastic and Contributors"]
 description = "Elastic APM .NET agent CLR profiler"
@@ -29,3 +29,4 @@ crate-type = ["cdylib"]
 
 [build-dependencies]
 static_vcruntime = "2.0"
+semver = "1.0.17"

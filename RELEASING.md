@@ -6,15 +6,11 @@ This guide aims to provide guidance on how to release new versions of the `apm-a
 
 Releasing a new version of the binary implies that there have been changes in the source code which are meant to be released for wider consumption. Before releasing a new version there's some prerequisites that have to be checked.
 
-### Make sure the version is updated
+### Versioning
 
-Since the source has changed, we need to update the current committed version to a higher version so that the release is published.
+Versioning off the binaries is automated through [minver](https://github.com/adamralph/minver)
 
-The version is currently defined in the [Directory.Build.props](./src/Directory.Build.props) in the [SEMVER](https://semver.org) format: `MAJOR.MINOR.BUG`
-
-Say we want to perform a minor version release (i.e. no breaking changes and only new features and bug fixes are being included); in which case we'll update the _MINOR_ part of the version.
-
-For instance, the bump from version 1.1.2 to 1.2 can be found in this https://github.com/elastic/apm-agent-dotnet/pull/624
+The tag dictates the version number. Untagged commits are automatically versioned as prereleases according to their distance to their closest version tag.
 
 ### Generating a changelog for the new version
 
@@ -85,30 +81,6 @@ Additionally, in case of a major version release, we need to create a PR in [ela
 In this PR we need to update:
 - [`conf.yaml`](https://github.com/elastic/docs/blob/master/conf.yaml): Set the `current` part to the new `<major>.x` and add that to the `branches` and `live` parts. In addition, remove the previous major entry from the `live` key.
 - [`shared/versions/stack/*.asciidoc`](https://github.com/elastic/docs/tree/master/shared/versions/stack): This directory defines how links from stack-versioned documentation relate to links from non stack-versioned documentation. For example, in the `8.5` file, the variable `:apm-dotnet-branch:` is set to `1.x`. This means any links in the `8.5` stack docs (like the APM Guide) that point to the APM .NET Agent reference, will point to the `1.x` version of those docs. The number of files you update in this directory depends on version compatibility between stack docs and your APM agent. In general, we update as far back as the new version of the agent is compatible with the stack; this pushes new documentation to the user.
-
-### Prepare the next (pre-release) version
-
-To clearly distinguish pre-release builds and artifacts from the newly released ones,
-bump the agent version again by adding the `-alpha` suffix to the following files:
-
-- `/src/Directory.Build.props`:
-
-  ```xml
-  ...
-  <InformationalVersion>1.20.0-alpha</InformationalVersion>
-  <VersionPrefix>1.20.0-alpha</VersionPrefix>
-  ...
-  ```
-
-  **Note** that `AssemblyVersion` and `FileVersion` do not add the `-alpha` prefix.
-
-- `/src/elastic_apm_profiler/Cargo.toml`:
-
-  ```toml
-  ...
-  version = "1.20.0-alpha"
-  ...
-  ```
 
 ## Executing the release script locally
 

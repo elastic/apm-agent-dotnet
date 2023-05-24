@@ -8,12 +8,4 @@
 #
 set -euxo pipefail
 
-VERSION_SUFFIX_ENABLED=${1:-"false"}
-
-# Set the canary flag if required
-FLAG=''
-if [ "${VERSION_SUFFIX_ENABLED}" = "true" ]; then
-    FLAG='--canary'
-fi
-
-./build.sh pack ${FLAG}
+./build.sh pack

@@ -27,28 +27,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-      
-    - name: Rustup
-      run: rustup default 1.67.1
-
-    - name: Cargo make
-      run: cargo install --force cargo-make
-
-    - name: Build
-      run: ./build.sh
-
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+      with:
+          rust: 'true'
+    
     - name: Package
-      run: .ci/linux/release.sh true
-
-    - name: Build profiler
-      run: ./build.sh profiler-zip
+      run: .ci/linux/release.sh 
 
   test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+    
     - name: Test & coverage
       run: .ci/linux/test.sh
 
@@ -64,18 +58,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+    
     - name: Build agent-zip
       run: ./build.sh agent-zip
 
-    - name: Setup dotnet
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: |
-          3.1.100
-          5.0.100
-          6.0.100
-          7.0.100
     - name: Startup Hook Tests
       run: .ci/linux/test-startuphooks.sh
 
@@ -91,21 +79,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Rustup
-      run: rustup default 1.67.1
-
-    - name: Cargo make
-      run: cargo install --force cargo-make
-
-    - name: Setup dotnet
-      uses: actions/setup-dotnet@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
       with:
-        dotnet-version: |
-          3.1.100
-          5.0.100
-          6.0.100
-          7.0.100
+          rust: 'true'
+    
     - name: Build profiler
       run: ./build.sh profiler-zip
 

@@ -17,18 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-
-    - name: Build
-      run: .ci/linux/build.sh
-
-    - name: Rustup
-      run: rustup default 1.67.1
-
-    - name: Cargo make
-      run: cargo install --force cargo-make
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+      with:
+          rust: 'true'
 
     - name: Package
-      run: .ci/linux/release.sh true
+      run: .ci/linux/release.sh
 
     - uses: actions/upload-artifact@v3
       with:
@@ -41,6 +36,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
 
     - name: Tools
       run: .ci\\windows\\tools.ps1
@@ -69,7 +66,7 @@ jobs:
     steps:
 
     - uses: actions/checkout@v3
-
+      
     - uses: actions/download-artifact@v3
       with:
         name: snapshoty-linux

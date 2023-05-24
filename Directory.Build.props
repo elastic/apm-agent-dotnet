@@ -14,7 +14,14 @@
     <ExposedPublicKeySampleApps>0024000004800000940000000602000000240000525341310004000001000100553bc065771cba5728dd48f670a8f93d119fe6f165a3b65dbff073687a014dd033b9a0019cb7d790c7ffaff9e8b5204eb56364ea7e3da5b681136e3082a2c5ae826018f9d1578536923205ad6e9d7d877dffc22d33099c561f3409874fb286641bac5ec51017baf7817cef7dbf727b05d26e1dccc54de08d786398381b5085b2</ExposedPublicKeySampleApps>
     <DelaySign>false</DelaySign>
   </PropertyGroup>
+  <!-- MinVer Configuration -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>canary.0</MinVerDefaultPreReleaseIdentifiers>
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
+  </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all"/>
   </ItemGroup>
 </Project>

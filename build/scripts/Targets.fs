@@ -31,7 +31,6 @@ module Main =
     // Command line options for Targets
     let private options : Option list = [
         Option<string>([| "-v"; "--version" |], "The version to use for the build")
-        Option<bool>([| "-c"; "--canary" |], "Whether the build is a canary release. Used by pack")
         Option<string>([| "-f"; "--framework" |], "The framework version to use for diffs. Used by diff")
         Option<string[]>([| "-p"; "--packageids" |], "The ids of nuget packages to diff. Used by diff")
     ]
@@ -96,7 +95,7 @@ module Main =
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
-            Targets.Target("build-profiler", ["restore"; "clean"; "version"; "clean-profiler"], Build.BuildProfiler)
+            Targets.Target("build-profiler", ["build"; "clean-profiler"], Build.BuildProfiler)
                         
             Targets.Target("profiler-integrations", ["build-profiler"], Build.ProfilerIntegrations)
             
@@ -104,25 +103,25 @@ module Main =
                 
                 printfn "Running profiler-zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
-                Build.Publish (Some projs)
-                Build.ProfilerZip (cmdLine.ValueForOption<bool>("canary"))
+                Build.Publish(Some projs)
+                Build.ProfilerZip()
             )
             
             Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
                   
-            Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
+            Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack())
             
             Targets.Target("agent-zip", ["build"], fun _ ->
                 printfn "Running profiler-zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm")
                             ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
                 
-                Build.Publish (Some projs)
-                Build.AgentZip (cmdLine.ValueForOption<bool>("canary"))
+                Build.Publish(Some projs)
+                Build.AgentZip()
             )
             
             Targets.Target("agent-docker", ["agent-zip"], fun _ ->
-                Build.AgentDocker (cmdLine.ValueForOption<bool>("canary"))
+                Build.AgentDocker()
             )   
             
             Targets.Target("release-notes", fun _ ->
