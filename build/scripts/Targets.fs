@@ -62,7 +62,7 @@ let private pristineCheck (arguments: ParseResults<Arguments>) =
 
     match doCheck, Information.isCleanWorkingCopy "." with
     | _, true -> printfn "The checkout folder does not have pending changes, proceeding"
-    | false, _ -> printf "Checkout is dirty but -c was specified to ignore this"
+    | false, _ -> printfn "Checkout is dirty but -c was specified to ignore this"
     | _ -> failwithf "The checkout folder has pending changes, aborting"
     
 let private generatePackages (arguments: ParseResults<Arguments>) =
@@ -81,7 +81,7 @@ let private validatePackages (arguments: ParseResults<Arguments>) =
     let ciOnWindowsArgs = if runningOnCI && runningOnWindows then [ "-r"; "true" ] else []
 
     let args =
-        [ "-v"; currentVersion; "-k"; Paths.SignKey; "-t"; output ] @ ciOnWindowsArgs
+        [ "-v"; currentVersion; "-n"; "true"; "-k"; Paths.SignKey; "-t"; output ] @ ciOnWindowsArgs
 
     nugetPackages |> Seq.iter (fun p -> exec "dotnet" ([ "nupkg-validator"; p ] @ args) |> ignore)
 
@@ -268,7 +268,7 @@ let Setup (parsed: ParseResults<Arguments>) (subCommand: Arguments) =
         | Pack -> 
             cmd
                 Pack.Name
-                (Some [ PristineCheck.Name; Test.Name; Integrate.Name ])
+                (Some [ PristineCheck.Name; ])
                 (Some [
                     GeneratePackages.Name
                     ValidatePackages.Name

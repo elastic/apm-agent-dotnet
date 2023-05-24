@@ -13,6 +13,18 @@
       "commands": [
         "minver"
       ]
+    },
+    "nupkg-validator": {
+      "version": "0.5.0",
+      "commands": [
+        "nupkg-validator"
+      ]
+    },
+    "release-notes": {
+      "version": "0.5.2",
+      "commands": [
+        "release-notes"
+      ]
     }
   }
 }
