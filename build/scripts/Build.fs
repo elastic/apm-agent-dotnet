@@ -16,10 +16,13 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
-open TestEnvironment
 open Tooling
 
 module Build =
+    
+    let private runningOnCI = Fake.Core.Environment.hasEnvironVar "CI"
+    let private runningOnWindows = Fake.Core.Environment.isWindows
+
     
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
     let private diagnosticSourceVersion6 = SemVer.parse "6.0.0"
@@ -141,7 +144,7 @@ module Build =
     /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
     let Build () =
         dotnet "build" Paths.Solution
-        if isWindows && not isCI then msBuild "Build" aspNetFullFramework
+        if runningOnWindows && not runningOnCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
         
     /// Builds the CLR profiler and supporting .NET managed assemblies
@@ -178,19 +181,19 @@ module Build =
     let Pack () =
         DotNet.Exec ["pack" ; Paths.Solution; "-c"; "Release"; $"--property:PackageOutputPath=%s{Paths.NugetOutput}"]
           
-    let Clean () =
-        Shell.cleanDir Paths.BuildOutputFolder
-        dotnet "clean" Paths.Solution       
-        if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
-        
     let CleanProfiler () =
         Cargo.Exec ["make"; "clean"]       
 
+    let Clean () =
+        Shell.cleanDir Paths.BuildOutputFolder
+        dotnet "clean" Paths.Solution       
+        if runningOnWindows && not runningOnCI then msBuild "Clean" aspNetFullFramework
+        
     /// Restores all packages for the solution
     let Restore () =
         DotNet.Exec ["tool" ; "restore"]
         DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
-        if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
+        if runningOnWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
             
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
         source.GetFiles()
@@ -239,7 +242,7 @@ module Build =
       
       
     /// Builds docker image including the ElasticApmAgent  
-    let AgentDocker() =
+    let StartupHooksDocker() =
         let agentVersion = Versioning.CurrentVersion.FileVersion.ToString()        
         
         Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";

@@ -2,191 +2,294 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-namespace Scripts
+module Targets
 
+open Argu
+open Bullseye.Internal
+open Fake.Tools.Git
+open CommandLine
 open System
-open System.CommandLine
-open System.CommandLine.Invocation
-open System.CommandLine.Parsing
 open Bullseye
-open Fake.IO
 open ProcNet
-open Fake.Core
+open Scripts
 open Fake.IO.Globbing.Operators
-open TestEnvironment
+open System.IO
 
-module Main =  
-    let excludeBullsEyeOptions = Set.ofList [
-        "--verbose"
-        "--clear"
-        "--parallel"
-    ]
+let runningOnCI = Fake.Core.Environment.hasEnvironVar "CI"
+let runningOnWindows = Fake.Core.Environment.isWindows
+
+let execWithTimeout binary args timeout =
+    let opts =
+        ExecArguments(binary, args |> List.map (sprintf "\"%s\"") |> List.toArray)
+        
+    let r = Proc.Exec(opts, timeout)
+
+    match r.HasValue with
+    | true -> r.Value
+    | false -> failwithf "invocation of `%s` timed out" binary
+
+let exec binary args =
+    execWithTimeout binary args (TimeSpan.FromMinutes 4)
+
+
+
+
+type TestMode = | Unit | Integration
+let private runTests (arguments: ParseResults<Arguments>) testMode =
     
-    // Command line options for Bullseye, excluding ones where we want to use the name
-    // TODO: investigate using sub commands for targets 
-    let private bullsEyeOptions =
-        Options.Definitions
-        |> Seq.filter (fun d -> excludeBullsEyeOptions |> Set.contains d.LongName |> not)
+    let mode = match testMode with | Unit ->  "unit" | Integration -> "integration"
         
-    // Command line options for Targets
-    let private options : Option list = [
-        Option<string>([| "-v"; "--version" |], "The version to use for the build")
-        Option<string>([| "-f"; "--framework" |], "The framework version to use for diffs. Used by diff")
-        Option<string[]>([| "-p"; "--packageids" |], "The ids of nuget packages to diff. Used by diff")
-    ]
+    let filterArg =
+        match testMode with
+        | Unit ->  [ "--filter"; "FullyQualifiedName!~IntegrationTests" ]
+        | Integration -> [ "--filter"; "FullyQualifiedName~IntegrationTests" ]
+
+    let os = if runningOnWindows then "win" else "linux"
+    let junitOutput =
+        Path.Combine(Paths.Output.FullName, $"junit-%s{os}-%s{mode}-{{assembly}}-{{framework}}-test-results.xml")
+
+    let loggerPathArgs = sprintf "LogFilePath=%s" junitOutput
+    let loggerArg = $"--logger:\"junit;%s{loggerPathArgs};MethodFormat=Class;FailureBodyFormat=Verbose\""
+    let settingsArg = if runningOnCI then (["-s"; ".ci.runsettings"]) else [];
+
+    execWithTimeout "dotnet" ([ "test" ] @ filterArg @ settingsArg @ [ "-c"; "RELEASE"; "-m:1"; loggerArg ]) (TimeSpan.FromMinutes 15)
+    |> ignore
+
+let private test (arguments: ParseResults<Arguments>) =
+    runTests arguments Unit
+
+let private integrate (arguments: ParseResults<Arguments>) =
+    runTests arguments Integration
     
-    /// Exception relating to passed options/arguments. Used by Bullseye to only include the message if this
-    /// type of exception is raised/thrown.
-    type OptionException(msg : string) =
-        inherit Exception(msg)
+let private pristineCheck (arguments: ParseResults<Arguments>) =
+    let doCheck = arguments.TryGetResult CleanCheckout |> Option.defaultValue true
+
+    match doCheck, Information.isCleanWorkingCopy "." with
+    | _, true -> printfn "The checkout folder does not have pending changes, proceeding"
+    | false, _ -> printf "Checkout is dirty but -c was specified to ignore this"
+    | _ -> failwithf "The checkout folder has pending changes, aborting"
+    
+let private generatePackages (arguments: ParseResults<Arguments>) =
+    let output = Paths.RootRelative Paths.Output.FullName
+    exec "dotnet" [ "pack"; "-c"; "Release"; "-o"; output ] |> ignore
+
+let private validatePackages (arguments: ParseResults<Arguments>) =
+    let output = Paths.RootRelative <| Paths.Output.FullName
+    let currentVersion = Versioning.CurrentVersion.FileVersion.ToString()
+
+    let nugetPackages =
+        Paths.Output.GetFiles("*.nupkg")
+        |> Seq.sortByDescending (fun f -> f.CreationTimeUtc)
+        |> Seq.map (fun p -> Paths.RootRelative p.FullName)
+
+    let ciOnWindowsArgs = if runningOnCI && runningOnWindows then [ "-r"; "true" ] else []
+
+    let args =
+        [ "-v"; currentVersion; "-k"; Paths.SignKey; "-t"; output ] @ ciOnWindowsArgs
+
+    nugetPackages |> Seq.iter (fun p -> exec "dotnet" ([ "nupkg-validator"; p ] @ args) |> ignore)
+
+let private generateApiChanges (arguments: ParseResults<Arguments>) =
+    let output = Paths.RootRelative <| Paths.Output.FullName
+    let currentVersion = Versioning.CurrentVersion.FileVersion.ToString()
+
+    let nugetPackages =
+        Paths.Output.GetFiles("*.nupkg")
+        |> Seq.sortByDescending (fun f -> f.CreationTimeUtc)
+        |> Seq.map (fun p ->
+            Path
+                .GetFileNameWithoutExtension(Paths.RootRelative p.FullName)
+                .Replace("." + currentVersion, ""))
+
+    let firstPath project tfms =
+        tfms
+        |> Seq.map (fun tfm -> (tfm, sprintf "directory|src/%s/bin/Release/%s" project Paths.MainTFM))
+        |> Seq.where (fun (tfm, path) -> File.Exists path)
+        |> Seq.tryHead
+
+    nugetPackages
+    |> Seq.iter (fun p ->
+        let outputFile =
+            let f = sprintf "breaking-changes-%s.md" p
+            Path.Combine(output, f)
+
+        let firstKnownTFM = firstPath p [ Paths.MainTFM; Paths.Netstandard21TFM ]
+
+        match firstKnownTFM with
+        | None -> printf "Skipping generating API changes for: %s" p
+        | Some (tfm, path) ->
+            let args =
+                [
+                    "assembly-differ"
+                    (sprintf "previous-nuget|%s|%s|%s" p currentVersion tfm)
+                    (sprintf "directory|%s" path)
+                    "-a"
+                    "true"
+                    "--target"
+                    p
+                    "-f"
+                    "github-comment"
+                    "--output"
+                    outputFile
+                ]
+
+            exec "dotnet" args |> ignore)
+
+let private generateReleaseNotes (arguments: ParseResults<Arguments>) =
+    let currentVersion = Versioning.CurrentVersion.FileVersion.ToString()
+
+    let output =
+        Paths.RootRelative <| Path.Combine(Paths.Output.FullName, sprintf "release-notes-%s.md" currentVersion)
+
+    let tokenArgs =
+        match arguments.TryGetResult Token with
+        | None -> []
+        | Some token -> [ "--token"; token ]
+
+    let releaseNotesArgs =
+        (Paths.Repository.Split("/") |> Seq.toList)
+        @ [
+            "--version"
+            currentVersion
+            "--label"
+            "enhancement"
+            "New Features"
+            "--label"
+            "bug"
+            "Bug Fixes"
+            "--label"
+            "documentation"
+            "Docs Improvements"
+          ]
+          @ tokenArgs @ [ "--output"; output ]
+
+    exec "dotnet" ([ "release-notes" ] @ releaseNotesArgs) |> ignore
+
+let private createReleaseOnGithub (arguments: ParseResults<Arguments>) =
+    let currentVersion = Versioning.CurrentVersion.FileVersion.ToString()
+
+    let tokenArgs =
+        match arguments.TryGetResult Token with
+        | None -> []
+        | Some token -> [ "--token"; token ]
+
+    let releaseNotes =
+        Paths.RootRelative <| Path.Combine(Paths.Output.FullName, sprintf "release-notes-%s.md" currentVersion)
+
+    let breakingChanges =
+        let breakingChangesDocs = Paths.Output.GetFiles("breaking-changes-*.md")
+
+        breakingChangesDocs |> Seq.map (fun f -> [ "--body"; Paths.RootRelative f.FullName ]) |> Seq.collect id |> Seq.toList
+
+    let releaseArgs =
+        (Paths.Repository.Split("/") |> Seq.toList)
+        @ [ "create-release"; "--version"; currentVersion; "--body"; releaseNotes ] @ breakingChanges @ tokenArgs
+
+    exec "dotnet" ([ "release-notes" ] @ releaseArgs) |> ignore
+
+
+// Targets.Target("profiler-zip", ["profiler-integrations"], fun _ ->
+let profilerZip (arguments: ParseResults<Arguments>) = 
+    
+    Build.BuildProfiler()
+    printfn "Running profiler-zip..."
+    Build.ProfilerIntegrations()
+    
+    
+    let projs = !! (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
+    Build.Publish(Some projs)
+    Build.ProfilerZip()
+
+let startupHooksZip (arguments: ParseResults<Arguments>) = 
+    printfn "Running startup hooks zip..."
+    let projs = !! (Paths.SrcProjFile "Elastic.Apm")
+                ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+    
+    Build.Publish(Some projs)
+    Build.AgentZip()
+
+// temp fix for unit reporting: https://github.com/elastic/apm-pipeline-library/issues/2063
+let teardown () =
+    if Paths.Output.Exists then
+        let isSkippedFile p =
+            File.ReadLines(p) |> Seq.tryHead = Some "<testsuites />"
+        Paths.Output.GetFiles("junit-*.xml")
+            |> Seq.filter (fun p -> isSkippedFile p.FullName)
+            |> Seq.iter (fun f ->
+                printfn $"Removing empty test file: %s{f.FullName}"
+                f.Delete()
+            )
+    Console.WriteLine "Ran teardown"
+
+let Setup (parsed: ParseResults<Arguments>) (subCommand: Arguments) =
+    let step (name: string) action =
+        Targets.Target(name, Action(fun _ -> action (parsed)))
+
+    let cmd (name: string) commandsBefore steps action =
+        let singleTarget = (parsed.TryGetResult SingleTarget |> Option.defaultValue false)
+
+        let deps =
+            match (singleTarget, commandsBefore) with
+            | (true, _) -> []
+            | (_, Some d) -> d
+            | _ -> []
+
+        let steps = steps |> Option.defaultValue []
+        Targets.Target(name, deps @ steps, Action(action))
+    
+    Arguments.AllTargets
+    |> Seq.iter (fun target ->
+        match target with
+        // steps for commands to depend on
+        | Clean -> step Clean.Name <| fun _ -> Build.Clean() 
+        | CleanProfiler -> step CleanProfiler.Name <| fun _ -> Build.CleanProfiler() 
+        | Restore -> step Restore.Name <| fun _ -> Build.Restore() 
+        | PristineCheck -> step PristineCheck.Name pristineCheck
+        | GeneratePackages -> step GeneratePackages.Name generatePackages
+        | ValidatePackages -> step ValidatePackages.Name validatePackages
+        | GenerateReleaseNotes -> step GenerateReleaseNotes.Name generateReleaseNotes
+        | GenerateApiChanges -> step GenerateApiChanges.Name generateApiChanges
+        | CreateReleaseOnGithub -> step CreateReleaseOnGithub.Name createReleaseOnGithub
         
-    [<EntryPoint>] 
-    let main args =         
-        let cmd = RootCommand()
-        cmd.TreatUnmatchedTokensAsErrors <- true
-        cmd.Description <- "Runs tasks for the APM .NET agent"      
-        options |> Seq.iter cmd.AddOption
-
-        let targets = Argument("targets")
-        targets.Arity <- ArgumentArity.ZeroOrMore
-        targets.Description <- "The target(s) to run or list"
-        cmd.Add(targets)
+        // sub commands
+        | Build ->
+            cmd Build.Name (Some [ Clean.Name ]) (Some [ Restore.Name ])  <| fun _ -> Build.Build()
+        | Test ->
+            cmd Test.Name (Some [ Build.Name ]) None <| fun _ -> test parsed
+        | Integrate ->
+            cmd Integrate.Name (Some [ Build.Name ]) None <| fun _ -> () //integrate parsed
+            
+        | StartupHookDocker ->
+            cmd StartupHookDocker.Name None (Some [ StartupHooksZip.Name ])  <| fun _ -> Build.StartupHooksDocker()
+        | StartupHooksZip -> 
+            cmd StartupHooksZip.Name None (Some [ Build.Name ]) <| fun _ -> startupHooksZip parsed
+        | ProfilerZip ->
+            cmd ProfilerZip.Name
+                (Some [ CleanProfiler.Name ])
+                (Some [ Build.Name ])
+            <| fun _ -> profilerZip parsed
         
-        // Add the Bullseye options as CommandLine options 
-        bullsEyeOptions
-        |> Seq.iter (fun d ->
-            let names =
-                [ d.ShortName; d.LongName ]
-                |> Seq.filter String.isNotNullOrEmpty
-                |> Seq.toArray       
-            cmd.Add(Option(names, d.Description))
-        )
-        
-        cmd.Handler <- CommandHandler.Create<ParseResult>(fun (cmdLine: ParseResult) ->
-            // parse bullseye targets from commandline targets
-            let targets =
-                cmdLine.CommandResult.Tokens
-                |> Seq.map (fun token -> token.Value)
-                
-            // Parse the values for Bullseye options from the arguments           
-            let parsedBullsEyeOptions =
-                let definitions =
-                    bullsEyeOptions
-                    |> Seq.map (fun o -> struct (o.LongName, cmdLine.ValueForOption<bool>(o.LongName)))
-                Options(definitions)
-
-            Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
+        | Pack -> 
+            cmd
+                Pack.Name
+                (Some [ PristineCheck.Name; Test.Name; Integrate.Name ])
+                (Some [
+                    GeneratePackages.Name
+                    ValidatePackages.Name
+                    ProfilerZip.Name
+                    StartupHooksZip.Name
+                    GenerateReleaseNotes.Name
+                    GenerateApiChanges.Name
+                ])
+            <| fun _ -> printfn "release"
             
-            Targets.Target("clean", fun _ ->
-                if isCI then
-                    printfn "skipping clean as running on CI"
-                else
-                    Build.Clean()
-            )
+        | Publish ->
+            cmd Publish.Name (Some [ Pack.Name ]) (Some [ CreateReleaseOnGithub.Name ])
+            <| fun _ -> printfn "publish"
             
-            Targets.Target("clean-profiler", fun _ ->
-                if isCI then
-                    printfn "skipping clean-profiler as running on CI"
-                else
-                    Build.CleanProfiler()
-            )
-            
-            Targets.Target("restore", Build.Restore)
-           
-            Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
-            
-            Targets.Target("build-profiler", ["build"; "clean-profiler"], Build.BuildProfiler)
-                        
-            Targets.Target("profiler-integrations", ["build-profiler"], Build.ProfilerIntegrations)
-            
-            Targets.Target("profiler-zip", ["profiler-integrations"], fun _ ->
-                
-                printfn "Running profiler-zip..."
-                let projs = !! (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
-                Build.Publish(Some projs)
-                Build.ProfilerZip()
-            )
-            
-            Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
-                  
-            Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack())
-            
-            Targets.Target("agent-zip", ["build"], fun _ ->
-                printfn "Running profiler-zip..."
-                let projs = !! (Paths.SrcProjFile "Elastic.Apm")
-                            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
-                
-                Build.Publish(Some projs)
-                Build.AgentZip()
-            )
-            
-            Targets.Target("agent-docker", ["agent-zip"], fun _ ->
-                Build.AgentDocker()
-            )   
-            
-            Targets.Target("release-notes", fun _ ->
-                let version = cmdLine.ValueForOption<string>("version")
-                let currentVersion = Versioning.CurrentVersion.AssemblyVersion
-                
-                if String.IsNullOrEmpty version then
-                    raise (sprintf "version greater than '%O' is required" currentVersion |> OptionException)
-                if SemVer.isValid version = false then
-                    raise (OptionException "version must be a valid semantic version")   
-                
-                let version = SemVer.parse version
-                if version <= currentVersion then
-                    raise (sprintf "version '%O' must be greater than '%O'" version currentVersion |> OptionException)
-              
-                ReleaseNotes.GenerateNotes Versioning.CurrentVersion.AssemblyVersion version
-            )
-            
-            Targets.Target("diff", ["build"], fun _ ->
-                let version =
-                    let v = cmdLine.ValueForOption<string>("version")
-                    match v with
-                    | null ->
-                        // the current version may not have yet been incremented since the last release
-                        // so create a patch version from the current version, which will work for both
-                        // an incremented and non-incremented cases
-                        let c = { Versioning.CurrentVersion.AssemblyVersion with
-                                    Patch = Versioning.CurrentVersion.AssemblyVersion.Patch + 1u
-                                    Original = None }         
-                        c.ToString()
-                    | _ -> v
-                    
-                let framework =
-                    let f = cmdLine.ValueForOption<string>("framework")
-                    match f with
-                    | null -> "netstandard2.0"
-                    | _ -> f
-                
-                let packageDirectories =
-                    let p = cmdLine.ValueForOption<string[]>("packageids")
-                    match p with
-                    | null -> IO.Directory.GetDirectories (Paths.BuildOutputFolder, "Elastic.*")
-                    | _ -> p |> Array.map Paths.BuildOutput
-                    
-                packageDirectories
-                |> Array.filter(fun id -> IO.Directory.Exists(Path.combine id framework))
-                |> Array.iter(fun dir ->
-                    let packageId = IO.Path.GetFileName dir
-                    
-                    let command = [ sprintf "previous-nuget|%s|%s|%s" packageId version framework
-                                    sprintf "directory|%s/%s" dir framework
-                                    "-a"; "-f"; "xml"; "--output"; (IO.Path.GetFullPath Paths.BuildOutputFolder)]
-                    
-                    Tooling.Diff command
-                )
-            )
-            
-            // default target if none is specified
-            Targets.Target("default", ["build"])
-
-            Targets.RunTargetsAndExit(
-                targets,
-                parsedBullsEyeOptions,
-                (fun e -> e.GetType() = typeof<ProcExecException> || e.GetType() = typeof<OptionException>),
-                ":");
-        )
-
-        cmd.Invoke(args)
+        // neither steps nor subcommands but command line arguments
+        | SingleTarget _ -> ()
+        | Token _ -> ()
+        | CleanCheckout _ -> ()
+    )
+    
