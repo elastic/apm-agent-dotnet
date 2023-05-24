@@ -9,8 +9,8 @@
     <Compile Include="Paths.fs" />
     <Compile Include="Versioning.fs" />
     <Compile Include="Tooling.fs" />
-    <Compile Include="Build.fs" />
     <Compile Include="CommandLine.fs" />
+    <Compile Include="Build.fs" />
     <Compile Include="Targets.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

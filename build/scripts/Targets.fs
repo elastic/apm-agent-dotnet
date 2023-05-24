@@ -5,7 +5,6 @@
 module Targets
 
 open Argu
-open Bullseye.Internal
 open Fake.Tools.Git
 open CommandLine
 open System
@@ -14,9 +13,6 @@ open ProcNet
 open Scripts
 open Fake.IO.Globbing.Operators
 open System.IO
-
-let runningOnCI = Fake.Core.Environment.hasEnvironVar "CI"
-let runningOnWindows = Fake.Core.Environment.isWindows
 
 let execWithTimeout binary args timeout =
     let opts =
@@ -241,7 +237,6 @@ let Setup (parsed: ParseResults<Arguments>) (subCommand: Arguments) =
     |> Seq.iter (fun target ->
         match target with
         // steps for commands to depend on
-        | Clean -> step Clean.Name <| fun _ -> Build.Clean() 
         | CleanProfiler -> step CleanProfiler.Name <| fun _ -> Build.CleanProfiler() 
         | Restore -> step Restore.Name <| fun _ -> Build.Restore() 
         | PristineCheck -> step PristineCheck.Name pristineCheck
@@ -252,6 +247,7 @@ let Setup (parsed: ParseResults<Arguments>) (subCommand: Arguments) =
         | CreateReleaseOnGithub -> step CreateReleaseOnGithub.Name createReleaseOnGithub
         
         // sub commands
+        | Clean -> cmd Clean.Name None None <| fun _ -> Build.Clean()
         | Build ->
             cmd Build.Name (Some [ Clean.Name ]) (Some [ Restore.Name ])  <| fun _ -> Build.Build()
         | Test ->

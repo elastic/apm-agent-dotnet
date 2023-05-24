@@ -4,7 +4,6 @@
 
 namespace Scripts
 
-open System
 open System.Collections.Generic
 open System.IO
 open System.IO.Compression
@@ -20,8 +19,8 @@ open Tooling
 
 module Build =
     
-    let private runningOnCI = Fake.Core.Environment.hasEnvironVar "CI"
-    let private runningOnWindows = Fake.Core.Environment.isWindows
+    let private runningOnCI = CommandLine.runningOnCI
+    let private runningOnWindows = CommandLine.runningOnWindows
 
     
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
@@ -186,14 +185,14 @@ module Build =
 
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder
-        dotnet "clean" Paths.Solution       
-        if runningOnWindows && not runningOnCI then msBuild "Clean" aspNetFullFramework
+        DotNet.Exec ["clean"; ]
+        // if runningOnWindows && not runningOnCI then msBuild "Clean" aspNetFullFramework
         
     /// Restores all packages for the solution
     let Restore () =
         DotNet.Exec ["tool" ; "restore"]
-        DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
-        if runningOnWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
+        DotNet.Exec ["restore"]
+        // if runningOnWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
             
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
         source.GetFiles()

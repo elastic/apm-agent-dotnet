@@ -3,6 +3,9 @@ module CommandLine
 open Argu
 open Microsoft.FSharp.Reflection
 
+let runningOnCI = Fake.Core.Environment.hasEnvironVar "CI"
+let runningOnWindows = Fake.Core.Environment.isWindows
+
 type Arguments =
     | [<CliPrefix(CliPrefix.None); Hidden; SubCommand>] Restore
     | [<CliPrefix(CliPrefix.None); SubCommand>] Clean

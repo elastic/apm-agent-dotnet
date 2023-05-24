@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-dotnet run --project build/scripts -- "$@"
+dotnet run --project build/scripts -c Release -- "$@"
