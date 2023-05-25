@@ -18,14 +18,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 
 		public string ConnectionString => _container.GetConnectionString();
 
-		public Task InitializeAsync()
-		{
-			return _container.StartAsync();
-		}
+		public Task InitializeAsync() => _container.StartAsync();
 
-		public Task DisposeAsync()
-		{
-			return _container.DisposeAsync().AsTask();
-		}
+		public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 	}
 }
