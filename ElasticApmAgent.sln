@@ -198,6 +198,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "profiler", "profiler", "{EA
 		src\profiler\Elastic.Apm.Profiler.Managed.Loader\Elastic.Apm.Profiler.Managed.Loader.csproj = src\profiler\Elastic.Apm.Profiler.Managed.Loader\Elastic.Apm.Profiler.Managed.Loader.csproj
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integrations", "integrations", "{3AC678A8-121F-4E78-A926-66ACA382D5AA}"
+	ProjectSection(SolutionItems) = preProject
+		src\integrations\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj = src\integrations\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj
+		src\integrations\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj = src\integrations\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj
+		src\integrations\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj = src\integrations\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj
+		src\integrations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj = src\integrations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj
+		src\integrations\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj = src\integrations\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj
+		src\integrations\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj = src\integrations\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj
+		src\integrations\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj = src\integrations\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -582,6 +593,7 @@ Global
 		{0F632E91-71D4-46EB-8926-E54C51F2878E} = {C6A7CA94-9D06-4CA1-BAEA-43B607BF939D}
 		{00F64981-E1EB-4B83-BA78-2F0591CEDF8A} = {C6A7CA94-9D06-4CA1-BAEA-43B607BF939D}
 		{EAD9B32C-46FC-44AF-8A48-954259F846C5} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{3AC678A8-121F-4E78-A926-66ACA382D5AA} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
