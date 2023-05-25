@@ -173,8 +173,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "profiler", "profiler", "{EAD9B32C-46FC-44AF-8A48-954259F846C5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integrations", "integrations", "{3AC678A8-121F-4E78-A926-66ACA382D5AA}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "startuphook", "startuphook", "{A9D3E13A-7782-4E0D-9CBB-9954F583F0B3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "elastic_apm_profiler", "src\profiler\elastic_apm_profiler\elastic_apm_profiler.csproj", "{30C75D5A-84F1-4AD1-9761-D35F72C9FBE2}"
@@ -187,23 +185,27 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Manage
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Profiler.Managed.Loader", "src\profiler\Elastic.Apm.Profiler.Managed.Loader\Elastic.Apm.Profiler.Managed.Loader.csproj", "{322FFF76-6794-4B73-AA32-6A2E5C8D0A12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Elasticsearch", "src\integrations\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj", "{7B529958-B4CC-4415-AC45-13C020C6A4A5}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integrations", "integrations", "{3AC678A8-121F-4E78-A926-66ACA382D5AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFramework6", "src\integrations\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj", "{C131822B-ACB2-4E3B-ADAD-3389E71A1349}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Elasticsearch", "src\instrumentations\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj", "{7B529958-B4CC-4415-AC45-13C020C6A4A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFrameworkCore", "src\integrations\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj", "{B0047AC4-2819-42C9-BD0A-E9FB48F9333E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFramework6", "src\instrumentations\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj", "{C131822B-ACB2-4E3B-ADAD-3389E71A1349}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.GrpcClient", "src\integrations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj", "{97AF29C9-C208-493C-9714-994C9760DEF6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFrameworkCore", "src\instrumentations\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj", "{B0047AC4-2819-42C9-BD0A-E9FB48F9333E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.MongoDb", "src\integrations\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj", "{CEDEF188-B975-4054-8CB1-D08CACB29F06}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.GrpcClient", "src\instrumentations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj", "{97AF29C9-C208-493C-9714-994C9760DEF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.SqlClient", "src\integrations\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj", "{2C34EB3B-1608-4B70-A6A5-A608E64CEBED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.MongoDb", "src\instrumentations\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj", "{CEDEF188-B975-4054-8CB1-D08CACB29F06}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StackExchange.Redis", "src\integrations\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj", "{096EE982-70B1-44F4-A9E8-5719F9160698}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.SqlClient", "src\instrumentations\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj", "{2C34EB3B-1608-4B70-A6A5-A608E64CEBED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StackExchange.Redis", "src\instrumentations\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj", "{096EE982-70B1-44F4-A9E8-5719F9160698}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StartupHook.Loader", "src\startuphook\Elastic.Apm.StartupHook.Loader\Elastic.Apm.StartupHook.Loader.csproj", "{27AA610C-0A8C-4012-ADE8-E4D8DCE51E9C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElasticApmAgentStartupHook", "src\startuphook\ElasticApmAgentStartupHook\ElasticApmAgentStartupHook.csproj", "{00BF8113-BB06-4B5F-8935-F44E2F58FD53}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "instrumentations", "instrumentations", "{2E405876-0925-4B96-94B6-6C529E52D47D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -607,15 +609,18 @@ Global
 		{6E388B69-72A1-467A-8645-039870D87446} = {EAD9B32C-46FC-44AF-8A48-954259F846C5}
 		{2B8565AA-D0DD-44CB-BCB7-E929198AEF26} = {EAD9B32C-46FC-44AF-8A48-954259F846C5}
 		{322FFF76-6794-4B73-AA32-6A2E5C8D0A12} = {EAD9B32C-46FC-44AF-8A48-954259F846C5}
-		{7B529958-B4CC-4415-AC45-13C020C6A4A5} = {3AC678A8-121F-4E78-A926-66ACA382D5AA}
-		{C131822B-ACB2-4E3B-ADAD-3389E71A1349} = {3AC678A8-121F-4E78-A926-66ACA382D5AA}
-		{B0047AC4-2819-42C9-BD0A-E9FB48F9333E} = {3AC678A8-121F-4E78-A926-66ACA382D5AA}
-		{97AF29C9-C208-493C-9714-994C9760DEF6} = {3AC678A8-121F-4E78-A926-66ACA382D5AA}
-		{CEDEF188-B975-4054-8CB1-D08CACB29F06} = {3AC678A8-121F-4E78-A926-66ACA382D5AA}
-		{2C34EB3B-1608-4B70-A6A5-A608E64CEBED} = {3AC678A8-121F-4E78-A926-66ACA382D5AA}
-		{096EE982-70B1-44F4-A9E8-5719F9160698} = {3AC678A8-121F-4E78-A926-66ACA382D5AA}
+		
+		{7B529958-B4CC-4415-AC45-13C020C6A4A5} = {2E405876-0925-4B96-94B6-6C529E52D47D}
+		{C131822B-ACB2-4E3B-ADAD-3389E71A1349} = {2E405876-0925-4B96-94B6-6C529E52D47D}
+		{B0047AC4-2819-42C9-BD0A-E9FB48F9333E} = {2E405876-0925-4B96-94B6-6C529E52D47D}
+		{97AF29C9-C208-493C-9714-994C9760DEF6} = {2E405876-0925-4B96-94B6-6C529E52D47D}
+		{CEDEF188-B975-4054-8CB1-D08CACB29F06} = {2E405876-0925-4B96-94B6-6C529E52D47D}
+		{2C34EB3B-1608-4B70-A6A5-A608E64CEBED} = {2E405876-0925-4B96-94B6-6C529E52D47D}
+		{096EE982-70B1-44F4-A9E8-5719F9160698} = {2E405876-0925-4B96-94B6-6C529E52D47D}
+		
 		{27AA610C-0A8C-4012-ADE8-E4D8DCE51E9C} = {A9D3E13A-7782-4E0D-9CBB-9954F583F0B3}
 		{00BF8113-BB06-4B5F-8935-F44E2F58FD53} = {A9D3E13A-7782-4E0D-9CBB-9954F583F0B3}
+		{2E405876-0925-4B96-94B6-6C529E52D47D} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
