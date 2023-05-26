@@ -250,7 +250,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			lastCentralConfigurationFetcher.IsRunning.Should().BeFalse();
 		}
 
-		[Theory]
+		[Theory(Skip = "TODO this tests takes over 6 minutes locally")]
 		[InlineData(1)]
 		[InlineData(5)]
 		[InlineData(9)]

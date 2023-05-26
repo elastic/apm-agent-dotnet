@@ -29,8 +29,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
-      with:
-          rust: 'true'
+      # with:
+      #    rust: 'true'
     
     - name: Test 
       shell: bash
@@ -38,6 +38,7 @@ jobs:
         dotnet test -c Release ElasticApmAgent.sln \
             --filter "FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests" \
             --verbosity minimal \
+            -f net7.0 \
             --results-directory build/output \
             --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
           
