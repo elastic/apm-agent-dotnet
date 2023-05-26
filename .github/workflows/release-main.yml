@@ -24,7 +24,7 @@ jobs:
     - name: publish canary packages github package repository
       shell: bash
       run:  |
-          until dotnet nuget push 'build/output/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} --skip-duplicate --no-symbols; do echo "Retrying"; sleep 1; done;
+          until dotnet nuget push 'build/output/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json  --skip-duplicate --no-symbols; do echo "Retrying"; sleep 1; done;
     
     - name: Prepare feedz.io
       uses: hashicorp/vault-action@v2.4.2
