@@ -20,10 +20,7 @@ namespace Elastic.Apm.MongoDb.Tests.Fixture
 
 		private readonly MongoDbContainer _container = new MongoDbBuilder().WithImage(MongoDbImage).Build();
 
-		public MongoFixture()
-		{
-			_configuration = new TConfiguration();
-		}
+		public MongoFixture() => _configuration = new TConfiguration();
 
 		public IMongoCollection<TDocument> Collection { get; private set; }
 

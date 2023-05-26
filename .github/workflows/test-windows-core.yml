@@ -65,6 +65,13 @@ jobs:
       with:
         name: test-results
         path: test/**/junit-*.xml
+        
+    - uses: actions/upload-artifact@v3
+      with:
+          name: snapshoty-windows
+          path: build/output/*
+          retention-days: 1
+
 
   startup-hook-test:
     runs-on: windows-2022
