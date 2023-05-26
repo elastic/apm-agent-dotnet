@@ -162,6 +162,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage", "src\azure\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj", "{00F64981-E1EB-4B83-BA78-2F0591CEDF8A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "profiler", "profiler", "{EAD9B32C-46FC-44AF-8A48-954259F846C5}"
+	ProjectSection(SolutionItems) = preProject
+		Makefile.toml = Makefile.toml
+		Cargo.toml = Cargo.toml
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "startuphook", "startuphook", "{A9D3E13A-7782-4E0D-9CBB-9954F583F0B3}"
 EndProject
