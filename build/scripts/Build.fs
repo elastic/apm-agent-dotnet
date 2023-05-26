@@ -26,7 +26,7 @@ module Build =
     
     let mutable private currentDiagnosticSourceVersion = None
         
-    let private aspNetFullFramework = Paths.SrcProjFile "Elastic.Apm.AspNetFullFramework"
+    let private aspNetFullFramework = Paths.IntegrationsProjFile "Elastic.Apm.AspNetFullFramework"
     
     let private allSrcProjects = !! "src/**/*.csproj"
         
@@ -128,7 +128,7 @@ module Build =
     let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =                
         let projects =
             !! (Paths.SrcProjFile "Elastic.Apm")
-            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+            ++ (Paths.StartupHookProjFile "Elastic.Apm.StartupHook.Loader")
     
         publishProjectsWithDiagnosticSourceVersion projects oldDiagnosticSourceVersion
         
@@ -146,7 +146,7 @@ module Build =
         
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
-        dotnet "build" (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
+        dotnet "build" (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
         Cargo.Exec [ "make"; "build-release"; ]
                               
     /// Publishes all projects with framework versions
@@ -246,9 +246,9 @@ module Build =
                       "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
         
     let ProfilerIntegrations () =
-        DotNet.Exec ["run"; "--project"; Paths.SrcProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
-                     "-i"; Paths.Src "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
-                     "-o"; Paths.Src "Elastic.Apm.Profiler.Managed"; "-f"; "yml"]
+        DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
+                     "-i"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
+                     "-o"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed"; "-f"; "yml"]
         
     /// Creates versioned elastic_apm_profiler.zip file containing all components needed for profiler auto-instrumentation  
     let ProfilerZip () =
@@ -264,11 +264,11 @@ module Build =
         profilerDir.Create()
         
         seq {
-            Paths.Src "Elastic.Apm.Profiler.Managed/integrations.yml"
+            Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/integrations.yml"
             "target/release/elastic_apm_profiler.dll"
             "target/release/libelastic_apm_profiler.so"
-            Paths.Src "elastic_apm_profiler/NOTICE"
-            Paths.Src "elastic_apm_profiler/README"
+            Paths.SrcProfiler "elastic_apm_profiler/NOTICE"
+            Paths.SrcProfiler "elastic_apm_profiler/README"
             "LICENSE"
         }
         |> Seq.map FileInfo

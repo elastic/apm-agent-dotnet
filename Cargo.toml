@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "src/elastic_apm_profiler",
+    "src/profiler/elastic_apm_profiler",
 ]
 
 # default release profile: https://doc.rust-lang.org/cargo/reference/profiles.html#release
