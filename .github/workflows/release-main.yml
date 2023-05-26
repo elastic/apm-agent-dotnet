@@ -21,6 +21,11 @@ jobs:
     - name: Package with canary suffix
       run: .ci/linux/release.sh 
 
+    - name: publish canary packages github package repository
+      shell: bash
+      run:  |
+          until dotnet nuget push 'build/output/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json  --skip-duplicate --no-symbols; do echo "Retrying"; sleep 1; done;
+    
     - name: Prepare feedz.io
       uses: hashicorp/vault-action@v2.4.2
       with:
@@ -31,10 +36,11 @@ jobs:
         secrets: |
           secret/apm-team/ci/elastic-observability-feedz.io apiKey | REPO_API_KEY ;
           secret/apm-team/ci/elastic-observability-feedz.io url | REPO_API_URL
-
-    - name: Release to feedz.io
-      run: .ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}
-
+            
+    # Github packages requires authentication, this is likely going away in the future so for now we publish to feedz.io
+    - run: dotnet nuget push 'build/output/*.nupkg' -k ${REPO_API_KEY} -s ${REPO_API_URL} --skip-duplicate --no-symbols
+      name: publish canary packages to feedz.io
+    
     - if: ${{ failure() }}
       uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
       with:
