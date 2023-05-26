@@ -9,7 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj" />
   </ItemGroup>
   
   <ItemGroup>
@@ -38,8 +39,5 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj" />
-  </ItemGroup>
 
 </Project>

@@ -268,11 +268,11 @@
     <TypeScriptCompile Include="Scripts\index.d.ts" />
   </ItemGroup>
   <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
-    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
+    <ProjectReference Include="..\..\src\integrations\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <Project>{d6ffddab-9d76-442f-8f1d-bd6f553f92fa}</Project>
       <Name>Elastic.Apm.AspNetFullFramework</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj">
+    <ProjectReference Include="..\..\src\instrumentations\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj">
       <Project>{12ffcff6-858c-4e6e-935c-e304712deca4}</Project>
       <Name>Elastic.Apm.EntityFramework6</Name>
     </ProjectReference>

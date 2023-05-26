@@ -8,15 +8,15 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Azure.CosmosDb\Elastic.Apm.Azure.CosmosDb.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj" />
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\instrumentations\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
+    <ProjectReference Include="..\..\instrumentations\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\instrumentations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
+    <ProjectReference Include="..\..\instrumentations\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj" />
+    <ProjectReference Include="..\..\instrumentations\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
+    <ProjectReference Include="..\..\azure\Elastic.Apm.Azure.CosmosDb\Elastic.Apm.Azure.CosmosDb.csproj" />
+    <ProjectReference Include="..\..\azure\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj" />
+    <ProjectReference Include="..\..\azure\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj" />
   </ItemGroup>
 </Project>

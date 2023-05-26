@@ -29,8 +29,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
     <ProjectReference Include="..\..\sample\WebApiSample\WebApiSample.csproj" />
     <ProjectReference Include="..\..\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />

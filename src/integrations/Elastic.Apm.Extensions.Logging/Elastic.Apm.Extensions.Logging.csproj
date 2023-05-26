@@ -12,7 +12,7 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 
   <ItemGroup>

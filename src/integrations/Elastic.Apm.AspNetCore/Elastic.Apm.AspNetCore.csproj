@@ -31,7 +31,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.Extensions.Hosting\Elastic.Apm.Extensions.Hosting.csproj" />
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\integrations\Elastic.Apm.Extensions.Hosting\Elastic.Apm.Extensions.Hosting.csproj" />
+    <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 </Project>

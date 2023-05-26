@@ -21,7 +21,7 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 

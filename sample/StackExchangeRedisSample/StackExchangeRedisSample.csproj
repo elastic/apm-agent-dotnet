@@ -11,6 +11,6 @@
     </ItemGroup>
   
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj" />
+      <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj" />
     </ItemGroup>
 </Project>

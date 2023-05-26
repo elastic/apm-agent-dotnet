@@ -18,7 +18,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 
   <ItemGroup>

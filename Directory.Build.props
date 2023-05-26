@@ -7,6 +7,10 @@
     <!-- suppress NETSDK1138 warnings for EOL frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <SolutionRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.bat))</SolutionRoot>
+    <SrcIntegrations>$(SolutionRoot)\src\integrations\</SrcIntegrations>
+    <SrcInstrumentations>$(SolutionRoot)\src\instrumentations\</SrcInstrumentations>
+    <SrcAzure>$(SolutionRoot)\src\azure\</SrcAzure>
+    <SrcProfiler>$(SolutionRoot)\src\profiler\</SrcProfiler>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <AssemblyOriginatorKeyFile Condition="EXISTS('$(SolutionRoot)/build/elasticapm.snk')">$(SolutionRoot)/build/elasticapm.snk</AssemblyOriginatorKeyFile>

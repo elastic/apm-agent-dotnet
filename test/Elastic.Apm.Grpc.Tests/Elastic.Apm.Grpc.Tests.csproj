@@ -27,10 +27,10 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
-    <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
   </ItemGroup>
   
   <ItemGroup>

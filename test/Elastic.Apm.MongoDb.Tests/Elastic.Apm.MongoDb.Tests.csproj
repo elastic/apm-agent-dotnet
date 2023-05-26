@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj" />
   </ItemGroup>
 </Project>

@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
-      <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+      <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
+      <ProjectReference Include="..\..\integrations\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
     </ItemGroup>
 
     <ItemGroup>

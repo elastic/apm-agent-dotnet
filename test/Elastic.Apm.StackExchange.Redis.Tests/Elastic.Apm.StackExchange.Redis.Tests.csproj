@@ -21,7 +21,7 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj" />
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
