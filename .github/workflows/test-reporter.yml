@@ -16,7 +16,7 @@ jobs:
         with:
           artifact: test-results            # artifact name
           name: Tests Summary                 # Name of the check run which will be created
-          path: "test/**/junit-*.xml"       # Path to test results (inside artifact .zip)
+          path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
           reporter: java-junit              # Format of test results
           list-suites: 'failed'
           list-tests: 'failed'
