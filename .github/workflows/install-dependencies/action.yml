@@ -20,4 +20,8 @@ runs:
       if: "${{ inputs.rust == 'true' }}"
       shell: bash
       run: cargo install --force cargo-make
-
+    
+    - uses: Swatinem/rust-cache@v2
+      if: "${{ inputs.rust == 'true' }}"
+      with:
+        cache-targets: "false"

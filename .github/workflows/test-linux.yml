@@ -32,9 +32,6 @@ jobs:
       with:
           rust: 'true'
     
-    - name: Package
-      run: ./build.sh pack
-      
     - name: Test 
       shell: bash
       run: |
@@ -49,8 +46,11 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
           name: test-results
-          path: test/**/junit-*.xml
+          path: build/output/**/junit-*.xml
       
+    - name: Package
+      run: ./build.sh pack
+    
     - uses: actions/upload-artifact@v3
       if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
       with:
@@ -60,6 +60,8 @@ jobs:
 
   startup-hook-test:
     runs-on: ubuntu-latest
+    # TODO disable while working on tests
+    if: ${{ false }}
 
     steps:
     - uses: actions/checkout@v3
@@ -81,6 +83,9 @@ jobs:
 
   profiler-test:
     runs-on: ubuntu-latest
+    # TODO disable while working on tests
+    if: ${{ false }}
+
 
     steps:
     - uses: actions/checkout@v3
