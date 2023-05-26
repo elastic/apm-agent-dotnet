@@ -87,7 +87,7 @@ In this PR we need to update:
 If required then it's possible to run the release script locally, for such, the credentials are needed to push to the NuGet repo.
 
 ```bash
-.ci/linux/release.sh
+./build.sh pack
 .ci/linux/deploy.sh <API_KEY> <SERVER_URL>
 ```
 

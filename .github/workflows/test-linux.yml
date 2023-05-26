@@ -33,7 +33,23 @@ jobs:
           rust: 'true'
     
     - name: Package
-      run: .ci/linux/release.sh 
+      run: ./build.sh pack
+      
+    - name: Test 
+      shell: bash
+      run: |
+        dotnet test -c Release ElasticApmAgent.sln \
+            --filter "FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests" \
+            --verbosity minimal \
+            --results-directory build/output \
+            --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+          
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+          name: test-results
+          path: test/**/junit-*.xml
       
     - uses: actions/upload-artifact@v3
       if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
@@ -41,25 +57,6 @@ jobs:
           name: snapshoty-linux
           path: build/output/*
           retention-days: 1
-
-
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Bootstrap Action Workspace
-      uses: ./.github/workflows/bootstrap
-    
-    - name: Test & coverage
-      run: .ci/linux/test.sh
-
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: test/**/junit-*.xml
 
   startup-hook-test:
     runs-on: ubuntu-latest
