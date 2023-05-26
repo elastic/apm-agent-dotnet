@@ -34,6 +34,14 @@ jobs:
     
     - name: Package
       run: .ci/linux/release.sh 
+      
+    - uses: actions/upload-artifact@v3
+      if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
+      with:
+          name: snapshoty-linux
+          path: build/output/*
+          retention-days: 1
+
 
   test:
     runs-on: ubuntu-latest
