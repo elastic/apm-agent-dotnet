@@ -32,23 +32,12 @@ jobs:
       with:
           azure: 'true'
       #    rust: 'true'
-    
-    - name: Test 
-      shell: bash
-      run: |
-        dotnet test -c Release ElasticApmAgent.sln \
-            --filter "FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests" \
-            --verbosity minimal \
-            -f net7.0 \
-            --logger:"junit;LogFilePath=$(readlink -f build/output)/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
-          
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      with:
-          name: test-results
-          path: build/output/**/junit-*.xml
       
+    - uses: ./.github/workflows/test
+      with:
+          name: 'unit'
+          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+    
     - name: Package
       run: ./build.sh pack
     
