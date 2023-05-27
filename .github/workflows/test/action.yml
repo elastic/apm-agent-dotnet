@@ -1,6 +1,5 @@
 ---
 name: Test
-run-name: 'Tests: ${{ inputs.name }}'
 description: Ensures an action has the appropiate non .NET dependencies installed
 
 inputs:
@@ -19,6 +18,8 @@ inputs:
       required: false
       default: 'net7.0'
 
+run-name: 'Tests: ${{ inputs.name }}'
+
 runs:
   using: "composite"
   steps:
@@ -27,8 +28,8 @@ runs:
       run: |
           dotnet test -c Release ${{ inputs.project }} \
               --verbosity minimal \
-              ${{ inputs.filter != '' && '--filter "${{ inputs.filter }}"' || '' } \
-              ${{ inputs.framework != '' && '-f "${{ inputs.framework }}"' || '' } \
+              ${{ inputs.filter != '' && '--filter "${{ inputs.filter }}"' || '' }} \
+              ${{ inputs.framework != '' && '-f "${{ inputs.framework }}"' || '' }} \
               --logger:"junit;LogFilePath=$(readlink -f build/output)/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
 
     - name: Store test results
