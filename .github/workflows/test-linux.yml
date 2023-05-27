@@ -40,7 +40,7 @@ jobs:
             --filter "FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests" \
             --verbosity minimal \
             -f net7.0 \
-            --logger:"junit;LogFilePath=build/output/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+            --logger:"junit;LogFilePath=$(readlink -f build/output)/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
           
     - name: Store test results
       if: success() || failure()
