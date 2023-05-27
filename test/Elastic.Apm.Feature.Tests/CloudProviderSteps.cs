@@ -35,7 +35,7 @@ namespace Elastic.Apm.Feature.Tests
 		{
 			_scenarioContext = scenarioContext;
 			var title = featureContext.FeatureInfo.Title;
-			if (title.EndsWith("Azure Function Apps")
+			if ((title.EndsWith("Azure Function Apps") || title.EndsWith("Azure App Service"))
 				&& !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTION")))
 				unitTestRuntimeProvider.TestIgnore("Skipping azure function feature tests on Github Actions");
 		}
