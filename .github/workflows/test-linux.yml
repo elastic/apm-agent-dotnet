@@ -33,7 +33,8 @@ jobs:
           azure: 'true'
       #    rust: 'true'
       
-    - uses: ./.github/workflows/test
+    - name: 'Tests: Unit'
+      uses: ./.github/workflows/test
       with:
           name: 'unit'
           filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
