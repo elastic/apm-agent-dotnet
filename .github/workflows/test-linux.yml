@@ -35,7 +35,7 @@ jobs:
       
     - name: Build
       shell: bash
-      run: dotnet build -c Release ${{ inputs.project }} --no-build --verbosity minimal 
+      run: dotnet build -c Release ${{ inputs.project }} --verbosity minimal 
       
     - name: 'Tests: Unit'
       uses: ./.github/workflows/test
