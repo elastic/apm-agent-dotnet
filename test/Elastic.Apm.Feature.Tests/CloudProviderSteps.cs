@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Net;
 using System.Net.Http;
 using Elastic.Apm.Api;
@@ -14,6 +15,7 @@ using FluentAssertions;
 using Newtonsoft.Json.Linq;
 using RichardSzalay.MockHttp;
 using TechTalk.SpecFlow;
+using TechTalk.SpecFlow.UnitTestProvider;
 using Xunit.Abstractions;
 using static Elastic.Apm.BackendComm.BackendCommUtils.ApmServerEndpoints;
 using MockHttpMessageHandler = RichardSzalay.MockHttp.MockHttpMessageHandler;
@@ -26,7 +28,17 @@ namespace Elastic.Apm.Feature.Tests
 
 		private readonly ScenarioContext _scenarioContext;
 
-		public CloudProviderSteps(ScenarioContext scenarioContext) => _scenarioContext = scenarioContext;
+		public CloudProviderSteps(
+			ScenarioContext scenarioContext,
+			FeatureContext featureContext,
+			IUnitTestRuntimeProvider unitTestRuntimeProvider)
+		{
+			_scenarioContext = scenarioContext;
+			var title = featureContext.FeatureInfo.Title;
+			if (title.EndsWith("Azure Function Apps")
+				&& !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTION")))
+				unitTestRuntimeProvider.TestIgnore("Skipping azure function feature tests on Github Actions");
+		}
 
 
 		[Given(@"an agent configured with")]
