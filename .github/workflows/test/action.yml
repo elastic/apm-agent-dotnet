@@ -1,6 +1,6 @@
 ---
 name: Test
-description: Ensures an action has the appropiate non .NET dependencies installed
+description: Runs part of the test suite
 
 inputs:
   name:
@@ -21,13 +21,13 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Test ${ 
+    - name: Test ${{ inputs.name }}
       shell: bash
       run: |
-          dotnet test -c Release ${{ inputs.project }} \
+          dotnet test -c Release ${{ inputs.project }} --no-build \
               --verbosity minimal \
               ${{ inputs.filter != '' && format('--filter "{0}"', inputs.filter) || '' }} \
-              ${{ inputs.framework != '' && format('-f "{0}"', inputs.framework) || '' }} \
+              ${{ inputs.framework != '' && format('-f {0}', inputs.framework) || '' }} \
               --logger:"junit;LogFilePath=$(readlink -f build/output)/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
 
     - name: Store test results

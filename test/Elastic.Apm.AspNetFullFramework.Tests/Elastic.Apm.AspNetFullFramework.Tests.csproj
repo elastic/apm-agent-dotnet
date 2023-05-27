@@ -10,11 +10,12 @@
     <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetFullFramework.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetFullFramework.Tests</RootNamespace>
+    <IsTestProject Condition="'$(BuildFullFrameworkAsp)' == 'false'">false</IsTestProject>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true' OR $(ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED) == 'true'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
     <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
@@ -50,4 +51,7 @@
     <Compile Remove="Program-NoFullFramework.cs" />
     <Compile Remove="NoWebComponentTests.cs" />
   </ItemGroup>
+
+  <!-- VS Test wants to see this target -->
+  <Target Name="VSTest" Condition="'$(BuildFullFrameworkAsp)' == 'false'"/>
 </Project>

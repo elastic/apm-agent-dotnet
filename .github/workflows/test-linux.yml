@@ -33,6 +33,10 @@ jobs:
           azure: 'true'
       #    rust: 'true'
       
+    - name: Build
+      shell: bash
+      run: dotnet build -c Release ${{ inputs.project }} --no-build --verbosity minimal 
+      
     - name: 'Tests: Unit'
       uses: ./.github/workflows/test
       with:
