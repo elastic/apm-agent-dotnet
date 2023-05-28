@@ -110,17 +110,3 @@ jobs:
       with:
         name: test-results
         path: test/**/junit-*.xml
-        
-  report:
-    runs-on: ubuntu-latest
-    if: ${{ always() }}
-    needs: ['tests', 'profiler-tests', 'startup-hook-tests']
-    steps:
-      - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
-        with:
-          artifact: test-results            # artifact name
-          name: Tests Summary                 # Name of the check run which will be created
-          path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
-          reporter: java-junit              # Format of test results
-          list-suites: 'failed'
-          list-tests: 'failed'
