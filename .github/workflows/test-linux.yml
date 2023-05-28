@@ -65,7 +65,7 @@ jobs:
             filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
   
   
-  startup-hook-test:
+  startup-hook-tests:
     runs-on: ubuntu-latest
     needs: [ 'build']
 
@@ -84,7 +84,7 @@ jobs:
         project: 'test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
         
 
-  profiler-test:
+  profiler-tests:
     runs-on: ubuntu-latest
     needs: [ 'build']
     
@@ -116,7 +116,8 @@ jobs:
         
   report:
     runs-on: ubuntu-latest
-    needs: ['test', 'profiler-test', 'startup-hook-test']
+    if: ${{ always() }}
+    needs: ['tests', 'profiler-tests', 'startup-hook-tests']
     steps:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
         with:
