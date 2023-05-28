@@ -27,7 +27,7 @@ defaults:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: windows-2022
         
     steps:
       - uses: actions/checkout@v3
@@ -45,72 +45,38 @@ jobs:
           name: 'unit'
           filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
     
-    
-  build-and-profiler:
+  startup-hook-tests:
     runs-on: windows-2022
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Bootstrap Action Workspace
-      uses: ./.github/workflows/bootstrap
       
-    - name: Install tools
-      run: .ci\\windows\\tools.ps1
-      shell: pwsh
-
-    - name: Build dotnet
-      run: .ci\\windows\\dotnet.bat
-
-    - name: Build agent
-      run: .\\build.bat agent-zip
-
-    - name: Build profiler
-      run: .\\build.bat profiler-zip
-
-    # Run test profiler in this job so
-    # there is no need to build profiler again in a different job
-    - name: Install test tools
-      run: .ci\\windows\\test-tools.ps1
-      shell: pwsh
-
-    - name: Test profiler
-      run: .ci\\windows\\test-profiler.bat
-
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: test/**/junit-*.xml
-        
-    - uses: actions/upload-artifact@v3
-      with:
-          name: snapshoty-windows
-          path: build/output/*
-          retention-days: 1
-
-
-  startup-hook-test:
-    runs-on: windows-2022
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Bootstrap Action Workspace
-      uses: ./.github/workflows/bootstrap
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
 
-    - name: Install test tools
-      run: .ci\\windows\\test-tools.ps1
-      shell: pwsh
+      - name: Build agent-zip
+        run: ./build.bat agent-zip
 
-    - name: Build agent
-      run: .\\build.bat agent-zip
+      - name: 'Tests: StartupHooks'
+        uses: ./.github/workflows/test
+        with:
+          name: 'startuphooks'
+          project: 'test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+          
+  profiler-tests:
+    runs-on: windows-2022
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          rust: 'true'
 
-    - name: Test & coverage
-      run: .ci\\windows\\test-startuphooks.bat
+      - name: Build profiler
+        run: ./build.bat profiler-zip
 
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: test/**/junit-*.xml
+      - name: 'Tests: Profiler'
+        uses: ./.github/workflows/test
+        with:
+          name: 'profiler'
+          project: 'test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'

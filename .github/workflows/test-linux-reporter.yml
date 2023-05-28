@@ -1,6 +1,6 @@
 ---
 ## Workflow to process the JUnit test results and add a report to the checks.
-name: test-reporter
+name: test-linux-reporter
 on:
   workflow_run:
     workflows:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
         with:
-          artifact: test-results            # artifact name
+          artifact: test-results-linux            # artifact name
           name: Tests Summary                 # Name of the check run which will be created
           path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
           reporter: java-junit              # Format of test results

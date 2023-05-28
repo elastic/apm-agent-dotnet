@@ -34,5 +34,5 @@ runs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       with:
-          name: test-results
+          name: test-results-${{ runner.os == 'Linux' && 'linux' || 'windows' }}
           path: build/output/**/junit-*.xml
