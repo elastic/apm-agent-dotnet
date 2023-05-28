@@ -31,18 +31,8 @@ jobs:
       uses: ./.github/workflows/bootstrap
       with:
           azure: 'true'
-      #    rust: 'true'
+          rust: 'true'
       
-    - name: Build
-      shell: bash
-      run: dotnet build -c Release ${{ inputs.project }} --verbosity minimal 
-      
-    - name: 'Tests: Unit'
-      uses: ./.github/workflows/test
-      with:
-          name: 'unit'
-          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
-    
     - name: Package
       run: ./build.sh pack
     
@@ -52,11 +42,31 @@ jobs:
           name: snapshoty-linux
           path: build/output/*
           retention-days: 1
+  
+  tests:
+    runs-on: ubuntu-latest
+    needs: [ 'build']
+    
+    steps:
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          azure: 'true'
+          
+      - name: Build
+        shell: bash
+        run: dotnet build -c Release ${{ inputs.project }} --verbosity minimal
 
+      - name: 'Tests: Unit'
+        uses: ./.github/workflows/test
+        with:
+            name: 'unit'
+            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+  
+  
   startup-hook-test:
     runs-on: ubuntu-latest
-    # TODO disable while working on tests
-    if: ${{ false }}
+    needs: [ 'build']
 
     steps:
     - uses: actions/checkout@v3
@@ -66,22 +76,17 @@ jobs:
     - name: Build agent-zip
       run: ./build.sh agent-zip
 
-    - name: Startup Hook Tests
-      run: .ci/linux/test-startuphooks.sh
-
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
+    - name: 'Tests: StartupHooks'
+      uses: ./.github/workflows/test
       with:
-        name: test-results
-        path: test/**/junit-*.xml
+        name: 'startuphooks'
+        project: 'test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+        
 
   profiler-test:
     runs-on: ubuntu-latest
-    # TODO disable while working on tests
-    if: ${{ false }}
-
-
+    needs: [ 'build']
+    
     steps:
     - uses: actions/checkout@v3
     - name: Bootstrap Action Workspace
@@ -92,9 +97,12 @@ jobs:
     - name: Build profiler
       run: ./build.sh profiler-zip
 
-    - name: Profiler Tests
-      run: .ci/linux/test-profiler.sh
-
+    - name: 'Tests: Profiler'
+      uses: ./.github/workflows/test
+      with:
+          name: 'profiler'
+          project: 'test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+    
     - name: Create Docker Image
       run: .ci/linux/build_docker.sh
 

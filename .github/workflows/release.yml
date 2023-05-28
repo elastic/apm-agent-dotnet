@@ -5,7 +5,8 @@ on:
     types: [published]
 
 permissions:
-  contents: write
+    contents: write
+    issues: write
 
 jobs:
   release:
