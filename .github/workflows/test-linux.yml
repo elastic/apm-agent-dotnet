@@ -63,7 +63,6 @@ jobs:
             name: 'unit'
             filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
   
-  
   startup-hook-tests:
     runs-on: ubuntu-latest
 
@@ -103,10 +102,3 @@ jobs:
     
     - name: Create Docker Image
       run: .ci/linux/build_docker.sh
-
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: test/**/junit-*.xml

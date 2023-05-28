@@ -7,6 +7,7 @@ on:
 permissions:
     contents: write
     issues: write
+    packages: write
 
 jobs:
   release:
@@ -38,7 +39,7 @@ jobs:
       run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${REPO_API_KEY} -s ${REPO_API_URL} --skip-duplicate --no-symbols
       
     - name: publish canary packages github package repository
-      run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json  --skip-duplicate --no-symbols
+      run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json --skip-duplicate --no-symbols
     
     - if: ${{ failure() }}
       uses: elastic/apm-pipeline-library/.github/actions/slack-message@current

@@ -1,0 +1,83 @@
+name: test-windows
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+defaults:
+  run:
+    shell: cmd
+
+jobs:
+  tests:
+    runs-on: windows-2022
+        
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          azure: 'true'
+
+      - name: Build
+        run: dotnet build -c Release --verbosity minimal
+
+      - name: 'Tests: Unit'
+        uses: ./.github/workflows/test
+        with:
+          name: 'unit'
+          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+    
+  startup-hook-tests:
+    runs-on: windows-2022
+      
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+
+      - name: Build agent-zip
+        run: ./build.bat agent-zip
+
+      - name: 'Tests: StartupHooks'
+        uses: ./.github/workflows/test
+        with:
+          name: 'startuphooks'
+          project: 'test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+          
+  profiler-tests:
+    runs-on: windows-2022
+    # Disable profiler tests for now
+    if: ${{ false }} 
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          rust: 'true'
+
+      - name: Build profiler
+        run: ./build.bat profiler-zip
+
+      - name: 'Tests: Profiler'
+        uses: ./.github/workflows/test
+        with:
+          name: 'profiler'
+          project: 'test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
