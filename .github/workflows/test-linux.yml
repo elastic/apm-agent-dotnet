@@ -48,6 +48,7 @@ jobs:
     needs: [ 'build']
     
     steps:
+      - uses: actions/checkout@v3
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
@@ -55,7 +56,7 @@ jobs:
           
       - name: Build
         shell: bash
-        run: dotnet build -c Release ${{ inputs.project }} --verbosity minimal
+        run: dotnet build -c Release --verbosity minimal
 
       - name: 'Tests: Unit'
         uses: ./.github/workflows/test
@@ -112,3 +113,16 @@ jobs:
       with:
         name: test-results
         path: test/**/junit-*.xml
+        
+  report:
+    runs-on: ubuntu-latest
+    needs: ['test', 'profiler-test', 'startup-hook-test']
+    steps:
+      - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
+        with:
+          artifact: test-results            # artifact name
+          name: Tests Summary                 # Name of the check run which will be created
+          path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
+          reporter: java-junit              # Format of test results
+          list-suites: 'failed'
+          list-tests: 'failed'

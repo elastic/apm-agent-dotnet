@@ -21,15 +21,23 @@ runs:
       shell: bash
       run: rustup default 1.67.1
 
-    - name: Cargo make
+    # - name: Cargo make
+    #   if: "${{ inputs.rust == 'true' }}"
+    #   shell: bash
+    #   run: cargo install --force cargo-make
+
+    - name: Install cargo-make using cache
       if: "${{ inputs.rust == 'true' }}"
-      shell: bash
-      run: cargo install --force cargo-make
+      uses: baptiste0928/cargo-install@v2
+      with:
+        crate: cargo-make
+        version: "^0.36.8"
     
     - uses: Swatinem/rust-cache@v2
       if: "${{ inputs.rust == 'true' }}"
       with:
         cache-targets: "false"
+        cache-allcrates: "true"
         
         
     # AZURE
