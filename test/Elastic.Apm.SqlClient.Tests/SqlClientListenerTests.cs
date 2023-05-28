@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -61,7 +62,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			}
 		}
 
-		[Theory]
+		[DisabledOnWindowsTheory]
 		[MemberData(nameof(Connections))]
 		public async Task SqlClientDiagnosticListener_ShouldCaptureSpan(string providerName, Func<string, DbConnection> connectionCreator)
 		{
@@ -115,7 +116,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Service.Target.Name.Should().Be(span.Context.Db.Instance);
 		}
 
-		[Theory]
+		[DisabledOnWindowsTheory]
 		[MemberData(nameof(Connections))]
 		public async Task SqlClientDiagnosticListener_ShouldCaptureErrorFromSystemSqlClient(string providerName,
 			Func<string, DbConnection> connectionCreator
@@ -179,7 +180,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Service.Target.Name.Should().Be(span.Context.Db.Instance);
 		}
 
-		[Theory]
+		[DisabledOnWindowsTheory]
 		[MemberData(nameof(Connections))]
 		public async Task SqlClientDiagnosticListener_ShouldNotUseCumulativeDurations(string providerName, Func<string, DbConnection> connectionCreator)
 		{

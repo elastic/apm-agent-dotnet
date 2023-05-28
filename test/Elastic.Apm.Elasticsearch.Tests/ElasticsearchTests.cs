@@ -9,6 +9,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Docker;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using Elasticsearch.Net;
 using FluentAssertions;
 using Xunit;
@@ -27,7 +28,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			_client = new ElasticLowLevelClient(settings);
 		}
 
-		[DockerFact]
+		[DisabledOnWindowsDockerFact]
 		public async Task Elasticsearch_Span_Does_Not_Have_Http_Child_Span()
 		{
 			var payloadSender = new MockPayloadSender();
