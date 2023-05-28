@@ -73,7 +73,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 			await container.StopAsync();
 		}
 
-		[DockerFact]
+		[DisabledOnWindowsDockerFact]
 		public async Task Capture_Redis_Commands_On_Span()
 		{
 			await using var container = new RedisBuilder().Build();
