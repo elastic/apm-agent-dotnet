@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.MongoDb.Tests.Fixture;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -63,7 +64,7 @@ namespace Elastic.Apm.MongoDb.Tests
 
 		private readonly MockPayloadSender _payloadSender;
 
-		[Fact]
+		[DisabledOnWindowsFact]
 		public async Task ApmAgent_ShouldCorrectlyCaptureSpan()
 		{
 			// Arrange
@@ -100,7 +101,7 @@ namespace Elastic.Apm.MongoDb.Tests
 			});
 		}
 
-		[Fact]
+		[DisabledOnWindowsFact]
 		public async Task ApmAgent_ShouldCorrectlyCaptureSpanAndError_WhenMongoCommandFailed()
 		{
 			// Arrange
