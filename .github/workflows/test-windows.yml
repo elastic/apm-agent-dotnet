@@ -1,4 +1,4 @@
-name: test-windows-core
+name: test-windows
 
 on:
   push:
@@ -26,11 +26,28 @@ defaults:
     shell: cmd
 
 jobs:
+  tests:
+    runs-on: ubuntu-latest
+        
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          azure: 'true'
+
+      - name: Build
+        run: dotnet build -c Release --verbosity minimal
+
+      - name: 'Tests: Unit'
+        uses: ./.github/workflows/test
+        with:
+          name: 'unit'
+          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+    
+    
   build-and-profiler:
     runs-on: windows-2022
-    # Disable profiler tests for now
-    if: ${{ false }}
-    
 
     steps:
     - uses: actions/checkout@v3
@@ -75,8 +92,6 @@ jobs:
 
   startup-hook-test:
     runs-on: windows-2022
-    # TODO disable while working on tests
-    if: ${{ false }}
 
     steps:
     - uses: actions/checkout@v3
