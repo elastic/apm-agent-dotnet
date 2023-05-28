@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -223,8 +224,15 @@ namespace Elastic.Apm.BackendComm
 			{
 				try
 				{
-					httpClient.DefaultRequestHeaders.UserAgent.Add(
-						new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
+					var name = AdaptUserAgentValue(service.Runtime.Name);
+					var version = AdaptUserAgentValue(service.Runtime.Version);
+					//Mono uses a more complex version number e.g
+					//6.12.0.182 (2020-02/6051b710727 Tue Jun 14 15:01:21 EDT 2022)
+					if (name.Equals("mono", StringComparison.InvariantCultureIgnoreCase))
+						version = version.Split(new[] { "__" }, StringSplitOptions.None).FirstOrDefault();
+
+
+					httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(name, version));
 				}
 				catch (Exception e)
 				{

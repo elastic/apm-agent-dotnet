@@ -5,7 +5,8 @@ on:
     types: [published]
 
 permissions:
-  contents: write
+    contents: write
+    issues: write
 
 jobs:
   release:
@@ -19,7 +20,7 @@ jobs:
           rust: 'true'
 
     - name: Package
-      run: .ci/linux/release.sh 
+      run: ./build.sh pack
 
     - name: Prepare Nuget
       uses: hashicorp/vault-action@v2.4.2

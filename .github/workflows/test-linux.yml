@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  build:
+  pack:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,38 +30,41 @@ jobs:
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
       with:
+          azure: 'true'
           rust: 'true'
-    
-    - name: Package
-      run: .ci/linux/release.sh 
       
+    - name: Package
+      run: ./build.sh pack
+    
     - uses: actions/upload-artifact@v3
       if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
       with:
           name: snapshoty-linux
           path: build/output/*
           retention-days: 1
-
-
-  test:
+  
+  tests:
     runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Bootstrap Action Workspace
-      uses: ./.github/workflows/bootstrap
     
-    - name: Test & coverage
-      run: .ci/linux/test.sh
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          azure: 'true'
+          
+      - name: Build
+        shell: bash
+        run: dotnet build -c Release --verbosity minimal
 
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: test/**/junit-*.xml
-
-  startup-hook-test:
+      - name: 'Tests: Unit'
+        uses: ./.github/workflows/test
+        with:
+            name: 'unit'
+            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+  
+  
+  startup-hook-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -72,19 +75,16 @@ jobs:
     - name: Build agent-zip
       run: ./build.sh agent-zip
 
-    - name: Startup Hook Tests
-      run: .ci/linux/test-startuphooks.sh
-
-    - name: Store test results
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
+    - name: 'Tests: StartupHooks'
+      uses: ./.github/workflows/test
       with:
-        name: test-results
-        path: test/**/junit-*.xml
+        name: 'startuphooks'
+        project: 'test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+        
 
-  profiler-test:
+  profiler-tests:
     runs-on: ubuntu-latest
-
+    
     steps:
     - uses: actions/checkout@v3
     - name: Bootstrap Action Workspace
@@ -95,9 +95,12 @@ jobs:
     - name: Build profiler
       run: ./build.sh profiler-zip
 
-    - name: Profiler Tests
-      run: .ci/linux/test-profiler.sh
-
+    - name: 'Tests: Profiler'
+      uses: ./.github/workflows/test
+      with:
+          name: 'profiler'
+          project: 'test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+    
     - name: Create Docker Image
       run: .ci/linux/build_docker.sh
 

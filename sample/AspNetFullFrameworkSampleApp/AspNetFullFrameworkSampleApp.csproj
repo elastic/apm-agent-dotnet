@@ -385,4 +385,7 @@
   </ProjectExtensions>
   <!-- https://github.com/aspnet/RoslynCodeDomProvider/issues/51 -->
   <Target Name="CheckIfShouldKillVBCSCompiler" />
+
+  <!-- VS Test wants to see this target -->
+  <Target Name="VSTest" Condition="'$(BuildFullFrameworkAsp)' == 'false'"/>
 </Project>

@@ -1,0 +1,38 @@
+---
+name: Test
+description: Runs part of the test suite
+
+inputs:
+  name:
+    description: 'Name of the test suite we are running.'
+    required: true
+  filter:
+      description: 'test filter to select tests from solution projects'
+      required: false
+  project:
+      description: 'test filter to select tests from solution projects'
+      required: false
+      default: 'ElasticApmAgent.sln'
+  framework:
+      description: 'test filter to select tests from solution projects'
+      required: false
+      default: 'net7.0'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Test ${{ inputs.name }}
+      shell: bash
+      run: |
+          dotnet test -c Release ${{ inputs.project }} --no-build \
+              --verbosity minimal \
+              ${{ inputs.filter != '' && format('--filter "{0}"', inputs.filter) || '' }} \
+              ${{ inputs.framework != '' && format('-f {0}', inputs.framework) || '' }} \
+              --logger:"junit;LogFilePath=$(readlink -f build/output)/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+
+    - name: Store test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+          name: test-results
+          path: build/output/**/junit-*.xml

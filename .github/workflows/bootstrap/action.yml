@@ -7,6 +7,10 @@ inputs:
     description: 'Install rust toolchain ("true" or "false")'
     required: false
     default: "false"
+  azure:
+      description: 'Install azure functions tool chain ("true" or "false"'
+      required: false
+      default: "false"
 
 runs:
   using: "composite"
@@ -43,3 +47,4 @@ runs:
       uses: ./.github/workflows/install-dependencies
       with:
           rust: '${{ inputs.rust }}'
+          azure: '${{ inputs.azure }}'
