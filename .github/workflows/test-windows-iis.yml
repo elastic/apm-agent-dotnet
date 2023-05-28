@@ -1,4 +1,4 @@
-name: test-iis
+name: test-windows-iis
 
 on:
   push:
@@ -29,8 +29,6 @@ jobs:
 
   test-iis:
     runs-on: windows-latest
-    # TODO disable while working on tests
-    if: ${{ false }}
     
     steps:
     - uses: actions/checkout@v3
@@ -88,11 +86,11 @@ jobs:
           --results-directory build/output ^
           --diag build/output/diag-iis.log ^
           --filter "FullyQualifiedName=Elastic.Apm.AspNetFullFramework.Tests.CustomServiceNodeNameSetViaSettings.Test" ^
-          --logger:"junit;LogFilePath=build/output/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+          --logger:"junit;LogFilePath=%GITHUB_WORKSPACE%/build/output/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
     - name: Store test results
       if: success() || failure()
       uses: actions/upload-artifact@v3
       with:
-        name: test-results
+        name: test-results-iis
         path: build/output/junit-*.xml
