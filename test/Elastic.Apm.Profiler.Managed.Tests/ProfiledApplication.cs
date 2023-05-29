@@ -126,9 +126,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			environmentVariables["ELASTIC_APM_CLOUD_PROVIDER"] = "none";
 
 			environmentVariables["ELASTIC_APM_PROFILER_HOME"] =
-				Path.Combine(SolutionPaths.Root, "src", "Elastic.Apm.Profiler.Managed", "bin", "Release");
+				Path.Combine(SolutionPaths.Root, "src", "profiler", "Elastic.Apm.Profiler.Managed", "bin", "Release");
 			environmentVariables["ELASTIC_APM_PROFILER_INTEGRATIONS"] =
-				Path.Combine(SolutionPaths.Root, "src", "Elastic.Apm.Profiler.Managed", "integrations.yml");
+				Path.Combine(SolutionPaths.Root, "src", "profiler", "Elastic.Apm.Profiler.Managed", "integrations.yml");
 
 			environmentVariables["ELASTIC_APM_PROFILER_LOG"] = "trace";
 			// log to relative logs directory for managed loader
