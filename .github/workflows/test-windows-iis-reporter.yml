@@ -21,4 +21,4 @@ jobs:
           reporter: java-junit             # Format of test results
           list-suites: 'failed'
           list-tests: 'failed'
-          output-to: 'step-sumary'
+          output-to: 'step-summary'
