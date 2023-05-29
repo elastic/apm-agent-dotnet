@@ -24,6 +24,7 @@ concurrency:
 
 env:
   ELASTIC_STACK_VERSION: '8.4.0'
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
 jobs:
 

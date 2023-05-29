@@ -29,11 +29,10 @@ runs:
     -   name: Setup dotnet
         uses: actions/setup-dotnet@v3
         with:
-            dotnet-version: |
-                3.1.100
-                5.0.100
-                6.0.100
-                7.0.100 
+          cache: true
+          dotnet-version: |
+            6.0.100
+            7.0.100 
     - shell: bash
       run: |
         dotnet --list-sdks
