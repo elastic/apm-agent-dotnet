@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <!--Only adding this for testing: make sure `ElasticsearchDiagnosticsSubscriber` does not cause any issue with the new client  -->
-    <ProjectReference Include="..\..\src\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
 
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />

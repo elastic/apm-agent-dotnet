@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Elastic.Apm.Extensions.Hosting\Elastic.Apm.Extensions.Hosting.csproj" />
+      <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.Extensions.Hosting\Elastic.Apm.Extensions.Hosting.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -29,10 +29,15 @@ module Paths =
     let Solution = "ElasticApmAgent.sln"
     
     let Keys keyFile = sprintf "%s/%s" BuildFolder keyFile
-    let Src folder = sprintf "%s/%s" SrcFolder folder
+    let private Src folder = sprintf "%s/%s" SrcFolder folder
+    let SrcProfiler folder = sprintf "%s/profiler/%s" SrcFolder folder
     let Test folder = sprintf "%s/%s" TestFolder folder
     let Sample folder = sprintf "%s/%s" SampleFolder folder
     
     let SrcProjFile project = sprintf "%s/%s/%s.csproj" SrcFolder project project
     let TestProjFile project = sprintf "%s/%s/%s.csproj" TestFolder project project
     let SampleProjFile project = sprintf "%s/%s/%s.csproj" SampleFolder project project
+    
+    let IntegrationsProjFile project = sprintf "%s/integrations/%s/%s.csproj" SrcFolder project project
+    let StartupHookProjFile project = sprintf "%s/startuphook/%s/%s.csproj" SrcFolder project project
+    let ProfilerProjFile project = sprintf "%s/profiler/%s/%s.csproj" SrcFolder project project

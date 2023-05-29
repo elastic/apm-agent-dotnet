@@ -102,7 +102,7 @@ module Main =
             Targets.Target("profiler-zip", ["profiler-integrations"], fun _ ->
                 
                 printfn "Running profiler-zip..."
-                let projs = !! (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
+                let projs = !! (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
                 Build.Publish(Some projs)
                 Build.ProfilerZip()
             )
@@ -114,7 +114,7 @@ module Main =
             Targets.Target("agent-zip", ["build"], fun _ ->
                 printfn "Running profiler-zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm")
-                            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+                            ++ (Paths.StartupHookProjFile "Elastic.Apm.StartupHook.Loader")
                 
                 Build.Publish(Some projs)
                 Build.AgentZip()

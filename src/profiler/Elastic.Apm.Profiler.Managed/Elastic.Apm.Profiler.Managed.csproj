@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net462'">
+    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+  </ItemGroup>
+
+  <!-- ASP.NET integration -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+  <!-- ASP.NET Core integration -->
+  <ItemGroup  Condition="'$(TargetFramework)' != 'net462'">
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm.Profiler.Managed.Core\Elastic.Apm.Profiler.Managed.Core.csproj" />
+    <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Elastic.Apm.Profiler.Managed.Tests" Key="$(ExposedPublicKey)" />
+  </ItemGroup>
+
+</Project>

@@ -19,9 +19,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\sample\SampleConsoleNetCoreApp\SampleConsoleNetCoreApp.csproj" />
-    <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
-    <ProjectReference Include="..\..\src\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj" />
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

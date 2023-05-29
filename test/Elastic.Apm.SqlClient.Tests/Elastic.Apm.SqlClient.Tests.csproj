@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\..\src\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
