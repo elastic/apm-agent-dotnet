@@ -28,7 +28,7 @@ runs:
               --verbosity minimal \
               ${{ inputs.filter != '' && format('--filter "{0}"', inputs.filter) || '' }} \
               ${{ inputs.framework != '' && format('-f {0}', inputs.framework) || '' }} \
-              --logger:"junit;LogFilePath=$(readlink -f build/output)/junit-${{ runner.os == 'Linux' && 'linux' || 'windows' }}-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+              --logger:"junit;LogFilePath=${GITHUB_WORKSPACE}/build/output/junit-${{ runner.os == 'Linux' && 'linux' || 'windows' }}-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
 
     - name: Store test results
       if: success() || failure()
