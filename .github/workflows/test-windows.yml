@@ -25,6 +25,9 @@ defaults:
   run:
     shell: cmd
 
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
 jobs:
   tests:
     runs-on: windows-2022

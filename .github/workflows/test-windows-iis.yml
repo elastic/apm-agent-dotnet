@@ -24,6 +24,7 @@ concurrency:
 
 env:
   ELASTIC_STACK_VERSION: '8.4.0'
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
 jobs:
 
@@ -38,9 +39,7 @@ jobs:
     - uses: actions/cache@v3
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.3.1
 
