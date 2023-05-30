@@ -10,9 +10,9 @@
   <ItemGroup>
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj"/>
     <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj"/>
-    <ProjectReference Include="$(SolutionRoot)\sample\WebApiSample\WebApiSample.csproj"/>
-    <ProjectReference Include="$(SolutionRoot)\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj"/>
     <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj"/>
+    <ProjectReference Include="..\applications\WebApiSample\WebApiSample.csproj"/>
+    <ProjectReference Include="..\applications\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj"/>
     <ProjectReference Include="..\Elastic.Apm.AspNetCore.Tests\Elastic.Apm.AspNetCore.Tests.csproj"/>
   </ItemGroup>
   <ItemGroup>
