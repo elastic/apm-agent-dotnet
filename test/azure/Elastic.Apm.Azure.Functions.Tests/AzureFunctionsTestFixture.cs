@@ -34,7 +34,7 @@ public class AzureFunctionsTestFixture : IDisposable
 		_apmServer.RunInBackground(port);
 
 		var solutionRoot = SolutionPaths.Root;
-		var workingDir = Path.Combine(solutionRoot, "sample", "Elastic.AzureFunctionApp.Isolated");
+		var workingDir = Path.Combine(solutionRoot, "test", "azure", "Elastic.AzureFunctionApp.Isolated");
 		LogLines.Add($"func working directory: {workingDir}");
 		Directory.Exists(workingDir).Should().BeTrue();
 
