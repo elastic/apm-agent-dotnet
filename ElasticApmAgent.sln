@@ -213,6 +213,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.NetCoreAll", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "docs", "docs\docs.csproj", "{7DA216DD-F842-41FE-8D1B-D2925B46E551}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "build", "build\build.fsproj", "{69C34D4F-13A5-43DE-A126-954B85F8A33E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -541,6 +543,10 @@ Global
 		{7DA216DD-F842-41FE-8D1B-D2925B46E551}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DA216DD-F842-41FE-8D1B-D2925B46E551}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DA216DD-F842-41FE-8D1B-D2925B46E551}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69C34D4F-13A5-43DE-A126-954B85F8A33E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69C34D4F-13A5-43DE-A126-954B85F8A33E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69C34D4F-13A5-43DE-A126-954B85F8A33E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69C34D4F-13A5-43DE-A126-954B85F8A33E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
