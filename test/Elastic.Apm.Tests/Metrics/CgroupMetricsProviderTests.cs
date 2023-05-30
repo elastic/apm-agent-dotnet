@@ -95,7 +95,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample?.KeyValue.Value.Should().Be(964778496);
+			memUsageSample.KeyValue.Value.Should().Be(964778496);
 		}
 
 		[DisabledTestFact("Flaky")]
@@ -109,7 +109,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample?.KeyValue.Value.Should().Be(964778496);
+			memUsageSample.KeyValue.Value.Should().Be(964778496);
 		}
 
 		/// <summary>

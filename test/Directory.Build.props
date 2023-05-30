@@ -4,18 +4,35 @@
   <PropertyGroup>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
+    
+    <!-- Elastic.Apm.AspNetFullFramework is completely self managed since it needs a lot of special care (for now) -->
+    <IsAspNetFullFrameworkTests Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)AspNetFullFramework\.Tests$'))">true</IsAspNetFullFrameworkTests>
+    <IsRegularTestProject Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$')) AND '$(IsAspNetFullFrameworkTests)' == ''">true</IsRegularTestProject>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- use xunit config for all test files. Allow assemblies to run in parallel -->
-    <Content Include="$(SolutionRoot)/xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(IsTestProject)' == 'true'" />
-  </ItemGroup>
   
   <ItemGroup>
-    <!-- Add coverlet collector for all platforms and frameworks, except net462 -->
-    <PackageReference Include="coverlet.collector" Version="3.0.2" Condition="'$(IsTestProject)' == 'true' AND '$(TargetFramework)' != 'net462'">
+    <!-- use xunit config for all test files. Allow assemblies to run in parallel -->
+    <Content Include="$(SolutionRoot)\xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(IsRegularTestProject)' == 'true'" />
+  </ItemGroup>
+
+  <PropertyGroup
+    Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$')) AND !$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)AspNetFullFramework\.Tests$'))">
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup 
+    Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$')) AND !$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)AspNetFullFramework\.Tests$'))">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
+    
+    <PackageReference Include="JunitXml.TestLogger" Version="3.0.114" PrivateAssets="All" />
+    <PackageReference Include="Nullean.VsTest.Pretty.TestLogger" Version="0.3.0" PrivateAssets="All" />
+
+    <PackageReference Include="FluentAssertions" Version="5.6.0" />
+    <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="JunitXml.TestLogger" Version="2.1.81" Condition="'$(IsTestProject)' == 'true'" />
   </ItemGroup>
 </Project>

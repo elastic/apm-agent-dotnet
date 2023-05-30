@@ -945,17 +945,17 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var recordedTransaction1 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction1");
 			recordedTransaction1.Should().NotBeNull();
-			recordedTransaction1?.Context.Service.Name.Should().Be("Service1");
-			recordedTransaction1?.Context.Service.Version.Should().Be("1.0-beta1");
+			recordedTransaction1.Context.Service.Name.Should().Be("Service1");
+			recordedTransaction1.Context.Service.Version.Should().Be("1.0-beta1");
 
 			var recordedTransaction2 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction2");
 			recordedTransaction2.Should().NotBeNull();
-			recordedTransaction2?.Context.Service.Name.Should().Be("Service2");
-			recordedTransaction2?.Context.Service.Version.Should().Be("1.0-beta2");
+			recordedTransaction2.Context.Service.Name.Should().Be("Service2");
+			recordedTransaction2.Context.Service.Version.Should().Be("1.0-beta2");
 
 			var recordedTransaction3 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction3");
 			recordedTransaction3.Should().NotBeNull();
-			recordedTransaction3?.Context.Service.Should().BeNull();
+			recordedTransaction3.Context.Service.Should().BeNull();
 		}
 
 		/// <summary>
@@ -976,8 +976,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
-			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
-			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");
+			payloadSender.FirstTransaction.Context.Service.Name.Should().Be("Service2");
+			payloadSender.FirstTransaction.Context.Service.Version.Should().Be("1.0-beta2");
 		}
 
 		[Fact]

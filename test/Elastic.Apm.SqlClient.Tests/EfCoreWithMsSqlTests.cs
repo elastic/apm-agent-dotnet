@@ -63,11 +63,10 @@ namespace Elastic.Apm.SqlClient.Tests
 
 			_payloadSender.SpansOnFirstTransaction.Should().HaveCount(1);
 			_payloadSender.FirstSpan.Should().NotBeNull();
-			_payloadSender.FirstSpan.Context?.Db?.Should().NotBeNull();
-			_payloadSender.FirstSpan.Context?.Db?.Should().NotBeNull();
-
-			_payloadSender.FirstSpan.Context?.Db?.Instance.Should().Be("master");
-			_payloadSender.FirstSpan.Context?.Db?.Type.Should().Be("sql");
+			_payloadSender.FirstSpan.Context.Should().NotBeNull();
+			_payloadSender.FirstSpan.Context.Db.Should().NotBeNull();
+			_payloadSender.FirstSpan.Context.Db.Instance.Should().Be("master");
+			_payloadSender.FirstSpan.Context.Db.Type.Should().Be("sql");
 		}
 
 		public void Dispose() => _apmAgent?.Dispose();

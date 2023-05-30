@@ -26,11 +26,13 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			var sideEffect = 0;
 
+#pragma warning disable NullConditionalAssertion
 			possiblyNull?.Let(x =>
 			{
 				sideEffect = 1;
 				x.Should().NotBeNull();
 			});
+#pragma warning restore NullConditionalAssertion
 
 			sideEffect.Should().Be(possiblyNull == null ? 0 : 1);
 		}
@@ -43,11 +45,13 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			var sideEffect = 0;
 
+#pragma warning disable NullConditionalAssertion
 			possiblyNull?.Let(x =>
 			{
 				sideEffect = 1;
 				x.Should().Be(possiblyNull.Value);
 			});
+#pragma warning restore NullConditionalAssertion
 
 			sideEffect.Should().Be(possiblyNull == null ? 0 : 1);
 		}
