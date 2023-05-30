@@ -83,4 +83,4 @@ jobs:
         uses: ./.github/workflows/test
         with:
           name: 'profiler'
-          project: 'test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+          project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
