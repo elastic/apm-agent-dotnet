@@ -28,10 +28,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 		private readonly string _projectName;
 		private readonly string _publishDirectory;
 
-		public ProfiledApplication(string projectName)
+		public ProfiledApplication(string projectName, bool genericSampleApp = false)
 		{
 			_projectName = projectName;
-			_projectDirectory = Path.Combine(SolutionPaths.Root, "sample", projectName);
+			var root = genericSampleApp
+				? Path.Combine(SolutionPaths.Root, "sample")
+				: Path.Combine(SolutionPaths.Root, "test", "profiler", "applications");
+			_projectDirectory = Path.Combine(root, projectName);
 
 			if (!Directory.Exists(_projectDirectory))
 				throw new DirectoryNotFoundException($"project could not be found at {_projectDirectory}");

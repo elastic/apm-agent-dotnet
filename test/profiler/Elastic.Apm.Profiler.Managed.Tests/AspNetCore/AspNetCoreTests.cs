@@ -33,7 +33,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			using (var profiledApplication = new ProfiledApplication("SampleAspNetCoreApp"))
+			using (var profiledApplication = new ProfiledApplication("SampleAspNetCoreApp", genericSampleApp: true))
 			{
 				IDictionary<string, string> environmentVariables = new Dictionary<string, string>
 				{
