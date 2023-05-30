@@ -24,16 +24,16 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Protobuf Include="..\..\sample\GrpcServiceSample\Protos\greet.proto" GrpcServices="Both">
+    <Protobuf Include="..\GrpcServiceSample\Protos\greet.proto" GrpcServices="Both">
       <Link>Protos\greet.proto</Link>
     </Protobuf>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\sample\GrpcServiceSample\appsettings.Development.json">
+    <Content Include="..\GrpcServiceSample\appsettings.Development.json">
       <Link>appsettings.Development.json</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\sample\GrpcServiceSample\appsettings.json">
+    <Content Include="..\GrpcServiceSample\appsettings.json">
       <Link>appsettings.json</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
