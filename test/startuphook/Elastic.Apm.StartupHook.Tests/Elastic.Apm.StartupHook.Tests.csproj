@@ -9,8 +9,8 @@
     </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
-    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 
 </Project>

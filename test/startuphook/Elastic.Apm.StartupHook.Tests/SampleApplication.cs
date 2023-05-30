@@ -58,7 +58,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <returns></returns>
 		public Uri Start(string targetFramework, IDictionary<string, string> environmentVariables = null)
 		{
-			var projectDirectory = Path.Combine(SolutionPaths.Root, "sample", ElasticApmStartuphookSampleProjectName);
+			var projectDirectory = Path.Combine(SolutionPaths.Root, "test", "startuphook", ElasticApmStartuphookSampleProjectName);
 			Publish(projectDirectory, targetFramework);
 
 			var startupHookAssembly = UnzipStartupHook();
