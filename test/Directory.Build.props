@@ -4,10 +4,6 @@
   <PropertyGroup>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
-    <!-- All projects in this directory are assumed to be Test projects by default i.e. containing tests. Some may not
-     be however, so they can override this setting so that common test components are not added.
-     -->
-    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
     <!-- use xunit config for all test files. Allow assemblies to run in parallel -->
