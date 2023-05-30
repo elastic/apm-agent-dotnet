@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Elastic.Apm.Azure.Functions.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
+  </ItemGroup>
+
+</Project>

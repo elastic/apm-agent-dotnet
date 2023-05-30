@@ -29,14 +29,16 @@ namespace Elastic.Apm.Tests
 		/// This test assumes that LineNo capturing is enabled and pdb files are also present
 		/// </summary>
 		[Fact]
-		public void StackTraceContainsLineNumber()
-			=> AssertWithAgent("-1", "-1", payloadSender =>
+		public void StackTraceContainsLineNumber() =>
+#pragma warning disable NullConditionalAssertion
+			AssertWithAgent("-1", "-1", payloadSender =>
 			{
 				payloadSender.FirstSpan.Should().NotBeNull();
 				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
 				var stackFrames = payloadSender.FirstSpan?.StackTrace;
 				stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
 			});
+#pragma warning restore NullConditionalAssertion
 
 		/// <summary>
 		/// Makes sure that the name of the async method is captured correctly
@@ -61,7 +63,7 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
+			(payloadSender.Errors.First() as Error).Exception.StackTrace.Should()
 				.Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync) && m.LineNo != 0);
 		}
 
@@ -86,8 +88,8 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.MoveNext));
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
+			(payloadSender.Errors.First() as Error).Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.MoveNext));
+			(payloadSender.Errors.First() as Error).Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
 		}
 
 		/// <summary>
@@ -114,14 +116,14 @@ namespace Elastic.Apm.Tests
 
 			var currentFileName = new StackTrace(true).GetFrame(0).GetFileName();
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
+			(payloadSender.Errors.First() as Error).Exception.StackTrace.Should()
 				.Contain(m => m.ClassName == typeof(Base).FullName
 					&& m.Function == nameof(Base.Method1)
 					&& m.Module == typeof(Base).Assembly.FullName
 					&& m.FileName == currentFileName
 				);
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
+			(payloadSender.Errors.First() as Error).Exception.StackTrace.Should()
 				.Contain(m => m.ClassName == typeof(Derived).FullName
 					&& m.Function == nameof(Derived.TestMethod)
 					&& m.Module == typeof(Derived).Assembly.FullName
@@ -143,7 +145,7 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().NotContain(frame => string.IsNullOrWhiteSpace(frame.FileName));
+			(payloadSender.Errors.First() as Error).Exception.StackTrace.Should().NotContain(frame => string.IsNullOrWhiteSpace(frame.FileName));
 		}
 
 		[Fact]
@@ -159,14 +161,14 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().Be(typeof(Derived).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].ClassName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
 
 			var fileName = new StackTrace(true).GetFrame(0).GetFileName();
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(fileName);
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].FileName.Should().Be(fileName);
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].ClassName.Should().Be(typeof(Derived).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].Function.Should().Be(nameof(Base.MyMethod));
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[1].ClassName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[1].Function.Should().Be(nameof(Base.MyMethod));
 		}
 
 		[Fact]
@@ -182,11 +184,11 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().Be(typeof(Base).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].ClassName.Should().Be(typeof(Base).FullName);
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
 
 			var fileName = new StackTrace(true).GetFrame(0).GetFileName();
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(fileName);
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].FileName.Should().Be(fileName);
 		}
 
 		/// <summary>
@@ -208,9 +210,9 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Base).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().BeNullOrEmpty();
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].FileName.Should().Be(typeof(Base).FullName);
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
+			(payloadSender.Errors.First() as Error).Exception.StackTrace[0].ClassName.Should().BeNullOrEmpty();
 		}
 
 		[Fact]

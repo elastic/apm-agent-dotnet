@@ -131,7 +131,10 @@ namespace Elastic.Apm.Feature.Tests
 			var token = payloadCollector.Payloads[0].Body[0].SelectToken($"metadata.cloud.{key}");
 
 			token.Should().NotBeNull();
-			token.Value<string>().Should().Be(value);
+			var prop = token as JProperty;
+			prop.Should().NotBeNull();
+			prop.Value<string>().Should().Be(value);
+
 		}
 	}
 }

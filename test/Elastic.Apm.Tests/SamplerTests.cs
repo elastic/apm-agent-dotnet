@@ -47,12 +47,14 @@ namespace Elastic.Apm.Tests
 					break;
 			}
 
+#pragma warning disable NullConditionalAssertion
 			sampler.Constant?.Let(c => 10.Repeat(() =>
 			{
 				var randomBytes = new byte[8];
 				RandomGenerator.GenerateRandomBytes(randomBytes);
 				sampler.DecideIfToSample(randomBytes).Should().Be(c);
 			}));
+#pragma warning restore NullConditionalAssertion
 		}
 
 		[Theory]
