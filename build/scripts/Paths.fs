@@ -16,12 +16,12 @@ module Paths =
     let SampleFolder = "sample"
     
     let BuildOutputFolder = sprintf "%s/output" BuildFolder
-    let PublishOutputFolder = sprintf "../../%s/output" BuildFolder
+    
+    let PublishOutputFolder = System.IO.Path.GetFullPath <| sprintf "%s/output" BuildFolder
     
     /// A path to a folder in the build output folder
     let BuildOutput folder = sprintf "%s/%s" BuildOutputFolder folder
-    /// Used by --property:PublishDir relative to csproject
-    let PublishDir folder = sprintf "../../%s" <| BuildOutput folder
+    let PublishDir folder = sprintf "%s" <| BuildOutput folder
  
     let NugetOutput = sprintf "%s/_packages" PublishOutputFolder
     
