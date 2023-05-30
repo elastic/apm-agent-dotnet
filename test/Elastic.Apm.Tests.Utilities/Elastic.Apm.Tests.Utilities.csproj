@@ -29,6 +29,7 @@
       <InternalsVisibleTo Include="Elastic.Apm.MongoDb.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Clients.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Sample.Microsoft.Data.SqlClient" Key="$(ExposedPublicKeySampleApps)" />
+      <InternalsVisibleTo Include="Elastic.Apm.OpenTelemetry.Tests" Key="$(ExposedPublicKey)" />
     </ItemGroup>
   
     <ItemGroup>
