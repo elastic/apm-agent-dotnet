@@ -13,7 +13,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
     <ProjectReference Include="$(SrcAzure)\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj" />
   </ItemGroup>
 

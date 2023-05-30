@@ -33,9 +33,8 @@ public class AzureFunctionsTestFixture : IDisposable
 		LogLines.Add($"Starting APM Server on port: {port}");
 		_apmServer.RunInBackground(port);
 
-		var workingDir = Path.Combine(Directory.GetCurrentDirectory(),
-			"../../../../../sample/Elastic.AzureFunctionApp.Isolated");
-		workingDir = Path.GetFullPath(workingDir);
+		var solutionRoot = SolutionPaths.Root;
+		var workingDir = Path.Combine(solutionRoot, "sample", "Elastic.AzureFunctionApp.Isolated");
 		LogLines.Add($"func working directory: {workingDir}");
 		Directory.Exists(workingDir).Should().BeTrue();
 

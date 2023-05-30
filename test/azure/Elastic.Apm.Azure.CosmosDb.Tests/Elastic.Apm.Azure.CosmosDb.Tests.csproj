@@ -14,8 +14,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+      <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj" />
+      <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
       <ProjectReference Include="$(SrcAzure)\Elastic.Apm.Azure.CosmosDb\Elastic.Apm.Azure.CosmosDb.csproj" />
     </ItemGroup>
   
