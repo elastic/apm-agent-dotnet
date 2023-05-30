@@ -27,7 +27,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       </PackageReference>
       <ProjectReference Include="$(SrcProfiler)\Elastic.Apm.Profiler.Managed\Elastic.Apm.Profiler.Managed.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
+      <ProjectReference Include="..\..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
       <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
     </ItemGroup>
 
