@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>
