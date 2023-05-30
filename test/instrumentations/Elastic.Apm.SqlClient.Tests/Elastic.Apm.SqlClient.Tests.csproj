@@ -20,7 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
     <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
 </Project>
