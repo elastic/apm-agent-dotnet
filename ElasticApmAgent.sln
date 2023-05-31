@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{3C791D
 		sample\Directory.Build.props = sample\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "test\integrations\applications\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{267A241E-571F-458F-B04C-B6C4DE79E735}"
 	ProjectSection(SolutionItems) = preProject
@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm", "src\Elastic.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests", "test\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj", "{4BEAD125-6F93-4566-A1D3-362F55D7AD4C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetCore.Tests", "test\Elastic.Apm.AspNetCore.Tests\Elastic.Apm.AspNetCore.Tests.csproj", "{36D72723-2161-4322-A04B-E97D0CB48EF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetCore.Tests", "test\integrations\Elastic.Apm.AspNetCore.Tests\Elastic.Apm.AspNetCore.Tests.csproj", "{36D72723-2161-4322-A04B-E97D0CB48EF6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiSamples", "sample\ApiSamples\ApiSamples.csproj", "{19C9C1BA-4BCC-4708-92C3-8F5AE18B44F8}"
 EndProject
@@ -34,7 +34,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Benchmarks", "b
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetFullFrameworkSampleApp", "sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj", "{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiSample", "sample\WebApiSample\WebApiSample.csproj", "{319E2094-D2E1-46C5-8985-9693CD8DDCBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiSample", "test\integrations\applications\WebApiSample\WebApiSample.csproj", "{319E2094-D2E1-46C5-8985-9693CD8DDCBD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Docker.Tests", "test\instrumentations\Elastic.Apm.Docker.Tests\Elastic.Apm.Docker.Tests.csproj", "{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}"
 EndProject
@@ -50,7 +50,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.SqlClient.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Feature.Tests", "test\Elastic.Apm.Feature.Tests\Elastic.Apm.Feature.Tests.csproj", "{A4EF875C-92AD-4538-AFF1-1DA277F1085A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleConsoleNetCoreApp", "sample\SampleConsoleNetCoreApp\SampleConsoleNetCoreApp.csproj", "{00AD0047-92A6-48CC-B67D-A3DB2812CE28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleConsoleNetCoreApp", "test\integrations\applications\SampleConsoleNetCoreApp\SampleConsoleNetCoreApp.csproj", "{00AD0047-92A6-48CC-B67D-A3DB2812CE28}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Elasticsearch.Tests", "test\instrumentations\Elastic.Apm.Elasticsearch.Tests\Elastic.Apm.Elasticsearch.Tests.csproj", "{E30DEF03-4E0B-46A0-87D0-E80545D99BBA}"
 EndProject
@@ -62,7 +62,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcClientSample", "test\in
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Grpc.Tests", "test\instrumentations\grpc\Elastic.Apm.Grpc.Tests\Elastic.Apm.Grpc.Tests.csproj", "{3AD5584E-057A-4C52-84EA-32A9BBE12F03}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Hosting.Tests", "test\Elastic.Apm.Extensions.Hosting.Tests\Elastic.Apm.Extensions.Hosting.Tests.csproj", "{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Hosting.Tests", "test\integrations\Elastic.Apm.Extensions.Hosting.Tests\Elastic.Apm.Extensions.Hosting.Tests.csproj", "{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StackExchangeRedisSample", "sample\StackExchangeRedisSample\StackExchangeRedisSample.csproj", "{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6}"
 EndProject
@@ -70,19 +70,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StackExchange.R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Specification", "src\Elastic.Apm.Specification\Elastic.Apm.Specification.csproj", "{5D076C7F-1F8B-4B11-9910-48717D133963}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetCore.Static.Tests", "test\Elastic.Apm.AspNetCore.Static.Tests\Elastic.Apm.AspNetCore.Static.Tests.csproj", "{2250D888-E4CC-4B2B-AF31-5C78D76EC73D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetCore.Static.Tests", "test\integrations\Elastic.Apm.AspNetCore.Static.Tests\Elastic.Apm.AspNetCore.Static.Tests.csproj", "{2250D888-E4CC-4B2B-AF31-5C78D76EC73D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.Utilities", "test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj", "{43F9247D-544B-49FB-9E50-FC236D90DE1A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticImplicitInitialization.Tests", "test\Elastic.Apm.StaticImplicitInitialization.Tests\Elastic.Apm.StaticImplicitInitialization.Tests.csproj", "{CE0120A5-A094-40A3-905E-8E14526800D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticImplicitInitialization.Tests", "test\integrations\Elastic.Apm.StaticImplicitInitialization.Tests\Elastic.Apm.StaticImplicitInitialization.Tests.csproj", "{CE0120A5-A094-40A3-905E-8E14526800D3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticExplicitInitialization.Tests", "test\Elastic.Apm.StaticExplicitInitialization.Tests\Elastic.Apm.StaticExplicitInitialization.Tests.csproj", "{DC879845-353B-4C62-9640-6EA3008326F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticExplicitInitialization.Tests", "test\integrations\Elastic.Apm.StaticExplicitInitialization.Tests\Elastic.Apm.StaticExplicitInitialization.Tests.csproj", "{DC879845-353B-4C62-9640-6EA3008326F7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Sample", "sample\Elastic.Apm.StartupHook.Sample\Elastic.Apm.StartupHook.Sample.csproj", "{B168C594-0314-4201-A55B-13DBBE2796FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Sample", "test\startuphook\Elastic.Apm.StartupHook.Sample\Elastic.Apm.StartupHook.Sample.csproj", "{B168C594-0314-4201-A55B-13DBBE2796FE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Tests", "test\Elastic.Apm.StartupHook.Tests\Elastic.Apm.StartupHook.Tests.csproj", "{9AE4805D-2586-4FA5-A0D0-885264EBC565}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Tests", "test\startuphook\Elastic.Apm.StartupHook.Tests\Elastic.Apm.StartupHook.Tests.csproj", "{9AE4805D-2586-4FA5-A0D0-885264EBC565}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Logging.Tests", "test\Elastic.Apm.Extensions.Logging.Tests\Elastic.Apm.Extensions.Logging.Tests.csproj", "{B235B13F-42AE-42DA-A3C8-20D047F38685}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Logging.Tests", "test\integrations\Elastic.Apm.Extensions.Logging.Tests\Elastic.Apm.Extensions.Logging.Tests.csproj", "{B235B13F-42AE-42DA-A3C8-20D047F38685}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.MongoDb.Tests", "test\instrumentations\Elastic.Apm.MongoDb.Tests\Elastic.Apm.MongoDb.Tests.csproj", "{FB07C133-C353-4061-A308-B9A6EF48AB7E}"
 EndProject
@@ -116,13 +116,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaSample", "test\profile
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqSample", "test\profiler\applications\RabbitMqSample\RabbitMqSample.csproj", "{1D6B0C67-42C8-4AB4-A795-B6FF8EF7196E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTelemetrySample", "sample\OpenTelemetrySample\OpenTelemetrySample.csproj", "{3D31589A-CA44-4D6D-9944-26CE9640A283}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTelemetrySample", "test\opentelemetry\OpenTelemetrySample\OpenTelemetrySample.csproj", "{3D31589A-CA44-4D6D-9944-26CE9640A283}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SatelliteAssemblySample", "test\profiler\applications\SatelliteAssemblySample\SatelliteAssemblySample.csproj", "{2B62E740-A493-42D6-BE5E-709BD07F877E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Functions.Tests", "test\azure\Elastic.Apm.Azure.Functions.Tests\Elastic.Apm.Azure.Functions.Tests.csproj", "{8E3D94CD-3378-4431-8956-07644A64D4E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.AzureFunctionApp.Isolated", "sample\Elastic.AzureFunctionApp.Isolated\Elastic.AzureFunctionApp.Isolated.csproj", "{9879E646-63ED-474C-905B-1B469403F0A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.AzureFunctionApp.Isolated", "test\azure\Elastic.AzureFunctionApp.Isolated\Elastic.AzureFunctionApp.Isolated.csproj", "{9879E646-63ED-474C-905B-1B469403F0A5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Clients.Elasticsearch.Tests", "test\instrumentations\Elastic.Clients.Elasticsearch.Tests\Elastic.Clients.Elasticsearch.Tests.csproj", "{E6217549-8C21-4E95-BDF2-E782922CD104}"
 EndProject
@@ -208,6 +208,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "instrumentations", "instrumentations", "{4F060027-5614-4C64-9338-128C7E9CE8A4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "grpc", "grpc", "{8B6EE9D6-8A1B-4F85-AE4C-D03E42DBDDEA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integrations", "integrations", "{67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "startuphook", "startuphook", "{93686A26-AD8A-498C-BC0E-FF8258F3D20C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "applications", "applications", "{59F3FB6E-4B48-4E87-AF3B-78DFED427EF1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opentelemetry", "opentelemetry", "{1CDE0A67-0245-4CB0-A1B9-D17CCC388E82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.OpenTelemetry.Tests", "test\opentelemetry\Elastic.Apm.OpenTelemetry.Tests\Elastic.Apm.OpenTelemetry.Tests.csproj", "{8EF0BEC9-C979-42B9-9447-F03570CCAA24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -537,37 +547,28 @@ Global
 		{69C34D4F-13A5-43DE-A126-954B85F8A33E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69C34D4F-13A5-43DE-A126-954B85F8A33E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69C34D4F-13A5-43DE-A126-954B85F8A33E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EF0BEC9-C979-42B9-9447-F03570CCAA24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EF0BEC9-C979-42B9-9447-F03570CCAA24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EF0BEC9-C979-42B9-9447-F03570CCAA24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EF0BEC9-C979-42B9-9447-F03570CCAA24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{0ADF687D-4DB7-417E-80B4-27B3FD86875E} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{90BC9629-C8D2-4FD5-863E-EA2D5FB37341} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{4BEAD125-6F93-4566-A1D3-362F55D7AD4C} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{36D72723-2161-4322-A04B-E97D0CB48EF6} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{19C9C1BA-4BCC-4708-92C3-8F5AE18B44F8} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{1AAB1A30-42C0-4C76-AE2E-9D7293945D80} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-		{319E2094-D2E1-46C5-8985-9693CD8DDCBD} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{4253798D-A160-40B3-8F16-5BF64C559B93} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{A4EF875C-92AD-4538-AFF1-1DA277F1085A} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{00AD0047-92A6-48CC-B67D-A3DB2812CE28} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{0FE5E852-E3AF-45F9-BF3A-8CD739C0807F} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{5D076C7F-1F8B-4B11-9910-48717D133963} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
-		{2250D888-E4CC-4B2B-AF31-5C78D76EC73D} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{43F9247D-544B-49FB-9E50-FC236D90DE1A} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{CE0120A5-A094-40A3-905E-8E14526800D3} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{DC879845-353B-4C62-9640-6EA3008326F7} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{B168C594-0314-4201-A55B-13DBBE2796FE} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-		{9AE4805D-2586-4FA5-A0D0-885264EBC565} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{B235B13F-42AE-42DA-A3C8-20D047F38685} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{27563B4E-ECB1-4F1B-B9F1-22C2C165B270} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-		{3D31589A-CA44-4D6D-9944-26CE9640A283} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-		{9879E646-63ED-474C-905B-1B469403F0A5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{BCE93684-0A40-4F5F-8FB5-94DE94B111E1} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{C6A7CA94-9D06-4CA1-BAEA-43B607BF939D} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{42F4F13C-0515-4501-A27B-9815BFF63807} = {C6A7CA94-9D06-4CA1-BAEA-43B607BF939D}
@@ -631,6 +632,24 @@ Global
 		{CC52EA80-5E18-4370-ACB3-9424B6BB6B68} = {8B6EE9D6-8A1B-4F85-AE4C-D03E42DBDDEA}
 		{6E6B9E49-EE42-4EB6-8248-BEEC8522937B} = {8B6EE9D6-8A1B-4F85-AE4C-D03E42DBDDEA}
 		{3AD5584E-057A-4C52-84EA-32A9BBE12F03} = {8B6EE9D6-8A1B-4F85-AE4C-D03E42DBDDEA}
+		{67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{2250D888-E4CC-4B2B-AF31-5C78D76EC73D} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
+		{36D72723-2161-4322-A04B-E97D0CB48EF6} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
+		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
+		{B235B13F-42AE-42DA-A3C8-20D047F38685} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
+		{DC879845-353B-4C62-9640-6EA3008326F7} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
+		{CE0120A5-A094-40A3-905E-8E14526800D3} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
+		{93686A26-AD8A-498C-BC0E-FF8258F3D20C} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{9AE4805D-2586-4FA5-A0D0-885264EBC565} = {93686A26-AD8A-498C-BC0E-FF8258F3D20C}
+		{B168C594-0314-4201-A55B-13DBBE2796FE} = {93686A26-AD8A-498C-BC0E-FF8258F3D20C}
+		{9879E646-63ED-474C-905B-1B469403F0A5} = {C2378D3C-2BA8-410F-AEF7-547C411C71C7}
+		{59F3FB6E-4B48-4E87-AF3B-78DFED427EF1} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
+		{319E2094-D2E1-46C5-8985-9693CD8DDCBD} = {59F3FB6E-4B48-4E87-AF3B-78DFED427EF1}
+		{0ADF687D-4DB7-417E-80B4-27B3FD86875E} = {59F3FB6E-4B48-4E87-AF3B-78DFED427EF1}
+		{00AD0047-92A6-48CC-B67D-A3DB2812CE28} = {59F3FB6E-4B48-4E87-AF3B-78DFED427EF1}
+		{1CDE0A67-0245-4CB0-A1B9-D17CCC388E82} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{3D31589A-CA44-4D6D-9944-26CE9640A283} = {1CDE0A67-0245-4CB0-A1B9-D17CCC388E82}
+		{8EF0BEC9-C979-42B9-9447-F03570CCAA24} = {1CDE0A67-0245-4CB0-A1B9-D17CCC388E82}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

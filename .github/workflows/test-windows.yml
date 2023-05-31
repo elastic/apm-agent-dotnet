@@ -63,7 +63,7 @@ jobs:
         uses: ./.github/workflows/test
         with:
           name: 'startuphooks'
-          project: 'test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+          project: 'test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
           
   profiler-tests:
     runs-on: windows-2022

@@ -38,7 +38,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' != 'net462' ">
-    <ProjectReference Include="..\..\sample\OpenTelemetrySample\OpenTelemetrySample.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
   </ItemGroup>
   

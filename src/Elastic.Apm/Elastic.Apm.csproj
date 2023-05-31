@@ -23,6 +23,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.SqlClient" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.SqlClient.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.OpenTelemetry.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.NetCoreAll" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.NetCoreAll.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Static.Tests" Key="$(ExposedPublicKey)" />

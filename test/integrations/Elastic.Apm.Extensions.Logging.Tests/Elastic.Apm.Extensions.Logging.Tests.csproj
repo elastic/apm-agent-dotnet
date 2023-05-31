@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\sample\SampleConsoleNetCoreApp\SampleConsoleNetCoreApp.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
+    <ProjectReference Include="..\applications\SampleConsoleNetCoreApp\SampleConsoleNetCoreApp.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj" />
   </ItemGroup>
