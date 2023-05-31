@@ -17,6 +17,14 @@ using ProcNet.Std;
 
 namespace Elastic.Apm.Profiler.Managed.Tests
 {
+
+	public class ProfiledIntegrationApplication : ProfiledApplication
+	{
+		public ProfiledIntegrationApplication(string projectName)
+			: base(projectName, "test", "integrations", "applications")
+		{}
+	}
+
 	/// <summary>
 	/// A sample application that can be instrumented with the (Core)CLR profiler
 	/// </summary>
@@ -28,12 +36,14 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 		private readonly string _projectName;
 		private readonly string _publishDirectory;
 
-		public ProfiledApplication(string projectName, bool genericSampleApp = false)
+		public ProfiledApplication(string projectName) : this(projectName, null) {}
+
+		protected ProfiledApplication(string projectName, params string[] folders)
 		{
 			_projectName = projectName;
-			var root = genericSampleApp
-				? Path.Combine(SolutionPaths.Root, "sample")
-				: Path.Combine(SolutionPaths.Root, "test", "profiler", "applications");
+			var root = folders == null || folders.Length == 0
+				? Path.Combine(SolutionPaths.Root, "test", "profiler", "applications")
+				: Path.Combine(new [] { SolutionPaths.Root }.Concat(folders).ToArray());
 			_projectDirectory = Path.Combine(root, projectName);
 
 			if (!Directory.Exists(_projectDirectory))
