@@ -9,8 +9,8 @@
     <!-- old style csproj not supported, we don't care about versioning this sample app though -->
     <MinVerSkip>true</MinVerSkip>
     <RestoreProjectStyle Condition="'$(BuildFullFrameworkAsp)' == 'false'">PackageReference</RestoreProjectStyle>
-    <EnableDefaultCompileItems Condition="'$(BuildFullFrameworkAsp)' == 'false'">false</EnableDefaultCompileItems>
-    <GenerateAssemblyInfo Condition="'$(BuildFullFrameworkAsp)' == 'false'">false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <!-- prevents NU1503 -->
@@ -38,7 +38,7 @@
     <RootNamespace>AspNetFullFrameworkSampleApp</RootNamespace>
     <AssemblyName>AspNetFullFrameworkSampleApp</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <TargetFramework Condition="'$(BuildFullFrameworkAsp)' == 'false'">net462</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <RuntimeIdentifier>win</RuntimeIdentifier>
   </PropertyGroup>
   <PropertyGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">

@@ -11,6 +11,7 @@
     <AssemblyName>Elastic.Apm.AspNetFullFramework.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetFullFramework.Tests</RootNamespace>
     <IsTestProject Condition="'$(BuildFullFrameworkAsp)' == 'false'">false</IsTestProject>
+    <IsTestProject>true</IsTestProject>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
   </PropertyGroup>
   <ItemGroup>
@@ -37,5 +38,5 @@
   </ItemGroup>
 
   <!-- VS Test wants to see this target -->
-  <Target Name="VSTest" Condition="'$(BuildFullFrameworkAsp)' == 'false'" />
+  <!-- <Target Name="VSTest" Condition="'$(BuildFullFrameworkAsp)' == 'false'" /> -->
 </Project>
