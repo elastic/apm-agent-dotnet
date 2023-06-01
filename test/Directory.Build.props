@@ -6,8 +6,7 @@
     <DebugSymbols>True</DebugSymbols>
     
     <!-- Elastic.Apm.AspNetFullFramework is completely self managed since it needs a lot of special care (for now) -->
-    <IsAspNetFullFrameworkTests Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)AspNetFullFramework\.Tests$'))">true</IsAspNetFullFrameworkTests>
-    <IsRegularTestProject Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$')) AND '$(IsAspNetFullFrameworkTests)' == ''">true</IsRegularTestProject>
+    <IsRegularTestProject Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$'))">true</IsRegularTestProject>
   </PropertyGroup>
   
   <ItemGroup>
@@ -15,13 +14,11 @@
     <Content Include="$(SolutionRoot)\xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(IsRegularTestProject)' == 'true'" />
   </ItemGroup>
 
-  <PropertyGroup
-    Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$')) AND !$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)AspNetFullFramework\.Tests$'))">
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$'))">
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
-  <ItemGroup 
-    Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$')) AND !$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)AspNetFullFramework\.Tests$'))">
+  <ItemGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$'))">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
     
     <PackageReference Include="JunitXml.TestLogger" Version="3.0.114" PrivateAssets="All" />

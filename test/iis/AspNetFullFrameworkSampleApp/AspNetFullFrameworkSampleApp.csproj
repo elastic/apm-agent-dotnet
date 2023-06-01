@@ -11,6 +11,7 @@
     <RestoreProjectStyle Condition="'$(BuildFullFrameworkAsp)' == 'false'">PackageReference</RestoreProjectStyle>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>MSB4011</NoWarn>
   </PropertyGroup>
 
   <!-- prevents NU1503 -->
@@ -255,7 +256,6 @@
     <Content Include="Views\Account\Register.cshtml" />
     <Content Include="Views\Account\ResetPassword.cshtml" />
     <Content Include="Views\Account\ResetPasswordConfirmation.cshtml" />
-    <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Database\Create.cshtml" />
     <Content Include="Views\Database\Index.cshtml" />
