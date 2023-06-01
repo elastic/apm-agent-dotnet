@@ -79,7 +79,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapmsample.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionRoot)\build\elasticapmsample.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(OS)' != 'WINDOWS_NT'">
     <Content Include="LinuxReadme.md" />
@@ -268,15 +268,15 @@
     <TypeScriptCompile Include="Scripts\index.d.ts" />
   </ItemGroup>
   <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
-    <ProjectReference Include="..\..\src\integrations\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <Project>{d6ffddab-9d76-442f-8f1d-bd6f553f92fa}</Project>
       <Name>Elastic.Apm.AspNetFullFramework</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\instrumentations\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj">
+    <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj">
       <Project>{12ffcff6-858c-4e6e-935c-e304712deca4}</Project>
       <Name>Elastic.Apm.EntityFramework6</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj">
+    <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj">
       <Project>{90bc9629-c8d2-4fd5-863e-ea2d5fb37341}</Project>
       <Name>Elastic.Apm</Name>
     </ProjectReference>
