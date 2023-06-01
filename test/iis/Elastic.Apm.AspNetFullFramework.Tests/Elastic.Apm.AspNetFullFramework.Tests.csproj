@@ -33,9 +33,9 @@
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <SetTargetFramework>TargetFramework=net462</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
-    <ProjectReference Include="..\..\sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
+    <ProjectReference Include="..\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(BuildFullFrameworkAsp)' == 'false'">
     <Compile Remove="**\*" />
