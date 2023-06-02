@@ -597,7 +597,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			/// </summary>
 			public static readonly bool IsVisible = Type.IsPublic || Type.IsNestedPublic;
 
-			private static CreateTypeResult _fastPath = default;
+			private static CreateTypeResult _fastPath;
 
 			/// <summary>
 			/// Gets the proxy type for a target type using the T proxy definition

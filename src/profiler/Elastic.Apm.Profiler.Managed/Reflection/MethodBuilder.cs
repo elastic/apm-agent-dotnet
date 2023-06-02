@@ -52,8 +52,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		private Type _concreteType;
 		private string _concreteTypeName;
 		private Type[] _parameters = Array.Empty<Type>();
-		private Type[] _explicitParameterTypes = null;
-		private string[] _namespaceAndNameFilter = null;
+		private Type[] _explicitParameterTypes;
+		private string[] _namespaceAndNameFilter;
 		private Type[] _declaringTypeGenerics;
 		private Type[] _methodGenerics;
 		private bool _forceMethodDefResolve;

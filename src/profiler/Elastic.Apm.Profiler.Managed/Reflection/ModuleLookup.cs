@@ -25,7 +25,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		private static ManualResetEventSlim _populationResetEvent = new ManualResetEventSlim(initialState: true);
 		private static ConcurrentDictionary<Guid, Module> _modules = new ConcurrentDictionary<Guid, Module>();
 
-		private static int _failures = 0;
+		private static int _failures;
 		private static bool _shortCircuitLogicHasLogged = false;
 
 		public static Module GetByPointer(long moduleVersionPointer) =>
