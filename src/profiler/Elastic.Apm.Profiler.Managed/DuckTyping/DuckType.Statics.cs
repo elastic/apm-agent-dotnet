@@ -90,12 +90,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			if (targetType.IsGenericType)
 			{
 				foreach (var type in targetType.GetGenericArguments())
-				{
-					if (type.Assembly != targetAssembly)
-					{
-						return CreateModuleBuilder($"DuckTypeGenericTypeAssembly.{targetType.Name}", targetAssembly);
-					}
-				}
+					if (type.Assembly != targetAssembly) return CreateModuleBuilder($"DuckTypeGenericTypeAssembly.{targetType.Name}", targetAssembly);
 			}
 
 			if (!ActiveBuilders.TryGetValue(targetAssembly, out var moduleBuilder))

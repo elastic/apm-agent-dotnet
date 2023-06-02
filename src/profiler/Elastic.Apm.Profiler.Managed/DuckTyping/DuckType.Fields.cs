@@ -68,10 +68,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				{
 					// Emit the instance load in the dynamic method
 					dynIL.Emit(OpCodes.Ldarg_0);
-					if (targetField.DeclaringType != typeof(object))
-					{
-						dynIL.Emit(targetField.DeclaringType!.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, targetField.DeclaringType);
-					}
+					if (targetField.DeclaringType != typeof(object)) dynIL.Emit(targetField.DeclaringType!.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, targetField.DeclaringType);
 				}
 
 				// Emit the field and convert before returning (in case of boxing)
@@ -87,10 +84,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			// Check if the type can be converted or if we need to enable duck chaining
 			if (DuckType.NeedsDuckChaining(targetField.FieldType, proxyMemberReturnType))
 			{
-				if (UseDirectAccessTo(proxyTypeBuilder, targetField.FieldType) && targetField.FieldType.IsValueType)
-				{
-					il.Emit(OpCodes.Box, targetField.FieldType);
-				}
+				if (UseDirectAccessTo(proxyTypeBuilder, targetField.FieldType) && targetField.FieldType.IsValueType) il.Emit(OpCodes.Box, targetField.FieldType);
 
 				// We call DuckType.CreateCache<>.Create()
 				var getProxyMethodInfo = typeof(DuckType.CreateCache<>)
@@ -187,10 +181,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				}
 				else
 				{
-					if (targetField.DeclaringType != typeof(object))
-					{
-						dynIL.Emit(OpCodes.Castclass, targetField.DeclaringType);
-					}
+					if (targetField.DeclaringType != typeof(object)) dynIL.Emit(OpCodes.Castclass, targetField.DeclaringType);
 
 					dynIL.Emit(OpCodes.Ldarg_1);
 					dynIL.WriteTypeConversion(dynValueType, targetField.FieldType);

@@ -27,10 +27,7 @@ public class CpuBurner
 
 	private static long ConsumeSingleCore(int percentage, CancellationToken cancellationToken)
 	{
-		if (percentage < 0 || percentage > 100)
-		{
-			throw new ArgumentException(nameof(percentage));
-		}
+		if (percentage < 0 || percentage > 100) throw new ArgumentException(nameof(percentage));
 
 		var iterations = 0L;
 		var watch = new Stopwatch();
@@ -41,10 +38,7 @@ public class CpuBurner
 			// remaining percentage milliseconds. So 40% utilization means work 40ms and sleep 60ms
 			if (watch.ElapsedMilliseconds > percentage)
 			{
-				if (percentage != 100)
-				{
-					Thread.Sleep(100 - percentage);
-				}
+				if (percentage != 100) Thread.Sleep(100 - percentage);
 
 				watch.Reset();
 				watch.Start();

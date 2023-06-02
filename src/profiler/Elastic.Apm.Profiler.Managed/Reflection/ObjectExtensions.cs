@@ -190,10 +190,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 		public static MemberResult<TResult> GetProperty<TResult>(this object source, string propertyName)
 		{
-			if (source == null)
-			{
-				return MemberResult<TResult>.NotFound;
-			}
+			if (source == null) return MemberResult<TResult>.NotFound;
 
 			return source.TryGetPropertyValue(propertyName, out TResult result)
 				? new MemberResult<TResult>(result)
@@ -241,10 +238,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		{
 			var fieldInfo = containerType.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-			if (fieldInfo == null)
-			{
-				return null;
-			}
+			if (fieldInfo == null) return null;
 
 			var dynamicMethod = new DynamicMethod($"{containerType.FullName}.{fieldName}", typeof(TResult), new Type[] { typeof(object) },
 				ObjectExtensions.Module, skipVisibility: true);
@@ -253,24 +247,15 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 			il.Emit(OpCodes.Ldarg_0);
 
 			if (containerType.IsValueType)
-			{
 				il.Emit(OpCodes.Unbox_Any, containerType);
-			}
 			else
-			{
 				il.Emit(OpCodes.Castclass, containerType);
-			}
 
 			il.Emit(OpCodes.Ldfld, fieldInfo);
 
 			if (fieldInfo.FieldType.IsValueType && typeof(TResult) == typeof(object))
-			{
 				il.Emit(OpCodes.Box, fieldInfo.FieldType);
-			}
-			else if (fieldInfo.FieldType != typeof(TResult))
-			{
-				il.Emit(OpCodes.Castclass, typeof(TResult));
-			}
+			else if (fieldInfo.FieldType != typeof(TResult)) il.Emit(OpCodes.Castclass, typeof(TResult));
 
 			il.Emit(OpCodes.Ret);
 			return (Func<object, TResult>)dynamicMethod.CreateDelegate(typeof(Func<object, TResult>));
