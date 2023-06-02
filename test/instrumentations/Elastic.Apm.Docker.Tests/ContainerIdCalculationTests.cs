@@ -4,7 +4,6 @@
 
 using System.IO;
 using System.Text;
-using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;

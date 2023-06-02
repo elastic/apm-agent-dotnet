@@ -5,7 +5,6 @@
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

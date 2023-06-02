@@ -8,7 +8,6 @@
 // </copyright>
 
 using System;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;

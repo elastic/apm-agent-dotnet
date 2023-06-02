@@ -11,7 +11,6 @@
 using System;
 using System.ComponentModel;
 using System.Threading;
-using Elastic.Apm.Api;
 using Elastic.Apm.Profiler.Managed.CallTarget;
 using Elastic.Apm.Profiler.Managed.Core;
 using Elastic.Apm.Profiler.Managed.DuckTyping;

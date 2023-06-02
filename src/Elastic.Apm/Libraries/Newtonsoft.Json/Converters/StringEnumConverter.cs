@@ -32,7 +32,6 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if !HAVE_LINQ
 
 #else
-using System.Linq;
 
 #endif
 

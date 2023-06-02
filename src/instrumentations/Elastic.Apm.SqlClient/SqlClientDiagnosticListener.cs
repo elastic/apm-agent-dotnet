@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Data;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Reflection;

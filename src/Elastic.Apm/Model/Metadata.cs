@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.Api;
-using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Model
 {

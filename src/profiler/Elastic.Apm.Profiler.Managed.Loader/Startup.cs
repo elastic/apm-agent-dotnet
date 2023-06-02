@@ -8,7 +8,6 @@
 // </copyright>
 
 using System;
-using System.Linq;
 using System.Reflection;
 
 namespace Elastic.Apm.Profiler.Managed.Loader

@@ -10,7 +10,6 @@
 
 using System;
 using System.ComponentModel;
-using Elastic.Apm.Api;
 using Elastic.Apm.Profiler.Managed.CallTarget;
 using Elastic.Apm.Profiler.Managed.Core;
 

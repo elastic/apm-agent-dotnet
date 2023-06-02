@@ -3,9 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
 using Elastic.Apm.Api;
-using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;

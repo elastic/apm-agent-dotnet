@@ -4,7 +4,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.Benchmarks.Helpers

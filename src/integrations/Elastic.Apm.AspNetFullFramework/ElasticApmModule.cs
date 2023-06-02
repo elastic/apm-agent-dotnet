@@ -21,7 +21,6 @@ using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
 using Elastic.Apm.Extensions;
-using static Elastic.Apm.Config.ConfigurationOption;
 using Environment = System.Environment;
 
 namespace Elastic.Apm.AspNetFullFramework

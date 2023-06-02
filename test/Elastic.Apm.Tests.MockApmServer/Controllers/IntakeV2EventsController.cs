@@ -19,9 +19,6 @@ using NJsonSchema;
 using Xunit.Sdk;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
-using Elastic.Apm.Report.Serialization;
-using NJsonSchema.Validation.FormatValidators;
-using NJsonSchema.Validation;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 

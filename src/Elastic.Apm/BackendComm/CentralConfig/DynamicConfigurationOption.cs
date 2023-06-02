@@ -6,7 +6,6 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Config;
-using Elastic.Apm.Logging;
 using static Elastic.Apm.BackendComm.CentralConfig.DynamicConfigurationOption;
 
 namespace Elastic.Apm.BackendComm.CentralConfig

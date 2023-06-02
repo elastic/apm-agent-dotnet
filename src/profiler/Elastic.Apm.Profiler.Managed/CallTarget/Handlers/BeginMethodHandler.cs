@@ -8,9 +8,7 @@
 // </copyright>
 
 using System;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using Elastic.Apm.Api;
 
 #pragma warning disable SA1649 // File name must match first type name
 

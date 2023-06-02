@@ -9,10 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Threading;
 using ProcNet;
-using ProcNet.Std;
 
 namespace Elastic.Apm.StartupHook.Tests
 {

@@ -26,7 +26,6 @@
 #endregion
 
 #if HAVE_INOTIFY_COLLECTION_CHANGED
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 #endif
 #if HAVE_DYNAMIC

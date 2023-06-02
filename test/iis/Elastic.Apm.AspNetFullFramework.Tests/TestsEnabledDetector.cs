@@ -5,7 +5,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests

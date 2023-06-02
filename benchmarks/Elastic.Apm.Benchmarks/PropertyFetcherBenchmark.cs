@@ -5,7 +5,6 @@
 using System;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Reflection;
 using Microsoft.Data.SqlClient;
 

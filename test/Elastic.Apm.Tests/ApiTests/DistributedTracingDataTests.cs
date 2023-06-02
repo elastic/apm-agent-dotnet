@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;

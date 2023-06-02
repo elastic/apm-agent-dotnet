@@ -27,7 +27,6 @@
 
 #if !HAVE_LINQ
 #else
-using System.Linq;
 #endif
 
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities

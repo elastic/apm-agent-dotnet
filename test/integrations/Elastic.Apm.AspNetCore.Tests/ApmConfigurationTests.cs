@@ -11,7 +11,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Extensions.Hosting.Config;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Data;
 using FluentAssertions;

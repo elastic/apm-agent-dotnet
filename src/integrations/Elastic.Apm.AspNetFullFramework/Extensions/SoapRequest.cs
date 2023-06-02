@@ -6,7 +6,6 @@ using System;
 using System.Buffers;
 using System.Collections.Specialized;
 using System.IO;
-using System.Text;
 using System.Web;
 using System.Xml;
 using Elastic.Apm.Logging;

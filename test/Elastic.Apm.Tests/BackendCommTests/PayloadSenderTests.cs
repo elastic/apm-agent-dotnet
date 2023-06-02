@@ -23,10 +23,8 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
-using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 using MockHttpMessageHandler = Elastic.Apm.Tests.Utilities.MockHttpMessageHandler;
 using RichardSzalay.MockHttp;
-using System = Elastic.Apm.Api.System;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {
