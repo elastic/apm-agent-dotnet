@@ -46,6 +46,7 @@ jobs:
     - name: Build the application
       shell: cmd
       run: |
+        set INCLUDE_CSHARP_TARGETS=true
         msbuild ^
           /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
            -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
@@ -85,7 +86,7 @@ jobs:
           --results-directory build/output ^
           --diag build/output/diag-iis.log ^
           --filter "FullyQualifiedName=Elastic.Apm.AspNetFullFramework.Tests.CustomServiceNodeNameSetViaSettings.Test" ^
-          --logger:"junit;LogFilePath=%GITHUB_WORKSPACE%/build/output/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+          --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
     - name: Store test results
       if: success() || failure()

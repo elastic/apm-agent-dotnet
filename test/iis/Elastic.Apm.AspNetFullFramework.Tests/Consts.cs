@@ -14,7 +14,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal const string RootUrl = "http://" + Host + RootUrlPath;
 			internal const string RootUrlPath = "/" + AppName;
 			internal const string SiteName = "Default Web Site";
-			internal const string SrcDirPathRelativeToSolutionRoot = @"sample\AspNetFullFrameworkSampleApp";
+			internal const string SrcDirPathRelativeToSolutionRoot = @"test\iis\AspNetFullFrameworkSampleApp";
 
 			internal static string CreateUrl(string relativePath) => RootUrl + "/" + relativePath.TrimStart('/');
 		}
