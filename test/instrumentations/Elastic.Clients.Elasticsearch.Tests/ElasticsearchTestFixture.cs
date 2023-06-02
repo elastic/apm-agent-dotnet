@@ -12,8 +12,6 @@ namespace Elastic.Clients.Elasticsearch.Tests;
 
 public sealed class ElasticsearchTestFixture : IAsyncLifetime
 {
-	private const string ElasticsearchImage = "docker.elastic.co/elasticsearch/elasticsearch:7.12.1";
-
 	public ElasticsearchContainer Container { get; } = new ElasticsearchBuilder().Build();
 
 	public ElasticsearchClient? Client { get; private set; }

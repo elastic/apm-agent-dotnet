@@ -640,8 +640,8 @@ namespace Elastic.Apm.Model
 			if (!isFirstEndCall)
 				return;
 
-			if (SpanTimings.ContainsKey(SpanTimerKey.AppSpanType))
-				SpanTimings[SpanTimerKey.AppSpanType].IncrementTimer(SelfDuration);
+			if (SpanTimings.TryGetValue(SpanTimerKey.AppSpanType, out var timing))
+				timing.IncrementTimer(SelfDuration);
 			else
 				SpanTimings.TryAdd(SpanTimerKey.AppSpanType, new SpanTimer(SelfDuration));
 

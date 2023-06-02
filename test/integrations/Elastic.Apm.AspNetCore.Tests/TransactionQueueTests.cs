@@ -33,7 +33,7 @@ public class TransactionQueueTests
 		GC.Collect();
 		Thread.Sleep(10);
 		GC.Collect();
-		foreach (var item in listener.ProcessingRequests) { }
+		foreach (var unused in listener.ProcessingRequests) { }
 
 		listener.ProcessingRequests.Count().Should().Be(0);
 	}

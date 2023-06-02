@@ -25,6 +25,7 @@ public class CpuBurner
 		}
 	}
 
+	// ReSharper disable once UnusedMethodReturnValue.Local
 	private static long ConsumeSingleCore(int percentage, CancellationToken cancellationToken)
 	{
 		if (percentage < 0 || percentage > 100) throw new ArgumentException(nameof(percentage));

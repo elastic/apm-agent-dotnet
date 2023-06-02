@@ -38,7 +38,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			var client = new ElasticLowLevelClient(new ConnectionConfiguration(new Uri(localServer.Uri)));
 			agent.Tracer.CaptureTransaction("Transaction", ApiConstants.TypeDb, _ =>
 			{
-				var response = client.Cat.Indices<StringResponse>();
+				client.Cat.Indices<StringResponse>();
 			});
 		}
 	}

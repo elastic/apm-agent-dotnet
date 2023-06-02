@@ -71,7 +71,7 @@ namespace Elastic.Apm.MongoDb.Tests
 			var transaction = _agent.Tracer.StartTransaction("elastic-apm-mongo", ApiConstants.TypeDb);
 
 			// Act
-			var docs = await _documents
+			var _ = await _documents
 				.Find(Builders<BsonDocument>.Filter.Empty)
 				.Project(Builders<BsonDocument>.Projection.ElemMatch("filter", FilterDefinition<BsonDocument>.Empty))
 				.ToListAsync();

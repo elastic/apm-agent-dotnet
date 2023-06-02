@@ -77,7 +77,7 @@ namespace Elastic.Apm.Config
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
+				logger.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
 			}
 		}
 
@@ -111,7 +111,7 @@ namespace Elastic.Apm.Config
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentConfiguration)}");
+				logger.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentConfiguration)}");
 			}
 		}
 	}

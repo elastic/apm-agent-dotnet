@@ -91,7 +91,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 					case CommandLineOptions.OutputFormat.Asciidoc:
 						output = GenerateAsciidoc(callTargetIntegrations);
 						break;
-					default: throw new ArgumentOutOfRangeException("format","Unknown format");
+					default: throw new ArgumentOutOfRangeException(nameof(opts.Format),"Unknown format");
 				}
 
 				var filename = Path.Combine(opts.Output, "integrations." + opts.Format.ToString().ToLowerInvariant());

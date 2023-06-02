@@ -18,11 +18,11 @@ namespace Elastic.Apm.SqlClient
 	internal class SqlClientDiagnosticListener : DiagnosticListenerBase
 	{
 		private ApmAgent _agent;
-		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
+		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new();
 
-		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
+		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new();
 
-		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new PropertyFetcherSet();
+		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new();
 
 		public SqlClientDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) => _agent = apmAgent as ApmAgent;
 
@@ -123,17 +123,18 @@ namespace Elastic.Apm.SqlClient
 
 		private class PropertyFetcherSet
 		{
-			public PropertyFetcher ErrorCommand { get; } = new PropertyFetcher("Command");
-			public PropertyFetcher ErrorCorrelationId { get; } = new PropertyFetcher("OperationId");
+			public PropertyFetcher ErrorCommand { get; } = new("Command");
+			public PropertyFetcher ErrorCorrelationId { get; } = new("OperationId");
 
-			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
+			public PropertyFetcher Exception { get; } = new("Exception");
 
-			public PropertyFetcher StartCommand { get; } = new PropertyFetcher("Command");
-			public PropertyFetcher StartCorrelationId { get; } = new PropertyFetcher("OperationId");
+			public PropertyFetcher StartCommand { get; } = new("Command");
+			public PropertyFetcher StartCorrelationId { get; } = new("OperationId");
 
-			public PropertyFetcher Statistics { get; } = new PropertyFetcher("Statistics");
-			public PropertyFetcher StopCommand { get; } = new PropertyFetcher("Command");
-			public PropertyFetcher StopCorrelationId { get; } = new PropertyFetcher("OperationId");
+			// ReSharper disable once UnusedMember.Local
+			public PropertyFetcher Statistics { get; } = new("Statistics");
+			public PropertyFetcher StopCommand { get; } = new("Command");
+			public PropertyFetcher StopCorrelationId { get; } = new("OperationId");
 		}
 	}
 }

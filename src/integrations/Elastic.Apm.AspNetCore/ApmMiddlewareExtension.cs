@@ -98,7 +98,7 @@ namespace Elastic.Apm.AspNetCore
 
 		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
-				? (IApmLogger)new NetCoreLogger(loggerFactory)
+				? new NetCoreLogger(loggerFactory)
 				: ConsoleLogger.Instance;
 	}
 }

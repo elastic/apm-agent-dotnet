@@ -6,7 +6,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+#if NETSTANDARD2_0 || NETFRAMEWORK
 using System.Linq;
+#endif
 using System.Text;
 using System.Threading;
 
