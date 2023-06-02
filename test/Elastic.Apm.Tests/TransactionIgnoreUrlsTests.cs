@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.Transactions.Count.Should().Be(1);
 
 			agent.Tracer.CaptureTransaction("Test", "Test",
-				transaction => { });
+				_ => { });
 
 			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Count.Should().Be(2);

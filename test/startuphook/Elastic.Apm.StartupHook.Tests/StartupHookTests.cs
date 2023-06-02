@@ -38,7 +38,7 @@ namespace Elastic.Apm.StartupHook.Tests
 
 		public static IEnumerable<object[]> WebAppInfos()
 		{
-			var testData = new List<object[]>();
+			var testData = new List<string[]>();
 			foreach (var i in GetDotNetFrameworkVersionInfos())
 			{
 				testData.Add(new []{ "webapi", $"WebApi{i.ShortVersion}", i.TargetFramework, "weatherforecast"});

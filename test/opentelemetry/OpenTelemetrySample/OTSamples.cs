@@ -78,7 +78,7 @@ namespace OpenTelemetrySample
 		{
 			var src = new ActivitySource("Test");
 
-			tracer.CaptureTransaction( nameof(Sample4), "test", t =>
+			tracer.CaptureTransaction( nameof(Sample4), "test", _ =>
 			{
 				Thread.Sleep(100);
 				using (var activity = src.StartActivity("foo"))

@@ -8,6 +8,7 @@ namespace Elastic.Apm.StartupHook.Sample.Controllers
 {
 	public class HomeController : Controller
 	{
+		// ReSharper disable once NotAccessedField.Local
 		private readonly ILogger<HomeController> _logger;
 
 		public HomeController(ILogger<HomeController> logger) => _logger = logger;

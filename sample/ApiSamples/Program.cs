@@ -166,11 +166,11 @@ namespace ApiSamples
 			Agent.Tracer.CaptureTransaction("TestTransaction1", "TestType1",
 				t =>
 				{
-					t.CaptureSpan("TestSpan", "TestSpanType", s =>
+					t.CaptureSpan("TestSpan", "TestSpanType", _ =>
 					{
 						Thread.Sleep(20);
 						//this span is also started on the transaction:
-						t.CaptureSpan("TestSpan2", "TestSpanType", s2 => { Thread.Sleep(20); });
+						t.CaptureSpan("TestSpan2", "TestSpanType", _ => { Thread.Sleep(20); });
 					});
 				});
 

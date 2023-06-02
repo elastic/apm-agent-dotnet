@@ -176,7 +176,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			await sender.SendAsync(
 				new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 
-			await _agent.Tracer.CaptureTransaction("Receive messages", ApiConstants.TypeMessaging, async t =>
+			await _agent.Tracer.CaptureTransaction("Receive messages", ApiConstants.TypeMessaging, async _ =>
 			{
 				await receiver.ReceiveAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
 			});
@@ -352,7 +352,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
 			var receiver = new MessageReceiver(_environment.ServiceBusConnectionString, scope.QueueName, ReceiveMode.PeekLock);
 
-			receiver.RegisterMessageHandler((message, token) =>
+			receiver.RegisterMessageHandler((message, _) =>
 			{
 				_agent.Tracer.CurrentTransaction.CaptureSpan("ProcessMessage", "process", s =>
 				{
@@ -409,7 +409,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
 			var client = new QueueClient(_environment.ServiceBusConnectionString, scope.QueueName, ReceiveMode.PeekLock);
 
-			client.RegisterSessionHandler((session, message, token) =>
+			client.RegisterSessionHandler((_, message, _) =>
 			{
 				_agent.Tracer.CurrentTransaction.CaptureSpan("ProcessSessionMessage", "process", s =>
 				{

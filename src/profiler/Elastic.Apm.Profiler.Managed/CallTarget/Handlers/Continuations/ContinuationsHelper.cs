@@ -9,7 +9,9 @@
 
 using System;
 using System.Reflection.Emit;
+#if NETSTANDARD2_0 || NETSTANDARD2_1 || NETFRAMEWORK
 using System.Runtime.CompilerServices;
+#endif
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 {

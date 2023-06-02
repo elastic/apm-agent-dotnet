@@ -119,7 +119,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("email", mail), new Claim("sub", sub) }, "someAuthTypeName"))
 				};
 
-				var middleware = new ApmMiddleware(async innerHttpContext => { await Task.Delay(1); }, agent.TracerInternal, agent);
+				var middleware = new ApmMiddleware(async _ => { await Task.Delay(1); }, agent.TracerInternal, agent);
 
 				await middleware.InvokeAsync(context);
 			}

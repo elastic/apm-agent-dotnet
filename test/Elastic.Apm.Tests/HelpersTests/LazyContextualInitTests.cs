@@ -49,7 +49,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var counter = new ThreadSafeIntCounter();
 			var lazyCtxInit = new LazyContextualInit<string>();
 
-			var threadResults = MultiThreadsTestUtils.TestOnThreads(threadIndex => wayToCall(lazyCtxInit, () => counter.Increment().ToString()));
+			var threadResults = MultiThreadsTestUtils.TestOnThreads(_ => wayToCall(lazyCtxInit, () => counter.Increment().ToString()));
 
 			lazyCtxInit.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
 			counter.Value.Should().Be(1);
@@ -87,7 +87,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var counter = new ThreadSafeIntCounter();
 			var lazyCtxInit = new LazyContextualInit();
 
-			var threadResults = MultiThreadsTestUtils.TestOnThreads(threadIndex => wayToCall(lazyCtxInit, () => counter.Increment()));
+			var threadResults = MultiThreadsTestUtils.TestOnThreads(_ => wayToCall(lazyCtxInit, () => counter.Increment()));
 
 			lazyCtxInit.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
 			counter.Value.Should().Be(1);

@@ -32,7 +32,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			}
 			finally
 			{
-				if (_invokeDelegate is null) _invokeDelegate = (instance, arg1, arg2, arg3) => CallTargetState.GetDefault();
+				if (_invokeDelegate is null) _invokeDelegate = (_, _, _, _) => CallTargetState.GetDefault();
 			}
 		}
 

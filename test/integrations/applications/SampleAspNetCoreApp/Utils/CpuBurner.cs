@@ -19,7 +19,7 @@ public class CpuBurner
 		for (var i = 0; i < threads; i++)
 		{
 			ThreadPool.QueueUserWorkItem<object>(
-				callBack: s => ConsumeSingleCore(percentage, cancellationToken),
+				callBack: _ => ConsumeSingleCore(percentage, cancellationToken),
 				state: null,
 				preferLocal: false);
 		}

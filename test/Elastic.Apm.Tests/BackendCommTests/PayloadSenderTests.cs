@@ -99,7 +99,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var isRequestFinished = new TaskCompletionSource<object>();
 
 			AuthenticationHeaderValue authHeader = null;
-			var handler = new MockHttpMessageHandler((r, c) =>
+			var handler = new MockHttpMessageHandler((r, _) =>
 			{
 				authHeader = r.Headers.Authorization;
 				isRequestFinished.SetResult(null);
@@ -135,7 +135,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var isRequestFinished = new TaskCompletionSource<object>();
 
 			AuthenticationHeaderValue authHeader = null;
-			var handler = new MockHttpMessageHandler((r, c) =>
+			var handler = new MockHttpMessageHandler((r, _) =>
 			{
 				authHeader = r.Headers.Authorization;
 				isRequestFinished.SetResult(null);
@@ -167,7 +167,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var isRequestFinished = new TaskCompletionSource<object>();
 
 			HttpHeaderValueCollection<ProductInfoHeaderValue> userAgentHeader = null;
-			var handler = new MockHttpMessageHandler((r, c) =>
+			var handler = new MockHttpMessageHandler((r, _) =>
 			{
 				userAgentHeader = r.Headers.UserAgent;
 				isRequestFinished.SetResult(null);
@@ -269,7 +269,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var expectedNumberOfBatchesSentTcs = new TaskCompletionSource<object>();
 
 			var actualNumberOfBatches = 0;
-			var handler = new MockHttpMessageHandler((r, c) =>
+			var handler = new MockHttpMessageHandler((_, _) =>
 			{
 				if (Interlocked.Increment(ref actualNumberOfBatches) == expectedNumberOfBatches)
 					expectedNumberOfBatchesSentTcs.SetResult(null);
@@ -325,7 +325,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var batchSentBarrier = new Barrier(2);
 			var barrierTimeout = 30.Seconds();
 
-			var handler = new MockHttpMessageHandler((r, c) =>
+			var handler = new MockHttpMessageHandler((_, _) =>
 			{
 				batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue();
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
@@ -350,7 +350,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		public void Dispose_stops_the_thread()
 		{
 			PayloadSenderV2 lastPayloadSender = null;
-			CreateSutEnvAndTest((agent, payloadSender) =>
+			CreateSutEnvAndTest((_, payloadSender) =>
 			{
 				lastPayloadSender = payloadSender;
 				lastPayloadSender.IsRunning.Should().BeTrue();
@@ -382,7 +382,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		private void CreateSutEnvAndTest(Action<ApmAgent, PayloadSenderV2> doAction)
 		{
 			var configReader = new MockConfiguration(_logger);
-			var mockHttpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
+			var mockHttpMessageHandler = new MockHttpMessageHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 			var service = Service.GetDefaultService(configReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), MockApmServerInfo.Version710,
 				mockHttpMessageHandler

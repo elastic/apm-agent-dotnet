@@ -36,7 +36,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			using var subscribe = agent.Subscribe(new ElasticsearchDiagnosticsSubscriber(), new HttpDiagnosticsSubscriber());
 
 			var client = new ElasticLowLevelClient(new ConnectionConfiguration(new Uri(localServer.Uri)));
-			agent.Tracer.CaptureTransaction("Transaction", ApiConstants.TypeDb, t =>
+			agent.Tracer.CaptureTransaction("Transaction", ApiConstants.TypeDb, _ =>
 			{
 				var response = client.Cat.Indices<StringResponse>();
 			});

@@ -106,7 +106,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void DistributedTracingDataWitSimpleActionWithParameter_Valid() =>
 			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, t => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
+				UnitTest, _ => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidDistributedTracingDataData))]

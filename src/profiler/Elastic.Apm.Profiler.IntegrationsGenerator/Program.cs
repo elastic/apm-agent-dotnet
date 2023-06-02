@@ -23,7 +23,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 				.ParseArguments<CommandLineOptions>(args)
 				.MapResult(
 					opts => Run(opts),
-					errs => 1);
+					_ => 1);
 
 		private static int Run(CommandLineOptions opts)
 		{

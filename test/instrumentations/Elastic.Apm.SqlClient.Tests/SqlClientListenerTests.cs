@@ -71,7 +71,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			// Arrange + Act
 			_testOutputHelper.WriteLine(providerName);
 
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async _ =>
 			{
 				using var dbConnection = connectionCreator.Invoke(_connectionString);
 				await dbConnection.OpenAsync();
@@ -127,7 +127,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			// Arrange + Act
 			_testOutputHelper.WriteLine(providerName);
 
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async _ =>
 			{
 				using var dbConnection = connectionCreator.Invoke(_connectionString);
 				await dbConnection.OpenAsync();
@@ -189,7 +189,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			// Arrange + Act
 			_testOutputHelper.WriteLine(providerName);
 
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async _ =>
 			{
 				using var dbConnection = connectionCreator.Invoke(_connectionString);
 				await dbConnection.OpenAsync();

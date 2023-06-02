@@ -120,7 +120,7 @@ namespace Elastic.Apm.Tests
 				var parentSpan = transaction.StartSpan("parent", "type");
 
 				// Act
-				parentSpan.CaptureSpan("span", "type", span => { });
+				parentSpan.CaptureSpan("span", "type", _ => { });
 
 				// Assert
 				payloadSender.Spans.Count.Should().Be(0);
