@@ -46,6 +46,7 @@ jobs:
     - name: Build the application
       shell: cmd
       run: |
+        set INCLUDE_CSHARP_TARGETS=true
         msbuild ^
           /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
            -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
