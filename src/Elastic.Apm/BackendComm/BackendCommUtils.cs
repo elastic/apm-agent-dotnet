@@ -9,7 +9,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Reflection;
+#if NETSTANDARD2_0 || NET6_0_OR_GREATER
 using System.Security.Authentication;
+#endif
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
