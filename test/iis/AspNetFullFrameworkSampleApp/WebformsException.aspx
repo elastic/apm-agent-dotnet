@@ -11,6 +11,7 @@
 	<%
 		// throw divide by zero exception and let the framework wrap in a HttpUnhandledException
 		var zero = 0;
+		// ReSharper disable once IntDivisionByZero
 		var result = 1 / zero;
 		Response.Write(result);
 	%>

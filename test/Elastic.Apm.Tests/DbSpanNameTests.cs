@@ -3,13 +3,8 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Text;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;

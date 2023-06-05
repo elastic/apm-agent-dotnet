@@ -43,7 +43,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				{
 					foreach (var metricSample in metricSet.Samples)
 					{
-						if (!samplesCountPerType.ContainsKey(metricSample.Key)) samplesCountPerType.Add(metricSample.Key, 0);
+						samplesCountPerType.TryAdd(metricSample.Key, 0);
 						++samplesCountPerType[metricSample.Key];
 					}
 				}

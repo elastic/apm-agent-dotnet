@@ -23,6 +23,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
 			Assert.True(tuple1.Equals(tuple2));
 			Assert.True(tuple1.Equals((object)tuple2));
+			// ReSharper disable once SuspiciousTypeConversion.Global
 			Assert.False(tuple1.Equals("Hello World"));
 		}
 	}

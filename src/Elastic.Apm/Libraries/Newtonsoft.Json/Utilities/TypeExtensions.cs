@@ -33,7 +33,6 @@ using System.Reflection;
 #if !HAVE_LINQ
 
 #else
-using System.Linq;
 #endif
 
 #nullable enable

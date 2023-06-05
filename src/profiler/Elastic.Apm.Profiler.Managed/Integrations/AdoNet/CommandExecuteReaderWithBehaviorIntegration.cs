@@ -10,7 +10,6 @@
 using System;
 using System.Data;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 using Elastic.Apm.Profiler.Managed.CallTarget;
 using static Elastic.Apm.Profiler.Managed.Integrations.AdoNet.AdoNetTypeNames;
 

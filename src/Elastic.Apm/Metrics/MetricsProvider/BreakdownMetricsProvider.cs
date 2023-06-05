@@ -73,9 +73,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					var groupKey = new GroupKey(new TransactionInfo() { Name = transaction.Name, Type = transaction.Type },
 						new SpanInfo { Type = item.Key.Type, SubType = item.Key.SubType });
 
-					if (_itemsToSend.ContainsKey(groupKey))
+					if (_itemsToSend.TryGetValue(groupKey, out var itemToUpdate))
 					{
-						var itemToUpdate = _itemsToSend[groupKey];
 						// We don't search in (iterate over) itemToUpdate.Sample, instead we take advantage of 2 facts here:
 						// 1: Samples are stored in List<MetricsSample>
 						// 2: The order is fixed: SpanSelfTimeCount, SpanSelfTimeSumUs

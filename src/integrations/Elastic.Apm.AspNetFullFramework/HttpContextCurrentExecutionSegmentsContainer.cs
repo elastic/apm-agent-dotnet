@@ -6,7 +6,6 @@
 using System.Threading;
 using System.Web;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.AspNetFullFramework
 {

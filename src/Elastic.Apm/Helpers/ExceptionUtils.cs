@@ -4,7 +4,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers

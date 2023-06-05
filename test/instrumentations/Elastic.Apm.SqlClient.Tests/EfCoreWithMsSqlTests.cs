@@ -54,7 +54,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			context.SampleTable.Add(new DbItem { StrField = "abc" });
 			context.SaveChanges();
 
-			_apmAgent.Tracer.CaptureTransaction("transaction", "type", transaction =>
+			_apmAgent.Tracer.CaptureTransaction("transaction", "type", _ =>
 			{
 				// ReSharper disable once AccessToDisposedClosure
 				var firstItemInDb = context.SampleTable.FirstOrDefault();

@@ -87,7 +87,7 @@ public class OpenTelemetryTests
 	public void TestOtelFieldsWith1Span()
 	{
 		var payloadSender = new MockPayloadSender();
-		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.OneSpanWithAttributes();
 
@@ -102,7 +102,7 @@ public class OpenTelemetryTests
 	public void TestOtelFieldsWith3Spans()
 	{
 		var payloadSender = new MockPayloadSender();
-		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.TwoSpansWithAttributes();
 
@@ -123,7 +123,7 @@ public class OpenTelemetryTests
 	public void SpanKindTests()
 	{
 		var payloadSender = new MockPayloadSender();
-		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.SpanKindSample();
 
@@ -144,8 +144,9 @@ public class OpenTelemetryTests
 	public void DisableOTelBridgeTest()
 	{
 		var payloadSender = new MockPayloadSender();
-		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
-				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "false")))) OTSamples.Sample1();
+		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "false"))))
+			OTSamples.Sample1();
 
 		payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
 		payloadSender.Transactions.Should().BeNullOrEmpty();
@@ -155,7 +156,7 @@ public class OpenTelemetryTests
 	public void SpanLinkTest()
 	{
 		var payloadSender = new MockPayloadSender();
-		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.SpanLinkSample();
 
@@ -169,7 +170,7 @@ public class OpenTelemetryTests
 	public void DistributedTracingTest()
 	{
 		var payloadSender = new MockPayloadSender();
-		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.DistributedTraceSample();
 
@@ -201,7 +202,7 @@ public class OpenTelemetryTests
 	public void ResourceIsRequiredWhenSpanDestinationServiceIsNotNull()
 	{
 		var payloadSender = new MockPayloadSender();
-		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
+		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716,
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.TwoSpansWithAttributes();
 

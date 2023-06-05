@@ -93,9 +93,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				returnType = typeof(void);
 			}
 			else
-			{
 				throw new Exception($"Only Func<> or Action<> are supported in {nameof(CreateMethodCallDelegate)}.");
-			}
 
 			// find any method that matches by name and parameter types
 			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
@@ -108,10 +106,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 					m =>
 					{
 						var ps = m.GetParameters();
-						if (ps.Length != methodParameterTypes.Length)
-						{
-							return false;
-						}
+						if (ps.Length != methodParameterTypes.Length) return false;
 
 						for (var i = 0; i < ps.Length; i++)
 						{
@@ -120,10 +115,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 							// generics can be tricky to compare for type equality
 							// so we will just check the namespace and name
-							if (t1.Namespace != t2.Namespace || t1.Name != t2.Name)
-							{
-								return false;
-							}
+							if (t1.Namespace != t2.Namespace || t1.Name != t2.Name) return false;
 						}
 
 						return true;
@@ -145,19 +137,14 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				return null;
 			}
 
-			if (methodGenericArguments != null)
-			{
-				methodInfo = methodInfo.MakeGenericMethod(methodGenericArguments);
-			}
+			if (methodGenericArguments != null) methodInfo = methodInfo.MakeGenericMethod(methodGenericArguments);
 
 			Type[] effectiveParameterTypes;
 
 			var reflectedParameterTypes = methodInfo.GetParameters()
 				.Select(p => p.ParameterType);
 			if (methodInfo.IsStatic)
-			{
 				effectiveParameterTypes = reflectedParameterTypes.ToArray();
-			}
 			else
 			{
 				// for instance methods, insert object's type as first element in array
@@ -195,13 +182,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				}
 
 				if (underlyingParameterType.IsValueType && delegateParameterType == typeof(object))
-				{
 					il.Emit(OpCodes.Unbox_Any, underlyingParameterType);
-				}
-				else if (underlyingParameterType != delegateParameterType)
-				{
-					il.Emit(OpCodes.Castclass, underlyingParameterType);
-				}
+				else if (underlyingParameterType != delegateParameterType) il.Emit(OpCodes.Castclass, underlyingParameterType);
 			}
 
 			if (callOpCode == OpCodeValue.Call || methodInfo.IsStatic)
@@ -216,14 +198,10 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				il.Emit(OpCodes.Callvirt, methodInfo);
 			}
 			else
-			{
 				throw new NotSupportedException($"OpCode {callOpCode} not supported when calling a method.");
-			}
 
 			if (methodInfo.ReturnType.IsValueType && !returnType.IsValueType)
-			{
 				il.Emit(OpCodes.Box, methodInfo.ReturnType);
-			}
 			else if (methodInfo.ReturnType.IsValueType && returnType.IsValueType && methodInfo.ReturnType != returnType)
 			{
 				throw new ArgumentException(
@@ -234,10 +212,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				throw new ArgumentException(
 					$"Cannot reliably convert the target method's return type {methodInfo.ReturnType.FullName} (reference type) to the delegate method's return type {returnType.FullName} (value type)");
 			}
-			else if (!methodInfo.ReturnType.IsValueType && !returnType.IsValueType && methodInfo.ReturnType != returnType)
-			{
-				il.Emit(OpCodes.Castclass, returnType);
-			}
+			else if (!methodInfo.ReturnType.IsValueType && !returnType.IsValueType && methodInfo.ReturnType != returnType) il.Emit(OpCodes.Castclass, returnType);
 
 			il.Emit(OpCodes.Ret);
 			return (TDelegate)dynamicMethod.CreateDelegate(delegateType);
@@ -269,35 +244,17 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		{
 			public bool Equals(Key x, Key y)
 			{
-				if (!object.Equals(x.Type, y.Type))
-				{
-					return false;
-				}
+				if (!object.Equals(x.Type, y.Type)) return false;
 
-				if (!object.Equals(x.MethodName, y.MethodName))
-				{
-					return false;
-				}
+				if (!object.Equals(x.MethodName, y.MethodName)) return false;
 
-				if (!object.Equals(x.CallOpCode, y.CallOpCode))
-				{
-					return false;
-				}
+				if (!object.Equals(x.CallOpCode, y.CallOpCode)) return false;
 
-				if (!object.Equals(x.ReturnType, y.ReturnType))
-				{
-					return false;
-				}
+				if (!object.Equals(x.ReturnType, y.ReturnType)) return false;
 
-				if (!ArrayEquals(x.MethodParameterTypes, y.MethodParameterTypes))
-				{
-					return false;
-				}
+				if (!ArrayEquals(x.MethodParameterTypes, y.MethodParameterTypes)) return false;
 
-				if (!ArrayEquals(x.MethodGenericArguments, y.MethodGenericArguments))
-				{
-					return false;
-				}
+				if (!ArrayEquals(x.MethodGenericArguments, y.MethodGenericArguments)) return false;
 
 				return true;
 			}
@@ -308,38 +265,22 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				{
 					var hash = 17;
 
-					if (obj.Type != null)
-					{
-						hash = (hash * 23) + obj.Type.GetHashCode();
-					}
+					if (obj.Type != null) hash = (hash * 23) + obj.Type.GetHashCode();
 
-					if (obj.MethodName != null)
-					{
-						hash = (hash * 23) + obj.MethodName.GetHashCode();
-					}
+					if (obj.MethodName != null) hash = (hash * 23) + obj.MethodName.GetHashCode();
 
 					hash = (hash * 23) + obj.CallOpCode.GetHashCode();
 
 					if (obj.MethodParameterTypes != null)
 					{
 						foreach (var t in obj.MethodParameterTypes)
-						{
-							if (t != null)
-							{
-								hash = (hash * 23) + t.GetHashCode();
-							}
-						}
+							if (t != null) hash = (hash * 23) + t.GetHashCode();
 					}
 
 					if (obj.MethodGenericArguments != null)
 					{
 						foreach (var t in obj.MethodGenericArguments)
-						{
-							if (t != null)
-							{
-								hash = (hash * 23) + t.GetHashCode();
-							}
-						}
+							if (t != null) hash = (hash * 23) + t.GetHashCode();
 					}
 
 					return hash;
@@ -348,15 +289,9 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 			private static bool ArrayEquals<T>(T[] array1, T[] array2)
 			{
-				if (array1 == null && array2 == null)
-				{
-					return true;
-				}
+				if (array1 == null && array2 == null) return true;
 
-				if (array1 == null || array2 == null)
-				{
-					return false;
-				}
+				if (array1 == null || array2 == null) return false;
 
 				return ((IStructuralEquatable)array1).Equals(array2, EqualityComparer<T>.Default);
 			}

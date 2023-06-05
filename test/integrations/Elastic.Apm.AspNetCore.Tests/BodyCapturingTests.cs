@@ -454,7 +454,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)
 					.ConfigureServices(services =>
 						{
-							services.Configure<KestrelServerOptions>(options => {  });
+							services.Configure<KestrelServerOptions>(_ => {  });
 							Startup.ConfigureServicesExceptMvc(services);
 
 							services.AddMvc()

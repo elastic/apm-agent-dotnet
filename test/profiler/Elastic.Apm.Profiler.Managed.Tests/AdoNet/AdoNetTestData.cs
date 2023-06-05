@@ -5,7 +5,6 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 {

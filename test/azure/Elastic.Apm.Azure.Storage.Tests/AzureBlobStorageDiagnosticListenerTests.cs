@@ -224,10 +224,8 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			{
 				var asyncPageable = scope.ContainerClient.GetBlobsAsync();
 				await foreach (var blob in asyncPageable)
-				{
 					// ReSharper disable once Xunit.XunitTestWithConsoleOutput
 					Console.WriteLine(blob.Name);
-				}
 			});
 
 			AssertSpan("ListBlobs", scope.ContainerName);

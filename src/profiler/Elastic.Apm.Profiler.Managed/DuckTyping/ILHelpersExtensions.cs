@@ -45,18 +45,12 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			// Define the Invoke method for the delegate
 			var parameters = dynamicMethod.GetParameters();
 			var paramTypes = new Type[parameters.Length];
-			for (var i = 0; i < parameters.Length; i++)
-			{
-				paramTypes[i] = parameters[i].ParameterType;
-			}
+			for (var i = 0; i < parameters.Length; i++) paramTypes[i] = parameters[i].ParameterType;
 
 			var methodBuilder = delegateType.DefineMethod("Invoke",
 				MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, dynamicMethod.ReturnType,
 				paramTypes);
-			for (var i = 0; i < parameters.Length; i++)
-			{
-				methodBuilder.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
-			}
+			for (var i = 0; i < parameters.Length; i++) methodBuilder.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
 
 			methodBuilder.SetImplementationFlags(MethodImplAttributes.Runtime | MethodImplAttributes.Managed);
 
@@ -73,10 +67,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 		internal static void LoadInstanceArgument(this LazyILGenerator il, Type actualType, Type expectedType)
 		{
 			il.Emit(OpCodes.Ldarg_0);
-			if (actualType == expectedType)
-			{
-				return;
-			}
+			if (actualType == expectedType) return;
 
 			if (expectedType.IsValueType)
 			{
@@ -86,9 +77,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				il.Emit(OpCodes.Ldloca_S, 0);
 			}
 			else
-			{
 				il.Emit(OpCodes.Castclass, expectedType);
-			}
 		}
 
 		/// <summary>
@@ -99,10 +88,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 		/// <param name="isStatic">Define if we need to take into account the instance argument</param>
 		internal static void WriteLoadArgument(this LazyILGenerator il, int index, bool isStatic)
 		{
-			if (!isStatic)
-			{
-				index += 1;
-			}
+			if (!isStatic) index += 1;
 
 			switch (index)
 			{
@@ -249,13 +235,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				}
 			}
 			else if (value >= -128 && value <= 127)
-			{
 				il.Emit(OpCodes.Ldc_I4_S, value);
-			}
 			else
-			{
 				il.Emit(OpCodes.Ldc_I4, value);
-			}
 		}
 
 		/// <summary>
@@ -269,10 +251,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			var actualUnderlyingType = actualType.IsEnum ? Enum.GetUnderlyingType(actualType) : actualType;
 			var expectedUnderlyingType = expectedType.IsEnum ? Enum.GetUnderlyingType(expectedType) : expectedType;
 
-			if (actualUnderlyingType == expectedUnderlyingType)
-			{
-				return;
-			}
+			if (actualUnderlyingType == expectedUnderlyingType) return;
 
 			if (actualUnderlyingType.IsValueType)
 			{
@@ -337,14 +316,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 						il.Emit(OpCodes.Unbox_Any, expectedType);
 					}
 					else
-					{
 						DuckTypeInvalidTypeConversionException.Throw(actualType, expectedType);
-					}
 				}
-				else if (expectedUnderlyingType != typeof(object))
-				{
-					il.Emit(OpCodes.Castclass, expectedUnderlyingType);
-				}
+				else if (expectedUnderlyingType != typeof(object)) il.Emit(OpCodes.Castclass, expectedUnderlyingType);
 			}
 		}
 

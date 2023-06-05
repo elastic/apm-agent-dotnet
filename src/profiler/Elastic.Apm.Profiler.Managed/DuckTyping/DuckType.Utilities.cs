@@ -28,15 +28,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 		/// <exception cref="ArgumentNullException">If the duck type or the instance value is null</exception>
 		private static void EnsureArguments(Type proxyType, object instance)
 		{
-			if (proxyType is null)
-			{
-				DuckTypeProxyTypeDefinitionIsNull.Throw();
-			}
+			if (proxyType is null) DuckTypeProxyTypeDefinitionIsNull.Throw();
 
-			if (instance is null)
-			{
-				DuckTypeTargetObjectInstanceIsNull.Throw();
-			}
+			if (instance is null) DuckTypeTargetObjectInstanceIsNull.Throw();
 
 #if NET45
             if (!proxyType.IsPublic && !proxyType.IsNestedPublic)

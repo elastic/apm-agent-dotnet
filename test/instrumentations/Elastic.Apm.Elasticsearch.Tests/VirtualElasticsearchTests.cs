@@ -8,7 +8,6 @@ using Elastic.Apm.Tests.Utilities.XUnit;
 using Elasticsearch.Net;
 using Elasticsearch.Net.VirtualizedCluster;
 using FluentAssertions;
-using Xunit;
 using Xunit.Abstractions;
 using Error = Elastic.Apm.Model.Error;
 

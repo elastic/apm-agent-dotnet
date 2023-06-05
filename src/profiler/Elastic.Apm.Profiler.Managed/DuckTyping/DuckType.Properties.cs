@@ -34,19 +34,13 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			{
 				proxyMemberReturnType = proxyProperty.PropertyType;
 				proxyParameterTypes = GetPropertyGetParametersTypes(proxyTypeBuilder, proxyProperty, true).ToArray();
-				if (proxyParameterTypes.Length != targetParametersTypes.Length)
-				{
-					DuckTypePropertyArgumentsLengthException.Throw(proxyProperty);
-				}
+				if (proxyParameterTypes.Length != targetParametersTypes.Length) DuckTypePropertyArgumentsLengthException.Throw(proxyProperty);
 			}
 			else if (proxyMember is FieldInfo proxyField)
 			{
 				proxyMemberReturnType = proxyField.FieldType;
 				proxyParameterTypes = Type.EmptyTypes;
-				if (proxyParameterTypes.Length != targetParametersTypes.Length)
-				{
-					DuckTypePropertyArgumentsLengthException.Throw(targetProperty);
-				}
+				if (proxyParameterTypes.Length != targetParametersTypes.Length) DuckTypePropertyArgumentsLengthException.Throw(targetProperty);
 			}
 
 			var proxyMethod = proxyTypeBuilder.DefineMethod(
@@ -85,9 +79,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 					targetParamType = typeof(object);
 				}
 				else
-				{
 					il.WriteLoadArgument(pIndex, false);
-				}
 
 				// If the target parameter type is public or if it's by ref we have to actually use the original target type.
 				targetParamType = UseDirectAccessTo(proxyTypeBuilder, targetParamType) || targetParamType.IsByRef ? targetParamType : typeof(object);
@@ -131,10 +123,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				// Emit the dynamic method body
 				var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
 
-				if (!targetMethod.IsStatic)
-				{
-					dynIL.LoadInstanceArgument(typeof(object), targetProperty.DeclaringType);
-				}
+				if (!targetMethod.IsStatic) dynIL.LoadInstanceArgument(typeof(object), targetProperty.DeclaringType);
 
 				for (var idx = targetMethod.IsStatic ? 0 : 1; idx < dynParameters.Length; idx++)
 				{
@@ -155,10 +144,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			// Check if the type can be converted or if we need to enable duck chaining
 			if (NeedsDuckChaining(targetProperty.PropertyType, proxyMemberReturnType))
 			{
-				if (UseDirectAccessTo(proxyTypeBuilder, targetProperty.PropertyType) && targetProperty.PropertyType.IsValueType)
-				{
-					il.Emit(OpCodes.Box, targetProperty.PropertyType);
-				}
+				if (UseDirectAccessTo(proxyTypeBuilder, targetProperty.PropertyType) && targetProperty.PropertyType.IsValueType) il.Emit(OpCodes.Box, targetProperty.PropertyType);
 
 				// We call DuckType.CreateCache<>.Create()
 				var getProxyMethodInfo = typeof(CreateCache<>)
@@ -191,19 +177,13 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			{
 				proxyMemberName = proxyProperty.Name;
 				proxyParameterTypes = GetPropertySetParametersTypes(proxyTypeBuilder, proxyProperty, true).ToArray();
-				if (proxyParameterTypes.Length != targetParametersTypes.Length)
-				{
-					DuckTypePropertyArgumentsLengthException.Throw(proxyProperty);
-				}
+				if (proxyParameterTypes.Length != targetParametersTypes.Length) DuckTypePropertyArgumentsLengthException.Throw(proxyProperty);
 			}
 			else if (proxyMember is FieldInfo proxyField)
 			{
 				proxyMemberName = proxyField.Name;
 				proxyParameterTypes = new Type[] { proxyField.FieldType };
-				if (proxyParameterTypes.Length != targetParametersTypes.Length)
-				{
-					DuckTypePropertyArgumentsLengthException.Throw(targetProperty);
-				}
+				if (proxyParameterTypes.Length != targetParametersTypes.Length) DuckTypePropertyArgumentsLengthException.Throw(targetProperty);
 			}
 
 			var proxyMethod = proxyTypeBuilder.DefineMethod(
@@ -284,10 +264,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				// Emit the dynamic method body
 				var dynIL = new LazyILGenerator(dynMethod.GetILGenerator());
 
-				if (!targetMethod.IsStatic)
-				{
-					dynIL.LoadInstanceArgument(typeof(object), targetProperty.DeclaringType);
-				}
+				if (!targetMethod.IsStatic) dynIL.LoadInstanceArgument(typeof(object), targetProperty.DeclaringType);
 
 				for (var idx = targetMethod.IsStatic ? 0 : 1; idx < dynParameters.Length; idx++)
 				{

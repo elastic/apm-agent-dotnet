@@ -13,7 +13,6 @@ using Elastic.Apm.Extensions.Hosting.Config;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
@@ -99,7 +98,7 @@ namespace Elastic.Apm.AspNetCore
 
 		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
-				? (IApmLogger)new NetCoreLogger(loggerFactory)
+				? new NetCoreLogger(loggerFactory)
 				: ConsoleLogger.Instance;
 	}
 }

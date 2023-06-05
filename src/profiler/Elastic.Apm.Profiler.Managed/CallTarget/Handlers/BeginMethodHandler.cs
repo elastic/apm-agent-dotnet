@@ -8,9 +8,7 @@
 // </copyright>
 
 using System;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using Elastic.Apm.Api;
 
 #pragma warning disable SA1649 // File name must match first type name
 
@@ -35,7 +33,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			finally
 			{
 				if (_invokeDelegate is null)
-					_invokeDelegate = instance => CallTargetState.GetDefault();
+					_invokeDelegate = _ => CallTargetState.GetDefault();
 			}
 		}
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace Elastic.Apm.StartupHook.Sample.Models
 {
 	public class ErrorViewModel

@@ -20,7 +20,7 @@ public class ApmServerInfoProviderTests
 		var logger = new InMemoryBlockingLogger(LogLevel.Warning);
 		var configReader = new MockConfiguration(logger);
 		var service = Service.GetDefaultService(configReader, logger);
-		var httpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(
+		var httpMessageHandler = new MockHttpMessageHandler((_, _) => Task.FromResult(
 			new HttpResponseMessage(HttpStatusCode.OK)
 			{
 				Content = new StringContent("{}", Encoding.UTF8)

@@ -18,19 +18,13 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 			string instrumentedTypeName
 		)
 		{
-			if (runtimeObject == null)
-			{
-				return null;
-			}
+			if (runtimeObject == null) return null;
 
 			var currentType = runtimeObject.GetType();
 
 			while (currentType != null)
 			{
-				if (currentType.Name == instrumentedTypeName && currentType.Namespace == instrumentedNamespace)
-				{
-					return currentType;
-				}
+				if (currentType.Name == instrumentedTypeName && currentType.Namespace == instrumentedNamespace) return currentType;
 
 				currentType = currentType.BaseType;
 			}

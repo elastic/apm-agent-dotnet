@@ -93,7 +93,7 @@ namespace Elastic.Apm.Metrics
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
-			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
+			_timer.Elapsed += (_, _) => { CollectAllMetrics(); };
 
 			void AddIfEnabled(IMetricsProvider provider)
 			{

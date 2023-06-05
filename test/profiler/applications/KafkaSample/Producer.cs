@@ -22,7 +22,7 @@ namespace KafkaSample
         // Flush every x messages
         private const int FlushInterval = 3;
         private static readonly TimeSpan FlushTimeout = TimeSpan.FromSeconds(5);
-        private static int MessageNumber = 0;
+        private static int MessageNumber;
 
 		public static async Task ProduceAsync(string topic, int numMessages, ClientConfig config, bool isTombstone) =>
 			await Agent.Tracer.CaptureTransaction($"Produce Messages Async {topic}", ApiConstants.TypeMessaging, async () =>

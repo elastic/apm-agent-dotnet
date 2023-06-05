@@ -332,7 +332,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					AspNetFullFrameworkSampleApp.Consts.ProcessIdResponseHeaderName, processIdInResponse);
 
 			var apmServerUrlsInResponse =
-				response.Headers?.GetValues(AspNetFullFrameworkSampleApp.Consts.ElasticApmServerUrlsResponseHeaderName).ToList();
+				response.Headers.GetValues(AspNetFullFrameworkSampleApp.Consts.ElasticApmServerUrlsResponseHeaderName).ToList();
 			try
 			{
 				apmServerUrlsInResponse.Should().HaveCount(1);

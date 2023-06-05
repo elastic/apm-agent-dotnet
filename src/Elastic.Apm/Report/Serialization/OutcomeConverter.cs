@@ -20,10 +20,7 @@ namespace Elastic.Apm.Report.Serialization
 				{
 					var property = (string)reader.Value;
 
-					if (Enum.TryParse<Outcome>(property, out var enumVal))
-					{
-						return enumVal;
-					}
+					if (Enum.TryParse<Outcome>(property, out var enumVal)) return enumVal;
 				}
 			}
 

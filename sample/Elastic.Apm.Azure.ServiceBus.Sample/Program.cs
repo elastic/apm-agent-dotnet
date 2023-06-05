@@ -59,9 +59,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 
 			Console.WriteLine("Printing messages:");
 			foreach (var item in messages)
-			{
 				Console.Write($"Body: {item.Body} - ");
-			}
 			Console.WriteLine($"Message count: {messages.Count}");
 			Console.WriteLine("Receiving messages from queue done");
 		}

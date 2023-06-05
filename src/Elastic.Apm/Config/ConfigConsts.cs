@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using Elastic.Apm.Cloud;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using static Elastic.Apm.Config.ConfigurationOption;
 
 namespace Elastic.Apm.Config
 {

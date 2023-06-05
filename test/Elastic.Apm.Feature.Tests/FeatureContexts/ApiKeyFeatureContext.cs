@@ -33,7 +33,7 @@ namespace Elastic.Apm.Feature.Tests.FeatureContexts
 			var isRequestFinished = new TaskCompletionSource<object>();
 
 			AuthenticationHeaderValue authHeader = null;
-			var handler = new MockHttpMessageHandler((r, c) =>
+			var handler = new MockHttpMessageHandler((r, _) =>
 			{
 				authHeader = r.Headers.Authorization;
 				isRequestFinished.SetResult(null);

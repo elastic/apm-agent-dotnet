@@ -26,7 +26,6 @@
 #endregion
 
 #if HAVE_DYNAMIC
-using System.ComponentModel;
 using System.Dynamic;
 #endif
 #if HAVE_BIG_INTEGER

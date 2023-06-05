@@ -13,6 +13,7 @@ namespace Elastic.Apm.Grpc.Tests.Services
 {
 	public class GreeterService : Greeter.GreeterBase
 	{
+		// ReSharper disable once NotAccessedField.Local
 		private readonly ILogger<GreeterService> _logger;
 
 		public GreeterService(ILogger<GreeterService> logger) => _logger = logger;

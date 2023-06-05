@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Files.Shares;
-using Azure.Storage.Queues;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;

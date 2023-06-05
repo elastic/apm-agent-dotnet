@@ -34,10 +34,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 
 		public override TReturn SetContinuation(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state)
 		{
-			if (_continuation == null)
-			{
-				return returnValue;
-			}
+			if (_continuation == null) return returnValue;
 
 			if (exception != null || returnValue == null)
 			{
@@ -47,10 +44,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 
 			var previousTask = FromTReturn<Task<TResult>>(returnValue);
 
-			if (previousTask.Status == TaskStatus.RanToCompletion)
-			{
-				return ToTReturn(Task.FromResult(_continuation(instance, previousTask.Result, default, state)));
-			}
+			if (previousTask.Status == TaskStatus.RanToCompletion) return ToTReturn(Task.FromResult(_continuation(instance, previousTask.Result, default, state)));
 
 			return ToTReturn(ContinuationAction(previousTask, instance, state));
 		}

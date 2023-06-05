@@ -15,7 +15,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Config;
 using Elastic.Apm.Report.Serialization;
 using ICSharpCode.SharpZipLib.Tar;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;

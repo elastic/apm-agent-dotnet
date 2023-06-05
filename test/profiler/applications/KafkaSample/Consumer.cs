@@ -22,9 +22,9 @@ namespace KafkaSample
         private readonly string _consumerName;
         private readonly IConsumer<string, string> _consumer;
 
-        public static int TotalAsyncMessages = 0;
-        public static int TotalSyncMessages = 0;
-        public static int TotalTombstones = 0;
+        public static int TotalAsyncMessages;
+        public static int TotalSyncMessages;
+        public static int TotalTombstones;
 
         private Consumer(ConsumerConfig config, string topic, string consumerName)
         {

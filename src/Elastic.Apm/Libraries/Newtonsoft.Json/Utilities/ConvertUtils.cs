@@ -42,7 +42,6 @@ using System.Text.RegularExpressions;
 
 #endif
 #if HAVE_ADO_NET
-using System.Data.SqlTypes;
 
 #endif
 

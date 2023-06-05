@@ -23,10 +23,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		{
 			var types = new Type[objectsToCheck.Length];
 
-			for (var i = 0; i < objectsToCheck.Length; i++)
-			{
-				types[i] = objectsToCheck[i]?.GetType();
-			}
+			for (var i = 0; i < objectsToCheck.Length; i++) types[i] = objectsToCheck[i]?.GetType();
 
 			return types;
 		}
