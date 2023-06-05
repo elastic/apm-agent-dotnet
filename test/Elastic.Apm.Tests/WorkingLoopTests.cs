@@ -37,7 +37,7 @@ public class WorkingLoopTests
 		});
 
 		var iterCount = 0;
-		var handler = new MockHttpMessageHandler((r, c) =>
+		var handler = new MockHttpMessageHandler((_, _) =>
 		{
 			// 1. request times out
 			if (iterCount == 0)
@@ -58,12 +58,12 @@ public class WorkingLoopTests
 		using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, configurationReader: config));
 
 		// This won't be sent due to timeout
-		agent.Tracer.CaptureTransaction("Test", "Test", t => { });
+		agent.Tracer.CaptureTransaction("Test", "Test", _ => { });
 
 		Thread.Sleep(500);
 
 		// This will be sent
-		agent.Tracer.CaptureTransaction("Test2", "Test", t => { });
+		agent.Tracer.CaptureTransaction("Test2", "Test", _ => { });
 
 		Thread.Sleep(500);
 

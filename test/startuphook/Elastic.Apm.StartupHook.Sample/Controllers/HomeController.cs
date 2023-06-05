@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Elastic.Apm.StartupHook.Sample.Models;
@@ -11,6 +8,7 @@ namespace Elastic.Apm.StartupHook.Sample.Controllers
 {
 	public class HomeController : Controller
 	{
+		// ReSharper disable once NotAccessedField.Local
 		private readonly ILogger<HomeController> _logger;
 
 		public HomeController(ILogger<HomeController> logger) => _logger = logger;

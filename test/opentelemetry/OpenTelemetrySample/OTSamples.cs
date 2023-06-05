@@ -34,10 +34,11 @@ namespace OpenTelemetrySample
 		{
 			var src = new ActivitySource("Test");
 
-			using (var activity1 = src.StartActivity(nameof(Sample2), ActivityKind.Server))
+			using (src.StartActivity(nameof(Sample2), ActivityKind.Server))
 			{
 				Thread.Sleep(100);
-				using (var activity2 = src.StartActivity("foo")) Thread.Sleep(150);
+				using (src.StartActivity("foo"))
+					Thread.Sleep(150);
 
 				tracer.CurrentTransaction.CaptureSpan("ElasticApmSpan", "test", () => Thread.Sleep(50));
 			}
@@ -55,10 +56,10 @@ namespace OpenTelemetrySample
 		{
 			var src = new ActivitySource("Test");
 
-			using (var activity1 = src.StartActivity(nameof(Sample3), ActivityKind.Server))
+			using (src.StartActivity(nameof(Sample3), ActivityKind.Server))
 			{
 				Thread.Sleep(100);
-				using (var activity2 = src.StartActivity("foo"))
+				using (src.StartActivity("foo"))
 				{
 					tracer.CurrentSpan.CaptureSpan("ElasticApmSpan", "test", () => Thread.Sleep(50));
 					Thread.Sleep(150);
@@ -78,10 +79,10 @@ namespace OpenTelemetrySample
 		{
 			var src = new ActivitySource("Test");
 
-			tracer.CaptureTransaction( nameof(Sample4), "test", t =>
+			tracer.CaptureTransaction( nameof(Sample4), "test", _ =>
 			{
 				Thread.Sleep(100);
-				using (var activity = src.StartActivity("foo"))
+				using (src.StartActivity("foo"))
 				{
 
 					tracer.CurrentSpan.CaptureSpan("ElasticApmSpan", "test", () => Thread.Sleep(50));

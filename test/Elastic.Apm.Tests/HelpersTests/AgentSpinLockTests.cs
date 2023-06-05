@@ -113,7 +113,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var numberOfThreads = MultiThreadsTestUtils.NumberOfThreadsForTest;
 			_logger.Debug()?.Log($"numberOfThreads: {numberOfThreads}");
 
-			var threadResults = MultiThreadsTestUtils.TestOnThreads(numberOfThreads, threadIndex =>
+			var threadResults = MultiThreadsTestUtils.TestOnThreads(numberOfThreads, _ =>
 			{
 				var numberOfIncrements = 0;
 

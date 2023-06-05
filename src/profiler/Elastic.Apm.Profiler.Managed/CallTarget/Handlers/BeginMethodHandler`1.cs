@@ -8,7 +8,6 @@
 // </copyright>
 
 using System;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable SA1649 // File name must match first type name
@@ -24,10 +23,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			try
 			{
 				var dynMethod = IntegrationMapper.CreateBeginMethodDelegate(typeof(TIntegration), typeof(TTarget), new[] { typeof(TArg1) });
-				if (dynMethod != null)
-				{
-					_invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
-				}
+				if (dynMethod != null) _invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
 			}
 			catch (Exception ex)
 			{
@@ -35,10 +31,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			}
 			finally
 			{
-				if (_invokeDelegate is null)
-				{
-					_invokeDelegate = (instance, arg1) => CallTargetState.GetDefault();
-				}
+				if (_invokeDelegate is null) _invokeDelegate = (_, _) => CallTargetState.GetDefault();
 			}
 		}
 

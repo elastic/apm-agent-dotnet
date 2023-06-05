@@ -53,24 +53,34 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			}
 
 			if (onMethodBeginMethodInfo.ReturnType != typeof(CallTargetState))
+			{
 				throw new ArgumentException(
 					$"The return type of the method: {BeginMethodName} in type: {integrationType.FullName} is not {nameof(CallTargetState)}");
+			}
 
 			var genericArgumentsTypes = onMethodBeginMethodInfo.GetGenericArguments();
 			if (genericArgumentsTypes.Length < 1)
+			{
 				throw new ArgumentException(
 					$"The method: {BeginMethodName} in type: {integrationType.FullName} doesn't have the generic type for the instance type.");
+			}
 
 			var onMethodBeginParameters = onMethodBeginMethodInfo.GetParameters();
 			if (onMethodBeginParameters.Length < argumentsTypes.Length)
+			{
 				throw new ArgumentException(
 					$"The method: {BeginMethodName} with {onMethodBeginParameters.Length} parameters in type: {integrationType.FullName} has less parameters than required.");
+			}
 			else if (onMethodBeginParameters.Length > argumentsTypes.Length + 1)
+			{
 				throw new ArgumentException(
 					$"The method: {BeginMethodName} with {onMethodBeginParameters.Length} parameters in type: {integrationType.FullName} has more parameters than required.");
+			}
 			else if (onMethodBeginParameters.Length != argumentsTypes.Length && onMethodBeginParameters[0].ParameterType != genericArgumentsTypes[0])
+			{
 				throw new ArgumentException(
 					$"The first generic argument for method: {BeginMethodName} in type: {integrationType.FullName} must be the same as the first parameter for the instance value.");
+			}
 
 			var callGenericTypes = new List<Type>();
 
@@ -131,10 +141,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 					throw new InvalidCastException($"The target parameter {targetParameterType} can't be assigned from {sourceParameterType}");
 
 				WriteLoadArgument(ilWriter, i, mustLoadInstance);
-				if (parameterProxyType != null)
-				{
-					WriteCreateNewProxyInstance(ilWriter, parameterProxyType, sourceParameterType);
-				}
+				if (parameterProxyType != null) WriteCreateNewProxyInstance(ilWriter, parameterProxyType, sourceParameterType);
 			}
 
 			// Call method
@@ -171,13 +178,17 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			}
 
 			if (onMethodBeginMethodInfo.ReturnType != typeof(CallTargetState))
+			{
 				throw new ArgumentException(
 					$"The return type of the method: {BeginMethodName} in type: {integrationType.FullName} is not {nameof(CallTargetState)}");
+			}
 
 			var genericArgumentsTypes = onMethodBeginMethodInfo.GetGenericArguments();
 			if (genericArgumentsTypes.Length < 1)
+			{
 				throw new ArgumentException(
 					$"The method: {BeginMethodName} in type: {integrationType.FullName} doesn't have the generic type for the instance type.");
+			}
 
 			var onMethodBeginParameters = onMethodBeginMethodInfo.GetParameters();
 
@@ -211,10 +222,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			{
 				ilWriter.Emit(OpCodes.Ldarg_0);
 
-				if (instanceGenericConstraint != null)
-				{
-					WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
-				}
+				if (instanceGenericConstraint != null) WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
 			}
 
 			// Load arguments
@@ -275,29 +283,41 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			}
 
 			if (onMethodEndMethodInfo.ReturnType != typeof(CallTargetReturn))
+			{
 				throw new ArgumentException(
 					$"The return type of the method: {EndMethodName} in type: {integrationType.FullName} is not {nameof(CallTargetReturn)}");
+			}
 
 			var genericArgumentsTypes = onMethodEndMethodInfo.GetGenericArguments();
 			if (genericArgumentsTypes.Length != 1)
+			{
 				throw new ArgumentException(
 					$"The method: {EndMethodName} in type: {integrationType.FullName} must have a single generic type for the instance type.");
+			}
 
 			var onMethodEndParameters = onMethodEndMethodInfo.GetParameters();
 			if (onMethodEndParameters.Length < 2)
+			{
 				throw new ArgumentException(
 					$"The method: {EndMethodName} with {onMethodEndParameters.Length} parameters in type: {integrationType.FullName} has less parameters than required.");
+			}
 			else if (onMethodEndParameters.Length > 3)
+			{
 				throw new ArgumentException(
 					$"The method: {EndMethodName} with {onMethodEndParameters.Length} parameters in type: {integrationType.FullName} has more parameters than required.");
+			}
 
 			if (onMethodEndParameters[onMethodEndParameters.Length - 2].ParameterType != typeof(Exception))
+			{
 				throw new ArgumentException(
 					$"The Exception type parameter of the method: {EndMethodName} in type: {integrationType.FullName} is missing.");
+			}
 
 			if (onMethodEndParameters[onMethodEndParameters.Length - 1].ParameterType != typeof(CallTargetState))
+			{
 				throw new ArgumentException(
 					$"The CallTargetState type parameter of the method: {EndMethodName} in type: {integrationType.FullName} is missing.");
+			}
 
 			var callGenericTypes = new List<Type>();
 
@@ -368,29 +388,41 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			}
 
 			if (onMethodEndMethodInfo.ReturnType.GetGenericTypeDefinition() != typeof(CallTargetReturn<>))
+			{
 				throw new ArgumentException(
 					$"The return type of the method: {EndMethodName} in type: {integrationType.FullName} is not {nameof(CallTargetReturn)}");
+			}
 
 			var genericArgumentsTypes = onMethodEndMethodInfo.GetGenericArguments();
 			if (genericArgumentsTypes.Length < 1 || genericArgumentsTypes.Length > 2)
+			{
 				throw new ArgumentException(
 					$"The method: {EndMethodName} in type: {integrationType.FullName} must have the generic type for the instance type.");
+			}
 
 			var onMethodEndParameters = onMethodEndMethodInfo.GetParameters();
 			if (onMethodEndParameters.Length < 3)
+			{
 				throw new ArgumentException(
 					$"The method: {EndMethodName} with {onMethodEndParameters.Length} parameters in type: {integrationType.FullName} has less parameters than required.");
+			}
 			else if (onMethodEndParameters.Length > 4)
+			{
 				throw new ArgumentException(
 					$"The method: {EndMethodName} with {onMethodEndParameters.Length} parameters in type: {integrationType.FullName} has more parameters than required.");
+			}
 
 			if (onMethodEndParameters[onMethodEndParameters.Length - 2].ParameterType != typeof(Exception))
+			{
 				throw new ArgumentException(
 					$"The Exception type parameter of the method: {EndMethodName} in type: {integrationType.FullName} is missing.");
+			}
 
 			if (onMethodEndParameters[onMethodEndParameters.Length - 1].ParameterType != typeof(CallTargetState))
+			{
 				throw new ArgumentException(
 					$"The CallTargetState type parameter of the method: {EndMethodName} in type: {integrationType.FullName} is missing.");
+			}
 
 			var callGenericTypes = new List<Type>();
 
@@ -423,9 +455,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 					callGenericTypes.Add(returnValueProxyType);
 				}
 				else
-				{
 					callGenericTypes.Add(returnType);
-				}
 			}
 			else if (onMethodEndParameters[returnParameterIndex].ParameterType != returnType)
 			{
@@ -447,18 +477,12 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			{
 				ilWriter.Emit(OpCodes.Ldarg_0);
 
-				if (instanceGenericConstraint != null)
-				{
-					WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
-				}
+				if (instanceGenericConstraint != null) WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
 			}
 
 			// Load the return value
 			ilWriter.Emit(OpCodes.Ldarg_1);
-			if (returnValueProxyType != null)
-			{
-				WriteCreateNewProxyInstance(ilWriter, returnValueProxyType, returnType);
-			}
+			if (returnValueProxyType != null) WriteCreateNewProxyInstance(ilWriter, returnValueProxyType, returnType);
 
 			// Load the exception
 			ilWriter.Emit(OpCodes.Ldarg_2);
@@ -515,24 +539,34 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 
 			var genericArgumentsTypes = onAsyncMethodEndMethodInfo.GetGenericArguments();
 			if (genericArgumentsTypes.Length < 1 || genericArgumentsTypes.Length > 2)
+			{
 				throw new ArgumentException(
 					$"The method: {EndAsyncMethodName} in type: {integrationType.FullName} must have the generic type for the instance type.");
+			}
 
 			var onAsyncMethodEndParameters = onAsyncMethodEndMethodInfo.GetParameters();
 			if (onAsyncMethodEndParameters.Length < 3)
+			{
 				throw new ArgumentException(
 					$"The method: {EndAsyncMethodName} with {onAsyncMethodEndParameters.Length} parameters in type: {integrationType.FullName} has less parameters than required.");
+			}
 			else if (onAsyncMethodEndParameters.Length > 4)
+			{
 				throw new ArgumentException(
 					$"The method: {EndAsyncMethodName} with {onAsyncMethodEndParameters.Length} parameters in type: {integrationType.FullName} has more parameters than required.");
+			}
 
 			if (onAsyncMethodEndParameters[onAsyncMethodEndParameters.Length - 2].ParameterType != typeof(Exception))
+			{
 				throw new ArgumentException(
 					$"The Exception type parameter of the method: {EndAsyncMethodName} in type: {integrationType.FullName} is missing.");
+			}
 
 			if (onAsyncMethodEndParameters[onAsyncMethodEndParameters.Length - 1].ParameterType != typeof(CallTargetState))
+			{
 				throw new ArgumentException(
 					$"The CallTargetState type parameter of the method: {EndAsyncMethodName} in type: {integrationType.FullName} is missing.");
+			}
 
 			var preserveContext = onAsyncMethodEndMethodInfo.GetCustomAttribute<PreserveContextAttribute>() != null;
 
@@ -570,8 +604,10 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 					callGenericTypes.Add(returnType);
 			}
 			else if (onAsyncMethodEndParameters[returnParameterIndex].ParameterType != returnType)
+			{
 				throw new ArgumentException(
 					$"The ReturnValue type parameter of the method: {EndAsyncMethodName} in type: {integrationType.FullName} is invalid. [{onAsyncMethodEndParameters[returnParameterIndex].ParameterType} != {returnType}]");
+			}
 
 			var callMethod = new DynamicMethod(
 				$"{onAsyncMethodEndMethodInfo.DeclaringType.Name}.{onAsyncMethodEndMethodInfo.Name}.{targetType.Name}.{returnType.Name}",

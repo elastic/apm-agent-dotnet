@@ -33,9 +33,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			// infinite recursion.
 			if (string.Equals(assemblyName, "mscorlib.resources", StringComparison.OrdinalIgnoreCase) ||
 				string.Equals(assemblyName, "System.Net.Http", StringComparison.OrdinalIgnoreCase))
-			{
 				return null;
-			}
 
 			var path = Path.Combine(Directory, $"{assemblyName}.dll");
 			var exists = File.Exists(path);

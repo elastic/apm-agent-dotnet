@@ -179,7 +179,7 @@ namespace Elastic.Apm.AdoNet
 			{
 				IDbCommand command;
 
-				await span.CaptureSpan($"{commandName} sync", "sync", async childSpan =>
+				await span.CaptureSpan($"{commandName} sync", "sync", async _ =>
 				{
 					Console.WriteLine("  synchronous");
 					await Task.Delay(100, cancellationToken);
@@ -210,7 +210,7 @@ namespace Elastic.Apm.AdoNet
 				{
 					await Task.Delay(100, cancellationToken);
 
-					await span.CaptureSpan($"{commandName} async", "async", async childSpan =>
+					await span.CaptureSpan($"{commandName} async", "async", async _ =>
 					{
 						Console.WriteLine("  asynchronous");
 						await Task.Delay(100, cancellationToken);
@@ -239,7 +239,7 @@ namespace Elastic.Apm.AdoNet
 
 					await Task.Delay(100, cancellationToken);
 
-					await span.CaptureSpan($"{commandName} async with cancellation", "async-cancellation", async childSpan =>
+					await span.CaptureSpan($"{commandName} async with cancellation", "async-cancellation", async _ =>
 					{
 						Console.WriteLine("  asynchronous with cancellation");
 						await Task.Delay(100, cancellationToken);

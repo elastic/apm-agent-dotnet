@@ -13,12 +13,15 @@ using Elastic.Apm;
 using Elastic.Apm.Api;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+// ReSharper disable AccessToDisposedClosure
+
+// ReSharper disable AccessToDisposedClosure
 
 namespace RabbitMqSample
 {
 	internal class Program
     {
-		private static volatile int MessageCount = 0;
+		private static volatile int MessageCount;
 		private static readonly AutoResetEvent SendFinished = new(false);
 
 		private const string IgnoreExchangeName = "test-ignore-exchange-name";
@@ -99,6 +102,7 @@ namespace RabbitMqSample
 					var resultMessage = Encoding.UTF8.GetString(result.Body);
 #endif
 					Console.WriteLine($"[{name}] BasicGet - Received message: {resultMessage}");
+					// ReSharper restore AccessToDisposedClosure
 				});
 			}
         }
@@ -194,7 +198,7 @@ namespace RabbitMqSample
                                     arguments: null);
 
                 var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
+                consumer.Received += (_, ea) =>
                 {
 					var transaction = Agent.Tracer.CurrentTransaction;
 					var span = transaction?.StartSpan("Consume message", ApiConstants.TypeMessaging);

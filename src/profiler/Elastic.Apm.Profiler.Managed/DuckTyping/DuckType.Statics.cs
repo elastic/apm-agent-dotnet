@@ -52,10 +52,10 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 		private static readonly Dictionary<Assembly, ModuleBuilder> ActiveBuilders = new Dictionary<Assembly, ModuleBuilder>();
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private static long _assemblyCount = 0;
+		private static long _assemblyCount;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private static long _typeCount = 0;
+		private static long _typeCount;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private static ConstructorInfo _ignoresAccessChecksToAttributeCtor =
@@ -90,12 +90,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			if (targetType.IsGenericType)
 			{
 				foreach (var type in targetType.GetGenericArguments())
-				{
-					if (type.Assembly != targetAssembly)
-					{
-						return CreateModuleBuilder($"DuckTypeGenericTypeAssembly.{targetType.Name}", targetAssembly);
-					}
-				}
+					if (type.Assembly != targetAssembly) return CreateModuleBuilder($"DuckTypeGenericTypeAssembly.{targetType.Name}", targetAssembly);
 			}
 
 			if (!ActiveBuilders.TryGetValue(targetAssembly, out var moduleBuilder))

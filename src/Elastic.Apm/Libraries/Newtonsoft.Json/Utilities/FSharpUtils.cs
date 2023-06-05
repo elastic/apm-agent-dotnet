@@ -26,14 +26,11 @@
 #endregion
 
 #if HAVE_FSHARP_TYPES
-using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
-using System.Diagnostics;
 
 #nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities

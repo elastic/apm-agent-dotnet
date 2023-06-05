@@ -130,7 +130,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					childDbSpans.Should().HaveCount(numberOfConcurrentIterations * 3 / 2);
 					ShouldBeMonotonicInTime(childDbSpans);
 
-					childDbSpans.ForEachIndexed((childDbSpan, i) =>
+					childDbSpans.ForEachIndexed((childDbSpan, _) =>
 					{
 						childDbSpan.ParentId.Should().Be(topLevelConcurrentSpan.Id);
 						childDbSpan.ShouldOccurBetween(topLevelConcurrentSpan);

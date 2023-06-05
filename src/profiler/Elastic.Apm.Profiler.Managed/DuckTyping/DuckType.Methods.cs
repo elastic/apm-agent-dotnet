@@ -228,9 +228,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 								il.Emit(OpCodes.Ldloca_S, localTargetArg.LocalIndex);
 							}
 							else
-							{
 								il.WriteLoadArgument(idx, false);
-							}
 						}
 						else if (proxyParamType.IsByRef)
 						{
@@ -352,10 +350,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 					// If the instance is public we can emit directly without any dynamic method
 
 					// Create generic method call
-					if (proxyMethodDefinitionGenericArguments.Length > 0)
-					{
-						targetMethod = targetMethod.MakeGenericMethod(proxyMethodDefinitionGenericArguments);
-					}
+					if (proxyMethodDefinitionGenericArguments.Length > 0) targetMethod = targetMethod.MakeGenericMethod(proxyMethodDefinitionGenericArguments);
 
 					// Method call
 					// A generic method cannot be called using calli (throws System.InvalidOperationException)
@@ -374,10 +369,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				else
 				{
 					// A generic method call can't be made from a DynamicMethod
-					if (proxyMethodDefinitionGenericArguments.Length > 0)
-					{
-						DuckTypeProxyMethodsWithGenericParametersNotSupportedInNonPublicInstancesException.Throw(proxyMethod);
-					}
+					if (proxyMethodDefinitionGenericArguments.Length > 0) DuckTypeProxyMethodsWithGenericParametersNotSupportedInNonPublicInstancesException.Throw(proxyMethod);
 
 					// If the instance is not public we need to create a Dynamic method to overpass the visibility checks
 					// we can't access non public types so we have to cast to object type (in the instance object and the return type).
@@ -411,8 +403,10 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 					// Check if we can emit a normal Call/CallVirt to the target method
 					if (!targetMethod.ContainsGenericParameters)
+					{
 						dynIL.EmitCall(targetMethod.IsStatic || targetMethod.DeclaringType.IsValueType ? OpCodes.Call : OpCodes.Callvirt,
 							targetMethod, null);
+					}
 					else
 					{
 						// We can't emit a call to a method with generics from a DynamicMethod
@@ -582,10 +576,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				var candidateParameters = candidateMethod.GetParameters();
 
 				// The proxy must have the same or less parameters than the candidate ( less is due to possible optional parameters in the candidate ).
-				if (proxyMethodParameters.Length > candidateParameters.Length)
-				{
-					continue;
-				}
+				if (proxyMethodParameters.Length > candidateParameters.Length) continue;
 
 				// We compare the target method candidate parameter by parameter.
 				var skip = false;
@@ -692,10 +683,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 									}
 								}
 
-								if (skip)
-								{
-									break;
-								}
+								if (skip) break;
 							}
 						}
 					}

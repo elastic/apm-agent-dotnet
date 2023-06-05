@@ -173,8 +173,10 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
 		)
 		{
 			if (IntegrationOptions<TIntegration, TTarget>.IsIntegrationEnabled)
+			{
 				return BeginMethodHandler<TIntegration, TTarget, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>.Invoke(instance, arg1, arg2, arg3, arg4,
 					arg5, arg6);
+			}
 
 			return CallTargetState.GetDefault();
 		}
@@ -206,8 +208,10 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
 		)
 		{
 			if (IntegrationOptions<TIntegration, TTarget>.IsIntegrationEnabled)
+			{
 				return BeginMethodHandler<TIntegration, TTarget, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>.Invoke(instance, arg1, arg2, arg3,
 					arg4, arg5, arg6, arg7);
+			}
 
 			return CallTargetState.GetDefault();
 		}
@@ -241,8 +245,10 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget
 		)
 		{
 			if (IntegrationOptions<TIntegration, TTarget>.IsIntegrationEnabled)
+			{
 				return BeginMethodHandler<TIntegration, TTarget, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8>.Invoke(instance, arg1, arg2,
 					arg3, arg4, arg5, arg6, arg7, arg8);
+			}
 
 			return CallTargetState.GetDefault();
 		}

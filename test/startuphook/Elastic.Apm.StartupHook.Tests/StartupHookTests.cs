@@ -12,12 +12,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
-using static Elastic.Apm.Config.ConfigConsts;
 using static Elastic.Apm.Config.ConfigurationOption;
 using Environment = System.Environment;
 using LogLevel = Elastic.Apm.Logging.LogLevel;
@@ -40,7 +38,7 @@ namespace Elastic.Apm.StartupHook.Tests
 
 		public static IEnumerable<object[]> WebAppInfos()
 		{
-			var testData = new List<object[]>();
+			var testData = new List<string[]>();
 			foreach (var i in GetDotNetFrameworkVersionInfos())
 			{
 				testData.Add(new []{ "webapi", $"WebApi{i.ShortVersion}", i.TargetFramework, "weatherforecast"});

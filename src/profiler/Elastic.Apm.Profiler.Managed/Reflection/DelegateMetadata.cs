@@ -45,9 +45,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				returnType = typeof(void);
 			}
 			else
-			{
 				throw new Exception($"Only Func<> or Action<> are supported in {nameof(DelegateMetadata)}.");
-			}
 
 			return new DelegateMetadata
 			{

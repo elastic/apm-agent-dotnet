@@ -10,7 +10,7 @@ namespace OracleManagedDataAccessCoreSample
 {
 	public class OracleDbCommandFactory : DbCommandFactory
 	{
-		private int _count = 0;
+		private int _count;
 		private readonly string _tableName;
 
 		public OracleDbCommandFactory(IDbConnection connection, string tableName)

@@ -52,8 +52,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		private Type _concreteType;
 		private string _concreteTypeName;
 		private Type[] _parameters = Array.Empty<Type>();
-		private Type[] _explicitParameterTypes = null;
-		private string[] _namespaceAndNameFilter = null;
+		private Type[] _explicitParameterTypes;
+		private string[] _namespaceAndNameFilter;
 		private Type[] _declaringTypeGenerics;
 		private Type[] _methodGenerics;
 		private bool _forceMethodDefResolve;
@@ -237,18 +237,13 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				}
 			}
 			else
-			{
 				Logger.Log(LogLevel.Warn, "Unable to resolve module version id {0}. Using method builder fallback.", _moduleVersionId);
-			}
 
 			MethodInfo methodInfo = null;
 
 			if (!requiresBestEffortMatching && _methodBase is MethodInfo info)
 			{
-				if (info.IsGenericMethodDefinition)
-				{
-					info = MakeGenericMethod(info);
-				}
+				if (info.IsGenericMethodDefinition) info = MakeGenericMethod(info);
 
 				methodInfo = VerifyMethodFromToken(info);
 			}
@@ -285,14 +280,9 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				returnType = typeof(void);
 			}
 			else
-			{
 				throw new Exception($"Only Func<> or Action<> are supported in {nameof(MethodBuilder)}.");
-			}
 
-			if (methodInfo.IsGenericMethodDefinition)
-			{
-				methodInfo = MakeGenericMethod(methodInfo);
-			}
+			if (methodInfo.IsGenericMethodDefinition) methodInfo = MakeGenericMethod(methodInfo);
 
 			Type[] effectiveParameterTypes;
 
@@ -300,9 +290,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				methodInfo.GetParameters().Select(p => p.ParameterType);
 
 			if (methodInfo.IsStatic)
-			{
 				effectiveParameterTypes = reflectedParameterTypes.ToArray();
-			}
 			else
 			{
 				// for instance methods, insert object's type as first element in array
@@ -340,13 +328,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				}
 
 				if (underlyingParameterType.IsValueType && delegateParameterType == typeof(object))
-				{
 					il.Emit(OpCodes.Unbox_Any, underlyingParameterType);
-				}
-				else if (underlyingParameterType != delegateParameterType)
-				{
-					il.Emit(OpCodes.Castclass, underlyingParameterType);
-				}
+				else if (underlyingParameterType != delegateParameterType) il.Emit(OpCodes.Castclass, underlyingParameterType);
 			}
 
 			if (_opCode == OpCodeValue.Call || methodInfo.IsStatic)
@@ -361,14 +344,10 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				il.Emit(OpCodes.Callvirt, methodInfo);
 			}
 			else
-			{
 				throw new NotSupportedException($"OpCode {_originalOpCodeValue} not supported when calling a method.");
-			}
 
 			if (methodInfo.ReturnType.IsValueType && !returnType.IsValueType)
-			{
 				il.Emit(OpCodes.Box, methodInfo.ReturnType);
-			}
 			else if (methodInfo.ReturnType.IsValueType && returnType.IsValueType && methodInfo.ReturnType != returnType)
 			{
 				throw new ArgumentException(
@@ -379,10 +358,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				throw new ArgumentException(
 					$"Cannot reliably convert the target method's return type {methodInfo.ReturnType.FullName} (reference type) to the delegate method's return type {returnType.FullName} (value type)");
 			}
-			else if (!methodInfo.ReturnType.IsValueType && !returnType.IsValueType && methodInfo.ReturnType != returnType)
-			{
-				il.Emit(OpCodes.Castclass, returnType);
-			}
+			else if (!methodInfo.ReturnType.IsValueType && !returnType.IsValueType && methodInfo.ReturnType != returnType) il.Emit(OpCodes.Castclass, returnType);
 
 			il.Emit(OpCodes.Ret);
 			return (TDelegate)dynamicMethod.CreateDelegate(typeof(TDelegate));
@@ -390,10 +366,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 		private MethodInfo MakeGenericMethod(MethodInfo methodInfo)
 		{
-			if (_methodGenerics == null || _methodGenerics.Length == 0)
-			{
-				throw new ArgumentException($"Must specify {nameof(_methodGenerics)} for a generic method.");
-			}
+			if (_methodGenerics == null || _methodGenerics.Length == 0) throw new ArgumentException($"Must specify {nameof(_methodGenerics)} for a generic method.");
 
 			return methodInfo.MakeGenericMethod(_methodGenerics);
 		}
@@ -434,15 +407,9 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 		private void ValidateRequirements()
 		{
-			if (_concreteType == null)
-			{
-				throw new ArgumentException($"{nameof(_concreteType)} must be specified.");
-			}
+			if (_concreteType == null) throw new ArgumentException($"{nameof(_concreteType)} must be specified.");
 
-			if (string.IsNullOrWhiteSpace(_methodName))
-			{
-				throw new ArgumentException($"There must be a {nameof(_methodName)} specified to ensure fallback {nameof(TryFindMethod)} is viable.");
-			}
+			if (string.IsNullOrWhiteSpace(_methodName)) throw new ArgumentException($"There must be a {nameof(_methodName)} specified to ensure fallback {nameof(TryFindMethod)} is viable.");
 
 			if (_namespaceAndNameFilter != null && _namespaceAndNameFilter.Length != _parameters.Length + 1)
 			{
@@ -452,10 +419,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 			if (_explicitParameterTypes != null)
 			{
-				if (_explicitParameterTypes.Length != _parameters.Length)
-				{
-					throw new ArgumentException($"The {nameof(_explicitParameterTypes)} must match the {_parameters} count.");
-				}
+				if (_explicitParameterTypes.Length != _parameters.Length) throw new ArgumentException($"The {nameof(_explicitParameterTypes)} must match the {_parameters} count.");
 
 				for (var i = 0; i < _explicitParameterTypes.Length; i++)
 				{
@@ -500,10 +464,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 					{
 						var parameters = m.GetParameters();
 
-						if ((parameters.Length + 1) != _namespaceAndNameFilter.Length)
-						{
-							return false;
-						}
+						if ((parameters.Length + 1) != _namespaceAndNameFilter.Length) return false;
 
 						var typesToCheck = new Type[] { m.ReturnType }.Concat(m.GetParameters().Select(p => p.ParameterType)).ToArray();
 						for (var i = 0; i < typesToCheck.Length; i++)
@@ -514,10 +475,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 								continue;
 							}
 
-							if ($"{typesToCheck[i].Namespace}.{typesToCheck[i].Name}" != _namespaceAndNameFilter[i])
-							{
-								return false;
-							}
+							if ($"{typesToCheck[i].Namespace}.{typesToCheck[i].Name}" != _namespaceAndNameFilter[i]) return false;
 						}
 
 						return true;
@@ -556,17 +514,11 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 			// Attempt to trim down further
 			methods = methods.Where(ParametersAreExact).ToArray();
 
-			if (methods.Length > 1)
-			{
-				throw new ArgumentException($"Unable to safely resolve method, found {methods.Length} matches ({logDetail})");
-			}
+			if (methods.Length > 1) throw new ArgumentException($"Unable to safely resolve method, found {methods.Length} matches ({logDetail})");
 
 			var methodInfo = methods.SingleOrDefault();
 
-			if (methodInfo == null)
-			{
-				throw new ArgumentException($"Unable to resolve method, started with {matchesOnNameAndReturn} by name match ({logDetail})");
-			}
+			if (methodInfo == null) throw new ArgumentException($"Unable to resolve method, started with {matchesOnNameAndReturn} by name match ({logDetail})");
 
 			return methodInfo;
 		}
@@ -608,10 +560,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 					return false;
 				}
 
-				if (!parameterType.IsAssignableFrom(expectedParameterType))
-				{
-					return false;
-				}
+				if (!parameterType.IsAssignableFrom(expectedParameterType)) return false;
 			}
 
 			return true;
@@ -636,10 +585,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 					continue;
 				}
 
-				if (parameterType != actualArgumentType)
-				{
-					return false;
-				}
+				if (parameterType != actualArgumentType) return false;
 			}
 
 			return true;
@@ -684,10 +630,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				{
 					var expectedGenericArg = _methodGenerics[actualGenericArg.GenericParameterPosition];
 
-					if (!MeetsGenericArgumentRequirements(actualGenericArg, expectedGenericArg))
-					{
-						return false;
-					}
+					if (!MeetsGenericArgumentRequirements(actualGenericArg, expectedGenericArg)) return false;
 				}
 			}
 
@@ -728,43 +671,22 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		{
 			public bool Equals(Key x, Key y)
 			{
-				if (x.CallingModuleMetadataToken != y.CallingModuleMetadataToken)
-				{
-					return false;
-				}
+				if (x.CallingModuleMetadataToken != y.CallingModuleMetadataToken) return false;
 
 				var builder1 = x.Builder;
 				var builder2 = y.Builder;
 
-				if (builder1._mdToken != builder2._mdToken)
-				{
-					return false;
-				}
+				if (builder1._mdToken != builder2._mdToken) return false;
 
-				if (builder1._opCode != builder2._opCode)
-				{
-					return false;
-				}
+				if (builder1._opCode != builder2._opCode) return false;
 
-				if (builder1._concreteType != builder2._concreteType)
-				{
-					return false;
-				}
+				if (builder1._concreteType != builder2._concreteType) return false;
 
-				if (!ArrayEquals(x.ExplicitParams, y.ExplicitParams))
-				{
-					return false;
-				}
+				if (!ArrayEquals(x.ExplicitParams, y.ExplicitParams)) return false;
 
-				if (!ArrayEquals(builder1._methodGenerics, builder2._methodGenerics))
-				{
-					return false;
-				}
+				if (!ArrayEquals(builder1._methodGenerics, builder2._methodGenerics)) return false;
 
-				if (!ArrayEquals(builder1._declaringTypeGenerics, builder2._declaringTypeGenerics))
-				{
-					return false;
-				}
+				if (!ArrayEquals(builder1._declaringTypeGenerics, builder2._declaringTypeGenerics)) return false;
 
 				return true;
 			}
@@ -789,45 +711,25 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 			private static int GetHashCode(Type[] array)
 			{
-				if (array == null)
-				{
-					return 0;
-				}
+				if (array == null) return 0;
 
 				var value = array.Length;
 
-				for (var i = 0; i < array.Length; i++)
-				{
-					value = unchecked((value * 31) + array[i]?.GetHashCode() ?? 0);
-				}
+				for (var i = 0; i < array.Length; i++) value = unchecked((value * 31) + array[i]?.GetHashCode() ?? 0);
 
 				return value;
 			}
 
 			private static bool ArrayEquals(Type[] array1, Type[] array2)
 			{
-				if (array1 == null)
-				{
-					return array2 == null;
-				}
+				if (array1 == null) return array2 == null;
 
-				if (array2 == null)
-				{
-					return false;
-				}
+				if (array2 == null) return false;
 
-				if (array1.Length != array2.Length)
-				{
-					return false;
-				}
+				if (array1.Length != array2.Length) return false;
 
 				for (var i = 0; i < array1.Length; i++)
-				{
-					if (array1[i] != array2[i])
-					{
-						return false;
-					}
-				}
+					if (array1[i] != array2[i]) return false;
 
 				return true;
 			}

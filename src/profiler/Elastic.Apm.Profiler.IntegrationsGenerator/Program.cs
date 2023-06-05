@@ -23,7 +23,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 				.ParseArguments<CommandLineOptions>(args)
 				.MapResult(
 					opts => Run(opts),
-					errs => 1);
+					_ => 1);
 
 		private static int Run(CommandLineOptions opts)
 		{
@@ -91,7 +91,7 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 					case CommandLineOptions.OutputFormat.Asciidoc:
 						output = GenerateAsciidoc(callTargetIntegrations);
 						break;
-					default: throw new ArgumentOutOfRangeException("format","Unknown format");
+					default: throw new ArgumentOutOfRangeException(nameof(opts.Format),"Unknown format");
 				}
 
 				var filename = Path.Combine(opts.Output, "integrations." + opts.Format.ToString().ToLowerInvariant());

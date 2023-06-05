@@ -9,7 +9,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Tests;
 using Elastic.Apm.BackendComm.CentralConfig;
-using Elastic.Apm.Config;
 using Elastic.Apm.Extensions.Hosting.Config;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;

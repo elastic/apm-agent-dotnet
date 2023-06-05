@@ -29,8 +29,9 @@ namespace Elastic.Apm.AspNetFullFramework
 	public class ElasticApmModule : IHttpModule
 	{
 		private static bool _isCaptureHeadersEnabled;
-		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new DbgInstanceNameGenerator();
-		private static readonly LazyContextualInit InitOnceHelper = new LazyContextualInit();
+		// ReSharper disable once RedundantDefaultMemberInitializer
+		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new();
+		private static readonly LazyContextualInit InitOnceHelper = new();
 
 		private readonly string _dbgInstanceName;
 		private HttpApplication _application;

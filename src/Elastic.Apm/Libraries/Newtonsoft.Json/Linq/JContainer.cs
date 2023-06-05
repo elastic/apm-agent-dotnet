@@ -39,7 +39,6 @@ using System.Collections.Specialized;
 #if !HAVE_LINQ
 
 #else
-using System.Linq;
 #endif
 
 #nullable enable

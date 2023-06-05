@@ -525,7 +525,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void CreateSubSpan()
 		{
 			var payloadSender = new MockPayloadSender();
-			StartTransactionAndSpanWithSubSpan(payloadSender, s => { });
+			StartTransactionAndSpanWithSubSpan(payloadSender, _ => { });
 		}
 
 		/// <summary>

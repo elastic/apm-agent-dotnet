@@ -60,7 +60,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 		public void GetHostingEnvironmentName_WorksViaReflection()
 		{
 			var environmentName = default(string);
-			CreateHostBuilder().ConfigureServices((ctx, services) =>
+			CreateHostBuilder().ConfigureServices((ctx, _) =>
 			{
 				environmentName = HostBuilderExtensions.GetHostingEnvironmentName(ctx, null);
 			}).Build();

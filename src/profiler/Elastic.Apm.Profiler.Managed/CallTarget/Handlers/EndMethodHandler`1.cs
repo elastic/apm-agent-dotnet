@@ -8,7 +8,6 @@
 // </copyright>
 
 using System;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -20,8 +19,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 {
 	internal static class EndMethodHandler<TIntegration, TTarget, TReturn>
 	{
-		private static readonly InvokeDelegate _invokeDelegate = null;
-		private static readonly ContinuationGenerator<TTarget, TReturn> _continuationGenerator = null;
+		private static readonly InvokeDelegate _invokeDelegate;
+		private static readonly ContinuationGenerator<TTarget, TReturn> _continuationGenerator;
 
 		static EndMethodHandler()
 		{

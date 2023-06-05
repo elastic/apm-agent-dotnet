@@ -3,10 +3,8 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Net.Http;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api

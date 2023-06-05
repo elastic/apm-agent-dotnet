@@ -185,7 +185,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			await sender.SendMessageAsync(
 				new ServiceBusMessage("test message")).ConfigureAwait(false);
 
-			await _agent.Tracer.CaptureTransaction("Receive messages", ApiConstants.TypeMessaging, async t =>
+			await _agent.Tracer.CaptureTransaction("Receive messages", ApiConstants.TypeMessaging, async _ =>
 			{
 				await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
 			});

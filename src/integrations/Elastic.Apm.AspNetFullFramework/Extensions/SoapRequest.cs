@@ -6,7 +6,6 @@ using System;
 using System.Buffers;
 using System.Collections.Specialized;
 using System.IO;
-using System.Text;
 using System.Web;
 using System.Xml;
 using Elastic.Apm.Logging;
@@ -101,13 +100,13 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		}
 
 		internal static string GetSoap12ActionFromInputStream(IApmLogger logger, Stream stream)
-		{ 
+		{
 			var shared = ArrayPool<byte>.Shared;
 			var bytes = shared.Rent((int)stream.Length);
 			try
 			{
 				stream.Position = 0;
-				stream.Read(bytes, 0, bytes.Length);
+				var _ = stream.Read(bytes, 0, bytes.Length);
 				stream.Position = 0;
 
 				var settings = new XmlReaderSettings

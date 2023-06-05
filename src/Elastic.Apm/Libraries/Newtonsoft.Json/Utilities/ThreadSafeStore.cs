@@ -26,7 +26,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 
 #if !HAVE_LINQ
 #endif

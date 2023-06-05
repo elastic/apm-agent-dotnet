@@ -369,7 +369,7 @@ namespace Elastic.Apm.Report
 					content.Headers.ContentType = MediaTypeHeaderValue;
 
 #if NET5_0_OR_GREATER
-					HttpResponseMessage response = null;
+					HttpResponseMessage response;
 					try
 					{
 						var webRequest = new HttpRequestMessage(HttpMethod.Post, _intakeV2EventsAbsoluteUrl) { Content = content };

@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;

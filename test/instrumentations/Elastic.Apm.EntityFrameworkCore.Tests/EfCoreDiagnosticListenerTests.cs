@@ -60,7 +60,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		public async Task EfCoreDiagnosticListener_ShouldCaptureException_WhenCommandFailed()
 		{
 			await using var context = new FakeDbContext(_options);
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async _ =>
 			{
 				try
 				{
@@ -85,7 +85,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		public async Task EfCoreDiagnosticListener_ShouldCaptureSpan_WhenCommandSucceed()
 		{
 			await using var context = new FakeDbContext(_options);
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async _ =>
 			{
 				try
 				{
@@ -128,7 +128,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			await using var context = new FakeDbContext(_options);
 
 			await _apmAgent.Tracer.CaptureTransaction("transaction", "type",
-				async transaction => await context.Data.FirstOrDefaultAsync());
+				async _ => await context.Data.FirstOrDefaultAsync());
 
 			_payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
 			_payloadSender.FirstSpan.StackTrace.Should()

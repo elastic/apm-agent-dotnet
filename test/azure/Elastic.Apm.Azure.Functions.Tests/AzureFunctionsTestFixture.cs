@@ -24,7 +24,7 @@ public class AzureFunctionsTestFixture : IDisposable
 	public AzureFunctionsTestFixture()
 	{
 		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsTests));
-		_apmServer.OnReceive += o =>
+		_apmServer.OnReceive += _ =>
 		{
 			if (!_apmServer.ReceivedData.Transactions.IsEmpty)
 				_waitForTransactionDataEvent.Set();
@@ -57,9 +57,9 @@ public class AzureFunctionsTestFixture : IDisposable
 		};
 		_funcProcess.StartInfo.RedirectStandardOutput = true;
 		_funcProcess.StartInfo.RedirectStandardError = true;
-		_funcProcess.OutputDataReceived += (sender, args) => LogLines.Add("[func] [ERROR] " + args.Data);
+		_funcProcess.OutputDataReceived += (_, args) => LogLines.Add("[func] [ERROR] " + args.Data);
 
-		_funcProcess.OutputDataReceived += (sender, args) =>
+		_funcProcess.OutputDataReceived += (_, args) =>
 		{
 			if (args.Data != null)
 			{

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -107,7 +106,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void DistributedTracingDataWitSimpleActionWithParameter_Valid() =>
 			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, t => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
+				UnitTest, _ => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidDistributedTracingDataData))]

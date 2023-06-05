@@ -15,7 +15,7 @@ namespace SqliteSample
 {
 	internal static class Program
 	{
-		private static async Task<int> Main(string[] args)
+		private static async Task<int> Main()
 		{
 			var cancellationTokenSource = new CancellationTokenSource();
 			var connectionType = typeof(SqliteConnection);

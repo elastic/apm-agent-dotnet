@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using Elastic.Apm.Tests.Utilities;
@@ -60,9 +59,11 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			_profilerPath = Path.Combine(SolutionPaths.Root, "target", "release", profilerFile);
 
 			if (!File.Exists(_profilerPath))
+			{
 				throw new FileNotFoundException(
 					$"profiler could not be found at {_profilerPath}. Run './build.[bat|sh] build-profiler' in project root to build it",
 					_profilerPath);
+			}
 
 			_publishDirectory = Path.Combine("bin", "Publish");
 		}

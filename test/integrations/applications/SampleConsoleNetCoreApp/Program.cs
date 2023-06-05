@@ -18,8 +18,8 @@ namespace SampleConsoleNetCoreApp
 
 		private static IHostBuilder CreateHostBuilder(string[] args) =>
 			Host.CreateDefaultBuilder(args)
-				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
-				.ConfigureLogging((hostingContext, logging) =>
+				.ConfigureServices((_, services) => { services.AddHostedService<HostedService>(); })
+				.ConfigureLogging((_, logging) =>
 				{
 					logging.ClearProviders();
 					logging.AddConsole(options => options.IncludeScopes = true);

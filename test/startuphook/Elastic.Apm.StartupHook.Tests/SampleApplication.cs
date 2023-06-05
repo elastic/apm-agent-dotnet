@@ -11,7 +11,6 @@ using System.IO.Compression;
 using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Elastic.Apm.Tests.Utilities;
 using ProcNet;
 
 namespace Elastic.Apm.StartupHook.Tests

@@ -6,7 +6,7 @@ namespace OpenTelemetrySample
 	internal class Program
 	{
 		// ReSharper disable once ArrangeTypeMemberModifiers
-		private static void Main(string[] args)
+		private static void Main()
 		{
 			Agent.Setup(new AgentComponents());
 			OTSamples.Sample1();

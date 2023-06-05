@@ -8,7 +8,6 @@
 // </copyright>
 
 using System;
-using System.Reflection.Emit;
 using System.Threading.Tasks;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
@@ -33,10 +32,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 
 		public override TReturn SetContinuation(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state)
 		{
-			if (_continuation is null)
-			{
-				return returnValue;
-			}
+			if (_continuation is null) return returnValue;
 
 			if (exception != null)
 			{

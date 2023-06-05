@@ -86,9 +86,11 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 		service.Runtime = new() { Name = MetaData.FunctionsWorkerRuntime, Version = runtimeVersion };
 		service.Node ??= new Node();
 		if (!string.IsNullOrEmpty(Agent.Config.ServiceNodeName))
+		{
 			Logger.Warning()
 				?.Log(
 					$"The configured {ConfigurationOption.ServiceNodeName.ToEnvironmentVariable()} value '{Agent.Config.ServiceNodeName}' will be overwritten with '{MetaData.WebsiteInstanceId}'");
+		}
 		service.Node.ConfiguredName = MetaData.WebsiteInstanceId;
 	}
 
