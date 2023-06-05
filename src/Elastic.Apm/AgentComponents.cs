@@ -6,9 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -22,6 +19,9 @@ using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 #if NET5_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
+#endif
+#if NETFRAMEWORK
+using Elastic.Apm.Config.Net4FullFramework;
 #endif
 
 namespace Elastic.Apm
@@ -49,8 +49,15 @@ namespace Elastic.Apm
 		{
 			try
 			{
+#if NETFRAMEWORK
+				var tempLogger = logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
+				ConfigurationReader = configurationReader
+					?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(tempLogger)
+					?? new AppSettingsConfiguration(tempLogger);
+#else
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfiguration(tempLogger);
+#endif
 				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
