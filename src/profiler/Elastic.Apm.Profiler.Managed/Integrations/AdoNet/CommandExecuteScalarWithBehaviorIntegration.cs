@@ -21,7 +21,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	/// object [Command].ExecuteScalar(CommandBehavior)
 	/// </summary>
 	[InstrumentMySqlAttribute(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentNpgsql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentOracleManagedDataAccess(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
 		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,

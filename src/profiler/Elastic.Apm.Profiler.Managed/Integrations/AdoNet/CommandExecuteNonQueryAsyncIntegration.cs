@@ -65,4 +65,4 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 		}
 	}
 }
-`
+
