@@ -370,12 +370,14 @@
       type: Npgsql.NpgsqlCommand
       method: ExecuteNonQuery
       signature_types:
-      - System.Int32
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Boolean
+      - System.Threading.CancellationToken
       minimum_version: 4.0.0
       maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
-      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
       action: CallTargetModification
   - target:
       assembly: Npgsql
@@ -383,12 +385,11 @@
       method: ExecuteNonQuery
       signature_types:
       - System.Int32
-      - System.Data.CommandBehavior
       minimum_version: 4.0.0
       maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
-      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
       action: CallTargetModification
   - target:
       assembly: Npgsql
