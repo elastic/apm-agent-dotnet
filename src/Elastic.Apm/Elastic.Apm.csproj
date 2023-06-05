@@ -30,6 +30,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.Docker.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.FullFramework.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests.MockApmServer" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Elasticsearch" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />

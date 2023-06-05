@@ -2,26 +2,26 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 #if NETFRAMEWORK
-using System;
-using System.Collections.Generic;
 using System.Configuration;
 using Elastic.Apm.Config;
 using Elastic.Apm.Config.Net4FullFramework;
-using FluentAssertions;
 using Elastic.Apm.Logging;
+using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigurationOption;
 using static Elastic.Apm.Config.Net4FullFramework.FullFrameworkDefaultImplementations;
 using Environment = System.Environment;
 using LogLevel = Elastic.Apm.Logging.LogLevel;
 
-namespace Elastic.Apm.Tests.Config
+namespace Elastic.Apm.FullFramework.Tests
 {
+	// Referenced later by string
+	// ReSharper disable once UnusedType.Global
 	internal class ConfigTestReader : FallbackToEnvironmentConfigurationBase
 	{
 		private static readonly ConfigurationDefaults ConfigurationDefaults = new() { DebugName = nameof(ConfigTestReader) };
 
-		public ConfigTestReader(IApmLogger logger = null)
+		public ConfigTestReader(IApmLogger? logger = null)
 			: base(logger, ConfigurationDefaults, new AppSettingsConfigurationKeyValueProvider(logger)) { }
 	}
 
