@@ -37,6 +37,6 @@ namespace Elastic.Apm.Specification
 		/// <summary>
 		/// The max length that the property value can have
 		/// </summary>
-		public int? MaxLength { get; set;  }
+		public int? MaxLength { get; set; }
 	}
 }

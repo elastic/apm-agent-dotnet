@@ -62,7 +62,8 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 			if (!string.IsNullOrWhiteSpace(soapActionWithNamespace))
 			{
 				var indexPosition = soapActionWithNamespace.LastIndexOf(@"/", StringComparison.InvariantCulture);
-				if (indexPosition != -1) return soapActionWithNamespace.Substring(indexPosition + 1).TrimEnd('\"');
+				if (indexPosition != -1)
+					return soapActionWithNamespace.Substring(indexPosition + 1).TrimEnd('\"');
 			}
 			return null;
 		}

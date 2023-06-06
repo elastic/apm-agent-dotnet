@@ -34,7 +34,8 @@ namespace Elastic.Apm.Elasticsearch
 
 		private void OnResult(string @event, IApiCallDetails response)
 		{
-			if (!TryGetCurrentElasticsearchSpan(out var span)) return;
+			if (!TryGetCurrentElasticsearchSpan(out var span))
+				return;
 
 			if (response != null)
 			{
@@ -64,7 +65,8 @@ namespace Elastic.Apm.Elasticsearch
 			//make sure db exists
 			var db = span.Context.Db ?? (span.Context.Db = new Database
 			{
-				Instance = response.Uri?.GetLeftPart(UriPartial.Authority), Type = Database.TypeElasticsearch
+				Instance = response.Uri?.GetLeftPart(UriPartial.Authority),
+				Type = Database.TypeElasticsearch
 			});
 
 			db.Statement = response.DebugInformation;
@@ -72,7 +74,8 @@ namespace Elastic.Apm.Elasticsearch
 
 		private static void RegisterError(ISpan span, IApiCallDetails response)
 		{
-			if (response.Success) return;
+			if (response.Success)
+				return;
 
 			var exception = response.OriginalException ?? response.AuditTrail.FirstOrDefault(a => a.Exception != null)?.Exception;
 			var f = PipelineFailure.Unexpected;
@@ -112,12 +115,15 @@ namespace Elastic.Apm.Elasticsearch
 				}
 			}
 
-			if (exception == null && !causeOnServer) return;
-			if (causeOnServer && string.IsNullOrEmpty(message)) return;
+			if (exception == null && !causeOnServer)
+				return;
+			if (causeOnServer && string.IsNullOrEmpty(message))
+				return;
 
 			if (causeOnServer)
 				span.CaptureError(message, culprit, stackFrames);
-			else span.CaptureException(exception);
+			else
+				span.CaptureException(exception);
 		}
 
 		private void OnRequestData(string @event, RequestData requestData)

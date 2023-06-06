@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.Metrics
 {
@@ -39,17 +39,22 @@ namespace Elastic.Apm.Metrics
 
 		public bool Equals(TransactionInfo other)
 		{
-			if (ReferenceEquals(null, other)) return false;
-			if (ReferenceEquals(this, other)) return true;
+			if (ReferenceEquals(null, other))
+				return false;
+			if (ReferenceEquals(this, other))
+				return true;
 
 			return Name == other.Name && Type == other.Type;
 		}
 
 		public override bool Equals(object obj)
 		{
-			if (ReferenceEquals(null, obj)) return false;
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
+			if (ReferenceEquals(null, obj))
+				return false;
+			if (ReferenceEquals(this, obj))
+				return true;
+			if (obj.GetType() != GetType())
+				return false;
 
 			return Equals((TransactionInfo)obj);
 		}
@@ -76,17 +81,22 @@ namespace Elastic.Apm.Metrics
 
 		public bool Equals(SpanInfo other)
 		{
-			if (ReferenceEquals(null, other)) return false;
-			if (ReferenceEquals(this, other)) return true;
+			if (ReferenceEquals(null, other))
+				return false;
+			if (ReferenceEquals(this, other))
+				return true;
 
 			return Type == other.Type && SubType == other.SubType;
 		}
 
 		public override bool Equals(object obj)
 		{
-			if (ReferenceEquals(null, obj)) return false;
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
+			if (ReferenceEquals(null, obj))
+				return false;
+			if (ReferenceEquals(this, obj))
+				return true;
+			if (obj.GetType() != GetType())
+				return false;
 
 			return Equals((SpanInfo)obj);
 		}

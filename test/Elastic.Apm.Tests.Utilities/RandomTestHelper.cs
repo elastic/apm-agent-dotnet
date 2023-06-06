@@ -33,11 +33,13 @@ namespace Elastic.Apm.Tests.Utilities
 
 		private static (int, string) GetSeed(int? seedArg, ITestOutputHelper xUnitOutputHelper)
 		{
-			if (seedArg.HasValue) return (seedArg.Value, "passed as argument");
+			if (seedArg.HasValue)
+				return (seedArg.Value, "passed as argument");
 
 			var config = TestingConfig.ReadFromFromEnvVars(xUnitOutputHelper);
 			// ReSharper disable once ConvertIfStatementToReturnStatement
-			if (config.RandomSeed.HasValue) return (config.RandomSeed.Value, "configured via environment variables");
+			if (config.RandomSeed.HasValue)
+				return (config.RandomSeed.Value, "configured via environment variables");
 
 			return (new Random().Next(), "randomly generated");
 		}

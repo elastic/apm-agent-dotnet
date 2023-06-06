@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -208,7 +208,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 		private static FieldInfo CreateIDuckTypeImplementation(TypeBuilder proxyTypeBuilder, Type targetType)
 		{
 			var instanceType = targetType;
-			if (!UseDirectAccessTo(proxyTypeBuilder, targetType)) instanceType = typeof(object);
+			if (!UseDirectAccessTo(proxyTypeBuilder, targetType))
+				instanceType = typeof(object);
 
 			var instanceField = proxyTypeBuilder.DefineField("_currentInstance", instanceType, FieldAttributes.Private | FieldAttributes.InitOnly);
 
@@ -221,7 +222,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			var il = getPropInstance.GetILGenerator();
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldfld, instanceField);
-			if (instanceType.IsValueType) il.Emit(OpCodes.Box, instanceType);
+			if (instanceType.IsValueType)
+				il.Emit(OpCodes.Box, instanceType);
 
 			il.Emit(OpCodes.Ret);
 			propInstance.SetGetMethod(getPropInstance);
@@ -249,7 +251,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			var implementedInterfaces = proxyDefinitionType.GetInterfaces();
 			foreach (var imInterface in implementedInterfaces)
 			{
-				if (imInterface == typeof(IDuckType)) continue;
+				if (imInterface == typeof(IDuckType))
+					continue;
 
 				var newProps = imInterface.GetProperties().Where(p => selectedProperties.All(i => i.Name != p.Name));
 				selectedProperties.AddRange(newProps);
@@ -263,7 +266,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				{
 					if (prop.CanRead && (prop.GetMethod.IsAbstract || prop.GetMethod.IsVirtual))
 						yield return prop;
-					else if (prop.CanWrite && (prop.SetMethod.IsAbstract || prop.SetMethod.IsVirtual)) yield return prop;
+					else if (prop.CanWrite && (prop.SetMethod.IsAbstract || prop.SetMethod.IsVirtual))
+						yield return prop;
 				}
 			}
 		}
@@ -276,12 +280,14 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			foreach (var proxyProperty in proxyTypeProperties)
 			{
 				// Ignore the properties marked with `DuckIgnore` attribute
-				if (proxyProperty.GetCustomAttribute<DuckIgnoreAttribute>(true) is not null) continue;
+				if (proxyProperty.GetCustomAttribute<DuckIgnoreAttribute>(true) is not null)
+					continue;
 
 				PropertyBuilder propertyBuilder = null;
 
 				// If the property is abstract or interface we make sure that we have the property defined in the new class
-				if ((proxyProperty.CanRead && proxyProperty.GetMethod.IsAbstract) || (proxyProperty.CanWrite && proxyProperty.SetMethod.IsAbstract)) propertyBuilder = proxyTypeBuilder.DefineProperty(proxyProperty.Name, PropertyAttributes.None, proxyProperty.PropertyType, null);
+				if ((proxyProperty.CanRead && proxyProperty.GetMethod.IsAbstract) || (proxyProperty.CanWrite && proxyProperty.SetMethod.IsAbstract))
+					propertyBuilder = proxyTypeBuilder.DefineProperty(proxyProperty.Name, PropertyAttributes.None, proxyProperty.PropertyType, null);
 
 				var duckAttribute = proxyProperty.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
 				duckAttribute.Name ??= proxyProperty.Name;
@@ -302,7 +308,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 								proxyProperty.GetIndexParameters().Select(i => i.ParameterType).ToArray());
 						}
 
-						if (targetProperty is null) break;
+						if (targetProperty is null)
+							break;
 
 						propertyBuilder ??=
 							proxyTypeBuilder.DefineProperty(proxyProperty.Name, PropertyAttributes.None, proxyProperty.PropertyType, null);
@@ -310,7 +317,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 						if (proxyProperty.CanRead)
 						{
 							// Check if the target property can be read
-							if (!targetProperty.CanRead) DuckTypePropertyCantBeReadException.Throw(targetProperty);
+							if (!targetProperty.CanRead)
+								DuckTypePropertyCantBeReadException.Throw(targetProperty);
 
 							propertyBuilder.SetGetMethod(GetPropertyGetMethod(proxyTypeBuilder, targetType, proxyProperty, targetProperty,
 								instanceField));
@@ -319,10 +327,12 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 						if (proxyProperty.CanWrite)
 						{
 							// Check if the target property can be written
-							if (!targetProperty.CanWrite) DuckTypePropertyCantBeWrittenException.Throw(targetProperty);
+							if (!targetProperty.CanWrite)
+								DuckTypePropertyCantBeWrittenException.Throw(targetProperty);
 
 							// Check if the target property declaring type is an struct (structs modification is not supported)
-							if (targetProperty.DeclaringType.IsValueType) DuckTypeStructMembersCannotBeChangedException.Throw(targetProperty.DeclaringType);
+							if (targetProperty.DeclaringType.IsValueType)
+								DuckTypeStructMembersCannotBeChangedException.Throw(targetProperty.DeclaringType);
 
 							propertyBuilder.SetSetMethod(GetPropertySetMethod(proxyTypeBuilder, targetType, proxyProperty, targetProperty,
 								instanceField));
@@ -332,20 +342,24 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 					case DuckKind.Field:
 						var targetField = targetType.GetField(duckAttribute.Name, duckAttribute.BindingFlags);
-						if (targetField is null) break;
+						if (targetField is null)
+							break;
 
 						propertyBuilder ??=
 							proxyTypeBuilder.DefineProperty(proxyProperty.Name, PropertyAttributes.None, proxyProperty.PropertyType, null);
 
-						if (proxyProperty.CanRead) propertyBuilder.SetGetMethod(GetFieldGetMethod(proxyTypeBuilder, targetType, proxyProperty, targetField, instanceField));
+						if (proxyProperty.CanRead)
+							propertyBuilder.SetGetMethod(GetFieldGetMethod(proxyTypeBuilder, targetType, proxyProperty, targetField, instanceField));
 
 						if (proxyProperty.CanWrite)
 						{
 							// Check if the target field is marked as InitOnly (readonly) and throw an exception in that case
-							if ((targetField.Attributes & FieldAttributes.InitOnly) != 0) DuckTypeFieldIsReadonlyException.Throw(targetField);
+							if ((targetField.Attributes & FieldAttributes.InitOnly) != 0)
+								DuckTypeFieldIsReadonlyException.Throw(targetField);
 
 							// Check if the target field declaring type is an struct (structs modification is not supported)
-							if (targetField.DeclaringType.IsValueType) DuckTypeStructMembersCannotBeChangedException.Throw(targetField.DeclaringType);
+							if (targetField.DeclaringType.IsValueType)
+								DuckTypeStructMembersCannotBeChangedException.Throw(targetField.DeclaringType);
 
 							propertyBuilder.SetSetMethod(GetFieldSetMethod(proxyTypeBuilder, targetType, proxyProperty, targetField, instanceField));
 						}
@@ -353,11 +367,14 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 						break;
 				}
 
-				if (propertyBuilder is null) continue;
+				if (propertyBuilder is null)
+					continue;
 
-				if (proxyProperty.CanRead && propertyBuilder.GetMethod is null) DuckTypePropertyOrFieldNotFoundException.Throw(proxyProperty.Name, duckAttribute.Name);
+				if (proxyProperty.CanRead && propertyBuilder.GetMethod is null)
+					DuckTypePropertyOrFieldNotFoundException.Throw(proxyProperty.Name, duckAttribute.Name);
 
-				if (proxyProperty.CanWrite && propertyBuilder.SetMethod is null) DuckTypePropertyOrFieldNotFoundException.Throw(proxyProperty.Name, duckAttribute.Name);
+				if (proxyProperty.CanWrite && propertyBuilder.SetMethod is null)
+					DuckTypePropertyOrFieldNotFoundException.Throw(proxyProperty.Name, duckAttribute.Name);
 			}
 		}
 
@@ -369,10 +386,12 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			foreach (var proxyFieldInfo in proxyDefinitionType.GetFields())
 			{
 				// Skip readonly fields
-				if ((proxyFieldInfo.Attributes & FieldAttributes.InitOnly) != 0) continue;
+				if ((proxyFieldInfo.Attributes & FieldAttributes.InitOnly) != 0)
+					continue;
 
 				// Ignore the fields marked with `DuckIgnore` attribute
-				if (proxyFieldInfo.GetCustomAttribute<DuckIgnoreAttribute>(true) is not null) continue;
+				if (proxyFieldInfo.GetCustomAttribute<DuckIgnoreAttribute>(true) is not null)
+					continue;
 
 				PropertyBuilder propertyBuilder = null;
 
@@ -383,10 +402,12 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				{
 					case DuckKind.Property:
 						var targetProperty = targetType.GetProperty(duckAttribute.Name, duckAttribute.BindingFlags);
-						if (targetProperty is null) break;
+						if (targetProperty is null)
+							break;
 
 						// Check if the target property can be read
-						if (!targetProperty.CanRead) DuckTypePropertyCantBeReadException.Throw(targetProperty);
+						if (!targetProperty.CanRead)
+							DuckTypePropertyCantBeReadException.Throw(targetProperty);
 
 						propertyBuilder =
 							proxyTypeBuilder.DefineProperty(proxyFieldInfo.Name, PropertyAttributes.None, proxyFieldInfo.FieldType, null);
@@ -396,7 +417,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 					case DuckKind.Field:
 						var targetField = targetType.GetField(duckAttribute.Name, duckAttribute.BindingFlags);
-						if (targetField is null) break;
+						if (targetField is null)
+							break;
 
 						propertyBuilder =
 							proxyTypeBuilder.DefineProperty(proxyFieldInfo.Name, PropertyAttributes.None, proxyFieldInfo.FieldType, null);
@@ -404,7 +426,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 						break;
 				}
 
-				if (propertyBuilder is null) DuckTypePropertyOrFieldNotFoundException.Throw(proxyFieldInfo.Name, duckAttribute.Name);
+				if (propertyBuilder is null)
+					DuckTypePropertyOrFieldNotFoundException.Throw(proxyFieldInfo.Name, duckAttribute.Name);
 			}
 		}
 
@@ -430,7 +453,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 			il.Emit(OpCodes.Newobj, ctor);
 
-			if (proxyType.IsValueType) il.Emit(OpCodes.Box, proxyType);
+			if (proxyType.IsValueType)
+				il.Emit(OpCodes.Box, proxyType);
 
 			il.Emit(OpCodes.Ret);
 			var delegateType = typeof(CreateProxyInstance<>).MakeGenericType(proxyDefinitionType);
@@ -474,10 +498,12 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			foreach (var finfo in proxyDefinitionType.GetFields())
 			{
 				// Skip readonly fields
-				if ((finfo.Attributes & FieldAttributes.InitOnly) != 0) continue;
+				if ((finfo.Attributes & FieldAttributes.InitOnly) != 0)
+					continue;
 
 				// Ignore the fields marked with `DuckIgnore` attribute
-				if (finfo.GetCustomAttribute<DuckIgnoreAttribute>(true) is not null) continue;
+				if (finfo.GetCustomAttribute<DuckIgnoreAttribute>(true) is not null)
+					continue;
 
 				var prop = proxyType.GetProperty(finfo.Name);
 				il.Emit(OpCodes.Ldloca_S, structLocal.LocalIndex);

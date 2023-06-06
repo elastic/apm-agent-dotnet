@@ -73,7 +73,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender1)))
 			{
 				var transaction =
-					agent.Tracer.StartTransaction(TestTransaction, UnitTest,  BuildDistributedTracingData(traceId, parentId, traceFlags));
+					agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId, traceFlags));
 				transaction.End();
 			}
 
@@ -89,13 +89,13 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void DistributedTracingDataWithSimpleAction_Valid() =>
 			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, () => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
+				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public void DistributedTracingDataWithSimpleAction_Invalid(string traceId, string parentId, string traceFlags) =>
 			AssertInvalidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, () => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
+				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 
 		/// <summary>
@@ -106,7 +106,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void DistributedTracingDataWitSimpleActionWithParameter_Valid() =>
 			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, _ => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
+				UnitTest, _ => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidDistributedTracingDataData))]
@@ -261,7 +261,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+				transactionCreator(agent);
 
 			payloadSender.FirstTransaction.TraceId.Should().Be(ValidTraceId);
 			payloadSender.FirstTransaction.ParentId.Should().Be(ValidParentId);
@@ -271,7 +272,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+				transactionCreator(agent);
 
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(traceId);
 			payloadSender.FirstTransaction.ParentId.Should().BeNullOrWhiteSpace();
@@ -281,7 +283,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) await transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+				await transactionCreator(agent);
 
 			payloadSender.FirstTransaction.TraceId.Should().Be(ValidTraceId);
 			payloadSender.FirstTransaction.ParentId.Should().Be(ValidParentId);
@@ -291,7 +294,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) await transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+				await transactionCreator(agent);
 
 			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(traceId);

@@ -37,7 +37,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 		private readonly PropertyFetcherCollection _exceptionProperty = new PropertyFetcherCollection { "Exception", "Messages" };
 
-	private readonly Framework _framework;
+		private readonly Framework _framework;
 
 		public override string Name { get; } = "Microsoft.Azure.ServiceBus";
 
@@ -337,7 +337,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 							if (property.Key.Equals("Diagnostic-Id", StringComparison.InvariantCultureIgnoreCase))
 							{
 								var parsedTraceParent = DistributedTracingData.TryDeserializeFromString(property.Value.ToString());
-								if(parsedTraceParent != null)
+								if (parsedTraceParent != null)
 									spanLinks.Add(new SpanLink(parsedTraceParent.ParentId, parsedTraceParent.TraceId));
 							}
 						}
@@ -347,9 +347,11 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 			switch (segment)
 			{
-				case Model.Transaction t: t.InsertSpanLinkInternal(spanLinks);
+				case Model.Transaction t:
+					t.InsertSpanLinkInternal(spanLinks);
 					break;
-				case Model.Span s: s.InsertSpanLinkInternal(spanLinks);
+				case Model.Span s:
+					s.InsertSpanLinkInternal(spanLinks);
 					break;
 			}
 		}

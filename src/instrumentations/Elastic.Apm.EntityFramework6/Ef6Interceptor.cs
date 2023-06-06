@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -62,7 +62,8 @@ namespace Elastic.Apm.EntityFramework6
 				return null;
 
 			// Make sure DB spans were not already captured
-			if (!(Agent.Tracer.CurrentSpan is Span span)) return impl;
+			if (!(Agent.Tracer.CurrentSpan is Span span))
+				return impl;
 
 			return span.InstrumentationFlag == InstrumentationFlag.SqlClient ? null : impl;
 		}

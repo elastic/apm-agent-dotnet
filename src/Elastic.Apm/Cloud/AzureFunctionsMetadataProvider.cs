@@ -56,13 +56,14 @@ namespace Elastic.Apm.Cloud
 			var websiteInstanceId = helper.GetEnvironmentVariable(AzureEnvironmentVariables.WebsiteInstanceId);
 
 			if (helper.NullOrEmptyVariable(AzureEnvironmentVariables.FunctionsExtensionVersion,
-				    functionsExtensionVersion) ||
-			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteOwnerName, websiteOwnerName) ||
-			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteSiteName, websiteSiteName))
+					functionsExtensionVersion) ||
+				helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteOwnerName, websiteOwnerName) ||
+				helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteSiteName, websiteSiteName))
 				return new AzureFunctionsMetaData { IsValid = false };
 
 			var tokens = helper.TokenizeWebSiteOwnerName(websiteOwnerName);
-			if (!tokens.HasValue) return new AzureFunctionsMetaData { IsValid = false };
+			if (!tokens.HasValue)
+				return new AzureFunctionsMetaData { IsValid = false };
 
 			if (string.IsNullOrEmpty(regionName))
 				regionName = tokens.Value.Region;

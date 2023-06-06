@@ -35,7 +35,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 			{
 				MultiThreadsTestUtils.TestOnThreads<object>(threadIndex =>
 				{
-					if (throwingThreadIndex == threadIndex) throw new DummyTestException(threadIndex.ToString());
+					if (throwingThreadIndex == threadIndex)
+						throw new DummyTestException(threadIndex.ToString());
 
 					return null;
 				});

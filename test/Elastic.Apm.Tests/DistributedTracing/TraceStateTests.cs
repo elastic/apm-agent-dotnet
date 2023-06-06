@@ -24,16 +24,16 @@ namespace Elastic.Apm.Tests.DistributedTracing
 		}
 
 		[Theory]
-		[InlineData(0,"one=two", null)]
-		[InlineData(7,"one=two", "one=two")]
-		[InlineData(20,"one=two_three=four", "one=two,three=four")] // no overflow
-		[InlineData(20,"one=two_three=four_five=six_seven=eight", "one=two,three=four")] // overflow after 'four'
-		[InlineData(20,"one=two,three=four_five=six,seven=eight", "one=two,three=four")] // overflow within 2cnd header
-		[InlineData(20,"one=two_three=four_five=six,seven=eight", "one=two,three=four")] // overflow within first header
-		[InlineData(20,"one=two_three=four,X,five=six_seven=eight,nine=ten", "one=two,three=four,X")] // empty entry kept as-is
-		[InlineData(20,"one=two_three=four,five=six,seven=eight_nine=ten", "one=two,three=four")] // multiple overflow values
-		[InlineData(18,"one=two_three=four,five=six,seven=eight_nine=ten", "one=two,three=four")] // cutoff on separator
-		[InlineData(17,"one=two_three=four,five=six,seven=eight_nine=ten,eleven-twelve", "one=two,nine=ten")] // just fits
+		[InlineData(0, "one=two", null)]
+		[InlineData(7, "one=two", "one=two")]
+		[InlineData(20, "one=two_three=four", "one=two,three=four")] // no overflow
+		[InlineData(20, "one=two_three=four_five=six_seven=eight", "one=two,three=four")] // overflow after 'four'
+		[InlineData(20, "one=two,three=four_five=six,seven=eight", "one=two,three=four")] // overflow within 2cnd header
+		[InlineData(20, "one=two_three=four_five=six,seven=eight", "one=two,three=four")] // overflow within first header
+		[InlineData(20, "one=two_three=four,X,five=six_seven=eight,nine=ten", "one=two,three=four,X")] // empty entry kept as-is
+		[InlineData(20, "one=two_three=four,five=six,seven=eight_nine=ten", "one=two,three=four")] // multiple overflow values
+		[InlineData(18, "one=two_three=four,five=six,seven=eight_nine=ten", "one=two,three=four")] // cutoff on separator
+		[InlineData(17, "one=two_three=four,five=six,seven=eight_nine=ten,eleven-twelve", "one=two,nine=ten")] // just fits
 		public void Header_Should_Be_Limited_By_SizeLimit(int limit, string headers, string expected)
 		{
 			static string ReplaceSpaces(string s) => s?.Replace('X', ' ');

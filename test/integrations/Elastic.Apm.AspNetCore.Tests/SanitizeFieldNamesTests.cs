@@ -145,14 +145,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 				if (Environment.Version.Major < 7)
 				{
 					var newItem = new List<object>();
-					foreach (var item in testDataItem) newItem.Add(item);
+					foreach (var item in testDataItem)
+						newItem.Add(item);
 					newItem.Add(true);
 
 					retVal.Add(newItem.ToArray());
 				}
 				{
 					var newItem = new List<object>();
-					foreach (var item in testDataItem) newItem.Add(item);
+					foreach (var item in testDataItem)
+						newItem.Add(item);
 					newItem.Add(false);
 
 					retVal.Add(newItem.ToArray());
@@ -194,7 +196,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			CreateAgent(useOnlyDiagnosticSource, sanitizeFieldNames);
 
-			foreach (var header in headerNames) _client.DefaultRequestHeaders.Add(header, "123");
+			foreach (var header in headerNames)
+				_client.DefaultRequestHeaders.Add(header, "123");
 
 			await _client.GetAsync("/Home/SimplePage");
 

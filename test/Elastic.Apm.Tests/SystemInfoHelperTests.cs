@@ -68,7 +68,7 @@ public class SystemInfoHelperTests : IDisposable
 		public string PodId;
 	}
 
-// Remove warning about unused test parameter "name"
+	// Remove warning about unused test parameter "name"
 #pragma warning disable xUnit1026
 	[Theory]
 	[JsonFileData("./TestResources/json-specs/cgroup_parsing.json", typeof(CGroupTestData))]

@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using System.Web;
+using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework

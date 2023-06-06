@@ -121,7 +121,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		/// <summary>
 		/// logger that has a log level switch but does not implement <see cref="ILogLevelSwitchable"/>
 		/// </summary>
-		private class UnswitchableLogger: IApmLogger
+		private class UnswitchableLogger : IApmLogger
 		{
 			public LogLevelSwitch LogLevelSwitch { get; }
 

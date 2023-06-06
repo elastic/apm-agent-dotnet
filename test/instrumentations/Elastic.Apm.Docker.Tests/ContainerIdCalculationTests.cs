@@ -37,7 +37,8 @@ namespace Elastic.Apm.Docker.Tests
 			"b15a5bdedd2e7645c3be271364324321b908314e4c77857bbfd32a041148c07f")]
 		public void TestCGroupContent(string cGroupContent, string expectedContainerId)
 		{
-			if (!File.Exists("/proc/self/cgroup")) return; //only run in Docker - this check can be improved
+			if (!File.Exists("/proc/self/cgroup"))
+				return; //only run in Docker - this check can be improved
 
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, cGroupContent);
@@ -51,7 +52,8 @@ namespace Elastic.Apm.Docker.Tests
 		[Fact]
 		public void TestCGroupContentWithInvalidData()
 		{
-			if (!File.Exists("/proc/self/cgroup")) return; //only run in Docker - this check can be improved
+			if (!File.Exists("/proc/self/cgroup"))
+				return; //only run in Docker - this check can be improved
 
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, "asdf:invalid-dockerid:243543");

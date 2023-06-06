@@ -24,8 +24,8 @@ namespace Elastic.Apm.Feature.Tests
 			var mockPaylodSender = new MockPayloadSender();
 			_scenarioContext.Add("payloadSender", mockPaylodSender);
 			using (var agent = new ApmAgent(new TestAgentComponents(
-				       configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"),
-				       apmServerInfo: MockApmServerInfo.Version716, payloadSender: mockPaylodSender)))
+					   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"),
+					   apmServerInfo: MockApmServerInfo.Version716, payloadSender: mockPaylodSender)))
 				_scenarioContext.Add("agent", agent);
 		}
 
@@ -257,7 +257,8 @@ namespace Elastic.Apm.Feature.Tests
 
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
 
-			foreach (var item in attributes) (payloadSender.FirstSpan as Span).Otel.Attributes[item.Key].Should().Be(item.Value);
+			foreach (var item in attributes)
+				(payloadSender.FirstSpan as Span).Otel.Attributes[item.Key].Should().Be(item.Value);
 		}
 
 		[Then(@"Elastic bridged span destination resource is set to ""([^""]*)""")]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
@@ -41,7 +41,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 
 			await Agent.Tracer.CaptureTransaction("Send AzureServiceBus Single Message", "messaging", async () =>
 			{
-				 await sender.SendMessageAsync(new ServiceBusMessage($"test message - single")).ConfigureAwait(false);
+				await sender.SendMessageAsync(new ServiceBusMessage($"test message - single")).ConfigureAwait(false);
 			});
 
 			Console.WriteLine("Messages sent");
@@ -86,7 +86,8 @@ namespace Elastic.Apm.Azure.ServiceBus.Sample
 
 			await Agent.Tracer.CaptureTransaction("Send AzureServiceBus Messages", "messaging", async () =>
 			{
-				for (var i = 0; i < 10; i++) await sender.SendMessageAsync(new ServiceBusMessage($"test message {i}")).ConfigureAwait(false);
+				for (var i = 0; i < 10; i++)
+					await sender.SendMessageAsync(new ServiceBusMessage($"test message {i}")).ConfigureAwait(false);
 			});
 
 			Console.WriteLine("Messages sent");

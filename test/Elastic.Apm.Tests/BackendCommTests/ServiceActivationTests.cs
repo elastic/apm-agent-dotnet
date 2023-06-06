@@ -16,9 +16,9 @@ using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using RichardSzalay.MockHttp;
 using Xunit;
 using Xunit.Abstractions;
-using RichardSzalay.MockHttp;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {

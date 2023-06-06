@@ -106,14 +106,16 @@ namespace Elastic.Apm.Model
 			{
 				if (t == token)
 					return true;
-				if (t != Token.Comment) return false;
+				if (t != Token.Comment)
+					return false;
 			}
 			return false;
 		}
 
 		public Token Scan()
 		{
-			if (!HasNext()) return Token.Eof;
+			if (!HasNext())
+				return Token.Eof;
 
 			var c = Next();
 			while (char.IsWhiteSpace(c) || _scannerFilter.Skip(this, c))
@@ -126,7 +128,8 @@ namespace Elastic.Apm.Model
 			_start = _pos - 1;
 			if (c == '_' || char.IsLetter(c))
 				return ScanKeywordOrIdentifier(c != '_');
-			if (char.IsDigit(c)) return ScanNumericLiteral();
+			if (char.IsDigit(c))
+				return ScanNumericLiteral();
 
 			switch (c)
 			{
@@ -176,7 +179,8 @@ namespace Elastic.Apm.Model
 				case '.':
 					return Token.Period;
 				case '$':
-					if (!HasNext()) return Token.Other;
+					if (!HasNext())
+						return Token.Other;
 
 					var nextC = Peek();
 					if (char.IsDigit(nextC))
@@ -237,11 +241,13 @@ namespace Elastic.Apm.Model
 				var c = Peek();
 				if (char.IsDigit(c) || c == '_' || c == '$')
 					maybeKeyword = false;
-				else if (!char.IsLetter(c)) break;
+				else if (!char.IsLetter(c))
+					break;
 
 				Next();
 			}
-			if (!maybeKeyword) return Token.Ident;
+			if (!maybeKeyword)
+				return Token.Ident;
 
 			foreach (var token in TokenHelper.GetKeywordsByLength(TextLength()))
 			{
@@ -267,18 +273,21 @@ namespace Elastic.Apm.Model
 				switch (c)
 				{
 					case '.':
-						if (hasPeriod) return Token.Number;
+						if (hasPeriod)
+							return Token.Number;
 
 						Next();
 						hasPeriod = true;
 						break;
 					case 'e':
 					case 'E':
-						if (hasExponent) return Token.Number;
+						if (hasExponent)
+							return Token.Number;
 
 						Next();
 						hasExponent = true;
-						if (IsNextChar('+') || IsNextChar('-')) Next();
+						if (IsNextChar('+') || IsNextChar('-'))
+							Next();
 						break;
 					default:
 						return Token.Number;
@@ -370,7 +379,8 @@ namespace Elastic.Apm.Model
 						{
 							Next();
 							nesting--;
-							if (nesting == 0) return Token.Comment;
+							if (nesting == 0)
+								return Token.Comment;
 						}
 						break;
 				}

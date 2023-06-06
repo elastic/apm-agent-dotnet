@@ -2,17 +2,17 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System.Text;
 using System;
-using Elastic.Apm.Config;
 using System.Collections.Generic;
+using System.Text;
+using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Helpers
 {
 	internal interface IHttpFormAdapter : IEnumerable<(string Key, string Value)>
 	{
 		bool HasValue { get; }
-		int Count { get; } 
+		int Count { get; }
 	}
 
 	internal static class IHttpFormAdapterExtensions

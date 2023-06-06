@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -628,7 +628,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.SignalEndSpans();
 				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
-				if (isSampled) payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
+				if (isSampled)
+					payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
 				span.End();
 
 				payloadSender.SignalEndSpans();
@@ -672,7 +673,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.SignalEndSpans();
 				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
-				if (isSampled) payloadSender.FirstSpan.Duration.Should().Be(123456.789);
+				if (isSampled)
+					payloadSender.FirstSpan.Duration.Should().Be(123456.789);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.Duration = 987654.321;

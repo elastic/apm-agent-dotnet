@@ -405,7 +405,8 @@ namespace Elastic.Apm.Azure.ServiceBus
 					current = current.Parent;
 			}
 
-			if (current == null) return;
+			if (current == null)
+				return;
 
 
 			// The type of Activity.Links got change across versions.
@@ -439,7 +440,8 @@ namespace Elastic.Apm.Azure.ServiceBus
 					var spanLinks = new List<SpanLink>();
 
 					var iEnumerable = links as IEnumerable;
-					if (iEnumerable == null) return;
+					if (iEnumerable == null)
+						return;
 
 					foreach (var link in iEnumerable)
 					{

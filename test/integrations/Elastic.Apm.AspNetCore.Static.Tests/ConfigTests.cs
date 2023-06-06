@@ -43,14 +43,17 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 
 			using var localServer = LocalServer.Create("http://localhost:8200/", context =>
 			{
-				if (context.Request.HttpMethod != HttpMethod.Post.Method) return;
+				if (context.Request.HttpMethod != HttpMethod.Post.Method)
+					return;
 
 				var body = new StreamReader(context.Request.InputStream).ReadToEnd();
-				if (context.Request.HttpMethod.Equals(HttpMethod.Post.Method, StringComparison.OrdinalIgnoreCase)) return;
+				if (context.Request.HttpMethod.Equals(HttpMethod.Post.Method, StringComparison.OrdinalIgnoreCase))
+					return;
 
 				// In CI with parallel tests running we could have multiple tests running and some of them may send HTTP post to the default server url
 				// So we only make the test fail, when the request body contains the sample app's url
-				if (body.ToLower().Contains("starttransactionwithagentapi")) defaultServerUrlConnectionMade = true;
+				if (body.ToLower().Contains("starttransactionwithagentapi"))
+					defaultServerUrlConnectionMade = true;
 			});
 
 			var configReader = new ApmConfiguration(new ConfigurationBuilder()

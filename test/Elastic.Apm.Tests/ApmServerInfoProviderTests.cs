@@ -25,7 +25,7 @@ public class ApmServerInfoProviderTests
 			{
 				Content = new StringContent("{}", Encoding.UTF8)
 			}));
-		var httpClient =  BackendCommUtils.BuildHttpClient(logger, configReader, service, nameof(ApmServerInfoProviderTests), httpMessageHandler);
+		var httpClient = BackendCommUtils.BuildHttpClient(logger, configReader, service, nameof(ApmServerInfoProviderTests), httpMessageHandler);
 
 		var callbackWasCalled = false;
 		await ApmServerInfoProvider.FillApmServerInfo(null, logger, configReader, httpClient, ((status, _) =>

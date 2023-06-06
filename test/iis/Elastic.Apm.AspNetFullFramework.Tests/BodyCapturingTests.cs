@@ -2,15 +2,15 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.Helpers;
-using Elastic.Apm.Tests.Utilities;
-using FluentAssertions;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Elastic.Apm.Helpers;
+using Elastic.Apm.Tests.Utilities;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -56,7 +56,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var pathData = SampleAppUrlPaths.HomePage;
 			var textFragment = "just plain text ... ";
 			var sb = new StringBuilder();
-			for (var i = 0; i < RequestBodyStreamHelper.RequestBodyMaxLength; i++) sb.Append(textFragment);
+			for (var i = 0; i < RequestBodyStreamHelper.RequestBodyMaxLength; i++)
+				sb.Append(textFragment);
 			var content = new StringContent(sb.ToString(), Encoding.UTF8, "text/plain");
 
 			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode, httpContent: content);
@@ -156,7 +157,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				var data = $"just some test data in the file";
 				var bytes = Encoding.UTF8.GetBytes(data);
-				using (var stream = new FileStream(tempFile.Path, FileMode.OpenOrCreate, FileAccess.Write)) stream.Write(bytes);
+				using (var stream = new FileStream(tempFile.Path, FileMode.OpenOrCreate, FileAccess.Write))
+					stream.Write(bytes);
 				var content = new MultipartFormDataContent
 				{
 					{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }

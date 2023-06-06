@@ -88,7 +88,7 @@ namespace Elastic.Apm.Tests.Utilities.Terraform
 		public void Init()
 		{
 			using var process = CreateProcess("init", "-no-color");
-			RunProcess(process, _messageSink is null ? null: line => _messageSink.OnMessage(new DiagnosticMessage(line.Line)));
+			RunProcess(process, _messageSink is null ? null : line => _messageSink.OnMessage(new DiagnosticMessage(line.Line)));
 		}
 
 		/// <summary>
@@ -115,7 +115,7 @@ namespace Elastic.Apm.Tests.Utilities.Terraform
 			}
 
 			using var process = CreateProcess(args.ToArray());
-			RunProcess(process, _messageSink is null ? null: line => _messageSink.OnMessage(new DiagnosticMessage(line.Line)));
+			RunProcess(process, _messageSink is null ? null : line => _messageSink.OnMessage(new DiagnosticMessage(line.Line)));
 		}
 
 		/// <summary>
