@@ -16,7 +16,7 @@ namespace Elastic.Apm.Helpers
 		internal static Destination ExtractDestination(Uri url, IApmLogger logger)
 		{
 			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic ||
-			    url.HostNameType == UriHostNameType.Unknown)
+				url.HostNameType == UriHostNameType.Unknown)
 			{
 				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}")
 					.Debug()
@@ -29,7 +29,7 @@ namespace Elastic.Apm.Helpers
 
 			var host = url.Host;
 			if (url.HostNameType == UriHostNameType.IPv6 && host.Length > 2 && host[0] == '[' &&
-			    host[host.Length - 1] == ']')
+				host[host.Length - 1] == ']')
 				host = host.Substring(1, host.Length - 2);
 
 			return new Destination { Address = host, Port = url.Port == -1 ? null : url.Port };

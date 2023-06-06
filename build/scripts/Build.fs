@@ -144,6 +144,7 @@ module Build =
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
         
+        
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
         dotnet "build" (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
@@ -187,10 +188,19 @@ module Build =
         Cargo.Exec ["make"; "clean"]       
 
     /// Restores all packages for the solution
-    let Restore () =
+    let ToolRestore () =
         DotNet.Exec ["tool" ; "restore"]
+        
+    /// Restores all packages for the solution
+    let Restore () =
+        ToolRestore()
         DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
+        
+    let Format () =
+        ToolRestore()
+        //dotnet dotnet-format --exclude src/Elastic.Apm/Libraries/
+        DotNet.Exec ["dotnet-format"; "--check"; "--exclude"; "src/Elastic.Apm/Libraries/"]
             
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
         source.GetFiles()

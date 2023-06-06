@@ -1,4 +1,4 @@
-﻿// Based on .NET Tracer for Datadog APM by Datadog
+// Based on .NET Tracer for Datadog APM by Datadog
 // https://github.com/DataDog/dd-trace-dotnet
 // Licensed to Elasticsearch B.V under
 // one or more agreements.

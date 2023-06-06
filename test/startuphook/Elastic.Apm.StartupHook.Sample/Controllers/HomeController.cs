@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
+using Elastic.Apm.StartupHook.Sample.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Elastic.Apm.StartupHook.Sample.Models;
 
 namespace Elastic.Apm.StartupHook.Sample.Controllers
 {

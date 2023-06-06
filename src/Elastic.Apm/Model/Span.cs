@@ -127,7 +127,7 @@ namespace Elastic.Apm.Model
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
 		}
 
-// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
+		// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
 #pragma warning disable CS0618
 		// If the legacy setting (span_frames_min_duration) is present but the new
 		// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
@@ -137,9 +137,9 @@ namespace Elastic.Apm.Model
 			// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
 			const double tolerance = 0.00001;
 			return Math.Abs(Configuration.SpanFramesMinDurationInMilliseconds -
-			                ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds) > tolerance &&
-			       Math.Abs(Configuration.SpanStackTraceMinDurationInMilliseconds -
-			                ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds) < tolerance;
+							ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds) > tolerance &&
+				   Math.Abs(Configuration.SpanStackTraceMinDurationInMilliseconds -
+							ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds) < tolerance;
 		}
 
 		internal bool IsCaptureStackTraceOnStartEnabled()
@@ -160,12 +160,12 @@ namespace Elastic.Apm.Model
 				if (UseLegacyCaptureStackTraceSetting())
 				{
 					return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
-					       (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
-					        Configuration.SpanFramesMinDurationInMilliseconds < 0);
+						   (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
+							Configuration.SpanFramesMinDurationInMilliseconds < 0);
 				}
 
 				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
-				       Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
+					   Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
 			}
 			return false;
 		}
@@ -594,7 +594,8 @@ namespace Elastic.Apm.Model
 
 		private bool TryToCompressRegular(Span sibling)
 		{
-			if (!IsSameKind(sibling)) return false;
+			if (!IsSameKind(sibling))
+				return false;
 
 			if (Name == sibling.Name)
 			{
@@ -943,7 +944,8 @@ namespace Elastic.Apm.Model
 		/// <param name="startTimestamp"></param>
 		public void OnChildStart(long startTimestamp)
 		{
-			if (++_activeChildren == 1) _start = startTimestamp;
+			if (++_activeChildren == 1)
+				_start = startTimestamp;
 		}
 
 		/// <summary>
@@ -952,7 +954,8 @@ namespace Elastic.Apm.Model
 		/// <param name="endTimestamp"></param>
 		public void OnChildEnd(long endTimestamp)
 		{
-			if (--_activeChildren == 0) IncrementDuration(endTimestamp);
+			if (--_activeChildren == 0)
+				IncrementDuration(endTimestamp);
 		}
 
 		/// <summary>

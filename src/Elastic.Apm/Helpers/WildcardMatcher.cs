@@ -60,7 +60,8 @@ namespace Elastic.Apm.Helpers
 				ignoreCase = false;
 				matcher = matcher.Substring(CaseSensitivePrefix.Length);
 			}
-			else if (matcher.StartsWith(CaseInsensitivePrefix)) matcher = matcher.Substring(CaseInsensitivePrefix.Length);
+			else if (matcher.StartsWith(CaseInsensitivePrefix))
+				matcher = matcher.Substring(CaseInsensitivePrefix.Length);
 
 			var split = matcher.Split('*');
 
@@ -111,7 +112,8 @@ namespace Elastic.Apm.Helpers
 		/// <returns>The first matching <see cref="WildcardMatcher" />, or <code>null</code> if none match.</returns>
 		internal static WildcardMatcher AnyMatch(IReadOnlyCollection<WildcardMatcher> matchers, string firstPart, string secondPart)
 		{
-			if (matchers is null) return null;
+			if (matchers is null)
+				return null;
 
 			for (var i = 0; i < matchers.Count; i++)
 			{
@@ -135,7 +137,8 @@ namespace Elastic.Apm.Helpers
 		/// <returns></returns>
 		internal static int IndexOfIgnoreCase(string haystack1, string haystack2, string needle, bool ignoreCase, int start, int end)
 		{
-			if (start < 0) return -1;
+			if (start < 0)
+				return -1;
 
 			var totalHaystackLength = haystack1.Length + haystack2.Length;
 			if (needle.IsEmpty() || totalHaystackLength == 0)
@@ -149,7 +152,8 @@ namespace Elastic.Apm.Helpers
 			for (var i = start; i < end; i++)
 			{
 				// Early out, if possible.
-				if (i + needleLength > totalHaystackLength) return -1;
+				if (i + needleLength > totalHaystackLength)
+					return -1;
 
 				// Attempt to match substring starting at position i of haystack.
 				var j = 0;
@@ -160,14 +164,16 @@ namespace Elastic.Apm.Helpers
 						? char.ToLowerInvariant(CharAt(ii, haystack1, haystack2, haystack1Length))
 						: CharAt(ii, haystack1, haystack2, haystack1Length);
 					var c2 = ignoreCase ? char.ToLowerInvariant(needle.ElementAt(j)) : needle.ElementAt(j);
-					if (c != c2) break;
+					if (c != c2)
+						break;
 
 					j++;
 					ii++;
 				}
 				// Walked all the way to the end of the needle, return the start
 				// position that this was found.
-				if (j == needleLength) return i;
+				if (j == needleLength)
+					return i;
 			}
 
 			return -1;
@@ -199,7 +205,8 @@ namespace Elastic.Apm.Helpers
 				{
 					var matcher = _wildcardMatchers.ElementAt(i);
 					offset = matcher.IndexOf(s, offset);
-					if (offset == -1) return false;
+					if (offset == -1)
+						return false;
 
 					offset += matcher.Matcher.Length;
 				}
@@ -213,7 +220,8 @@ namespace Elastic.Apm.Helpers
 				{
 					var wildcardMatcher = _wildcardMatchers.ElementAt(i);
 					offset = wildcardMatcher.IndexOf(firstPart, secondPart, offset);
-					if (offset == -1) return false;
+					if (offset == -1)
+						return false;
 
 					offset += wildcardMatcher.Matcher.Length;
 				}
@@ -272,7 +280,8 @@ namespace Elastic.Apm.Helpers
 
 			public int IndexOf(string firstPart, string secondPart, int offset)
 			{
-				if (secondPart == null) secondPart = "";
+				if (secondPart == null)
+					secondPart = "";
 				var totalLength = firstPart.Length + secondPart.Length;
 				if (_wildcardAtEnd && _wildcardAtBeginning)
 					return IndexOfIgnoreCase(firstPart, secondPart, Matcher, _ignoreCase, offset, totalLength);

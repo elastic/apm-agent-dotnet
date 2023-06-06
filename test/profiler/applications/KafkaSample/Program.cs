@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -49,55 +49,55 @@ namespace KafkaSample
 		}
 
 		private static async Task ConsumeAndProduceMessages(string topic, ClientConfig config, int numberOfMessagesPerProducer = 10)
-        {
-            var commitPeriod = 3;
+		{
+			var commitPeriod = 3;
 			var cts = new CancellationTokenSource();
 
 			using var consumer1 = Consumer.Create(config, true, topic, "AutoCommitConsumer1");
 			using var consumer2 = Consumer.Create(config, false, topic, "ManualCommitConsumer2");
 
-            Console.WriteLine("Starting consumers...");
+			Console.WriteLine("Starting consumers...");
 
-            var consumeTask1 = Task.Run(() => consumer1.Consume(cts.Token));
-            var consumeTask2 = Task.Run(() => consumer2.ConsumeWithExplicitCommit(commitEveryXMessages: commitPeriod, cts.Token));
+			var consumeTask1 = Task.Run(() => consumer1.Consume(cts.Token));
+			var consumeTask2 = Task.Run(() => consumer2.ConsumeWithExplicitCommit(commitEveryXMessages: commitPeriod, cts.Token));
 
-            Console.WriteLine($"Producing messages");
+			Console.WriteLine($"Producing messages");
 
-            var messagesProduced = await ProduceMessages(topic, config, numberOfMessagesPerProducer);
+			var messagesProduced = await ProduceMessages(topic, config, numberOfMessagesPerProducer);
 
-            // Wait for all messages to be consumed
-            // This assumes that the topic starts empty, and nothing else is producing to the topic
-            var deadline = DateTime.UtcNow.AddSeconds(30);
-            while (true)
-            {
-                var syncCount = Volatile.Read(ref Consumer.TotalSyncMessages);
-                var asyncCount = Volatile.Read(ref Consumer.TotalAsyncMessages);
-                var tombstoneCount = Volatile.Read(ref Consumer.TotalTombstones);
+			// Wait for all messages to be consumed
+			// This assumes that the topic starts empty, and nothing else is producing to the topic
+			var deadline = DateTime.UtcNow.AddSeconds(30);
+			while (true)
+			{
+				var syncCount = Volatile.Read(ref Consumer.TotalSyncMessages);
+				var asyncCount = Volatile.Read(ref Consumer.TotalAsyncMessages);
+				var tombstoneCount = Volatile.Read(ref Consumer.TotalTombstones);
 
-                if (syncCount >= messagesProduced.SyncMessages
-                 && asyncCount >= messagesProduced.AsyncMessages
-                 && tombstoneCount >= messagesProduced.TombstoneMessages)
-                {
-                    Console.WriteLine($"All messages produced and consumed");
-                    break;
-                }
+				if (syncCount >= messagesProduced.SyncMessages
+				 && asyncCount >= messagesProduced.AsyncMessages
+				 && tombstoneCount >= messagesProduced.TombstoneMessages)
+				{
+					Console.WriteLine($"All messages produced and consumed");
+					break;
+				}
 
-                if (DateTime.UtcNow > deadline)
-                {
-                    Console.WriteLine($"Exiting consumer: did not consume all messages syncCount {syncCount}, asyncCount {asyncCount}");
-                    break;
-                }
+				if (DateTime.UtcNow > deadline)
+				{
+					Console.WriteLine($"Exiting consumer: did not consume all messages syncCount {syncCount}, asyncCount {asyncCount}");
+					break;
+				}
 
-                await Task.Delay(1000);
-            }
+				await Task.Delay(1000);
+			}
 
-            cts.Cancel();
-            Console.WriteLine($"Waiting for graceful exit...");
+			cts.Cancel();
+			Console.WriteLine($"Waiting for graceful exit...");
 
-            await Task.WhenAny(
-                Task.WhenAll(consumeTask1, consumeTask2),
-                Task.Delay(TimeSpan.FromSeconds(5)));
-        }
+			await Task.WhenAny(
+				Task.WhenAll(consumeTask1, consumeTask2),
+				Task.Delay(TimeSpan.FromSeconds(5)));
+		}
 
 
 		private static async Task ProduceMessagesInvalidTopic(ClientConfig config)
@@ -116,32 +116,32 @@ namespace KafkaSample
 			}
 		}
 
-        private static async Task<MessagesProduced> ProduceMessages(string topic, ClientConfig config, int numberOfMessagesPerProducer)
-        {
+		private static async Task<MessagesProduced> ProduceMessages(string topic, ClientConfig config, int numberOfMessagesPerProducer)
+		{
 			// Send valid messages
-            Producer.Produce(topic, numberOfMessagesPerProducer, config, false, false);
-            Producer.Produce(topic, numberOfMessagesPerProducer, config, true, false);
-            await Producer.ProduceAsync(topic, numberOfMessagesPerProducer, config, false);
+			Producer.Produce(topic, numberOfMessagesPerProducer, config, false, false);
+			Producer.Produce(topic, numberOfMessagesPerProducer, config, true, false);
+			await Producer.ProduceAsync(topic, numberOfMessagesPerProducer, config, false);
 
-            // Send tombstone messages
-            Producer.Produce(topic, numberOfMessagesPerProducer, config, false, true);
-            Producer.Produce(topic, numberOfMessagesPerProducer, config, true, true);
-            await Producer.ProduceAsync(topic, numberOfMessagesPerProducer, config, true);
+			// Send tombstone messages
+			Producer.Produce(topic, numberOfMessagesPerProducer, config, false, true);
+			Producer.Produce(topic, numberOfMessagesPerProducer, config, true, true);
+			await Producer.ProduceAsync(topic, numberOfMessagesPerProducer, config, true);
 
-            return new MessagesProduced
-            {
-                SyncMessages = numberOfMessagesPerProducer * 2,
-                AsyncMessages = numberOfMessagesPerProducer * 1,
-                TombstoneMessages = numberOfMessagesPerProducer * 3,
-            };
-        }
+			return new MessagesProduced
+			{
+				SyncMessages = numberOfMessagesPerProducer * 2,
+				AsyncMessages = numberOfMessagesPerProducer * 1,
+				TombstoneMessages = numberOfMessagesPerProducer * 3,
+			};
+		}
 
-        private struct MessagesProduced
-        {
-            public int SyncMessages;
-            public int AsyncMessages;
-            public int TombstoneMessages;
-        }
+		private struct MessagesProduced
+		{
+			public int SyncMessages;
+			public int AsyncMessages;
+			public int TombstoneMessages;
+		}
 
 		private static async Task CreateTopic(ClientConfig config, string topic)
 		{

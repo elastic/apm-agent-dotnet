@@ -16,7 +16,7 @@ namespace Elastic.Apm.Tests
 {
 	public class WildcardMatcherTests
 	{
-// Remove warning about unused test parameter "testCaseName"
+		// Remove warning about unused test parameter "testCaseName"
 #pragma warning disable xUnit1026
 		[Theory]
 		[JsonFileData("./TestResources/json-specs/wildcard_matcher_tests.json")]

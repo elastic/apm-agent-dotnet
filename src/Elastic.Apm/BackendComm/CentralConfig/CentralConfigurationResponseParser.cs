@@ -36,7 +36,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			var waitInfo = ExtractWaitInfo(httpResponse);
 			try
 			{
-				if (!InterpretResponseStatusCode(httpResponse, waitInfo)) return (null, waitInfo);
+				if (!InterpretResponseStatusCode(httpResponse, waitInfo))
+					return (null, waitInfo);
 
 				if (httpResponse?.Headers?.ETag == null)
 					throw new CentralConfigurationFetcher.FailedToFetchConfigException("Response from APM Server doesn't have ETag header", waitInfo);
@@ -98,7 +99,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private bool InterpretResponseStatusCode(HttpResponseMessage httpResponse, CentralConfigurationFetcher.WaitInfoS waitInfo)
 		{
-			if (httpResponse.IsSuccessStatusCode) return true;
+			if (httpResponse.IsSuccessStatusCode)
+				return true;
 
 			var severity = LogLevel.Error;
 			var statusAsString = $"HTTP status code is {httpResponse.ReasonPhrase} ({(int)httpResponse.StatusCode})";

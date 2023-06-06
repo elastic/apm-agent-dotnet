@@ -54,7 +54,7 @@ namespace Elastic.Apm.AspNetCore
 					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
 					transaction.CollectRequestBody(true, new AspNetCoreHttpRequest(context.Request), _logger);
 
-				if(transaction != null)
+				if (transaction != null)
 					WebRequestTransactionCreator.StopTransaction(transaction, context, _logger);
 				else
 					createdTransaction?.End();

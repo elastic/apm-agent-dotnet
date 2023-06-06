@@ -9,8 +9,8 @@ using TechTalk.SpecFlow;
 
 namespace Elastic.Apm.Feature.Tests
 {
-    [Binding]
-    public class APMServerAuthenticationWithAPIKeyAndSecretTokenStepDefinitions
+	[Binding]
+	public class APMServerAuthenticationWithAPIKeyAndSecretTokenStepDefinitions
 	{
 		private readonly ApiKeyFeatureContext _apiKeyFeatureContext;
 

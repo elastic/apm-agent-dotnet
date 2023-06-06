@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -256,19 +256,24 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 			duckInterface.Add("K", "V");
 
 			Assert.True(duckInterface.ContainsKey("K"));
-			if (duckInterface.ContainsKey("K")) Assert.True(duckInterface.Remove("K"));
+			if (duckInterface.ContainsKey("K"))
+				Assert.True(duckInterface.Remove("K"));
 
-			if (duckInterface.TryGetValue("Key01", out var value)) Assert.Equal("Value01", value);
+			if (duckInterface.TryGetValue("Key01", out var value))
+				Assert.Equal("Value01", value);
 
 			Assert.Equal("Value02", duckInterface["Key02"]);
 
 			Assert.Equal(2, duckInterface.Count);
 
-			foreach (var val in duckInterface) Assert.NotNull(val.Key);
+			foreach (var val in duckInterface)
+				Assert.NotNull(val.Key);
 
-			if (duckInterface.TryGetValueInObject("Key02", out var objValue)) Assert.NotNull(objValue);
+			if (duckInterface.TryGetValueInObject("Key02", out var objValue))
+				Assert.NotNull(objValue);
 
-			if (duckInterface.TryGetValueInDuckChaining("Key02", out var dictioValue)) Assert.NotNull(dictioValue);
+			if (duckInterface.TryGetValueInDuckChaining("Key02", out var dictioValue))
+				Assert.NotNull(dictioValue);
 		}
 
 		[Theory]

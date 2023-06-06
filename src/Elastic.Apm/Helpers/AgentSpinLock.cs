@@ -43,7 +43,8 @@ namespace Elastic.Apm.Helpers
 		/// <exception cref="System.InvalidOperationException">If this lock is not currently in acquired state</exception>
 		internal void Release()
 		{
-			if (!IsAcquired) throw new InvalidOperationException("Attempt to release lock that is not acquired");
+			if (!IsAcquired)
+				throw new InvalidOperationException("Attempt to release lock that is not acquired");
 
 			_isAcquiredBoolValueAsInt = FalseValueAsInt;
 		}
@@ -65,7 +66,8 @@ namespace Elastic.Apm.Helpers
 
 			public void Dispose()
 			{
-				if (IsAcquired) _agentSpinLock.Release();
+				if (IsAcquired)
+					_agentSpinLock.Release();
 			}
 		}
 	}

@@ -58,7 +58,8 @@ namespace Elastic.Apm.Api
 			{
 				if (!string.IsNullOrEmpty(Type))
 					sb.Append(Type);
-				if (string.IsNullOrEmpty(Name)) return sb.ToString();
+				if (string.IsNullOrEmpty(Name))
+					return sb.ToString();
 
 				if (sb.Length > 0)
 					sb.Append("/");
@@ -69,17 +70,22 @@ namespace Elastic.Apm.Api
 
 		public bool Equals(Target other)
 		{
-			if (ReferenceEquals(null, other)) return false;
-			if (ReferenceEquals(this, other)) return true;
+			if (ReferenceEquals(null, other))
+				return false;
+			if (ReferenceEquals(this, other))
+				return true;
 
 			return Type == other.Type && Name == other.Name;
 		}
 
 		public override bool Equals(object obj)
 		{
-			if (ReferenceEquals(null, obj)) return false;
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
+			if (ReferenceEquals(null, obj))
+				return false;
+			if (ReferenceEquals(this, obj))
+				return true;
+			if (obj.GetType() != GetType())
+				return false;
 
 			return Equals((Target)obj);
 		}

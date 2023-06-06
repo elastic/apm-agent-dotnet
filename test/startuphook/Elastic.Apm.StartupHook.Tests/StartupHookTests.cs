@@ -34,16 +34,16 @@ namespace Elastic.Apm.StartupHook.Tests
 			=> GetDotNetFrameworkVersionInfos().Select(i => new[] { i.TargetFramework, i.RuntimeName, i.Version });
 
 		public static IEnumerable<object[]> DotNetFrameworks()
-			=> DotNetFrameworkVersionInfos().Select(o => o[0 .. 1]);
+			=> DotNetFrameworkVersionInfos().Select(o => o[0..1]);
 
 		public static IEnumerable<object[]> WebAppInfos()
 		{
 			var testData = new List<string[]>();
 			foreach (var i in GetDotNetFrameworkVersionInfos())
 			{
-				testData.Add(new []{ "webapi", $"WebApi{i.ShortVersion}", i.TargetFramework, "weatherforecast"});
-				testData.Add(new []{ "webapp", $"WebApp{i.ShortVersion}", i.TargetFramework, ""});
-				testData.Add(new []{ "mvc", $"Mvc{i.ShortVersion}", i.TargetFramework, ""});
+				testData.Add(new[] { "webapi", $"WebApi{i.ShortVersion}", i.TargetFramework, "weatherforecast" });
+				testData.Add(new[] { "webapp", $"WebApp{i.ShortVersion}", i.TargetFramework, "" });
+				testData.Add(new[] { "mvc", $"Mvc{i.ShortVersion}", i.TargetFramework, "" });
 			}
 			return testData;
 		}

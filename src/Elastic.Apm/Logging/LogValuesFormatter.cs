@@ -140,7 +140,8 @@ namespace Elastic.Apm.Logging
 
 		public string Format(object[] values)
 		{
-			if (_scope != null) return Format(_scope, values);
+			if (_scope != null)
+				return Format(_scope, values);
 
 			values = values ?? EmptyArray;
 
@@ -164,14 +165,17 @@ namespace Elastic.Apm.Logging
 
 		private object FormatArgument(object value)
 		{
-			if (value == null) return NullValue;
+			if (value == null)
+				return NullValue;
 
 			// since 'string' implements IEnumerable, special case it
-			if (value is string) return value;
+			if (value is string)
+				return value;
 
 			// if the value implements IEnumerable, build a comma separated string.
 			var enumerable = value as IEnumerable;
-			if (enumerable != null) return string.Join(", ", enumerable.Cast<object>().Select(o => o ?? NullValue));
+			if (enumerable != null)
+				return string.Join(", ", enumerable.Cast<object>().Select(o => o ?? NullValue));
 
 			return value;
 		}

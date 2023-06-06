@@ -52,12 +52,14 @@ namespace Elastic.Apm.Helpers
 
 			internal void DoIfEnabled(Action<AssertIfEnabled> doAction)
 			{
-				if (IsEnabled) doAction(SingletonAssertIfEnabled);
+				if (IsEnabled)
+					doAction(SingletonAssertIfEnabled);
 			}
 
 			internal void DoIf_O_n_LevelEnabled(Action<AssertIfEnabled> doAction)
 			{
-				if (Is_O_n_LevelEnabled) doAction(SingletonAssertIfEnabled);
+				if (Is_O_n_LevelEnabled)
+					doAction(SingletonAssertIfEnabled);
 			}
 		}
 
@@ -65,7 +67,8 @@ namespace Elastic.Apm.Helpers
 		{
 			internal void That(bool condition, string message)
 			{
-				if (!condition) throw new AssertionFailedException(message);
+				if (!condition)
+					throw new AssertionFailedException(message);
 			}
 		}
 	}

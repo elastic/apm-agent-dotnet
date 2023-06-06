@@ -73,7 +73,8 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			foreach (var externalDbType in PotentialExternalDbTypes)
 			{
 				var connectionDetails = GetConnectionDetails(externalDbType);
-				if (connectionDetails == null) continue;
+				if (connectionDetails == null)
+					continue;
 				isAtLeastOneExternalDbConfigured = true;
 				yield return (externalDbType, connectionDetails);
 			}
@@ -89,7 +90,8 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		[MemberData(nameof(ConfiguredExternalDbVariants))]
 		public void Context_Destination_from_Db(ExternalDbType externalDbType, ConnectionDetails connectionDetails)
 		{
-			if (connectionDetails == null) return;
+			if (connectionDetails == null)
+				return;
 
 			var mockPayloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender)))
@@ -117,7 +119,8 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			{
 				var envVarName = "ELASTIC_APM_TESTS_" + externalDbType.EnvVarNameMiddlePart + "_" + envVarSuffixToConnectionProperty.Key;
 				var envVarValue = Environment.GetEnvironmentVariable(envVarName);
-				if (envVarValue == null) return null;
+				if (envVarValue == null)
+					return null;
 				envVarSuffixToConnectionProperty.Value(connectionDetails, envVarValue);
 			}
 
@@ -126,7 +129,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 
 		private static void ExecuteTestCrudSequence(Func<DbContextImplBase> dbContextFactory)
 		{
-			using(var dbContext = dbContextFactory())
+			using (var dbContext = dbContextFactory())
 			{
 				dbContext.Database.EnsureDeleted();
 				dbContext.Database.EnsureCreated();
@@ -137,7 +140,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			//
 			Publisher publisher;
 			Book book1;
-			using(var dbContext = dbContextFactory())
+			using (var dbContext = dbContextFactory())
 			{
 				publisher = new Publisher { Name = "Mariner Books" };
 				dbContext.Publishers.Add(publisher);
@@ -149,7 +152,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			//
 			// Read data and verify
 			//
-			using(var dbContext = dbContextFactory())
+			using (var dbContext = dbContextFactory())
 			{
 				var publishers = dbContext.Publishers;
 				var books = dbContext.Books;
@@ -167,7 +170,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			// Update some data
 			//
 			Book book2;
-			using(var dbContext = dbContextFactory())
+			using (var dbContext = dbContextFactory())
 			{
 				book2 = new Book { ISBN = "978-0547247762", Title = "The Sealed Letter", Publisher = dbContext.Publishers.First() };
 				dbContext.Books.Add(book2);
@@ -177,7 +180,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			//
 			// Read data and verify
 			//
-			using(var dbContext = dbContextFactory())
+			using (var dbContext = dbContextFactory())
 			{
 				var publishers = dbContext.Publishers;
 				var books = dbContext.Books;
@@ -194,7 +197,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			//
 			// Delete some data
 			//
-			using(var dbContext = dbContextFactory())
+			using (var dbContext = dbContextFactory())
 			{
 				dbContext.Books.Remove(book1);
 				dbContext.SaveChanges();
@@ -203,7 +206,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			//
 			// Read data and verify
 			//
-			using(var dbContext = dbContextFactory())
+			using (var dbContext = dbContextFactory())
 			{
 				var publishers = dbContext.Publishers;
 				var books = dbContext.Books;

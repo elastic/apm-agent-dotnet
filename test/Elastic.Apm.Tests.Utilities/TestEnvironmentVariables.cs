@@ -8,7 +8,7 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.Utilities
 {
-	public class TestEnvironmentVariables: IEnvironmentVariables
+	public class TestEnvironmentVariables : IEnvironmentVariables
 	{
 		private readonly Hashtable _hashTable;
 

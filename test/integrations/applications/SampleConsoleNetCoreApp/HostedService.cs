@@ -32,14 +32,16 @@ namespace SampleConsoleNetCoreApp
 				{
 					_logger.LogError("Yet another sample error log");
 
-					using (_logger.BeginScope("bar")) _logger.LogError("And a 3. sample error log");
+					using (_logger.BeginScope("bar"))
+						_logger.LogError("And a 3. sample error log");
 				}
 
 				using var fooScope = _logger.BeginScope("foo");
 
 				// Make sure Agent.Tracer.CurrentTransaction is not null
 				var currentTransaction = Agent.Tracer.CurrentTransaction;
-				if (currentTransaction == null) throw new Exception("Agent.Tracer.CurrentTransaction returns null");
+				if (currentTransaction == null)
+					throw new Exception("Agent.Tracer.CurrentTransaction returns null");
 
 				var httpClient = new HttpClient();
 				return await httpClient.GetAsync("https://elastic.co", cancellationToken);

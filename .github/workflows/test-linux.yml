@@ -35,7 +35,10 @@ jobs:
       with:
           azure: 'true'
           rust: 'true'
-      
+          
+    - name: Format
+      run: ./build.sh format
+    
     - name: Package
       run: ./build.sh pack
     

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
@@ -20,7 +20,8 @@ namespace Elastic.Apm.Report.Serialization
 				{
 					var property = (string)reader.Value;
 
-					if (Enum.TryParse<Outcome>(property, out var enumVal)) return enumVal;
+					if (Enum.TryParse<Outcome>(property, out var enumVal))
+						return enumVal;
 				}
 			}
 

@@ -61,53 +61,53 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				switch (CurrentXunitTest.TestCase.TestMethod.Method.Name)
 				{
 					case nameof(MaxSpans_valid_value):
-					{
-						CurrentXunitTest.TestCase.TestMethodArguments.Length.Should().Be(1);
-						var transactionMaxSpansLocalConfig = (int?)CurrentXunitTest.TestCase.TestMethodArguments[0];
-						if (transactionMaxSpansLocalConfig.HasValue)
-							EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] = transactionMaxSpansLocalConfig.ToString();
-						break;
-					}
+						{
+							CurrentXunitTest.TestCase.TestMethodArguments.Length.Should().Be(1);
+							var transactionMaxSpansLocalConfig = (int?)CurrentXunitTest.TestCase.TestMethodArguments[0];
+							if (transactionMaxSpansLocalConfig.HasValue)
+								EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] = transactionMaxSpansLocalConfig.ToString();
+							break;
+						}
 
 					case nameof(SampleRate_valid_value):
-					{
-						CurrentXunitTest.TestCase.TestMethodArguments.Length.Should().Be(1);
-						var transactionSampleRateLocalConfig = (bool?)CurrentXunitTest.TestCase.TestMethodArguments[0];
-						if (transactionSampleRateLocalConfig.HasValue)
 						{
-							EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] =
-								transactionSampleRateLocalConfig.Value ? "1" : "0";
+							CurrentXunitTest.TestCase.TestMethodArguments.Length.Should().Be(1);
+							var transactionSampleRateLocalConfig = (bool?)CurrentXunitTest.TestCase.TestMethodArguments[0];
+							if (transactionSampleRateLocalConfig.HasValue)
+							{
+								EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] =
+									transactionSampleRateLocalConfig.Value ? "1" : "0";
+							}
+							break;
 						}
-						break;
-					}
 
 					case nameof(Combination_of_both_options):
-					{
-						CurrentXunitTest.TestCase.TestMethodArguments.Length.Should().Be(2);
-						var transactionMaxSpansLocalConfig = (int?)CurrentXunitTest.TestCase.TestMethodArguments[0];
-						var transactionSampleRateLocalConfig = (bool?)CurrentXunitTest.TestCase.TestMethodArguments[1];
-						if (transactionMaxSpansLocalConfig.HasValue)
-							EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] = transactionMaxSpansLocalConfig.ToString();
-						if (transactionSampleRateLocalConfig.HasValue)
 						{
-							EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] =
-								transactionSampleRateLocalConfig.Value ? "1" : "0";
+							CurrentXunitTest.TestCase.TestMethodArguments.Length.Should().Be(2);
+							var transactionMaxSpansLocalConfig = (int?)CurrentXunitTest.TestCase.TestMethodArguments[0];
+							var transactionSampleRateLocalConfig = (bool?)CurrentXunitTest.TestCase.TestMethodArguments[1];
+							if (transactionMaxSpansLocalConfig.HasValue)
+								EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] = transactionMaxSpansLocalConfig.ToString();
+							if (transactionSampleRateLocalConfig.HasValue)
+							{
+								EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] =
+									transactionSampleRateLocalConfig.Value ? "1" : "0";
+							}
+							break;
 						}
-						break;
-					}
 
 					case nameof(SampleRate_invalid_value):
-					{
-						EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] = "0";
-						break;
-					}
+						{
+							EnvVarsToSetForSampleAppPool[TransactionSampleRate.ToEnvironmentVariable()] = "0";
+							break;
+						}
 
 					case nameof(MaxSpans_invalid_value):
-					{
-						EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] =
-							MaxSpansLocalConfigForInvalidValueTest.ToString();
-						break;
-					}
+						{
+							EnvVarsToSetForSampleAppPool[TransactionMaxSpans.ToEnvironmentVariable()] =
+								MaxSpansLocalConfigForInvalidValueTest.ToString();
+							break;
+						}
 				}
 			}
 
@@ -265,7 +265,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						// Relies on srcPageData.TransactionsCount.Should().Be(1);
 						AssertReceivedDataSampledStatus(receivedData, isSampled, pageData.SpansCount);
 
-						if (isSampled) receivedData.Transactions.First().SpanCount.Dropped.Should().Be(spansToExecCount - pageData.SpansCount);
+						if (isSampled)
+							receivedData.Transactions.First().SpanCount.Dropped.Should().Be(spansToExecCount - pageData.SpansCount);
 
 						for (var i = 0; i < receivedData.Spans.Count; i++)
 						{
@@ -305,7 +306,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				lock (_lock)
 				{
-					if (waitUntilNextRequest.HasValue) _waitUntilNextRequest = waitUntilNextRequest.Value;
+					if (waitUntilNextRequest.HasValue)
+						_waitUntilNextRequest = waitUntilNextRequest.Value;
 					// ReSharper disable once UseDeconstructionOnParameter
 					optionsToUpdate.ForEach(optToUpdate =>
 					{

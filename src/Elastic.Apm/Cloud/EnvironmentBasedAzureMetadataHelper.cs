@@ -49,7 +49,8 @@ namespace Elastic.Apm.Cloud
 
 		internal bool NullOrEmptyVariable(string key, string value)
 		{
-			if (!string.IsNullOrEmpty(value)) return false;
+			if (!string.IsNullOrEmpty(value))
+				return false;
 
 			_logger.Trace()?.Log(
 				$"Unable to get '{_name}' cloud metadata as no '{key}' environment variable exists. The application is likely not running in '{_name}'");

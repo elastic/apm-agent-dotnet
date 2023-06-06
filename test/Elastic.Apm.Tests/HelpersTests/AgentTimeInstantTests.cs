@@ -37,7 +37,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 				1.Days() + 2.Hours() + 3.Minutes() + 4.Seconds() + 5.Milliseconds()
 			};
 
-			foreach (var timeSpan in longTimeSpans) yield return new[] { (object)new MockAgentTimer(), timeSpan };
+			foreach (var timeSpan in longTimeSpans)
+				yield return new[] { (object)new MockAgentTimer(), timeSpan };
 		}
 
 		public static IEnumerable<object[]> IncompatibleAgentTimeInstantSources()
@@ -161,7 +162,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 				.WithMessage("*illegal to perform operation op_LessThanOrEqual *");
 
 			// ReSharper disable once UnusedParameter.Local
-			void DummyNoopFunc<T>(T _) { }
+			void DummyNoopFunc<T>(T _)
+			{ }
 		}
 	}
 }

@@ -34,11 +34,11 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			LogLevel = GetSimpleConfigurationValue(DynamicConfigurationOption.LogLevel, ParseLogLevel);
 			SpanStackTraceMinDurationInMilliseconds =
 				GetSimpleConfigurationValue(DynamicConfigurationOption.SpanStackTraceMinDuration, ParseSpanStackTraceMinDurationInMilliseconds);
-// Disable obsolete-warning
+			// Disable obsolete-warning
 #pragma warning disable CS0618
 			SpanFramesMinDurationInMilliseconds =
 				GetSimpleConfigurationValue(DynamicConfigurationOption.SpanFramesMinDuration, ParseSpanFramesMinDurationInMilliseconds);
-// Disable obsolete-warning
+			// Disable obsolete-warning
 #pragma warning restore CS0618
 			StackTraceLimit = GetSimpleConfigurationValue(DynamicConfigurationOption.StackTraceLimit, ParseStackTraceLimit);
 			Recording = GetSimpleConfigurationValue(DynamicConfigurationOption.Recording, ParseRecording);
@@ -110,12 +110,16 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			var builder = new ToStringBuilder($"[ETag: `{ETag}']");
 
-			if (CaptureBody != null) builder.Add(nameof(CaptureBody), CaptureBody);
+			if (CaptureBody != null)
+				builder.Add(nameof(CaptureBody), CaptureBody);
 			if (CaptureBodyContentTypes != null)
 				builder.Add(nameof(CaptureBodyContentTypes), string.Join(", ", CaptureBodyContentTypes.Select(x => $"`{x}'")));
-			if (TransactionMaxSpans.HasValue) builder.Add(nameof(TransactionMaxSpans), TransactionMaxSpans.Value);
-			if (TransactionSampleRate.HasValue) builder.Add(nameof(TransactionSampleRate), TransactionSampleRate.Value);
-			if (Recording.HasValue) builder.Add(nameof(Recording), Recording.Value);
+			if (TransactionMaxSpans.HasValue)
+				builder.Add(nameof(TransactionMaxSpans), TransactionMaxSpans.Value);
+			if (TransactionSampleRate.HasValue)
+				builder.Add(nameof(TransactionSampleRate), TransactionSampleRate.Value);
+			if (Recording.HasValue)
+				builder.Add(nameof(Recording), Recording.Value);
 
 			return builder.ToString();
 		}

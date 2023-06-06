@@ -109,9 +109,9 @@ namespace Elastic.Apm
 				}
 #endif
 				PayloadSender = payloadSender
-				                ?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
-					                ApmServerInfo,
-					                isEnabled: ConfigurationReader.Enabled, serverInfoCallback: serverInfoCallback);
+								?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
+									ApmServerInfo,
+									isEnabled: ConfigurationReader.Enabled, serverInfoCallback: serverInfoCallback);
 
 				if (ConfigurationReader.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
@@ -251,9 +251,11 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (MetricsCollector is IDisposable disposableMetricsCollector) disposableMetricsCollector.Dispose();
+			if (MetricsCollector is IDisposable disposableMetricsCollector)
+				disposableMetricsCollector.Dispose();
 
-			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
+			if (PayloadSender is IDisposable disposablePayloadSender)
+				disposablePayloadSender.Dispose();
 
 			CentralConfigurationFetcher?.Dispose();
 		}

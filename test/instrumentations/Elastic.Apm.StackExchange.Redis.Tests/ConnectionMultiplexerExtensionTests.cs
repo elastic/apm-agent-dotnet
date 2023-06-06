@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Moq;
 using StackExchange.Redis;
 using StackExchange.Redis.Profiling;

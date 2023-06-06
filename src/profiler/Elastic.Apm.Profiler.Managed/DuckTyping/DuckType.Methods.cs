@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -350,7 +350,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 					// If the instance is public we can emit directly without any dynamic method
 
 					// Create generic method call
-					if (proxyMethodDefinitionGenericArguments.Length > 0) targetMethod = targetMethod.MakeGenericMethod(proxyMethodDefinitionGenericArguments);
+					if (proxyMethodDefinitionGenericArguments.Length > 0)
+						targetMethod = targetMethod.MakeGenericMethod(proxyMethodDefinitionGenericArguments);
 
 					// Method call
 					// A generic method cannot be called using calli (throws System.InvalidOperationException)
@@ -369,7 +370,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				else
 				{
 					// A generic method call can't be made from a DynamicMethod
-					if (proxyMethodDefinitionGenericArguments.Length > 0) DuckTypeProxyMethodsWithGenericParametersNotSupportedInNonPublicInstancesException.Throw(proxyMethod);
+					if (proxyMethodDefinitionGenericArguments.Length > 0)
+						DuckTypeProxyMethodsWithGenericParametersNotSupportedInNonPublicInstancesException.Throw(proxyMethod);
 
 					// If the instance is not public we need to create a Dynamic method to overpass the visibility checks
 					// we can't access non public types so we have to cast to object type (in the instance object and the return type).
@@ -576,7 +578,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 				var candidateParameters = candidateMethod.GetParameters();
 
 				// The proxy must have the same or less parameters than the candidate ( less is due to possible optional parameters in the candidate ).
-				if (proxyMethodParameters.Length > candidateParameters.Length) continue;
+				if (proxyMethodParameters.Length > candidateParameters.Length)
+					continue;
 
 				// We compare the target method candidate parameter by parameter.
 				var skip = false;
@@ -665,7 +668,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 									// If the proxy parameter type is a value type (no ducktyping neither a base class) both types must match
 									if (proxyParamTypeGenericType.IsValueType && !proxyParamTypeGenericType.IsEnum
-									    && proxyParamTypeGenericType != candidateParamTypeGenericType)
+										&& proxyParamTypeGenericType != candidateParamTypeGenericType)
 									{
 										skip = true;
 										break;
@@ -673,7 +676,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 									// If the proxy parameter is a class and not is an abstract class (only interface and abstract class can be used as ducktype base type)
 									if (proxyParamTypeGenericType.IsClass && !proxyParamTypeGenericType.IsAbstract
-									    && proxyParamTypeGenericType != typeof(object))
+										&& proxyParamTypeGenericType != typeof(object))
 									{
 										if (!candidateParamTypeGenericType.IsAssignableFrom(proxyParamTypeGenericType))
 										{
@@ -683,7 +686,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 									}
 								}
 
-								if (skip) break;
+								if (skip)
+									break;
 							}
 						}
 					}

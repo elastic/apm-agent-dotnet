@@ -71,7 +71,8 @@ namespace Elastic.Apm
 		/// <returns>This instance of <see cref="CompositeDisposable"/></returns>
 		public CompositeDisposable Add(IDisposable disposable)
 		{
-			if (_isDisposed) throw new ObjectDisposedException(nameof(CompositeDisposable));
+			if (_isDisposed)
+				throw new ObjectDisposedException(nameof(CompositeDisposable));
 
 			_disposables.Add(disposable);
 			return this;
@@ -79,14 +80,17 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (_isDisposed) return;
+			if (_isDisposed)
+				return;
 
 			lock (_lock)
 			{
-				if (_isDisposed) return;
+				if (_isDisposed)
+					return;
 
 				_isDisposed = true;
-				foreach (var d in _disposables) d?.Dispose();
+				foreach (var d in _disposables)
+					d?.Dispose();
 			}
 		}
 	}

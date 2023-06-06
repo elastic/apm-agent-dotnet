@@ -17,7 +17,8 @@ namespace Elastic.Apm.Helpers
 		{
 			longerThanMaxLength = false;
 
-			if (requestBody == null) return null;
+			if (requestBody == null)
+				return null;
 
 			string body = null;
 

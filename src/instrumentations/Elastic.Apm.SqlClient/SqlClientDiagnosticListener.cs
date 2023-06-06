@@ -40,7 +40,8 @@ namespace Elastic.Apm.SqlClient
 					return;
 			}
 
-			if (!value.Key.StartsWith("Microsoft.Data.SqlClient.") && !value.Key.StartsWith("System.Data.SqlClient.")) return;
+			if (!value.Key.StartsWith("Microsoft.Data.SqlClient.") && !value.Key.StartsWith("System.Data.SqlClient."))
+				return;
 
 			switch (value.Key)
 			{
@@ -82,7 +83,8 @@ namespace Elastic.Apm.SqlClient
 				if (propertyFetcherSet.StopCorrelationId.Fetch(payloadData) is Guid operationId
 					&& propertyFetcherSet.StopCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
-					if (!_spans.TryRemove(operationId, out var span)) return;
+					if (!_spans.TryRemove(operationId, out var span))
+						return;
 
 					_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success);
 				}
@@ -100,9 +102,11 @@ namespace Elastic.Apm.SqlClient
 			{
 				if (propertyFetcherSet.ErrorCorrelationId.Fetch(payloadData) is Guid operationId)
 				{
-					if (!_spans.TryRemove(operationId, out var span)) return;
+					if (!_spans.TryRemove(operationId, out var span))
+						return;
 
-					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
+					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception)
+						span.CaptureException(exception);
 
 					if (propertyFetcherSet.ErrorCommand.Fetch(payloadData) is IDbCommand dbCommand)
 						_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Failure);

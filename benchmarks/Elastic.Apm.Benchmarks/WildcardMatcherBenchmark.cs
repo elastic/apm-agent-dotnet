@@ -19,7 +19,8 @@ namespace Elastic.Apm.Benchmarks
 		{
 			_str = string.Empty;
 			var random = new Random();
-			for (var i = 0; i < 1000; i++) _str += random.Next(10).ToString();
+			for (var i = 0; i < 1000; i++)
+				_str += random.Next(10).ToString();
 		}
 
 		[Benchmark]

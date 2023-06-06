@@ -22,7 +22,8 @@ namespace Elastic.Apm.Elasticsearch
 			//		- script parameters
 			//		- script values
 			// This is too granular of information for tracing and is more there to aid profiling.
-			if (serializerInfo.Purpose != "request/response") return;
+			if (serializerInfo.Purpose != "request/response")
+				return;
 
 			var name = ToName(@event);
 

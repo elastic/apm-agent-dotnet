@@ -1,4 +1,4 @@
-﻿using Elastic.Apm.Logging;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;

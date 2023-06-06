@@ -90,7 +90,7 @@ namespace Elastic.Apm.Tests.Metrics
 		[DisabledTestFact("Sometimes fails in CI with `System.ArgumentNullException : Value cannot be null.`")]
 		public void TestUnlimitedCgroup1()
 		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup","/proc/unlimited/memory", "cgroup cgroup");
+			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup", "/proc/unlimited/memory", "cgroup cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
 			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
@@ -104,7 +104,7 @@ namespace Elastic.Apm.Tests.Metrics
 		[DisabledTestFact("Flaky")]
 		public void TestUnlimitedCgroup2()
 		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2","/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
+			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2", "/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
 			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);

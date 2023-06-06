@@ -1,4 +1,4 @@
-﻿using Elastic.Apm.Api;
+using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Helpers
 {

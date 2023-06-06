@@ -7,9 +7,8 @@ using System;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Microsoft.Extensions.Logging;
 using Elastic.Apm.Logging;
-
+using Microsoft.Extensions.Logging;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Elastic.Apm.Extensions.Logging
@@ -33,9 +32,12 @@ namespace Elastic.Apm.Extensions.Logging
 
 		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
 		{
-			if (!Agent.IsConfigured) return;
-			if (!IsEnabled(logLevel)) return;
-			if (!_agent.ConfigurationReader.Enabled || !_agent.ConfigurationReader.Recording) return;
+			if (!Agent.IsConfigured)
+				return;
+			if (!IsEnabled(logLevel))
+				return;
+			if (!_agent.ConfigurationReader.Enabled || !_agent.ConfigurationReader.Recording)
+				return;
 
 			var logLine = formatter(state, exception);
 			var errorLog = new ErrorLog(logLine);
@@ -66,7 +68,7 @@ namespace Elastic.Apm.Extensions.Logging
 				else
 					_agent.Tracer.CaptureErrorLog(errorLog);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				_agent.Logger.Warning()?.LogException(e, "Failed capturing APM Error based on log");
 			}

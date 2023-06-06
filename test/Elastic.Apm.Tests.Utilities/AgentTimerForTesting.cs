@@ -73,7 +73,8 @@ namespace Elastic.Apm.Tests.Utilities
 			{
 				CatchUpMockTimerToReal(realNow);
 				var leftToWait = targetInstant - realNow;
-				if (leftToWait <= TimeSpan.Zero) break;
+				if (leftToWait <= TimeSpan.Zero)
+					break;
 
 				_logger.Debug()
 					?.Log("Waiting for time to pass..."
@@ -85,7 +86,8 @@ namespace Elastic.Apm.Tests.Utilities
 				realNow = _realAgentTimer.Now;
 			}
 
-			if (untilCondition != null) WaitUntil(untilCondition, dbgDesc);
+			if (untilCondition != null)
+				WaitUntil(untilCondition, dbgDesc);
 		}
 
 		private void WaitUntil(Func<bool> untilCondition, Func<string> dbgDesc)

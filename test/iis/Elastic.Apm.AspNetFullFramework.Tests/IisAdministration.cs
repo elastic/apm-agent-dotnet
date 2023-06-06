@@ -192,7 +192,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				using var serverManager = new ServerManager();
 				var existingAppPool = serverManager.ApplicationPools[SampleApp.AppPoolName];
-				if (existingAppPool != null) ChangeAppPoolStateTo(existingAppPool, ObjectState.Stopped);
+				if (existingAppPool != null)
+					ChangeAppPoolStateTo(existingAppPool, ObjectState.Stopped);
 
 				var site = serverManager.Sites[SampleApp.SiteName];
 				var existingApp = site.Applications[SampleApp.RootUrlPath];
@@ -234,7 +235,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					SampleApp.AppPoolName, sampleAppShouldUseHighPrivilegedAccount);
 
 			var applicationPool = serverManager.ApplicationPools[SampleApp.AppPoolName];
-			if (applicationPool != null) serverManager.ApplicationPools.Remove(applicationPool);
+			if (applicationPool != null)
+				serverManager.ApplicationPools.Remove(applicationPool);
 
 			applicationPool = serverManager.ApplicationPools.Add(SampleApp.AppPoolName);
 			applicationPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
@@ -289,7 +291,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_logger.Debug()?.Log("Adding application {IisApp}...", SampleApp.RootUrlPath);
 			var site = serverManager.Sites[SampleApp.SiteName];
 			var application = site.Applications[SampleApp.RootUrlPath];
-			if (application != null) site.Applications.Remove(application);
+			if (application != null)
+				site.Applications.Remove(application);
 
 			var appPath = Path.Combine(SolutionRoot.FullName, SampleApp.SrcDirPathRelativeToSolutionRoot);
 			application = site.Applications.Add(SampleApp.RootUrlPath, appPath);
@@ -461,14 +464,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					{
 						var o = element.GetAttributeValue(keyValues[i]);
 						string value = null;
-						if (o != null) value = o.ToString();
+						if (o != null)
+							value = o.ToString();
 						if (!string.Equals(value, keyValues[i + 1], StringComparison.OrdinalIgnoreCase))
 						{
 							matches = false;
 							break;
 						}
 					}
-					if (matches) return element;
+					if (matches)
+						return element;
 				}
 			}
 			return null;
@@ -506,7 +511,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					interestingLines.Add(line);
 			}
 			_logger.Debug()?.Log("Found {NumberOfLines} interesting lines in IIS config file `{FilePath}'", interestingLines.Count, filePath);
-			foreach (var line in interestingLines) _logger.Debug()?.Log("{Line}", TextUtils.Indent(line));
+			foreach (var line in interestingLines)
+				_logger.Debug()?.Log("{Line}", TextUtils.Indent(line));
 		}
 	}
 
