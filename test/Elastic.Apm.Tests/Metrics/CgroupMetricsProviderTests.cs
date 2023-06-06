@@ -15,6 +15,7 @@ using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
 
 namespace Elastic.Apm.Tests.Metrics
@@ -22,11 +23,13 @@ namespace Elastic.Apm.Tests.Metrics
 	public class CgroupMetricsProviderTests
 	{
 		private readonly string _projectRoot;
+		private readonly IApmLogger _logger;
 
-		public CgroupMetricsProviderTests()
+		public CgroupMetricsProviderTests(ITestOutputHelper output)
 		{
 			var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			_projectRoot = assemblyDirectory;
+			_logger = new XUnitLogger(LogLevel.Trace, output);
 		}
 
 		[Theory]
@@ -46,7 +49,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			using (tempFile)
 			{
-				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>(), ignoreOs: true);
+				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, _logger, new List<WildcardMatcher>(), ignoreOs: true);
 
 				var samples = provider.GetSamples().ToList();
 
