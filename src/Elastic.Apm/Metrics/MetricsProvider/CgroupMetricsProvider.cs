@@ -104,6 +104,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_logger.Debug()?.Log("{File} does not exist. Cgroup metrics will not be reported", procSelfCGroup);
 				return null;
 			}
+			_logger.Trace()?.Log("{File} exists. Cgroup metrics will be reported", procSelfCGroup);
 
 			string cGroupLine = null;
 

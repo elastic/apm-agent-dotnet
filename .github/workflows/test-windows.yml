@@ -47,6 +47,7 @@ jobs:
         with:
           name: 'unit'
           filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+          framework: '' # reset to test all .NET frameworks including net462
     
   startup-hook-tests:
     runs-on: windows-2022
