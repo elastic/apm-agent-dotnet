@@ -28,6 +28,7 @@ namespace Elastic.Apm.FullFramework.Tests
 	[Collection("UsesEnvironmentVariables")]
 	public class AppSettingsTests
 	{
+		private static readonly string ConfigType = "Elastic.Apm.FullFramework.Tests.ConfigTestReader, Elastic.Apm.FullFramework.Tests";
 		private static void UpdateAppSettings(Dictionary<ConfigurationOption, string> values)
 		{
 			var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -75,8 +76,7 @@ namespace Elastic.Apm.FullFramework.Tests
 			var logger = new ConsoleLogger(LogLevel.Information);
 			var config = new Dictionary<ConfigurationOption, string>();
 
-			var type = "Elastic.Apm.Tests.Config.ConfigTestReader, Elastic.Apm.Tests";
-			config.Add(FullFrameworkConfigurationReaderType, type);
+			config.Add(FullFrameworkConfigurationReaderType, ConfigType);
 
 			UpdateAppSettings(config);
 
@@ -91,8 +91,7 @@ namespace Elastic.Apm.FullFramework.Tests
 			var logger = new ConsoleLogger(LogLevel.Information);
 			var config = new Dictionary<ConfigurationOption, string>();
 
-			var type = "Elastic.Apm.Tests.Config.ConfigTestReader, Elastic.Apm.Tests";
-			Environment.SetEnvironmentVariable(FullFrameworkConfigurationReaderType.ToEnvironmentVariable(), type);
+			Environment.SetEnvironmentVariable(FullFrameworkConfigurationReaderType.ToEnvironmentVariable(), ConfigType);
 
 			UpdateAppSettings(config);
 			var reader = CreateConfigurationReaderFromConfiguredType(logger);

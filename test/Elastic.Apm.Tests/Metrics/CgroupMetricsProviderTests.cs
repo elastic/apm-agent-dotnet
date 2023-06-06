@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests.Metrics
 			_logger = new XUnitLogger(LogLevel.Trace, output);
 		}
 
-		[Theory]
+		[DisabledOnWindowsTheory]
 		[InlineData(964778496, "/proc/cgroup", "/proc/limited/memory", 7964778496)]
 		[InlineData(964778496, "/proc/cgroup2", "/proc/sys_cgroup2", 7964778496)]
 		// stat have different values to inactive_file and total_inactive_file
