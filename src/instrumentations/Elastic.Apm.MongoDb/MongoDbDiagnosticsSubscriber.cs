@@ -25,7 +25,7 @@ namespace Elastic.Apm.MongoDb
 		{
 			var retVal = new CompositeDisposable();
 
-			if (!components.ConfigurationReader.Enabled)
+			if (!components.Configuration.Enabled)
 				return retVal;
 
 			var initializer = new DiagnosticInitializer(components, new MongoDiagnosticListener(components));

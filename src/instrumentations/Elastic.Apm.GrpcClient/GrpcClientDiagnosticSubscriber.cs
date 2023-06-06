@@ -17,7 +17,7 @@ namespace Elastic.Apm.GrpcClient
 		{
 			var retVal = new CompositeDisposable();
 
-			if (!agent.ConfigurationReader.Enabled)
+			if (!agent.Configuration.Enabled)
 				return retVal;
 
 			Listener = new GrpcClientDiagnosticListener(agent as ApmAgent);

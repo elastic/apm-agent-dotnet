@@ -161,7 +161,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(agentComponents))
 			{
 				await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
-				agent.ConfigurationReader.MetricsIntervalInMilliseconds.Should().Be(1000);
+				agent.Configuration.MetricsIntervalInMilliseconds.Should().Be(1000);
 			}
 
 			payloadSender.Metrics.Should().NotBeEmpty();
@@ -185,7 +185,7 @@ namespace Elastic.Apm.Tests
 			using var agent = new ApmAgent(agentComponents);
 
 			await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
-			agent.ConfigurationReader.MetricsIntervalInMilliseconds.Should().Be(1000);
+			agent.Configuration.MetricsIntervalInMilliseconds.Should().Be(1000);
 			payloadSender.Metrics.Should().BeEmpty();
 
 			//start recording

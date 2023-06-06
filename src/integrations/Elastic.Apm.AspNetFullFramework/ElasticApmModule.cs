@@ -159,7 +159,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var application = (HttpApplication)sender;
 			var request = application.Context.Request;
 
-			if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, request.Unvalidated.Path))
+			if (WildcardMatcher.IsAnyMatch(Agent.Instance.Configuration.TransactionIgnoreUrls, request.Unvalidated.Path))
 			{
 				_logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", request.Unvalidated.Path);
 				return;
@@ -309,7 +309,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			if (transaction is null)
 			{
 				// We expect transaction to be null if `TransactionIgnoreUrls` matches
-				if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, request.Unvalidated.Path))
+				if (WildcardMatcher.IsAnyMatch(Agent.Instance.Configuration.TransactionIgnoreUrls, request.Unvalidated.Path))
 					return;
 
 				var hasHttpContext = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
@@ -469,10 +469,10 @@ namespace Elastic.Apm.AspNetFullFramework
 				var agentComponents = CreateAgentComponents(dbgInstanceName);
 				Agent.Setup(agentComponents);
 
-				if (!Agent.Instance.ConfigurationReader.Enabled)
+				if (!Agent.Instance.Configuration.Enabled)
 					return;
 
-				_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+				_isCaptureHeadersEnabled = Agent.Instance.Configuration.CaptureHeaders;
 
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 			}) ?? false;

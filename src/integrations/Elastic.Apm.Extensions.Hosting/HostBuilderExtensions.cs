@@ -55,7 +55,7 @@ namespace Elastic.Apm.Extensions.Hosting
 				else
 				{
 					services.AddSingleton(Agent.Instance.Logger);
-					services.AddSingleton(Agent.Instance.ConfigurationReader);
+					services.AddSingleton(Agent.Instance.Configuration);
 				}
 
 				services.AddSingleton(sp =>
@@ -91,7 +91,7 @@ namespace Elastic.Apm.Extensions.Hosting
 				if (!(agent is ApmAgent apmAgent))
 					return;
 
-				if (!Agent.IsConfigured || !apmAgent.ConfigurationReader.Enabled)
+				if (!Agent.IsConfigured || !apmAgent.Configuration.Enabled)
 					return;
 
 				// Only add ElasticApmErrorLoggingProvider after the agent is created, because it depends on the agent

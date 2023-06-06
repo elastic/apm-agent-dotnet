@@ -11,9 +11,16 @@ using Elastic.Apm.Logging;
 namespace Elastic.Apm.Config
 {
 
+	/// <summary> Implements the dynamic lookup of a configuration option </summary>
 	public interface IConfigurationLookup
 	{
 		ConfigurationKeyValue Lookup(ConfigurationOption option);
+	}
+
+	/// <summary> A description for the configuration </summary>
+	public interface IConfigurationDescription
+	{
+		public string Description { get; }
 	}
 
 	/// <summary>

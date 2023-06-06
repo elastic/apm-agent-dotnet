@@ -36,7 +36,7 @@ namespace Elastic.Apm.Extensions.Logging
 				return;
 			if (!IsEnabled(logLevel))
 				return;
-			if (!_agent.ConfigurationReader.Enabled || !_agent.ConfigurationReader.Recording)
+			if (!_agent.Configuration.Enabled || !_agent.Configuration.Recording)
 				return;
 
 			var logLine = formatter(state, exception);
@@ -45,7 +45,7 @@ namespace Elastic.Apm.Extensions.Logging
 			if (_agent is ApmAgent apmAgent && exception != null)
 			{
 				errorLog.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, _agent.Logger, "CaptureErrorLogsAsApmError",
-					apmAgent.ConfigurationReader, apmAgent.Components.ApmServerInfo);
+					apmAgent.Configuration, apmAgent.Components.ApmServerInfo);
 			}
 
 			errorLog.Level = logLevel.ToString();

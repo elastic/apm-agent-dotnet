@@ -17,7 +17,10 @@ namespace Elastic.Apm
 {
 	public interface IApmAgent
 	{
+		[Obsolete("Please use Configuration property instead")]
 		IConfigurationReader ConfigurationReader { get; }
+
+		IConfigurationReader Configuration { get; }
 
 		IApmLogger Logger { get; }
 
@@ -38,7 +41,10 @@ namespace Elastic.Apm
 
 		internal AgentComponents Components { get; }
 		internal IConfigurationStore ConfigurationStore => Components.ConfigurationStore;
-		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
+		public IConfigurationReader Configuration => ConfigurationStore.CurrentSnapshot;
+		[Obsolete("Please use Configuration property instead")]
+		public IConfigurationReader ConfigurationReader => Configuration;
+
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public Service Service => Components.Service;
@@ -73,7 +79,7 @@ namespace Elastic.Apm
 
 		internal static AgentComponents Components { get; private set; }
 
-		public static IConfigurationReader Config => Instance.ConfigurationReader;
+		public static IConfigurationReader Config => Instance.Configuration;
 
 		internal static ApmAgent Instance => LazyApmAgent.Value;
 

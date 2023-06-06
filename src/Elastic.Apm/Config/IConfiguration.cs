@@ -13,11 +13,4 @@ namespace Elastic.Apm.Config
 	{
 	}
 
-	/// <summary>
-	/// A description for the configuration
-	/// </summary>
-	public interface IConfigurationDescription
-	{
-		public string Description { get; }
-	}
 }
