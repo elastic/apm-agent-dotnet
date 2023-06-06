@@ -32,7 +32,8 @@ namespace Elastic.Apm.Helpers
 			{
 				logger.Debug()?.LogException(ex, MethodExitingCancelledMsgFmt, dbgCallerMethodName);
 
-				if (!shouldSwallowCancellation) throw;
+				if (!shouldSwallowCancellation)
+					throw;
 			}
 			catch (Exception ex)
 			{

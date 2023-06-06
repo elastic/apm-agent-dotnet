@@ -400,7 +400,7 @@ namespace Elastic.Apm.Tests
 			inMemoryLogger.Lines.Should().HaveCountGreaterOrEqualTo(1);
 			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));
 
-			if(inMemoryLogger.Lines.Contains("localhost:8234"))
+			if (inMemoryLogger.Lines.Contains("localhost:8234"))
 				inMemoryLogger.Lines.Should().Contain(n => n.Contains("http://[REDACTED]:[REDACTED]@localhost:8234"));
 		}
 

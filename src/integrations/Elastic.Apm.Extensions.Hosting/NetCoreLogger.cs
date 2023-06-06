@@ -21,15 +21,22 @@ namespace Elastic.Apm.Extensions.Hosting
 		{
 			switch (logLevel)
 			{
-				case LogLevel.Trace: return Microsoft.Extensions.Logging.LogLevel.Trace;
-				case LogLevel.Debug: return Microsoft.Extensions.Logging.LogLevel.Debug;
-				case LogLevel.Information: return Microsoft.Extensions.Logging.LogLevel.Information;
-				case LogLevel.Warning: return Microsoft.Extensions.Logging.LogLevel.Warning;
-				case LogLevel.Error: return Microsoft.Extensions.Logging.LogLevel.Error;
-				case LogLevel.Critical: return Microsoft.Extensions.Logging.LogLevel.Critical;
+				case LogLevel.Trace:
+					return Microsoft.Extensions.Logging.LogLevel.Trace;
+				case LogLevel.Debug:
+					return Microsoft.Extensions.Logging.LogLevel.Debug;
+				case LogLevel.Information:
+					return Microsoft.Extensions.Logging.LogLevel.Information;
+				case LogLevel.Warning:
+					return Microsoft.Extensions.Logging.LogLevel.Warning;
+				case LogLevel.Error:
+					return Microsoft.Extensions.Logging.LogLevel.Error;
+				case LogLevel.Critical:
+					return Microsoft.Extensions.Logging.LogLevel.Critical;
 				// ReSharper disable once RedundantCaseLabel
 				case LogLevel.None:
-				default: return Microsoft.Extensions.Logging.LogLevel.None;
+				default:
+					return Microsoft.Extensions.Logging.LogLevel.None;
 			}
 		}
 	}

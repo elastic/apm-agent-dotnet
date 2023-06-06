@@ -21,7 +21,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		{
 			var multipart = await Request.Content.ReadAsMultipartAsync();
 			var result = new StringBuilder();
-			foreach(var content in multipart.Contents)
+			foreach (var content in multipart.Contents)
 				result.Append(await content.ReadAsStringAsync());
 
 			return Ok(result.ToString());

@@ -83,7 +83,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			EnvVarsToSetForSampleAppPool.TryAdd(ServerUrls.ToEnvironmentVariable(), BuildApmServerUrl(_mockApmServerPort));
 			EnvVarsToSetForSampleAppPool.TryAdd(SpanCompressionEnabled.ToEnvironmentVariable(), "false");
 
-			if (_sampleAppLogEnabled) EnvVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
+			if (_sampleAppLogEnabled)
+				EnvVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
 
 			EnvVarsToSetForSampleAppPool.TryAdd(FlushInterval.ToEnvironmentVariable(), "10ms");
 		}
@@ -145,7 +146,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
 
 			internal static readonly SampleAppUrlPathData ChildHttpSpanWithResponseForbiddenPage =
-				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, transactionsCount:2, spansCount: 1, errorsCount: 0);
+				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, transactionsCount: 2, spansCount: 1, errorsCount: 0);
 
 
 			/// <summary>
@@ -229,7 +230,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					?.Log("Not tearing down IIS sample application and pool because {Reason}", TearDownPersistentDataReason);
 			}
 
-			if (_startMockApmServer) await MockApmServer.StopAsync();
+			if (_startMockApmServer)
+				await MockApmServer.StopAsync();
 
 			_logger.Info()?.Log("Finished test: {FullUnitTestName}", TestDisplayName);
 		}
@@ -496,16 +498,21 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private void FindReceivedDataWithTimestampEarlierThanTestStart()
 		{
-			foreach (var error in MockApmServer.ReceivedData.Errors) AnalyzeDtoTimestamp(error.Timestamp, error);
-			foreach (var metricSet in MockApmServer.ReceivedData.Metrics) AnalyzeDtoTimestamp(metricSet.Timestamp, metricSet);
-			foreach (var span in MockApmServer.ReceivedData.Spans) AnalyzeDtoTimestamp(span.Timestamp, span);
-			foreach (var transaction in MockApmServer.ReceivedData.Transactions) AnalyzeDtoTimestamp(transaction.Timestamp, transaction);
+			foreach (var error in MockApmServer.ReceivedData.Errors)
+				AnalyzeDtoTimestamp(error.Timestamp, error);
+			foreach (var metricSet in MockApmServer.ReceivedData.Metrics)
+				AnalyzeDtoTimestamp(metricSet.Timestamp, metricSet);
+			foreach (var span in MockApmServer.ReceivedData.Spans)
+				AnalyzeDtoTimestamp(span.Timestamp, span);
+			foreach (var transaction in MockApmServer.ReceivedData.Transactions)
+				AnalyzeDtoTimestamp(transaction.Timestamp, transaction);
 
 			void AnalyzeDtoTimestamp(long dtoTimestamp, object dto)
 			{
 				var dtoStartTime = TimeUtils.ToDateTime(dtoTimestamp);
 
-				if (_testStartTime <= dtoStartTime) return;
+				if (_testStartTime <= dtoStartTime)
+					return;
 
 				_logger.Warning()
 					?.Log("The following DTO received from the agent has timestamp that is earlier than the current test start time. " +
@@ -566,11 +573,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private void FullFwAssertValid(ReceivedData receivedData)
 		{
-			foreach (var error in receivedData.Errors) FullFwAssertValid(error);
-			foreach (var metadata in receivedData.Metadata) FullFwAssertValid(metadata);
-			foreach (var metricSet in receivedData.Metrics) FullFwAssertValid(metricSet);
-			foreach (var span in receivedData.Spans) FullFwAssertValid(span);
-			foreach (var transaction in receivedData.Transactions) FullFwAssertValid(transaction);
+			foreach (var error in receivedData.Errors)
+				FullFwAssertValid(error);
+			foreach (var metadata in receivedData.Metadata)
+				FullFwAssertValid(metadata);
+			foreach (var metricSet in receivedData.Metrics)
+				FullFwAssertValid(metricSet);
+			foreach (var span in receivedData.Spans)
+				FullFwAssertValid(span);
+			foreach (var transaction in receivedData.Transactions)
+				FullFwAssertValid(transaction);
 		}
 
 		private void FullFwAssertValid(MetadataDto metadata)
@@ -624,7 +636,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			FullFwAssertValid((ITimestampedDto)error);
 			error.Transaction.AssertValid();
-			if (error.Context != null) FullFwAssertValid(error.Context, error);
+			if (error.Context != null)
+				FullFwAssertValid(error.Context, error);
 			error.Culprit.NonEmptyAssertValid();
 			error.Exception.AssertValid();
 		}
@@ -633,7 +646,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			transaction.Should().NotBeNull();
 
-			if (transaction.Context != null) FullFwAssertValid(transaction.Context, transaction);
+			if (transaction.Context != null)
+				FullFwAssertValid(transaction.Context, transaction);
 			transaction.Name.Should().NotBeNull();
 			TransactionResultFullFwAssertValid(transaction.Result);
 			transaction.Type.Should().Be(ApiConstants.TypeRequest);
@@ -645,7 +659,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			timestampedDto.Should().NotBeNull();
 
-			if (_sampleAppClientCallTiming != null) timestampedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
+			if (_sampleAppClientCallTiming != null)
+				timestampedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
 		}
 
 		private void FullFwAssertValid(ITimedDto timedDto)
@@ -654,7 +669,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			timedDto.Duration.Should().BeGreaterOrEqualTo(0);
 
-			if (_sampleAppClientCallTiming != null) timedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
+			if (_sampleAppClientCallTiming != null)
+				timedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
 		}
 
 		private static void FullFwAssertValid(Url url)
@@ -692,7 +708,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			span.Should().NotBeNull();
 
 			FullFwAssertValid((ITimedDto)span);
-			if (span.StackTrace != null) FullFwAssertValid(span.StackTrace);
+			if (span.StackTrace != null)
+				FullFwAssertValid(span.StackTrace);
 		}
 
 		private static void FullFwAssertValid(IEnumerable<CapturedStackFrame> stackTrace)
@@ -793,7 +810,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				if (isSampled)
 				{
 					transaction.Context.Should().NotBeNull();
-					if (expectedSpanCount.HasValue) transaction.SpanCount.Started.Should().Be(expectedSpanCount.Value);
+					if (expectedSpanCount.HasValue)
+						transaction.SpanCount.Started.Should().Be(expectedSpanCount.Value);
 				}
 				else
 				{

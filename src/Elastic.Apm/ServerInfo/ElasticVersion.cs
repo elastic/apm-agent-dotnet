@@ -143,13 +143,16 @@ namespace Elastic.Apm.ServerInfo
 				return 1;
 
 			var r = Major.CompareTo(other.Major);
-			if (r != 0) return r;
+			if (r != 0)
+				return r;
 
 			r = Minor.CompareTo(other.Minor);
-			if (r != 0) return r;
+			if (r != 0)
+				return r;
 
 			r = Patch.CompareTo(other.Patch);
-			if (r != 0) return r;
+			if (r != 0)
+				return r;
 
 			r = CompareComponent(Prerelease, other.Prerelease, true);
 			return r;
@@ -182,7 +185,8 @@ namespace Elastic.Apm.ServerInfo
 				if (isanum && isbnum)
 				{
 					r = anum.CompareTo(bnum);
-					if (r != 0) return anum.CompareTo(bnum);
+					if (r != 0)
+						return anum.CompareTo(bnum);
 				}
 				else
 				{

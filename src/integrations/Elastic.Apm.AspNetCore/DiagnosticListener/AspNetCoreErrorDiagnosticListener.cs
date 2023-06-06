@@ -22,7 +22,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			if (kv.Key != "Microsoft.AspNetCore.Diagnostics.UnhandledException"
-				&& kv.Key != "Microsoft.AspNetCore.Diagnostics.HandledException") return;
+				&& kv.Key != "Microsoft.AspNetCore.Diagnostics.HandledException")
+				return;
 
 			var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("exception")?.GetValue(kv.Value) as Exception;
 			var httpContextUnhandledException =

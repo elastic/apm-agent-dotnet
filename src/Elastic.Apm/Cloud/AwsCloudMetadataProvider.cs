@@ -9,9 +9,9 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Cloud
 {
@@ -53,7 +53,8 @@ namespace Elastic.Apm.Cloud
 					var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);
 					awsToken = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
 				}
-				if (string.IsNullOrWhiteSpace(awsToken)) return null;
+				if (string.IsNullOrWhiteSpace(awsToken))
+					return null;
 
 				JObject metadata;
 				using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, MetadataUri))

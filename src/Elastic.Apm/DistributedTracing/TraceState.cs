@@ -216,7 +216,8 @@ namespace Elastic.Apm.DistributedTracing
 			var listMembers = traceState.Split(VendorSeparator);
 			var set = new HashSet<string>();
 
-			if (listMembers.Length == 0 || listMembers.Length > 32) return null;
+			if (listMembers.Length == 0 || listMembers.Length > 32)
+				return null;
 
 			var sb = new StringBuilder();
 
@@ -247,7 +248,8 @@ namespace Elastic.Apm.DistributedTracing
 					if (vendorFormatKey[1].Length == 0 || string.IsNullOrEmpty(vendorFormatKey[1]) || vendorFormatKey[1].Length > 14)
 						return null;
 
-					if (!IsValidKey(vendorFormatKey[0]) || !IsValidKey(vendorFormatKey[1])) return null;
+					if (!IsValidKey(vendorFormatKey[0]) || !IsValidKey(vendorFormatKey[1]))
+						return null;
 				}
 				else
 				{
@@ -278,7 +280,8 @@ namespace Elastic.Apm.DistributedTracing
 					//OWS rule: if we hit a ' ', then it must be next to a '\t'
 					|| c == ' ' && (i > 0 && str[i - 1] == '\t' || i < str.Length - 2 && str[i + 1] == '\t');
 
-				if (!isOk) return false;
+				if (!isOk)
+					return false;
 			}
 
 			return true;
@@ -286,7 +289,8 @@ namespace Elastic.Apm.DistributedTracing
 
 		private static bool IsValidValue(string str)
 		{
-			if (string.IsNullOrEmpty(str)) return false;
+			if (string.IsNullOrEmpty(str))
+				return false;
 
 			// ReSharper disable once LoopCanBeConvertedToQuery
 			for (var i = 0; i < str.Length; i++)
@@ -296,7 +300,8 @@ namespace Elastic.Apm.DistributedTracing
 					//OWS rule: if we hit a ' ', then it must be next to a '\t'
 					|| c == ' ' && (i > 0 && str[i - 1] == '\t' || i < str.Length - 2 && str[i + 1] == '\t');
 
-				if (!isOk) return false;
+				if (!isOk)
+					return false;
 			}
 
 			return true;

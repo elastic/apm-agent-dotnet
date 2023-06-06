@@ -18,7 +18,8 @@ namespace Elastic.Apm.Helpers
 		{
 			var result = new StringBuilder();
 
-			if (prefix != null) result.Append(prefix);
+			if (prefix != null)
+				result.Append(prefix);
 
 			var currentId = Interlocked.Increment(ref _lastId);
 			result.Append(currentId);

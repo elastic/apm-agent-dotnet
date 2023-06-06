@@ -33,7 +33,8 @@ namespace Elastic.Apm.Config
 		{
 			get
 			{
-				if (string.IsNullOrWhiteSpace(Value)) return Consts.NotProvided;
+				if (string.IsNullOrWhiteSpace(Value))
+					return Consts.NotProvided;
 
 				string UrlString(string value) => Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri.Sanitize().ToString() : value;
 

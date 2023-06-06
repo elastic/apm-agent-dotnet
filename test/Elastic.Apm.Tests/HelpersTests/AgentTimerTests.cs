@@ -220,7 +220,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			try
 			{
 				if (!task.IsCanceled)
-					Task.WaitAll(new [] { task });
+					Task.WaitAll(new[] { task });
 			}
 			catch
 			{
@@ -321,7 +321,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			{
 				awaitOrTimeoutTask.IsCompletedSuccessfully().Should().BeTrue();
 
-				if (!_isVoid) ((Task<TResult>)awaitOrTimeoutTask).Result.Should().Be(_resultValue);
+				if (!_isVoid)
+					((Task<TResult>)awaitOrTimeoutTask).Result.Should().Be(_resultValue);
 
 				_taskToAwaitTcs.Task.IsCompletedSuccessfully().Should().BeTrue();
 				_taskToAwaitTcs.Task.Result.Should().Be(_resultValue);

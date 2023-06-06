@@ -161,7 +161,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfiguration(_logger, enabled: "false", exitSpanMinDuration:"0"), _capturedPayload));
+				new MockConfiguration(_logger, enabled: "false", exitSpanMinDuration: "0"), _capturedPayload));
 
 			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
@@ -381,7 +381,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 			var httpSpans = spans.Where(span => span.Context.Http != null);
 			httpSpans.Should().NotBeEmpty();
-			foreach (var httpSpan in httpSpans) httpSpan.ParentId.Should().Be(controllerActionSpan.Id);
+			foreach (var httpSpan in httpSpans)
+				httpSpan.ParentId.Should().Be(controllerActionSpan.Id);
 			// ReSharper restore PossibleMultipleEnumeration
 		}
 

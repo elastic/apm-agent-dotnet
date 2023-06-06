@@ -22,7 +22,8 @@ public class ConfigurationLoggingPreambleTests
 		{
 			// Extra treatment required?
 			var n = propertyName;
-			if (n.EndsWith("InMilliseconds")) n = propertyName.Replace("InMilliseconds", string.Empty);
+			if (n.EndsWith("InMilliseconds"))
+				n = propertyName.Replace("InMilliseconds", string.Empty);
 			ConfigurationLogger.OptionLoggingInstructions.Should().Contain(i => i.Option.ToString() == n);
 		}
 	}
@@ -65,8 +66,8 @@ public class ConfigurationLoggingPreambleTests
 	{
 		var configuration = new MockConfiguration(
 			secretToken: "42",
-			serverUrl:$"http://abc:def@localhost:8123",
-			serverUrls:$"http://ghi:jkl@localhost:8124,http://mno:pqr@localhost:8125"
+			serverUrl: $"http://abc:def@localhost:8123",
+			serverUrls: $"http://ghi:jkl@localhost:8124,http://mno:pqr@localhost:8125"
 		);
 		var logger = new TestLogger(LogLevel.Information);
 		ConfigurationLogger.PrintAgentLogPreamble(logger, configuration);

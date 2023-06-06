@@ -21,10 +21,10 @@ using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using FluentAssertions.Extensions;
+using RichardSzalay.MockHttp;
 using Xunit;
 using Xunit.Abstractions;
 using MockHttpMessageHandler = Elastic.Apm.Tests.Utilities.MockHttpMessageHandler;
-using RichardSzalay.MockHttp;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {

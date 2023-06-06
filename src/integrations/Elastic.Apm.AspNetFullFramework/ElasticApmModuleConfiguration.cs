@@ -17,8 +17,8 @@ namespace Elastic.Apm.AspNetFullFramework
 			: base(logger,
 				new ConfigurationDefaults
 				{
-						DebugName = nameof(ElasticApmModuleConfiguration),
-						ServiceName = DiscoverFullFrameworkServiceName(logger?.Scoped(nameof(ElasticApmModuleConfiguration)))
+					DebugName = nameof(ElasticApmModuleConfiguration),
+					ServiceName = DiscoverFullFrameworkServiceName(logger?.Scoped(nameof(ElasticApmModuleConfiguration)))
 				}
 			)
 		{ }

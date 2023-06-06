@@ -62,7 +62,8 @@ namespace Elastic.Apm.Elasticsearch
 			SetDestination(span, instanceUri);
 
 			var id = Activity.Current.Id;
-			if (Spans.TryAdd(id, span)) return true;
+			if (Spans.TryAdd(id, span))
+				return true;
 
 			Logger.Error()?.Log("Failed to register start of span in ConcurrentDictionary {SpanDetails}", span.ToString());
 			span = null;
@@ -95,7 +96,8 @@ namespace Elastic.Apm.Elasticsearch
 		private static void SetDbContext(ISpan span, Uri instance)
 		{
 			var instanceUriString = instance?.ToString();
-			if (span.Context.Db?.Instance != null || instanceUriString == null) return;
+			if (span.Context.Db?.Instance != null || instanceUriString == null)
+				return;
 
 			span.Context.Db = new Database { Instance = instanceUriString, Type = Database.TypeElasticsearch };
 		}

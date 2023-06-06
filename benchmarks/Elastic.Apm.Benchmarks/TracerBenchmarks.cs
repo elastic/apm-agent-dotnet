@@ -59,14 +59,16 @@ namespace Elastic.Apm.Benchmarks
 		public void Simple100Transaction10Spans()
 			=> _agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
 			{
-				for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
+				for (var j = 0; j < 10; j++)
+					transaction.CaptureSpan("span", "perfSpan", () => { });
 			});
 
 		[Benchmark]
 		public void DebugLogSimpleTransaction10Spans()
 			=> _agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
 			{
-				for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
+				for (var j = 0; j < 10; j++)
+					transaction.CaptureSpan("span", "perfSpan", () => { });
 			});
 	}
 }

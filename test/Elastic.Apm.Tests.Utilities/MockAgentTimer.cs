@@ -92,7 +92,8 @@ namespace Elastic.Apm.Tests.Utilities
 				while (true)
 				{
 					var delayItem = _delayItems.RemoveEarliestToTrigger(targetNow);
-					if (!delayItem.HasValue) break;
+					if (!delayItem.HasValue)
+						break;
 
 					Assertion.IfEnabled?.That(delayItem.Value.WhenToTrigger >= Now, "Delay item should not have past trigger time");
 					Now = delayItem.Value.WhenToTrigger;
@@ -171,7 +172,8 @@ namespace Elastic.Apm.Tests.Utilities
 			) =>
 				DoUnderLock<(AgentTimeInstant _now, long?)>(() =>
 				{
-					if (whenToTrigger <= _now) return (_now, (long?)null);
+					if (whenToTrigger <= _now)
+						return (_now, (long?)null);
 
 					var newItemId = _nextItemId++;
 
@@ -184,7 +186,8 @@ namespace Elastic.Apm.Tests.Utilities
 				DoUnderLock<DelayItem?>(() =>
 				{
 					var index = _items.FindIndex(delayItem => delayItem.Id == itemId);
-					if (index == -1) return null;
+					if (index == -1)
+						return null;
 
 					if (Assertion.IsEnabled && index != _items.Count - 1)
 					{
@@ -198,14 +201,16 @@ namespace Elastic.Apm.Tests.Utilities
 			internal DelayItem? RemoveEarliestToTrigger(AgentTimeInstant whenToTrigger) =>
 				DoUnderLock<DelayItem?>(() =>
 				{
-					if (_items.IsEmpty() || _items[0].WhenToTrigger > whenToTrigger) return null;
+					if (_items.IsEmpty() || _items[0].WhenToTrigger > whenToTrigger)
+						return null;
 
 					return RemoveAtReturnCopy(0);
 				});
 
 			private void AssertValid()
 			{
-				if (!Assertion.IsEnabled) return;
+				if (!Assertion.IsEnabled)
+					return;
 
 				Assertion.IfEnabled?.That(Monitor.IsEntered(_lock), "Current thread should hold the lock");
 

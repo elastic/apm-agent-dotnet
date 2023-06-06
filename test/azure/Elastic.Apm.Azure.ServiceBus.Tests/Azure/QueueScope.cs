@@ -21,7 +21,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 			QueueName = queueName;
 			_properties = properties;
 		}
-		
+
 		public static async Task<QueueScope> CreateWithQueue(ServiceBusAdministrationClient adminClient)
 		{
 			var queueName = Guid.NewGuid().ToString("D");

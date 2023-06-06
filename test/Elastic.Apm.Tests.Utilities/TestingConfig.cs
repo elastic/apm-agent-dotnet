@@ -68,7 +68,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 			private static LogLevel ParseLogLevel(string valueAsString)
 			{
-				if (AbstractConfigurationReader.TryParseLogLevel(valueAsString, out var logLevel)) return logLevel;
+				if (AbstractConfigurationReader.TryParseLogLevel(valueAsString, out var logLevel))
+					return logLevel;
 
 				throw new FormatException($"`{valueAsString}' is not a valid log level");
 			}
@@ -213,7 +214,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		private static bool DetectIfRunningInIde()
 		{
-			if (Environment.GetEnvironmentVariable("VisualStudioVersion") != null) return true;
+			if (Environment.GetEnvironmentVariable("VisualStudioVersion") != null)
+				return true;
 
 			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (string envVarName in Environment.GetEnvironmentVariables().Keys)
@@ -245,7 +247,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 				foreach (var optionMetadata in Options.All)
 				{
-					if (optionMetadata == Options.LogLevelForTestingConfigParsing) continue;
+					if (optionMetadata == Options.LogLevelForTestingConfigParsing)
+						continue;
 
 					optionMetadata.ParseAndSetProperty(rawConfigSnapshot, this, parsingLogger);
 				}

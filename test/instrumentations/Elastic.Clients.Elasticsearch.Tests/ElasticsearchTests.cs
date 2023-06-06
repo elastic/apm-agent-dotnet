@@ -1,4 +1,4 @@
-﻿using Elastic.Apm;
+using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
@@ -111,7 +111,8 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		var tweet = response.Source;
 		tweet.Should().NotBeNull();
-		if (tweet == null) return;
+		if (tweet == null)
+			return;
 
 		var (payloadSender, apmAgent) = SetUpAgent();
 
@@ -195,7 +196,10 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 	{
 		var tweet = new Tweet
 		{
-			Id = 1, User = "stevejgordon", PostDate = new DateTime(2009, 11, 15), Message = "Trying out the client, so far so good?"
+			Id = 1,
+			User = "stevejgordon",
+			PostDate = new DateTime(2009, 11, 15),
+			Message = "Trying out the client, so far so good?"
 		};
 
 		var response = await _client.IndexAsync(tweet, request => request.Index("my-tweet-index"));

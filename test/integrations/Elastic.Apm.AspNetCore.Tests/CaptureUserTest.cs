@@ -36,7 +36,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var unused = Program.CreateWebHostBuilder(null)
 				.Configure(app =>
 				{
-					_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender, configuration: new MockConfiguration(exitSpanMinDuration:"0")));
+					_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender, configuration: new MockConfiguration(exitSpanMinDuration: "0")));
 					app.UseElasticApm(_agent, _agent.Logger);
 					Startup.ConfigureAllExceptAgent(app);
 				})

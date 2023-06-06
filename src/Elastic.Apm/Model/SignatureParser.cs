@@ -78,7 +78,8 @@ namespace Elastic.Apm.Model
 			{
 				case Scanner.Token.Call:
 					signature.Append("CALL");
-					if (scanner.ScanUntil(Scanner.Token.Ident)) AppendIdentifiers(scanner, signature, dbLink);
+					if (scanner.ScanUntil(Scanner.Token.Ident))
+						AppendIdentifiers(scanner, signature, dbLink);
 					return;
 				case Scanner.Token.Delete:
 					signature.Append("DELETE");
@@ -151,7 +152,8 @@ namespace Elastic.Apm.Model
 									}
 									else if (isDbLink)
 									{
-										if (dbLink != null) scanner.AppendCurrentTokenText(dbLink);
+										if (dbLink != null)
+											scanner.AppendCurrentTokenText(dbLink);
 										isDbLink = false;
 									}
 									// Two adjacent identifiers found after the first period.
@@ -224,7 +226,8 @@ namespace Elastic.Apm.Model
 					case Scanner.Token.Using:
 						return;
 					default:
-						if ("@".Equals(scanner.ToString())) isDbLink = true;
+						if ("@".Equals(scanner.ToString()))
+							isDbLink = true;
 						break;
 				}
 			}

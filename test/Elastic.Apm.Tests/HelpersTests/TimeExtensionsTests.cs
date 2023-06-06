@@ -139,7 +139,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 				{
 					yield return (timeSpan, expectedTruncatedTimeSpan);
 
-					if (timeSpan != TimeSpan.Zero) yield return (-timeSpan, -expectedTruncatedTimeSpan);
+					if (timeSpan != TimeSpan.Zero)
+						yield return (-timeSpan, -expectedTruncatedTimeSpan);
 				}
 			}
 
@@ -200,7 +201,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 				{
 					yield return (timeSpan, hmsInSeconds);
 
-					if (timeSpan == TimeSpan.Zero) continue;
+					if (timeSpan == TimeSpan.Zero)
+						continue;
 
 					if (timeSpan >= 1.Seconds())
 						yield return (-timeSpan, "-" + hmsInSeconds);

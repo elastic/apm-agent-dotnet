@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.StackExchange.Redis;

@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -40,15 +40,18 @@ namespace AspNetFullFrameworkSampleApp
 			};
 
 			var logFileEnvVarValue = Environment.GetEnvironmentVariable(LogFileEnvVarName);
-			if (logFileEnvVarValue != null) logTargets.Add(new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true });
+			if (logFileEnvVarValue != null)
+				logTargets.Add(new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true });
 
-			foreach (var logTarget in logTargets) logTarget.Layout = layout;
+			foreach (var logTarget in logTargets)
+				logTarget.Layout = layout;
 
 			// ReSharper disable once CoVariantArrayConversion
 			config.AddRule(LogLevel.Trace, LogLevel.Fatal, new SplitGroupTarget(logTargets.ToArray()));
 
 			InternalLogger.LogToConsole = true;
-			if (logFileEnvVarValue != null) InternalLogger.LogFile = logFileEnvVarValue;
+			if (logFileEnvVarValue != null)
+				InternalLogger.LogFile = logFileEnvVarValue;
 			InternalLogger.LogLevel = LogLevel.Info;
 			InternalLogger.LogWriter = new StringWriter();
 
@@ -82,7 +85,8 @@ namespace AspNetFullFrameworkSampleApp
 			private static string PrefixEveryLine(string input, string prefix = "")
 			{
 				// We treat empty input as a special case because StringReader doesn't return it as an empty line
-				if (input.Length == 0) return prefix;
+				if (input.Length == 0)
+					return prefix;
 
 				var resultBuilder = new StringBuilder(input.Length);
 				using (var stringReader = new StringReader(input))
@@ -105,7 +109,8 @@ namespace AspNetFullFrameworkSampleApp
 
 				foreach (var endOfLineSeq in EndOfLineCharSequences)
 				{
-					if (!input.EndsWith(endOfLineSeq)) continue;
+					if (!input.EndsWith(endOfLineSeq))
+						continue;
 
 					resultBuilder.Append(endOfLineSeq);
 					break;

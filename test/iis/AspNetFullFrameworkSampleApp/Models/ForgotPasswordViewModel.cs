@@ -8,10 +8,10 @@ using System.ComponentModel.DataAnnotations;
 namespace AspNetFullFrameworkSampleApp.Models
 {
 	public class ForgotPasswordViewModel
-    {
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; }
-    }
+	{
+		[Required]
+		[EmailAddress]
+		[Display(Name = "Email")]
+		public string Email { get; set; }
+	}
 }

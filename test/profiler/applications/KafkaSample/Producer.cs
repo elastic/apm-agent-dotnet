@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -17,12 +17,12 @@ using Newtonsoft.Json.Linq;
 
 namespace KafkaSample
 {
-    internal static class Producer
-    {
-        // Flush every x messages
-        private const int FlushInterval = 3;
-        private static readonly TimeSpan FlushTimeout = TimeSpan.FromSeconds(5);
-        private static int MessageNumber;
+	internal static class Producer
+	{
+		// Flush every x messages
+		private const int FlushInterval = 3;
+		private static readonly TimeSpan FlushTimeout = TimeSpan.FromSeconds(5);
+		private static int MessageNumber;
 
 		public static async Task ProduceAsync(string topic, int numMessages, ClientConfig config, bool isTombstone) =>
 			await Agent.Tracer.CaptureTransaction($"Produce Messages Async {topic}", ApiConstants.TypeMessaging, async () =>
@@ -54,13 +54,13 @@ namespace KafkaSample
 			});
 
 		private static void Flush(IProducer<string, string> producer)
-        {
-            var queueLength = 1;
-            while (queueLength > 0)
+		{
+			var queueLength = 1;
+			while (queueLength > 0)
 				queueLength = producer.Flush(FlushTimeout);
 		}
 
-        public static void Produce(string topic, int numMessages, ClientConfig config, bool handleDelivery, bool isTombstone) =>
+		public static void Produce(string topic, int numMessages, ClientConfig config, bool handleDelivery, bool isTombstone) =>
 			Produce(topic, numMessages, config, handleDelivery ? HandleDelivery : null, isTombstone);
 
 		private static void Produce(string topic, int numMessages, ClientConfig config, Action<DeliveryReport<string, string>> deliveryHandler, bool isTombstone) =>
@@ -95,9 +95,9 @@ namespace KafkaSample
 				: $"Produced message to: {deliveryReport.TopicPartitionOffset}");
 
 		private static string GetMessage(int iteration, bool isProducedAsync)
-        {
-            var message = new SampleMessage("fruit", iteration, isProducedAsync);
-            return JObject.FromObject(message).ToString(Formatting.None);
-        }
-    }
+		{
+			var message = new SampleMessage("fruit", iteration, isProducedAsync);
+			return JObject.FromObject(message).ToString(Formatting.None);
+		}
+	}
 }

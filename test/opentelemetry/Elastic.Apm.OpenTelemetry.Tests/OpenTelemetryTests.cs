@@ -5,12 +5,12 @@
 
 using System.Diagnostics;
 using Elastic.Apm.Api;
-using Xunit;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
-using OpenTelemetrySample;
 using FluentAssertions;
-using Elastic.Apm.Model;
+using OpenTelemetrySample;
+using Xunit;
 
 namespace Elastic.Apm.OpenTelemetry.Tests;
 
@@ -38,7 +38,8 @@ public class OpenTelemetryTests
 
 	private void AssertOnTraceIds(MockPayloadSender payloadSender)
 	{
-		foreach (var span in payloadSender.Spans) span.TraceId.Should().Be(payloadSender.FirstTransaction.TraceId);
+		foreach (var span in payloadSender.Spans)
+			span.TraceId.Should().Be(payloadSender.FirstTransaction.TraceId);
 	}
 
 	[Fact]

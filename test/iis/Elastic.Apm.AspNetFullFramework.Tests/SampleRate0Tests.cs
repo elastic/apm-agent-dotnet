@@ -15,7 +15,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	public class SampleRate0Tests : TestsBase
 	{
 		public SampleRate0Tests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper,
-			envVarsToSetForSampleAppPool: new Dictionary<string, string> { { TransactionSampleRate.ToEnvironmentVariable(), "0" } }) { }
+			envVarsToSetForSampleAppPool: new Dictionary<string, string> { { TransactionSampleRate.ToEnvironmentVariable(), "0" } })
+		{ }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]

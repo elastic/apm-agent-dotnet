@@ -269,7 +269,8 @@ internal static class AssertValidExtensions
 		thisObj.Should().NotBeNull();
 
 		thisObj.Should().NotBeEmpty();
-		foreach (var stackFrame in thisObj) stackFrame.AssertValid();
+		foreach (var stackFrame in thisObj)
+			stackFrame.AssertValid();
 	}
 
 	internal static void AssertValid(this CapturedStackFrame thisObj)

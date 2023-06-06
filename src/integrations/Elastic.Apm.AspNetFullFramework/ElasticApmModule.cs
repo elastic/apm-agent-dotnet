@@ -13,13 +13,13 @@ using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.Config.Net4FullFramework;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Extensions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
-using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
-using Elastic.Apm.Extensions;
 using Environment = System.Environment;
+using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -84,7 +84,8 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			var scopedLogger = logger.Scoped(debugName);
 			var aspNetVersion = AspNetVersion.GetEngineVersion(scopedLogger);
-			if (aspNetVersion != null) agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion};
+			if (aspNetVersion != null)
+				agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
 
 			return agentComponents;
 		}
@@ -188,7 +189,8 @@ namespace Elastic.Apm.AspNetFullFramework
 				transaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
 			}
 
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(request, transaction, _logger);
+			if (transaction.IsSampled)
+				FillSampledTransactionContextRequest(request, transaction, _logger);
 		}
 
 		/// <summary>
@@ -283,7 +285,8 @@ namespace Elastic.Apm.AspNetFullFramework
 		private void ProcessError(object sender)
 		{
 			var transaction = Agent.Instance.Tracer.CurrentTransaction;
-			if (transaction is null) return;
+			if (transaction is null)
+				return;
 
 			var application = (HttpApplication)sender;
 			var exception = application.Server.GetLastError();
@@ -344,7 +347,8 @@ namespace Elastic.Apm.AspNetFullFramework
 						if (area != null)
 						{
 							routeData = new Dictionary<string, object>(values.Count + 1);
-							foreach (var value in values) routeData.Add(value.Key, value.Value);
+							foreach (var value in values)
+								routeData.Add(value.Key, value.Value);
 							routeData.Add("area", area);
 						}
 						else
@@ -383,7 +387,8 @@ namespace Elastic.Apm.AspNetFullFramework
 							name = Transaction.GetNameFromRouteContext(routeData);
 						}
 
-						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.HttpMethod} {name}";
+						if (!string.IsNullOrWhiteSpace(name))
+							transaction.Name = $"{context.Request.HttpMethod} {name}";
 					}
 					else
 					{
@@ -425,15 +430,19 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static void FillSampledTransactionContextResponse(HttpResponse response, ITransaction transaction) =>
 			transaction.Context.Response = new Response
 			{
-				Finished = true, StatusCode = response.StatusCode, Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
+				Finished = true,
+				StatusCode = response.StatusCode,
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
 		{
-			if (transaction.Context.User != null) return;
+			if (transaction.Context.User != null)
+				return;
 
 			var userIdentity = context.User?.Identity;
-			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
+			if (userIdentity == null || !userIdentity.IsAuthenticated)
+				return;
 
 			var user = new User { UserName = userIdentity.Name };
 

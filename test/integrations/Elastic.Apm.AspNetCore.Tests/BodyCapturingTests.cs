@@ -285,7 +285,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						yield return new OptionsTestVariant
 						{
-							CaptureBody = captureBody, CaptureBodyContentTypes = captureBodyContentTypes, IsSampled = isSampled
+							CaptureBody = captureBody,
+							CaptureBodyContentTypes = captureBodyContentTypes,
+							IsSampled = isSampled
 						};
 					}
 				}
@@ -352,10 +354,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			bool ShouldRequestBodyBeCaptured(IConfigurationReader configSnapshot, bool isError)
 			{
-				if (!configSnapshot.CaptureBodyContentTypes.Contains(MyCustomContentType)) return false;
+				if (!configSnapshot.CaptureBodyContentTypes.Contains(MyCustomContentType))
+					return false;
 
-				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyOff)) return false;
-				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll)) return true;
+				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyOff))
+					return false;
+				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll))
+					return true;
 
 				return isError || configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions);
 			}
@@ -385,7 +390,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					capturedRequestBody = transaction.Context.Request.Body;
 
-						capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
+					capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
 
 				}
 
@@ -417,7 +422,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private SutEnv StartSutEnv(IConfiguration startConfiguration = null)
 		{
-			if (_sutEnv != null) return _sutEnv;
+			if (_sutEnv != null)
+				return _sutEnv;
 
 			_sutEnv = new SutEnv(startConfiguration);
 			return _sutEnv;
@@ -454,7 +460,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)
 					.ConfigureServices(services =>
 						{
-							services.Configure<KestrelServerOptions>(_ => {  });
+							services.Configure<KestrelServerOptions>(_ => { });
 							Startup.ConfigureServicesExceptMvc(services);
 
 							services.AddMvc()

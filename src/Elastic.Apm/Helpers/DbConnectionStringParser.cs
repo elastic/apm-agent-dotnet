@@ -43,7 +43,8 @@ namespace Elastic.Apm.Helpers
 
 			wasFoundInCache = false;
 			destination = ParseConnectionString(dbConnectionString);
-			if (_cacheCount < MaxCacheSize && _cache.TryAdd(dbConnectionString, destination)) Interlocked.Increment(ref _cacheCount);
+			if (_cacheCount < MaxCacheSize && _cache.TryAdd(dbConnectionString, destination))
+				Interlocked.Increment(ref _cacheCount);
 			return destination;
 		}
 
@@ -128,7 +129,8 @@ namespace Elastic.Apm.Helpers
 
 			private void ParseKeyValue(string keyValue)
 			{
-				if (string.IsNullOrWhiteSpace(keyValue)) return;
+				if (string.IsNullOrWhiteSpace(keyValue))
+					return;
 
 				var keyValueSplit = keyValue.Split(new[] { KeyValueSeparator }, 2);
 				if (keyValueSplit.Length < 2)
@@ -145,7 +147,8 @@ namespace Elastic.Apm.Helpers
 				// Skip unknown keys
 				if (!_keyToPropertySetter.TryGetValue(key, out var valueParser))
 				{
-					if (!HasNestedStructure(value)) return;
+					if (!HasNestedStructure(value))
+						return;
 
 					// Unless value for an unknown key has nested structure
 					// then we want to go into the value to see if we find known keys
@@ -187,10 +190,12 @@ namespace Elastic.Apm.Helpers
 				var currentDelimiterIndex = openingDelimiterIndex;
 				while (true)
 				{
-					if (currentDelimiterIndex == str.Length - 1) break;
+					if (currentDelimiterIndex == str.Length - 1)
+						break;
 
 					currentDelimiterIndex = str.IndexOfAny(NestedDelimiters, currentDelimiterIndex + 1);
-					if (currentDelimiterIndex == -1) break;
+					if (currentDelimiterIndex == -1)
+						break;
 
 					if (str[currentDelimiterIndex] == NestedOpeningDelimiter)
 					{
@@ -199,7 +204,8 @@ namespace Elastic.Apm.Helpers
 					}
 
 					--nestingDepth;
-					if (nestingDepth != 0) continue;
+					if (nestingDepth != 0)
+						continue;
 
 					matchingClosingDelimiterIndex = currentDelimiterIndex;
 					break;
@@ -221,7 +227,8 @@ namespace Elastic.Apm.Helpers
 				Assertion.IfEnabled?.That(HasNestedStructure(value),
 					$"This method should called only on values with nested structure. Provided value: `{value}'.");
 
-				if (_currentNestingDepth + 1 > MaxNestingDepth) return;
+				if (_currentNestingDepth + 1 > MaxNestingDepth)
+					return;
 				++_currentNestingDepth;
 
 				var currentSubKeyValueOpenDelimiterIndex = 0;
@@ -232,11 +239,13 @@ namespace Elastic.Apm.Helpers
 						currentSubKeyValueOpenDelimiterIndex + 1,
 						currentSubKeyValueCloseDelimiterIndex - (currentSubKeyValueOpenDelimiterIndex + 1)));
 
-					if (currentSubKeyValueCloseDelimiterIndex == value.Length - 1) break;
+					if (currentSubKeyValueCloseDelimiterIndex == value.Length - 1)
+						break;
 
 					currentSubKeyValueOpenDelimiterIndex =
 						value.IndexOf(NestedOpeningDelimiter, currentSubKeyValueCloseDelimiterIndex + 1);
-					if (currentSubKeyValueOpenDelimiterIndex == -1) break;
+					if (currentSubKeyValueOpenDelimiterIndex == -1)
+						break;
 				}
 
 				--_currentNestingDepth;
@@ -247,7 +256,8 @@ namespace Elastic.Apm.Helpers
 			private void ParseAddressKeyWithNestedStructureValue(string value)
 			{
 				// If we already found address part of destination we don't need to parse anymore
-				if (_destination.AddressHasValue) return;
+				if (_destination.AddressHasValue)
+					return;
 
 				if (!HasNestedStructure(value))
 				{
@@ -262,7 +272,8 @@ namespace Elastic.Apm.Helpers
 			private void ParseServerValue(string valueArg)
 			{
 				// Some DB connection string formats allow multiple addresses - we use only the first one
-				if (_destination.AddressHasValue) return;
+				if (_destination.AddressHasValue)
+					return;
 
 				var value = TrimDiscardable(valueArg);
 
@@ -280,7 +291,8 @@ namespace Elastic.Apm.Helpers
 				}
 
 				var dbInstanceSeparatorIndex = value.IndexOf(ServerNameDbInstanceSeparator);
-				if (dbInstanceSeparatorIndex != -1) value = value.Substring(0, dbInstanceSeparatorIndex);
+				if (dbInstanceSeparatorIndex != -1)
+					value = value.Substring(0, dbInstanceSeparatorIndex);
 				ParseServerWithOptionalPort(value);
 			}
 
@@ -314,17 +326,21 @@ namespace Elastic.Apm.Helpers
 				// IPv6 can contain `/<hex number>' and we don't want to discard a part of the address
 
 				var lastSlashIndex = value.LastIndexOf('/');
-				if (lastSlashIndex == -1) return value;
+				if (lastSlashIndex == -1)
+					return value;
 
 				var foundNonHexDigit = false;
-				for (var i = lastSlashIndex + 1 ; i < value.Length ; ++i )
+				for (var i = lastSlashIndex + 1; i < value.Length; ++i)
 				{
-					if (! TextUtils.IsLatinLetter(value[i])) return value;
-					if (!foundNonHexDigit && !TextUtils.IsHex(value[i])) foundNonHexDigit = true;
+					if (!TextUtils.IsLatinLetter(value[i]))
+						return value;
+					if (!foundNonHexDigit && !TextUtils.IsHex(value[i]))
+						foundNonHexDigit = true;
 				}
 
 				// If the suffix part after / is not empty and it's a valid hex number - we don't want to trim it
-				if (lastSlashIndex < value.Length - 1 && !foundNonHexDigit) return value;
+				if (lastSlashIndex < value.Length - 1 && !foundNonHexDigit)
+					return value;
 
 				return value.Substring(0, lastSlashIndex);
 			}
@@ -408,7 +424,7 @@ namespace Elastic.Apm.Helpers
 				if (string.IsNullOrWhiteSpace(valueToParse))
 					throw new FormatException($"Port part of server value is white space only/empty string. valueToParse: `{valueToParse}'.");
 
-				if (! int.TryParse(valueToParse, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
+				if (!int.TryParse(valueToParse, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
 					throw new FormatException($"Failed to parse port part of server value. valueToParse: `{valueToParse}'.");
 
 				if (port < 0)

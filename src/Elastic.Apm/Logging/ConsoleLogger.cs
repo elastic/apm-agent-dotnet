@@ -41,7 +41,8 @@ namespace Elastic.Apm.Logging
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			if (!IsEnabled(level)) return;
+			if (!IsEnabled(level))
+				return;
 
 			TextWriter writer;
 			switch (level)
@@ -99,15 +100,22 @@ namespace Elastic.Apm.Logging
 		{
 			switch (level)
 			{
-				case LogLevel.Error: return "Error";
-				case LogLevel.Warning: return "Warning";
-				case LogLevel.Information: return "Info";
-				case LogLevel.Debug: return "Debug";
-				case LogLevel.Trace: return "Trace";
-				case LogLevel.Critical: return "Critical";
+				case LogLevel.Error:
+					return "Error";
+				case LogLevel.Warning:
+					return "Warning";
+				case LogLevel.Information:
+					return "Info";
+				case LogLevel.Debug:
+					return "Debug";
+				case LogLevel.Trace:
+					return "Trace";
+				case LogLevel.Critical:
+					return "Critical";
 				// ReSharper disable once RedundantCaseLabel
 				case LogLevel.None:
-				default: return "None";
+				default:
+					return "None";
 			}
 		}
 	}

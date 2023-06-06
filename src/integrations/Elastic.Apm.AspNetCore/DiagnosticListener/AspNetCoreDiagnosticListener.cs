@@ -76,9 +76,12 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			{
 				case "Microsoft.AspNetCore.Diagnostics.UnhandledException": //Called when exception handler is registered
 				case "Microsoft.AspNetCore.Diagnostics.HandledException":
-					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextDiagnosticsUnhandledException)) return;
-					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception diagnosticsException)) return;
-					if (!ProcessingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var iDiagnosticsTransaction)) return;
+					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextDiagnosticsUnhandledException))
+						return;
+					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception diagnosticsException))
+						return;
+					if (!ProcessingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var iDiagnosticsTransaction))
+						return;
 
 					if (iDiagnosticsTransaction is Transaction diagnosticsTransaction)
 					{
@@ -88,9 +91,12 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					break;
 				case "Microsoft.AspNetCore.Hosting.UnhandledException": // Not called when exception handler registered
-					if (!(_hostDefaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextUnhandledException)) return;
-					if (!(_hostExceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception)) return;
-					if (!ProcessingRequests.TryGetValue(httpContextUnhandledException, out var iCurrentTransaction)) return;
+					if (!(_hostDefaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextUnhandledException))
+						return;
+					if (!(_hostExceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception))
+						return;
+					if (!ProcessingRequests.TryGetValue(httpContextUnhandledException, out var iCurrentTransaction))
+						return;
 
 					if (iCurrentTransaction is Transaction currentTransaction)
 					{

@@ -105,7 +105,8 @@ namespace SampleAspNetCoreApp.Controllers
 
 		private static Task<T> SafeCaptureSpan<T>(bool captureControllerActionAsSpan, string spanName, string spanType, Func<Task<T>> spanBody)
 		{
-			if (!captureControllerActionAsSpan || Agent.Tracer.CurrentTransaction == null) return spanBody();
+			if (!captureControllerActionAsSpan || Agent.Tracer.CurrentTransaction == null)
+				return spanBody();
 
 			return (Agent.Tracer.CurrentSpan ?? (IExecutionSegment)Agent.Tracer.CurrentTransaction).CaptureSpan(spanName, spanType, spanBody);
 		}
@@ -164,7 +165,8 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TriggerError()
 		{
-			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.SetLabel("foo", "bar");
+			if (Agent.Tracer.CurrentTransaction != null)
+				Agent.Tracer.CurrentTransaction.SetLabel("foo", "bar");
 			throw new Exception("This is a test exception!");
 		}
 
@@ -191,7 +193,8 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TransactionWithCustomName()
 		{
-			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Name = "custom";
+			if (Agent.Tracer.CurrentTransaction != null)
+				Agent.Tracer.CurrentTransaction.Name = "custom";
 			return Ok();
 		}
 
@@ -203,7 +206,8 @@ namespace SampleAspNetCoreApp.Controllers
 			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
 			var str = string.Join(",", model.ToArray());
 
-			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.CaptureSpan("SampleSpan", "PerfBenchmark", () => { });
+			if (Agent.Tracer.CurrentTransaction != null)
+				Agent.Tracer.CurrentTransaction.CaptureSpan("SampleSpan", "PerfBenchmark", () => { });
 
 			return Ok(str);
 		}
@@ -230,7 +234,8 @@ namespace SampleAspNetCoreApp.Controllers
 			var isTransactionWithValidTraceIdCreated = false;
 			Agent.Tracer.CaptureTransaction("a", "b", t =>
 			{
-				if (!string.IsNullOrEmpty(t.TraceId)) isTransactionWithValidTraceIdCreated = true;
+				if (!string.IsNullOrEmpty(t.TraceId))
+					isTransactionWithValidTraceIdCreated = true;
 			});
 			return Ok(isTransactionWithValidTraceIdCreated);
 		}

@@ -96,7 +96,8 @@ namespace Elastic.Apm.BackendComm
 				//    if the relative part of baseUri is to be preserved in the constructed Uri.
 				var baseAbsoluteUrlAdapted = baseAbsoluteUrl;
 				var baseAbsoluteUrlAsStr = baseAbsoluteUrl.ToString();
-				if (!baseAbsoluteUrlAsStr.EndsWith("/")) baseAbsoluteUrlAdapted = new Uri(baseAbsoluteUrlAsStr + "/", UriKind.Absolute);
+				if (!baseAbsoluteUrlAsStr.EndsWith("/"))
+					baseAbsoluteUrlAdapted = new Uri(baseAbsoluteUrlAsStr + "/", UriKind.Absolute);
 				return new Uri(baseAbsoluteUrlAdapted, relativeUrl);
 			}
 		}
@@ -104,7 +105,7 @@ namespace Elastic.Apm.BackendComm
 		private static void ConfigServicePoint(Uri serverUrlBase, IApmLogger logger) =>
 			ConfigServicePointOnceHelper.IfNotInited?.Init(() =>
 			{
-// ServicePointManager is obsolete
+				// ServicePointManager is obsolete
 #pragma warning disable SYSLIB0014
 				var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
 #pragma warning restore SYSLIB0014
@@ -131,7 +132,8 @@ namespace Elastic.Apm.BackendComm
 			{
 				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
 				{
-					if (policyError == SslPolicyErrors.None) return true;
+					if (policyError == SslPolicyErrors.None)
+						return true;
 
 					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
 					return true;
@@ -146,7 +148,8 @@ namespace Elastic.Apm.BackendComm
 
 					serverCertificateCustomValidationCallback = (_, certificate, _, policyError) =>
 					{
-						if (policyError == SslPolicyErrors.None) return true;
+						if (policyError == SslPolicyErrors.None)
+							return true;
 
 						if (certificate is null)
 						{
@@ -182,7 +185,8 @@ namespace Elastic.Apm.BackendComm
 				// set a default callback to log the policy error
 				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
 				{
-					if (policyError == SslPolicyErrors.None) return true;
+					if (policyError == SslPolicyErrors.None)
+						return true;
 
 					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
 					return false;

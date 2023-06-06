@@ -27,8 +27,8 @@ namespace Elastic.Apm.StackExchange.Redis
 
 		private readonly Lazy<IApmLogger> _logger;
 		private readonly Lazy<IApmAgent> _agent;
-		private static readonly Func<object,object> MessageFetcher;
-		private static readonly Func<object,object> CommandAndKeyFetcher;
+		private static readonly Func<object, object> MessageFetcher;
+		private static readonly Func<object, object> CommandAndKeyFetcher;
 		private static readonly Type _profiledCommandType;
 
 		static ElasticApmProfiler()
@@ -134,7 +134,8 @@ namespace Elastic.Apm.StackExchange.Redis
 					"Finished profiling session for {ExecutionSegment}. Collected {ProfiledCommandCount} commands",
 					executionSegment, profiledCommands.Count());
 
-				foreach (var profiledCommand in profiledCommands) ProcessCommand(profiledCommand, executionSegment);
+				foreach (var profiledCommand in profiledCommands)
+					ProcessCommand(profiledCommand, executionSegment);
 
 				_logger.Value.Trace()?.Log(
 					"End profiling session for {ExecutionSegment} {Id}",

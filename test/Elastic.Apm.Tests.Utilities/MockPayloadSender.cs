@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -82,11 +82,13 @@ namespace Elastic.Apm.Tests.Utilities
 				var signalled = true;
 				if (timeout is null)
 				{
-					lock (_transactionLock) transactionCount = _transactions.Count;
+					lock (_transactionLock)
+						transactionCount = _transactions.Count;
 					while (transactionCount < count && signalled)
 					{
 						signalled = _transactionWaitHandle.WaitOne(DefaultTimeout);
-						lock (_transactionLock) transactionCount = _transactions.Count;
+						lock (_transactionLock)
+							transactionCount = _transactions.Count;
 					}
 				}
 				else
@@ -100,7 +102,8 @@ namespace Elastic.Apm.Tests.Utilities
 					{
 						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
 						signalled = _transactionWaitHandle.WaitOne(elapsedMilliseconds);
-						lock (_transactionLock) transactionCount = _transactions.Count;
+						lock (_transactionLock)
+							transactionCount = _transactions.Count;
 					}
 				}
 
@@ -123,23 +126,27 @@ namespace Elastic.Apm.Tests.Utilities
 				var signalled = true;
 				if (timeout is null)
 				{
-					lock (_spanLock) spanCount = _spans.Count;
+					lock (_spanLock)
+						spanCount = _spans.Count;
 					while (spanCount < count && signalled)
 					{
 						signalled = _spanWaitHandle.WaitOne(DefaultTimeout);
-						lock (_spanLock) spanCount = _spans.Count;
+						lock (_spanLock)
+							spanCount = _spans.Count;
 					}
 				}
 				else
 				{
 					var stopWatch = Stopwatch.StartNew();
 
-					lock (_spanLock) spanCount = _spans.Count;
+					lock (_spanLock)
+						spanCount = _spans.Count;
 					while (spanCount < count && signalled)
 					{
 						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
 						signalled = _spanWaitHandle.WaitOne(elapsedMilliseconds);
-						lock (_spanLock) spanCount = _spans.Count;
+						lock (_spanLock)
+							spanCount = _spans.Count;
 					}
 				}
 
@@ -183,7 +190,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			get
 			{
-				lock (_errorLock) return CreateImmutableSnapshot<IError>(_errors);
+				lock (_errorLock)
+					return CreateImmutableSnapshot<IError>(_errors);
 			}
 		}
 
@@ -202,7 +210,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			get
 			{
-				lock (_metricsLock) return CreateImmutableSnapshot<IMetricSet>(_metrics);
+				lock (_metricsLock)
+					return CreateImmutableSnapshot<IMetricSet>(_metrics);
 			}
 		}
 
@@ -210,7 +219,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			get
 			{
-				lock (_spanLock) return CreateImmutableSnapshot<ISpan>(_spans);
+				lock (_spanLock)
+					return CreateImmutableSnapshot<ISpan>(_spans);
 			}
 		}
 
@@ -218,7 +228,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			get
 			{
-				lock (_transactionLock) return CreateImmutableSnapshot<ITransaction>(_transactions);
+				lock (_transactionLock)
+					return CreateImmutableSnapshot<ITransaction>(_transactions);
 			}
 		}
 
@@ -305,10 +316,14 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public void Clear()
 		{
-			lock (_spanLock) _spans.Clear();
-			lock (_errorLock) _errors.Clear();
-			lock (_transactionLock) _transactions.Clear();
-			lock (_metricsLock) _metrics.Clear();
+			lock (_spanLock)
+				_spans.Clear();
+			lock (_errorLock)
+				_errors.Clear();
+			lock (_transactionLock)
+				_transactions.Clear();
+			lock (_metricsLock)
+				_metrics.Clear();
 		}
 
 		private static IReadOnlyList<T> CreateImmutableSnapshot<T>(IEnumerable<T> source) => new List<T>(source);

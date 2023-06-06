@@ -36,9 +36,9 @@ namespace Elastic.Apm.Cloud
 			var websiteInstanceId = helper.GetEnvironmentVariable(AzureEnvironmentVariables.WebsiteInstanceId);
 
 			if (helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteOwnerName, websiteOwnerName) ||
-			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteResourceGroup, websiteResourceGroup) ||
-			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteSiteName, websiteSiteName) ||
-			    helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteInstanceId, websiteInstanceId))
+				helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteResourceGroup, websiteResourceGroup) ||
+				helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteSiteName, websiteSiteName) ||
+				helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteInstanceId, websiteInstanceId))
 				return Task.FromResult<Api.Cloud>(null);
 
 			var tokens = helper.TokenizeWebSiteOwnerName(websiteOwnerName);

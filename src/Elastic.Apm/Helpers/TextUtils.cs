@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -21,7 +21,8 @@ namespace Elastic.Apm.Helpers
 			input.ThrowIfArgumentNull(nameof(input));
 
 			// We treat empty input as a special case because StringReader doesn't return it as an empty line
-			if (input.IsEmpty()) return prefix;
+			if (input.IsEmpty())
+				return prefix;
 
 			var resultBuilder = new StringBuilder(input.Length);
 			using (var stringReader = new StringReader(input))
@@ -44,7 +45,8 @@ namespace Elastic.Apm.Helpers
 
 			foreach (var endOfLineSeq in EndOfLineCharSequences)
 			{
-				if (!input.EndsWith(endOfLineSeq)) continue;
+				if (!input.EndsWith(endOfLineSeq))
+					continue;
 
 				resultBuilder.Append(endOfLineSeq);
 				break;
@@ -59,12 +61,12 @@ namespace Elastic.Apm.Helpers
 			Indent(input, Indentation.Repeat(indentationLevel));
 
 		internal static bool IsHex(char c) =>
-			( '0' <= c && c <= '9' ) ||
-			( 'a' <= c && c <= 'f' ) ||
-			( 'A' <= c && c <= 'F' );
+			('0' <= c && c <= '9') ||
+			('a' <= c && c <= 'f') ||
+			('A' <= c && c <= 'F');
 
 		internal static bool IsLatinLetter(char c) =>
-			( 'a' <= c && c <= 'z' ) ||
-			( 'A' <= c && c <= 'Z' );
+			('a' <= c && c <= 'z') ||
+			('A' <= c && c <= 'Z');
 	}
 }

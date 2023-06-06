@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -41,7 +41,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			}
 
 			var inMemoryLogContentBuilder = new StringBuilder();
-			foreach (var line in LoggingConfig.LogMemoryTarget.Logs) inMemoryLogContentBuilder.AppendLine(line);
+			foreach (var line in LoggingConfig.LogMemoryTarget.Logs)
+				inMemoryLogContentBuilder.AppendLine(line);
 			model.InMemoryLogContent = inMemoryLogContentBuilder.ToString();
 
 			model.LoggingSubsystemInternalLogContent = InternalLogger.LogWriter?.ToString();

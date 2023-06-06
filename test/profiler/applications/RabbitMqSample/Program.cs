@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -20,7 +20,7 @@ using RabbitMQ.Client.Events;
 namespace RabbitMqSample
 {
 	internal class Program
-    {
+	{
 		private static volatile int MessageCount;
 		private static readonly AutoResetEvent SendFinished = new(false);
 
@@ -61,15 +61,15 @@ namespace RabbitMqSample
 			// Allow time for the agent to send data
 			Thread.Sleep(TimeSpan.FromSeconds(30));
 			Console.WriteLine("finished");
-        }
+		}
 
-        private static void PublishAndGet(string name, string exchange, string queue, string routingKey)
-        {
-            // Configure and send to RabbitMQ queue
-            var factory = new ConnectionFactory { Uri = new Uri(Host()) };
+		private static void PublishAndGet(string name, string exchange, string queue, string routingKey)
+		{
+			// Configure and send to RabbitMQ queue
+			var factory = new ConnectionFactory { Uri = new Uri(Host()) };
 
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+			using (var connection = factory.CreateConnection())
+			using (var channel = connection.CreateModel())
 			{
 				Agent.Tracer.CaptureTransaction(name, "messaging", () =>
 				{
@@ -105,17 +105,17 @@ namespace RabbitMqSample
 					// ReSharper restore AccessToDisposedClosure
 				});
 			}
-        }
+		}
 
-        private static void PublishAndGetDefault()
-        {
-            // Configure and send to RabbitMQ queue
-            var factory = new ConnectionFactory() { Uri = new Uri(Host()) };
+		private static void PublishAndGetDefault()
+		{
+			// Configure and send to RabbitMQ queue
+			var factory = new ConnectionFactory() { Uri = new Uri(Host()) };
 
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                string defaultQueueName;
+			using (var connection = factory.CreateConnection())
+			using (var channel = connection.CreateModel())
+			{
+				string defaultQueueName;
 
 				Agent.Tracer.CaptureTransaction("PublishAndGetDefault", "messaging", () =>
 				{
@@ -144,23 +144,23 @@ namespace RabbitMqSample
 					Console.WriteLine($"[PublishAndGetDefault] BasicGet - Received message: {resultMessage}");
 				});
 			}
-        }
+		}
 
-        private static void Send()
-        {
-            // Configure and send to RabbitMQ queue
-            var factory = new ConnectionFactory() { Uri = new Uri(Host()) };
-            using(var connection = factory.CreateConnection())
-            using(var channel = connection.CreateModel())
-            {
-                channel.QueueDeclare(queue: "hello",
-                                        durable: false,
-                                        exclusive: false,
-                                        autoDelete: false,
-                                        arguments: null);
-                channel.QueuePurge("hello"); // Ensure there are no more messages in this queue
+		private static void Send()
+		{
+			// Configure and send to RabbitMQ queue
+			var factory = new ConnectionFactory() { Uri = new Uri(Host()) };
+			using (var connection = factory.CreateConnection())
+			using (var channel = connection.CreateModel())
+			{
+				channel.QueueDeclare(queue: "hello",
+										durable: false,
+										exclusive: false,
+										autoDelete: false,
+										arguments: null);
+				channel.QueuePurge("hello"); // Ensure there are no more messages in this queue
 
-                for (var i = 0; i < 3; i++)
+				for (var i = 0; i < 3; i++)
 				{
 					Agent.Tracer.CaptureTransaction("PublishToConsumer", "messaging", () =>
 					{
@@ -175,56 +175,56 @@ namespace RabbitMqSample
 						Interlocked.Increment(ref MessageCount);
 					});
 				}
-            }
+			}
 
-            SendFinished.Set();
-            Console.WriteLine("[Send] Exiting Thread.");
-        }
+			SendFinished.Set();
+			Console.WriteLine("[Send] Exiting Thread.");
+		}
 
-        private static void Receive()
-        {
-            // Let's just wait for all sending activity to finish before doing any work
-            SendFinished.WaitOne();
+		private static void Receive()
+		{
+			// Let's just wait for all sending activity to finish before doing any work
+			SendFinished.WaitOne();
 
-            // Configure and listen to RabbitMQ queue
-            var factory = new ConnectionFactory { Uri = new Uri(Host()) };
-            using(var connection = factory.CreateConnection())
-            using(var channel = connection.CreateModel())
-            {
-                channel.QueueDeclare(queue: "hello",
-                                    durable: false,
-                                    exclusive: false,
-                                    autoDelete: false,
-                                    arguments: null);
+			// Configure and listen to RabbitMQ queue
+			var factory = new ConnectionFactory { Uri = new Uri(Host()) };
+			using (var connection = factory.CreateConnection())
+			using (var channel = connection.CreateModel())
+			{
+				channel.QueueDeclare(queue: "hello",
+									durable: false,
+									exclusive: false,
+									autoDelete: false,
+									arguments: null);
 
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (_, ea) =>
-                {
+				var consumer = new EventingBasicConsumer(channel);
+				consumer.Received += (_, ea) =>
+				{
 					var transaction = Agent.Tracer.CurrentTransaction;
 					var span = transaction?.StartSpan("Consume message", ApiConstants.TypeMessaging);
 
 #if RABBITMQ_6_0
-                    var body = ea.Body.ToArray();
+					var body = ea.Body.ToArray();
 #else
                     var body = ea.Body;
 #endif
 
-                    var message = Encoding.UTF8.GetString(body);
-                    Console.WriteLine("[Receive] - [x] Received {0}", message);
+					var message = Encoding.UTF8.GetString(body);
+					Console.WriteLine("[Receive] - [x] Received {0}", message);
 
 					Interlocked.Decrement(ref MessageCount);
 					span?.End();
-                };
+				};
 
-                channel.BasicConsume("hello",
-                                    true,
-                                    consumer);
+				channel.BasicConsume("hello",
+									true,
+									consumer);
 
-                while (MessageCount != 0)
+				while (MessageCount != 0)
 					Thread.Sleep(1000);
 
 				Console.WriteLine("[Receive] Exiting Thread.");
-            }
-        }
-    }
+			}
+		}
+	}
 }
