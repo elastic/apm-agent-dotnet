@@ -58,7 +58,8 @@ namespace Elastic.Apm.Elasticsearch
 
 			span.InstrumentationFlag = InstrumentationFlag.Elasticsearch;
 			span.Action = name;
-			SetDbContext(span, instanceUri);
+
+			SetDbContext(span);
 			SetDestination(span, instanceUri);
 
 			var id = Activity.Current.Id;
@@ -78,12 +79,12 @@ namespace Elastic.Apm.Elasticsearch
 			span.Context.Destination = new Destination { Port = instance.Port, Address = instance.Host };
 		}
 
-		internal bool TryGetCurrentElasticsearchSpan(out Span span, Uri instance = null)
+		internal bool TryGetCurrentElasticsearchSpan(out Span span)
 		{
 			var id = Activity.Current.Id;
 			if (Spans.TryRemove(id, out span))
 			{
-				SetDbContext(span, instance);
+				SetDbContext(span);
 				return true;
 			}
 
@@ -93,13 +94,10 @@ namespace Elastic.Apm.Elasticsearch
 			return false;
 		}
 
-		private static void SetDbContext(ISpan span, Uri instance)
+		private static void SetDbContext(ISpan span)
 		{
-			var instanceUriString = instance?.ToString();
-			if (span.Context.Db?.Instance != null || instanceUriString == null)
-				return;
-
-			span.Context.Db = new Database { Instance = instanceUriString, Type = Database.TypeElasticsearch };
+			if (span.Context.Db != null) return;
+			span.Context.Db = new Database { Type = Database.TypeElasticsearch };
 		}
 	}
 }
