@@ -3,8 +3,20 @@ NOTE: For the best reading experience,
 please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet[elastic.co]
 endif::[]
 
-[[log-correlation]]
-== Log correlation
+[[logs]]
+== Logs
+
+Elastic .NET Agent provides <<log-correlation-ids>>.
+The agent will automaticaly inject correlation IDs that allow navigation between logs, traces and services.
+
+This features is part of {observability-guide}/application-logs.html[Application log ingestion strategies].
+
+The {ecs-logging-dotnet-ref}/intro.html[`ecs-logging-dotnet`] library can also be used to use the {ecs-logging-ref}/intro.html[ECS logging] format without an APM agent.
+When deployed with the .NET APM agent, the agent will provide <<log-correlation-ids,log correlation>> IDs.
+
+[float]
+[[log-correlation-ids]]
+=== Log correlation
 
 The Elastic APM .NET agent provides integrations for popular logging frameworks, which take care of
 injecting trace ID fields into your application's log records. Currently supported logging frameworks are:
@@ -22,7 +34,7 @@ send your logs to Elasticsearch, in order to correlate your traces and logs and 
 APM to the {observability-guide}/monitor-logs.html[Logs app].
 
 [[serilog]]
-=== Serilog
+==== Serilog
 
 We offer a https://github.com/serilog/serilog/wiki/Enrichment[Serilog Enricher] that adds the trace id to every log line that is created during an active trace.
 
@@ -64,7 +76,7 @@ With this setup the application will send all the logs automatically to Elastics
 
 
 [[nlog]]
-=== NLog
+==== NLog
 
 For NLog, we offer two https://github.com/NLog/NLog/wiki/Layout-Renderers[LayoutRenderers] that inject the current trace and transaction id into logs.
 
@@ -93,7 +105,7 @@ In order to use them, you need to add the https://www.nuget.org/packages/Elastic
 As you can see in the sample file above, you can reference the current transaction id with `${ElasticApmTransactionId}` and the trace id with `${ElasticApmTraceId}`.
 
 [[log-correlation-manual]]
-=== Manual log correlation
+==== Manual log correlation
 
 If the agent-provided logging integrations are not suitable or not available for your
 application, then you can use the agent's <<public-api, API>> to inject trace IDs manually.
@@ -102,7 +114,7 @@ or unstructured logging.
 
 [float]
 [[log-correlation-manual-structured]]
-==== Manual log correlation (structured)
+===== Manual log correlation (structured)
 
 For correlating structured logs with traces, the following fields should be added to your logs:
 
@@ -127,7 +139,7 @@ In case the agent is configured and there is an active transaction, the `traceId
 
 [float]
 [[log-correlation-manual-unstructured]]
-==== Manual log correlation (unstructured)
+===== Manual log correlation (unstructured)
 
 For correlating unstructured logs (e.g. basic printf-style logging, like
 `Console.WriteLine`), you will need to include the trace ids in your log message, and then
