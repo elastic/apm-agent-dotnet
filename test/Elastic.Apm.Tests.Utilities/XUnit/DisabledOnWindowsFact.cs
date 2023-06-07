@@ -28,12 +28,12 @@ public sealed class DisabledOnFullFrameworkFact : FactAttribute
 	}
 }
 
-public sealed class DisabledOnWindowsDockerFact : DockerFactAttribute
+public sealed class DisabledOnWindowsCIDockerFact : DockerFactAttribute
 {
-	public DisabledOnWindowsDockerFact()
+	public DisabledOnWindowsCIDockerFact()
 	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			Skip = "This test is disabled on windows";
+		if (TestEnvironment.IsCi && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			Skip = "This test is disabled on windows CI";
 	}
 }
 
