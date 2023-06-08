@@ -12,7 +12,7 @@ The agent will automaticaly inject correlation IDs that allow navigation between
 This features is part of {observability-guide}/application-logs.html[Application log ingestion strategies].
 
 The {ecs-logging-dotnet-ref}/intro.html[`ecs-logging-dotnet`] library can also be used to use the {ecs-logging-ref}/intro.html[ECS logging] format without an APM agent.
-When deployed with the .NET APM agent, the agent will provide <<log-correlation-ids,log correlation>> IDs.
+ECS .NET logging will always provide <<log-correlation-ids,log correlation>> IDs through https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-7.0[`System.Diagnostics.Activity`]. When paired with the APM Agent it will pick up the appropriate service correlation features too.
 
 [float]
 [[log-correlation-ids]]
