@@ -17,7 +17,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 {
 	public class ProfilingSessionTests
 	{
-		[DisabledOnWindowsCIDockerFact]
+		[DisabledOnWindowsGitHubActionsDockerFact]
 		public async Task Capture_Redis_Commands_On_Transaction()
 		{
 			await using var container = new RedisBuilder().Build();
@@ -75,7 +75,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 			await container.StopAsync();
 		}
 
-		[DisabledOnWindowsCIDockerFact]
+		[DisabledOnWindowsGitHubActionsDockerFact]
 		public async Task Capture_Redis_Commands_On_Span()
 		{
 			await using var container = new RedisBuilder().Build();

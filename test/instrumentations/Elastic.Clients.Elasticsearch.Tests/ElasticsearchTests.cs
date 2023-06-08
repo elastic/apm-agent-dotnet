@@ -24,7 +24,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		_client = _esClientListenerFixture.Client ?? throw new Exception("ElasticsearchClient is `null`");
 	}
 
-	[DisabledOnWindowsCIDockerFact]
+	[DisabledOnWindowsGitHubActionsDockerFact]
 	public async Task IndexDataTest()
 	{
 		var (payloadSender, apmAgent) = SetUpAgent();
@@ -49,7 +49,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 	}
 
 
-	[DisabledOnWindowsCIDockerFact]
+	[DisabledOnWindowsGitHubActionsDockerFact]
 	public async Task GetDocumentTest()
 	{
 		// make sure data is present
@@ -76,7 +76,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-	[DisabledOnWindowsCIDockerFact]
+	[DisabledOnWindowsGitHubActionsDockerFact]
 	public async Task SearchDocumentTest()
 	{
 		// make sure data is present
@@ -103,7 +103,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-	[DisabledOnWindowsCIDockerFact]
+	[DisabledOnWindowsGitHubActionsDockerFact]
 	public async Task UpdateDocumentTest()
 	{
 		// make sure data is present
@@ -139,7 +139,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		updateSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-	[DisabledOnWindowsCIDockerFact]
+	[DisabledOnWindowsGitHubActionsDockerFact]
 	public async Task DeleteDocumentTest()
 	{
 		// make sure data is present

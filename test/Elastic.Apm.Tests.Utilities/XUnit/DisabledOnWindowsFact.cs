@@ -3,7 +3,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System.Runtime.InteropServices;
 using Elastic.Apm.Tests.Utilities.Docker;
 using Xunit;
 
@@ -13,8 +12,8 @@ public sealed class DisabledOnWindowsFact : FactAttribute
 {
 	public DisabledOnWindowsFact()
 	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			Skip = "This test is disabled on windows";
+		if (TestEnvironment.IsWindows)
+			Skip = "This test is disabled on Windows.";
 	}
 }
 
@@ -28,12 +27,16 @@ public sealed class DisabledOnFullFrameworkFact : FactAttribute
 	}
 }
 
-public sealed class DisabledOnWindowsCIDockerFact : DockerFactAttribute
+/// <summary>
+/// May be applied to tests which depend on Linux Docker images which will not be
+/// available when running on Windows images from GitHub actions.
+/// </summary>
+public sealed class DisabledOnWindowsGitHubActionsDockerFact : DockerFactAttribute
 {
-	public DisabledOnWindowsCIDockerFact()
+	public DisabledOnWindowsGitHubActionsDockerFact()
 	{
-		if (TestEnvironment.IsCi && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			Skip = "This test is disabled on windows CI";
+		if (TestEnvironment.IsGitHubActions && TestEnvironment.IsWindows)
+			Skip = "This test is disabled on Windows when running under GitHub Actions.";
 	}
 }
 
@@ -41,8 +44,8 @@ public sealed class DisabledOnWindowsTheory : TheoryAttribute
 {
 	public DisabledOnWindowsTheory()
 	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			Skip = "This test is disabled on windows";
+		if (TestEnvironment.IsWindows)
+			Skip = "This test is disabled on Windows.";
 	}
 }
 
