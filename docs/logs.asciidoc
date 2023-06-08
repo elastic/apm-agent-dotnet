@@ -34,7 +34,7 @@ send your logs to Elasticsearch, in order to correlate your traces and logs and 
 APM to the {observability-guide}/monitor-logs.html[Logs app].
 
 [[serilog]]
-==== Serilog
+=== Serilog
 
 We offer a https://github.com/serilog/serilog/wiki/Enrichment[Serilog Enricher] that adds the trace id to every log line that is created during an active trace.
 
@@ -76,7 +76,7 @@ With this setup the application will send all the logs automatically to Elastics
 
 
 [[nlog]]
-==== NLog
+=== NLog
 
 For NLog, we offer two https://github.com/NLog/NLog/wiki/Layout-Renderers[LayoutRenderers] that inject the current trace and transaction id into logs.
 
@@ -105,7 +105,7 @@ In order to use them, you need to add the https://www.nuget.org/packages/Elastic
 As you can see in the sample file above, you can reference the current transaction id with `${ElasticApmTransactionId}` and the trace id with `${ElasticApmTraceId}`.
 
 [[log-correlation-manual]]
-==== Manual log correlation
+=== Manual log correlation
 
 If the agent-provided logging integrations are not suitable or not available for your
 application, then you can use the agent's <<public-api, API>> to inject trace IDs manually.
