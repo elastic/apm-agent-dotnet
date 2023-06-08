@@ -96,7 +96,8 @@ namespace Elastic.Apm.Elasticsearch
 
 		private static void SetDbContext(ISpan span)
 		{
-			if (span.Context.Db != null) return;
+			if (span.Context.Db != null)
+				return;
 			span.Context.Db = new Database { Type = Database.TypeElasticsearch };
 		}
 	}

@@ -8,10 +8,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
-using StackExchange.Redis;
-using FluentAssertions;
-using Testcontainers.Redis;
 using Elastic.Apm.Tests.Utilities.XUnit;
+using FluentAssertions;
+using StackExchange.Redis;
+using Testcontainers.Redis;
 
 namespace Elastic.Apm.StackExchange.Redis.Tests
 {
