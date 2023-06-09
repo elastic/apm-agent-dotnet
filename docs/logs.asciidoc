@@ -3,8 +3,20 @@ NOTE: For the best reading experience,
 please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet[elastic.co]
 endif::[]
 
-[[log-correlation]]
-== Log correlation
+[[logs]]
+== Logs
+
+Elastic .NET Agent provides <<log-correlation-ids>>.
+The agent will automaticaly inject correlation IDs that allow navigation between logs, traces and services.
+
+This features is part of {observability-guide}/application-logs.html[Application log ingestion strategies].
+
+The {ecs-logging-dotnet-ref}/intro.html[`ecs-logging-dotnet`] library can also be used to use the {ecs-logging-ref}/intro.html[ECS logging] format without an APM agent.
+ECS .NET logging will always provide <<log-correlation-ids,log correlation>> IDs through https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-7.0[`System.Diagnostics.Activity`]. When paired with the APM Agent it will pick up the appropriate service correlation features too.
+
+[float]
+[[log-correlation-ids]]
+=== Log correlation
 
 The Elastic APM .NET agent provides integrations for popular logging frameworks, which take care of
 injecting trace ID fields into your application's log records. Currently supported logging frameworks are:
@@ -102,7 +114,7 @@ or unstructured logging.
 
 [float]
 [[log-correlation-manual-structured]]
-==== Manual log correlation (structured)
+===== Manual log correlation (structured)
 
 For correlating structured logs with traces, the following fields should be added to your logs:
 
@@ -127,7 +139,7 @@ In case the agent is configured and there is an active transaction, the `traceId
 
 [float]
 [[log-correlation-manual-unstructured]]
-==== Manual log correlation (unstructured)
+===== Manual log correlation (unstructured)
 
 For correlating unstructured logs (e.g. basic printf-style logging, like
 `Console.WriteLine`), you will need to include the trace ids in your log message, and then
