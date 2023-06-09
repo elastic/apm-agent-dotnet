@@ -360,7 +360,21 @@
       - System.Threading.Tasks.Task`1<System.Int32>
       - System.Threading.CancellationToken
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
+    wrapper:
+      assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
+      action: CallTargetModification
+  - target:
+      assembly: Npgsql
+      type: Npgsql.NpgsqlCommand
+      method: ExecuteNonQuery
+      signature_types:
+      - System.Threading.Tasks.Task`1<System.Int32>
+      - System.Boolean
+      - System.Threading.CancellationToken
+      minimum_version: 4.0.0
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
@@ -372,7 +386,7 @@
       signature_types:
       - System.Int32
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryIntegration
@@ -380,25 +394,12 @@
   - target:
       assembly: Npgsql
       type: Npgsql.NpgsqlCommand
-      method: ExecuteNonQuery
-      signature_types:
-      - System.Int32
-      - System.Data.CommandBehavior
-      minimum_version: 4.0.0
-      maximum_version: 6.*.*
-    wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
-      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteNonQueryWithBehaviorIntegration
-      action: CallTargetModification
-  - target:
-      assembly: Npgsql
-      type: Npgsql.NpgsqlCommand
       method: ExecuteReaderAsync
       signature_types:
       - System.Threading.Tasks.Task`1<Npgsql.NpgsqlDataReader>
       - System.Threading.CancellationToken
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderAsyncIntegration
@@ -406,14 +407,16 @@
   - target:
       assembly: Npgsql
       type: Npgsql.NpgsqlCommand
-      method: ExecuteReader
+      method: ExecuteReaderAsync
       signature_types:
-      - Npgsql.NpgsqlDataReader
+      - System.Threading.Tasks.Task`1<Npgsql.NpgsqlDataReader>
+      - System.Data.CommandBehavior
+      - System.Threading.CancellationToken
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
-      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderIntegration
+      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
       action: CallTargetModification
   - target:
       assembly: Npgsql
@@ -421,10 +424,9 @@
       method: ExecuteReaderAsync
       signature_types:
       - System.Threading.Tasks.Task`1<Npgsql.NpgsqlDataReader>
-      - System.Data.CommandBehavior
       - System.Threading.CancellationToken
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
@@ -438,7 +440,7 @@
       - System.Data.CommandBehavior
       - System.Threading.CancellationToken
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorAsyncIntegration
@@ -451,7 +453,7 @@
       - Npgsql.NpgsqlDataReader
       - System.Data.CommandBehavior
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
@@ -464,7 +466,7 @@
       - System.Data.Common.DbDataReader
       - System.Data.CommandBehavior
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteReaderWithBehaviorIntegration
@@ -477,7 +479,7 @@
       - System.Threading.Tasks.Task`1<System.Object>
       - System.Threading.CancellationToken
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarAsyncIntegration
@@ -489,23 +491,10 @@
       signature_types:
       - System.Object
       minimum_version: 4.0.0
-      maximum_version: 6.*.*
+      maximum_version: 7.*.*
     wrapper:
       assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
       type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarIntegration
-      action: CallTargetModification
-  - target:
-      assembly: Npgsql
-      type: Npgsql.NpgsqlCommand
-      method: ExecuteScalar
-      signature_types:
-      - System.Object
-      - System.Data.CommandBehavior
-      minimum_version: 4.0.0
-      maximum_version: 6.*.*
-    wrapper:
-      assembly: Elastic.Apm.Profiler.Managed, Version=1.22.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22
-      type: Elastic.Apm.Profiler.Managed.Integrations.AdoNet.CommandExecuteScalarWithBehaviorIntegration
       action: CallTargetModification
 - name: OracleCommand
   method_replacements:
