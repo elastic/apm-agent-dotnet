@@ -49,26 +49,12 @@ namespace Elastic.Apm
 		{
 			try
 			{
-#if NETFRAMEWORK
-				var tempLogger = logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
-				Configuration = configurationReader
-					?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(tempLogger)
-					?? new AppSettingsConfiguration(tempLogger);
-#else
-				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
-				Configuration = configurationReader ?? new EnvironmentConfiguration(tempLogger);
-#endif
-#pragma warning disable CS0618
-				ConfigurationReader = Configuration;
-#pragma warning restore CS0618
-				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(Configuration.LogLevel), Configuration.LogLevel);
+				var config = DetermineConfiguration(logger, configurationReader);
+
+				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(config.LogLevel), config.LogLevel);
+				ConfigurationStore = new ConfigurationStore(new RuntimeConfigurationSnapshot(config), Logger);
+
 				Service = Service.GetDefaultService(Configuration, Logger);
-
-				var systemInfoHelper = new SystemInfoHelper(Logger);
-				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName);
-
-				ConfigurationStore =
-					new ConfigurationStore(new RuntimeConfigurationSnapshot(Configuration), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
@@ -111,6 +97,9 @@ namespace Elastic.Apm
 					};
 				}
 #endif
+				var systemInfoHelper = new SystemInfoHelper(Logger);
+				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName);
+
 				PayloadSender = payloadSender
 								?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
 									ApmServerInfo,
@@ -188,6 +177,19 @@ namespace Elastic.Apm
 			}
 		}
 
+		private static IConfigurationReader DetermineConfiguration(IApmLogger logger, IConfigurationReader configurationReader)
+		{
+#if NETFRAMEWORK
+			var localLogger = logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
+			return configurationReader
+				?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(localLogger)
+				?? new AppSettingsConfiguration(localLogger);
+#else
+			var localLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+			return configurationReader ?? new EnvironmentConfiguration(localLogger);
+#endif
+		}
+
 		//
 		// This is the hooking point that checks for the existence of profiler-related
 		// logging settings.
@@ -238,9 +240,9 @@ namespace Elastic.Apm
 		internal Tracer TracerInternal { get; }
 
 		[Obsolete("Please use Configuration property instead")]
-		public IConfigurationReader ConfigurationReader { get; }
+		public IConfigurationReader ConfigurationReader => Configuration;
 
-		public IConfigurationReader Configuration { get; }
+		public IConfigurationReader Configuration => ConfigurationStore.CurrentSnapshot;
 
 		public IApmLogger Logger { get; }
 

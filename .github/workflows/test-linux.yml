@@ -67,7 +67,13 @@ jobs:
         uses: ./.github/workflows/test
         with:
             name: 'unit'
-            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
+            
+      - name: 'Tests: Azure'
+        uses: ./.github/workflows/test
+        with:
+          name: 'azure'
+          filter: 'FullyQualifiedName~Elastic.Apm.Azure'
   
   startup-hook-tests:
     runs-on: ubuntu-latest
