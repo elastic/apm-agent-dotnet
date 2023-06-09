@@ -36,7 +36,8 @@ namespace Elastic.Apm.Helpers
 
 			var now = Now;
 			var delayRemainder = until - now;
-			if (delayRemainder <= TimeSpan.Zero) return;
+			if (delayRemainder <= TimeSpan.Zero)
+				return;
 
 			await Task.Delay(delayRemainder, cancellationToken);
 		}

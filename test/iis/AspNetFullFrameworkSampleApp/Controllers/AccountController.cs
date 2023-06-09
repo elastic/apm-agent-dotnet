@@ -150,7 +150,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		[RedirectIfAuthenticated]
 		public async Task<ActionResult> ResetPassword(ResetPasswordViewModel model)
 		{
-			if (!ModelState.IsValid) return View(model);
+			if (!ModelState.IsValid)
+				return View(model);
 
 			var user = await UserManager.FindByNameAsync(model.Email);
 			if (user == null)
@@ -159,7 +160,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 				return RedirectToAction("ResetPasswordConfirmation", "Account");
 			}
 			var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.Password);
-			if (result.Succeeded) return RedirectToAction("ResetPasswordConfirmation", "Account");
+			if (result.Succeeded)
+				return RedirectToAction("ResetPasswordConfirmation", "Account");
 
 			AddErrors(result);
 			return View();
@@ -193,12 +195,14 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		private void AddErrors(IdentityResult result)
 		{
-			foreach (var error in result.Errors) ModelState.AddModelError("", error);
+			foreach (var error in result.Errors)
+				ModelState.AddModelError("", error);
 		}
 
 		private ActionResult RedirectToLocal(string returnUrl)
 		{
-			if (Url.IsLocalUrl(returnUrl)) return Redirect(returnUrl);
+			if (Url.IsLocalUrl(returnUrl))
+				return Redirect(returnUrl);
 
 			return RedirectToAction("Index", "Home");
 		}

@@ -58,7 +58,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_collectGcGen2Size = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen2SizeName);
 			_collectGcGen3Size = !WildcardMatcher.IsAnyMatch(disabledMetrics, GcGen3SizeName);
 			_isEnabled = _collectGcCount || _collectGcTime || _collectGcGen0Size || _collectGcGen1Size || _collectGcGen2Size || _collectGcGen3Size;
-			if (!IsEnabled(disabledMetrics)) return;
+			if (!IsEnabled(disabledMetrics))
+				return;
 
 			_logger = logger.Scoped(DbgName);
 			if (!PlatformDetection.IsDotNetCore && !PlatformDetection.IsDotNet)

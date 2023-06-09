@@ -37,7 +37,8 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			{
 				var version = Assembly.GetExecutingAssembly().GetName().Version;
 				var assembly = Assembly.Load($"Elastic.Apm.Profiler.Managed, Version={version}, Culture=neutral, PublicKeyToken=ae7400d2c189cf22");
-				if (assembly == null) return;
+				if (assembly == null)
+					return;
 
 				var type = assembly.GetType("Elastic.Apm.Profiler.Managed.AutoInstrumentation", throwOnError: false);
 				var method = type?.GetRuntimeMethod("Initialize", parameters: Type.EmptyTypes);

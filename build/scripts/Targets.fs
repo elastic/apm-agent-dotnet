@@ -92,6 +92,8 @@ module Main =
             )
             
             Targets.Target("restore", Build.Restore)
+            
+            Targets.Target("format", Build.Format)
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             

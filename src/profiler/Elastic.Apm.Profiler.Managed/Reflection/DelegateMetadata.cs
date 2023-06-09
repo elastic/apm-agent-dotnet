@@ -49,7 +49,10 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 			return new DelegateMetadata
 			{
-				Generics = genericTypeArguments, Parameters = parameterTypes, ReturnType = returnType, Type = delegateType
+				Generics = genericTypeArguments,
+				Parameters = parameterTypes,
+				ReturnType = returnType,
+				Type = delegateType
 			};
 		}
 	}

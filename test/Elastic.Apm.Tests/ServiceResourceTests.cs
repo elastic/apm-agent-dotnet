@@ -60,7 +60,8 @@ namespace Elastic.Apm.Tests
 			{
 				span.Context.Db = new Database
 				{
-					Type = testDataSpan.Context.Db.Type, Instance = testDataSpan.Context.Db.Instance
+					Type = testDataSpan.Context.Db.Type,
+					Instance = testDataSpan.Context.Db.Instance
 				};
 			}
 
@@ -73,7 +74,8 @@ namespace Elastic.Apm.Tests
 				};
 			}
 
-			if (testDataSpan.Context?.Http != null) span.Context.Http = new Http { Url = testDataSpan.Context.Http.Url };
+			if (testDataSpan.Context?.Http != null)
+				span.Context.Http = new Http { Url = testDataSpan.Context.Http.Url };
 
 			if (testDataSpan.Context?.Service != null)
 			{

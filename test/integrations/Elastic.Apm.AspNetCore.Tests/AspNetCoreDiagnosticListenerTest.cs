@@ -43,7 +43,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
 		{
 			var capturedPayload = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(exitSpanMinDuration:"0"))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(exitSpanMinDuration: "0"))))
 			{
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
@@ -127,7 +127,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// '<>f__AnonymousType0`2[ Microsoft.AspNetCore.Http.HttpContext, System.Exception ]'.'
 
 			var capturedPayload = new MockPayloadSender();
-			using ( var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(exitSpanMinDuration: "0"))) )
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(exitSpanMinDuration: "0"))))
 			{
 				// Based on Helper GetClient
 				var builder = _factory
@@ -159,7 +159,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						n.ConfigureServices(Helper.ConfigureServices);
 					});
 
-				var client  = builder.CreateClient();
+				var client = builder.CreateClient();
 
 				// Hits case Microsoft.AspNetCore.Diagnostics.UnhandledException
 				// Exception handled by UseDeveloperExceptionPage
@@ -173,7 +173,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				// Hits case Microsoft.AspNetCore.Hosting.UnhandledException
 				Func<Task> act = async () => await client.GetAsync("/Home/TriggerError?skipUseDeveloperExceptionPage=true");
-				( await act.Should().ThrowAsync<Exception>() ).WithMessage("This is a test exception!");
+				(await act.Should().ThrowAsync<Exception>()).WithMessage("This is a test exception!");
 
 				capturedPayload?.WaitForTransactions();
 				capturedPayload?.Transactions.Should().ContainSingle();

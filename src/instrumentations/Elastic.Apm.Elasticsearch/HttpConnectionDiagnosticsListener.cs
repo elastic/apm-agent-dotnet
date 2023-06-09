@@ -21,7 +21,8 @@ namespace Elastic.Apm.Elasticsearch
 
 		private void OnResult(string @event, int? statusCode)
 		{
-			if (!TryGetCurrentElasticsearchSpan(out var span)) return;
+			if (!TryGetCurrentElasticsearchSpan(out var span))
+				return;
 
 			span.Name += $" ({statusCode})";
 			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
@@ -33,7 +34,8 @@ namespace Elastic.Apm.Elasticsearch
 		private void OnRequestData(string @event, RequestData requestData)
 		{
 			var name = ToName(@event);
-			if (requestData == null) return;
+			if (requestData == null)
+				return;
 
 			var instanceUri = requestData.Node?.Uri;
 			if (TryStartElasticsearchSpan(name, out var span, instanceUri))

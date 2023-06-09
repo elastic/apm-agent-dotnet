@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -569,7 +569,8 @@ namespace Elastic.Apm.Tests
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request");
 
 				var rnd = new Random();
-				for (var i = 0; i < 5000; i++) t.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
+				for (var i = 0; i < 5000; i++)
+					t.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
 				t.End();
 			}
 
@@ -613,9 +614,12 @@ namespace Elastic.Apm.Tests
 				{
 					agent.TracerInternal.CaptureTransaction("test", "request", (t) =>
 					{
-						for (var j = 0; j < 10; j++) t.CaptureSpan("Span1", ApiConstants.TypeDb, () => { }, ApiConstants.SubtypeMssql);
-						for (var j = 0; j < 10; j++) t.CaptureSpan("Span2", ApiConstants.TypeExternal, () => { }, ApiConstants.SubtypeHttp);
-						for (var j = 0; j < 10; j++) t.CaptureSpan("Span2", ApiConstants.TypeDb, () => { }, ApiConstants.SubtypeMssql);
+						for (var j = 0; j < 10; j++)
+							t.CaptureSpan("Span1", ApiConstants.TypeDb, () => { }, ApiConstants.SubtypeMssql);
+						for (var j = 0; j < 10; j++)
+							t.CaptureSpan("Span2", ApiConstants.TypeExternal, () => { }, ApiConstants.SubtypeHttp);
+						for (var j = 0; j < 10; j++)
+							t.CaptureSpan("Span2", ApiConstants.TypeDb, () => { }, ApiConstants.SubtypeMssql);
 					});
 				}
 			}
@@ -663,7 +667,8 @@ namespace Elastic.Apm.Tests
 				{
 					var t = agent.TracerInternal.StartTransactionInternal("test", "request");
 
-					for (var i = 0; i < 5000; i++) t.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
+					for (var i = 0; i < 5000; i++)
+						t.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
 					t.End();
 				}
 			}
@@ -675,7 +680,8 @@ namespace Elastic.Apm.Tests
 			breakdownMetricsProvider.GetSamples().Count().Should().Be(1000);
 
 			var t2 = agent.TracerInternal.StartTransactionInternal("test", "request");
-			for (var i = 0; i < 5000; i++) t2.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
+			for (var i = 0; i < 5000; i++)
+				t2.CaptureSpan("foo", $"bar-{rnd.Next().ToString()}", () => { });
 			t2.End();
 
 			// After BreakdownMetricsProvider.GetSamples() the warning is logged again
@@ -691,7 +697,8 @@ namespace Elastic.Apm.Tests
 		private async Task TimeStampTest()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
-			using (agent) agent.Tracer.CaptureTransaction("test", "test", () => { });
+			using (agent)
+				agent.Tracer.CaptureTransaction("test", "test", () => { });
 			await Task.Delay(500);
 
 			var timeStampBeforeReporting = TimeUtils.TimestampNow();

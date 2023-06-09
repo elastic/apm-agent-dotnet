@@ -47,7 +47,8 @@ namespace Elastic.Apm.SqlClient
 
 		protected override void OnEventWritten(EventWrittenEventArgs eventData)
 		{
-			if (eventData?.Payload == null) return;
+			if (eventData?.Payload == null)
+				return;
 
 			// Check for competing instrumentation
 			if (_apmAgent.TracerInternal.CurrentSpan is Span span)
@@ -103,7 +104,8 @@ namespace Elastic.Apm.SqlClient
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_apmAgent, spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql,
 				InstrumentationFlag.SqlClient, isExitSpan: true);
 
-			if (span == null) return;
+			if (span == null)
+				return;
 
 			if (_processingSpans.TryAdd(id, (span, start)))
 			{

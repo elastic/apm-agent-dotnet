@@ -38,7 +38,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		// ReSharper disable StringLiteralTypo
 		[InlineData("http://München", "münchen", DefaultHttpPort)]
 		[InlineData("http://Хост", "Хост", DefaultHttpPort)] // Host in Russian
-		// ReSharper restore StringLiteralTypo
+															 // ReSharper restore StringLiteralTypo
 		public void TryExtractDestinationInfo_valid_input(string inputUrl, string expectedHost, int? expectedPort)
 		{
 			var actualDestination = UrlUtils.ExtractDestination(new Uri(inputUrl), new NoopLogger());

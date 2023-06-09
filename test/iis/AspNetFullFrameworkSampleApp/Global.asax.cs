@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -49,13 +49,15 @@ namespace AspNetFullFrameworkSampleApp
 
 		protected void Application_BeginRequest(object sender, EventArgs e)
 		{
-			if (Response.HeadersWritten) return;
+			if (Response.HeadersWritten)
+				return;
 
 			Response.AddOnSendingHeaders(httpContext =>
 			{
 				// ReSharper disable once ConstantConditionalAccessQualifier
 				var responseHeaders = httpContext?.Response?.Headers;
-				if (responseHeaders == null) return;
+				if (responseHeaders == null)
+					return;
 
 				AddHeaderIfNotPresent(responseHeaders, Consts.ElasticApmServerUrlsResponseHeaderName, Agent.Config.ServerUrl.ToString());
 				AddHeaderIfNotPresent(responseHeaders, Consts.ProcessIdResponseHeaderName, Process.GetCurrentProcess().Id.ToString());
@@ -64,7 +66,8 @@ namespace AspNetFullFrameworkSampleApp
 			void AddHeaderIfNotPresent(NameValueCollection responseHeaders, string headerName, string headerValue)
 			{
 				var alreadyExistingValues = responseHeaders.GetValues(headerName);
-				if (alreadyExistingValues != null && alreadyExistingValues.Length > 0) return;
+				if (alreadyExistingValues != null && alreadyExistingValues.Length > 0)
+					return;
 
 				responseHeaders.Add(headerName, headerValue);
 			}

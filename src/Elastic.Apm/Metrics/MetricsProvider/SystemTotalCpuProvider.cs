@@ -30,11 +30,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public SystemTotalCpuProvider(IApmLogger logger)
 		{
 			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
-			
+
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
 				var (success, idle, total) = ReadProcStat();
-				if (!success) return;
+				if (!success)
+					return;
 
 				_prevIdleTime = idle;
 				_prevTotalTime = total;
@@ -62,7 +63,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				try
 				{
 					var firstLine = sr.ReadLine();
-					if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return (false, 0, 0);
+					if (firstLine == null || !firstLine.ToLower().StartsWith("cpu"))
+						return (false, 0, 0);
 
 					var values = firstLine.Substring(3, firstLine.Length - 3).Trim().Split(' ').ToArray();
 					if (values.Length < 4)
@@ -90,7 +92,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
-			if(!_initializationStarted)
+			if (!_initializationStarted)
 			{
 				// Ideally we'd do all this initialization in the .ctor
 				// The reason to move it here is the call to `new PerformanceCounter(...)`.
@@ -144,7 +146,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				if (_processorTimePerfCounter == null) return null;
+				if (_processorTimePerfCounter == null)
+					return null;
 
 				var val = _processorTimePerfCounter.NextValue();
 
@@ -157,7 +160,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
 				var (success, idle, total) = ReadProcStat();
-				if (!success) return null;
+				if (!success)
+					return null;
 
 				var idleTimeDelta = idle - _prevIdleTime;
 				var totalTimeDelta = total - _prevTotalTime;

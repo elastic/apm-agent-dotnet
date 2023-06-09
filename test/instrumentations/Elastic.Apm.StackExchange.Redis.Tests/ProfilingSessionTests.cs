@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
-using StackExchange.Redis;
 using FluentAssertions;
+using StackExchange.Redis;
 using Testcontainers.Redis;
 
 namespace Elastic.Apm.StackExchange.Redis.Tests

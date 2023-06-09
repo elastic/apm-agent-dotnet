@@ -17,7 +17,7 @@ namespace AspNetFullFrameworkSampleApp.Services.Auth
 	{
 		public override async Task<ClaimsIdentity> CreateAsync(UserManager<ApplicationUser, string> manager, ApplicationUser user, string authenticationType)
 		{
-			var claimsIdentity =  await base.CreateAsync(manager, user, authenticationType);
+			var claimsIdentity = await base.CreateAsync(manager, user, authenticationType);
 
 			// Add the email claim
 			claimsIdentity.AddClaim(new Claim(ClaimTypes.Email, user.Email));

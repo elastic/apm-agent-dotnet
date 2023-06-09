@@ -26,7 +26,8 @@ namespace Elastic.Apm.Tests.Utilities.XUnit
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			if (!IsEnabled(level)) return;
+			if (!IsEnabled(level))
+				return;
 
 			var message = formatter(state, e);
 			if (_scope is null)

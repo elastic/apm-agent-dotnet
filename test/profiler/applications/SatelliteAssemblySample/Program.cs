@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Microsoft.FSharp.Collections;
 
 var germanCulture = new CultureInfo("de");

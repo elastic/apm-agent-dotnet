@@ -136,7 +136,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			bool doCaptureSpan = true
 		)
 		{
-			if (!doCaptureSpan || Agent.Tracer.CurrentTransaction == null) return func();
+			if (!doCaptureSpan || Agent.Tracer.CurrentTransaction == null)
+				return func();
 
 			var currentExecutionSegment = Agent.Tracer.CurrentSpan ?? (IExecutionSegment)Agent.Tracer.CurrentTransaction;
 			return currentExecutionSegment.CaptureSpan(spanName, spanType, func, subType, action);
@@ -301,14 +302,16 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 						var numberOfInserts = isContainedSpan ? 2 : 1;
 						for (var j = 0; j < numberOfInserts; ++j)
 						{
-							if (isContainedSpan) syncBarrier.SignalAndWait();
+							if (isContainedSpan)
+								syncBarrier.SignalAndWait();
 							using (var dbCtx = new SampleDataDbContext( /* attachedState: */ isContainedSpan))
 							{
 								var suffix = isContainedSpan ? j == 0 ? ".before" : ".after" : "";
 								dbCtx.Set<SampleData>().Add(new SampleData { Name = $"{branchId}.{i}{suffix}" });
 								dbCtx.SaveChanges();
 							}
-							if (isContainedSpan) syncBarrier.SignalAndWait();
+							if (isContainedSpan)
+								syncBarrier.SignalAndWait();
 						}
 					}
 				});
@@ -345,7 +348,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		private string GetQueryStringValue(string key, string defaultValue)
 		{
 			var values = HttpContext.Request.QueryString.GetValues(key);
-			if (values == null || values.Length == 0) return defaultValue;
+			if (values == null || values.Length == 0)
+				return defaultValue;
 
 			if (values.Length > 1)
 				throw new ArgumentException($"{key} should appear in query string at most once", key);
@@ -394,11 +398,14 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 			private void ProcessCommandEvent<TResult>(DbCommandInterceptionContext<TResult> interceptionContext)
 			{
-				if (!(interceptionContext.DbContexts.SingleOrDefault() is SampleDataDbContext sampleDataDbContext)) return;
-				if (sampleDataDbContext.AttachedState == null) return;
+				if (!(interceptionContext.DbContexts.SingleOrDefault() is SampleDataDbContext sampleDataDbContext))
+					return;
+				if (sampleDataDbContext.AttachedState == null)
+					return;
 
 				var isContainedSpan = (bool)sampleDataDbContext.AttachedState;
-				if (isContainedSpan) return;
+				if (isContainedSpan)
+					return;
 
 				// Wait for the first/second contained span's start
 				_syncBarrier.SignalAndWait();

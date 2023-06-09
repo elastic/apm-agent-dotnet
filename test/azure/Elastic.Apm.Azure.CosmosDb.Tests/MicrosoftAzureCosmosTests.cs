@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -75,8 +75,9 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			await _agent.Tracer.CaptureTransaction("List CosmosDb Databases", ApiConstants.TypeDb, async () =>
 			{
 				var iterator = _client.GetDatabaseQueryIterator<DatabaseProperties>();
-				while(iterator.HasMoreResults)
-					foreach (var _ in await iterator.ReadNextAsync()) { }
+				while (iterator.HasMoreResults)
+					foreach (var _ in await iterator.ReadNextAsync())
+					{ }
 			});
 
 			AssertSpan("List databases");
@@ -119,7 +120,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			await _agent.Tracer.CaptureTransaction("List CosmosDb Collections", ApiConstants.TypeDb, async () =>
 			{
 				var iterator = db.GetContainerQueryIterator<ContainerProperties>();
-				while(iterator.HasMoreResults)
+				while (iterator.HasMoreResults)
 				{
 					foreach (var _ in await iterator.ReadNextAsync())
 					{
@@ -225,7 +226,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			span.Type.Should().Be(ApiConstants.TypeDb);
 			span.Subtype.Should().Be(ApiConstants.SubTypeCosmosDb);
 
-			if(!string.IsNullOrEmpty(db))
+			if (!string.IsNullOrEmpty(db))
 				span.Context.Destination.Service.Resource.Should().Be($"{ApiConstants.SubTypeCosmosDb}/{db}");
 			else
 				span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubTypeCosmosDb);

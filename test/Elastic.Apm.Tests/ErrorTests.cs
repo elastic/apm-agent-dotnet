@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -32,7 +32,8 @@ namespace Elastic.Apm.Tests
 			{
 				t.Context.Request = new Request("GET", new Url { Full = "http://localhost", Protocol = "http", Search = "abc" })
 				{
-					Body = "abc", Headers = new Dictionary<string, string> { { "header1", "headerValue" } }
+					Body = "abc",
+					Headers = new Dictionary<string, string> { { "header1", "headerValue" } }
 				};
 				t.Context.Response = new Response { StatusCode = 404, Finished = false };
 
@@ -180,7 +181,7 @@ namespace Elastic.Apm.Tests
 			var config = new MockConfiguration(transactionSampleRate: "0", serverUrl: localServer.Uri, flushInterval: "0");
 			var logger = new InMemoryBlockingLogger(LogLevel.Warning);
 			var payloadSender = new PayloadSenderV2(logger, config,
-				Service.GetDefaultService(config, logger), new Api.System(),MockApmServerInfo.Version710);
+				Service.GetDefaultService(config, logger), new Api.System(), MockApmServerInfo.Version710);
 
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, configurationReader: config));
 			agent.Tracer.CaptureTransaction("Test", "Test", t =>

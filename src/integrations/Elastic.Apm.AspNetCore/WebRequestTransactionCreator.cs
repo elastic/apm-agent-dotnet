@@ -86,14 +86,16 @@ namespace Elastic.Apm.AspNetCore
 
 		internal static void FillSampledTransactionContextRequest(Transaction transaction, HttpContext context, IApmLogger logger)
 		{
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction, logger);
+			if (transaction.IsSampled)
+				FillSampledTransactionContextRequest(context, transaction, logger);
 		}
 
 		private static void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction, IApmLogger logger)
 		{
 			try
 			{
-				if (context?.Request == null) return;
+				if (context?.Request == null)
+					return;
 
 				var url = new Url
 				{
@@ -164,7 +166,8 @@ namespace Elastic.Apm.AspNetCore
 
 		internal static void StopTransaction(Transaction transaction, HttpContext context, IApmLogger logger)
 		{
-			if (transaction == null) return;
+			if (transaction == null)
+				return;
 
 			var grpcCallInfo = CollectGrpcInfo();
 
@@ -180,7 +183,8 @@ namespace Elastic.Apm.AspNetCore
 						logger?.Trace()?.Log("Calculating transaction name based on route data");
 						var name = Transaction.GetNameFromRouteContext(routeData);
 
-						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
+						if (!string.IsNullOrWhiteSpace(name))
+							transaction.Name = $"{context.Request.Method} {name}";
 					}
 					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
 					{

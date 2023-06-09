@@ -58,9 +58,12 @@ namespace Elastic.Apm.Api
 
 		internal void CopyMissingPropertiesFrom(Destination src)
 		{
-			if (!_address.HasValue) _address = src._address;
-			if (!_port.HasValue) _port = src._port;
-			if (!_service.HasValue) _service = src._service;
+			if (!_address.HasValue)
+				_address = src._address;
+			if (!_port.HasValue)
+				_port = src._port;
+			if (!_service.HasValue)
+				_service = src._service;
 		}
 
 		/// <summary>

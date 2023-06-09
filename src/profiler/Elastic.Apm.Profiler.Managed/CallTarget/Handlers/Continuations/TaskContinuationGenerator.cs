@@ -32,7 +32,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 
 		public override TReturn SetContinuation(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state)
 		{
-			if (_continuation == null) return returnValue;
+			if (_continuation == null)
+				return returnValue;
 
 			if (exception != null || returnValue == null)
 			{
@@ -52,7 +53,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 
 		private static async Task ContinuationAction(Task previousTask, TTarget target, CallTargetState state)
 		{
-			if (!previousTask.IsCompleted) await new NoThrowAwaiter(previousTask, _preserveContext);
+			if (!previousTask.IsCompleted)
+				await new NoThrowAwaiter(previousTask, _preserveContext);
 
 			Exception exception = null;
 
@@ -87,7 +89,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 			// *
 			// If the original task throws an exception we rethrow it here.
 			// *
-			if (exception != null) ExceptionDispatchInfo.Capture(exception).Throw();
+			if (exception != null)
+				ExceptionDispatchInfo.Capture(exception).Throw();
 		}
 	}
 }

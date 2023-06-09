@@ -11,8 +11,8 @@ using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Xunit;
 using SampleAspNetCoreApp;
+using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {

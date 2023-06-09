@@ -22,7 +22,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		private readonly CloudStorageAccount _account;
 
 		public MicrosoftAzureBlobStorageTracerTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
-			:base(environment, output) =>
+			: base(environment, output) =>
 			_account = CloudStorageAccount.Parse(Environment.StorageAccountConnectionString);
 
 		[AzureCredentialsFact]
@@ -146,7 +146,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var sourceBlobReference = containerReference.GetBlockBlobReference(sourceBlobName);
 
 			await using var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
-				await sourceBlobReference.UploadFromStreamAsync(stream);
+			await sourceBlobReference.UploadFromStreamAsync(stream);
 
 
 			var destinationBlobName = Guid.NewGuid().ToString();

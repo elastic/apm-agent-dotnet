@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -69,7 +69,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 	{
 		private DuckTypePropertyCantBeReadException(PropertyInfo property)
 			: base(
-				$"The property '{property.Name}' can't be read, you should remove the getter from the proxy definition base type class or interface.") { }
+				$"The property '{property.Name}' can't be read, you should remove the getter from the proxy definition base type class or interface.")
+		{ }
 
 		[DebuggerHidden]
 		internal static void Throw(PropertyInfo property) => throw new DuckTypePropertyCantBeReadException(property);
@@ -82,7 +83,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 	{
 		private DuckTypePropertyCantBeWrittenException(PropertyInfo property)
 			: base(
-				$"The property '{property.Name}' can't be written, you should remove the setter from the proxy definition base type class or interface.") { }
+				$"The property '{property.Name}' can't be written, you should remove the setter from the proxy definition base type class or interface.")
+		{ }
 
 		[DebuggerHidden]
 		internal static void Throw(PropertyInfo property) => throw new DuckTypePropertyCantBeWrittenException(property);
@@ -207,7 +209,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 	{
 		private DuckTypeTargetMethodAmbiguousMatchException(MethodInfo proxyMethod, MethodInfo targetMethod, MethodInfo targetMethod2)
 			: base(
-				$"The proxy method '{proxyMethod}' matches at least two methods in the target type. Method1 = '{targetMethod}' and Method2 = '{targetMethod2}'") { }
+				$"The proxy method '{proxyMethod}' matches at least two methods in the target type. Method1 = '{targetMethod}' and Method2 = '{targetMethod2}'")
+		{ }
 
 		[DebuggerHidden]
 		internal static void Throw(MethodInfo proxyMethod, MethodInfo targetMethod, MethodInfo targetMethod2) =>

@@ -1,12 +1,12 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
 using Elastic.Apm.Logging;
 using NLog;
-using NLogLevel = NLog.LogLevel;
 using ApmLogLevel = Elastic.Apm.Logging.LogLevel;
+using NLogLevel = NLog.LogLevel;
 
 namespace AspNetFullFrameworkSampleApp
 {
@@ -17,7 +17,7 @@ namespace AspNetFullFrameworkSampleApp
 		public bool IsEnabled(ApmLogLevel level) => _logger.Value.IsEnabled(ConvertLevel(level));
 
 		public ApmLoggerToNLog()
-			:this(string.Empty)
+			: this(string.Empty)
 		{
 
 		}
@@ -42,14 +42,22 @@ namespace AspNetFullFrameworkSampleApp
 		{
 			switch (apmLogLevel)
 			{
-				case ApmLogLevel.Trace: return NLogLevel.Trace;
-				case ApmLogLevel.Debug: return NLogLevel.Debug;
-				case ApmLogLevel.Information: return NLogLevel.Info;
-				case ApmLogLevel.Warning: return NLogLevel.Warn;
-				case ApmLogLevel.Error: return NLogLevel.Error;
-				case ApmLogLevel.Critical: return NLogLevel.Fatal;
-				case ApmLogLevel.None: return NLogLevel.Off;
-				default: return NLogLevel.Info;
+				case ApmLogLevel.Trace:
+					return NLogLevel.Trace;
+				case ApmLogLevel.Debug:
+					return NLogLevel.Debug;
+				case ApmLogLevel.Information:
+					return NLogLevel.Info;
+				case ApmLogLevel.Warning:
+					return NLogLevel.Warn;
+				case ApmLogLevel.Error:
+					return NLogLevel.Error;
+				case ApmLogLevel.Critical:
+					return NLogLevel.Fatal;
+				case ApmLogLevel.None:
+					return NLogLevel.Off;
+				default:
+					return NLogLevel.Info;
 			}
 		}
 	}

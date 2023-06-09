@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -23,52 +23,52 @@ namespace Elastic.Apm.AdoNet
 		}
 
 		public virtual IDbCommand GetCreateTableCommand()
-        {
-            var command = Connection.CreateCommand();
-            command.CommandText = $"DROP TABLE IF EXISTS {TableName}; CREATE TABLE {TableName} (Id int PRIMARY KEY, Name varchar(100));";
-            return command;
-        }
+		{
+			var command = Connection.CreateCommand();
+			command.CommandText = $"DROP TABLE IF EXISTS {TableName}; CREATE TABLE {TableName} (Id int PRIMARY KEY, Name varchar(100));";
+			return command;
+		}
 
-        public virtual IDbCommand GetInsertRowCommand()
-        {
-            var command = Connection.CreateCommand();
-            command.CommandText = $"INSERT INTO {TableName} (Id, Name) VALUES (@Id, @Name);";
-            command.AddParameterWithValue("Id", 1);
-            command.AddParameterWithValue("Name", "Name1");
-            return command;
-        }
+		public virtual IDbCommand GetInsertRowCommand()
+		{
+			var command = Connection.CreateCommand();
+			command.CommandText = $"INSERT INTO {TableName} (Id, Name) VALUES (@Id, @Name);";
+			command.AddParameterWithValue("Id", 1);
+			command.AddParameterWithValue("Name", "Name1");
+			return command;
+		}
 
-        public virtual IDbCommand GetUpdateRowCommand()
-        {
-            var command = Connection.CreateCommand();
-            command.CommandText = $"UPDATE {TableName} SET Name=@Name WHERE Id=@Id;";
+		public virtual IDbCommand GetUpdateRowCommand()
+		{
+			var command = Connection.CreateCommand();
+			command.CommandText = $"UPDATE {TableName} SET Name=@Name WHERE Id=@Id;";
 			command.AddParameterWithValue("Name", "Name2");
-            command.AddParameterWithValue("Id", 1);
-            return command;
-        }
+			command.AddParameterWithValue("Id", 1);
+			return command;
+		}
 
-        public virtual IDbCommand GetSelectScalarCommand()
-        {
-            var command = Connection.CreateCommand();
-            command.CommandText = $"SELECT Name FROM {TableName} WHERE Id=@Id;";
-            command.AddParameterWithValue("Id", 1);
-            return command;
-        }
+		public virtual IDbCommand GetSelectScalarCommand()
+		{
+			var command = Connection.CreateCommand();
+			command.CommandText = $"SELECT Name FROM {TableName} WHERE Id=@Id;";
+			command.AddParameterWithValue("Id", 1);
+			return command;
+		}
 
-        public virtual IDbCommand GetSelectRowCommand()
-        {
-            var command = Connection.CreateCommand();
-            command.CommandText = $"SELECT * FROM {TableName} WHERE Id=@Id;";
-            command.AddParameterWithValue("Id", 1);
-            return command;
-        }
+		public virtual IDbCommand GetSelectRowCommand()
+		{
+			var command = Connection.CreateCommand();
+			command.CommandText = $"SELECT * FROM {TableName} WHERE Id=@Id;";
+			command.AddParameterWithValue("Id", 1);
+			return command;
+		}
 
-        public virtual IDbCommand GetDeleteRowCommand()
-        {
-            var command = Connection.CreateCommand();
-            command.CommandText = $"DELETE FROM {TableName} WHERE Id=@Id;";
-            command.AddParameterWithValue("Id", 1);
-            return command;
-        }
+		public virtual IDbCommand GetDeleteRowCommand()
+		{
+			var command = Connection.CreateCommand();
+			command.CommandText = $"DELETE FROM {TableName} WHERE Id=@Id;";
+			command.AddParameterWithValue("Id", 1);
+			return command;
+		}
 	}
 }

@@ -21,7 +21,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			try
 			{
 				var dynMethod = IntegrationMapper.CreateSlowBeginMethodDelegate(typeof(TIntegration), typeof(TTarget));
-				if (dynMethod != null) _invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
+				if (dynMethod != null)
+					_invokeDelegate = (InvokeDelegate)dynMethod.CreateDelegate(typeof(InvokeDelegate));
 			}
 			catch (Exception ex)
 			{
@@ -29,7 +30,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			}
 			finally
 			{
-				if (_invokeDelegate is null) _invokeDelegate = (_, _) => CallTargetState.GetDefault();
+				if (_invokeDelegate is null)
+					_invokeDelegate = (_, _) => CallTargetState.GetDefault();
 			}
 		}
 

@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -90,7 +90,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 			if (targetType.IsGenericType)
 			{
 				foreach (var type in targetType.GetGenericArguments())
-					if (type.Assembly != targetAssembly) return CreateModuleBuilder($"DuckTypeGenericTypeAssembly.{targetType.Name}", targetAssembly);
+					if (type.Assembly != targetAssembly)
+						return CreateModuleBuilder($"DuckTypeGenericTypeAssembly.{targetType.Name}", targetAssembly);
 			}
 
 			if (!ActiveBuilders.TryGetValue(targetAssembly, out var moduleBuilder))

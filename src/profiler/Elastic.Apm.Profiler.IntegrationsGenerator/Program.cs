@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -46,38 +46,38 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 					select attribute;
 
 				var callTargetIntegrations = from attribute in classesInstrumentMethodAttributes
-					let integrationName = attribute.Group
-					let assembly = attribute.CallTargetType.Assembly
-					let wrapperType = attribute.CallTargetType
-					orderby integrationName
-					group new { assembly, wrapperType, attribute } by integrationName
+											 let integrationName = attribute.Group
+											 let assembly = attribute.CallTargetType.Assembly
+											 let wrapperType = attribute.CallTargetType
+											 orderby integrationName
+											 group new { assembly, wrapperType, attribute } by integrationName
 					into g
-					select new Integration
-					{
-						Name = g.Key,
-						MethodReplacements = from item in g
-							select new MethodReplacement
-							{
-								Target = new Target
-								{
-									Nuget = item.attribute.Nuget,
-									Assembly = item.attribute.Assembly,
-									Type = item.attribute.Type,
-									Method = item.attribute.Method,
-									SignatureTypes = new[] { item.attribute.ReturnType }
-										.Concat(item.attribute.ParameterTypes ?? Enumerable.Empty<string>())
-										.ToArray(),
-									MinimumVersion = item.attribute.MinimumVersion,
-									MaximumVersion = item.attribute.MaximumVersion
-								},
-								Wrapper = new Wrapper
-								{
-									Assembly = item.assembly.FullName,
-									Type = item.wrapperType.FullName,
-									Action = "CallTargetModification"
-								}
-							}
-					};
+											 select new Integration
+											 {
+												 Name = g.Key,
+												 MethodReplacements = from item in g
+																	  select new MethodReplacement
+																	  {
+																		  Target = new Target
+																		  {
+																			  Nuget = item.attribute.Nuget,
+																			  Assembly = item.attribute.Assembly,
+																			  Type = item.attribute.Type,
+																			  Method = item.attribute.Method,
+																			  SignatureTypes = new[] { item.attribute.ReturnType }
+																				  .Concat(item.attribute.ParameterTypes ?? Enumerable.Empty<string>())
+																				  .ToArray(),
+																			  MinimumVersion = item.attribute.MinimumVersion,
+																			  MaximumVersion = item.attribute.MaximumVersion
+																		  },
+																		  Wrapper = new Wrapper
+																		  {
+																			  Assembly = item.assembly.FullName,
+																			  Type = item.wrapperType.FullName,
+																			  Action = "CallTargetModification"
+																		  }
+																	  }
+											 };
 
 				string output;
 				switch (opts.Format)
@@ -91,7 +91,8 @@ namespace Elastic.Apm.Profiler.IntegrationsGenerator
 					case CommandLineOptions.OutputFormat.Asciidoc:
 						output = GenerateAsciidoc(callTargetIntegrations);
 						break;
-					default: throw new ArgumentOutOfRangeException(nameof(opts.Format),"Unknown format");
+					default:
+						throw new ArgumentOutOfRangeException(nameof(opts.Format), "Unknown format");
 				}
 
 				var filename = Path.Combine(opts.Output, "integrations." + opts.Format.ToString().ToLowerInvariant());

@@ -22,7 +22,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 #if NETSTANDARD2_1_OR_GREATER
 			return Unsafe.As<TFrom, TReturn>(ref returnValue);
 #else
-            return ContinuationsHelper.Convert<TFrom, TReturn>(returnValue);
+			return ContinuationsHelper.Convert<TFrom, TReturn>(returnValue);
 #endif
 		}
 
@@ -32,7 +32,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 #if NETSTANDARD2_1_OR_GREATER
 			return Unsafe.As<TReturn, TTo>(ref returnValue);
 #else
-            return ContinuationsHelper.Convert<TReturn, TTo>(returnValue);
+			return ContinuationsHelper.Convert<TReturn, TTo>(returnValue);
 #endif
 		}
 	}

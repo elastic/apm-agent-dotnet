@@ -12,7 +12,7 @@ namespace Elastic.Apm.StartupHook.Tests
 	public static class SolutionPaths
 	{
 		private static readonly Lazy<string> _root = new Lazy<string>(FindSolutionRoot);
-		
+
 		private static readonly Lazy<string> _agentZip = new Lazy<string>(FindVersionedAgentZip);
 		private static string FindSolutionRoot()
 		{
@@ -29,7 +29,7 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
 		}
-		
+
 		private static string FindVersionedAgentZip()
 		{
 			var buildOutputDir = Path.Combine(Root, "build/output");
@@ -51,7 +51,7 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			return agentZip;
 		}
-			
+
 		public static string Root => _root.Value;
 		public static string AgentZip => _agentZip.Value;
 	}

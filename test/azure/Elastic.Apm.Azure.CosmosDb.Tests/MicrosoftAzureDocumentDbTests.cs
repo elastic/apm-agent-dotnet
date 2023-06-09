@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -72,7 +72,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			await _agent.Tracer.CaptureTransaction("List CosmosDb Databases", ApiConstants.TypeDb, async () =>
 			{
 				var response = await _client.ReadDatabaseFeedAsync();
-				foreach(var db in response)
+				foreach (var db in response)
 				{
 				}
 			});
@@ -117,7 +117,8 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			await _agent.Tracer.CaptureTransaction("List CosmosDb Collections", ApiConstants.TypeDb, async () =>
 			{
 				var response = await _client.ReadDocumentCollectionFeedAsync(db.AltLink);
-				foreach (var collection in response) { }
+				foreach (var collection in response)
+				{ }
 			});
 
 			AssertSpan($"List collections {db.Id}", db.Id);
@@ -179,9 +180,11 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			var containerId = RandomName();
 			var containerResponse = await _client.CreateDocumentCollectionAsync(
 				db.AltLink,
-				new DocumentCollection {
+				new DocumentCollection
+				{
 					Id = containerId,
-					PartitionKey = new PartitionKeyDefinition{ Paths = new Collection<string>{ "/PartitionKey" } } });
+					PartitionKey = new PartitionKeyDefinition { Paths = new Collection<string> { "/PartitionKey" } }
+				});
 			return containerResponse.Resource;
 		}
 

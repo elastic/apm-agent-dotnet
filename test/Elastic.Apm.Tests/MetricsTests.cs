@@ -294,7 +294,7 @@ namespace Elastic.Apm.Tests
 		public void GcMetricsCanBeDisabled()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
-			var disableGc = new List<WildcardMatcher>() { {WildcardMatcher.ValueOf("clr.gc.*")} };
+			var disableGc = new List<WildcardMatcher>() { { WildcardMatcher.ValueOf("clr.gc.*") } };
 			using var gcMetricsProvider = new GcMetricsProvider(logger, disableGc);
 			gcMetricsProvider.IsEnabled(disableGc).Should().BeFalse();
 		}
@@ -419,7 +419,8 @@ namespace Elastic.Apm.Tests
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }

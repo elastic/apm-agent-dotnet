@@ -1,0 +1,9 @@
+["appendix",role="exclude",id="redirects"]
+== Deleted pages
+
+The following pages have moved or been deleted.
+
+[role="exclude",id="log-correlation"]
+=== Log correlation
+
+This section has moved. See <<logs>>.

@@ -81,13 +81,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						if (line != null && line.Contains("MemAvailable:") && _collectFreeMemory)
 						{
 							var (suc, res) = GetEntry(line, "MemAvailable:");
-							if (suc) samples.Add(new MetricSample(FreeMemory, res));
+							if (suc)
+								samples.Add(new MetricSample(FreeMemory, res));
 							hasMemFree = true;
 						}
 						if (line != null && line.Contains("MemTotal:") && _collectTotalMemory)
 						{
 							var (suc, res) = GetEntry(line, "MemTotal:");
-							if (suc) samples.Add(new MetricSample(TotalMemory, res));
+							if (suc)
+								samples.Add(new MetricSample(TotalMemory, res));
 							hasMemTotal = true;
 						}
 
@@ -111,15 +113,19 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				var values = line.Substring(line.IndexOf(name, StringComparison.Ordinal) + name.Length);
 
-				if (string.IsNullOrWhiteSpace(values)) return (false, 0);
+				if (string.IsNullOrWhiteSpace(values))
+					return (false, 0);
 
 				var items = values.Trim().Split(' ');
 
 				switch (items.Length)
 				{
-					case 1 when ulong.TryParse(items[0], out var res): return (true, res);
-					case 2 when items[1].ToLowerInvariant() == "kb" && ulong.TryParse(items[0], out var res): return (true, res * 1024);
-					default: return (false, 0);
+					case 1 when ulong.TryParse(items[0], out var res):
+						return (true, res);
+					case 2 when items[1].ToLowerInvariant() == "kb" && ulong.TryParse(items[0], out var res):
+						return (true, res * 1024);
+					default:
+						return (false, 0);
 				}
 			}
 

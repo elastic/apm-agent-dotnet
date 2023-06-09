@@ -42,7 +42,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 
 		private static readonly LogLevel Level;
 		private static readonly string LogFile;
-		private static readonly Dictionary<LogLevel,string> Levels;
+		private static readonly Dictionary<LogLevel, string> Levels;
 
 		public static void Log(LogLevel level, Exception exception, string message, params object[] args)
 		{

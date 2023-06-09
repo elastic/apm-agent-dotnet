@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -61,10 +61,10 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AspNet
 
 			try
 			{
-// directive applied just to here and to .NET framework specific using directives, to allow
-// the integrations file generator to pick this integration up, irrespective of version.
+				// directive applied just to here and to .NET framework specific using directives, to allow
+				// the integrations file generator to pick this integration up, irrespective of version.
 #if NETFRAMEWORK
-                HttpApplication.RegisterModule(typeof(ElasticApmModule));
+				HttpApplication.RegisterModule(typeof(ElasticApmModule));
 #endif
 			}
 			catch

@@ -24,7 +24,8 @@ namespace Elastic.Apm.Helpers
 			var stateBeforeTry = TryChangeStateAtomically(State.BeforeDispose, State.DuringDispose);
 			switch (stateBeforeTry)
 			{
-				case State.BeforeDispose: break;
+				case State.BeforeDispose:
+					break;
 
 				case State.DuringDispose:
 					logger.Critical()?.Log(string.Format(AnotherCallStillInProgressMsg, "{DisposableDesc}"), dbgOwnerDesc);

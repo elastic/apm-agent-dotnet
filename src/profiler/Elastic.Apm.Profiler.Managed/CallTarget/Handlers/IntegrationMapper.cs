@@ -141,7 +141,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 					throw new InvalidCastException($"The target parameter {targetParameterType} can't be assigned from {sourceParameterType}");
 
 				WriteLoadArgument(ilWriter, i, mustLoadInstance);
-				if (parameterProxyType != null) WriteCreateNewProxyInstance(ilWriter, parameterProxyType, sourceParameterType);
+				if (parameterProxyType != null)
+					WriteCreateNewProxyInstance(ilWriter, parameterProxyType, sourceParameterType);
 			}
 
 			// Call method
@@ -222,7 +223,8 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			{
 				ilWriter.Emit(OpCodes.Ldarg_0);
 
-				if (instanceGenericConstraint != null) WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
+				if (instanceGenericConstraint != null)
+					WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
 			}
 
 			// Load arguments
@@ -477,12 +479,14 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 			{
 				ilWriter.Emit(OpCodes.Ldarg_0);
 
-				if (instanceGenericConstraint != null) WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
+				if (instanceGenericConstraint != null)
+					WriteCreateNewProxyInstance(ilWriter, instanceProxyType, targetType);
 			}
 
 			// Load the return value
 			ilWriter.Emit(OpCodes.Ldarg_1);
-			if (returnValueProxyType != null) WriteCreateNewProxyInstance(ilWriter, returnValueProxyType, returnType);
+			if (returnValueProxyType != null)
+				WriteCreateNewProxyInstance(ilWriter, returnValueProxyType, returnType);
 
 			// Load the exception
 			ilWriter.Emit(OpCodes.Ldarg_2);

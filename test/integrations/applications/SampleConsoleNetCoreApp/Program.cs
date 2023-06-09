@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;

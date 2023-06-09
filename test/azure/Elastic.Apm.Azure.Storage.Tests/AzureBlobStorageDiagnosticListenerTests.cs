@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 	public class AzureBlobStorageDiagnosticListenerTests : BlobStorageTestsBase
 	{
 		public AzureBlobStorageDiagnosticListenerTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
-			:base (environment, output)
+			: base(environment, output)
 		{
 		}
 

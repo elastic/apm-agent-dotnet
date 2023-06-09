@@ -73,7 +73,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 			waitInfoS.Interval.Should().Be(TimeSpan.FromSeconds(5));
 
-			if(seconds < 5)
+			if (seconds < 5)
 			{
 				waitInfoS.Reason.Should().Be("The max-age directive in Cache-Control header in APM Server's response is less than 5 seconds, "
 					+ "which is less than expected by the spec - falling back to use 5 seconds wait time.");
@@ -94,7 +94,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		[InlineData(-1)]
 		[InlineData(-10)]
 		[InlineData(int.MinValue)]
-		public void  ParseHttpResponse_ShouldUseDefaultWaitTime_WhenMaxAgeIsZeroOrNegative(int seconds)
+		public void ParseHttpResponse_ShouldUseDefaultWaitTime_WhenMaxAgeIsZeroOrNegative(int seconds)
 		{
 			var response = new HttpResponseMessage
 			{

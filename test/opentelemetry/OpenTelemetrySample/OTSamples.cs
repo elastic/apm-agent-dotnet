@@ -79,22 +79,23 @@ namespace OpenTelemetrySample
 		{
 			var src = new ActivitySource("Test");
 
-			tracer.CaptureTransaction( nameof(Sample4), "test", _ =>
-			{
-				Thread.Sleep(100);
-				using (src.StartActivity("foo"))
-				{
+			tracer.CaptureTransaction(nameof(Sample4), "test", _ =>
+		   {
+			   Thread.Sleep(100);
+			   using (src.StartActivity("foo"))
+			   {
 
-					tracer.CurrentSpan.CaptureSpan("ElasticApmSpan", "test", () => Thread.Sleep(50));
-					Thread.Sleep(150);
-				}
-			});
+				   tracer.CurrentSpan.CaptureSpan("ElasticApmSpan", "test", () => Thread.Sleep(50));
+				   Thread.Sleep(150);
+			   }
+		   });
 		}
 
 		public static void OneSpanWithAttributes()
 		{
 			var src = new ActivitySource("Test");
-			using (var activity = src.StartActivity("foo", ActivityKind.Server)) activity?.SetTag("foo", "bar");
+			using (var activity = src.StartActivity("foo", ActivityKind.Server))
+				activity?.SetTag("foo", "bar");
 		}
 
 		public static void TwoSpansWithAttributes()
@@ -103,7 +104,8 @@ namespace OpenTelemetrySample
 			using (var activity1 = src.StartActivity("foo", ActivityKind.Server))
 			{
 				activity1?.SetTag("foo1", "bar1");
-				using (var activity2 = src.StartActivity("bar", ActivityKind.Internal)) activity2?.SetTag("foo2", "bar2");
+				using (var activity2 = src.StartActivity("bar", ActivityKind.Internal))
+					activity2?.SetTag("foo2", "bar2");
 			}
 		}
 
@@ -113,10 +115,14 @@ namespace OpenTelemetrySample
 			using (var _ = src.StartActivity("SpanKindSample", ActivityKind.Server))
 			{
 
-				using (var activity = src.StartActivity("httpSpan", ActivityKind.Client)) activity?.SetTag("http.url", "http://foo.bar");
-				using (var activity = src.StartActivity("dbSpan", ActivityKind.Client)) activity?.SetTag("db.system", "mysql");
-				using (var activity = src.StartActivity("grpcSpan", ActivityKind.Client)) activity?.SetTag("rpc.system", "grpc");
-				using (var activity = src.StartActivity("messagingSpan", ActivityKind.Client)) activity?.SetTag("messaging.system", "rabbitmq");
+				using (var activity = src.StartActivity("httpSpan", ActivityKind.Client))
+					activity?.SetTag("http.url", "http://foo.bar");
+				using (var activity = src.StartActivity("dbSpan", ActivityKind.Client))
+					activity?.SetTag("db.system", "mysql");
+				using (var activity = src.StartActivity("grpcSpan", ActivityKind.Client))
+					activity?.SetTag("rpc.system", "grpc");
+				using (var activity = src.StartActivity("messagingSpan", ActivityKind.Client))
+					activity?.SetTag("messaging.system", "rabbitmq");
 			}
 		}
 

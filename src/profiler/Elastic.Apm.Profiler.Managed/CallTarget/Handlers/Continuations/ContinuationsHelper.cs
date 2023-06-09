@@ -41,25 +41,25 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 
 #if NETSTANDARD2_1_OR_GREATER
 #else
-        internal static TTo Convert<TFrom, TTo>(TFrom value) => Converter<TFrom, TTo>.Convert(value);
+		internal static TTo Convert<TFrom, TTo>(TFrom value) => Converter<TFrom, TTo>.Convert(value);
 
 		private static class Converter<TFrom, TTo>
-        {
-            private static readonly ConvertDelegate _converter;
+		{
+			private static readonly ConvertDelegate _converter;
 
-            static Converter()
-            {
-                var dMethod =
+			static Converter()
+			{
+				var dMethod =
  new DynamicMethod($"Converter<{typeof(TFrom).Name},{typeof(TTo).Name}>", typeof(TTo), new[] { typeof(TFrom) }, typeof(ConvertDelegate).Module, true);
-                var il = dMethod.GetILGenerator();
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ret);
-                _converter = (ConvertDelegate)dMethod.CreateDelegate(typeof(ConvertDelegate));
-            }
+				var il = dMethod.GetILGenerator();
+				il.Emit(OpCodes.Ldarg_0);
+				il.Emit(OpCodes.Ret);
+				_converter = (ConvertDelegate)dMethod.CreateDelegate(typeof(ConvertDelegate));
+			}
 
-            private delegate TTo ConvertDelegate(TFrom value);
+			private delegate TTo ConvertDelegate(TFrom value);
 
-            public static TTo Convert(TFrom value) => _converter(value);
+			public static TTo Convert(TFrom value) => _converter(value);
 		}
 #endif
 	}

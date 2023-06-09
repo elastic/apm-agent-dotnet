@@ -37,7 +37,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 		public MemberResult<TResult> GetProperty<TResult>(string propertyName)
 		{
-			if (!HasValue || Value == null || !Value.TryGetPropertyValue(propertyName, out TResult result)) return MemberResult<TResult>.NotFound;
+			if (!HasValue || Value == null || !Value.TryGetPropertyValue(propertyName, out TResult result))
+				return MemberResult<TResult>.NotFound;
 
 			return new MemberResult<TResult>(result);
 		}
@@ -46,7 +47,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 		public MemberResult<TResult> GetField<TResult>(string fieldName)
 		{
-			if (!HasValue || Value == null || !Value.TryGetFieldValue(fieldName, out TResult result)) return MemberResult<TResult>.NotFound;
+			if (!HasValue || Value == null || !Value.TryGetFieldValue(fieldName, out TResult result))
+				return MemberResult<TResult>.NotFound;
 
 			return new MemberResult<TResult>(result);
 		}
@@ -55,7 +57,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 		public MemberResult<TResult> CallMethod<TArg1, TResult>(string methodName, TArg1 arg1)
 		{
-			if (!HasValue || Value == null || !Value.TryCallMethod(methodName, arg1, out TResult result)) return MemberResult<TResult>.NotFound;
+			if (!HasValue || Value == null || !Value.TryCallMethod(methodName, arg1, out TResult result))
+				return MemberResult<TResult>.NotFound;
 
 			return new MemberResult<TResult>(result);
 		}
@@ -64,7 +67,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 
 		public override string ToString()
 		{
-			if (!HasValue || Value == null) return string.Empty;
+			if (!HasValue || Value == null)
+				return string.Empty;
 
 			return Value.ToString();
 		}

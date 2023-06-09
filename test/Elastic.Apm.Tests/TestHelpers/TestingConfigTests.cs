@@ -65,7 +65,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 			}
 
 			var invalidLogLevelStrings = new[] { "", "x", "some text", "with various \t white \n\t space" };
-			foreach (var invalidLogLevelString in invalidLogLevelStrings) yield return (invalidLogLevelString, (object)null);
+			foreach (var invalidLogLevelString in invalidLogLevelStrings)
+				yield return (invalidLogLevelString, (object)null);
 
 			string UppercaseLetterAt(string str, int index)
 			{
@@ -79,7 +80,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 		{
 			foreach (var defaultValue in PossibleNullableIntDefaultValues)
 			{
-				if (defaultValue == null) continue;
+				if (defaultValue == null)
+					continue;
 
 				yield return (defaultValue.ToString(), (object)defaultValue);
 			}

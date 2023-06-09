@@ -18,6 +18,16 @@ public sealed class DisabledOnWindowsFact : FactAttribute
 	}
 }
 
+public sealed class DisabledOnFullFrameworkFact : FactAttribute
+{
+	public DisabledOnFullFrameworkFact()
+	{
+#if NETFRAMEWORK
+		Skip = "This test is disabled on .NET Full Framework";
+#endif
+	}
+}
+
 public sealed class DisabledOnWindowsDockerFact : DockerFactAttribute
 {
 	public DisabledOnWindowsDockerFact()
@@ -33,5 +43,15 @@ public sealed class DisabledOnWindowsTheory : TheoryAttribute
 	{
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			Skip = "This test is disabled on windows";
+	}
+}
+
+public sealed class DisabledOnFullFrameworkTheory : TheoryAttribute
+{
+	public DisabledOnFullFrameworkTheory()
+	{
+#if NETFRAMEWORK
+		Skip = "This test is disabled on .NET Full Framework";
+#endif
 	}
 }

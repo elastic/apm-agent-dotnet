@@ -21,9 +21,9 @@ public class ExitSpanMinDurationTests
 			configuration: new MockConfiguration(exitSpanMinDuration: "100ms")));
 		agent.Tracer.CaptureTransaction("foo", "bar", t =>
 		{
-			t.CaptureSpan("span1", "test", () => Thread.Sleep(150), isExitSpan:true);
-			t.CaptureSpan("span2", "test", () => { }, isExitSpan:true);
-			t.CaptureSpan("span3", "test", () => Thread.Sleep(150), isExitSpan:true);
+			t.CaptureSpan("span1", "test", () => Thread.Sleep(150), isExitSpan: true);
+			t.CaptureSpan("span2", "test", () => { }, isExitSpan: true);
+			t.CaptureSpan("span3", "test", () => Thread.Sleep(150), isExitSpan: true);
 			//Fast, but not exit span
 			t.CaptureSpan("span4", "test", () => { });
 

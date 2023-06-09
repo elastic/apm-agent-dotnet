@@ -34,13 +34,15 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		public static Module Get(Guid moduleVersionId)
 		{
 			// First attempt at cached values with no blocking
-			if (_modules.TryGetValue(moduleVersionId, out var value)) return value;
+			if (_modules.TryGetValue(moduleVersionId, out var value))
+				return value;
 
 			// Block if a population event is happening
 			_populationResetEvent.Wait();
 
 			// See if the previous population event populated what we need
-			if (_modules.TryGetValue(moduleVersionId, out value)) return value;
+			if (_modules.TryGetValue(moduleVersionId, out value))
+				return value;
 
 			if (_failures >= MaxFailures)
 			{
@@ -81,7 +83,8 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		{
 			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 			foreach (var assembly in assemblies)
-			foreach (var module in assembly.Modules) _modules.TryAdd(module.ModuleVersionId, module);
+				foreach (var module in assembly.Modules)
+					_modules.TryAdd(module.ModuleVersionId, module);
 		}
 	}
 }

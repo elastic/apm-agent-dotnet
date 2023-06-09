@@ -35,7 +35,7 @@ namespace Elastic.Apm.Features
 			return enabled;
 		}
 
-		internal string Name { get;  }
+		internal string Name { get; }
 	}
 
 	internal class DefaultAgentFeatures : AgentFeatures
