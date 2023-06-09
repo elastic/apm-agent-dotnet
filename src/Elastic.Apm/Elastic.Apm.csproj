@@ -66,6 +66,7 @@
   <ItemGroup Condition="'$(TargetFramework)'=='net462'">
     <Reference Include="System.Core" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
@@ -84,11 +85,17 @@
   <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="6.0.1" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
     <!-- Used by Ben.Demystifier -->
     <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net462'">
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
   </ItemGroup>
 
   <!-- Newtonsoft.Json constants -->
@@ -106,5 +113,5 @@
       <PackagePath>.</PackagePath>
     </None>
   </ItemGroup>
-  
+
 </Project>

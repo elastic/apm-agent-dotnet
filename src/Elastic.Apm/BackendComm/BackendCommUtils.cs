@@ -195,7 +195,9 @@ namespace Elastic.Apm.BackendComm
 
 			var httpClientHandler = new HttpClientHandler
 			{
-				ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback,
+				// TODO - This change would force a rework to use ServicePointManager on net462.
+				// We won't do that here but this would need addressing if we later take these changes.
+				//ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback,
 				UseDefaultCredentials = useWindowsCredentials
 			};
 #if NETFRAMEWORK
