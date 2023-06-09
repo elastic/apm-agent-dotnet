@@ -11,8 +11,8 @@ DOTNET_VERSION = "net5.0"
 DOTNET_CONFIG = "Debug"
 CORECLR_ENABLE_PROFILING = { value = "1", condition = { env_not_set = ["CORECLR_ENABLE_PROFILING"] } }
 CORECLR_PROFILER = { value = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}", condition = { env_not_set = ["CORECLR_PROFILER"] } }
-ELASTIC_APM_PROFILER_HOME = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elastic.Apm.Profiler.Managed/bin/Release", condition = { env_not_set = ["ELASTIC_APM_PROFILER_HOME"] } }
-ELASTIC_APM_PROFILER_INTEGRATIONS = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/Elastic.Apm.Profiler.Managed/integrations.yml", condition = { env_not_set = ["ELASTIC_APM_PROFILER_INTEGRATIONS"] } }
+ELASTIC_APM_PROFILER_HOME = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/profiler/Elastic.Apm.Profiler.Managed/bin/Release", condition = { env_not_set = ["ELASTIC_APM_PROFILER_HOME"] } }
+ELASTIC_APM_PROFILER_INTEGRATIONS = { value = "${CARGO_MAKE_WORKING_DIRECTORY}/src/profiler/Elastic.Apm.Profiler.Managed/integrations.yml", condition = { env_not_set = ["ELASTIC_APM_PROFILER_INTEGRATIONS"] } }
 ELASTIC_APM_PROFILER_CALLTARGET_ENABLED = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_CALLTARGET_ENABLED"] } }
 ELASTIC_APM_PROFILER_LOG = { value = "debug", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG"] } }
 ELASTIC_APM_PROFILER_LOG_IL = { value = "true", condition = { env_not_set = ["ELASTIC_APM_PROFILER_LOG_IL"] } }
@@ -23,7 +23,7 @@ SAMPLE_APP = { value = "KafkaSample", condition = { env_not_set = ["SAMPLE_APP"]
 [tasks.build-loader]
 description = "Builds Managed Profiler .NET loader"
 command = "dotnet"
-args = ["build", "-c", "Release", "./src/Elastic.Apm.Profiler.Managed.Loader/Elastic.Apm.Profiler.Managed.Loader.csproj"]
+args = ["build", "-c", "Release", "./src/profiler/Elastic.Apm.Profiler.Managed.Loader/Elastic.Apm.Profiler.Managed.Loader.csproj"]
 
 [tasks.build]
 description = "Builds CLR Profiler"
@@ -38,7 +38,7 @@ dependencies = ["build-loader"]
 [tasks.build-integrations]
 description = "Builds Managed Profiler .NET integrations"
 command = "dotnet"
-args = ["build", "-c", "Release", "./src/Elastic.Apm.Profiler.Managed/Elastic.Apm.Profiler.Managed.csproj"]
+args = ["build", "-c", "Release", "./src/profiler/Elastic.Apm.Profiler.Managed/Elastic.Apm.Profiler.Managed.csproj"]
 
 [tasks.build-example]
 description = "Builds Example .NET project to instrument"
@@ -55,10 +55,10 @@ private = true
 command = "dotnet"
 args = [
     "run",
-    "--project", "./src/Elastic.Apm.Profiler.IntegrationsGenerator/Elastic.Apm.Profiler.IntegrationsGenerator.csproj",
+    "--project", "./src/profiler/Elastic.Apm.Profiler.IntegrationsGenerator/Elastic.Apm.Profiler.IntegrationsGenerator.csproj",
     "--",
-    "-i", "./src/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
-    "-o", "./src/Elastic.Apm.Profiler.Managed",
+    "-i", "./src/profiler/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
+    "-o", "./src/profiler/Elastic.Apm.Profiler.Managed",
     "-f", "yml"]
 dependencies = ["build-integrations"]
 
@@ -68,9 +68,9 @@ private = true
 command = "dotnet"
 args = [
     "run",
-    "--project", "./src/Elastic.Apm.Profiler.IntegrationsGenerator/Elastic.Apm.Profiler.IntegrationsGenerator.csproj",
+    "--project", "./src/profiler/Elastic.Apm.Profiler.IntegrationsGenerator/Elastic.Apm.Profiler.IntegrationsGenerator.csproj",
     "--",
-    "-i", "./src/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
+    "-i", "./src/profiler/Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll",
     "-o", "./docs",
     "-f", "asciidoc"]
 dependencies = ["build-integrations"]
@@ -78,7 +78,7 @@ dependencies = ["build-integrations"]
 [tasks.expand]
 clear = true
 script = '''
-cargo expand --manifest-path src/elastic_apm_profiler/Cargo.toml --color never > expanded.rs
+cargo expand --manifest-path src/profiler/elastic_apm_profiler/Cargo.toml --color never > expanded.rs
 '''
 
 [tasks.set-profiler-env]

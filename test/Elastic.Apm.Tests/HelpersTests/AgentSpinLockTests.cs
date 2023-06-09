@@ -113,7 +113,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var numberOfThreads = MultiThreadsTestUtils.NumberOfThreadsForTest;
 			_logger.Debug()?.Log($"numberOfThreads: {numberOfThreads}");
 
-			var threadResults = MultiThreadsTestUtils.TestOnThreads(numberOfThreads, threadIndex =>
+			var threadResults = MultiThreadsTestUtils.TestOnThreads(numberOfThreads, _ =>
 			{
 				var numberOfIncrements = 0;
 
@@ -121,13 +121,15 @@ namespace Elastic.Apm.Tests.HelpersTests
 				{
 					using (var acq = spinLock.TryAcquireWithDisposable())
 					{
-						if (!acq.IsAcquired) continue;
+						if (!acq.IsAcquired)
+							continue;
 
 						++mutexProtectedVar;
 					}
 
 					++numberOfIncrements;
-					if (numberOfIncrements == expectedNumberOfIncrementsPerThread) return numberOfIncrements;
+					if (numberOfIncrements == expectedNumberOfIncrementsPerThread)
+						return numberOfIncrements;
 				}
 			});
 
@@ -150,7 +152,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void Dispose()
 			{
-				if (IsAcquired) _spinLockForTest.Release();
+				if (IsAcquired)
+					_spinLockForTest.Release();
 			}
 		}
 
@@ -173,7 +176,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public bool TryAcquire()
 			{
-				if (_isLockHeld) return false;
+				if (_isLockHeld)
+					return false;
 
 				// Force the worst case scenario giving other thread more chance to change _isLockHeld to true
 				// while the current thread will still think that _isLockHeld is false after resuming from Thread.Yield()
@@ -185,7 +189,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void Release()
 			{
-				if (_releaseOnNotAcquiredThrows && !_isLockHeld) throw new InvalidOperationException("Attempt to release lock that is not acquired");
+				if (_releaseOnNotAcquiredThrows && !_isLockHeld)
+					throw new InvalidOperationException("Attempt to release lock that is not acquired");
 
 				_isLockHeld = false;
 			}

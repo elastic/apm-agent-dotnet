@@ -1,12 +1,12 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
 using Elastic.Apm.Api;
-using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.Model
 {
@@ -30,7 +30,8 @@ namespace Elastic.Apm.Model
 			get
 			{
 				// merge
-				foreach (var key in Keys) InnerDictionary[key] = base[key];
+				foreach (var key in Keys)
+					InnerDictionary[key] = base[key];
 				return InnerDictionary;
 			}
 		}

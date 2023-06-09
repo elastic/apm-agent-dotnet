@@ -16,9 +16,9 @@ using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using RichardSzalay.MockHttp;
 using Xunit;
 using Xunit.Abstractions;
-using RichardSzalay.MockHttp;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {
@@ -88,7 +88,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			// Agent blocks first event queue worker loop to get information ONCE
 			handler
 				.When(serverInformationUrl.AbsoluteUri)
-				.Respond(c =>
+				.Respond(_ =>
 				{
 					var response = new HttpResponseMessage(HttpStatusCode.OK);
 					var json = $@"{{

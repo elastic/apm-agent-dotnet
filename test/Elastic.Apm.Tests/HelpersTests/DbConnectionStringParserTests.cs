@@ -217,11 +217,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
 
 			[Theory]
-			[InlineData(DbConnectionStringParser.MaxNestingDepth/2, true)]
-			[InlineData(DbConnectionStringParser.MaxNestingDepth-1, true)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth / 2, true)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth - 1, true)]
 			[InlineData(DbConnectionStringParser.MaxNestingDepth, true)]
-			[InlineData(DbConnectionStringParser.MaxNestingDepth+1, false)]
-			[InlineData(DbConnectionStringParser.MaxNestingDepth*2, false)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth + 1, false)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth * 2, false)]
 			public void nested_value_max_depth(int nestingDepth, bool isValid)
 			{
 				// @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.21.25.186)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB)));User Id=SAJDDL; Direct=True;"
@@ -248,9 +248,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 				string BuildNestedPart(int outerNestingDepth, string innerPart, char nestingKey)
 				{
 					var strBuilder = new StringBuilder(nestingDepth * 6);
-					for (var i = 0; i < outerNestingDepth; ++i) strBuilder.Append($"({nestingKey}{i+1}=");
+					for (var i = 0; i < outerNestingDepth; ++i)
+						strBuilder.Append($"({nestingKey}{i + 1}=");
 					strBuilder.Append(innerPart);
-					for (var i = 0; i < outerNestingDepth; ++i) strBuilder.Append(')');
+					for (var i = 0; i < outerNestingDepth; ++i)
+						strBuilder.Append(')');
 					return strBuilder.ToString();
 				}
 			}

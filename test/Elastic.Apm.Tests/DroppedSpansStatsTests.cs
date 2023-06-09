@@ -32,8 +32,8 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent =
-			       new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(exitSpanMinDuration: exitSpanMinDuration),
-				       payloadSender: payloadSender)))
+				   new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(exitSpanMinDuration: exitSpanMinDuration),
+					   payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
 				{

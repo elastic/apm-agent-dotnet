@@ -24,8 +24,10 @@ namespace Elastic.Apm.Helpers
 			input.ThrowIfArgumentNull(nameof(input));
 			count.ThrowIfArgumentNegative(nameof(count));
 
-			if (input.IsEmpty() || count == 0) return string.Empty;
-			if (count == 1) return input;
+			if (input.IsEmpty() || count == 0)
+				return string.Empty;
+			if (count == 1)
+				return input;
 
 			return new StringBuilder(input.Length * count).Insert(0, input, count).ToString();
 		}
@@ -47,9 +49,11 @@ namespace Elastic.Apm.Helpers
 			if (input is null)
 				return null;
 
-			if (input.Length <= length) return input;
+			if (input.Length <= length)
+				return input;
 
-			if (length <= 5) return input.Substring(0, length);
+			if (length <= 5)
+				return input.Substring(0, length);
 
 			return $"{input.Substring(0, length - Ellipsis.Length)}{Ellipsis}";
 		}

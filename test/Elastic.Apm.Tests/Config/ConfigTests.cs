@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -544,7 +544,7 @@ namespace Elastic.Apm.Tests.Config
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", _ => { Thread.Sleep(2); });
 
 				//By default XUnit uses 'testhost' as the entry assembly, and that is what the
 				//agent reports if we don't set it to anything:
@@ -568,7 +568,7 @@ namespace Elastic.Apm.Tests.Config
 			using (var agent = new ApmAgent(
 					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfiguration())))
 			{
-				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", _ => { Thread.Sleep(2); });
 
 				agent.Service.Name.Should().Be(serviceName);
 			}
@@ -589,7 +589,7 @@ namespace Elastic.Apm.Tests.Config
 			using (var agent = new ApmAgent(
 					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfiguration())))
 			{
-				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", _ => { Thread.Sleep(2); });
 
 				agent.Service.Name.Should().Be(serviceName.Replace('.', '_'));
 				agent.Service.Name.Should().NotContain(".");
@@ -608,7 +608,7 @@ namespace Elastic.Apm.Tests.Config
 			using (var agent = new ApmAgent(
 					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfiguration())))
 			{
-				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", _ => { Thread.Sleep(2); });
 
 				agent.Service.Name.Should().NotBe(serviceName);
 				agent.Service.Name.Should()
@@ -629,7 +629,7 @@ namespace Elastic.Apm.Tests.Config
 			using (var agent = new ApmAgent(
 					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfiguration())))
 			{
-				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", _ => { Thread.Sleep(2); });
 
 				agent.Service.Name.Should().Be(serviceName);
 				agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
@@ -650,7 +650,7 @@ namespace Elastic.Apm.Tests.Config
 			using (var agent = new ApmAgent(
 					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfiguration())))
 			{
-				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", _ => { Thread.Sleep(2); });
 
 				agent.Service.Version.Should().Be(serviceVersion);
 			}
@@ -667,7 +667,7 @@ namespace Elastic.Apm.Tests.Config
 					   new TestAgentComponents(payloadSender: payloadSender, configuration: new EnvironmentConfiguration())))
 			{
 				// Act
-				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", _ => { Thread.Sleep(2); });
 
 				// Assert
 				agent.Service.Node.ConfiguredName.Should().Be(serviceNodeName);

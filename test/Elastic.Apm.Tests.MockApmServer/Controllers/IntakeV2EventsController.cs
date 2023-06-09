@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -10,18 +10,15 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Specification;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using NJsonSchema;
 using Xunit.Sdk;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
-using Elastic.Apm.Report.Serialization;
-using NJsonSchema.Validation.FormatValidators;
-using NJsonSchema.Validation;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 
@@ -80,7 +77,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 			}
 
 			string requestBody;
-			using (var reader = new StreamReader(Request.Body, Encoding.UTF8)) requestBody = await reader.ReadToEndAsync();
+			using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
+				requestBody = await reader.ReadToEndAsync();
 
 			var numberOfParsedLines = 0;
 			using (var sr = new StringReader(requestBody))
@@ -125,7 +123,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 
 			async Task HandleParsed<TDto>(string dtoType, TDto dto, ImmutableList<TDto> accumulatingList, Action<TDto> action) where TDto : IDto
 			{
-				if (dto == null) return;
+				if (dto == null)
+					return;
 
 				foundDto.Should().BeFalse($"There should be exactly one object per line: `{line}'");
 				foundDto = true;

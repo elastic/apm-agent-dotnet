@@ -9,6 +9,9 @@ permissions:
     issues: write
     packages: write
 
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
 jobs:
   release:
     runs-on: ubuntu-latest

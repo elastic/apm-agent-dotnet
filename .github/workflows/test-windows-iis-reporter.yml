@@ -1,0 +1,24 @@
+---
+## Workflow to process the JUnit test results and add a report to the checks.
+name: test-windows-iis-reporter
+on:
+  workflow_run:
+    workflows:
+      - test-windows-iis
+    types:
+      - completed
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    name: IIS Test Summary
+    steps:
+      - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
+        with:
+          artifact: test-results-iis       # artifact name
+          name: IIS Tests Summary              # Name of the check run which will be created
+          path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
+          reporter: java-junit             # Format of test results
+          list-suites: 'failed'
+          list-tests: 'failed'
+          # output-to: 'step-summary'

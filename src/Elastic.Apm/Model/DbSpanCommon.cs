@@ -47,7 +47,8 @@ namespace Elastic.Apm.Model
 		{
 			if (span is Span capturedSpan)
 			{
-				if (duration.HasValue) capturedSpan.Duration = duration.Value.TotalMilliseconds;
+				if (duration.HasValue)
+					capturedSpan.Duration = duration.Value.TotalMilliseconds;
 
 				GetDefaultProperties(dbCommand.Connection.GetType().FullName, out var spanSubtype, out var defaultPort);
 				capturedSpan.Subtype = spanSubtype;
@@ -127,12 +128,15 @@ namespace Elastic.Apm.Model
 
 		internal Destination GetDestination(string dbConnectionString, int? defaultPort)
 		{
-			if (dbConnectionString == null) return null;
+			if (dbConnectionString == null)
+				return null;
 
 			var destination = _dbConnectionStringParser.ExtractDestination(dbConnectionString);
-			if (destination == null) return null;
+			if (destination == null)
+				return null;
 
-			if (!destination.Port.HasValue) destination.Port = defaultPort;
+			if (!destination.Port.HasValue)
+				destination.Port = defaultPort;
 
 			return destination;
 		}

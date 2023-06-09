@@ -18,8 +18,10 @@ namespace Elastic.Apm.Extensions
 		public static bool ContainsLike(this List<string> list, string matchedString)
 		{
 			foreach (var str in list)
+			{
 				if (str.IsLike(matchedString))
 					return true;
+			}
 
 			return false;
 		}

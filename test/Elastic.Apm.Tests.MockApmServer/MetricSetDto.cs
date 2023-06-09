@@ -30,7 +30,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 			var resultBuilder = new ToStringBuilder(nameof(MetricSetDto));
 			resultBuilder.Add("Timestamp", Timestamp);
 			var samplesToStringBuilder = new ToStringBuilder("");
-			foreach (var sample in Samples) resultBuilder.Add(sample.Key, sample.Value);
+			foreach (var sample in Samples)
+				resultBuilder.Add(sample.Key, sample.Value);
 			resultBuilder.Add("samples", samplesToStringBuilder.ToString());
 			return resultBuilder.ToString();
 		}

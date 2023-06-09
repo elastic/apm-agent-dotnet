@@ -42,10 +42,10 @@ namespace Elastic.Apm.Config
 		internal static DefaultKeyValue GetDefaultValueForLogging(ConfigurationOption option, IConfigurationReader config) =>
 			option switch
 			{
-				ServerUrl => new (option, config.ServerUrl.AbsoluteUri, nameof(GetDefaultValueForLogging)),
-				ServiceName => new (option, config.ServiceName, nameof(GetDefaultValueForLogging)),
-				ServiceVersion => new (option, config.ServiceVersion, nameof(GetDefaultValueForLogging)),
-				ConfigurationOption.LogLevel => new (option, config.LogLevel.ToString(), nameof(GetDefaultValueForLogging)),
+				ServerUrl => new(option, config.ServerUrl.AbsoluteUri, nameof(GetDefaultValueForLogging)),
+				ServiceName => new(option, config.ServiceName, nameof(GetDefaultValueForLogging)),
+				ServiceVersion => new(option, config.ServiceVersion, nameof(GetDefaultValueForLogging)),
+				ConfigurationOption.LogLevel => new(option, config.LogLevel.ToString(), nameof(GetDefaultValueForLogging)),
 				_ => null,
 			};
 
@@ -57,7 +57,8 @@ namespace Elastic.Apm.Config
 
 		public static void PrintAgentLogPreamble(IApmLogger logger, IConfigurationReader configurationReader)
 		{
-			if (logger?.Info() == null) return;
+			if (logger?.Info() == null)
+				return;
 
 			try
 			{
@@ -77,13 +78,14 @@ namespace Elastic.Apm.Config
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
+				logger.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
 			}
 		}
 
 		public static void PrintAgentConfiguration(IApmLogger logger, IConfigurationReader configurationReader)
 		{
-			if (logger?.Info() == null) return;
+			if (logger?.Info() == null)
+				return;
 			try
 			{
 				var info = logger.Info()!.Value;
@@ -111,7 +113,7 @@ namespace Elastic.Apm.Config
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentConfiguration)}");
+				logger.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentConfiguration)}");
 			}
 		}
 	}

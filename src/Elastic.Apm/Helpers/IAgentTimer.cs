@@ -49,7 +49,8 @@ namespace Elastic.Apm.Helpers
 			}
 			finally
 			{
-				if (!timeoutDelayTask.IsCompleted) timeoutDelayCts.Cancel();
+				if (!timeoutDelayTask.IsCompleted)
+					timeoutDelayCts.Cancel();
 				timeoutDelayCts.Dispose();
 			}
 		}
@@ -87,7 +88,8 @@ namespace Elastic.Apm.Helpers
 		)
 		{
 			var timeStarted = agentTimer.Now;
-			if (await TryAwaitOrTimeout(agentTimer, taskToAwait, until, cancellationToken)) return;
+			if (await TryAwaitOrTimeout(agentTimer, taskToAwait, until, cancellationToken))
+				return;
 
 			throw new TimeoutException($"Elapsed time: {(agentTimer.Now - timeStarted).ToHms()}");
 		}
@@ -111,7 +113,8 @@ namespace Elastic.Apm.Helpers
 			var timeStarted = agentTimer.Now;
 			var (hasTaskToAwaitCompletedBeforeTimeout, result) =
 				await TryAwaitOrTimeout(agentTimer, taskToAwait, until, cancellationToken);
-			if (hasTaskToAwaitCompletedBeforeTimeout) return result;
+			if (hasTaskToAwaitCompletedBeforeTimeout)
+				return result;
 
 			throw new TimeoutException($"Elapsed time: {(agentTimer.Now - timeStarted).ToHms()}");
 		}

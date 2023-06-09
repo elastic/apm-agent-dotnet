@@ -525,7 +525,9 @@ public class ConvenientApiTransactionTests
 						new Request("GET",
 							new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic", Protocol = "HTTP" })
 						{
-							HttpVersion = "2.0", Socket = new Socket { RemoteAddress = "127.0.0.1" }, Body = "123"
+							HttpVersion = "2.0",
+							Socket = new Socket { RemoteAddress = "127.0.0.1" },
+							Body = "123"
 						};
 				});
 			});
@@ -666,7 +668,7 @@ public class ConvenientApiTransactionTests
 
 		using var agent = new ApmAgent(new TestAgentComponents());
 
-		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async _ =>
 		{
 			var activity = Activity.Current;
 			activity.Should().NotBeNull();
@@ -759,7 +761,7 @@ public class ConvenientApiTransactionTests
 
 		using var agent = new ApmAgent(new TestAgentComponents());
 
-		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async _ =>
 		{
 			var sc = SynchronizationContext.Current;
 			sc.Should().NotBeNull();
@@ -775,7 +777,7 @@ public class ConvenientApiTransactionTests
 
 		using var agent = new ApmAgent(new TestAgentComponents());
 
-		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async t =>
+		await Agent.Tracer.CaptureTransaction("async 1", ApiConstants.TypeDb, async _ =>
 		{
 			var sc = SynchronizationContext.Current;
 			sc.Should().NotBeNull();
@@ -817,7 +819,7 @@ public class ConvenientApiTransactionTests
 			var sc = SynchronizationContext.Current;
 			sc.Should().NotBeNull();
 
-			await t.CaptureSpan("AsyncSPan", "test", async (s) =>
+			await t.CaptureSpan("AsyncSPan", "test", async (_) =>
 			{
 				sc.Should().NotBeNull();
 				await Task.Delay(1_000);
@@ -836,7 +838,7 @@ public class ConvenientApiTransactionTests
 		{
 			var sc = SynchronizationContext.Current;
 			sc.Should().NotBeNull();
-			await t.CaptureSpan("AsyncSPan", "test", async (s) =>
+			await t.CaptureSpan("AsyncSPan", "test", async (_) =>
 			{
 				sc.Should().NotBeNull();
 				await Task.Delay(1_000);

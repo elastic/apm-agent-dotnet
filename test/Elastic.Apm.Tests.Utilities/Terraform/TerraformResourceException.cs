@@ -15,7 +15,7 @@ namespace Elastic.Apm.Tests.Utilities.Terraform
 	public class TerraformResourceException : Exception
 	{
 		public TerraformResourceException(string message, int exitCode, List<string> output)
-			: base(string.Join(Environment.NewLine, new [] { message, $"exit code: {exitCode}", "output:" }.Concat<string>(output)))
+			: base(string.Join(Environment.NewLine, new[] { message, $"exit code: {exitCode}", "output:" }.Concat<string>(output)))
 		{
 		}
 

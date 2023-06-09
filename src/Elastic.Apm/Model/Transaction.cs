@@ -68,7 +68,8 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type, long? timestamp = null)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, null, timestamp: timestamp) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, null, timestamp: timestamp)
+		{ }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -640,8 +641,8 @@ namespace Elastic.Apm.Model
 			if (!isFirstEndCall)
 				return;
 
-			if (SpanTimings.ContainsKey(SpanTimerKey.AppSpanType))
-				SpanTimings[SpanTimerKey.AppSpanType].IncrementTimer(SelfDuration);
+			if (SpanTimings.TryGetValue(SpanTimerKey.AppSpanType, out var timing))
+				timing.IncrementTimer(SelfDuration);
 			else
 				SpanTimings.TryAdd(SpanTimerKey.AppSpanType, new SpanTimer(SelfDuration));
 

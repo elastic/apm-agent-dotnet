@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -122,7 +121,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		/// <summary>
 		/// logger that has a log level switch but does not implement <see cref="ILogLevelSwitchable"/>
 		/// </summary>
-		private class UnswitchableLogger: IApmLogger
+		private class UnswitchableLogger : IApmLogger
 		{
 			public LogLevelSwitch LogLevelSwitch { get; }
 

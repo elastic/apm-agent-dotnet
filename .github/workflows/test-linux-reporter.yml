@@ -11,12 +11,14 @@ on:
 jobs:
   report:
     runs-on: ubuntu-latest
+    name: Linux Test Summary
     steps:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
         with:
           artifact: test-results-linux            # artifact name
-          name: Tests Summary                 # Name of the check run which will be created
+          name: Linux Tests Summary                 # Name of the check run which will be created
           path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
           reporter: java-junit              # Format of test results
           list-suites: 'failed'
           list-tests: 'failed'
+          # output-to: 'step-summary'

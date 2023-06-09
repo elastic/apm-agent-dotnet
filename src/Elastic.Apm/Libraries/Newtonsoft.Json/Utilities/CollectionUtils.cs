@@ -36,7 +36,6 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 #if HAVE_METHOD_IMPL_ATTRIBUTE
-using System.Runtime.CompilerServices;
 #endif
 
 #nullable enable

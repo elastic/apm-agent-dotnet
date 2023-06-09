@@ -7,10 +7,10 @@ using System;
 using System.Linq;
 using System.Threading;
 using Elastic.Apm.Api;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Tests
 {
@@ -74,7 +74,8 @@ namespace Elastic.Apm.Tests
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version710, payloadSender: payloadSender))) Generate10DbCalls(agent, spanName, true, 2);
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version710, payloadSender: payloadSender)))
+				Generate10DbCalls(agent, spanName, true, 2);
 
 			payloadSender.Transactions.Should().HaveCount(1);
 			payloadSender.Spans.Should().HaveCount(10);
@@ -280,7 +281,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.Spans.Count.Should().Be(11);
 			payloadSender.Spans.Where(s =>
 			{
-				if(s is Span realSpan)
+				if (s is Span realSpan)
 					return realSpan.Composite != null;
 
 				return false;

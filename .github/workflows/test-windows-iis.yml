@@ -24,6 +24,7 @@ concurrency:
 
 env:
   ELASTIC_STACK_VERSION: '8.4.0'
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
 jobs:
 
@@ -38,15 +39,14 @@ jobs:
     - uses: actions/cache@v3
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.3.1
 
     - name: Build the application
       shell: cmd
       run: |
+        set INCLUDE_CSHARP_TARGETS=true
         msbuild ^
           /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
            -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
@@ -81,12 +81,12 @@ jobs:
         icacls %sample_app_log_dir% /t /q /grant Everyone:F
         set ELASTIC_APM_ASP_NET_FULL_FRAMEWORK_SAMPLE_APP_LOG_FILE=%sample_app_log_dir%\Elastic.Apm.AspNetFullFramework.Tests.SampleApp.log
           
-        dotnet test -c Release test\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
+        dotnet test -c Release test\iis\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
           --verbosity normal ^
           --results-directory build/output ^
           --diag build/output/diag-iis.log ^
           --filter "FullyQualifiedName=Elastic.Apm.AspNetFullFramework.Tests.CustomServiceNodeNameSetViaSettings.Test" ^
-          --logger:"junit;LogFilePath=%GITHUB_WORKSPACE%/build/output/junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+          --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
     - name: Store test results
       if: success() || failure()

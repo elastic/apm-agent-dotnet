@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -75,13 +74,13 @@ public class UnsampledTransactionTests
 	{
 		var payloadSender = new MockPayloadSender();
 		using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
-				   configuration: new MockConfiguration(transactionSampleRate: "0", exitSpanMinDuration:"0"))))
+				   configuration: new MockConfiguration(transactionSampleRate: "0", exitSpanMinDuration: "0"))))
 		{
 			agent.Tracer.CaptureTransaction("foo", "bar", (t) =>
 			{
 				for (var i = 0; i < 10; i++)
 				{
-					var name =  "Foo" + new Random().Next();
+					var name = "Foo" + new Random().Next();
 					t.CaptureSpan(name, ApiConstants.TypeDb, (s) =>
 					{
 						s.Context.Db = new Database() { Type = "mssql", Instance = "01" };

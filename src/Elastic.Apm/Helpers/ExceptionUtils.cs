@@ -4,7 +4,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
@@ -33,7 +32,8 @@ namespace Elastic.Apm.Helpers
 			{
 				logger.Debug()?.LogException(ex, MethodExitingCancelledMsgFmt, dbgCallerMethodName);
 
-				if (!shouldSwallowCancellation) throw;
+				if (!shouldSwallowCancellation)
+					throw;
 			}
 			catch (Exception ex)
 			{

@@ -19,7 +19,8 @@ namespace Elastic.Apm.Helpers
 			if (inst == null)
 			{
 				int seed;
-				lock (Global) seed = Global.Next();
+				lock (Global)
+					seed = Global.Next();
 				_local = inst = new Random(seed);
 			}
 			return inst;

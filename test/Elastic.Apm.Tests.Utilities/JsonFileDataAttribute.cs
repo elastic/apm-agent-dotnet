@@ -35,11 +35,11 @@ public class JsonFileDataAttribute : DataAttribute
 		{
 			case JTokenType.Array:
 				foreach (var t in jToken)
-					yield return new []{ t.ToObject(_inputDataType) };
+					yield return new[] { t.ToObject(_inputDataType) };
 				break;
 			case JTokenType.Object:
 				foreach (var kvp in (JObject)jToken)
-					yield return new [] { kvp.Key, kvp.Value.ToObject(_inputDataType) };
+					yield return new[] { kvp.Key, kvp.Value.ToObject(_inputDataType) };
 				break;
 			default:
 				throw new Exception($"Unexpected JSON input: '{jToken}'");

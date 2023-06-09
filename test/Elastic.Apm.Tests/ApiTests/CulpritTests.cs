@@ -9,7 +9,6 @@ using FluentAssertions;
 using LibraryNamespace;
 using Test.Application;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
 {

@@ -1,4 +1,4 @@
-﻿// Licensed to Elasticsearch B.V under
+// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -525,7 +525,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void CreateSubSpan()
 		{
 			var payloadSender = new MockPayloadSender();
-			StartTransactionAndSpanWithSubSpan(payloadSender, s => { });
+			StartTransactionAndSpanWithSubSpan(payloadSender, _ => { });
 		}
 
 		/// <summary>
@@ -628,7 +628,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.SignalEndSpans();
 				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
-				if (isSampled) payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
+				if (isSampled)
+					payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
 				span.End();
 
 				payloadSender.SignalEndSpans();
@@ -672,7 +673,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.SignalEndSpans();
 				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
-				if (isSampled) payloadSender.FirstSpan.Duration.Should().Be(123456.789);
+				if (isSampled)
+					payloadSender.FirstSpan.Duration.Should().Be(123456.789);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.Duration = 987654.321;
@@ -945,17 +947,17 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var recordedTransaction1 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction1");
 			recordedTransaction1.Should().NotBeNull();
-			recordedTransaction1?.Context.Service.Name.Should().Be("Service1");
-			recordedTransaction1?.Context.Service.Version.Should().Be("1.0-beta1");
+			recordedTransaction1.Context.Service.Name.Should().Be("Service1");
+			recordedTransaction1.Context.Service.Version.Should().Be("1.0-beta1");
 
 			var recordedTransaction2 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction2");
 			recordedTransaction2.Should().NotBeNull();
-			recordedTransaction2?.Context.Service.Name.Should().Be("Service2");
-			recordedTransaction2?.Context.Service.Version.Should().Be("1.0-beta2");
+			recordedTransaction2.Context.Service.Name.Should().Be("Service2");
+			recordedTransaction2.Context.Service.Version.Should().Be("1.0-beta2");
 
 			var recordedTransaction3 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction3");
 			recordedTransaction3.Should().NotBeNull();
-			recordedTransaction3?.Context.Service.Should().BeNull();
+			recordedTransaction3.Context.Service.Should().BeNull();
 		}
 
 		/// <summary>
@@ -976,8 +978,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
-			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
-			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");
+			payloadSender.FirstTransaction.Context.Service.Name.Should().Be("Service2");
+			payloadSender.FirstTransaction.Context.Service.Version.Should().Be("1.0-beta2");
 		}
 
 		[Fact]

@@ -18,7 +18,7 @@ dotnet_diagnostic.CS8625.severity = none
 dotnet_diagnostic.CS8618.severity = none
 dotnet_diagnostic.CS8620.severity = none
 dotnet_diagnostic.CS8762.severity = none
-
+generated_code = true
 
 csharp_style_var_for_built_in_types = false:none
 csharp_style_var_when_type_is_apparent = false:none

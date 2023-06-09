@@ -25,6 +25,9 @@ defaults:
   run:
     shell: cmd
 
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
 jobs:
   tests:
     runs-on: windows-2022
@@ -44,6 +47,7 @@ jobs:
         with:
           name: 'unit'
           filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+          framework: '' # reset to test all .NET frameworks including net462
     
   startup-hook-tests:
     runs-on: windows-2022
@@ -60,7 +64,7 @@ jobs:
         uses: ./.github/workflows/test
         with:
           name: 'startuphooks'
-          project: 'test/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+          project: 'test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
           
   profiler-tests:
     runs-on: windows-2022
@@ -80,4 +84,4 @@ jobs:
         uses: ./.github/workflows/test
         with:
           name: 'profiler'
-          project: 'test/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+          project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'

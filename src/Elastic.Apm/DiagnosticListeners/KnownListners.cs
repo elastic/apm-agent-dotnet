@@ -17,7 +17,9 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public static HashSet<string> KnownListenersList => new()
 		{
-			MicrosoftAspNetCoreHostingHttpRequestIn, SystemNetHttpHttpRequestOut, SystemNetHttpDesktopHttpRequestOut,
+			MicrosoftAspNetCoreHostingHttpRequestIn,
+			SystemNetHttpHttpRequestOut,
+			SystemNetHttpDesktopHttpRequestOut,
 			ApmTransactionActivityName
 		};
 	}

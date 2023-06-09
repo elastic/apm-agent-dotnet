@@ -21,7 +21,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly IConfigurationReader _mainConfiguration;
 
 		internal RuntimeConfigurationSnapshot(IConfigurationReader mainConfiguration)
-			: this(mainConfiguration, null) {}
+			: this(mainConfiguration, null) { }
 		internal RuntimeConfigurationSnapshot(IConfigurationReader mainConfiguration, CentralConfiguration? dynamicConfiguration)
 		{
 			_mainConfiguration = mainConfiguration;

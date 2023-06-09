@@ -93,7 +93,7 @@ namespace Elastic.Apm.Metrics
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
-			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
+			_timer.Elapsed += (_, _) => { CollectAllMetrics(); };
 
 			void AddIfEnabled(IMetricsProvider provider)
 			{
@@ -144,7 +144,8 @@ namespace Elastic.Apm.Metrics
 
 			try
 			{
-				foreach (var item in samplesFromAllProviders) _payloadSender.QueueMetrics(item);
+				foreach (var item in samplesFromAllProviders)
+					_payloadSender.QueueMetrics(item);
 
 				_logger.Debug()
 					?.Log("Metrics collected: {data}",
@@ -213,7 +214,8 @@ namespace Elastic.Apm.Metrics
 							metricsProvider.ConsecutiveNumberOfFailedReads);
 				}
 
-				if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess) continue;
+				if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess)
+					continue;
 
 				_logger.Info()
 					?.Log("Failed reading {operationName} {numberOfTimes} consecutively - the agent won't try reading {operationName} anymore",

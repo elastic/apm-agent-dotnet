@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+      <!-- TODO make this netstandard 2.0 and ref System.Runtime.Loader -->
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
+      <ProjectReference Include="..\..\integrations\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
+      <ProjectReference Include="..\..\instrumentations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="..\ElasticApmAgentStartupHook\StartupHookLogger.cs">
+        <Link>StartupHookLogger.cs</Link>
+      </Compile>
+    </ItemGroup>
+  
+</Project>

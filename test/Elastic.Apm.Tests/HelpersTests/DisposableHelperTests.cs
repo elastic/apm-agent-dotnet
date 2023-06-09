@@ -52,7 +52,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 		internal void calling_Dispose_again_while_previous_call_is_still_in_progress()
 		{
 			var mockLogger = new TestLogger(LogLevel.Trace);
-			using (new DummyClassReenteringDispose(mockLogger)) { }
+			using (new DummyClassReenteringDispose(mockLogger))
+			{ }
 			mockLogger.Lines.Where(line => line.Contains("Critical")
 					&& line.Contains(string.Format(DisposableHelper.AnotherCallStillInProgressMsg, nameof(DummyClassReenteringDispose))))
 				.Should()

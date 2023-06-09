@@ -41,11 +41,13 @@ namespace Elastic.Apm.DistributedTracing
 		{
 			var bestAttempt = false;
 
-			if (string.IsNullOrWhiteSpace(traceParentValue)) return null;
+			if (string.IsNullOrWhiteSpace(traceParentValue))
+				return null;
 
 			traceParentValue = traceParentValue.Trim();
 
-			if (traceParentValue.Length < VersionPrefixIdLength || traceParentValue[VersionPrefixIdLength - 1] != '-') return null;
+			if (traceParentValue.Length < VersionPrefixIdLength || traceParentValue[VersionPrefixIdLength - 1] != '-')
+				return null;
 
 			try
 			{
@@ -63,7 +65,8 @@ namespace Elastic.Apm.DistributedTracing
 				return null;
 			}
 
-			if (traceParentValue.Length < VersionAndTraceIdLength || traceParentValue[VersionAndTraceIdLength - 1] != '-') return null;
+			if (traceParentValue.Length < VersionAndTraceIdLength || traceParentValue[VersionAndTraceIdLength - 1] != '-')
+				return null;
 
 			string traceId;
 			try
@@ -83,7 +86,8 @@ namespace Elastic.Apm.DistributedTracing
 			}
 
 			if (traceParentValue.Length < VersionAndTraceIdAndSpanIdLength
-				|| traceParentValue[VersionAndTraceIdAndSpanIdLength - 1] != '-') return null;
+				|| traceParentValue[VersionAndTraceIdAndSpanIdLength - 1] != '-')
+				return null;
 
 			string parentId;
 			try
@@ -100,7 +104,8 @@ namespace Elastic.Apm.DistributedTracing
 				return null;
 			}
 
-			if (traceParentValue.Length < VersionAndTraceIdAndSpanIdLength + OptionsLength) return null;
+			if (traceParentValue.Length < VersionAndTraceIdAndSpanIdLength + OptionsLength)
+				return null;
 
 			byte traceFlags;
 			try
@@ -112,7 +117,8 @@ namespace Elastic.Apm.DistributedTracing
 				return null;
 			}
 
-			if (!bestAttempt && traceParentValue.Length != VersionAndTraceIdAndSpanIdLength + OptionsLength) return null;
+			if (!bestAttempt && traceParentValue.Length != VersionAndTraceIdAndSpanIdLength + OptionsLength)
+				return null;
 
 			// ReSharper disable once InvertIf - imo that would make it hard to read.
 			if (bestAttempt)
@@ -181,11 +187,14 @@ namespace Elastic.Apm.DistributedTracing
 
 			int HexCharToInt(char c)
 			{
-				if (c >= '0' && c <= '9') return c - '0';
+				if (c >= '0' && c <= '9')
+					return c - '0';
 
-				if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+				if (c >= 'a' && c <= 'f')
+					return c - 'a' + 10;
 
-				if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+				if (c >= 'A' && c <= 'F')
+					return c - 'A' + 10;
 
 				throw new ArgumentOutOfRangeException("Invalid character: " + c);
 			}

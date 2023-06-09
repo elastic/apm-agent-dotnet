@@ -30,8 +30,8 @@ public class ConstructorTests
 		var logger = agent.Logger as ConsoleLogger;
 
 		logger.Should().NotBeNull();
-		logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
-		logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
+		logger.IsEnabled(LogLevel.Warning).Should().BeTrue();
+		logger.IsEnabled(LogLevel.Information).Should().BeFalse();
 	}
 
 	[Fact]

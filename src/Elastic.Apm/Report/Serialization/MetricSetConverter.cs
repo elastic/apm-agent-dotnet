@@ -4,11 +4,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Elastic.Apm.Api;
-using Elastic.Apm.Metrics;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Metrics;
 
 namespace Elastic.Apm.Report.Serialization
 {
@@ -19,7 +17,7 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteStartObject();
 			if (value.Transaction != null)
 			{
-				
+
 				writer.WritePropertyName("transaction");
 
 				writer.WriteStartObject();

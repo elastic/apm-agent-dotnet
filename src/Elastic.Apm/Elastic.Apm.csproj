@@ -9,7 +9,6 @@
     <PackageId>Elastic.Apm</PackageId>
     <Description>Elastic APM .NET Agent base package. This package provides core functionality for transmitting of all Elastic APM types and is a dependent package for all other Elastic APM package. Additionally this package contains the public Agent API that allows you to manually capture transactions and spans. Please install the platform specific package for the best experience. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
-    <LangVersion>9</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7" />
@@ -23,6 +22,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.SqlClient" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.SqlClient.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.OpenTelemetry.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.NetCoreAll" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.NetCoreAll.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Static.Tests" Key="$(ExposedPublicKey)" />
@@ -30,6 +30,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.Docker.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.FullFramework.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests.MockApmServer" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Elasticsearch" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />
@@ -60,6 +61,11 @@
     <InternalsVisibleTo Include="Elastic.Apm.StaticExplicitInitialization.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Clients.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Sample.Microsoft.Data.SqlClient" Key="$(ExposedPublicKeySampleApps)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net462'">
+    <Reference Include="System.Core" />
+    <Reference Include="System.Configuration" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
