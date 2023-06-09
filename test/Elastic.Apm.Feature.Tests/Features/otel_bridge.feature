@@ -201,8 +201,8 @@ Feature: OpenTelemetry bridge
     Examples:
       | messaging.system | messaging.destination | messaging.url         | net.peer.ip | net.peer.name | net.peer.port | resource         | target_service_name |
       | rabbitmq         |                       | amqp://carrot:4444/q1 |             |               |               | rabbitmq         |                     |
-      | rabbitmq         |                       |                       | 127.0.0.1   | carrot-server | 7777          | rabbitmq         | carrot-server:7777  |
-      | rabbitmq         |                       |                       |             | carrot-server |               | rabbitmq         | carrot-server       |
+      | rabbitmq         |                       |                       | 127.0.0.1   | carrot-server | 7777          | rabbitmq         |                     |
+      | rabbitmq         |                       |                       |             | carrot-server |               | rabbitmq         |                     |
       | rabbitmq         |                       |                       | 127.0.0.1   |               |               | rabbitmq         |                     |
       | rabbitmq         | myQueue               | amqp://carrot:4444/q1 |             |               |               | rabbitmq/myQueue | myQueue             |
       | rabbitmq         | myQueue               |                       | 127.0.0.1   | carrot-server | 7777          | rabbitmq/myQueue | myQueue             |
