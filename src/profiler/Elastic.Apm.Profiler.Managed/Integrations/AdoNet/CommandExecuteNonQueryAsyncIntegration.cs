@@ -23,7 +23,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	/// </summary>
 	[InstrumentMySqlAttribute(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
 	[InstrumentNpgsql(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
-	[InstrumentNpgsql(Method = ExecuteNonQuery, ReturnType = TaskInt32, ParameterTypes = new[] { ClrTypeNames.Bool, ClrTypeNames.CancellationToken })]
 	[InstrumentOracleManagedDataAccess(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
 	[InstrumentMicrosoftDataSqlite(Method = ExecuteNonQueryAsync, ReturnType = TaskInt32, ParameterTypes = new[] { ClrTypeNames.CancellationToken })]
