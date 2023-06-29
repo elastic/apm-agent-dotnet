@@ -104,16 +104,7 @@ namespace Elastic.Apm.Helpers
 
 			try
 			{
-				const string localDomainSuffix = ".localdomain"; // May be applied to returned host name on Linux when no domain is set
-
 				fqdn = Dns.GetHostEntry(string.Empty).HostName;
-
-				if (fqdn.EndsWith(localDomainSuffix, StringComparison.Ordinal))
-				{
-#pragma warning disable IDE0057 // Use range operator
-					fqdn = fqdn.Substring(0, fqdn.Length - localDomainSuffix.Length);
-#pragma warning restore IDE0057 // Use range operator
-				}
 			}
 			catch (Exception e)
 			{
@@ -128,8 +119,7 @@ namespace Elastic.Apm.Helpers
 				var hostName = IPGlobalProperties.GetIPGlobalProperties().HostName;
 				var domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
 
-				// On Linux, 'DomainName' may return localdomain which we ignore
-				if (!string.IsNullOrEmpty(domainName) && !domainName.Equals("localdomain", StringComparison.Ordinal))
+				if (!string.IsNullOrEmpty(domainName))
 				{
 					hostName = $"{hostName}.{domainName}";
 				}
