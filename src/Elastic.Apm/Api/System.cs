@@ -25,14 +25,6 @@ namespace Elastic.Apm.Api
 		public string DetectedHostName { get; set; }
 
 		/// <summary>
-		/// Host domain name detected by the APM agent. It usually contains what the hostname -f command returns on the host machine.
-		/// It will be used as part of the event's hostname if <see cref="ConfiguredHostName"/> is not present.
-		/// </summary>
-		[MaxLength]
-		[JsonProperty("detected_domain_name")]
-		public string DetectedDomainName { get; set; }
-
-		/// <summary>
 		/// Configured name of the host the monitored service is running on. It should only be sent when configured by the user.
 		/// If given, it is used as the event's hostname.
 		/// </summary>
@@ -58,7 +50,6 @@ namespace Elastic.Apm.Api
 				{ nameof(Container), Container },
 				{ nameof(ConfiguredHostName), ConfiguredHostName },
 				{ nameof(DetectedHostName), DetectedHostName },
-				{ nameof(DetectedDomainName), DetectedDomainName },
 #pragma warning disable 618
 				{ nameof(HostName), HostName }
 #pragma warning restore 618

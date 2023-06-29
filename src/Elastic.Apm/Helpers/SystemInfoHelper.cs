@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Data.Common;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -86,8 +87,7 @@ namespace Elastic.Apm.Helpers
 		internal Api.System GetSystemInfo(string hostName)
 		{
 			var detectedHostName = GetHostName();
-			var detectedDomainName = GetHostDomainName(); 
-			var system = new Api.System { DetectedHostName = detectedHostName, DetectedDomainName = detectedDomainName, ConfiguredHostName = hostName };
+			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
 
 			if (AgentFeaturesProvider.Get(_logger).Check(AgentFeature.ContainerInfo))
 			{
@@ -100,67 +100,85 @@ namespace Elastic.Apm.Helpers
 
 		internal string GetHostName()
 		{
+			var fqdn = string.Empty;
+
 			try
 			{
-				return IPGlobalProperties.GetIPGlobalProperties().HostName;
+				const string localDomainSuffix = ".localdomain"; // May be applied to returned host name on Linux when no domain is set
+
+				fqdn = Dns.GetHostEntry(string.Empty).HostName;
+
+				if (fqdn.EndsWith(localDomainSuffix, StringComparison.Ordinal))
+				{
+#pragma warning disable IDE0057 // Use range operator
+					fqdn = fqdn.Substring(0, fqdn.Length - localDomainSuffix.Length);
+#pragma warning restore IDE0057 // Use range operator
+				}
 			}
 			catch (Exception e)
 			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via GetIPGlobalProperties().HostName - reverting to environment variables.");
-
-				try
-				{
-					// try environment variables
-					var host = (Environment.GetEnvironmentVariable("COMPUTERNAME")
-						?? Environment.GetEnvironmentVariable("HOSTNAME"))
-						?? Environment.GetEnvironmentVariable("HOST");
-
-					if (host == null)
-						_logger.Error()?.Log("Failed to get hostname via environment variables.");
-					return host;
-				}
-				catch (Exception exception)
-				{
-					_logger.Error()?.LogException(exception, "Failed to get hostname.");
-				}
+				_logger.Warning()?.LogException(e, "Failed to get hostname via Dns.GetHostEntry(string.Empty).HostName.");
 			}
 
-			return null;
-		}
+			if (!string.IsNullOrEmpty(fqdn))
+				return NormalizeHostName(fqdn);
 
-		internal string GetHostDomainName()
-		{
 			try
 			{
+				var hostName = IPGlobalProperties.GetIPGlobalProperties().HostName;
 				var domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
 
-				if (!string.IsNullOrEmpty(domainName))
-					return domainName.ToLowerInvariant();
+				// On Linux, 'DomainName' may return localdomain which we ignore
+				if (!string.IsNullOrEmpty(domainName) && !domainName.Equals("localdomain", StringComparison.Ordinal))
+				{
+					hostName = $"{hostName}.{domainName}";
+				}
 
-				domainName = Environment.UserDomainName;
+				fqdn = hostName;
 
-				return string.IsNullOrEmpty(domainName) ? null : domainName.ToLowerInvariant();
 			}
 			catch (Exception e)
 			{
-				_logger.Warning()?.LogException(e, "Failed to get host domain name via GetIPGlobalProperties().DomainName or Environment.UserDomainName - reverting to environment variables.");
+				_logger.Warning()?.LogException(e, "Failed to get hostname via IPGlobalProperties.GetIPGlobalProperties().");
+			}
 
-				try
-				{
-					// try environment variables
-					var domain = Environment.GetEnvironmentVariable("USERDOMAIN");
+			if (!string.IsNullOrEmpty(fqdn))
+				return NormalizeHostName(fqdn);
 
-					if (domain == null)
-						_logger.Error()?.Log("Failed to get host domain name from 'USERDOMAIN' environment variable.");
-					return domain;
-				}
-				catch (Exception exception)
-				{
-					_logger.Error()?.LogException(exception, "Failed to get host domain name.");
-				}
+			try
+			{
+				fqdn = Environment.MachineName;
+			}
+			catch (Exception e)
+			{
+				_logger.Warning()?.LogException(e, "Failed to get hostname via Environment.MachineName.");
+			}
+
+			if (!string.IsNullOrEmpty(fqdn))
+				return NormalizeHostName(fqdn);
+
+			_logger.Debug()?.Log("Falling back to environment variables to get hostname.");
+
+			try
+			{
+				fqdn = (Environment.GetEnvironmentVariable("COMPUTERNAME")
+					?? Environment.GetEnvironmentVariable("HOSTNAME"))
+					?? Environment.GetEnvironmentVariable("HOST");
+
+				if (string.IsNullOrEmpty(fqdn))
+					_logger.Error()?.Log("Failed to get hostname via environment variables.");
+
+				return NormalizeHostName(fqdn);
+			}
+			catch (Exception e)
+			{
+				_logger.Error()?.LogException(e, "Failed to get hostname.");
 			}
 
 			return null;
+
+			static string NormalizeHostName(string hostName) =>
+				string.IsNullOrEmpty(hostName) ? null : hostName.Trim().ToLower();
 		}
 
 		private void ParseContainerInfo(Api.System system, string reportedHostName)
