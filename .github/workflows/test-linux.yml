@@ -80,6 +80,24 @@ jobs:
         shell: bash
         run: dotnet build -c Release --verbosity minimal
 
+      - name: 'Read credentials'
+        uses: hashicorp/vault-action@v2.7.1
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          method: approle
+          secrets: |
+            secret/apm-team/ci/apm-agent-dotnet-azure client_id | AZ_CLIENT_ID ;
+            secret/apm-team/ci/apm-agent-dotnet-azure client_secret | AZ_CLIENT_SECRET ;
+            secret/apm-team/ci/apm-agent-dotnet-azure subscription_id | AZ_SUBSCRIPTION_ID ;
+            secret/apm-team/ci/apm-agent-dotnet-azure tenant_id | AZ_TENANT_ID
+
+      - name: 'Login to Azure'
+        run: |
+          az login --service-principal --username ${{ env.AZ_CLIENT_ID }} --password ${{ env.AZ_CLIENT_SECRET }} --tenant ${{ env.AZ_TENANT_ID }}
+          az account set --subscription ${{ env.AZ_SUBSCRIPTION_ID }}
+
       - name: 'Tests: Azure'
         uses: ./.github/workflows/test
         with:

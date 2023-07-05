@@ -77,27 +77,6 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 
 		private static AzureCredentials LoadCredentials()
 		{
-			if (TestEnvironment.IsCi)
-			{
-				var credentialsFile = Path.Combine(SolutionPaths.Root, ".credentials.json");
-				if (!File.Exists(credentialsFile))
-					return new Unauthenticated();
-
-				try
-				{
-					using var fileStream = new FileStream(credentialsFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-					using var streamReader = new StreamReader(fileStream);
-					using var jsonTextReader = new JsonTextReader(streamReader);
-					var serializer = new JsonSerializer();
-					return serializer.Deserialize<ServicePrincipal>(jsonTextReader);
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e);
-					return new Unauthenticated();
-				}
-			}
-
 			return LoggedIntoAccountWithAzureCli()
 				? new AzureUserAccount()
 				: new Unauthenticated();
