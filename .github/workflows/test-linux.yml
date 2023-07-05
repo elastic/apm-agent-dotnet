@@ -33,7 +33,6 @@ jobs:
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
       with:
-          azure: 'true'
           rust: 'true'
           
     - name: Format
@@ -56,8 +55,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
-        with:
-          azure: 'true'
           
       - name: Build
         shell: bash
@@ -67,7 +64,27 @@ jobs:
         uses: ./.github/workflows/test
         with:
             name: 'unit'
-            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
+            
+  azure-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          azure: 'true'
+
+      - name: Build
+        shell: bash
+        run: dotnet build -c Release --verbosity minimal
+
+      - name: 'Tests: Azure'
+        uses: ./.github/workflows/test
+        with:
+          name: 'azure'
+          filter: 'FullyQualifiedName~Elastic.Apm.Azure'
   
   startup-hook-tests:
     runs-on: ubuntu-latest
