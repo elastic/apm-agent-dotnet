@@ -68,7 +68,6 @@ jobs:
             
   azure-tests:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap Action Workspace
@@ -97,13 +96,14 @@ jobs:
         run: |
           az login --service-principal --username ${{ env.ARM_CLIENT_ID }} --password ${{ env.ARM_CLIENT_SECRET }} --tenant ${{ env.ARM_TENANT_ID }}
           az account set --subscription ${{ env.ARM_SUBSCRIPTION_ID }}
+          echo "AZURE_RESOURCE_GROUP_PREFIX=ci-dotnet-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
 
       - name: 'Tests: Azure'
         uses: ./.github/workflows/test
         with:
           name: 'azure'
           filter: 'FullyQualifiedName~Elastic.Apm.Azure'
-  
+
   startup-hook-tests:
     runs-on: ubuntu-latest
 
