@@ -73,7 +73,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 			waitInfoS.Interval.Should().Be(TimeSpan.FromSeconds(5));
 
-			if(seconds < 5)
+			if (seconds < 5)
 			{
 				waitInfoS.Reason.Should().Be("The max-age directive in Cache-Control header in APM Server's response is less than 5 seconds, "
 					+ "which is less than expected by the spec - falling back to use 5 seconds wait time.");
@@ -94,7 +94,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		[InlineData(-1)]
 		[InlineData(-10)]
 		[InlineData(int.MinValue)]
-		public void  ParseHttpResponse_ShouldUseDefaultWaitTime_WhenMaxAgeIsZeroOrNegative(int seconds)
+		public void ParseHttpResponse_ShouldUseDefaultWaitTime_WhenMaxAgeIsZeroOrNegative(int seconds)
 		{
 			var response = new HttpResponseMessage
 			{
@@ -197,7 +197,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				{
 					yield return new object[]
 					{
-						$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyKey}\": \"{value}\"}}",
+						$"{{\"{DynamicConfigurationOption.CaptureBody.ToJsonKey()}\": \"{value}\"}}",
 						new Action<CentralConfiguration>(cfg =>
 						{
 							cfg.CaptureBody.Should()
@@ -209,7 +209,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionMaxSpansKey}\": \"{100}\"}}",
+					$"{{\"{DynamicConfigurationOption.TransactionMaxSpans.ToJsonKey()}\": \"{100}\"}}",
 					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.TransactionMaxSpans.Should()
@@ -220,7 +220,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"0.75\"}}",
+					$"{{\"{DynamicConfigurationOption.TransactionSampleRate.ToJsonKey()}\": \"0.75\"}}",
 					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.TransactionSampleRate.Should()
@@ -232,7 +232,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				var captureBodyContentTypes = "application/x-www-form-urlencoded*, application/json*";
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey}\": \"{captureBodyContentTypes}\"}}",
+					$"{{\"{DynamicConfigurationOption.CaptureBodyContentTypes.ToJsonKey()}\": \"{captureBodyContentTypes}\"}}",
 					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.CaptureBodyContentTypes.Should()
@@ -243,7 +243,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.StackTraceLimitKey}\": \"{150}\"}}",
+					$"{{\"{DynamicConfigurationOption.StackTraceLimit.ToJsonKey()}\": \"{150}\"}}",
 					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.StackTraceLimit.Should()
@@ -254,7 +254,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.SpanFramesMinDurationKey}\": \"{150}\"}}",
+					$"{{\"{DynamicConfigurationOption.SpanFramesMinDuration.ToJsonKey()}\": \"{150}\"}}",
 					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.SpanFramesMinDurationInMilliseconds.Should()
@@ -265,7 +265,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{false}\"}}",
+					$"{{\"{DynamicConfigurationOption.CaptureHeaders.ToJsonKey()}\": \"{false}\"}}",
 					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
@@ -276,7 +276,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				yield return new object[]
 				{
-					$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{true}\"}}",
+					$"{{\"{DynamicConfigurationOption.CaptureHeaders.ToJsonKey()}\": \"{true}\"}}",
 					new Action<CentralConfiguration>(cfg =>
 					{
 						cfg.CaptureHeaders.Should()
@@ -298,7 +298,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				{
 					yield return new object[]
 					{
-						$"{{\"{CentralConfigurationResponseParser.CentralConfigPayload.LogLevelKey}\": \"{value}\"}}",
+						$"{{\"{DynamicConfigurationOption.LogLevel.ToJsonKey()}\": \"{value}\"}}",
 						new Action<CentralConfiguration>(cfg =>
 						{
 							cfg.LogLevel.Should()

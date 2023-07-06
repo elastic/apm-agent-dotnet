@@ -22,7 +22,8 @@ namespace Elastic.Apm.Helpers
 
 		public override bool Equals(object otherObj)
 		{
-			if (otherObj is AgentTimeInstant other) return Equals(other);
+			if (otherObj is AgentTimeInstant other)
+				return Equals(other);
 
 			return false;
 		}
@@ -74,7 +75,8 @@ namespace Elastic.Apm.Helpers
 
 		private static void VerifyInstantsAreCompatible(AgentTimeInstant i1, AgentTimeInstant i2, [CallerMemberName] string caller = null)
 		{
-			if (i1.IsCompatibleWith(i2._sourceAgentTimer)) return;
+			if (i1.IsCompatibleWith(i2._sourceAgentTimer))
+				return;
 
 			var opName = caller == null ? "an operation" : $"operation {caller}";
 			throw new InvalidOperationException($"It's illegal to perform {opName} on two AgentTimeInstant instances " +

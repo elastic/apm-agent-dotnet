@@ -26,7 +26,6 @@
 #endregion
 
 #if HAVE_CONCURRENT_DICTIONARY
-using System.Collections.Concurrent;
 #endif
 #if HAVE_DYNAMIC
 using System.Dynamic;

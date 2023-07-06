@@ -294,7 +294,7 @@ namespace Elastic.Apm.Tests
 		public void GcMetricsCanBeDisabled()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
-			var disableGc = new List<WildcardMatcher>() { {WildcardMatcher.ValueOf("clr.gc.*")} };
+			var disableGc = new List<WildcardMatcher>() { { WildcardMatcher.ValueOf("clr.gc.*") } };
 			using var gcMetricsProvider = new GcMetricsProvider(logger, disableGc);
 			gcMetricsProvider.IsEnabled(disableGc).Should().BeFalse();
 		}
@@ -305,7 +305,7 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger(LogLevel.Trace);
 			using (var gcMetricsProvider = new GcMetricsProvider(logger, new List<WildcardMatcher>()))
 			{
-#if !NETCOREAPP2_1
+#if NETCOREAPP2_2_OR_GREATER
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
 
@@ -393,7 +393,7 @@ namespace Elastic.Apm.Tests
 			noopConfigReader.SetupGet(n => n.MetricsIntervalInMilliseconds).Returns(1);
 
 			var _ = new MetricsCollector(new NoopLogger(), new NoopPayloadSender(),
-				new ConfigurationStore(new RuntimeConfigurationSnapshot(noopConfigReader.Object, ""), new NoopLogger()));
+				new ConfigurationStore(new RuntimeConfigurationSnapshot(noopConfigReader.Object), new NoopLogger()));
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider
@@ -419,7 +419,8 @@ namespace Elastic.Apm.Tests
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }

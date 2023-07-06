@@ -29,9 +29,11 @@ namespace Elastic.Apm.Filters
 
 		public ISpan Filter(ISpan iSpan)
 		{
-			if (!(iSpan is Span span)) return iSpan;
+			if (!(iSpan is Span span))
+				return iSpan;
 
-			if (span.RawStackTrace == null) return span;
+			if (span.RawStackTrace == null)
+				return span;
 
 			StackFrame[] trace;
 			try

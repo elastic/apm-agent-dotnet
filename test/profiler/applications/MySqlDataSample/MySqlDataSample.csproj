@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <MySqlDataVersion Condition="'$(MySqlDataVersion)'==''">8.0.32.1</MySqlDataVersion>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net462;net6.0;net7.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="$(MySqlDataVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm.AdoNet\Elastic.Apm.AdoNet.csproj" />
+  </ItemGroup>
+
+</Project>

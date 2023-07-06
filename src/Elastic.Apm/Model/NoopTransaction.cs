@@ -83,11 +83,13 @@ namespace Elastic.Apm.Model
 		public string Type { get; set; }
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null
-		) { }
+		)
+		{ }
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null
-		) { }
+		)
+		{ }
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null,
 			bool isExitSpan = false, IEnumerable<SpanLink> links = null
@@ -159,6 +161,7 @@ namespace Elastic.Apm.Model
 		}
 
 		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
-		) { }
+		)
+		{ }
 	}
 }

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <RootNamespace>Elastic.Apm.EntityFrameworkCore</RootNamespace>
+    <AssemblyName>Elastic.Apm.EntityFrameworkCore</AssemblyName>
+    <PackageId>Elastic.Apm.EntityFrameworkCore</PackageId>
+    <Description>Elastic APM for Entity Framework Core. This package contains auto instrumentation for Entity Framework Core. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframeworkcore, efcore</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj"/>
+  </ItemGroup>
+</Project>

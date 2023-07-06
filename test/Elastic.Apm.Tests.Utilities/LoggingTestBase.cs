@@ -44,7 +44,8 @@ namespace Elastic.Apm.Tests.Utilities
 			if (config.LogToXunitEnabled)
 			{
 				lineWriters.Add(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper, string.Format(config.LogToXunitLinePrefix, testId)));
-				if (!TestingConfig.IsRunningInIde) writerForStartFinish = lineWriters.ToArray();
+				if (!TestingConfig.IsRunningInIde)
+					writerForStartFinish = lineWriters.ToArray();
 			}
 
 			_loggerForStartFinish = new LineWriterToLoggerAdaptor(new SplittingLineWriter(writerForStartFinish), config.LogLevel);

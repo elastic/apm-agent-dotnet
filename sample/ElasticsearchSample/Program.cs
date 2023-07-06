@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
@@ -21,7 +21,7 @@ namespace ElasticsearchSample
 			.DefaultIndex("index")
 			.DisableDirectStreaming();
 
-		private static async Task Main(string[] args)
+		private static async Task Main()
 		{
 			Agent.Subscribe(new ElasticsearchDiagnosticsSubscriber());
 

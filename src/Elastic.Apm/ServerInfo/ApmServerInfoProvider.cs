@@ -10,9 +10,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.ServerInfo
 {

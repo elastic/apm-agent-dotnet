@@ -31,15 +31,15 @@ namespace Elastic.Apm.Tests
 			// classes and interfaces can define the spec...
 			var specInterfaces =
 				(from type in agentTypes
-					where type.GetCustomAttribute<SpecificationAttribute>() != null
-					select type).ToList();
+				 where type.GetCustomAttribute<SpecificationAttribute>() != null
+				 select type).ToList();
 
 			// but the concrete implementations of spec types are what get serialized
 			// so they define the constraints such as max length, etc.
 			_specTypes =
 				(from type in agentTypes
-					where type.IsClass && specInterfaces.Any(i => i.IsAssignableFrom(type))
-					select type).ToList();
+				 where type.IsClass && specInterfaces.Any(i => i.IsAssignableFrom(type))
+				 select type).ToList();
 
 			_validator = new Validator();
 			_output = output;

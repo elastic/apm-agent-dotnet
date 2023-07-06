@@ -15,6 +15,7 @@ using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
 
 namespace Elastic.Apm.Tests.Metrics
@@ -22,14 +23,16 @@ namespace Elastic.Apm.Tests.Metrics
 	public class CgroupMetricsProviderTests
 	{
 		private readonly string _projectRoot;
+		private readonly IApmLogger _logger;
 
-		public CgroupMetricsProviderTests()
+		public CgroupMetricsProviderTests(ITestOutputHelper output)
 		{
 			var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			_projectRoot = assemblyDirectory;
+			_logger = new XUnitLogger(LogLevel.Trace, output);
 		}
 
-		[Theory]
+		[DisabledOnWindowsTheory]
 		[InlineData(964778496, "/proc/cgroup", "/proc/limited/memory", 7964778496)]
 		[InlineData(964778496, "/proc/cgroup2", "/proc/sys_cgroup2", 7964778496)]
 		// stat have different values to inactive_file and total_inactive_file
@@ -46,7 +49,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			using (tempFile)
 			{
-				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>(), ignoreOs: true);
+				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, _logger, new List<WildcardMatcher>(), ignoreOs: true);
 
 				var samples = provider.GetSamples().ToList();
 
@@ -87,7 +90,7 @@ namespace Elastic.Apm.Tests.Metrics
 		[DisabledTestFact("Sometimes fails in CI with `System.ArgumentNullException : Value cannot be null.`")]
 		public void TestUnlimitedCgroup1()
 		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup","/proc/unlimited/memory", "cgroup cgroup");
+			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup", "/proc/unlimited/memory", "cgroup cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
 			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
@@ -95,13 +98,13 @@ namespace Elastic.Apm.Tests.Metrics
 
 			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample?.KeyValue.Value.Should().Be(964778496);
+			memUsageSample.KeyValue.Value.Should().Be(964778496);
 		}
 
 		[DisabledTestFact("Flaky")]
 		public void TestUnlimitedCgroup2()
 		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2","/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
+			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2", "/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
 			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
@@ -109,7 +112,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample?.KeyValue.Value.Should().Be(964778496);
+			memUsageSample.KeyValue.Value.Should().Be(964778496);
 		}
 
 		/// <summary>

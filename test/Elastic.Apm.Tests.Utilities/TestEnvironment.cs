@@ -18,6 +18,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		static TestEnvironment()
 		{
+			// TODO this IsCi check is no longer valid, once we are green on Github Action
+			// we should be able to remove all special handling related to this
 			IsCi = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_ID"));
 			IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 			IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);

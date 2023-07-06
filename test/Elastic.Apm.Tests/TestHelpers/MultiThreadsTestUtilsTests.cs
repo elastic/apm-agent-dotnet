@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -36,7 +35,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 			{
 				MultiThreadsTestUtils.TestOnThreads<object>(threadIndex =>
 				{
-					if (throwingThreadIndex == threadIndex) throw new DummyTestException(threadIndex.ToString());
+					if (throwingThreadIndex == threadIndex)
+						throw new DummyTestException(threadIndex.ToString());
 
 					return null;
 				});

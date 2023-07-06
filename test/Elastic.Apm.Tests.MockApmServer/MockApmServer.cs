@@ -75,13 +75,13 @@ namespace Elastic.Apm.Tests.MockApmServer
 			_dbgCurrentTestName = dbgCurrentTestName;
 			_useHttps = useHttps;
 
-			if (useHttps)
-			{
-				using var ms = new MemoryStream();
-				using var certStream = typeof(MockApmServer).Assembly.GetManifestResourceStream("Elastic.Apm.Tests.MockApmServer.cert.pfx");
-				certStream.CopyTo(ms);
-				_serverCertificate = ms.ToArray();
-			}
+			if (!useHttps)
+				return;
+
+			using var ms = new MemoryStream();
+			using var certStream = typeof(MockApmServer).Assembly.GetManifestResourceStream("Elastic.Apm.Tests.MockApmServer.cert.pfx");
+			certStream?.CopyTo(ms);
+			_serverCertificate = ms.ToArray();
 		}
 
 		private static class PortScanRange
@@ -135,8 +135,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 					}
 				}
 
-				if (currentPort + 1 == PortScanRange.End) currentPort = PortScanRange.Begin;
-				else ++currentPort;
+				if (currentPort + 1 == PortScanRange.End)
+					currentPort = PortScanRange.Begin;
+				else
+					++currentPort;
 			}
 		}
 
@@ -161,12 +163,14 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		internal TResult DoUnderLock<TResult>(Func<TResult> func)
 		{
-			lock (_lock) return func();
+			lock (_lock)
+				return func();
 		}
 
 		internal Task<TResult> DoUnderLock<TResult>(Func<Task<TResult>> asyncFunc)
 		{
-			lock (_lock) return asyncFunc();
+			lock (_lock)
+				return asyncFunc();
 		}
 
 		public async Task StopAsync()

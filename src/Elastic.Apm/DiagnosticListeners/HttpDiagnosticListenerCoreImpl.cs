@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 
 namespace Elastic.Apm.DiagnosticListeners
@@ -38,7 +36,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected override void RequestHeadersAdd(HttpRequestMessage request, string headerName, string headerValue)
 		{
-			if(!string.IsNullOrEmpty(headerValue))
+			if (!string.IsNullOrEmpty(headerValue))
 				request.Headers.Add(headerName, headerValue);
 		}
 

@@ -1,25 +1,29 @@
 namespace Scripts
 
 open Fake.Core
-open System.Xml.Linq
+
+open ProcNet
 
 module Versioning = 
-    let private buildProps = Paths.Src "Directory.Build.props"    
-    let private xName name = XName.op_Implicit name
-    
     type AssemblyInfo = {
         AssemblyVersion: SemVerInfo
         InformationalVersion: SemVerInfo
         FileVersion: SemVerInfo
-        VersionPrefix: SemVerInfo
     }
     
     /// Gets the current AssemblyInfo version from the Directory.Build.Props in /src
     let CurrentVersion =
-        let project = XElement.Load(buildProps)
-        let propertyGroup = project.Element(xName "PropertyGroup")
-        
-        { AssemblyVersion = propertyGroup.Element(xName "AssemblyVersion").Value |> SemVer.parse
-          InformationalVersion = propertyGroup.Element(xName "InformationalVersion").Value |> SemVer.parse
-          FileVersion = propertyGroup.Element(xName "FileVersion").Value |> SemVer.parse
-          VersionPrefix = propertyGroup.Element(xName "VersionPrefix").Value |> SemVer.parse }
+        let version = Proc.Start <| StartArguments("dotnet", "minver",  "-t=v", "-p=canary.0", "-v=e")
+        match Seq.toList version.ConsoleOut with
+        | [ head ] ->
+            match SemVer.isValid(head.Line) with
+            | true -> 
+                let semver = SemVer.parse(head.Line)
+                { AssemblyVersion = semver
+                  InformationalVersion = semver
+                  FileVersion = semver
+                }
+            | false -> 
+                failwithf "First line from `dotnet-minver '%s' not a valid version`" head.Line;
+        | _ ->
+            failwithf "failed to run `dotnet-minver` %A " version.ExitCode;

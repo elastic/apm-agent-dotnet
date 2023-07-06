@@ -1,0 +1,110 @@
+name: test-linux
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+  pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+      with:
+          azure: 'true'
+          rust: 'true'
+          
+    - name: Format
+      run: ./build.sh format
+    
+    - name: Package
+      run: ./build.sh pack
+    
+    - uses: actions/upload-artifact@v3
+      if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
+      with:
+          name: snapshoty-linux
+          path: build/output/*
+          retention-days: 1
+  
+  tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          azure: 'true'
+          
+      - name: Build
+        shell: bash
+        run: dotnet build -c Release --verbosity minimal
+
+      - name: 'Tests: Unit'
+        uses: ./.github/workflows/test
+        with:
+            name: 'unit'
+            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests'
+  
+  startup-hook-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+    
+    - name: Build agent-zip
+      run: ./build.sh agent-zip
+
+    - name: 'Tests: StartupHooks'
+      uses: ./.github/workflows/test
+      with:
+        name: 'startuphooks'
+        project: 'test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+        
+
+  profiler-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+      with:
+          rust: 'true'
+    
+    - name: Build profiler
+      run: ./build.sh profiler-zip
+
+    - name: 'Tests: Profiler'
+      uses: ./.github/workflows/test
+      with:
+          name: 'profiler'
+          project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+    
+    - name: Create Docker Image
+      run: .ci/linux/build_docker.sh

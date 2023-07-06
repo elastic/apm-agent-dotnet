@@ -5,7 +5,6 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -33,7 +32,8 @@ namespace Elastic.Apm.Logging
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			if (!IsEnabled(level)) return;
+			if (!IsEnabled(level))
+				return;
 
 			var message = formatter(state, e);
 			var logLevel = LevelToString(level);
@@ -96,15 +96,22 @@ namespace Elastic.Apm.Logging
 		{
 			switch (level)
 			{
-				case LogLevel.Error: return "Error";
-				case LogLevel.Warning: return "Warning";
-				case LogLevel.Information: return "Info";
-				case LogLevel.Debug: return "Debug";
-				case LogLevel.Trace: return "Trace";
-				case LogLevel.Critical: return "Critical";
+				case LogLevel.Error:
+					return "Error";
+				case LogLevel.Warning:
+					return "Warning";
+				case LogLevel.Information:
+					return "Info";
+				case LogLevel.Debug:
+					return "Debug";
+				case LogLevel.Trace:
+					return "Trace";
+				case LogLevel.Critical:
+					return "Critical";
 				// ReSharper disable once RedundantCaseLabel
 				case LogLevel.None:
-				default: return "None";
+				default:
+					return "None";
 			}
 		}
 	}

@@ -22,7 +22,7 @@ namespace Elastic.Apm.Tests
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
-						transaction.CaptureSpan("test span name", "test span type", span => { })
+						transaction.CaptureSpan("test span name", "test span type", _ => { })
 				);
 			}
 
@@ -55,7 +55,7 @@ namespace Elastic.Apm.Tests
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
-						transaction.CaptureSpan("test span name", "test span type", span => { })
+						transaction.CaptureSpan("test span name", "test span type", _ => { })
 				);
 			}
 
@@ -83,7 +83,7 @@ namespace Elastic.Apm.Tests
 					transaction =>
 					{
 						foreach (var iteration in Enumerable.Range(1, spansCount))
-							transaction.CaptureSpan($"test span name #{iteration}", "test span type", span => { });
+							transaction.CaptureSpan($"test span name #{iteration}", "test span type", _ => { });
 					});
 			}
 
@@ -111,7 +111,7 @@ namespace Elastic.Apm.Tests
 					{
 						MultiThreadsTestUtils.TestOnThreads(spansCount, threadIndex =>
 						{
-							transaction.CaptureSpan($"test span name #{threadIndex}", "test span type", span => { });
+							transaction.CaptureSpan($"test span name #{threadIndex}", "test span type", _ => { });
 							return 1;
 						});
 					});
@@ -140,7 +140,7 @@ namespace Elastic.Apm.Tests
 					transaction =>
 					{
 						foreach (var iteration in Enumerable.Range(1, spansCount))
-							transaction.CaptureSpan($"test span name #{iteration}", "test span type", span => { });
+							transaction.CaptureSpan($"test span name #{iteration}", "test span type", _ => { });
 					});
 			}
 

@@ -47,12 +47,14 @@ namespace Elastic.Apm.Tests
 					break;
 			}
 
+#pragma warning disable NullConditionalAssertion
 			sampler.Constant?.Let(c => 10.Repeat(() =>
 			{
 				var randomBytes = new byte[8];
 				RandomGenerator.GenerateRandomBytes(randomBytes);
 				sampler.DecideIfToSample(randomBytes).Should().Be(c);
 			}));
+#pragma warning restore NullConditionalAssertion
 		}
 
 		[Theory]
@@ -117,7 +119,8 @@ namespace Elastic.Apm.Tests
 				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler,
 					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentsContainer,
 					MockApmServerInfo.Version710, null);
-				if (transaction.IsSampled) ++sampledCount;
+				if (transaction.IsSampled)
+					++sampledCount;
 
 				// ReSharper disable once InvertIf
 				if (i + 1 >= startCheckingAfter)

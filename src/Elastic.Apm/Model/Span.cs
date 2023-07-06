@@ -87,8 +87,7 @@ namespace Elastic.Apm.Model
 			Type = type;
 			Links = links;
 
-			if (_parentSpan != null)
-				_parentSpan._childDurationTimer.OnChildStart(Timestamp);
+			_parentSpan?._childDurationTimer.OnChildStart(Timestamp);
 
 			ParentId = parentId;
 			TraceId = traceId;
@@ -112,7 +111,7 @@ namespace Elastic.Apm.Model
 					// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the
 					// System.Net.Http.HttpRequestOut.Stop
 					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
-					// capture the stacktrace is .Start
+					// capture the stacktrace in .Start
 					if (captureStackTraceOnStart && IsCaptureStackTraceOnStartEnabled())
 						RawStackTrace = new StackTrace(true);
 				}
@@ -127,7 +126,7 @@ namespace Elastic.Apm.Model
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
 		}
 
-// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
+		// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.
 #pragma warning disable CS0618
 		// If the legacy setting (span_frames_min_duration) is present but the new
 		// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
@@ -137,9 +136,9 @@ namespace Elastic.Apm.Model
 			// setting (span_stack_trace_min_duration) is not (or has a default value), the legacy setting dominates.
 			const double tolerance = 0.00001;
 			return Math.Abs(Configuration.SpanFramesMinDurationInMilliseconds -
-			                ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds) > tolerance &&
-			       Math.Abs(Configuration.SpanStackTraceMinDurationInMilliseconds -
-			                ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds) < tolerance;
+							ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds) > tolerance &&
+				   Math.Abs(Configuration.SpanStackTraceMinDurationInMilliseconds -
+							ConfigConsts.DefaultValues.SpanStackTraceMinDurationInMilliseconds) < tolerance;
 		}
 
 		internal bool IsCaptureStackTraceOnStartEnabled()
@@ -153,21 +152,27 @@ namespace Elastic.Apm.Model
 			}
 			return false;
 		}
+
 		internal bool IsCaptureStackTraceOnEndEnabled()
 		{
 			if (Configuration.StackTraceLimit != 0 && RawStackTrace == null)
 			{
-				if (UseLegacyCaptureStackTraceSetting())
-				{
-					return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
-					       (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
-					        Configuration.SpanFramesMinDurationInMilliseconds < 0);
-				}
-
-				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
-				       Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
+				return DurationRequiresCaptureStackTrace();
 			}
 			return false;
+		}
+
+		private bool DurationRequiresCaptureStackTrace()
+		{
+			if (UseLegacyCaptureStackTraceSetting())
+			{
+				return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
+					(Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
+						Configuration.SpanFramesMinDurationInMilliseconds < 0);
+			}
+
+			return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
+					Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
 		}
 #pragma warning restore CS0618
 
@@ -465,6 +470,11 @@ namespace Elastic.Apm.Model
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
+				// If we recorded the stack trace on start, but the duration of the span does not require
+				// inclusion of the stack trace, remove it.
+				if (RawStackTrace is not null && !DurationRequiresCaptureStackTrace())
+					RawStackTrace = null;
+
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (IsCaptureStackTraceOnEndEnabled())
@@ -594,7 +604,8 @@ namespace Elastic.Apm.Model
 
 		private bool TryToCompressRegular(Span sibling)
 		{
-			if (!IsSameKind(sibling)) return false;
+			if (!IsSameKind(sibling))
+				return false;
 
 			if (Name == sibling.Name)
 			{
@@ -943,7 +954,8 @@ namespace Elastic.Apm.Model
 		/// <param name="startTimestamp"></param>
 		public void OnChildStart(long startTimestamp)
 		{
-			if (++_activeChildren == 1) _start = startTimestamp;
+			if (++_activeChildren == 1)
+				_start = startTimestamp;
 		}
 
 		/// <summary>
@@ -952,7 +964,8 @@ namespace Elastic.Apm.Model
 		/// <param name="endTimestamp"></param>
 		public void OnChildEnd(long endTimestamp)
 		{
-			if (--_activeChildren == 0) IncrementDuration(endTimestamp);
+			if (--_activeChildren == 0)
+				IncrementDuration(endTimestamp);
 		}
 
 		/// <summary>

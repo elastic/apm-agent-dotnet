@@ -1,0 +1,57 @@
+---
+name: Install Dependencies
+description: Ensures an action has the appropiate non .NET dependencies installed
+
+inputs:
+  rust:
+    description: 'Install rust toolchain ("true" or "false")'
+    required: false
+    default: "false"
+  azure:
+      description: 'Install azure functions tool chain ("true" or "false")'
+      required: false
+      default: "false"
+      
+runs:
+  using: "composite"
+  steps:
+    # RUST
+    - name: Rustup
+      if: "${{ inputs.rust == 'true' }}"
+      shell: bash
+      run: rustup default 1.67.1
+
+    # - name: Cargo make
+    #   if: "${{ inputs.rust == 'true' }}"
+    #   shell: bash
+    #   run: cargo install --force cargo-make
+
+    - name: Install cargo-make using cache
+      if: "${{ inputs.rust == 'true' }}"
+      uses: baptiste0928/cargo-install@v2
+      with:
+        crate: cargo-make
+        version: "^0.36.8"
+    
+    - uses: Swatinem/rust-cache@v2
+      if: "${{ inputs.rust == 'true' }}"
+      with:
+        cache-targets: "false"
+        cache-all-crates: "true"
+        
+        
+    # AZURE
+    - name: 'Linux: Azure functions core tools'
+      if: "${{ inputs.azure == 'true' && runner.os == 'Linux' }}"
+      shell: bash
+      run: |
+        wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install azure-functions-core-tools-4
+          
+    - name: 'Windows: Azure functions core tools'
+      if: "${{ inputs.azure == 'true' && runner.os == 'Windows' }}"
+      shell: cmd
+      run: choco install azure-functions-core-tools -y --no-progress -r --version 4.0.4829
+        

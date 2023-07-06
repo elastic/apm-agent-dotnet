@@ -1,0 +1,78 @@
+name: release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+    contents: write
+    issues: write
+
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Bootstrap Action Workspace
+      uses: ./.github/workflows/bootstrap
+      with:
+          rust: 'true'
+
+    - name: Package
+      run: ./build.sh pack
+
+    - name: Prepare Nuget
+      uses: hashicorp/vault-action@v2.4.2
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        method: approle
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        secrets: |
+          secret/apm-team/ci/elastic-observability-nuget apiKey | REPO_API_KEY ;
+          secret/apm-team/ci/elastic-observability-nuget url | REPO_API_URL
+
+    - name: Release to Nuget
+      run: .ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}
+
+    - uses: elastic/apm-pipeline-library/.github/actions/docker-login@current
+      with:
+        registry: docker.elastic.co
+        secret: secret/observability-team/ci/docker-registry/prod
+        url: ${{ secrets.VAULT_ADDR }}
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+
+    - name: Publish Docker Image
+      run: |
+        chmod +x .ci/linux/push_docker.sh
+        .ci/linux/push_docker.sh
+      env:
+        TAG_NAME: ${{ github.ref_name }}
+
+    - if: ${{ success() }}
+      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        channel: "#apm-agent-dotnet"
+        message: |
+          :large_green_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* published.
+          Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)
+          Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)"
+
+    - if: ${{ failure() }}
+      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        channel: "#apm-agent-dotnet"
+        message: |
+          :large_yellow_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* could not be published.
+          Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)

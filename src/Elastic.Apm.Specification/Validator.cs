@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -15,7 +15,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Config;
 using Elastic.Apm.Report.Serialization;
 using ICSharpCode.SharpZipLib.Tar;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
@@ -93,72 +92,73 @@ namespace Elastic.Apm.Specification
 		}
 
 		public static async Task DownloadAsync(string branch, string destination)
-        {
+		{
 			if (Directory.Exists(destination))
-            {
+			{
 				try
-                {
-                    Directory.Delete(destination, true);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"Exception deleting directory '{destination}', {e.Message}", e);
-                }
-            }
+				{
+					Directory.Delete(destination, true);
+				}
+				catch (Exception e)
+				{
+					throw new Exception($"Exception deleting directory '{destination}', {e.Message}", e);
+				}
+			}
 
-            using var client = new HttpClient();
+			using var client = new HttpClient();
 #if !NETSTANDARD
             // force use of TLS 1.2 on older Full Framework, in order to call GitHub API
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 #endif
 
-            client.DefaultRequestHeaders.UserAgent.Clear();
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("apm-agent-dotnet", "1"));
+			client.DefaultRequestHeaders.UserAgent.Clear();
+			client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("apm-agent-dotnet", "1"));
 
-            // use the GitHub api to download the tar.gz and extract the specs from the stream.
-            // This is considerably faster than downloading many small files.
-            var response = await client.GetAsync($"https://api.github.com/repos/elastic/apm-server/tarball/{branch}")
-                .ConfigureAwait(false);
+			// use the GitHub api to download the tar.gz and extract the specs from the stream.
+			// This is considerably faster than downloading many small files.
+			var response = await client.GetAsync($"https://api.github.com/repos/elastic/apm-server/tarball/{branch}")
+				.ConfigureAwait(false);
 
-            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            using var gzipStream = new GZipStream(stream, CompressionMode.Decompress);
-            using var tarStream = new TarInputStream(gzipStream, Encoding.UTF8);
+			using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+			using var gzipStream = new GZipStream(stream, CompressionMode.Decompress);
+			using var tarStream = new TarInputStream(gzipStream, Encoding.UTF8);
 
-            while (true)
-            {
-                var entry = tarStream.GetNextEntry();
-                if (entry == null) break;
+			while (true)
+			{
+				var entry = tarStream.GetNextEntry();
+				if (entry == null)
+					break;
 
-                if (entry.TarHeader.TypeFlag == TarHeader.LF_LINK || entry.TarHeader.TypeFlag == TarHeader.LF_SYMLINK)
-                    continue;
+				if (entry.TarHeader.TypeFlag == TarHeader.LF_LINK || entry.TarHeader.TypeFlag == TarHeader.LF_SYMLINK)
+					continue;
 
-                var name = entry.Name;
-                var match = SpecPathRegex.Match(name);
+				var name = entry.Name;
+				var match = SpecPathRegex.Match(name);
 
-                // only interested in the spec files
-                if (!match.Success)
-                    continue;
+				// only interested in the spec files
+				if (!match.Success)
+					continue;
 
-                name = match.Groups["path"].Value;
-                name = name.Replace('/', Path.DirectorySeparatorChar);
+				name = match.Groups["path"].Value;
+				name = name.Replace('/', Path.DirectorySeparatorChar);
 
-                var destFile = Path.Combine(destination, name);
-                var parentDirectory = Path.GetDirectoryName(destFile);
+				var destFile = Path.Combine(destination, name);
+				var parentDirectory = Path.GetDirectoryName(destFile);
 
-                try
-                {
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    Directory.CreateDirectory(parentDirectory);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"Exception creating directory '{parentDirectory}', {e.Message}", e);
-                }
+				try
+				{
+					// ReSharper disable once AssignNullToNotNullAttribute
+					Directory.CreateDirectory(parentDirectory);
+				}
+				catch (Exception e)
+				{
+					throw new Exception($"Exception creating directory '{parentDirectory}', {e.Message}", e);
+				}
 
-                using var fileStream = File.Create(destFile);
-                tarStream.CopyEntryContents(fileStream);
-            }
-        }
+				using var fileStream = File.Create(destFile);
+				tarStream.CopyEntryContents(fileStream);
+			}
+		}
 
 		/// <summary>
 		/// Loads the schema for the given specification id. Downloads the schema if it not already downloaded.

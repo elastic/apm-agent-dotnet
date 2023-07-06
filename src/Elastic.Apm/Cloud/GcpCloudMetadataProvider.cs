@@ -8,12 +8,11 @@ using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Cloud
 {

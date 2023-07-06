@@ -34,7 +34,6 @@ using System.Numerics;
 #endif
 using System.Threading.Tasks;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
-using System.Diagnostics;
 
 #nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json

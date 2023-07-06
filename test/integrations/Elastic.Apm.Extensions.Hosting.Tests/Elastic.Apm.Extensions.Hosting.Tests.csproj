@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\applications\SampleConsoleNetCoreApp\SampleConsoleNetCoreApp.csproj" />
+    <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
+    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+  </ItemGroup>
+</Project>

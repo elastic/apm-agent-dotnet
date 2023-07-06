@@ -6,15 +6,11 @@ This guide aims to provide guidance on how to release new versions of the `apm-a
 
 Releasing a new version of the binary implies that there have been changes in the source code which are meant to be released for wider consumption. Before releasing a new version there's some prerequisites that have to be checked.
 
-### Make sure the version is updated
+### Versioning
 
-Since the source has changed, we need to update the current committed version to a higher version so that the release is published.
+Versioning off the binaries is automated through [minver](https://github.com/adamralph/minver)
 
-The version is currently defined in the [Directory.Build.props](./src/Directory.Build.props) in the [SEMVER](https://semver.org) format: `MAJOR.MINOR.BUG`
-
-Say we want to perform a minor version release (i.e. no breaking changes and only new features and bug fixes are being included); in which case we'll update the _MINOR_ part of the version.
-
-For instance, the bump from version 1.1.2 to 1.2 can be found in this https://github.com/elastic/apm-agent-dotnet/pull/624
+The tag dictates the version number. Untagged commits are automatically versioned as prereleases according to their distance to their closest version tag.
 
 ### Generating a changelog for the new version
 
@@ -50,7 +46,7 @@ After the new changelog and version have been merged to main, the only thing rem
  git push upstream v<major>.<minor>.<bug>(-<suffix>)?
  ```
 
-The above commands will push the GitHub tag and will trigger the corresponding [CI Build pipeline](Jenkinsfile) which will run all the required stages to satisfy the release is in a good shape, then at the very end of the pipeline there will be an input approval waiting for an UI interaction to release to the NuGet repo. This particular input approval step will notify by email, to the owners of this repo, regarding the expected action to be done for doing the release.
+The above commands will push the GitHub tag and will trigger the corresponding [Github Action](.github/workflows/release-main.yml) which will run all the required stages to satisfy the release is in a good shape, then at the very end of the pipeline there will be an input approval waiting for an UI interaction to release to the NuGet repo. This particular input approval step will notify by email, to the owners of this repo, regarding the expected action to be done for doing the release.
 
 Tag names should start with a `v` prefix.
 
@@ -86,36 +82,12 @@ In this PR we need to update:
 - [`conf.yaml`](https://github.com/elastic/docs/blob/master/conf.yaml): Set the `current` part to the new `<major>.x` and add that to the `branches` and `live` parts. In addition, remove the previous major entry from the `live` key.
 - [`shared/versions/stack/*.asciidoc`](https://github.com/elastic/docs/tree/master/shared/versions/stack): This directory defines how links from stack-versioned documentation relate to links from non stack-versioned documentation. For example, in the `8.5` file, the variable `:apm-dotnet-branch:` is set to `1.x`. This means any links in the `8.5` stack docs (like the APM Guide) that point to the APM .NET Agent reference, will point to the `1.x` version of those docs. The number of files you update in this directory depends on version compatibility between stack docs and your APM agent. In general, we update as far back as the new version of the agent is compatible with the stack; this pushes new documentation to the user.
 
-### Prepare the next (pre-release) version
-
-To clearly distinguish pre-release builds and artifacts from the newly released ones,
-bump the agent version again by adding the `-alpha` suffix to the following files:
-
-- `/src/Directory.Build.props`:
-
-  ```xml
-  ...
-  <InformationalVersion>1.20.0-alpha</InformationalVersion>
-  <VersionPrefix>1.20.0-alpha</VersionPrefix>
-  ...
-  ```
-
-  **Note** that `AssemblyVersion` and `FileVersion` do not add the `-alpha` prefix.
-
-- `/src/elastic_apm_profiler/Cargo.toml`:
-
-  ```toml
-  ...
-  version = "1.20.0-alpha"
-  ...
-  ```
-
 ## Executing the release script locally
 
 If required then it's possible to run the release script locally, for such, the credentials are needed to push to the NuGet repo.
 
 ```bash
-.ci/linux/release.sh
+./build.sh pack
 .ci/linux/deploy.sh <API_KEY> <SERVER_URL>
 ```
 

@@ -50,7 +50,7 @@ namespace Elastic.Apm.Config
 			var logLevel = v.ToLowerInvariant() switch
 			{
 				"trace" => LogLevel.Trace,
-				"debug" =>LogLevel.Debug,
+				"debug" => LogLevel.Debug,
 				"info" => LogLevel.Information,
 				"warn" => LogLevel.Warning,
 				"error" => LogLevel.Error,

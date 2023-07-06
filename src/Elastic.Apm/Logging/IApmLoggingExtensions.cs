@@ -29,7 +29,7 @@ namespace Elastic.Apm.Logging
 
 				var logValues = formatter.GetState(args);
 
-				logger?.Log(level, logValues, e, (s, _) => formatter.Format(args));
+				logger?.Log(level, logValues, e, (_, _) => formatter.Format(args));
 			}
 			catch (Exception exception)
 			{

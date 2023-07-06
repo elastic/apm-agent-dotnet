@@ -16,12 +16,12 @@ module Paths =
     let SampleFolder = "sample"
     
     let BuildOutputFolder = sprintf "%s/output" BuildFolder
-    let PublishOutputFolder = sprintf "../../%s/output" BuildFolder
+    
+    let PublishOutputFolder = System.IO.Path.GetFullPath <| sprintf "%s/output" BuildFolder
     
     /// A path to a folder in the build output folder
     let BuildOutput folder = sprintf "%s/%s" BuildOutputFolder folder
-    /// Used by --property:PublishDir relative to csproject
-    let PublishDir folder = sprintf "../../%s" <| BuildOutput folder
+    let PublishDir folder = sprintf "%s" <| BuildOutput folder
  
     let NugetOutput = sprintf "%s/_packages" PublishOutputFolder
     
@@ -29,10 +29,15 @@ module Paths =
     let Solution = "ElasticApmAgent.sln"
     
     let Keys keyFile = sprintf "%s/%s" BuildFolder keyFile
-    let Src folder = sprintf "%s/%s" SrcFolder folder
+    let private Src folder = sprintf "%s/%s" SrcFolder folder
+    let SrcProfiler folder = sprintf "%s/profiler/%s" SrcFolder folder
     let Test folder = sprintf "%s/%s" TestFolder folder
     let Sample folder = sprintf "%s/%s" SampleFolder folder
     
     let SrcProjFile project = sprintf "%s/%s/%s.csproj" SrcFolder project project
     let TestProjFile project = sprintf "%s/%s/%s.csproj" TestFolder project project
     let SampleProjFile project = sprintf "%s/%s/%s.csproj" SampleFolder project project
+    
+    let IntegrationsProjFile project = sprintf "%s/integrations/%s/%s.csproj" SrcFolder project project
+    let StartupHookProjFile project = sprintf "%s/startuphook/%s/%s.csproj" SrcFolder project project
+    let ProfilerProjFile project = sprintf "%s/profiler/%s/%s.csproj" SrcFolder project project

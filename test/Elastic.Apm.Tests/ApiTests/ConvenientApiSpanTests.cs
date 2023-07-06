@@ -193,7 +193,7 @@ public class ConvenientApiSpanTests
 	public void SimpleActionWithReturnTypeAndParameter()
 		=> AssertWith1TransactionAnd1Span(t =>
 		{
-			var res = t.CaptureSpan(SpanName, SpanType, s =>
+			var res = t.CaptureSpan(SpanName, SpanType, _ =>
 			{
 				t.Should().NotBeNull();
 				WaitHelpers.Sleep2XMinimum();
@@ -207,7 +207,7 @@ public class ConvenientApiSpanTests
 	public void SimpleActionWithReturnTypeAndParameter_OnSubSpan()
 		=> AssertWith1TransactionAnd1SpanOnSubSpan(t =>
 		{
-			var res = t.CaptureSpan(SpanName, SpanType, s =>
+			var res = t.CaptureSpan(SpanName, SpanType, _ =>
 			{
 				t.Should().NotBeNull();
 				WaitHelpers.Sleep2XMinimum();

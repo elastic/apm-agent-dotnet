@@ -202,14 +202,6 @@ resharper_csharp_accessor_owner_body=expression_body
 resharper_redundant_case_label_highlighting=do_not_show
 resharper_redundant_argument_default_value_highlighting=do_not_show
 
-[Jenkinsfile]
-indent_style = space
-indent_size = 2
-end_of_line = lf
-charset = utf-8
-trim_trailing_whitespace = true
-insert_final_newline = true
-
 [*.{sh,bat,ps1}]
 trim_trailing_whitespace=true
 insert_final_newline=true

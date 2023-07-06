@@ -1,0 +1,55 @@
+---
+name: Bootstrap Checkout
+description: Ensures all actions bootstrap the same
+
+inputs:
+  rust:
+    description: 'Install rust toolchain ("true" or "false")'
+    required: false
+    default: "false"
+  azure:
+      description: 'Install azure functions tool chain ("true" or "false"'
+      required: false
+      default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    # Ensure we fetch all tags
+    - shell: bash
+      run: |
+        git fetch --prune --unshallow --tags
+        git tag --list
+        
+    - uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+          
+    # Install .NET version as mandated by global.json
+    #- uses: actions/setup-dotnet@v3
+    #  with:
+    #      global-json-file: global.json
+
+    -   name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            6.0.100
+            7.0.100 
+    - shell: bash
+      run: |
+        dotnet --list-sdks
+  
+      
+    # Setup git config
+    - uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
+    
+    # install common dependencies
+    - name: Install common dependencies
+      uses: ./.github/workflows/install-dependencies
+      with:
+          rust: '${{ inputs.rust }}'
+          azure: '${{ inputs.azure }}'

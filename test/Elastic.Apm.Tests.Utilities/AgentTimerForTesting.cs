@@ -38,7 +38,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly AgentTimer _realAgentTimer = new AgentTimer();
 
 		internal AgentTimerForTesting(IApmLogger logger = null) =>
-			_logger = logger == null ? (IApmLogger)new NoopLogger() : logger.Scoped(ThisClassName);
+			_logger = logger == null ? new NoopLogger() : logger.Scoped(ThisClassName);
 
 		public AgentTimeInstant Now => _realAgentTimer.Now;
 
@@ -73,7 +73,8 @@ namespace Elastic.Apm.Tests.Utilities
 			{
 				CatchUpMockTimerToReal(realNow);
 				var leftToWait = targetInstant - realNow;
-				if (leftToWait <= TimeSpan.Zero) break;
+				if (leftToWait <= TimeSpan.Zero)
+					break;
 
 				_logger.Debug()
 					?.Log("Waiting for time to pass..."
@@ -85,7 +86,8 @@ namespace Elastic.Apm.Tests.Utilities
 				realNow = _realAgentTimer.Now;
 			}
 
-			if (untilCondition != null) WaitUntil(untilCondition, dbgDesc);
+			if (untilCondition != null)
+				WaitUntil(untilCondition, dbgDesc);
 		}
 
 		private void WaitUntil(Func<bool> untilCondition, Func<string> dbgDesc)

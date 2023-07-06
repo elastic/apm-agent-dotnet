@@ -19,10 +19,14 @@ namespace Elastic.Apm.Helpers
 		{
 			switch (dateTimeKind)
 			{
-				case DateTimeKind.Utc: return "UTC";
-				case DateTimeKind.Local: return "Local";
-				case DateTimeKind.Unspecified: return "Unspecified";
-				default: return $"UNRECOGNIZED {dateTimeKind} ({(int)dateTimeKind} as int)";
+				case DateTimeKind.Utc:
+					return "UTC";
+				case DateTimeKind.Local:
+					return "Local";
+				case DateTimeKind.Unspecified:
+					return "Unspecified";
+				default:
+					return $"UNRECOGNIZED {dateTimeKind} ({(int)dateTimeKind} as int)";
 			}
 		}
 
@@ -34,11 +38,13 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		internal static string ToHms(this TimeSpan timeSpan)
 		{
-			if (timeSpan == TimeSpan.Zero) return "0";
+			if (timeSpan == TimeSpan.Zero)
+				return "0";
 
 			var strBuilder = new StringBuilder();
 
-			if (timeSpan < TimeSpan.Zero) strBuilder.Append("-");
+			if (timeSpan < TimeSpan.Zero)
+				strBuilder.Append("-");
 
 			var hasParts = false;
 
@@ -67,10 +73,13 @@ namespace Elastic.Apm.Helpers
 
 			void AppendIfNotZero(int count, string unitsSuffix)
 			{
-				if (count == 0) return;
+				if (count == 0)
+					return;
 
-				if (hasParts) strBuilder.Append(" ");
-				else hasParts = true;
+				if (hasParts)
+					strBuilder.Append(" ");
+				else
+					hasParts = true;
 
 				strBuilder.Append(Math.Abs(count)).Append(unitsSuffix);
 			}
@@ -84,10 +93,12 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		internal static string ToHmsInSeconds(this TimeSpan timeSpan)
 		{
-			if (timeSpan == TimeSpan.Zero) return "0s";
+			if (timeSpan == TimeSpan.Zero)
+				return "0s";
 
 			var truncated = TruncateToSeconds(timeSpan);
-			if (truncated != TimeSpan.Zero) return truncated.ToHms();
+			if (truncated != TimeSpan.Zero)
+				return truncated.ToHms();
 
 			return timeSpan > TimeSpan.Zero ? "<1s" : ">-1s";
 		}

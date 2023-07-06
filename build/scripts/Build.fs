@@ -26,7 +26,7 @@ module Build =
     
     let mutable private currentDiagnosticSourceVersion = None
         
-    let private aspNetFullFramework = Paths.SrcProjFile "Elastic.Apm.AspNetFullFramework"
+    let private aspNetFullFramework = Paths.IntegrationsProjFile "Elastic.Apm.AspNetFullFramework"
     
     let private allSrcProjects = !! "src/**/*.csproj"
         
@@ -128,7 +128,7 @@ module Build =
     let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =                
         let projects =
             !! (Paths.SrcProjFile "Elastic.Apm")
-            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+            ++ (Paths.StartupHookProjFile "Elastic.Apm.StartupHook.Loader")
     
         publishProjectsWithDiagnosticSourceVersion projects oldDiagnosticSourceVersion
         
@@ -144,9 +144,10 @@ module Build =
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
         
+        
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
-        dotnet "build" (Paths.SrcProjFile "Elastic.Apm.Profiler.Managed")
+        dotnet "build" (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
         Cargo.Exec [ "make"; "build-release"; ]
                               
     /// Publishes all projects with framework versions
@@ -174,16 +175,9 @@ module Build =
         
         publishElasticApmStartupHookWithDiagnosticSourceVersion()
     
-    /// Version suffix used for canary builds
-    let versionSuffix = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") |> sprintf "alpha-%s"
-     
     /// Packages projects into nuget packages
-    let Pack (canary:bool) =
-        let arguments =
-            let a = ["pack" ; Paths.Solution; "-c"; "Release"; $"--property:PackageOutputPath=%s{Paths.NugetOutput}"]
-            if canary then List.append a ["--version-suffix"; versionSuffix]
-            else a      
-        DotNet.Exec arguments
+    let Pack () =
+        DotNet.Exec ["pack" ; Paths.Solution; "-c"; "Release"; $"--property:PackageOutputPath=%s{Paths.NugetOutput}"]
           
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder
@@ -194,9 +188,19 @@ module Build =
         Cargo.Exec ["make"; "clean"]       
 
     /// Restores all packages for the solution
+    let ToolRestore () =
+        DotNet.Exec ["tool" ; "restore"]
+        
+    /// Restores all packages for the solution
     let Restore () =
+        ToolRestore()
         DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
+        
+    let Format () =
+        ToolRestore()
+        //dotnet dotnet-format --exclude src/Elastic.Apm/Libraries/
+        DotNet.Exec ["dotnet-format"; "--check"; "--exclude"; "src/Elastic.Apm/Libraries/"]
             
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
         source.GetFiles()
@@ -204,14 +208,11 @@ module Build =
         |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
         
     /// Creates versioned ElasticApmAgent.zip file    
-    let AgentZip (canary:bool) =        
+    let AgentZip () =        
         let name = "ElasticApmAgent"      
-        let currentAssemblyVersion = Versioning.CurrentVersion.VersionPrefix
+        let currentAssemblyVersion = Versioning.CurrentVersion.FileVersion
         let versionedName =
-            if canary then
-                sprintf "%s_%s-%s" name (currentAssemblyVersion.ToString()) versionSuffix
-            else
-                sprintf "%s_%s" name (currentAssemblyVersion.ToString())
+            sprintf "%s_%s" name (currentAssemblyVersion.ToString())
                 
         let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
@@ -248,43 +249,36 @@ module Build =
       
       
     /// Builds docker image including the ElasticApmAgent  
-    let AgentDocker (canary:bool) =
-        let agentVersion =
-            if canary then
-                sprintf "%s-%s" (Versioning.CurrentVersion.AssemblyVersion.ToString()) versionSuffix
-            else
-                Versioning.CurrentVersion.AssemblyVersion.ToString()        
+    let AgentDocker() =
+        let agentVersion = Versioning.CurrentVersion.FileVersion.ToString()        
         
         Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
                       "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
         
     let ProfilerIntegrations () =
-        DotNet.Exec ["run"; "--project"; Paths.SrcProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
-                     "-i"; Paths.Src "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
-                     "-o"; Paths.Src "Elastic.Apm.Profiler.Managed"; "-f"; "yml"]
+        DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
+                     "-i"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
+                     "-o"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed"; "-f"; "yml"]
         
     /// Creates versioned elastic_apm_profiler.zip file containing all components needed for profiler auto-instrumentation  
-    let ProfilerZip (canary:bool) =
+    let ProfilerZip () =
         let name = "elastic_apm_profiler"
-        let currentAssemblyVersion = Versioning.CurrentVersion.VersionPrefix
+        let currentAssemblyVersion = Versioning.CurrentVersion.FileVersion
         let versionedName =
             let os =
                 if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then "win-x64"
                 else "linux-x64"      
-            if canary then
-                sprintf "%s_%s-%s-%s" name (currentAssemblyVersion.ToString()) os versionSuffix
-            else
-                sprintf "%s_%s-%s" name (currentAssemblyVersion.ToString()) os
+            sprintf "%s_%s-%s" name (currentAssemblyVersion.ToString()) os
                 
         let profilerDir = Paths.BuildOutput name |> DirectoryInfo                    
         profilerDir.Create()
         
         seq {
-            Paths.Src "Elastic.Apm.Profiler.Managed/integrations.yml"
+            Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/integrations.yml"
             "target/release/elastic_apm_profiler.dll"
             "target/release/libelastic_apm_profiler.so"
-            Paths.Src "elastic_apm_profiler/NOTICE"
-            Paths.Src "elastic_apm_profiler/README"
+            Paths.SrcProfiler "elastic_apm_profiler/NOTICE"
+            Paths.SrcProfiler "elastic_apm_profiler/README"
             "LICENSE"
         }
         |> Seq.map FileInfo
@@ -300,8 +294,12 @@ module Build =
         |> Seq.map DirectoryInfo
         |> Seq.iter (fun sourceDir -> copyDllsAndPdbs (profilerDir.CreateSubdirectory(sourceDir.Name)) sourceDir)
         
-        // include version in the zip file name    
-        ZipFile.CreateFromDirectory(profilerDir.FullName, Paths.BuildOutput versionedName + ".zip")
+        // include version in the zip file name and ensure the target zip is removed
+        let zip = Paths.BuildOutput versionedName + ".zip"
+        if File.exists zip  then
+            printf $"%s{zip} already exists on disk"
+            File.delete zip
+        ZipFile.CreateFromDirectory(profilerDir.FullName, zip)
         
         
         

@@ -67,5 +67,7 @@ namespace Elastic.Apm.Feature.Tests
 		public bool UseElasticTraceparentHeader { get; set; } = DefaultValues.UseElasticTraceparentHeader;
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
 		public bool OpenTelemetryBridgeEnabled { get; set; }
+
+		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }

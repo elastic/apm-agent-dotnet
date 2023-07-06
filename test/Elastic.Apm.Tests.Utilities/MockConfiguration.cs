@@ -12,19 +12,16 @@ namespace Elastic.Apm.Tests.Utilities
 {
 	public class MockConfigurationEnvironmentProvider : IConfigurationEnvironmentValueProvider
 	{
-		private readonly Func<string, string> _reader;
-		public string Description => MockConfiguration.Origin;
+		private readonly Func<ConfigurationOption, string> _reader;
+		public string Description => nameof(MockConfigurationEnvironmentProvider);
 
-		public MockConfigurationEnvironmentProvider(Func<string, string> reader) => _reader = reader;
+		public MockConfigurationEnvironmentProvider(Func<ConfigurationOption, string> reader) => _reader = reader;
 
-		public ConfigurationKeyValue Read(string variable) => new(variable, _reader(variable)?.Trim(), Description);
+		public EnvironmentKeyValue Read(ConfigurationOption option) => new(option, _reader(option)?.Trim(), Description);
 	}
 
 	internal class MockConfiguration : FallbackConfigurationBase, IConfiguration
 	{
-		public const string Origin = "unit test configuration";
-		private const string ThisClassName = nameof(MockConfiguration);
-
 		public MockConfiguration(IApmLogger logger = null,
 			string logLevel = null,
 			string serverUrls = null,
@@ -36,7 +33,6 @@ namespace Elastic.Apm.Tests.Utilities
 			string apiKey = null,
 			string captureHeaders = null,
 			string centralConfig = null,
-			string description = null,
 			string openTelemetryBridgeEnabled = null,
 			string exitSpanMinDuration = null,
 			string transactionSampleRate = null,
@@ -74,57 +70,57 @@ namespace Elastic.Apm.Tests.Utilities
 			string traceContinuationStrategy = null
 		) : base(
 			logger,
-			new ConfigurationDefaults { DebugName = ThisClassName },
+			new ConfigurationDefaults { DebugName = nameof(MockConfiguration) },
 			new NullConfigurationKeyValueProvider(),
 			new MockConfigurationEnvironmentProvider(key => key switch
 			{
-				EnvVarNames.ApiKey => apiKey,
-				EnvVarNames.ApplicationNamespaces => applicationNamespaces,
-				EnvVarNames.CaptureBody => captureBody,
-				EnvVarNames.CaptureBodyContentTypes => captureBodyContentTypes,
-				EnvVarNames.CaptureHeaders => captureHeaders,
-				EnvVarNames.CentralConfig => centralConfig,
-				EnvVarNames.CloudProvider => cloudProvider,
-				EnvVarNames.DisableMetrics => disableMetrics,
-				EnvVarNames.Enabled => enabled,
-				EnvVarNames.OpenTelemetryBridgeEnabled => openTelemetryBridgeEnabled,
-				EnvVarNames.Environment => environment,
-				EnvVarNames.ExcludedNamespaces => excludedNamespaces,
-				EnvVarNames.ExitSpanMinDuration => exitSpanMinDuration,
-				EnvVarNames.FlushInterval => flushInterval,
-				EnvVarNames.GlobalLabels => globalLabels,
-				EnvVarNames.HostName => hostName,
-				EnvVarNames.IgnoreMessageQueues => ignoreMessageQueues,
-				EnvVarNames.LogLevel => logLevel,
-				EnvVarNames.MaxBatchEventCount => maxBatchEventCount,
-				EnvVarNames.MaxQueueEventCount => maxQueueEventCount,
-				EnvVarNames.MetricsInterval => metricsInterval,
-				EnvVarNames.Recording => recording,
-				EnvVarNames.SanitizeFieldNames => sanitizeFieldNames,
-				EnvVarNames.SecretToken => secretToken,
-				EnvVarNames.ServerCert => serverCert,
-				EnvVarNames.ServerUrl => serverUrl,
-				EnvVarNames.ServerUrls => serverUrls,
-				EnvVarNames.UseWindowsCredentials => useWindowsCredentials,
-				EnvVarNames.ServiceName => serviceName,
-				EnvVarNames.ServiceNodeName => serviceNodeName,
-				EnvVarNames.ServiceVersion => serviceVersion,
-				EnvVarNames.SpanCompressionEnabled => spanCompressionEnabled,
-				EnvVarNames.SpanCompressionExactMatchMaxDuration => spanCompressionExactMatchMaxDuration,
-				EnvVarNames.SpanCompressionSameKindMaxDuration => spanCompressionSameKindMaxDuration,
-				EnvVarNames.SpanStackTraceMinDuration => spanStackTraceMinDurationInMilliseconds,
-				EnvVarNames.SpanFramesMinDuration => spanFramesMinDurationInMilliseconds,
-				EnvVarNames.StackTraceLimit => stackTraceLimit,
-				EnvVarNames.TraceContextIgnoreSampledFalse => traceContextIgnoreSampledFalse,
-				EnvVarNames.TraceContinuationStrategy => traceContinuationStrategy,
-				EnvVarNames.TransactionIgnoreUrls => transactionIgnoreUrls,
-				EnvVarNames.TransactionMaxSpans => transactionMaxSpans,
-				EnvVarNames.TransactionSampleRate => transactionSampleRate,
-				EnvVarNames.UseElasticTraceparentHeader => useElasticTraceparentHeader,
-				EnvVarNames.VerifyServerCert => verifyServerCert,
+				ConfigurationOption.ApiKey => apiKey,
+				ConfigurationOption.ApplicationNamespaces => applicationNamespaces,
+				ConfigurationOption.CaptureBody => captureBody,
+				ConfigurationOption.CaptureBodyContentTypes => captureBodyContentTypes,
+				ConfigurationOption.CaptureHeaders => captureHeaders,
+				ConfigurationOption.CentralConfig => centralConfig,
+				ConfigurationOption.CloudProvider => cloudProvider,
+				ConfigurationOption.DisableMetrics => disableMetrics,
+				ConfigurationOption.Enabled => enabled,
+				ConfigurationOption.OpenTelemetryBridgeEnabled => openTelemetryBridgeEnabled,
+				ConfigurationOption.Environment => environment,
+				ConfigurationOption.ExcludedNamespaces => excludedNamespaces,
+				ConfigurationOption.ExitSpanMinDuration => exitSpanMinDuration,
+				ConfigurationOption.FlushInterval => flushInterval,
+				ConfigurationOption.GlobalLabels => globalLabels,
+				ConfigurationOption.HostName => hostName,
+				ConfigurationOption.IgnoreMessageQueues => ignoreMessageQueues,
+				ConfigurationOption.LogLevel => logLevel,
+				ConfigurationOption.MaxBatchEventCount => maxBatchEventCount,
+				ConfigurationOption.MaxQueueEventCount => maxQueueEventCount,
+				ConfigurationOption.MetricsInterval => metricsInterval,
+				ConfigurationOption.Recording => recording,
+				ConfigurationOption.SanitizeFieldNames => sanitizeFieldNames,
+				ConfigurationOption.SecretToken => secretToken,
+				ConfigurationOption.ServerCert => serverCert,
+				ConfigurationOption.ServerUrl => serverUrl,
+				ConfigurationOption.ServerUrls => serverUrls,
+				ConfigurationOption.UseWindowsCredentials => useWindowsCredentials,
+				ConfigurationOption.ServiceName => serviceName,
+				ConfigurationOption.ServiceNodeName => serviceNodeName,
+				ConfigurationOption.ServiceVersion => serviceVersion,
+				ConfigurationOption.SpanCompressionEnabled => spanCompressionEnabled,
+				ConfigurationOption.SpanCompressionExactMatchMaxDuration => spanCompressionExactMatchMaxDuration,
+				ConfigurationOption.SpanCompressionSameKindMaxDuration => spanCompressionSameKindMaxDuration,
+				ConfigurationOption.SpanStackTraceMinDuration => spanStackTraceMinDurationInMilliseconds,
+				ConfigurationOption.SpanFramesMinDuration => spanFramesMinDurationInMilliseconds,
+				ConfigurationOption.StackTraceLimit => stackTraceLimit,
+				ConfigurationOption.TraceContextIgnoreSampledFalse => traceContextIgnoreSampledFalse,
+				ConfigurationOption.TraceContinuationStrategy => traceContinuationStrategy,
+				ConfigurationOption.TransactionIgnoreUrls => transactionIgnoreUrls,
+				ConfigurationOption.TransactionMaxSpans => transactionMaxSpans,
+				ConfigurationOption.TransactionSampleRate => transactionSampleRate,
+				ConfigurationOption.UseElasticTraceparentHeader => useElasticTraceparentHeader,
+				ConfigurationOption.VerifyServerCert => verifyServerCert,
+				ConfigurationOption.FullFrameworkConfigurationReaderType => null,
 				_ => throw new Exception($"{nameof(MockConfiguration)} does not have implementation for configuration : {key}")
-			}),
-			description
+			})
 		)
 		{ }
 	}

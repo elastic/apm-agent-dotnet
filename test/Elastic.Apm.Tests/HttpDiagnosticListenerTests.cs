@@ -3,14 +3,12 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -810,7 +808,7 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		// Don't run this test on NET461 as it can intermittently fail-
+		// Don't run this test on NET462 as it can intermittently fail-
 		// NET Framework's instrumentation to capture HTTP client calls in HttpHandlerDiagnosticListener is achieved through reflection to replace
 		// the ServicePointManager.s_ServicePointTable static non-public field, in order to provide own implementations of the ServicePointHashtable,
 		// ConnectionGroupHashtable, ConnectionArrayList and HttpWebRequestArrayList, such that diagnostic source events can be raised when new

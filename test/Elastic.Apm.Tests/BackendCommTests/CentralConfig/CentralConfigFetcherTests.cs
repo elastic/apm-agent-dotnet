@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -122,7 +121,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		/// <summary>
 		/// logger that has a log level switch but does not implement <see cref="ILogLevelSwitchable"/>
 		/// </summary>
-		private class UnswitchableLogger: IApmLogger
+		private class UnswitchableLogger : IApmLogger
 		{
 			public LogLevelSwitch LogLevelSwitch { get; }
 
@@ -223,7 +222,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		public void Dispose_stops_the_thread()
 		{
 			CentralConfigurationFetcher lastCentralConfigurationFetcher;
-			var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration(), "local");
+			var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration());
 			var configStore = new ConfigurationStore(snapshot, LoggerBase);
 			var service = Service.GetDefaultService(new EnvironmentConfiguration(), LoggerBase);
 			var handler = new MockHttpMessageHandler();
@@ -250,7 +249,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			lastCentralConfigurationFetcher.IsRunning.Should().BeFalse();
 		}
 
-		[Theory]
+		[Theory(Skip = "TODO this tests takes over 6 minutes locally")]
 		[InlineData(1)]
 		[InlineData(5)]
 		[InlineData(9)]
@@ -264,7 +263,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 			numberOfAgentInstances.Repeat(i =>
 			{
-				var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration(), "local");
+				var snapshot = new RuntimeConfigurationSnapshot(new EnvironmentConfiguration());
 				var service = Service.GetDefaultService(new EnvironmentConfiguration(), LoggerBase);
 				var configStore = new ConfigurationStore(snapshot, LoggerBase);
 

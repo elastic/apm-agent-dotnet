@@ -14,25 +14,25 @@ using System.Text.RegularExpressions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using static Elastic.Apm.Config.ConfigConsts;
+using static Elastic.Apm.Config.ConfigurationOption;
+using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.Config
 {
 	public abstract class AbstractConfigurationReader
 	{
-		private const string ThisClassName = nameof(AbstractConfigurationReader);
-
 		private readonly IApmLogger _logger;
 		private readonly ConfigurationDefaults _defaults;
 
 		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) : this(logger,
-			new ConfigurationDefaults { DebugName = dbgDerivedClassName }) { }
+			new ConfigurationDefaults { DebugName = dbgDerivedClassName })
+		{ }
 
 		internal AbstractConfigurationReader(IApmLogger logger, ConfigurationDefaults defaults)
 		{
-			_logger = logger?.Scoped($"{ThisClassName} ({defaults?.DebugName})");
+			_logger = logger?.Scoped($"{nameof(AbstractConfigurationReader)} ({defaults?.DebugName})");
 			_defaults = defaults;
 		}
-
 
 		protected bool ParseUseElasticTraceparentHeader(ConfigurationKeyValue kv) =>
 			ParseBoolOption(kv, DefaultValues.UseElasticTraceparentHeader, "UseElasticTraceparentHeader");
@@ -40,10 +40,12 @@ namespace Elastic.Apm.Config
 		protected internal static bool TryParseLogLevel(string value, out LogLevel level)
 		{
 			level = default;
-			if (string.IsNullOrEmpty(value)) return false;
+			if (string.IsNullOrEmpty(value))
+				return false;
 
 			var retLevel = DefaultLogLevel();
-			if (!retLevel.HasValue) return false;
+			if (!retLevel.HasValue)
+				return false;
 
 			level = retLevel.Value;
 			return true;
@@ -52,24 +54,32 @@ namespace Elastic.Apm.Config
 			{
 				switch (value.ToLowerInvariant())
 				{
-					case "trace": return LogLevel.Trace;
-					case "debug": return LogLevel.Debug;
+					case "trace":
+						return LogLevel.Trace;
+					case "debug":
+						return LogLevel.Debug;
 					case "information":
-					case "info": return LogLevel.Information;
-					case "warning": return LogLevel.Warning;
-					case "error": return LogLevel.Error;
-					case "critical": return LogLevel.Critical;
+					case "info":
+						return LogLevel.Information;
+					case "warning":
+						return LogLevel.Warning;
+					case "error":
+						return LogLevel.Error;
+					case "critical":
+						return LogLevel.Critical;
 					case "off":
 					case "none":
 						return LogLevel.None;
-					default: return null;
+					default:
+						return null;
 				}
 			}
 		}
 
 		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNames(ConfigurationKeyValue kv)
 		{
-			if (kv?.Value == null) return DefaultValues.SanitizeFieldNames;
+			if (kv?.Value == null)
+				return DefaultValues.SanitizeFieldNames;
 
 			try
 			{
@@ -77,7 +87,8 @@ namespace Elastic.Apm.Config
 				var sanitizeFieldNames = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(sanitizeFieldNames.Count);
-				foreach (var item in sanitizeFieldNames) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				foreach (var item in sanitizeFieldNames)
+					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
@@ -89,7 +100,8 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv)
 		{
-			if (kv?.Value == null) return DefaultValues.DisableMetrics;
+			if (kv?.Value == null)
+				return DefaultValues.DisableMetrics;
 
 			try
 			{
@@ -97,7 +109,8 @@ namespace Elastic.Apm.Config
 				var disableMetrics = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(disableMetrics.Count);
-				foreach (var item in disableMetrics) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				foreach (var item in disableMetrics)
+					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
@@ -152,7 +165,8 @@ namespace Elastic.Apm.Config
 				var ignoreMessageQueues = kv.Value.Split(',').Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(ignoreMessageQueues.Count);
-				foreach (var item in ignoreMessageQueues) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				foreach (var item in ignoreMessageQueues)
+					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
@@ -164,28 +178,32 @@ namespace Elastic.Apm.Config
 
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return null;
 
 			return kv.Value;
 		}
 
 		protected string ParseServerCert(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return null;
 
 			return kv.Value;
 		}
 
 		protected string ParseApiKey(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return null;
 
 			return kv.Value;
 		}
 
 		protected bool ParseEnabled(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return true;
 
 			if (bool.TryParse(kv.Value, out var isEnabledParsed))
 				return isEnabledParsed;
@@ -196,7 +214,8 @@ namespace Elastic.Apm.Config
 
 		protected bool ParseOpenTelemetryBridgeEnabled(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.OpenTelemetryBridgeEnabled;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return DefaultValues.OpenTelemetryBridgeEnabled;
 
 			if (bool.TryParse(kv.Value, out var isOTelEnabled))
 				return isOTelEnabled;
@@ -210,7 +229,8 @@ namespace Elastic.Apm.Config
 
 		protected bool ParseRecording(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return true;
 
 			if (bool.TryParse(kv.Value, out var isRecording))
 				return isRecording;
@@ -242,17 +262,20 @@ namespace Elastic.Apm.Config
 
 		protected bool ParseTraceContextIgnoreSampledFalse(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.TraceContextIgnoreSampledFalse;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return DefaultValues.TraceContextIgnoreSampledFalse;
 
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.TraceContextIgnoreSampledFalse;
 		}
 
-		protected bool ParseUseWindowsCredentials(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureHeaders, "UseWindowsCredentials");
+		protected bool ParseUseWindowsCredentials(ConfigurationKeyValue kv) =>
+			ParseBoolOption(kv, DefaultValues.CaptureHeaders, "UseWindowsCredentials");
 
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return DefaultValues.VerifyServerCert;
 
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.VerifyServerCert;
@@ -262,7 +285,8 @@ namespace Elastic.Apm.Config
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
-			if (TryParseLogLevel(kv?.Value, out var level)) return level;
+			if (TryParseLogLevel(kv?.Value, out var level))
+				return level;
 
 			if (kv?.Value == null)
 				_logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", DefaultValues.LogLevel);
@@ -298,18 +322,13 @@ namespace Elastic.Apm.Config
 			if (kv == null || string.IsNullOrEmpty(kv.Value))
 				return LogAndReturnDefault().AsReadOnly();
 
-			switch (kv.Key)
+			if (kv.Option == ServerUrls)
 			{
-				case EnvVarNames.ServerUrls:
-					_logger?.Info()
-						?.Log(
-							"{ServerUrls} is deprecated. Use {ServerUrl}", EnvVarNames.ServerUrls, EnvVarNames.ServerUrl);
-					break;
-				case KeyNames.ServerUrls:
-					_logger?.Info()
-						?.Log(
-							"{ServerUrls} is deprecated. Use {ServerUrl}", KeyNames.ServerUrls, KeyNames.ServerUrl);
-					break;
+				_logger?.Info()
+					?.Log("{ServerUrls} is deprecated. Use {ServerUrl}",
+						ServerUrls.ToConfigurationName(kv.Type),
+						ServerUrl.ToConfigurationName(kv.Type)
+					);
 			}
 
 			var uriStrings = kv.Value.Split(',');
@@ -327,7 +346,7 @@ namespace Elastic.Apm.Config
 			if (list.Count > 1)
 			{
 				_logger?.Warning()
-					?.Log(nameof(EnvVarNames.ServerUrls)
+					?.Log(nameof(ServerUrls)
 						+ " configuration option contains more than one URL which is not supported by the agent"
 						+ " - only the first URL will be used."
 						+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
@@ -421,7 +440,8 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrls(ConfigurationKeyValue kv)
 		{
-			if (kv?.Value == null) return DefaultValues.TransactionIgnoreUrls;
+			if (kv?.Value == null)
+				return DefaultValues.TransactionIgnoreUrls;
 
 			try
 			{
@@ -429,7 +449,8 @@ namespace Elastic.Apm.Config
 				var transactionIgnoreUrls = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(transactionIgnoreUrls.Count);
-				foreach (var item in transactionIgnoreUrls) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				foreach (var item in transactionIgnoreUrls)
+					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
@@ -442,7 +463,8 @@ namespace Elastic.Apm.Config
 
 		protected bool ParseSpanCompressionEnabled(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.SpanCompressionEnabled;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return DefaultValues.SpanCompressionEnabled;
 
 			if (bool.TryParse(kv.Value, out var isSpanCompressionEnable))
 				return isSpanCompressionEnable;
@@ -540,7 +562,7 @@ namespace Elastic.Apm.Config
 				{
 					_logger?.Error()
 						?.Log("Failed to parse provided span stack trace minimum duration `{ProvidedSpanStackTraceMinDuration}' - " +
-									"using default: {DefaultSpanStackTraceMinDuration}",
+							"using default: {DefaultSpanStackTraceMinDuration}",
 							value,
 							DefaultValues.SpanStackTraceMinDuration);
 					return DefaultValues.SpanStackTraceMinDurationInMilliseconds;
@@ -550,7 +572,7 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Critical()
 					?.LogException(e, nameof(ArgumentException) + " thrown from TryParseTimeInterval which means a programming bug - " +
-														"using default: {DefaultSpanStackTraceMinDuration}",
+						"using default: {DefaultSpanStackTraceMinDuration}",
 						DefaultValues.SpanStackTraceMinDuration);
 				return DefaultValues.SpanStackTraceMinDurationInMilliseconds;
 			}
@@ -630,7 +652,8 @@ namespace Elastic.Apm.Config
 		protected int ParseMaxBatchEventCount(ConfigurationKeyValue kv) =>
 			ParseMaxXyzEventCount(kv, DefaultValues.MaxBatchEventCount, "MaxBatchEventCount");
 
-		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) => ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount");
+		protected int ParseMaxQueueEventCount(ConfigurationKeyValue kv) =>
+			ParseMaxXyzEventCount(kv, DefaultValues.MaxQueueEventCount, "MaxQueueEventCount");
 
 		protected TimeSpan ParseFlushInterval(ConfigurationKeyValue kv) =>
 			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S,
@@ -754,15 +777,18 @@ namespace Elastic.Apm.Config
 		internal static string DiscoverDefaultServiceName()
 		{
 			var entryAssemblyName = DiscoverEntryAssemblyName();
-			if (entryAssemblyName != null) return entryAssemblyName.Name;
+			if (entryAssemblyName != null)
+				return entryAssemblyName.Name;
 
 			var stackFrames = new StackTrace().GetFrames();
-			if (stackFrames == null) return null;
+			if (stackFrames == null)
+				return null;
 
 			foreach (var frame in stackFrames)
 			{
 				var currentAssemblyName = frame?.GetMethod()?.DeclaringType?.Assembly.GetName();
-				if (currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())) return currentAssemblyName.Name;
+				if (currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken()))
+					return currentAssemblyName.Name;
 			}
 
 			return null;
@@ -804,7 +830,7 @@ namespace Elastic.Apm.Config
 			_logger?.Error()
 				?.Log("Failed to discover service name, the service name will be '{DefaultServiceName}'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
-					DefaultValues.UnknownServiceName, EnvVarNames.ServiceName);
+					DefaultValues.UnknownServiceName, ServiceName.ToEnvironmentVariable());
 			return DefaultValues.UnknownServiceName;
 		}
 
@@ -821,7 +847,8 @@ namespace Elastic.Apm.Config
 		{
 			var versionInConfig = kv.Value;
 
-			if (!string.IsNullOrEmpty(versionInConfig)) return versionInConfig;
+			if (!string.IsNullOrEmpty(versionInConfig))
+				return versionInConfig;
 
 			_logger?.Info()?.Log("The agent was started without a service version. The service version will be automatically discovered.");
 
@@ -841,14 +868,16 @@ namespace Elastic.Apm.Config
 
 		protected string ParseEnvironment(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return null;
 
 			return kv.Value;
 		}
 
 		protected string ParseServiceNodeName(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrWhiteSpace(kv.Value)) return null;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				return null;
 
 			return kv.Value;
 		}
@@ -990,7 +1019,8 @@ namespace Elastic.Apm.Config
 		{
 			var valueToParse = kv.Value;
 
-			if (string.IsNullOrEmpty(valueToParse)) valueToParse = DefaultValues.CaptureBodyContentTypes;
+			if (string.IsNullOrEmpty(valueToParse))
+				valueToParse = DefaultValues.CaptureBodyContentTypes;
 
 			return valueToParse.Split(',').Select(p => p.Trim()).ToList();
 		}
@@ -1045,7 +1075,8 @@ namespace Elastic.Apm.Config
 
 		protected string ParseHostName(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return null;
 
 			return kv.Value;
 		}
@@ -1104,7 +1135,8 @@ namespace Elastic.Apm.Config
 
 		internal static string ToLogString(IReadOnlyDictionary<string, string> stringToStringMap)
 		{
-			if (stringToStringMap == null) return ObjectExtensions.NullAsString;
+			if (stringToStringMap == null)
+				return ObjectExtensions.NullAsString;
 
 			// [count: 3]: [0]: `key0': `value0', [1]: `key1': `value1', [2]: `key2': `value2'
 			var result = new StringBuilder();
@@ -1123,7 +1155,8 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyList<string> ParseExcludedNamespaces(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return LogAndReturnDefault().AsReadOnly();
 
 			var list = kv.Value.Split(',').ToList();
 
@@ -1138,7 +1171,8 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyList<string> ParseApplicationNamespaces(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return LogAndReturnDefault().AsReadOnly();
 
 			var list = kv.Value.Split(',').ToList();
 
@@ -1155,7 +1189,8 @@ namespace Elastic.Apm.Config
 		{
 			// https://stackoverflow.com/a/33573337
 			uri = null;
-			if (!Uri.TryCreate(u, UriKind.Absolute, out uri)) return false;
+			if (!Uri.TryCreate(u, UriKind.Absolute, out uri))
+				return false;
 
 			return uri.IsWellFormedOriginalString() && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 		}

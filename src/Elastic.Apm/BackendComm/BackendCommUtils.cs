@@ -3,12 +3,15 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Reflection;
+#if NETSTANDARD2_0 || NET6_0_OR_GREATER
 using System.Security.Authentication;
+#endif
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -93,7 +96,8 @@ namespace Elastic.Apm.BackendComm
 				//    if the relative part of baseUri is to be preserved in the constructed Uri.
 				var baseAbsoluteUrlAdapted = baseAbsoluteUrl;
 				var baseAbsoluteUrlAsStr = baseAbsoluteUrl.ToString();
-				if (!baseAbsoluteUrlAsStr.EndsWith("/")) baseAbsoluteUrlAdapted = new Uri(baseAbsoluteUrlAsStr + "/", UriKind.Absolute);
+				if (!baseAbsoluteUrlAsStr.EndsWith("/"))
+					baseAbsoluteUrlAdapted = new Uri(baseAbsoluteUrlAsStr + "/", UriKind.Absolute);
 				return new Uri(baseAbsoluteUrlAdapted, relativeUrl);
 			}
 		}
@@ -101,7 +105,7 @@ namespace Elastic.Apm.BackendComm
 		private static void ConfigServicePoint(Uri serverUrlBase, IApmLogger logger) =>
 			ConfigServicePointOnceHelper.IfNotInited?.Init(() =>
 			{
-// ServicePointManager is obsolete
+				// ServicePointManager is obsolete
 #pragma warning disable SYSLIB0014
 				var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
 #pragma warning restore SYSLIB0014
@@ -128,7 +132,8 @@ namespace Elastic.Apm.BackendComm
 			{
 				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
 				{
-					if (policyError == SslPolicyErrors.None) return true;
+					if (policyError == SslPolicyErrors.None)
+						return true;
 
 					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
 					return true;
@@ -143,7 +148,8 @@ namespace Elastic.Apm.BackendComm
 
 					serverCertificateCustomValidationCallback = (_, certificate, _, policyError) =>
 					{
-						if (policyError == SslPolicyErrors.None) return true;
+						if (policyError == SslPolicyErrors.None)
+							return true;
 
 						if (certificate is null)
 						{
@@ -179,7 +185,8 @@ namespace Elastic.Apm.BackendComm
 				// set a default callback to log the policy error
 				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
 				{
-					if (policyError == SslPolicyErrors.None) return true;
+					if (policyError == SslPolicyErrors.None)
+						return true;
 
 					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
 					return false;
@@ -223,8 +230,15 @@ namespace Elastic.Apm.BackendComm
 			{
 				try
 				{
-					httpClient.DefaultRequestHeaders.UserAgent.Add(
-						new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
+					var name = AdaptUserAgentValue(service.Runtime.Name);
+					var version = AdaptUserAgentValue(service.Runtime.Version);
+					//Mono uses a more complex version number e.g
+					//6.12.0.182 (2020-02/6051b710727 Tue Jun 14 15:01:21 EDT 2022)
+					if (name.Equals("mono", StringComparison.InvariantCultureIgnoreCase))
+						version = version.Split(new[] { "__" }, StringSplitOptions.None).FirstOrDefault();
+
+
+					httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(name, version));
 				}
 				catch (Exception e)
 				{

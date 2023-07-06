@@ -7,6 +7,18 @@
       "commands": [
         "assembly-differ"
       ]
+    },
+    "minver-cli": {
+      "version": "4.3.0",
+      "commands": [
+        "minver"
+      ]
+    },
+    "dotnet-format": {
+      "version": "5.1.250801",
+      "commands": [
+        "dotnet-format"
+      ]
     }
   }
 }

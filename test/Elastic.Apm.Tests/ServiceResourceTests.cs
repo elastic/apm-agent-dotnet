@@ -41,17 +41,13 @@ namespace Elastic.Apm.Tests
 
 			var targetName = span.Context?.Service?.Target?.Name;
 			if (input.ExpectedServiceTarget?.Name != null)
-			{
 				targetName.Should().Be(input.ExpectedServiceTarget.Name, input.FailureMessage);
-			}
 			else
 				targetName.Should().BeNull(input.FailureMessage);
 
 			var resource = span.Context?.Destination?.Service?.Resource;
 			if (input.ExpectedResource != null)
-			{
 				resource.Should().Be(input.ExpectedResource, input.FailureMessage);
-			}
 			else
 				resource.Should().BeNull(input.FailureMessage);
 		}
@@ -64,7 +60,8 @@ namespace Elastic.Apm.Tests
 			{
 				span.Context.Db = new Database
 				{
-					Type = testDataSpan.Context.Db.Type, Instance = testDataSpan.Context.Db.Instance
+					Type = testDataSpan.Context.Db.Type,
+					Instance = testDataSpan.Context.Db.Instance
 				};
 			}
 
@@ -78,9 +75,7 @@ namespace Elastic.Apm.Tests
 			}
 
 			if (testDataSpan.Context?.Http != null)
-			{
 				span.Context.Http = new Http { Url = testDataSpan.Context.Http.Url };
-			}
 
 			if (testDataSpan.Context?.Service != null)
 			{

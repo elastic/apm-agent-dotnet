@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -59,7 +58,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			var isCentralConfigOptEqDefault = _initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig;
 			var centralConfigStatus = _initialSnapshot.CentralConfig ? "enabled" : "disabled";
-			if (!isCentralConfigOptEqDefault) centralConfigStatus = centralConfigStatus.ToUpper();
+			if (!isCentralConfigOptEqDefault)
+				centralConfigStatus = centralConfigStatus.ToUpper();
 			_logger.IfLevel(isCentralConfigOptEqDefault ? LogLevel.Debug : LogLevel.Information)
 				?.Log("Central configuration feature is {CentralConfigStatus} because CentralConfig option's value is {CentralConfigOptionValue}"
 					+ " (default value is {CentralConfigOptionDefaultValue})"
@@ -76,7 +76,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				};
 			}
 
-			if (!_initialSnapshot.CentralConfig) return;
+			if (!_initialSnapshot.CentralConfig)
+				return;
 
 			_configurationStore = configurationStore;
 
@@ -173,7 +174,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private HttpRequestMessage BuildHttpRequest(EntityTagHeaderValue eTag)
 		{
 			var httpRequest = new HttpRequestMessage(HttpMethod.Get, _getConfigAbsoluteUrl);
-			if (eTag != null) httpRequest.Headers.IfNoneMatch.Add(eTag);
+			if (eTag != null)
+				httpRequest.Headers.IfNoneMatch.Add(eTag);
 			return httpRequest;
 		}
 
@@ -207,8 +209,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger.Info()
 				?.Log("Updating " + nameof(ConfigurationStore) + ". New central configuration: {CentralConfiguration}", centralConfiguration);
 
-			var snapshotDescription = $"{_initialSnapshot.Description} + central (ETag: `{centralConfiguration.ETag}')";
-			_configurationStore.CurrentSnapshot = new RuntimeConfigurationSnapshot(_initialSnapshot, snapshotDescription, centralConfiguration);
+			_configurationStore.CurrentSnapshot = new RuntimeConfigurationSnapshot(_initialSnapshot, centralConfiguration);
 		}
 
 		internal class FailedToFetchConfigException : Exception

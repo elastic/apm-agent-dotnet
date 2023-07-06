@@ -1,0 +1,168 @@
+elastic_apm_profiler
+CLR profiler for the .NET runtime
+Copyright 2021 Elasticsearch B.V.
+
+---
+This product includes a Rust port of functions and COM interfaces defined
+in the .NET runtime (https://github.com/dotnet/runtime).
+
+Copyright (c) .NET Foundation and Contributors.
+
+All rights reserved.
+Licensed under the MIT License.
+
+Available at
+https://github.com/dotnet/runtime/blob/main/LICENSE.TXT
+
+---
+This product includes software derived from software developed by Datadog
+(https://github.com/DataDog/dd-trace-dotnet).
+
+Copyright 2017-2021 Datadog, Inc.
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/DataDog/dd-trace-dotnet/blob/eff230c477d8729f166b2e4f8fa5849d8ff7f78e/LICENSE
+
+---
+This product includes software derived from clr-profiler.
+
+Copyright 2019 Camden Reslink
+Licensed under the MIT license
+
+Available at
+https://github.com/camdenreslink/clr-profiler/blob/master/LICENSE
+
+---
+This product includes software derived from winapi-rs.
+
+Copyright (c) 2015-2018 The winapi-rs Developers
+Licensed under the Apache 2.0 license
+
+Available at
+https://github.com/retep998/winapi-rs/blob/0.3/LICENSE-APACHE
+
+---
+License notice for bitflags crate
+
+Copyright (c) 2014 The Rust Project Developers
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/bitflags/bitflags/blob/main/LICENSE-APACHE
+
+---
+License notice for c_vec crate
+
+Copyright (c) 2015 Guillaume Gomez
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/GuillaumeGomez/c_vec-rs/blob/master/LICENSE-APACHE
+
+---
+License notice for com crate
+
+Copyright (c) Microsoft Corporation.
+Licensed under the MIT License.
+
+Available at
+https://github.com/microsoft/com-rs/blob/master/LICENSE
+
+---
+License notice for hex crate
+
+Copyright (c) 2013-2014 The Rust Project Developers.
+Copyright (c) 2015-2020 The rust-hex Developers.
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/KokaKiwi/rust-hex/blob/main/LICENSE-APACHE
+
+---
+License notice for log crate
+
+Copyright (c) 2014 The Rust Project Developers.
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/rust-lang/log/blob/master/LICENSE-APACHE
+
+---
+License notice for log4rs crate
+
+Copyright (c) 2015-2016 Steven Fackler
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/estk/log4rs/blob/master/LICENSE-APACHE
+
+---
+License notice for num-derive crate
+
+Copyright (c) 2014 The Rust Project Developers
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/rust-num/num-derive/blob/master/LICENSE-APACHE
+
+---
+License notice for num-traits crate
+
+Copyright (c) 2014 The Rust Project Developers
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/rust-num/num-traits/blob/master/LICENSE-APACHE
+
+---
+License notice for once_cell crate
+
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/matklad/once_cell/blob/master/LICENSE-APACHE
+
+---
+License notice for rust-crypto crate
+
+Copyright (c) 2006-2009 Graydon Hoare
+Copyright (c) 2009-2013 Mozilla Foundation
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/DaGenix/rust-crypto/blob/master/LICENSE-APACHE
+
+---
+License notice for rust-embed crate
+
+Copyright (c) 2018 pyros2097
+Licensed under The MIT License (MIT).
+
+Available at
+https://github.com/pyros2097/rust-embed/blob/master/license
+
+---
+License notice for serde crate
+
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/serde-rs/serde/blob/master/LICENSE-APACHE
+
+---
+License notice for serde_yaml crate
+
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/dtolnay/serde-yaml/blob/master/LICENSE-APACHE
+
+---
+License notice for widestring crate
+
+Copyright (c) 2016 Kathryn Long
+Licensed under the Apache License, Version 2.0.
+
+Available at
+https://github.com/starkat99/widestring-rs/blob/master/LICENSE-APACHE

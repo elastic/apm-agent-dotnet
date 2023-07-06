@@ -208,11 +208,13 @@ namespace Elastic.Apm.Model
 
 		private static string GetCulprit(Exception exception, IConfigurationReader configurationReader)
 		{
-			if (exception == null) return DefaultCulprit;
+			if (exception == null)
+				return DefaultCulprit;
 
 			var stackTrace = new StackTrace(exception);
 			var frames = stackTrace.GetFrames();
-			if (frames == null) return DefaultCulprit;
+			if (frames == null)
+				return DefaultCulprit;
 
 			var excludedNamespaces = configurationReader.ExcludedNamespaces;
 			var applicationNamespaces = configurationReader.ApplicationNamespaces;
@@ -221,7 +223,8 @@ namespace Elastic.Apm.Model
 			{
 				var method = frame.GetMethod();
 				var fullyQualifiedTypeName = method.DeclaringType?.FullName ?? "Unknown Type";
-				if (IsInApp(fullyQualifiedTypeName, excludedNamespaces, applicationNamespaces)) return fullyQualifiedTypeName;
+				if (IsInApp(fullyQualifiedTypeName, excludedNamespaces, applicationNamespaces))
+					return fullyQualifiedTypeName;
 			}
 
 			return DefaultCulprit;
@@ -231,7 +234,8 @@ namespace Elastic.Apm.Model
 			IReadOnlyCollection<string> applicationNamespaces
 		)
 		{
-			if (string.IsNullOrEmpty(fullyQualifiedTypeName)) return false;
+			if (string.IsNullOrEmpty(fullyQualifiedTypeName))
+				return false;
 
 			if (applicationNamespaces.Count != 0)
 			{

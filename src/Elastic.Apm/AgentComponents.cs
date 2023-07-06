@@ -6,9 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -22,6 +19,9 @@ using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 #if NET5_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
+#endif
+#if NETFRAMEWORK
+using Elastic.Apm.Config.Net4FullFramework;
 #endif
 
 namespace Elastic.Apm
@@ -49,17 +49,23 @@ namespace Elastic.Apm
 		{
 			try
 			{
+#if NETFRAMEWORK
+				var tempLogger = logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
+				ConfigurationReader = configurationReader
+					?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(tempLogger)
+					?? new AppSettingsConfiguration(tempLogger);
+#else
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfiguration(tempLogger);
+#endif
 				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
-				PrintAgentLogPreamble(Logger, ConfigurationReader);
 				Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
 
 				ConfigurationStore =
-					new ConfigurationStore(new RuntimeConfigurationSnapshot(ConfigurationReader, "local"), Logger);
+					new ConfigurationStore(new RuntimeConfigurationSnapshot(ConfigurationReader), Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
@@ -103,9 +109,9 @@ namespace Elastic.Apm
 				}
 #endif
 				PayloadSender = payloadSender
-				                ?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
-					                ApmServerInfo,
-					                isEnabled: ConfigurationReader.Enabled, serverInfoCallback: serverInfoCallback);
+								?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
+									ApmServerInfo,
+									isEnabled: ConfigurationReader.Enabled, serverInfoCallback: serverInfoCallback);
 
 				if (ConfigurationReader.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
@@ -245,75 +251,14 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (MetricsCollector is IDisposable disposableMetricsCollector) disposableMetricsCollector.Dispose();
+			if (MetricsCollector is IDisposable disposableMetricsCollector)
+				disposableMetricsCollector.Dispose();
 
-			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
+			if (PayloadSender is IDisposable disposablePayloadSender)
+				disposablePayloadSender.Dispose();
 
 			CentralConfigurationFetcher?.Dispose();
 		}
 
-		private static void PrintAgentLogPreamble(IApmLogger logger, IConfigurationReader configurationReader)
-		{
-			if (logger?.Info() != null)
-			{
-				try
-				{
-					var info = logger.Info().Value;
-					info.Log("********************************************************************************");
-					info.Log(
-						$"Elastic APM .NET Agent, version: {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}");
-					info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
-					info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
-					info.Log($"Command line arguments: '{string.Join(", ", Environment.GetCommandLineArgs())}'");
-					info.Log($"Operating System: {RuntimeInformation.OSDescription}");
-					info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
-					info.Log($"Host: {Environment.MachineName}");
-					info.Log($"Time zone: {TimeZoneInfo.Local}");
-					info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
-					info.Log("********************************************************************************");
-					info.Log($"Agent Configuration (via '{configurationReader.GetType()}'):");
-					var configLogger = configurationReader as IConfigurationLoggingPreambleProvider;
-					foreach (var item in ConfigurationLoggingPreamble.ConfigurationItems)
-					{
-						var origin = string.Empty;
-						var value = string.Empty;
-						if (configLogger != null)
-						{
-							var ckv = configLogger.Get(item);
-							origin = ckv.ReadFrom;
-							value = ckv.Value;
-						}
-						else
-						{
-							// The implementation of IConfigurationReader does not support "IConfigurationLoggingPreambleProvider".
-							// Let's log the essential configuration items in that case.
-							if (item.IsEssentialForLogging)
-							{
-								origin = "unknown";
-								value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configurationReader);
-							}
-						}
-
-						if (item.LogAlways || !string.IsNullOrEmpty(value))
-						{
-							if (string.IsNullOrEmpty(value))
-							{
-								origin = "default";
-								value = ConfigurationLoggingPreamble.GetDefaultValueForLogging(item.Id, configurationReader);
-							}
-
-							if (item.NeedsMasking) value = item.NeedsMasking ? Consts.Redacted : value;
-							info.Log($" - {item.NormalizedName}: '{value}' ({origin})");
-						}
-					}
-
-					info.Log("********************************************************************************");
-				}
-				catch (Exception e)
-				{
-					logger?.Warning()?.LogException(e, $"Unexpected exception during {nameof(PrintAgentLogPreamble)}");
-				}
-			}
-		}
 	}
 }

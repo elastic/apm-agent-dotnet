@@ -8,6 +8,7 @@ using Xunit;
 using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 
 // ReSharper disable ImplicitlyCapturedClosure
+#pragma warning disable NullConditionalAssertion
 
 namespace Elastic.Apm.Tests.HelpersTests
 {

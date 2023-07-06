@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +40,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			if (!IsEnabled(level)) return;
+			if (!IsEnabled(level))
+				return;
 
 			_lines.Enqueue(formatter(state, e));
 			_waitHandle.Set();

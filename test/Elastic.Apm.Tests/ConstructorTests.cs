@@ -30,8 +30,8 @@ public class ConstructorTests
 		var logger = agent.Logger as ConsoleLogger;
 
 		logger.Should().NotBeNull();
-		logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
-		logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
+		logger.IsEnabled(LogLevel.Warning).Should().BeTrue();
+		logger.IsEnabled(LogLevel.Information).Should().BeFalse();
 	}
 
 	[Fact]
@@ -144,5 +144,7 @@ public class ConstructorTests
 
 		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 		// ReSharper restore UnassignedGetOnlyAutoProperty
+
+		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }
