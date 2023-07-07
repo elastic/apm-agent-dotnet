@@ -104,6 +104,13 @@ jobs:
           name: 'azure'
           filter: 'FullyQualifiedName~Elastic.Apm.Azure'
 
+      - name: 'Teardown tests infra'
+        if: ${{ always() }}
+        run: |
+          for group in $(az group list --query "[?name | starts_with(@,'${{ env.AZURE_RESOURCE_GROUP_PREFIX }}')]" --out json | jq .[].name --raw-output); do
+            az group delete --name "${group}" --no-wait --yes
+          done
+
   startup-hook-tests:
     runs-on: ubuntu-latest
 
