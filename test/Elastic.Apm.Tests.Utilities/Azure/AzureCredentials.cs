@@ -73,14 +73,12 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 		// ReSharper restore InconsistentNaming
 
 		private static readonly Lazy<AzureCredentials> _lazyCredentials =
-			new Lazy<AzureCredentials>(LoadCredentials, LazyThreadSafetyMode.ExecutionAndPublication);
+			new(LoadCredentials, LazyThreadSafetyMode.ExecutionAndPublication);
 
-		private static AzureCredentials LoadCredentials()
-		{
-			return LoggedIntoAccountWithAzureCli()
+		private static AzureCredentials LoadCredentials() =>
+			LoggedIntoAccountWithAzureCli()
 				? new AzureUserAccount()
 				: new Unauthenticated();
-		}
 
 		/// <summary>
 		/// Checks that Azure CLI is installed and in the PATH, and is logged into an account
