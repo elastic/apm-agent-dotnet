@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests.Utilities.Terraform
 	/// </summary>
 	public class TerraformResources
 	{
-		private static readonly TimeSpan _defaultTimeout = TimeSpan.FromMinutes(10);
+		private static readonly TimeSpan _defaultTimeout = TimeSpan.FromMinutes(15);
 
 		private readonly string _resourceDirectory;
 		private readonly IMessageSink _messageSink;
