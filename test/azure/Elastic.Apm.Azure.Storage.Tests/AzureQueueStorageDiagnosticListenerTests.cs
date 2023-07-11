@@ -23,37 +23,36 @@ namespace Elastic.Apm.Azure.Storage.Tests
 
 		public AzureQueueStorageDiagnosticListenerTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
 		{
+			var logger = new XUnitLogger(LogLevel.Trace, output);
+
 			_environment = environment;
 			_output = output;
-
-			var logger = new XUnitLogger(LogLevel.Trace, output);
 			_sender = new MockPayloadSender(logger);
 			_agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: _sender));
 			_subscription = _agent.Subscribe(new AzureQueueStorageDiagnosticsSubscriber());
 		}
 
 		[AzureCredentialsFact]
-		public async Task Capture_Span_When_Receives_From_Queue()
+		public async Task Capture_Transaction_When_Receive_Messages_From_Queue()
 		{
 			var queueName = Guid.NewGuid().ToString();
 			var client = new QueueClient(_environment.StorageAccountConnectionString, queueName);
 
 			var createResponse = await client.CreateAsync();
-			var sendResponse = await client.SendMessageAsync(nameof(Capture_Span_When_Receives_From_Queue));
+			var sendResponse = await client.SendMessageAsync(nameof(Capture_Transaction_When_Receive_Messages_From_Queue));
 			var receiveResponse = await client.ReceiveMessagesAsync(1);
 
 			AssertTransaction("RECEIVE", queueName);
 		}
 
 		[AzureCredentialsFact]
-		public async Task Capture_Span_When_Receive_From_Queue()
+		public async Task Capture_Transaction_When_Receive_Message_From_Queue()
 		{
 			var queueName = Guid.NewGuid().ToString();
 			var client = new QueueClient(_environment.StorageAccountConnectionString, queueName);
 
 			var createResponse = await client.CreateAsync();
-			var sendResponse = await client.SendMessageAsync(nameof(Capture_Span_When_Receive_From_Queue));
-
+			var sendResponse = await client.SendMessageAsync(nameof(Capture_Transaction_When_Receive_Message_From_Queue));
 			var receiveResponse = await client.ReceiveMessageAsync();
 
 			AssertTransaction("RECEIVE", queueName);
@@ -104,9 +103,8 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			span.Context.Service.Target.Name.Should().Be(queueName);
 
 			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.QueueFullyQualifiedNamespace);
-			destination.Service.Resource.Should().Be($"{AzureQueueStorage.SubType}/{queueName}");
+			span.Context.Destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.QueueFullyQualifiedNamespace);
+			span.Context.Destination.Service.Resource.Should().Be($"{AzureQueueStorage.SubType}/{queueName}");
 		}
 
 		public void Dispose()
