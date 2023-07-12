@@ -67,6 +67,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Context.Message.Should().NotBeNull();
 			span.Context.Message.Queue.Should().NotBeNull();
 			span.Context.Message.Queue.Name.Should().Be(scope.QueueName);
+
+			span.Context.Service.Target.Should().NotBeNull();
+			span.Context.Service.Target.Type.Should().Be(ServiceBus.SubType);
+			span.Context.Service.Target.Name.Should().Be(scope.QueueName);
 		}
 
 		[AzureCredentialsFact]
@@ -98,6 +102,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Context.Message.Should().NotBeNull();
 			span.Context.Message.Queue.Should().NotBeNull();
 			span.Context.Message.Queue.Name.Should().Be(scope.TopicName);
+
+			span.Context.Service.Target.Should().NotBeNull();
+			span.Context.Service.Target.Type.Should().Be(ServiceBus.SubType);
+			span.Context.Service.Target.Name.Should().Be(scope.TopicName);
 		}
 
 		[AzureCredentialsFact]
@@ -131,6 +139,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Context.Message.Should().NotBeNull();
 			span.Context.Message.Queue.Should().NotBeNull();
 			span.Context.Message.Queue.Name.Should().Be(scope.QueueName);
+
+			span.Context.Service.Target.Should().NotBeNull();
+			span.Context.Service.Target.Type.Should().Be(ServiceBus.SubType);
+			span.Context.Service.Target.Name.Should().Be(scope.QueueName);
 		}
 
 		[AzureCredentialsFact]
@@ -164,6 +176,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Context.Message.Should().NotBeNull();
 			span.Context.Message.Queue.Should().NotBeNull();
 			span.Context.Message.Queue.Name.Should().Be(scope.TopicName);
+
+			span.Context.Service.Target.Should().NotBeNull();
+			span.Context.Service.Target.Type.Should().Be(ServiceBus.SubType);
+			span.Context.Service.Target.Name.Should().Be(scope.TopicName);
 		}
 
 		[AzureCredentialsFact]
@@ -195,6 +211,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Context.Message.Should().NotBeNull();
 			span.Context.Message.Queue.Should().NotBeNull();
 			span.Context.Message.Queue.Name.Should().Be(scope.QueueName);
+
+			span.Context.Service.Target.Should().NotBeNull();
+			span.Context.Service.Target.Type.Should().Be(ServiceBus.SubType);
+			span.Context.Service.Target.Name.Should().Be(scope.QueueName);
 		}
 
 		[AzureCredentialsFact]

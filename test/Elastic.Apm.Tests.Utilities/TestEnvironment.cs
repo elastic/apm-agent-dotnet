@@ -8,12 +8,30 @@ using System.Runtime.InteropServices;
 
 namespace Elastic.Apm.Tests.Utilities
 {
+	/// <summary>
+	/// Provides static properties used to identify test environment conditions that may be used to
+	/// conditionally skip tests.
+	/// </summary>
 	public static class TestEnvironment
 	{
+		/// <summary>
+		/// LEGACY: this IsCi check is no longer valid on GitHub Actions.
+		/// </summary>
 		public static bool IsCi { get; }
 
+		/// <summary>
+		/// Will be <see langword="true"/> when the tests are running under GitHub Actions.
+		/// </summary>
+		public static bool IsGitHubActions { get; }
+
+		/// <summary>
+		/// Will be <see langword="true"/> when the tests are running on a Linux OS.
+		/// </summary>
 		public static bool IsLinux { get; }
 
+		/// <summary>
+		/// Will be <see langword="true"/> when the tests are running on a Windows OS.
+		/// </summary>
 		public static bool IsWindows { get; }
 
 		static TestEnvironment()
@@ -21,6 +39,7 @@ namespace Elastic.Apm.Tests.Utilities
 			// TODO this IsCi check is no longer valid, once we are green on Github Action
 			// we should be able to remove all special handling related to this
 			IsCi = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_ID"));
+			IsGitHubActions = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTION"));
 			IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 			IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 		}

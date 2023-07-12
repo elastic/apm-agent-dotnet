@@ -87,7 +87,7 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 			}
 
-			if (!(kv.Value is Activity activity))
+			if (kv.Value is not Activity activity)
 			{
 				Logger.Trace()?.Log("Value is not an activity - exiting");
 				return;
@@ -117,6 +117,8 @@ namespace Elastic.Apm.Azure.Storage
 			if (queueUrl != null)
 				SetDestination(span, destinationAddress, queueName);
 
+			span.Context.Service = new SpanService(new Target(AzureQueueStorage.SubType, queueName));
+
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
 				Logger.Trace()
@@ -140,12 +142,11 @@ namespace Elastic.Apm.Azure.Storage
 
 		private void OnReceiveStart(KeyValuePair<string, object> kv)
 		{
-			if (!(kv.Value is Activity activity))
+			if (kv.Value is not Activity activity)
 			{
 				Logger.Trace()?.Log("Value is not an activity - exiting");
 				return;
 			}
-
 
 			// if we're already processing this activity, ignore it.
 			if (_processingSegments.ContainsKey(activity.Id))
@@ -243,6 +244,8 @@ namespace Elastic.Apm.Azure.Storage
 					span.Name += $" to {queueUrl.QueueName}";
 
 					SetDestination(span, queueUrl.FullyQualifiedNamespace, queueUrl.QueueName);
+
+					span.Context.Service = new SpanService(new Target(AzureQueueStorage.SubType, queueUrl.QueueName));
 				}
 			}
 			else if (segment is ITransaction transaction && !transaction.Name.Contains("RECEIVE from "))
@@ -297,6 +300,8 @@ namespace Elastic.Apm.Azure.Storage
 					}
 
 					SetDestination(span, queueUrl.FullyQualifiedNamespace, queueUrl.QueueName);
+
+					span.Context.Service = new SpanService(new Target(AzureQueueStorage.SubType, queueUrl.QueueName));
 				}
 			}
 			else if (segment is ITransaction transaction
