@@ -100,7 +100,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			if (currentSegment is null)
 				return;
 
-			if (!(kv.Value is Activity activity))
+			if (kv.Value is not Activity activity)
 			{
 				Logger.Trace()?.Log("Value is not an activity - exiting");
 				return;
@@ -138,7 +138,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 		private void OnProcessStart(KeyValuePair<string, object> kv, string action)
 		{
-			if (!(kv.Value is Activity activity))
+			if (kv.Value is not Activity activity)
 			{
 				Logger.Trace()?.Log("Value is not an activity - exiting");
 				return;
@@ -189,7 +189,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 		private void OnReceiveStart(KeyValuePair<string, object> kv, string action)
 		{
-			if (!(kv.Value is Activity activity))
+			if (kv.Value is not Activity activity)
 			{
 				Logger.Trace()?.Log("Value is not an activity - exiting");
 				return;
@@ -229,8 +229,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				var span = ApmAgent.GetCurrentExecutionSegment()
 					.StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action, isExitSpan: true);
 
-				if (queueName != null)
-					span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+				SetMessageAndServiceTarget(queueName, span);
 
 				segment = span;
 			}
@@ -281,7 +280,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
-			if (!(kv.Value is Activity activity))
+			if (kv.Value is not Activity activity)
 			{
 				Logger.Trace()?.Log("Value is not an activity - exiting");
 				return;
@@ -321,8 +320,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				}
 			};
 
-			if (queueName != null)
-				span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+			SetMessageAndServiceTarget(queueName, span);
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
@@ -408,7 +406,6 @@ namespace Elastic.Apm.Azure.ServiceBus
 			if (current == null)
 				return;
 
-
 			// The type of Activity.Links got change across versions.
 			// If different the compiled version is different from the runtime version, we can't use the .Links property
 			// Therefore we fetch the value via reflection
@@ -439,8 +436,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				{
 					var spanLinks = new List<SpanLink>();
 
-					var iEnumerable = links as IEnumerable;
-					if (iEnumerable == null)
+					if (links is not IEnumerable iEnumerable)
 						return;
 
 					foreach (var link in iEnumerable)
@@ -467,6 +463,17 @@ namespace Elastic.Apm.Azure.ServiceBus
 						realSpan.InsertSpanLinkInternal(spanLinks);
 				}
 			}
+		}
+
+		private static void SetMessageAndServiceTarget(string queueName, ISpan span)
+		{
+			if (queueName is not null)
+			{
+				span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+			}
+
+			// queueName may be null here which is fine
+			span.Context.Service = new SpanService(new Target(ServiceBus.SubType, queueName));
 		}
 	}
 }

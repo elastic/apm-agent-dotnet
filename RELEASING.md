@@ -46,7 +46,7 @@ After the new changelog and version have been merged to main, the only thing rem
  git push upstream v<major>.<minor>.<bug>(-<suffix>)?
  ```
 
-The above commands will push the GitHub tag and will trigger the corresponding [CI Build pipeline](Jenkinsfile) which will run all the required stages to satisfy the release is in a good shape, then at the very end of the pipeline there will be an input approval waiting for an UI interaction to release to the NuGet repo. This particular input approval step will notify by email, to the owners of this repo, regarding the expected action to be done for doing the release.
+The above commands will push the GitHub tag and will trigger the corresponding [Github Action](.github/workflows/release-main.yml) which will run all the required stages to satisfy the release is in a good shape, then at the very end of the pipeline there will be an input approval waiting for an UI interaction to release to the NuGet repo. This particular input approval step will notify by email, to the owners of this repo, regarding the expected action to be done for doing the release.
 
 Tag names should start with a `v` prefix.
 
