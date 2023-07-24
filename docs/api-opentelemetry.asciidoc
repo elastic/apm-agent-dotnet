@@ -26,7 +26,7 @@ Currently the bridge is opt-in, so you need to enable it.
 
 If you configured the agent via environment variables, set the `ELASTIC_APM_OPENTELEMETRY_BRIDGE_ENABLED ` environment variable to `true``.
 
-If you configured the agent via the `appsettings.json` file, then set `ElasticApm:EnableOpenTelemetryBridge` to `true`.
+If you configured the agent via the `appsettings.json` file, then set `ElasticApm:OpenTelemetryBridgeEnabled` to `true`.
 
 [source,js]
 ----
@@ -35,7 +35,7 @@ If you configured the agent via the `appsettings.json` file, then set `ElasticAp
     {
       "ServerUrl":  "http://myapmserver:8200",
       "SecretToken":  "apm-server-secret-token",
-      "EnableOpenTelemetryBridge": true
+      "OpenTelemetryBridgeEnabled": true
     }
 }
 ----
