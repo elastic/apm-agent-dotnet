@@ -9,9 +9,4 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <IntermediateOutputPath>$(ProjectDir)</IntermediateOutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="../Jenkinsfile" />
-    
-  </ItemGroup>
-
 </Project>

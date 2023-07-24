@@ -97,11 +97,11 @@ module Main =
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
-            Targets.Target("build-profiler", ["build"; "clean-profiler"], Build.BuildProfiler)
-                        
-            Targets.Target("profiler-integrations", ["build-profiler"], Build.ProfilerIntegrations)
+            Targets.Target("profiler-integrations", Build.ProfilerIntegrations)
             
-            Targets.Target("profiler-zip", ["profiler-integrations"], fun _ ->
+            Targets.Target("build-profiler", ["build"; "profiler-integrations"; "clean-profiler" ], Build.BuildProfiler)
+                        
+            Targets.Target("profiler-zip", ["build-profiler"], fun _ ->
                 
                 printfn "Running profiler-zip..."
                 let projs = !! (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")

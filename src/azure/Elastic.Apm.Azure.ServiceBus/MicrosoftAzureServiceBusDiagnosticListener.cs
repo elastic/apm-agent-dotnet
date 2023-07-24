@@ -170,8 +170,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				var span = ApmAgent.GetCurrentExecutionSegment()
 					.StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action, true);
 
-				if (queueName != null)
-					span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+				SetMessageAndServiceTarget(queueName, span);
 
 				segment = span;
 			}
@@ -247,8 +246,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				}
 			};
 
-			if (queueName != null)
-				span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+			SetMessageAndServiceTarget(queueName, span);
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
@@ -323,10 +321,9 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 		private void FillSpanLinks(PropertyFetcherCollection cachedProperties, IExecutionSegment segment, KeyValuePair<string, object> kv)
 		{
-			var messages = cachedProperties.Fetch(kv.Value, "Messages") as IEnumerable<object>;
-
 			var spanLinks = new List<SpanLink>();
-			if (messages != null)
+
+			if (cachedProperties.Fetch(kv.Value, "Messages") is IEnumerable<object> messages)
 			{
 				foreach (var message in messages)
 				{
@@ -354,6 +351,17 @@ namespace Elastic.Apm.Azure.ServiceBus
 					s.InsertSpanLinkInternal(spanLinks);
 					break;
 			}
+		}
+
+		private static void SetMessageAndServiceTarget(string queueName, ISpan span)
+		{
+			if (queueName is not null)
+			{
+				span.Context.Message = new Message { Queue = new Queue { Name = queueName } };
+			}
+
+			// queueName may be null here which is fine
+			span.Context.Service = new SpanService(new Target(ServiceBus.SubType, queueName));
 		}
 	}
 }

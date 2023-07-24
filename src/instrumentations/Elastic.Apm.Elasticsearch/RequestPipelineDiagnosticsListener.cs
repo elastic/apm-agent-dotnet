@@ -43,6 +43,7 @@ namespace Elastic.Apm.Elasticsearch
 
 				RegisterStatement(span, response);
 				RegisterError(span, response);
+				RegisterHttp(span, response);
 
 				if (response.Success)
 					span.Outcome = Outcome.Success;
@@ -55,9 +56,23 @@ namespace Elastic.Apm.Elasticsearch
 				span.Outcome = Outcome.Failure;
 			}
 
-
 			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 			span.End();
+		}
+
+		private static void RegisterHttp(ISpan span, IApiCallDetails response)
+		{
+			if (span.Context.Http is null)
+			{
+				var http = new Http
+				{
+					Method = response.HttpMethod.GetStringValue()
+				};
+				http.SetUrl(response.Uri);
+				span.Context.Http = http;
+			}
+
+			span.Context.Http.StatusCode = response.HttpStatusCode ?? default;
 		}
 
 		private static void RegisterStatement(ISpan span, IApiCallDetails response)
@@ -138,22 +153,12 @@ namespace Elastic.Apm.Elasticsearch
 			}
 		}
 
-		private static string ToName(string @event)
+		private static string ToName(string @event) => @event switch
 		{
-			switch (@event)
-			{
-				case PingStart:
-				case PingStop:
-					return DiagnosticSources.RequestPipeline.Ping;
-				case SniffStart:
-				case SniffStop:
-					return DiagnosticSources.RequestPipeline.Sniff;
-				case CallStart:
-				case CallStop:
-					return DiagnosticSources.RequestPipeline.CallElasticsearch;
-				default:
-					return @event?.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty);
-			}
-		}
+			PingStart or PingStop => DiagnosticSources.RequestPipeline.Ping,
+			SniffStart or SniffStop => DiagnosticSources.RequestPipeline.Sniff,
+			CallStart or CallStop => ApiConstants.ActionRequest, // For regular calls, align with the spec
+			_ => @event?.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty),
+		};
 	}
 }

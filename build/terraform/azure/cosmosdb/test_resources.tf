@@ -2,7 +2,7 @@ terraform {
 	required_providers {
 		azurerm = {
 			source  = "hashicorp/azurerm"
-			version = "=2.46.0"
+			version = "=3.9.0"
 		}
 	}
 }
@@ -78,6 +78,6 @@ output "endpoint" {
 }
 
 output "primary_master_key" {
-	value = azurerm_cosmosdb_account.cosmos_db_account.primary_master_key
+	value = azurerm_cosmosdb_account.cosmos_db_account.primary_key
 	sensitive = true
 }

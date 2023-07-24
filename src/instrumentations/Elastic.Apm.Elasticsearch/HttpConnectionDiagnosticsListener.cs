@@ -55,20 +55,11 @@ namespace Elastic.Apm.Elasticsearch
 		private const string SendStart = nameof(DiagnosticSources.HttpConnection.SendAndReceiveHeaders) + StartSuffix;
 		private const string SendStop = nameof(DiagnosticSources.HttpConnection.SendAndReceiveHeaders) + StopSuffix;
 
-		private static string ToName(string @event)
+		private static string ToName(string @event) => @event switch
 		{
-			switch (@event)
-			{
-				case ReceiveStart:
-				case ReceiveStop:
-					return DiagnosticSources.HttpConnection.ReceiveBody;
-				case SendStart:
-				case SendStop:
-					return DiagnosticSources.HttpConnection.SendAndReceiveHeaders;
-				default:
-					return @event?.Replace(".Start", string.Empty).Replace(".Stop", string.Empty);
-
-			}
-		}
+			ReceiveStart or ReceiveStop => DiagnosticSources.HttpConnection.ReceiveBody,
+			SendStart or SendStop => DiagnosticSources.HttpConnection.SendAndReceiveHeaders,
+			_ => @event?.Replace(".Start", string.Empty).Replace(".Stop", string.Empty),
+		};
 	}
 }

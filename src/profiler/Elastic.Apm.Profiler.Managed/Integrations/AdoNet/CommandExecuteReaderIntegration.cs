@@ -20,7 +20,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	/// [*]DataReader [Command].ExecuteReader()
 	/// </summary>
 	[InstrumentMySqlAttribute(Method = ExecuteReader, ReturnType = MySql.DataReader)]
-	[InstrumentNpgsql(Method = ExecuteReader, ReturnType = Npgsql.DataReader)]
 	[InstrumentOracleManagedDataAccess(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
 	[InstrumentOracleManagedDataAccessCore(Method = ExecuteReader, ReturnType = OracleManagedDataAccess.DataReader)]
 	[InstrumentMicrosoftDataSqlite(Method = ExecuteReader, ReturnType = MicrosoftDataSqlite.DataReader)]

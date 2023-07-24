@@ -24,7 +24,7 @@ include::./api-opentelemetry.asciidoc[]
 
 include::./metrics.asciidoc[]
 
-include::./log-correlation.asciidoc[]
+include::./logs.asciidoc[]
 
 include::./performance-tuning.asciidoc[]
 
@@ -33,3 +33,5 @@ include::./troubleshooting.asciidoc[]
 include::./upgrading.asciidoc[]
 
 include::./release-notes.asciidoc[]
+
+include::./redirects.asciidoc[]
