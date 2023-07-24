@@ -17,7 +17,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 {
 	public class ProfilingSessionTests
 	{
-		[DisabledOnWindowsDockerFact]
+		[DisabledOnWindowsGitHubActionsDockerFact]
 		public async Task Capture_Redis_Commands_On_Transaction()
 		{
 			await using var container = new RedisBuilder().Build();
@@ -69,10 +69,13 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 			foreach (var transaction in transactions)
 				payloadSender.Spans.Count(s => s.TransactionId == transaction.Id).Should().BeGreaterOrEqualTo(minSpansPerTransaction);
 
+			foreach (var span in payloadSender.Spans)
+				AssertSpan(span);
+
 			await container.StopAsync();
 		}
 
-		[DisabledOnWindowsDockerFact]
+		[DisabledOnWindowsGitHubActionsDockerFact]
 		public async Task Capture_Redis_Commands_On_Span()
 		{
 			await using var container = new RedisBuilder().Build();
@@ -146,11 +149,33 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 				var spansOfParentSpan = transactionSpans.Where(s => s.ParentId == parentSpanId).ToList();
 
 				spansOfParentSpan.Should().HaveCount(spansPerParentSpan);
-				foreach (var span in spansOfParentSpan)
-					span.Context?.Db?.Statement.Should().MatchRegex(@"[G|S]ET string\d");
+
+				foreach (var span in transactionSpans.Where(s => !s.Name.StartsWith("parent", StringComparison.Ordinal)))
+					AssertSpan(span);
 			}
 
 			await container.StopAsync();
+		}
+
+		private static void AssertSpan(ISpan span)
+		{
+			span.Type.Should().Be(ApiConstants.TypeDb);
+			span.Name.Should().MatchRegex(@"[G|S]ET");
+			span.Subtype.Should().Be(ApiConstants.SubTypeRedis);
+			span.Action.Should().Be(ApiConstants.ActionQuery);
+
+			span.Context.Db.Should().NotBeNull();
+			span.Context.Db.Type.Should().Be(ApiConstants.SubTypeRedis);
+			span.Context.Db.Instance.Should().BeNull();
+			span.Context.Db.Statement.Should().BeNull();
+
+			span.Context.Destination.Should().NotBeNull();
+			span.Context.Destination.Address.Should().NotBeNullOrEmpty();
+			span.Context.Destination.Port.Should().BeGreaterThan(0).And.BeLessThan(65536);
+
+			span.Context.Service.Target.Should().NotBeNull();
+			span.Context.Service.Target.Type.Should().Be(ApiConstants.SubTypeRedis);
+			span.Context.Service.Target.Name.Should().BeNull();
 		}
 	}
 }

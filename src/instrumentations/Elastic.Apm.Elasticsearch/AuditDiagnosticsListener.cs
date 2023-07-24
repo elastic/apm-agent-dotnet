@@ -22,7 +22,7 @@ namespace Elastic.Apm.Elasticsearch
 
 			if (@event.EndsWith(StartSuffix) && TryStartElasticsearchSpan(name, out _, audit.Node?.Uri))
 				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
-			else if (@event.EndsWith(StopSuffix) && TryGetCurrentElasticsearchSpan(out var span, audit.Node?.Uri))
+			else if (@event.EndsWith(StopSuffix) && TryGetCurrentElasticsearchSpan(out var span))
 			{
 				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 				span.End();
