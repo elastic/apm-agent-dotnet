@@ -26,7 +26,7 @@ namespace Elastic.Apm.Config
 			public const bool CaptureHeaders = true;
 			public const bool CentralConfig = true;
 			public const string CloudProvider = SupportedValues.CloudProviderAuto;
-			public const bool OpenTelemetryBridgeEnabled = false;
+			public const bool OpenTelemetryBridgeEnabled = true;
 			public const string ExitSpanMinDuration = "0ms";
 			public const int ExitSpanMinDurationInMilliseconds = 0;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
