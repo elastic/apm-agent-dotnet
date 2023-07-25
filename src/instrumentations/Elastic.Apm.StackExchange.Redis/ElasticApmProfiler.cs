@@ -22,8 +22,7 @@ namespace Elastic.Apm.StackExchange.Redis
 	/// </summary>
 	public class ElasticApmProfiler
 	{
-		private readonly ConcurrentDictionary<string, ProfilingSession> _executionSegmentSessions =
-			new ConcurrentDictionary<string, ProfilingSession>();
+		private readonly ConcurrentDictionary<string, ProfilingSession> _executionSegmentSessions = new();
 
 		private readonly Lazy<IApmLogger> _logger;
 		private readonly Lazy<IApmAgent> _agent;
@@ -148,6 +147,7 @@ namespace Elastic.Apm.StackExchange.Redis
 					segmentType, executionSegment.Id);
 			}
 		}
+
 		private static void ProcessCommand(IProfiledCommand profiledCommand, IExecutionSegment executionSegment)
 		{
 			var name = GetCommand(profiledCommand);
@@ -161,8 +161,6 @@ namespace Elastic.Apm.StackExchange.Redis
 			{
 				span.Context.Db = new Database
 				{
-					Instance = profiledCommand.Db.ToString(CultureInfo.InvariantCulture),
-					Statement = GetCommandAndKey(profiledCommand) ?? name,
 					Type = ApiConstants.SubTypeRedis
 				};
 
@@ -192,9 +190,10 @@ namespace Elastic.Apm.StackExchange.Redis
 				// profiled commands are always successful
 				span.Outcome = Outcome.Success;
 
+				// https://github.com/elastic/apm-agent-dotnet/issues/2107
 				// TODO: clear the raw stacktrace as it won't be representative of the call stack at
 				// the point at which the call to redis happens, and therefore misleading to include
-			}, ApiConstants.SubTypeRedis, "query", true);
+			}, ApiConstants.SubTypeRedis, ApiConstants.ActionQuery, true);
 		}
 
 		private static string GetCommand(IProfiledCommand profiledCommand) =>

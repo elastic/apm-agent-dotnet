@@ -94,9 +94,9 @@ Of course these calls don't have to be in the same method. The concept described
 [[supported-opentelemetry-implementations]]
 ==== Supported OpenTelemetry implementations
 
-OpenTelemetry in .NET is implemented via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API] and there is an https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry shim] which follows the OpenTelemetry specification more closer. This shim is built on top of the Activity API.
+OpenTelemetry in .NET is implemented via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API] and there is an https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry shim] which follows the OpenTelemetry specification more closer. This shim is built on top of the Activity API.
 
-The OpenTelemetry bridge in the Elastic .NET APM Agent targets the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API]. Since the https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry .NET shim] builds on top of the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0[Activity API], the shim is implicitly supported as well, although we don't directly test it, because the Activity API is the recommended OpenTelemetry API for .NET.
+The OpenTelemetry bridge in the Elastic .NET APM Agent targets the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. Since the https://opentelemetry.io/docs/instrumentation/net/shim/[OpenTelemetry .NET shim] builds on top of the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API], the shim is implicitly supported as well, although we don't directly test it, because the Activity API is the recommended OpenTelemetry API for .NET.
 
 [float]
 [[otel-caveats]]

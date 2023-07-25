@@ -41,11 +41,15 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			_payloadSender = new MockPayloadSender();
 			_apmAgent = new ApmAgent(new AgentComponents(
 				payloadSender: _payloadSender,
-				configurationReader: new MockConfiguration(exitSpanMinDuration: "0", centralConfig: "false"),
+				configurationReader: new MockConfiguration(
+					exitSpanMinDuration: "0",
+					centralConfig: "false",
+					// Ensure we always capture (and do not throw away) the stack trace
+					// when using this configuration
+					spanStackTraceMinDurationInMilliseconds: "0"),
 				logger: new UnitTestLogger(output, LogLevel.Trace)
 			));
 			_apmAgent.Subscribe(new EfCoreDiagnosticsSubscriber());
-
 		}
 
 		public void Dispose()
@@ -133,6 +137,28 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			_payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
 			_payloadSender.FirstSpan.StackTrace.Should()
 				.Contain(n => n.Function.Contains(nameof(EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext)));
+		}
+
+		[Fact]
+		public async Task EfCoreDiagnosticListener_ShouldNotCaptureStackTrace_WhenDurationLessThanConfiguredLimit()
+		{
+			await using var context = new FakeDbContext(_options);
+
+			var apmAgent = new ApmAgent(new AgentComponents(
+				payloadSender: _payloadSender,
+				configurationReader: new MockConfiguration(
+					exitSpanMinDuration: "0",
+					centralConfig: "false",
+					// used to test that a stack trace captured on start is thrown away when less than configured duration
+					spanStackTraceMinDurationInMilliseconds: "1000"),
+				logger: new NoopLogger()
+			));
+			apmAgent.Subscribe(new EfCoreDiagnosticsSubscriber());
+
+			await apmAgent.Tracer.CaptureTransaction("transaction", "type",
+				async _ => await context.Data.FirstOrDefaultAsync());
+
+			_payloadSender.FirstSpan.RawStackTrace.Should().BeNull();
 		}
 	}
 }

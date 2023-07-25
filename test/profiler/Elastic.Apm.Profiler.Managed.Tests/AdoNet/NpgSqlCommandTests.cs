@@ -42,7 +42,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 					yield return new object[] { "net462", npgSqlVersion };
 
 				npgSqlVersion = "6.0.2";
+				yield return new object[] { "net7.0", npgSqlVersion };
 
+				npgSqlVersion = "7.0.2";
 				yield return new object[] { "net7.0", npgSqlVersion };
 			}
 		}

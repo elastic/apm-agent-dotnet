@@ -33,7 +33,6 @@ jobs:
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
       with:
-          azure: 'true'
           rust: 'true'
           
     - name: Format
@@ -56,8 +55,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
-        with:
-          azure: 'true'
           
       - name: Build
         shell: bash
@@ -69,12 +66,54 @@ jobs:
             name: 'unit'
             filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
             
+  azure-tests:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'pull_request'
+      || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          azure: 'true'
+
+      - name: Build
+        shell: bash
+        run: dotnet build -c Release --verbosity minimal
+
+      - name: 'Read credentials'
+        uses: hashicorp/vault-action@v2.7.1
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          method: approle
+          secrets: |
+            secret/apm-team/ci/apm-agent-dotnet-azure client_id | ARM_CLIENT_ID ;
+            secret/apm-team/ci/apm-agent-dotnet-azure client_secret | ARM_CLIENT_SECRET ;
+            secret/apm-team/ci/apm-agent-dotnet-azure subscription_id | ARM_SUBSCRIPTION_ID ;
+            secret/apm-team/ci/apm-agent-dotnet-azure tenant_id | ARM_TENANT_ID
+
+      - name: 'Login to Azure'
+        run: |
+          az login --service-principal --username ${{ env.ARM_CLIENT_ID }} --password ${{ env.ARM_CLIENT_SECRET }} --tenant ${{ env.ARM_TENANT_ID }}
+          az account set --subscription ${{ env.ARM_SUBSCRIPTION_ID }}
+          echo "AZURE_RESOURCE_GROUP_PREFIX=ci-dotnet-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
+
       - name: 'Tests: Azure'
         uses: ./.github/workflows/test
         with:
           name: 'azure'
           filter: 'FullyQualifiedName~Elastic.Apm.Azure'
-  
+
+      - name: 'Teardown tests infra'
+        if: ${{ always() }}
+        run: |
+          for group in $(az group list --query "[?name | starts_with(@,'${{ env.AZURE_RESOURCE_GROUP_PREFIX }}')]" --out json | jq .[].name --raw-output); do
+            az group delete --name "${group}" --no-wait --yes
+          done
+
   startup-hook-tests:
     runs-on: ubuntu-latest
 

@@ -73,35 +73,12 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 		// ReSharper restore InconsistentNaming
 
 		private static readonly Lazy<AzureCredentials> _lazyCredentials =
-			new Lazy<AzureCredentials>(LoadCredentials, LazyThreadSafetyMode.ExecutionAndPublication);
+			new(LoadCredentials, LazyThreadSafetyMode.ExecutionAndPublication);
 
-		private static AzureCredentials LoadCredentials()
-		{
-			if (TestEnvironment.IsCi)
-			{
-				var credentialsFile = Path.Combine(SolutionPaths.Root, ".credentials.json");
-				if (!File.Exists(credentialsFile))
-					return new Unauthenticated();
-
-				try
-				{
-					using var fileStream = new FileStream(credentialsFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-					using var streamReader = new StreamReader(fileStream);
-					using var jsonTextReader = new JsonTextReader(streamReader);
-					var serializer = new JsonSerializer();
-					return serializer.Deserialize<ServicePrincipal>(jsonTextReader);
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e);
-					return new Unauthenticated();
-				}
-			}
-
-			return LoggedIntoAccountWithAzureCli()
+		private static AzureCredentials LoadCredentials() =>
+			LoggedIntoAccountWithAzureCli()
 				? new AzureUserAccount()
 				: new Unauthenticated();
-		}
 
 		/// <summary>
 		/// Checks that Azure CLI is installed and in the PATH, and is logged into an account

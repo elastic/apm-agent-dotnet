@@ -8,7 +8,7 @@ inputs:
     required: false
     default: "false"
   azure:
-      description: 'Install azure functions tool chain ("true" or "false"'
+      description: 'Install azure functions tool chain ("true" or "false")'
       required: false
       default: "false"
 

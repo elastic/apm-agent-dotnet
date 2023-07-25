@@ -87,8 +87,7 @@ namespace Elastic.Apm.Model
 			Type = type;
 			Links = links;
 
-			if (_parentSpan != null)
-				_parentSpan._childDurationTimer.OnChildStart(Timestamp);
+			_parentSpan?._childDurationTimer.OnChildStart(Timestamp);
 
 			ParentId = parentId;
 			TraceId = traceId;
@@ -112,7 +111,7 @@ namespace Elastic.Apm.Model
 					// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the
 					// System.Net.Http.HttpRequestOut.Stop
 					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
-					// capture the stacktrace is .Start
+					// capture the stacktrace in .Start
 					if (captureStackTraceOnStart && IsCaptureStackTraceOnStartEnabled())
 						RawStackTrace = new StackTrace(true);
 				}
@@ -153,21 +152,27 @@ namespace Elastic.Apm.Model
 			}
 			return false;
 		}
+
 		internal bool IsCaptureStackTraceOnEndEnabled()
 		{
 			if (Configuration.StackTraceLimit != 0 && RawStackTrace == null)
 			{
-				if (UseLegacyCaptureStackTraceSetting())
-				{
-					return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
-						   (Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
-							Configuration.SpanFramesMinDurationInMilliseconds < 0);
-				}
-
-				return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
-					   Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
+				return DurationRequiresCaptureStackTrace();
 			}
 			return false;
+		}
+
+		private bool DurationRequiresCaptureStackTrace()
+		{
+			if (UseLegacyCaptureStackTraceSetting())
+			{
+				return Configuration.SpanFramesMinDurationInMilliseconds != 0 &&
+					(Duration >= Configuration.SpanFramesMinDurationInMilliseconds ||
+						Configuration.SpanFramesMinDurationInMilliseconds < 0);
+			}
+
+			return Configuration.SpanStackTraceMinDurationInMilliseconds >= 0 &&
+					Duration >= Configuration.SpanStackTraceMinDurationInMilliseconds;
 		}
 #pragma warning restore CS0618
 
@@ -465,6 +470,11 @@ namespace Elastic.Apm.Model
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
+				// If we recorded the stack trace on start, but the duration of the span does not require
+				// inclusion of the stack trace, remove it.
+				if (RawStackTrace is not null && !DurationRequiresCaptureStackTrace())
+					RawStackTrace = null;
+
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (IsCaptureStackTraceOnEndEnabled())
