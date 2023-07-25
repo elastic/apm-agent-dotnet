@@ -84,8 +84,9 @@ namespace Elastic.Apm.Helpers
 						// FileName is either the .cs file or the assembly location as fallback
 						capturedStackFrame.FileName =
 							string.IsNullOrWhiteSpace(fileName)
-								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) ? "n/a" :
-								frame.GetMethod()?.GetType().Assembly.Location
+								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location)
+									? "n/a"
+									: frame.GetMethod()?.GetType().Assembly.Location
 								: fileName;
 
 						capturedStackFrame.ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className;
@@ -97,9 +98,8 @@ namespace Elastic.Apm.Helpers
 			catch (Exception e)
 			{
 				logger.Warning()?.LogException(e, "Failed capturing stacktrace for {ApmContext}", dbgCapturingFor);
-				foreach(var frame in capturedFrames)
+				foreach (var frame in capturedFrames)
 					logger.Trace()?.Log("{MethodName}, {lineNo}", frame.Function, frame.LineNo);
-
 			}
 
 			return capturedFrames;
