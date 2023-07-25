@@ -49,23 +49,12 @@ namespace Elastic.Apm
 		{
 			try
 			{
-#if NETFRAMEWORK
-				var tempLogger = logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
-				ConfigurationReader = configurationReader
-					?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(tempLogger)
-					?? new AppSettingsConfiguration(tempLogger);
-#else
-				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
-				ConfigurationReader = configurationReader ?? new EnvironmentConfiguration(tempLogger);
-#endif
-				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel), ConfigurationReader.LogLevel);
-				Service = Service.GetDefaultService(ConfigurationReader, Logger);
+				var config = DetermineConfiguration(logger, configurationReader);
 
-				var systemInfoHelper = new SystemInfoHelper(Logger);
-				var system = systemInfoHelper.GetSystemInfo(ConfigurationReader.HostName);
+				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(config.LogLevel), config.LogLevel);
+				ConfigurationStore = new ConfigurationStore(new RuntimeConfigurationSnapshot(config), Logger);
 
-				ConfigurationStore =
-					new ConfigurationStore(new RuntimeConfigurationSnapshot(ConfigurationReader), Logger);
+				Service = Service.GetDefaultService(Configuration, Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
@@ -75,7 +64,7 @@ namespace Elastic.Apm
 
 #if NET5_0_OR_GREATER
 				ElasticActivityListener activityListener = null;
-				if (ConfigurationReader.OpenTelemetryBridgeEnabled)
+				if (Configuration.OpenTelemetryBridgeEnabled)
 				{
 					activityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 
@@ -108,12 +97,15 @@ namespace Elastic.Apm
 					};
 				}
 #endif
+				var systemInfoHelper = new SystemInfoHelper(Logger);
+				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName);
+
 				PayloadSender = payloadSender
 								?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
 									ApmServerInfo,
-									isEnabled: ConfigurationReader.Enabled, serverInfoCallback: serverInfoCallback);
+									isEnabled: Configuration.Enabled, serverInfoCallback: serverInfoCallback);
 
-				if (ConfigurationReader.Enabled)
+				if (Configuration.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
 				SubscribedListeners = new HashSet<Type>();
@@ -124,7 +116,7 @@ namespace Elastic.Apm
 					breakdownMetricsProvider);
 
 #if NET5_0_OR_GREATER
-				if (ConfigurationReader.OpenTelemetryBridgeEnabled)
+				if (Configuration.OpenTelemetryBridgeEnabled)
 				{
 					// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version
 					if (ApmServerInfo.Version == null || ApmServerInfo?.Version == new ElasticVersion(0, 0, 0, null))
@@ -148,7 +140,7 @@ namespace Elastic.Apm
 				}
 #endif
 
-				if (ConfigurationReader.Enabled)
+				if (Configuration.Enabled)
 				{
 					var agentFeatures = AgentFeaturesProvider.Get(Logger);
 					//
@@ -183,6 +175,19 @@ namespace Elastic.Apm
 			{
 				Logger.Error()?.LogException(e, "Failed initializing agent.");
 			}
+		}
+
+		private static IConfigurationReader DetermineConfiguration(IApmLogger logger, IConfigurationReader configurationReader)
+		{
+#if NETFRAMEWORK
+			var localLogger = logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
+			return configurationReader
+				?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(localLogger)
+				?? new AppSettingsConfiguration(localLogger);
+#else
+			var localLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+			return configurationReader ?? new EnvironmentConfiguration(localLogger);
+#endif
 		}
 
 		//
@@ -234,7 +239,10 @@ namespace Elastic.Apm
 
 		internal Tracer TracerInternal { get; }
 
-		public IConfigurationReader ConfigurationReader { get; }
+		[Obsolete("Please use Configuration property instead")]
+		public IConfigurationReader ConfigurationReader => Configuration;
+
+		public IConfigurationReader Configuration => ConfigurationStore.CurrentSnapshot;
 
 		public IApmLogger Logger { get; }
 

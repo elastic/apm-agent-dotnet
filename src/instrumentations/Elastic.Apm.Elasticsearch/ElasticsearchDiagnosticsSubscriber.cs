@@ -20,7 +20,7 @@ namespace Elastic.Apm.Elasticsearch
 		{
 			var composite = new CompositeDisposable();
 
-			if (!agentComponents.ConfigurationReader.Enabled)
+			if (!agentComponents.Configuration.Enabled)
 				return composite;
 
 			var subscriber = new DiagnosticInitializer(agentComponents, new IDiagnosticListener[]

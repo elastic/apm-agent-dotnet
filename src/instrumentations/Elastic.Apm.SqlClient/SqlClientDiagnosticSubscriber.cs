@@ -19,7 +19,7 @@ namespace Elastic.Apm.SqlClient
 		{
 			var retVal = new CompositeDisposable();
 
-			if (!agentComponents.ConfigurationReader.Enabled)
+			if (!agentComponents.Configuration.Enabled)
 				return retVal;
 
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet)

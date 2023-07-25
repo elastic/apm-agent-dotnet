@@ -29,7 +29,7 @@ namespace Elastic.Apm
 		public static IDisposable Subscribe(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
 		{
 			var disposable = new CompositeDisposable();
-			if (!agent.ConfigurationReader.Enabled || subscribers is null || subscribers.Length == 0)
+			if (!agent.Configuration.Enabled || subscribers is null || subscribers.Length == 0)
 				return disposable;
 
 			foreach (var subscriber in subscribers)

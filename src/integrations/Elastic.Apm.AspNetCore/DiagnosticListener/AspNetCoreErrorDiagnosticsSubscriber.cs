@@ -20,7 +20,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		public IDisposable Subscribe(IApmAgent agent)
 		{
 			var retVal = new CompositeDisposable();
-			if (!agent.ConfigurationReader.Enabled)
+			if (!agent.Configuration.Enabled)
 				return retVal;
 
 			var subscriber = new DiagnosticInitializer(agent, new AspNetCoreErrorDiagnosticListener(agent));

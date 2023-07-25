@@ -116,7 +116,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//test transaction.context.response
 			transaction.Context.Response.StatusCode.Should().Be(200);
-			if (_agent.ConfigurationReader.CaptureHeaders)
+			if (_agent.Configuration.CaptureHeaders)
 			{
 				transaction.Context.Response.Headers.Should().NotBeNull();
 				transaction.Context.Response.Headers.Should().NotBeEmpty();
@@ -140,7 +140,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transaction.Context.Request.Url.HostName.Should().Be("localhost");
 			transaction.Context.Request.Url.Protocol.Should().Be("HTTP");
 
-			if (_agent.ConfigurationReader.CaptureHeaders)
+			if (_agent.Configuration.CaptureHeaders)
 			{
 				transaction.Context.Request.Headers.Should().NotBeNull();
 				transaction.Context.Request.Headers.Should().NotBeEmpty();
@@ -268,13 +268,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//test transaction.context.response
 			transaction.Context.Response.StatusCode.Should().Be(200);
-			if (_agent.ConfigurationReader.CaptureHeaders)
+			if (_agent.Configuration.CaptureHeaders)
 			{
 				transaction.Context.Response.Headers.Should().NotBeNull();
 				transaction.Context.Response.Headers.Should().NotBeEmpty();
 			}
 
-			if (_agent.ConfigurationReader.CaptureBody != "off")
+			if (_agent.Configuration.CaptureBody != "off")
 			{
 				transaction.Context.Request.Body.Should().NotBeNull();
 				transaction.Context.Request.Body.Should().Be(body);
@@ -295,7 +295,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transaction.Context.Request.Url.HostName.Should().Be("localhost");
 			transaction.Context.Request.Url.Protocol.Should().Be("HTTP");
 
-			if (_agent.ConfigurationReader.CaptureHeaders)
+			if (_agent.Configuration.CaptureHeaders)
 			{
 				transaction.Context.Request.Headers.Should().NotBeNull();
 				transaction.Context.Request.Headers.Should().NotBeEmpty();

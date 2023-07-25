@@ -69,7 +69,7 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			if (!agent.ConfigurationReader.Enabled)
+			if (!agent.Configuration.Enabled)
 			{
 				if (!Agent.IsConfigured)
 					Agent.Setup(agent);
