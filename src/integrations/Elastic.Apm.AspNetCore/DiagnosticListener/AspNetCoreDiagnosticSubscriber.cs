@@ -15,7 +15,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			agent.Logger.Debug()?.Log($"{nameof(AspNetCoreDiagnosticSubscriber)} starting to subscribe");
 
 			var retVal = new CompositeDisposable();
-			if (!agent.ConfigurationReader.Enabled)
+			if (!agent.Configuration.Enabled)
 				return retVal;
 
 			var subscriber = new DiagnosticInitializer(agent, new AspNetCoreDiagnosticListener(agent as ApmAgent));

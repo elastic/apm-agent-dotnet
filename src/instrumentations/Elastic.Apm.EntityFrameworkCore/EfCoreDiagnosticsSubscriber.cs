@@ -19,7 +19,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{
 			var retVal = new CompositeDisposable();
-			if (!agentComponents.ConfigurationReader.Enabled)
+			if (!agentComponents.Configuration.Enabled)
 				return retVal;
 
 			var subscriber = new DiagnosticInitializer(agentComponents, new EfCoreDiagnosticListener(agentComponents));
