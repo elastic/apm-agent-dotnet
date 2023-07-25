@@ -718,7 +718,7 @@ namespace Elastic.Apm.Tests
 
 			var agentComponents = new AgentComponents(
 				logger,
-				new MockConfiguration(metricsInterval: metricsInterval ?? "1s"),
+				new MockConfiguration(metricsInterval: metricsInterval ?? "1s", openTelemetryBridgeEnabled: "false"),
 				new NoopPayloadSender(),
 				new FakeMetricsCollector(), //metricsCollector will be set in AgentComponents.ctor
 				new CurrentExecutionSegmentsContainer(),
