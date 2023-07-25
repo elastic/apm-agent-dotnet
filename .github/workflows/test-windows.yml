@@ -67,7 +67,7 @@ jobs:
   profiler-tests:
     runs-on: windows-2022
     # Disable profiler tests for now
-    if: ${{ false }} 
+    # if: ${{ false }} 
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap Action Workspace
