@@ -37,7 +37,6 @@ runs:
       
     - name: "Test Report Summary: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       uses: phoenix-actions/test-reporting@v12
-      id: "test-report-${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       if: success() || failure()
       with:
         name: "${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }} Tests"
