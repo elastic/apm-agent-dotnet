@@ -37,10 +37,10 @@ runs:
       
     - name: "Test Report Summary: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       uses: phoenix-actions/test-reporting@v12
-      id: test-report-${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}
+      id: "test-report-${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       if: success() || failure()
       with:
-        name: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }} Tests
+        name: "${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }} Tests"
         path: "junit-*.xml"
         reporter: java-junit
         output-to: 'step-summary'
@@ -49,5 +49,5 @@ runs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       with:
-          name: test-results-${{ runner.os == 'Linux' && 'linux' || 'windows' }}
+          name: "test-results-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
           path: build/output/junit-*.xml
