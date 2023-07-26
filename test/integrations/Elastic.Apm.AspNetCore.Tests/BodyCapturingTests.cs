@@ -25,6 +25,7 @@ using Newtonsoft.Json.Serialization;
 using SampleAspNetCoreApp;
 using SampleAspNetCoreApp.Controllers;
 using Xunit;
+using static Elastic.Apm.Config.ConfigConsts.SupportedValues;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -49,6 +50,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public Task DisposeAsync() => _sutEnv?.DisposeAsync();
 
+		private MockConfiguration CreateConfiguration(string captureBody = CaptureBodyAll) =>
+			new (new NoopLogger(), captureBody: captureBody, openTelemetryBridgeEnabled: "false");
+
 		/// <summary>
 		/// Calls <see cref="HomeController.Send(BaseReportFilter{SendMessageFilter})" />.
 		/// That method returns HTTP 500 in case the request body is null in the method, otherwise HTTP 200.
@@ -58,7 +62,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task ComplexDataSendCaptureBody()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			// build test data, which we send to the sample app
 			var data = new BaseReportFilter<SendMessageFilter>
@@ -89,7 +93,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Not_Error_When_Large_File()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			using (var tempFile = new TempFile())
 			{
@@ -123,7 +127,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Stream()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var json = JsonConvert.SerializeObject(new { key1 = "value1" });
 			var count = Encoding.UTF8.GetByteCount(json);
@@ -147,7 +151,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Stream_Up_To_MaxLength()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var jObject = new JObject();
 			var charLength = 0;
@@ -185,7 +189,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Form()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var formValues = new List<KeyValuePair<string, string>>
 			{
@@ -209,7 +213,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Form_Up_To_MaxLength()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var charLength = 0;
 			var formValues = new List<KeyValuePair<string, string>>();
@@ -241,7 +245,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task ApmMiddleware_ShouldSkipCapturing_WhenInvalidContentType()
 		{
 			// Arrange
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
+			var sutEnv = StartSutEnv(CreateConfiguration(CaptureBodyErrors));
 
 			// build test data, which we send to the sample app
 			var data = new BaseReportFilter<SendMessageFilter>
@@ -277,7 +281,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				ConfigConsts.DefaultValues.CaptureBodyContentTypes + ", " + MyCustomContentType
 			};
 
-			foreach (var captureBody in ConfigConsts.SupportedValues.CaptureBodySupportedValues)
+			foreach (var captureBody in CaptureBodySupportedValues)
 			{
 				foreach (var captureBodyContentTypes in captureBodyContentTypesVariants)
 				{
@@ -357,12 +361,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 				if (!configSnapshot.CaptureBodyContentTypes.Contains(MyCustomContentType))
 					return false;
 
-				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyOff))
+				if (configSnapshot.CaptureBody.Equals(CaptureBodyOff))
 					return false;
-				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll))
+				if (configSnapshot.CaptureBody.Equals(CaptureBodyAll))
 					return true;
 
-				return isError || configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions);
+				return isError || configSnapshot.CaptureBody.Equals(CaptureBodyTransactions);
 			}
 
 			// ReSharper disable once ImplicitlyCapturedClosure
