@@ -30,12 +30,22 @@ runs:
               ${{ inputs.framework != '' && format('-f {0}', inputs.framework) || '' }} \
               --logger:"junit;LogFilePath=${GITHUB_WORKSPACE}/build/output/junit-${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
 
-    - name: Remove skipped assemblies ${{ inputs.name }}
+    - name: "Test Report Clean: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }"
       shell: bash
       if: success() || failure()
       run: find ./build/output/junit-* -exec grep -q '<testsuites />' '{}' \; -print
+      
+    - name: "Test Report Summary: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }"
+      uses: phoenix-actions/test-reporting@v12
+      id: test-report-${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }
+      if: success() || failure()
+      with:
+        name: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' } Tests
+        path: "junit-*.xml"
+        reporter: java-junit
+        output-to: 'step-summary'
 
-    - name: Store test results
+    - name: "Test Report Store: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }"
       if: success() || failure()
       uses: actions/upload-artifact@v3
       with:
