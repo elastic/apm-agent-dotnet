@@ -33,14 +33,14 @@ runs:
     - name: "Test Report Clean: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       shell: bash
       if: success() || failure()
-      run: find ./build/output/junit-* -exec grep -q '<testsuites />' '{}' \; -print
+      run: find ./build/output/junit-* -exec grep -q '<testsuites />' '{}' \; -delete
       
     - name: "Test Report Summary: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       uses: phoenix-actions/test-reporting@v12
       if: success() || failure()
       with:
-        name: "${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }} Tests"
-        path: "junit-*.xml"
+        name: " Tests: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
+        path: build/output/junit-*.xml
         reporter: java-junit
         output-to: 'step-summary'
 
