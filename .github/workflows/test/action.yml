@@ -28,11 +28,28 @@ runs:
               --verbosity minimal \
               ${{ inputs.filter != '' && format('--filter "{0}"', inputs.filter) || '' }} \
               ${{ inputs.framework != '' && format('-f {0}', inputs.framework) || '' }} \
-              --logger:"junit;LogFilePath=${GITHUB_WORKSPACE}/build/output/junit-${{ runner.os == 'Linux' && 'linux' || 'windows' }}-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+              --logger:"junit;LogFilePath=${GITHUB_WORKSPACE}/build/output/junit-${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
 
-    - name: Store test results
+    - name: "Test Report Clean: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
+      shell: bash
+      if: success() || failure()
+      run: find ./build/output/junit-* -exec grep -q '<testsuites />' '{}' \; -delete
+      
+    - name: "Test Report Summary: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
+      uses: phoenix-actions/test-reporting@v12
+      if: success() || failure()
+      with:
+        name: " Tests: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
+        path: build/output/junit-*.xml
+        reporter: java-junit
+        output-to: 'step-summary'
+        fail-on-error: 'false'
+        list-suites: 'failed'
+        list-tests: 'failed'
+
+    - name: "Test Report Store: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       if: success() || failure()
       uses: actions/upload-artifact@v3
       with:
-          name: test-results-${{ runner.os == 'Linux' && 'linux' || 'windows' }}
+          name: "test-results-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
           path: build/output/junit-*.xml

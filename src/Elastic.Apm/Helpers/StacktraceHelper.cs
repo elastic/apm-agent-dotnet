@@ -46,7 +46,7 @@ namespace Elastic.Apm.Helpers
 			// the StackTraceLimit feature takes the top n frames, so unfortunately we currently capture the whole stack trace and just take
 			// the top `configurationReader.StackTraceLimit` frames.
 			var len = stackTraceLimit == -1 ? frames.Length : Math.Min(frames.Length, stackTraceLimit);
-			var retVal = new List<CapturedStackFrame>(len);
+			var capturedFrames = new List<CapturedStackFrame>(len);
 
 			logger.Trace()?.Log("transform stack frames");
 
@@ -63,8 +63,6 @@ namespace Elastic.Apm.Helpers
 						functionName += $" x {enhancedStackFrame.MethodInfo.RecurseCount}";
 
 					var fileName = frame?.GetFileName();
-
-					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
 
 					var capturedStackFrame = new CapturedStackFrame
 					{
@@ -86,22 +84,25 @@ namespace Elastic.Apm.Helpers
 						// FileName is either the .cs file or the assembly location as fallback
 						capturedStackFrame.FileName =
 							string.IsNullOrWhiteSpace(fileName)
-								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) ? "n/a" :
-								frame.GetMethod()?.GetType().Assembly.Location
+								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location)
+									? "n/a"
+									: frame.GetMethod()?.GetType().Assembly.Location
 								: fileName;
 
 						capturedStackFrame.ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className;
 					}
 
-					retVal.Add(capturedStackFrame);
+					capturedFrames.Add(capturedStackFrame);
 				}
 			}
 			catch (Exception e)
 			{
 				logger.Warning()?.LogException(e, "Failed capturing stacktrace for {ApmContext}", dbgCapturingFor);
+				foreach (var frame in capturedFrames)
+					logger.Trace()?.Log("{MethodName}, {lineNo}", frame.Function, frame.LineNo);
 			}
 
-			return retVal;
+			return capturedFrames;
 		}
 
 		/// <summary>

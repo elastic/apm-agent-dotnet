@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
@@ -117,6 +118,17 @@ namespace Elastic.Apm.AspNetFullFramework
 		private void OnBeginRequest(object sender, EventArgs e)
 		{
 			_logger.Debug()?.Log("Incoming request processing started - starting trace...");
+
+			try
+			{
+				var usingLegacySynchronizationContext = SynchronizationContext.Current?.GetType().Name == "LegacyAspNetSynchronizationContext";
+				if (usingLegacySynchronizationContext)
+					_logger.Warning()?.Log("ASP.NET is using LegacyAspNetSynchronizationContext and might not behave well for asynchronous code");
+			}
+			catch
+			{
+				// ignored
+			}
 
 			try
 			{
