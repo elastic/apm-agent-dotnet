@@ -43,6 +43,9 @@ runs:
         path: build/output/junit-*.xml
         reporter: java-junit
         output-to: 'step-summary'
+        fail-on-error: 'false'
+        list-suites: 'failed'
+        list-tests: 'failed'
 
     - name: "Test Report Store: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       if: success() || failure()
