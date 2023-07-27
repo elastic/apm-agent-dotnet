@@ -8,6 +8,7 @@ using System.Linq;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Docker;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +44,7 @@ namespace Elastic.Apm.SqlClient.Tests
 		/// Executes a db query within a transaction while both SqlClient and EFCore capturing is active.
 		/// Makes sure that the db call is only captured once - so only 1 of them captures the call, the other one ignores it.
 		/// </summary>
-		[DisabledOnWindowsFact]
+		[DockerFact]
 		public void BothEfCoreAndSqlClientCapturingActive()
 		{
 			var dbContextOptionsBuilder = new DbContextOptionsBuilder<TestDbContext>();

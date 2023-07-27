@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Docker;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using Elasticsearch.Net;
 using FluentAssertions;
@@ -28,7 +29,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			_client = new ElasticLowLevelClient(settings);
 		}
 
-		[DisabledOnWindowsGitHubActionsDockerFact]
+		[DockerFact]
 		public async Task Elasticsearch_Span_Should_Align_With_Spec()
 		{
 			var payloadSender = new MockPayloadSender();
@@ -86,7 +87,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 			span.Context.Destination.Port.Should().BeGreaterThan(0).And.BeLessThan(65536);
 		}
 
-		[DisabledOnWindowsGitHubActionsDockerFact]
+		[DockerFact]
 		public async Task Elasticsearch_Span_Does_Not_Have_Http_Child_Span()
 		{
 			var payloadSender = new MockPayloadSender();
