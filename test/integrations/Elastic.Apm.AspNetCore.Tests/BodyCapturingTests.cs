@@ -51,7 +51,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public Task DisposeAsync() => _sutEnv?.DisposeAsync();
 
 		private MockConfiguration CreateConfiguration(string captureBody = CaptureBodyAll) =>
-			new (new NoopLogger(), captureBody: captureBody, openTelemetryBridgeEnabled: "false");
+			new(new NoopLogger(), captureBody: captureBody, openTelemetryBridgeEnabled: "false");
 
 		/// <summary>
 		/// Calls <see cref="HomeController.Send(BaseReportFilter{SendMessageFilter})" />.
@@ -111,9 +111,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				HttpResponseMessage response;
 				using (var formData = new MultipartFormDataContent
-				{
-					{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }
-				})
+					{
+						{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }
+					})
 					response = await sutEnv.HttpClient.PostAsync("Home/File", formData);
 
 				response.IsSuccessStatusCode.Should().BeTrue();
@@ -193,8 +193,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var formValues = new List<KeyValuePair<string, string>>
 			{
-				new KeyValuePair<string, string>("key1", "value1"),
-				new KeyValuePair<string, string>("key2", "value2"),
+				new("key1", "value1"), new("key2", "value2"),
 			};
 
 			HttpResponseMessage response;
@@ -395,7 +394,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 					capturedRequestBody = transaction.Context.Request.Body;
 
 					capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
-
 				}
 
 				if (isError)
@@ -407,7 +405,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 						error.Transaction.IsSampled.Should().BeTrue();
 						error.Context.Should().NotBeNull();
 						error.Context.Request.Body.Should().Be(capturedRequestBody);
-
 					}
 					else
 					{
@@ -452,9 +449,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			private const string UrlForTestApp = "http://localhost:5903";
 			internal readonly ApmAgent Agent;
 			internal readonly HttpClient HttpClient;
-			internal readonly MockPayloadSender MockPayloadSender = new MockPayloadSender();
+			internal readonly MockPayloadSender MockPayloadSender = new();
 
-			private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+			private readonly CancellationTokenSource _cancellationTokenSource = new();
 			private readonly Task _taskForSampleApp;
 
 			internal SutEnv(IConfiguration startConfiguration = null)
