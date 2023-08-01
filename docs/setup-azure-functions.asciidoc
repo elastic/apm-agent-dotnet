@@ -17,7 +17,7 @@ existing one, you can follow https://learn.microsoft.com/en-us/azure/azure-funct
 to create one.
 
 You can also take a look at and use this
-https://github.com/elastic/apm-agent-dotnet/tree/main/sample/Elastic.AzureFunctionApp.Isolated[Azure Functions example app with Elastic APM already integrated].
+https://github.com/elastic/apm-agent-dotnet/tree/1.x/sample/Elastic.AzureFunctionApp.Isolated[Azure Functions example app with Elastic APM already integrated].
 
 [IMPORTANT]
 ====
