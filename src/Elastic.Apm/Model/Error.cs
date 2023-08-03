@@ -73,7 +73,6 @@ namespace Elastic.Apm.Model
 				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttachOnErrors, baggage.Key))
 					continue;
 
-				Context.InternalLabels ??= new Lazy<LabelsDictionary>();
 				Context.InternalLabels.Value.Add(baggage.Key, baggage.Value);
 			}
 		}
