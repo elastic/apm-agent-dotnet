@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests.DistributedTracing;
 
 public class BaggageTests
 {
-	private readonly ActivitySource _activitySource = new (nameof(BaggageTests));
+	private readonly ActivitySource _activitySource = new(nameof(BaggageTests));
 
 	public BaggageTests()
 	{

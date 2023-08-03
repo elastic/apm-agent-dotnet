@@ -135,7 +135,8 @@ namespace Elastic.Apm.Model
 
 			foreach (var baggage in Activity.Current.Baggage)
 			{
-				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttachOnSpans, baggage.Key)) continue;
+				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttachOnSpans, baggage.Key))
+					continue;
 
 				Otel ??= new OTel() { Attributes = new Dictionary<string, string>() };
 				Otel.Attributes.Add(baggage.Key, baggage.Value);

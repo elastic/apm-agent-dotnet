@@ -70,7 +70,8 @@ namespace Elastic.Apm.Model
 
 			foreach (var baggage in Activity.Current.Baggage)
 			{
-				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttachOnErrors, baggage.Key)) continue;
+				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttachOnErrors, baggage.Key))
+					continue;
 
 				Context.InternalLabels ??= new Lazy<LabelsDictionary>();
 				Context.InternalLabels.Value.Add(baggage.Key, baggage.Value);
