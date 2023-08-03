@@ -49,19 +49,19 @@ namespace Elastic.Apm.DiagnosticSource
 					var subscription = value.Subscribe(listener);
 					_subscriptions.Add(new Subscription(subscription, _agent, listenerType));
 					_logger.Debug()
-						?.Log("`{DiagnosticListenerName,20}' subscribed by: {DiagnosticListenerType, 20}", value.Name, listenerType.Name);
+						?.Log("'{DiagnosticListenerName}' subscribed by: {DiagnosticListenerType}", value.Name, listenerType.Name);
 				}
 				else
 				{
 					_logger.Debug()
-						?.Log("`{DiagnosticListenerName,20}` already subscribed by {DiagnosticListenerType,20}", value.Name, listenerType.Name);
+						?.Log("'{DiagnosticListenerName}' already subscribed by: {DiagnosticListenerType}", value.Name, listenerType.Name);
 				}
 			}
 
 			if (!subscribedAny)
 			{
 				_logger.Trace()
-					?.Log("`{DiagnosticListenerName,20}' not matched by any of: ({DiagnosticListeners})",
+					?.Log("'{DiagnosticListenerName}' not matched by any of: ({DiagnosticListeners})",
 						value.Name,
 						string.Join(", ", _listeners.Select(listener => listener.GetType().Name))
 					);

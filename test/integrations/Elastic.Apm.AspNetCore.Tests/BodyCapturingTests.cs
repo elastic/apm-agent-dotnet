@@ -492,13 +492,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					.RunAsync(_cancellationTokenSource.Token);
 
 				//We need to ensure we are not propagating any unsampled current activities
-				HttpClient = new HttpClient(new DisableActivityHandler(new SocketsHttpHandler()
-				{
-					ActivityHeadersPropagator = DistributedContextPropagator.CreateNoOutputPropagator()
-				}, output))
-				{
-					BaseAddress = new Uri(UrlForTestApp),
-				};
+				HttpClient = new HttpClient(new DisableActivityHandler(output)) { BaseAddress = new Uri(UrlForTestApp) };
 			}
 
 			internal async Task DisposeAsync()
