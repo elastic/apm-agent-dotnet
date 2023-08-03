@@ -17,14 +17,13 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests;
 
 /// <summary>
-/// Base class to encapsulate 2 <see cref="ApmAgent"/> instances injected into HostBuilder instances>
+/// Base class to encapsulate 2 <see cref="ApmAgent" /> instances injected into HostBuilder instances.
 /// </summary>
-public abstract class MultiApplicationTestBase: IAsyncLifetime
+public abstract class MultiApplicationTestBase : IAsyncLifetime
 {
-	private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-	internal readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
-	internal readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
+	internal readonly MockPayloadSender _payloadSender1 = new();
+	internal readonly MockPayloadSender _payloadSender2 = new();
+	private readonly CancellationTokenSource _cancellationTokenSource = new();
 	internal ApmAgent _agent1;
 	internal ApmAgent _agent2;
 
@@ -34,7 +33,7 @@ public abstract class MultiApplicationTestBase: IAsyncLifetime
 	public Task InitializeAsync()
 	{
 		_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1,
-			configuration: new MockConfiguration(exitSpanMinDuration: "0" )));
+			configuration: new MockConfiguration(exitSpanMinDuration: "0")));
 		_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2,
 			configuration: new MockConfiguration(exitSpanMinDuration: "0")));
 
@@ -87,5 +86,4 @@ public abstract class MultiApplicationTestBase: IAsyncLifetime
 		_agent1?.Dispose();
 		_agent2?.Dispose();
 	}
-
 }
