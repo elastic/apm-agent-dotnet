@@ -37,8 +37,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			return client;
 		}
 
-		private static IDiagnosticsSubscriber[] DiagnosticsOnlyListeners => new IDiagnosticsSubscriber [] { new AspNetCoreDiagnosticSubscriber(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber() };
-		private static IDiagnosticsSubscriber[] UseApmListeners => new IDiagnosticsSubscriber [] { new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber() };
+		private static IDiagnosticsSubscriber[] DiagnosticsOnlyListeners =>
+			new IDiagnosticsSubscriber[] { new AspNetCoreDiagnosticSubscriber(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber() };
+		private static IDiagnosticsSubscriber[] UseApmListeners =>
+			new IDiagnosticsSubscriber[] { new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber() };
 
 		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource) where T : class
 		{

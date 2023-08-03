@@ -39,7 +39,8 @@ namespace Elastic.Apm.DiagnosticSource
 
 			foreach (var listener in _listeners)
 			{
-				if (value.Name != listener.Name) continue;
+				if (value.Name != listener.Name)
+					continue;
 
 				subscribedAny = true;
 				var listenerType = listener.GetType();

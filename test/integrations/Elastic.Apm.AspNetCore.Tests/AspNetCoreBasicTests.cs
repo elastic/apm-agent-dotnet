@@ -46,13 +46,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(
-            				_logger,
-            				new MockConfiguration(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll, exitSpanMinDuration: "0"),
-            				payloadSender,
-            				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
-            				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
-            				Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
-            			);
+							_logger,
+							new MockConfiguration(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll, exitSpanMinDuration: "0"),
+							payloadSender,
+							// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
+							// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
+							Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
+						);
 			HostBuilderExtensions.UpdateServiceInformation(agent.Service);
 			return agent;
 		}
