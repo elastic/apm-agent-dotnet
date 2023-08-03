@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenTelemetry;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
 using SampleAspNetCoreApp.Utils;
@@ -320,6 +322,40 @@ namespace SampleAspNetCoreApp.Controllers
 			cancellationToken.Cancel();
 
 			return $"Burned Cpu for {seconds}s on {threads} threads with {percentage}% fired at {DateTimeOffset.Now}.";
+		}
+
+		[HttpGet]
+		public string ReturnBaggageAsString()
+		{
+			var ret = new StringBuilder();
+
+
+			if (Activity.Current == null || !Activity.Current.Baggage.Any()) return ret.ToString();
+			foreach (var item in Activity.Current.Baggage) ret.Append(item);
+
+			return ret.ToString();
+		}
+
+		/// <summary>
+		/// Adds baggage to the current activity and calls a downstream service
+		/// </summary>
+		/// <returns></returns>
+		[HttpGet]
+		public async Task<string> WriteBaggage()
+		{
+			if (Activity.Current != null) Activity.Current.AddBaggage("foo", "bar");
+
+			var httpClient = new HttpClient();
+
+			var outgoingServiceUrl = HttpContext.Request.Headers["OutgoingServiceUrl"];
+			if (!string.IsNullOrEmpty(outgoingServiceUrl))
+			{
+				await httpClient.GetAsync($"{outgoingServiceUrl}/api/values");
+			}
+			else
+				await httpClient.GetAsync("http://localhost:5050/api/values");
+
+			return "ok";
 		}
 	}
 

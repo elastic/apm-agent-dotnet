@@ -15,7 +15,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 	/// <summary>
 	/// Represents an active configuration snapshot with potential overrides from an updated <see cref="CentralConfiguration"/>
 	/// </summary>
-	internal class RuntimeConfigurationSnapshot : IConfiguration, IConfigurationDescription
+	internal class RuntimeConfigurationSnapshot : IConfiguration
 	{
 		private readonly CentralConfiguration? _dynamicConfiguration;
 		private readonly IConfigurationReader _mainConfiguration;
@@ -36,6 +36,12 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		public string ApiKey => _mainConfiguration.ApiKey;
 		public IReadOnlyCollection<string> ApplicationNamespaces => _mainConfiguration.ApplicationNamespaces;
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnTransactions => _mainConfiguration.BaggageToAttachOnTransactions;
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnSpans => _mainConfiguration.BaggageToAttachOnSpans;
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnErrors => _mainConfiguration.BaggageToAttachOnErrors;
 
 		public string CaptureBody => _dynamicConfiguration?.CaptureBody ?? _mainConfiguration.CaptureBody;
 
@@ -106,6 +112,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_dynamicConfiguration?.SpanFramesMinDurationInMilliseconds ?? _mainConfiguration.SpanFramesMinDurationInMilliseconds;
 
 		public int StackTraceLimit => _dynamicConfiguration?.StackTraceLimit ?? _mainConfiguration.StackTraceLimit;
+
 		[Obsolete("Use TraceContinuationStrategy")]
 		public bool TraceContextIgnoreSampledFalse => _mainConfiguration.TraceContextIgnoreSampledFalse;
 
@@ -121,6 +128,5 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public bool UseElasticTraceparentHeader => _mainConfiguration.UseElasticTraceparentHeader;
 
 		public bool VerifyServerCert => _mainConfiguration.VerifyServerCert;
-
 	}
 }

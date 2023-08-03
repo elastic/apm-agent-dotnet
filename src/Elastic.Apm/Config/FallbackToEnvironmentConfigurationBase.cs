@@ -85,6 +85,9 @@ namespace Elastic.Apm.Config
 
 			ApiKey = ParseApiKey(Lookup(ConfigurationOption.ApiKey));
 			ApplicationNamespaces = ParseApplicationNamespaces(Lookup(ConfigurationOption.ApplicationNamespaces));
+			BaggageToAttachOnTransactions = ParseBaggageToAttachOnTransactions(Lookup(ConfigurationOption.BaggageToAttachOnTransactions));
+			BaggageToAttachOnSpans = ParseBaggageToAttachOnSpans(Lookup(ConfigurationOption.BaggageToAttachOnSpans));
+			BaggageToAttachOnErrors = ParseBaggageToAttachOnErrors(Lookup(ConfigurationOption.BaggageToAttachOnErrors));
 			CaptureBody = ParseCaptureBody(Lookup(ConfigurationOption.CaptureBody));
 			CaptureBodyContentTypes = ParseCaptureBodyContentTypes(Lookup(ConfigurationOption.CaptureBodyContentTypes));
 			CaptureHeaders = ParseCaptureHeaders(Lookup(ConfigurationOption.CaptureHeaders));
@@ -155,6 +158,12 @@ namespace Elastic.Apm.Config
 		public string ApiKey { get; }
 
 		public IReadOnlyCollection<string> ApplicationNamespaces { get; }
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnTransactions { get; }
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnSpans { get; }
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnErrors { get; }
 
 		public string CaptureBody { get; }
 

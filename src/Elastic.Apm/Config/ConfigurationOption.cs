@@ -16,6 +16,12 @@ namespace Elastic.Apm.Config
 		ApiKey,
 		/// <inheritdoc cref="IConfigurationReader.ApplicationNamespaces"/>
 		ApplicationNamespaces,
+		/// <inheritdoc cref="IConfigurationReader.BaggageToAttachOnTransactions"/>
+		BaggageToAttachOnTransactions,
+		/// <inheritdoc cref="IConfigurationReader.BaggageToAttachOnSpans"/>
+		BaggageToAttachOnSpans,
+		/// <inheritdoc cref="IConfigurationReader.BaggageToAttachOnErrors"/>
+		BaggageToAttachOnErrors,
 		/// <inheritdoc cref="IConfigurationReader.CaptureBody"/>
 		CaptureBody,
 		/// <inheritdoc cref="IConfigurationReader.CaptureBodyContentTypes"/>
@@ -138,6 +144,9 @@ namespace Elastic.Apm.Config
 			{
 				ApiKey => EnvPrefix + "API_KEY",
 				ApplicationNamespaces => EnvPrefix + "APPLICATION_NAMESPACES",
+				BaggageToAttachOnTransactions => EnvPrefix + "BAGGAGE_TO_ATTACH_ON_TRANSACTIONS",
+				BaggageToAttachOnSpans => EnvPrefix + "BAGGAGE_TO_ATTACH_ON_SPANS",
+				BaggageToAttachOnErrors => EnvPrefix + "BAGGAGE_TO_ATTACH_ON_ERRORS",
 				CaptureBody => EnvPrefix + "CAPTURE_BODY",
 				CaptureBodyContentTypes => EnvPrefix + "CAPTURE_BODY_CONTENT_TYPES",
 				CaptureHeaders => EnvPrefix + "CAPTURE_HEADERS",
@@ -189,6 +198,9 @@ namespace Elastic.Apm.Config
 			{
 				ApiKey => KeyPrefix + nameof(ApiKey),
 				ApplicationNamespaces => KeyPrefix + nameof(ApplicationNamespaces),
+				BaggageToAttachOnTransactions => KeyPrefix + nameof(BaggageToAttachOnTransactions),
+				BaggageToAttachOnSpans => KeyPrefix + nameof(BaggageToAttachOnSpans),
+				BaggageToAttachOnErrors => KeyPrefix + nameof(BaggageToAttachOnErrors),
 				CaptureBody => KeyPrefix + nameof(CaptureBody),
 				CaptureBodyContentTypes => KeyPrefix + nameof(CaptureBodyContentTypes),
 				CaptureHeaders => KeyPrefix + nameof(CaptureHeaders),

@@ -98,6 +98,34 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttachOnTransactions(ConfigurationKeyValue kv)
+			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttachOnTransactions, "BaggageToAttachOnTransactions");
+
+		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttachOnSpans(ConfigurationKeyValue kv)
+			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttachOnSpans, "BaggageToAttachOnSpans");
+
+		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttachOnErrors(ConfigurationKeyValue kv)
+			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttachOnErrors, "BaggageToAttachOnErrors");
+
+		private IReadOnlyList<WildcardMatcher> ParseWildcardMatcher(string stringValue, string configName)
+		{
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing {ConfigName}, values: {Values}", configName, stringValue);
+				var values = stringValue.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+
+				var retVal = new List<WildcardMatcher>(values.Count);
+				foreach (var item in values)
+					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				return retVal;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()?.LogException(e, "Failed parsing {ConfigName}, values in the config: {stringValues}", configName, stringValue);
+				return default;
+			}
+		}
+
 		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null)

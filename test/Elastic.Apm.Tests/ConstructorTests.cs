@@ -130,6 +130,11 @@ public class ConstructorTests
 		public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
 
 		public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnTransactions { get; }
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnSpans { get; }
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnErrors { get; }
 
 		public bool OpenTelemetryBridgeEnabled => ConfigConsts.DefaultValues.OpenTelemetryBridgeEnabled;
 

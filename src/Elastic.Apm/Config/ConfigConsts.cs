@@ -21,6 +21,9 @@ namespace Elastic.Apm.Config
 		public static class DefaultValues
 		{
 			public const int ApmServerPort = 8200;
+			public const string BaggageToAttachOnTransactions = "*";
+			public const string BaggageToAttachOnSpans = "*";
+			public const string BaggageToAttachOnErrors = "*";
 			public const string CaptureBody = SupportedValues.CaptureBodyOff;
 			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
 			public const bool CaptureHeaders = true;

@@ -264,7 +264,7 @@ WARNING: Setting `Enabled` to `false` influences the behavior of the <<public-ap
 This is used to keep all the errors and transactions of your service together
 and is the primary filter in the Elastic APM user interface.
 
-NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. In other words, your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores, and spaces. Characters in service names that don't match the regular expression will be replaced with the `_` symbol. 
+NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. In other words, your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores, and spaces. Characters in service names that don't match the regular expression will be replaced with the `_` symbol.
 
 [options="header"]
 |============
@@ -305,7 +305,7 @@ NOTE: This feature requires APM Server versions >= 7.5
 
 A version string for the currently deployed version of the service. If you don’t
 version your deployments, the recommended value for this field is the commit identifier
-of the deployed revision, e.g. the output of `git rev-parse HEAD`. 
+of the deployed revision, e.g. the output of `git rev-parse HEAD`.
 
 [options="header"]
 |============
@@ -505,7 +505,7 @@ NOTE: This option requires APM Server 7.2 or later. It will have no effect on ol
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-Setting this option to true will enable span compression feature. Span compression reduces the collection, processing, and storage overhead, and removes clutter from the UI. 
+Setting this option to true will enable span compression feature. Span compression reduces the collection, processing, and storage overhead, and removes clutter from the UI.
 The tradeoff is that some information such as DB statements of all the compressed spans will not be collected.
 
 [options="header"]
@@ -708,10 +708,10 @@ Verification can be disabled by changing this setting to false.
 [[config-server-cert]]
 ==== `ServerCert` (added[1.9])
 
-The path to a PEM-encoded certificate used for SSL/TLS by APM server. Used to perform validation 
-through certificate pinning. 
+The path to a PEM-encoded certificate used for SSL/TLS by APM server. Used to perform validation
+through certificate pinning.
 
-This can be specified when using a certificate signed by a Certificate Authority (CA) that is not in 
+This can be specified when using a certificate signed by a Certificate Authority (CA) that is not in
 the trust store, such as a self-signed certificate.
 
 [options="header"]
@@ -732,7 +732,7 @@ the trust store, such as a self-signed certificate.
 
 The maximal amount of time events are held in the queue until there is enough to send a batch.
 It's possible for a batch to contain less than <<config-max-batch-event-count,`MaxBatchEventCount`>> events
-if there are events that need to be sent out because they were held for too long. 
+if there are events that need to be sent out because they were held for too long.
 A lower value will increase the load on your APM server,
 while a higher value can increase the memory pressure on your app.
 A higher value also impacts the time until transactions are indexed and searchable in Elasticsearch.
@@ -1095,6 +1095,66 @@ This is useful when using windows authentication on a proxy, that routes APM age
 |============
 
 [float]
+[[config-baggage-to-attach-on-transactions]]
+==== `BaggageToAttachOnTransactions` (added[1.23])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Controls which baggage values are automatically attached to the given transaction. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/[W3C Baggage specification]. You can programmatically write and read baggage values via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. For more details, see <<baggage-api,`our documentation on how to integrate with OpenTelemetry`>>.
+
+[options="header"]
+|============
+| Environment variable name                       | IConfiguration key
+| `ELASTIC_APM_BAGGAGE_TO_ATTACH_ON_TRANSACTIONS` | `ElasticApm:BaggageToAttachOnTransactions`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `*`     | Comma separated string
+|============
+
+[float]
+[[config-baggage-to-attach-on-spans]]
+==== `BaggageToAttachOnSpans` (added[1.23])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Controls which baggage values are automatically attached to the given span. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/[W3C Baggage specification]. You can programmatically write and read baggage values via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. For more details, see <<baggage-api,`our documentation on how to integrate with OpenTelemetry`>>.
+
+[options="header"]
+|============
+| Environment variable name                       | IConfiguration key
+| `ELASTIC_APM_BAGGAGE_TO_ATTACH_ON_SPANS` | `ElasticApm:BaggageToAttachOnSpans`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `*`     | Comma separated string
+|============
+
+[float]
+[[config-baggage-to-attach-on-errors]]
+==== `BaggageToAttachOnErrors` (added[1.23])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+Controls which baggage values are automatically attached to the given error. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/[W3C Baggage specification]. You can programmatically write and read baggage values via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. For more details, see <<baggage-api,`our documentation on how to integrate with OpenTelemetry`>>.
+
+[options="header"]
+|============
+| Environment variable name                       | IConfiguration key
+| `ELASTIC_APM_BAGGAGE_TO_ATTACH_ON_ERRORS` | `ElasticApm:BaggageToAttachOnErrors`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `*`     | Comma separated string
+|============
+
+[float]
 [[config-trace-context-ignore-sampled-false]]
 ==== `TraceContextIgnoreSampledFalse`
 
@@ -1132,7 +1192,7 @@ If your application is called by an {dotnet5} application that does not have an 
 [[config-ignore-message-queues]]
 ==== `IgnoreMessageQueues` (added[1.10])
 
-Used to filter out specific messaging queues/topics/exchanges from being traced. When set, sends-to and receives-from the 
+Used to filter out specific messaging queues/topics/exchanges from being traced. When set, sends-to and receives-from the
 specified queues/topics/exchanges will be ignored.
 
 This config accepts a comma separated string of wildcard patterns of queues/topics/exchange names which should be ignored.

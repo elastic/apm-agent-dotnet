@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -18,6 +19,10 @@ namespace Elastic.Apm.Feature.Tests
 
 		public string ApiKey { get; set; }
 		public IReadOnlyCollection<string> ApplicationNamespaces { get; set; } = DefaultValues.DefaultApplicationNamespaces;
+
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnTransactions { get; } = new Collection<WildcardMatcher>();
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnSpans { get; } = new Collection<WildcardMatcher>();
+		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnErrors { get; } = new Collection<WildcardMatcher>();
 		public string CaptureBody { get; set; } = SupportedValues.CaptureBodyOff;
 		public List<string> CaptureBodyContentTypes { get; set; } = new()
 		{

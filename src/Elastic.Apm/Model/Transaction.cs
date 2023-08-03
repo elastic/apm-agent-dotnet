@@ -302,6 +302,8 @@ namespace Elastic.Apm.Model
 			if (IsSampled && _activity != null)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
+			CheckAndCaptureBaggage();
+
 			SpanCount = new SpanCount();
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
 
@@ -321,6 +323,20 @@ namespace Elastic.Apm.Model
 						"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
 						" Start time: {Time} (as timestamp: {Timestamp})",
 						this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			}
+		}
+
+		private void CheckAndCaptureBaggage()
+		{
+			if (Activity.Current == null || !Activity.Current.Baggage.Any())
+				return;
+
+			foreach (var baggage in Activity.Current.Baggage)
+			{
+				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttachOnTransactions, baggage.Key)) continue;
+
+				Otel ??= new OTel() { Attributes = new Dictionary<string, string>() };
+				Otel.Attributes.Add(baggage.Key, baggage.Value);
 			}
 		}
 
