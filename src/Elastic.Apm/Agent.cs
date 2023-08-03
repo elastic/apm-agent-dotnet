@@ -15,7 +15,12 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm
 {
-	public interface IApmAgent
+	public interface IApmAgentComponents
+	{
+		HashSet<Type> SubscribedListeners { get; }
+	}
+
+	public interface IApmAgent : IApmAgentComponents
 	{
 		[Obsolete("Please use Configuration property instead")]
 		IConfigurationReader ConfigurationReader { get; }
@@ -33,7 +38,7 @@ namespace Elastic.Apm
 
 	internal class ApmAgent : IApmAgent, IDisposable
 	{
-		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
+		internal readonly CompositeDisposable Disposables = new();
 
 		internal ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
 
@@ -51,7 +56,7 @@ namespace Elastic.Apm
 		public ITracer Tracer => Components.Tracer;
 		internal Tracer TracerInternal => Components.TracerInternal;
 		internal HttpTraceConfiguration HttpTraceConfiguration => Components.HttpTraceConfiguration;
-		internal HashSet<Type> SubscribedListeners => Components.SubscribedListeners;
+		HashSet<Type> IApmAgentComponents.SubscribedListeners => ((IApmAgentComponents)Components).SubscribedListeners;
 
 		public void Dispose()
 		{

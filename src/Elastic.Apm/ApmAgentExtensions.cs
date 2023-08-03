@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm
 {
@@ -29,6 +30,9 @@ namespace Elastic.Apm
 		public static IDisposable Subscribe(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
 		{
 			var disposable = new CompositeDisposable();
+			agent.Logger.Trace()?.Log("Agent Subscribe(), Agent Enabled: {AgentEnabled} Subscriber count: {NumberOfSubscribers}",
+				agent.Configuration.Enabled, subscribers?.Length ?? 0);
+
 			if (!agent.Configuration.Enabled || subscribers is null || subscribers.Length == 0)
 				return disposable;
 
@@ -59,8 +63,8 @@ namespace Elastic.Apm
 	/// </summary>
 	internal class CompositeDisposable : IDisposable
 	{
-		private readonly List<IDisposable> _disposables = new List<IDisposable>();
-		private readonly object _lock = new object();
+		private readonly List<IDisposable> _disposables = new();
+		private readonly object _lock = new();
 
 		private bool _isDisposed;
 

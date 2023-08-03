@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,7 +15,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -25,6 +28,7 @@ using Newtonsoft.Json.Serialization;
 using SampleAspNetCoreApp;
 using SampleAspNetCoreApp.Controllers;
 using Xunit;
+using Xunit.Abstractions;
 using static Elastic.Apm.Config.ConfigConsts.SupportedValues;
 
 namespace Elastic.Apm.AspNetCore.Tests
@@ -42,16 +46,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private const string MyCustomContentType = "application/my-custom-content";
 		private SutEnv _sutEnv;
+		private readonly ITestOutputHelper _output;
+		private readonly XUnitLogger _logger;
 
 		public static IEnumerable<object[]> OptionsChangedAfterStartTestVariants =>
 			BuildOptionsTestVariants().ZipWithIndex().Select(x => new object[] { x.Item1, x.Item2 });
+
+		public BodyCapturingTests(ITestOutputHelper output)
+		{
+			_output = output;
+			_logger = new XUnitLogger(LogLevel.Trace, _output);
+		}
 
 		public Task InitializeAsync() => Task.CompletedTask;
 
 		public Task DisposeAsync() => _sutEnv?.DisposeAsync();
 
 		private MockConfiguration CreateConfiguration(string captureBody = CaptureBodyAll) =>
-			new(new NoopLogger(), captureBody: captureBody, openTelemetryBridgeEnabled: "false");
+			new(_logger, captureBody: captureBody, openTelemetryBridgeEnabled: "false");
 
 		/// <summary>
 		/// Calls <see cref="HomeController.Send(BaseReportFilter{SendMessageFilter})" />.
@@ -426,7 +438,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			if (_sutEnv != null)
 				return _sutEnv;
 
-			_sutEnv = new SutEnv(startConfiguration);
+			_sutEnv = new SutEnv(startConfiguration, _logger, _output);
 			return _sutEnv;
 		}
 
@@ -449,14 +461,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 			private const string UrlForTestApp = "http://localhost:5903";
 			internal readonly ApmAgent Agent;
 			internal readonly HttpClient HttpClient;
-			internal readonly MockPayloadSender MockPayloadSender = new();
+			internal readonly MockPayloadSender MockPayloadSender;
 
 			private readonly CancellationTokenSource _cancellationTokenSource = new();
 			private readonly Task _taskForSampleApp;
 
-			internal SutEnv(IConfiguration startConfiguration = null)
+			internal SutEnv(IConfiguration startConfiguration, IApmLogger logger, ITestOutputHelper output)
 			{
-				Agent = new ApmAgent(new TestAgentComponents(new NoopLogger(), startConfiguration, MockPayloadSender));
+				MockPayloadSender = new MockPayloadSender(logger);
+				Agent = new ApmAgent(new TestAgentComponents(logger, startConfiguration, MockPayloadSender));
 
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)
 					.ConfigureServices(services =>
@@ -473,11 +486,19 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseElasticApm(Agent, new TestLogger());
 						Startup.ConfigureAllExceptAgent(app);
 					})
+					.ConfigureLogging(logging => logging.AddXunit(output))
 					.UseUrls(UrlForTestApp)
 					.Build()
 					.RunAsync(_cancellationTokenSource.Token);
 
-				HttpClient = new HttpClient { BaseAddress = new Uri(UrlForTestApp) };
+				//We need to ensure we are not propagating any unsampled current activities
+				HttpClient = new HttpClient(new DisableActivityHandler(new SocketsHttpHandler()
+				{
+					ActivityHeadersPropagator = DistributedContextPropagator.CreateNoOutputPropagator()
+				}, output))
+				{
+					BaseAddress = new Uri(UrlForTestApp),
+				};
 			}
 
 			internal async Task DisposeAsync()

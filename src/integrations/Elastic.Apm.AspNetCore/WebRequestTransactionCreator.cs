@@ -207,6 +207,8 @@ namespace Elastic.Apm.AspNetCore
 					transaction.SetOutcome(GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result));
 				}
 
+				logger?.Trace()?.Log("Transaction is sampled {Sampled}", transaction.IsSampled);
+
 				if (transaction.IsSampled)
 				{
 					FillSampledTransactionContextResponse(context, transaction, logger);

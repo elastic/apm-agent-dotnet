@@ -74,8 +74,6 @@ namespace Elastic.Apm
 				if (Configuration.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
 
-				SubscribedListeners = new HashSet<Type>();
-
 				// initialize the tracer before central configuration or metric collection is started
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo,
@@ -247,7 +245,7 @@ namespace Elastic.Apm
 
 		internal HttpTraceConfiguration HttpTraceConfiguration { get; }
 
-		internal HashSet<Type> SubscribedListeners { get; }
+		HashSet<Type> IApmAgentComponents.SubscribedListeners { get; } = new();
 
 		internal Tracer TracerInternal { get; }
 

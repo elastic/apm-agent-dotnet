@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.DistributedTracing;
@@ -218,6 +219,11 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void PropagateTraceContext(TRequest request, ITransaction transaction, ISpan span)
 		{
+			var a = Activity.Current;
+			if (a == null)
+			{
+				return;
+			}
 			if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderName))
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format

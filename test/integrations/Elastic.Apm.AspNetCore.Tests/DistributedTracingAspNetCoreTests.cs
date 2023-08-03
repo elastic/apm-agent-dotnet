@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -33,6 +34,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private Task _taskForApp1;
 		private Task _taskForApp2;
+		private readonly ITestOutputHelper _output;
+
+		public DistributedTracingAspNetCoreTests(ITestOutputHelper output) => _output = output;
 
 		public Task InitializeAsync()
 		{
@@ -51,6 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 					}
 				)
+				.ConfigureLogging(logging => logging.AddXunit(_output))
 				.Configure(app =>
 				{
 					app.UseElasticApm(_agent1, new TestLogger(),
@@ -62,6 +67,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.RunAsync(_cancellationTokenSource.Token);
 
 			_taskForApp2 = WebApiSample.Program.CreateWebHostBuilder(null)
+				.ConfigureLogging(logging => logging.AddXunit(_output))
 				.ConfigureServices(services =>
 				{
 					services.AddMvc()
