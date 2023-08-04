@@ -151,7 +151,8 @@ namespace Elastic.Apm.Feature.Tests
 		public void ThenElasticBridgedSpanTypeIs(string type)
 		{
 			var payloadSender = _scenarioContext.Get<MockPayloadSender>("payloadSender");
-			(payloadSender.FirstSpan as Span).Type.Should().Be(type);
+			payloadSender.FirstSpan.Should().NotBeNull("No first span captured for {0}", type);
+			payloadSender.FirstSpan.Type.Should().Be(type);
 		}
 
 		[Then(@"Elastic bridged span subtype is ""([^""]*)""")]
