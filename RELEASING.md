@@ -14,43 +14,23 @@ The tag dictates the version number. Untagged commits are automatically versione
 
 ### Generating a changelog for the new version
 
-Once the version is updated, we can then generate the changelog, you can see the current changelog in [`CHANGELOG.asciidoc`](CHANGELOG.asciidoc). The idea is to fill all the applicable sections so that users can consume an orderly changelog.
+Prior to tagging and releasing the new version we create a changelog commit. Adding relevant new features and bugfixes to [`CHANGELOG.asciidoc`](CHANGELOG.asciidoc). The idea is to fill all the applicable sections so that users can consume an orderly changelog.
 
-For major and minor releases, you'll also need to update the EOL table in [`upgrading.asciidoc`](docs/upgrading.asciidoc). The EOL date is the release date plus 18 months.
-
-After a changelog has been manually curated, a new pull request can be opened with the changelog and version update changes (and EOL table if applicable).
+After a changelog has been manually curated, a new pull request must be opened with the changelog.
 
 For instance, the changelog that was created for the 1.2 release can be found in this https://github.com/elastic/apm-agent-dotnet/pull/640
 
 ## Releasing a new package
 
-In case you release a package the first time and you rely on the CI to push that to nuget.org, you need to make sure that the [deploy.sh](https://github.com/elastic/apm-agent-dotnet/blob/main/.ci/linux/deploy.sh) script is updated. You need to add the name of the new package into that script.
+In case you release a package the first time and you rely on the CI to push that to nuget.org, you need to make sure that t [deploy.sh](https://github.com/elastic/apm-agent-dotnet/blob/main/.ci/linux/deploy.sh) script is updated. You need to add the name of the new package into that script.
 
 ## Executing the release
 
-After the new changelog and version have been merged to main, the only thing remaining is to run the below commands:
+After the new changelog has been merged to main.
 
+Create a new release on Github, creating a new tag for the version `vMAJOR.MINOR.PATCH`
 
- ```bash
- ## let's assume the origin is your forked repo and upstream the one where the releases are coming from.
- git checkout main
-
- ## let's ensure we do use the latest commit, although this requirement could be not necessary if it's required
- ## to use another git commit rather than the HEAD at that time.
- git reset --hard upstream/main
-
- ## <major>, <minor>, <bug> and <suffix> should be replaced accordingly. <suffix> is an optional one.
- git tag v<major>.<minor>.<bug>(-<suffix>)?
-
- ## Push commit to the usptream repo.
- git push upstream v<major>.<minor>.<bug>(-<suffix>)?
- ```
-
-The above commands will push the GitHub tag and will trigger the corresponding [Github Action](.github/workflows/release-main.yml) which will run all the required stages to satisfy the release is in a good shape, then at the very end of the pipeline there will be an input approval waiting for an UI interaction to release to the NuGet repo. This particular input approval step will notify by email, to the owners of this repo, regarding the expected action to be done for doing the release.
-
-Tag names should start with a `v` prefix.
-
-This release process is a tagged release event based with an input approval.
+Creating a release will trigger the [release Github Action](.github/workflows/release.yml)
 
 ## Steps after the release 
 
