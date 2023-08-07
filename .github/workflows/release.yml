@@ -53,6 +53,11 @@ jobs:
         .ci/linux/push_docker.sh
       env:
         TAG_NAME: ${{ github.ref_name }}
+        
+    - name: Attach Profiler And Startup Hooks
+      continue-on-error: true #continue for now until we see it working in action
+      run: |
+        gh release upload ${{ github.ref_name }} "ElasticApmAgent_*.zip" "elastic_apm_profiler_*.zip"
 
     - if: ${{ success() }}
       uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
@@ -76,3 +81,23 @@ jobs:
         message: |
           :large_yellow_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* could not be published.
           Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)
+          
+  release-windows:
+    runs-on: ubuntu-latest
+    needs: [ 'release']
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with:
+          rust: 'true'
+
+      - name: Package
+        run: ./build.sh pack
+
+      - name: Attach Profiler
+        continue-on-error: true #continue for now until we see it working in action
+        run: |
+          gh release upload ${{ github.ref_name }} "elastic_apm_profiler_*.zip"
+
