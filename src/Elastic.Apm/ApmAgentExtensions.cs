@@ -36,7 +36,7 @@ namespace Elastic.Apm
 			var subscribersList = string.Join(", ", subscribers.Select(s => s.GetType().Name));
 
 			agent.Logger.Trace()?.Log("Agent.Subscribe(), Agent Enabled: {AgentEnabled} Subscriber count: {NumberOfSubscribers}, ({Subscribers})",
-				agent.Configuration.Enabled, subscribers.Length, subscribers);
+				agent.Configuration.Enabled, subscribers.Length, subscribersList);
 
 			if (!agent.Configuration.Enabled || subscribers.Length == 0)
 				return disposable;
