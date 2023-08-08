@@ -57,7 +57,7 @@ jobs:
     - name: Attach Profiler And Startup Hooks
       continue-on-error: true #continue for now until we see it working in action
       run: |
-        gh release upload ${{ github.ref_name }} "ElasticApmAgent_*.zip" "elastic_apm_profiler_*.zip"
+        gh release upload ${{ github.ref_name }} "build/output/ElasticApmAgent_*.zip" "build/output/elastic_apm_profiler_*.zip"
 
     - if: ${{ success() }}
       uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
@@ -93,11 +93,11 @@ jobs:
         with:
           rust: 'true'
 
-      - name: Package
-        run: ./build.sh pack
+      - name: Build profiler
+        run: ./build.bat profiler-zip
 
       - name: Attach Profiler
         continue-on-error: true #continue for now until we see it working in action
         run: |
-          gh release upload ${{ github.ref_name }} "elastic_apm_profiler_*.zip"
+          gh release upload ${{ github.ref_name }} "build/output/elastic_apm_profiler_*.zip"
 
