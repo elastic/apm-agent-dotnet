@@ -15,7 +15,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Attributes hold the unmapped OpenTelemetry attributes.
 		/// </summary>
-		public Dictionary<string, string> Attributes { get; set; }
+		public Dictionary<string, object> Attributes { get; set; }
 
 		/// <summary>
 		/// SpanKind holds the incoming OpenTelemetry span kind.
