@@ -34,7 +34,7 @@ public class OpenTelemetryBridgeBenchmarks
 		_activity.SetTag(SemanticConventions.ServerPort, 9200);
 		_activity.SetTag(SemanticConventions.DbSystem, "elasticsearch");
 		_activity.SetTag("db.operation", "cluster.health");
-		_activity.SetTag("db.elasticsearch.route.template", "_cluster/health");		
+		_activity.SetTag("db.elasticsearch.route.template", "_cluster/health");
 
 		var transaction = ((Tracer)agent.Tracer).StartTransactionInternal(_activity.DisplayName, "unknown",
 						TimeUtils.ToTimestamp(_activity.StartTimeUtc), true, _activity.SpanId.ToString());
