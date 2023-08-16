@@ -18,6 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Bootstrap Action Workspace
+      id: bootstrap
       uses: ./.github/workflows/bootstrap
       with:
           rust: 'true'
@@ -47,12 +48,12 @@ jobs:
         roleId: ${{ secrets.VAULT_ROLE_ID }}
         secretId: ${{ secrets.VAULT_SECRET_ID }}
 
-    - name: Publish Docker Image
+    - name: Build/Push Profiler Docker Image
+      continue-on-error: true #continue for now until we see it working in action
       run: |
-        chmod +x .ci/linux/push_docker.sh
-        .ci/linux/push_docker.sh
-      env:
-        TAG_NAME: ${{ github.ref_name }}
+        docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
+            --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+        docker push docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }}
         
     - name: Attach Profiler And Startup Hooks
       continue-on-error: true #continue for now until we see it working in action

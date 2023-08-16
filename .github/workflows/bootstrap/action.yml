@@ -11,7 +11,11 @@ inputs:
       description: 'Install azure functions tool chain ("true" or "false")'
       required: false
       default: "false"
-
+outputs:
+  agent-version:
+    description: "The current agent version number"
+    value: ${{ steps.dotnet.outputs.agent-version }}
+    
 runs:
   using: "composite"
   steps:
@@ -40,8 +44,12 @@ runs:
             6.0.100
             7.0.100 
     - shell: bash
+      id: dotnet
       run: |
         dotnet --list-sdks
+        dotnet tool restore
+        echo "AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e) >> $GITHUB_ENV
+        echo "agent-version=$(dotnet minver -t=v -p=canary.0 -v=e) >> $GITHUB_OUTPUT
   
       
     # Setup git config
