@@ -23,6 +23,22 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.23.0]]
+==== 1.23.0
+
+===== Features
+{pull}2069[#2069] .NET Full Framework now always loads configuration from web or app.config
+{pull}2103[#2103] Add Npgsql 7.x support to profiler
+{pull}2104[#2104] Backend dependencies granularity for NoSQL and Messaging
+{pull}2067[#2067] Send domain name when detected
+{pull}2136[#2136] Log when we detect LegacyAspNetSynchronizationContext
+
+===== Bug fixes
+{pull}2126[#2126] Fix to not send start stack trace when below configured duration 
+{pull}2109[#2109] Agent.Configuration now always points to ConfigurationStore's configuration 
+{pull}2142[#2142] Reduce logging noise for stack frame capturing.
+{pull}2148[#2148] Move Redis Profiler registration to ConditionalWeakTable 
+
 [[release-notes-1.22.0]]
 ==== 1.22.0
 

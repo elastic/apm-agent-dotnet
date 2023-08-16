@@ -21,8 +21,11 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener : IDisposable
 	{
-		private readonly ConcurrentDictionary<string, Span> ActiveSpans = new();
-		private readonly ConcurrentDictionary<string, Transaction> ActiveTransactions = new();
+		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
+		private static readonly string[] ServerAddressAttributeKeys = new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+
+		private readonly ConcurrentDictionary<string, Span> _activeSpans = new();
+		private readonly ConcurrentDictionary<string, Transaction> _activeTransactions = new();
 
 		internal ElasticActivityListener(IApmAgent agent, HttpTraceConfiguration httpTraceConfiguration) => (_logger, _httpTraceConfiguration) =
 			(agent.Logger?.Scoped(nameof(ElasticActivityListener)), httpTraceConfiguration);
@@ -31,11 +34,13 @@ namespace Elastic.Apm.OpenTelemetry
 		private Tracer _tracer;
 		private readonly HttpTraceConfiguration _httpTraceConfiguration;
 
+		private bool _disposed;
+
 		internal void Start(Tracer tracerInternal)
 		{
 			_httpTraceConfiguration?.AddTracer(new ElasticSearchHttpNonTracer());
-
 			_tracer = tracerInternal;
+
 			Listener = new ActivityListener
 			{
 				ActivityStarted = ActivityStarted,
@@ -45,6 +50,8 @@ namespace Elastic.Apm.OpenTelemetry
 			};
 			ActivitySource.AddActivityListener(Listener);
 		}
+
+		private ActivityListener Listener { get; set; }
 
 		private Action<Activity> ActivityStarted =>
 			activity =>
@@ -102,7 +109,7 @@ namespace Elastic.Apm.OpenTelemetry
 						}
 
 						if (activity.Id != null)
-							ActiveSpans.TryAdd(activity.Id, newSpan);
+							_activeSpans.TryAdd(activity.Id, newSpan);
 					}
 				}
 
@@ -111,10 +118,9 @@ namespace Elastic.Apm.OpenTelemetry
 					transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
 					if (activity.Id != null)
-						ActiveTransactions.TryAdd(activity.Id, transaction);
+						_activeTransactions.TryAdd(activity.Id, transaction);
 				}
 			};
-
 
 		private Action<Activity> ActivityStopped =>
 			activity =>
@@ -132,14 +138,14 @@ namespace Elastic.Apm.OpenTelemetry
 
 				if (activity.Id != null)
 				{
-					if (ActiveTransactions.TryRemove(activity.Id, out var transaction))
+					if (_activeTransactions.TryRemove(activity.Id, out var transaction))
 					{
 						transaction.Duration = activity.Duration.TotalMilliseconds;
 
-						if (activity.Tags.Any())
-							transaction.Otel.Attributes = new Dictionary<string, string>();
+						if (activity.TagObjects.Any())
+							transaction.Otel.Attributes = new Dictionary<string, object>();
 
-						foreach (var tag in activity.Tags)
+						foreach (var tag in activity.TagObjects)
 							transaction.Otel.Attributes.Add(tag.Key, tag.Value);
 
 						InferTransactionType(transaction, activity);
@@ -163,44 +169,51 @@ namespace Elastic.Apm.OpenTelemetry
 
 						transaction.End();
 					}
-					else if (ActiveSpans.TryRemove(activity.Id, out var span))
+					else if (_activeSpans.TryRemove(activity.Id, out var span))
 					{
-						span.Duration = activity.Duration.TotalMilliseconds;
-
-						if (activity.Tags.Any())
-							span.Otel.Attributes = new Dictionary<string, string>();
-
-						foreach (var tag in activity.Tags)
-							span.Otel.Attributes.Add(tag.Key, tag.Value);
-
-						InferSpanTypeAndSubType(span, activity);
-
-						// By default we set unknown outcome
-						span.Outcome = Outcome.Unknown;
-#if NET6_0_OR_GREATER
-						switch (activity.Status)
-						{
-							case ActivityStatusCode.Unset:
-								span.Outcome = Outcome.Unknown;
-								break;
-							case ActivityStatusCode.Ok:
-								span.Outcome = Outcome.Success;
-								break;
-							case ActivityStatusCode.Error:
-								span.Outcome = Outcome.Failure;
-								break;
-						}
-#endif
-						span.End();
+						UpdateSpan(activity, span);
 					}
 				}
 			};
 
-		private void InferTransactionType(Transaction transaction, Activity activity)
+		private static void UpdateSpan(Activity activity, Span span)
 		{
-			var isRpc = activity.Tags.Any(n => n.Key == "rpc.system");
-			var isHttp = activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme");
-			var isMessaging = activity.Tags.Any(n => n.Key == "messaging.system");
+			span.Duration = activity.Duration.TotalMilliseconds;
+
+			if (activity.TagObjects.Any())
+				span.Otel.Attributes = new Dictionary<string, object>();
+
+			foreach (var tag in activity.TagObjects)
+				span.Otel.Attributes.Add(tag.Key, tag.Value);
+
+			InferSpanTypeAndSubType(span, activity);
+
+			// By default we set unknown outcome
+			span.Outcome = Outcome.Unknown;
+#if NET6_0_OR_GREATER
+			switch (activity.Status)
+			{
+				case ActivityStatusCode.Unset:
+					span.Outcome = Outcome.Unknown;
+					break;
+				case ActivityStatusCode.Ok:
+					span.Outcome = Outcome.Success;
+					break;
+				case ActivityStatusCode.Error:
+					span.Outcome = Outcome.Failure;
+					break;
+			}
+#endif
+			span.End();
+		}
+
+		internal static void UpdateSpanBenchmark(Activity activity, Span span) => UpdateSpan(activity, span);
+
+		private static void InferTransactionType(Transaction transaction, Activity activity)
+		{
+			var isRpc = activity.Tags.Any(n => n.Key == SemanticConventions.RpcSystem);
+			var isHttp = activity.Tags.Any(n => n.Key == SemanticConventions.HttpUrl || n.Key == SemanticConventions.UrlFull || n.Key == SemanticConventions.HttpScheme);
+			var isMessaging = activity.Tags.Any(n => n.Key == SemanticConventions.MessagingSystem);
 
 			if (activity.Kind == ActivityKind.Server && (isRpc || isHttp))
 				transaction.Type = ApiConstants.TypeRequest;
@@ -209,8 +222,6 @@ namespace Elastic.Apm.OpenTelemetry
 			else
 				transaction.Type = "unknown";
 		}
-
-		private ActivityListener Listener { get; set; }
 
 		private static void InferSpanTypeAndSubType(Span span, Activity activity)
 		{
@@ -225,7 +236,7 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 
 			// extracts 'host' or 'host:port' from URL
-			string ParseNetName(string url)
+			static string ParseNetName(string url)
 			{
 				try
 				{
@@ -243,17 +254,14 @@ namespace Elastic.Apm.OpenTelemetry
 				return string.IsNullOrEmpty(name) ? type : $"{type}/{name}";
 			}
 
-			var peerPort = "";
-			var netName = "";
+			var peerPort = string.Empty;
+			var netName = string.Empty;
 
-			if (activity.Tags.Any(n => n.Key == "net.peer.port"))
-				peerPort = activity.Tags.FirstOrDefault(n => n.Key == "net.peer.port").Value;
+			if (TryGetStringValue(activity, ServerPortAttributeKeys, out var netPortValue))
+				peerPort = netPortValue;
 
-			if (activity.Tags.Any(n => n.Key == "net.peer.ip"))
-				netName = activity.Tags.FirstOrDefault(n => n.Key == "net.peer.ip").Value;
-
-			if (activity.Tags.Any(n => n.Key == "net.peer.name"))
-				netName = activity.Tags.FirstOrDefault(n => n.Key == "net.peer.name").Value;
+			if (TryGetStringValue(activity, ServerAddressAttributeKeys, out var netNameValue))
+				netName = netNameValue;
 
 			if (netName.Length > 0 && peerPort.Length > 0)
 			{
@@ -265,44 +273,48 @@ namespace Elastic.Apm.OpenTelemetry
 			string serviceTargetName = null;
 			string resource = null;
 
-			if (activity.Tags.Any(n => n.Key == "db.system"))
+			var isDbSpan = TryGetStringValue(activity, SemanticConventions.DbSystem, out var dbSystem);
+
+			if (isDbSpan)
 			{
 				span.Type = ApiConstants.TypeDb;
-				span.Subtype = activity.Tags.First(n => n.Key == "db.system").Value;
+				span.Subtype = dbSystem;
 				serviceTargetType = span.Subtype;
-				serviceTargetName = activity.Tags.FirstOrDefault(n => n.Key == "db.name").Value;
+				serviceTargetName = TryGetStringValue(activity, SemanticConventions.DbName, out var dbName) ? dbName : null;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
 			}
-			else if (activity.Tags.Any(n => n.Key == "messaging.system"))
+			else if (activity.Tags.Any(n => n.Key == SemanticConventions.MessagingSystem))
 			{
 				span.Type = ApiConstants.TypeMessaging;
-				span.Subtype = activity.Tags.First(n => n.Key == "messaging.system").Value;
+				span.Subtype = activity.Tags.First(n => n.Key == SemanticConventions.MessagingSystem).Value;
 				serviceTargetType = span.Subtype;
-				serviceTargetName = activity.Tags.FirstOrDefault(n => n.Key == "messaging.destination").Value;
+				serviceTargetName = activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.MessagingDestination).Value;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
 			}
-			else if (activity.Tags.Any(n => n.Key == "rpc.system"))
+			else if (activity.Tags.Any(n => n.Key == SemanticConventions.RpcSystem))
 			{
 				span.Type = ApiConstants.TypeExternal;
-				span.Subtype = activity.Tags.First(n => n.Key == "rpc.system").Value;
+				span.Subtype = activity.Tags.First(n => n.Key == SemanticConventions.RpcSystem).Value;
 				serviceTargetType = span.Subtype;
 				serviceTargetName = !string.IsNullOrEmpty(netName)
 					? netName
-					: activity.Tags.FirstOrDefault(n => n.Key == "rpc.service").Value;
+					: activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.RpcService).Value;
 				resource = serviceTargetName ?? span.Subtype;
 			}
-			else if (activity.Tags.Any(n => n.Key == "http.url" || n.Key == "http.scheme"))
+			else if (activity.Tags.Any(n => n.Key == SemanticConventions.HttpUrl || n.Key == SemanticConventions.UrlFull || n.Key == SemanticConventions.HttpScheme))
 			{
 				span.Type = ApiConstants.TypeExternal;
 				span.Subtype = ApiConstants.SubtypeHttp;
 				serviceTargetType = span.Subtype;
-				if (activity.Tags.Any(n => n.Key == "http.host") && activity.Tags.Any(n => n.Key == "http.scheme"))
+				if (activity.Tags.Any(n => n.Key == SemanticConventions.HttpHost) && activity.Tags.Any(n => n.Key == SemanticConventions.HttpScheme))
 				{
-					serviceTargetName = activity.Tags.FirstOrDefault(n => n.Key == "http.host").Value + ":"
-						+ HttpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == "http.scheme").Value);
+					serviceTargetName = activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.HttpHost).Value + ":"
+						+ HttpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.HttpScheme).Value);
 				}
-				else if (activity.Tags.Any(n => n.Key == "http.url"))
-					serviceTargetName = ParseNetName(activity.Tags.FirstOrDefault(n => n.Key == "http.url").Value);
+				else if (activity.Tags.Any(n => n.Key == SemanticConventions.HttpUrl))
+					serviceTargetName = ParseNetName(activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.HttpUrl).Value);
+				else if (activity.Tags.Any(n => n.Key == SemanticConventions.UrlFull))
+					serviceTargetName = ParseNetName(activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.UrlFull).Value);
 				else
 					serviceTargetName = netName;
 
@@ -328,8 +340,59 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 		}
 
-		public void Dispose() => Listener?.Dispose();
+		private static bool TryGetStringValue(Activity activity, string key, out string value)
+		{
+			value = null;
+
+			var attribute = activity.GetTagItem(key);
+
+			if (attribute is string stringValue)
+			{
+				value = stringValue;
+				return true;
+			}
+
+			if (attribute is int intValue)
+			{
+				value = intValue.ToString();
+				return true;
+			}
+
+			return false;
+		}
+
+		private static bool TryGetStringValue(Activity activity, string[] keys, out string value)
+		{
+			value = null;
+
+			foreach (var key in keys)
+			{
+				if (TryGetStringValue(activity, key, out var attributeValue))
+				{
+					value = attributeValue;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!_disposed)
+			{
+				if (disposing)
+					Listener?.Dispose();
+
+				_disposed = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
 	}
 }
-
 #endif
