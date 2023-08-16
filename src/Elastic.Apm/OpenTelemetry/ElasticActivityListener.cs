@@ -219,6 +219,9 @@ namespace Elastic.Apm.OpenTelemetry
 			span.End();
 		}
 
+		/// <summary>
+		/// Specifically exposed for benchmarking. This is not intended for any other purpose.
+		/// </summary>
 		internal static void UpdateSpanBenchmark(Activity activity, Span span) => UpdateSpan(activity, span);
 
 		private static void InferTransactionType(Transaction transaction, Activity activity)
