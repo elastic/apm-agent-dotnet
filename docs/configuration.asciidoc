@@ -1095,57 +1095,17 @@ This is useful when using windows authentication on a proxy, that routes APM age
 |============
 
 [float]
-[[config-baggage-to-attach-on-transactions]]
-==== `BaggageToAttachOnTransactions` (added[1.23])
+[[config-baggage-to-attach]]
+==== `BaggageToAttach` (added[1.24])
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-Controls which baggage values are automatically attached to the given transaction. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/[W3C Baggage specification]. You can programmatically write and read baggage values via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. For more details, see <<baggage-api,`our documentation on how to integrate with OpenTelemetry`>>.
+Controls which baggage values are automatically attached to the given event (transaction, span, error). Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/[W3C Baggage specification]. You can programmatically write and read baggage values via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. For more details, see <<baggage-api,`our documentation on how to integrate with OpenTelemetry`>>.
 
 [options="header"]
 |============
 | Environment variable name                       | IConfiguration key
-| `ELASTIC_APM_BAGGAGE_TO_ATTACH_ON_TRANSACTIONS` | `ElasticApm:BaggageToAttachOnTransactions`
-|============
-
-[options="header"]
-|============
-| Default | Type
-| `*`     | Comma separated string
-|============
-
-[float]
-[[config-baggage-to-attach-on-spans]]
-==== `BaggageToAttachOnSpans` (added[1.23])
-
-<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
-
-Controls which baggage values are automatically attached to the given span. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/[W3C Baggage specification]. You can programmatically write and read baggage values via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. For more details, see <<baggage-api,`our documentation on how to integrate with OpenTelemetry`>>.
-
-[options="header"]
-|============
-| Environment variable name                       | IConfiguration key
-| `ELASTIC_APM_BAGGAGE_TO_ATTACH_ON_SPANS` | `ElasticApm:BaggageToAttachOnSpans`
-|============
-
-[options="header"]
-|============
-| Default | Type
-| `*`     | Comma separated string
-|============
-
-[float]
-[[config-baggage-to-attach-on-errors]]
-==== `BaggageToAttachOnErrors` (added[1.23])
-
-<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
-
-Controls which baggage values are automatically attached to the given error. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/[W3C Baggage specification]. You can programmatically write and read baggage values via the https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0[Activity API]. For more details, see <<baggage-api,`our documentation on how to integrate with OpenTelemetry`>>.
-
-[options="header"]
-|============
-| Environment variable name                       | IConfiguration key
-| `ELASTIC_APM_BAGGAGE_TO_ATTACH_ON_ERRORS` | `ElasticApm:BaggageToAttachOnErrors`
+| `ELASTIC_APM_BAGGAGE_TO_ATTACH` | `ElasticApm:BaggageToAttach`
 |============
 
 [options="header"]

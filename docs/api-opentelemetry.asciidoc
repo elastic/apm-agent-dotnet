@@ -105,11 +105,7 @@ _activitySource.StartActivity("MyActivity")?.AddBaggage("foo", "bar");
 
 The Elastic APM Agent will automatically propagate such values according to the https://www.w3.org/TR/baggage/[W3C Baggage specification] and `Activity.Baggage` is automatically populated based on the incoming `baggage` header.
 
-Furthermore, the agent offers the following configurations to automatically attach values from `Activity.Baggage` to:
-
-* Transactions: <<config-baggage-to-attach-on-transactions, BaggageToAttachOnTransactions>>
-* Spans: <<config-baggage-to-attach-on-spans, BaggageToAttachOnSpans>>
-* Errors: <<config-baggage-to-attach-on-errors, BaggageToAttachOnErrors>>
+Furthermore, the agent offers the <<config-baggage-to-attach, BaggageToAttach>> configuration to automatically attach values from `Activity.Baggage` to captured events.
 
 [float]
 [[supported-opentelemetry-implementations]]
