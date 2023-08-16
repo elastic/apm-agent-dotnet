@@ -35,9 +35,9 @@ public class BaggageAspNetCoreTests : MultiApplicationTestBase
 			.Should()
 			.Be("key1=value1, key2 = value2, key3=value3");
 
-		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("key1", "value1"));
-		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("key2", "value2"));
-		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("key3", "value3"));
+		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("key1", "value1"));
+		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("key2", "value2"));
+		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("key3", "value3"));
 	}
 
 	/// <summary>
@@ -73,6 +73,6 @@ public class BaggageAspNetCoreTests : MultiApplicationTestBase
 			.Should()
 			.Be("foo=bar");
 
-		_payloadSender2.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
+		_payloadSender2.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("foo", "bar"));
 	}
 }

@@ -336,7 +336,7 @@ namespace Elastic.Apm.Model
 				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
 					continue;
 
-				Otel ??= new OTel() { Attributes = new Dictionary<string, string>() };
+				Otel ??= new OTel() { Attributes = new Dictionary<string, object>() };
 				Otel.Attributes.Add(baggage.Key, baggage.Value);
 			}
 		}

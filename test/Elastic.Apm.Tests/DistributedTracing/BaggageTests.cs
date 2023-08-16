@@ -41,10 +41,10 @@ public class BaggageTests
 		RunSample(agent);
 
 		payloadSender.FirstTransaction.Should().NotBeNull();
-		payloadSender.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
+		payloadSender.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("foo", "bar"));
 
 		payloadSender.FirstSpan.Should().NotBeNull();
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
+		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("foo", "bar"));
 
 		payloadSender.FirstError.Should().NotBeNull();
 		payloadSender.FirstError.Context.InternalLabels.Should().NotBeNull();
@@ -66,11 +66,11 @@ public class BaggageTests
 		RunSample(agent);
 
 		payloadSender.FirstTransaction.Should().NotBeNull();
-		payloadSender.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
+		payloadSender.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("foo", "bar"));
 		payloadSender.FirstTransaction.Otel.Attributes.Should().NotContainKey("key1");
 
 		payloadSender.FirstSpan.Should().NotBeNull();
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
+		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("foo", "bar"));
 		payloadSender.FirstSpan.Otel.Attributes.Should().NotContainKey("key1");
 
 		payloadSender.FirstError.Should().NotBeNull();
