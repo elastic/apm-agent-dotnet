@@ -8,10 +8,9 @@ using System;
 
 [assembly: FunctionsStartup(typeof(Elastic.AzureFunctionApp.InProcess.Startup))]
 
-namespace Elastic.AzureFunctionApp.InProcess
+namespace Elastic.AzureFunctionApp.InProcess;
+
+internal class Startup : FunctionsStartup
 {
-	internal class Startup : FunctionsStartup
-	{
-		public override void Configure(IFunctionsHostBuilder builder) => builder.AddElasticApm();
-	}
+	public override void Configure(IFunctionsHostBuilder builder) => builder.AddElasticApm();
 }

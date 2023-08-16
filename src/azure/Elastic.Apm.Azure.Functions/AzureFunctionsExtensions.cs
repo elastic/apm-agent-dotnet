@@ -7,22 +7,21 @@ using System.Linq;
 using Elastic.Apm.DiagnosticSource;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
-namespace Elastic.Apm.Azure.Functions
-{
-	public static class AzureFunctionsExtensions
-	{
-		public static IFunctionsHostBuilder AddElasticApm(this IFunctionsHostBuilder builder)
-		{
-			AddElasticApm(Agent.Instance, null);
-			return builder;
-		}
+namespace Elastic.Apm.Azure.Functions;
 
-		private static void AddElasticApm(ApmAgent agent, IDiagnosticsSubscriber[]? subscribers)
-		{
-			var subs = subscribers?.ToList() ?? new List<IDiagnosticsSubscriber>(1);
-			if (subs.Count == 0 || subs.All(s => s.GetType() != typeof(AzureFunctionsDiagnosticSubscriber)))
-				subs.Add(new AzureFunctionsDiagnosticSubscriber());
-			agent.Subscribe(subs.ToArray());
-		}
+public static class AzureFunctionsExtensions
+{
+	public static IFunctionsHostBuilder AddElasticApm(this IFunctionsHostBuilder builder)
+	{
+		AddElasticApm(Agent.Instance, null);
+		return builder;
+	}
+
+	private static void AddElasticApm(ApmAgent agent, IDiagnosticsSubscriber[]? subscribers)
+	{
+		var subs = subscribers?.ToList() ?? new List<IDiagnosticsSubscriber>(1);
+		if (subs.Count == 0 || subs.All(s => s.GetType() != typeof(AzureFunctionsDiagnosticSubscriber)))
+			subs.Add(new AzureFunctionsDiagnosticSubscriber());
+		agent.Subscribe(subs.ToArray());
 	}
 }

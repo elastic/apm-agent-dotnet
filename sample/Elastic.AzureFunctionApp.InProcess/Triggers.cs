@@ -11,28 +11,27 @@ using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Text;
 
-namespace Elastic.AzureFunctionApp.InProcess
+namespace Elastic.AzureFunctionApp.InProcess;
+
+public static class Triggers
 {
-    public static class Triggers
-    {
-        [FunctionName("SampleHttpTrigger")]
-        public static  IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
-        {
-			log.LogInformation("C# HTTP trigger function (dotnet in-process) processed a request.");
+	[FunctionName("SampleHttpTrigger")]
+	public static  IActionResult Run(
+		[HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+		ILogger log)
+	{
+		log.LogInformation("C# HTTP trigger function (dotnet in-process) processed a request.");
 
-			var responseMessage = new StringBuilder();
-			responseMessage.AppendLine("Hello Azure Functions (in-process)!");
-			responseMessage.AppendLine("======================");
-			foreach (DictionaryEntry e in Environment.GetEnvironmentVariables())
-			{
-				log.LogInformation($"{e.Key} = {e.Value}");
-				responseMessage.AppendLine($"{e.Key} = {e.Value}");
-			}
-			responseMessage.AppendLine("======================");
+		var responseMessage = new StringBuilder();
+		responseMessage.AppendLine("Hello Azure Functions (in-process)!");
+		responseMessage.AppendLine("======================");
+		foreach (DictionaryEntry e in Environment.GetEnvironmentVariables())
+		{
+			log.LogInformation($"{e.Key} = {e.Value}");
+			responseMessage.AppendLine($"{e.Key} = {e.Value}");
+		}
+		responseMessage.AppendLine("======================");
 
-			return new OkObjectResult(responseMessage);
-        }
-    }
+		return new OkObjectResult(responseMessage);
+	}
 }

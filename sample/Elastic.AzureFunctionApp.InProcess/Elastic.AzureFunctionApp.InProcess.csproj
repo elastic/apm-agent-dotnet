@@ -16,6 +16,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.Azure.Functions\Elastic.Apm.Azure.Functions.csproj" />
+    <ProjectReference Include="$(SrcAzure)\Elastic.Apm.Azure.Functions\Elastic.Apm.Azure.Functions.csproj" />
   </ItemGroup>
 </Project>
