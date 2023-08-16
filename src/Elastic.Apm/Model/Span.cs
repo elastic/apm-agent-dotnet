@@ -119,11 +119,28 @@ namespace Elastic.Apm.Model
 			else
 				SampleRate = 0;
 
+			CheckAndCaptureBaggage();
+
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 
 			_logger.Trace()
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
+		}
+
+		private void CheckAndCaptureBaggage()
+		{
+			if (Activity.Current == null || !Activity.Current.Baggage.Any())
+				return;
+
+			foreach (var baggage in Activity.Current.Baggage)
+			{
+				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
+					continue;
+
+				Otel ??= new OTel() { Attributes = new Dictionary<string, object>() };
+				Otel.Attributes.Add(baggage.Key, baggage.Value);
+			}
 		}
 
 		// Disable obsolete-warning due to Configuration.SpanFramesMinDurationInMilliseconds access.

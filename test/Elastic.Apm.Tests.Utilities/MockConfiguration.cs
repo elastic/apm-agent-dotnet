@@ -31,6 +31,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string serviceNodeName = null,
 			string secretToken = null,
 			string apiKey = null,
+			string baggageToAttach = null,
 			string captureHeaders = null,
 			string centralConfig = null,
 			string openTelemetryBridgeEnabled = null,
@@ -76,6 +77,7 @@ namespace Elastic.Apm.Tests.Utilities
 			{
 				ConfigurationOption.ApiKey => apiKey,
 				ConfigurationOption.ApplicationNamespaces => applicationNamespaces,
+				ConfigurationOption.BaggageToAttach => baggageToAttach,
 				ConfigurationOption.CaptureBody => captureBody,
 				ConfigurationOption.CaptureBodyContentTypes => captureBodyContentTypes,
 				ConfigurationOption.CaptureHeaders => captureHeaders,
