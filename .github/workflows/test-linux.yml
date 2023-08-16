@@ -138,6 +138,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Bootstrap Action Workspace
+      id: bootstrap
       uses: ./.github/workflows/bootstrap
       with:
           rust: 'true'
@@ -151,5 +152,7 @@ jobs:
           name: 'profiler'
           project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
     
-    - name: Create Docker Image
-      run: .ci/linux/build_docker.sh
+    - name: Build Profiler Docker Image
+      run: |
+        docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
+            --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
