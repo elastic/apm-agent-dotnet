@@ -44,8 +44,8 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 	private readonly MockApmServer _apmServer;
 	private readonly Process _funcProcess;
 	protected abstract Uri BaseUri { get; }
-	public abstract string WebsiteName { get;  }
-	public abstract string RuntimeName { get;  }
+	public abstract string WebsiteName { get; }
+	public abstract string RuntimeName { get; }
 
 	internal AzureFunctionTestContextBase(FunctionType functionType)
 	{
@@ -114,7 +114,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		}
 	}
 
-	public Uri CreateUri(string path) => new (BaseUri, path);
+	public Uri CreateUri(string path) => new(BaseUri, path);
 
 	internal async Task<TransactionDto> InvokeFunction(ITestOutputHelper output, Uri uri)
 	{

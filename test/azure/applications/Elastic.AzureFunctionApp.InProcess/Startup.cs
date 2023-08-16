@@ -2,9 +2,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using Elastic.Apm.Azure.Functions;
 using System;
+using Elastic.Apm.Azure.Functions;
+using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
 [assembly: FunctionsStartup(typeof(Elastic.AzureFunctionApp.InProcess.Startup))]
 

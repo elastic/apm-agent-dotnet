@@ -3,22 +3,22 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Text;
 using System.Web.Http;
 using Elastic.Apm.AzureFunctionApp.Core;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Elastic.AzureFunctionApp.InProcess;
 
 public static class Triggers
 {
 	[FunctionName(FunctionName.SampleHttpTrigger)]
-	public static  IActionResult Run(
+	public static IActionResult Run(
 		[HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
 		ILogger log)
 	{
