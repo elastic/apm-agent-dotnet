@@ -21,6 +21,9 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener : IDisposable
 	{
+		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
+		private static readonly string[] ServerAddressAttributeKeys = new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+
 		private readonly ConcurrentDictionary<string, Span> _activeSpans = new();
 		private readonly ConcurrentDictionary<string, Transaction> _activeTransactions = new();
 
@@ -254,10 +257,10 @@ namespace Elastic.Apm.OpenTelemetry
 			var peerPort = string.Empty;
 			var netName = string.Empty;
 
-			if (TryGetStringValue(activity, SemanticConventions.ServerPort, SemanticConventions.NetPeerPort, out var netPortValue))
+			if (TryGetStringValue(activity, ServerPortAttributeKeys, out var netPortValue))
 				peerPort = netPortValue;
 
-			if (TryGetStringValue(activity, SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp, out var netNameValue))
+			if (TryGetStringValue(activity, ServerAddressAttributeKeys, out var netNameValue))
 				netName = netNameValue;
 
 			if (netName.Length > 0 && peerPort.Length > 0)
@@ -277,7 +280,7 @@ namespace Elastic.Apm.OpenTelemetry
 				span.Type = ApiConstants.TypeDb;
 				span.Subtype = dbSystem;
 				serviceTargetType = span.Subtype;
-				serviceTargetName = TryGetStringValue(activity, SemanticConventions.DbName, out var dbName)	? dbName : null;
+				serviceTargetName = TryGetStringValue(activity, SemanticConventions.DbName, out var dbName) ? dbName : null;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
 			}
 			else if (activity.Tags.Any(n => n.Key == SemanticConventions.MessagingSystem))
@@ -358,45 +361,17 @@ namespace Elastic.Apm.OpenTelemetry
 			return false;
 		}
 
-		private static bool TryGetStringValue(Activity activity, string keyA, string keyB, out string value)
+		private static bool TryGetStringValue(Activity activity, string[] keys, out string value)
 		{
 			value = null;
 
-			if (TryGetStringValue(activity, keyA, out var attributeValue))
+			foreach (var key in keys)
 			{
-				value = attributeValue;
-				return true;
-			}
-
-			if (TryGetStringValue(activity, keyB, out attributeValue))
-			{
-				value = attributeValue;
-				return true;
-			}
-
-			return false;
-		}
-
-		private static bool TryGetStringValue(Activity activity, string keyA, string keyB, string keyC, out string value)
-		{
-			value = null;
-
-			if (TryGetStringValue(activity, keyA, out var attributeValue))
-			{
-				value = attributeValue;
-				return true;
-			}
-
-			if (TryGetStringValue(activity, keyB, out attributeValue))
-			{
-				value = attributeValue;
-				return true;
-			}
-
-			if (TryGetStringValue(activity, keyC, out attributeValue))
-			{
-				value = attributeValue;
-				return true;
+				if (TryGetStringValue(activity, key, out var attributeValue))
+				{
+					value = attributeValue;
+					return true;
+				}
 			}
 
 			return false;
@@ -420,5 +395,4 @@ namespace Elastic.Apm.OpenTelemetry
 		}
 	}
 }
-
 #endif
