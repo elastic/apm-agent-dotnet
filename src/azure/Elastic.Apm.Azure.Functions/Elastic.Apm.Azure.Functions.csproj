@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\integrations\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

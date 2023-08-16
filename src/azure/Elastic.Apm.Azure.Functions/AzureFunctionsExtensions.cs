@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
-using System.Linq;
+using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
@@ -13,15 +13,17 @@ public static class AzureFunctionsExtensions
 {
 	public static IFunctionsHostBuilder AddElasticApm(this IFunctionsHostBuilder builder)
 	{
-		AddElasticApm(Agent.Instance, null);
+		AddElasticApm(Agent.Instance);
 		return builder;
 	}
 
-	private static void AddElasticApm(ApmAgent agent, IDiagnosticsSubscriber[]? subscribers)
+	private static void AddElasticApm(ApmAgent agent)
 	{
-		var subs = subscribers?.ToList() ?? new List<IDiagnosticsSubscriber>(1);
-		if (subs.Count == 0 || subs.All(s => s.GetType() != typeof(AzureFunctionsDiagnosticSubscriber)))
-			subs.Add(new AzureFunctionsDiagnosticSubscriber());
+		var subs = new List<IDiagnosticsSubscriber>
+		{
+			new AzureFunctionsDiagnosticSubscriber(),
+			new AspNetCoreErrorDiagnosticsSubscriber()
+		};
 		agent.Subscribe(subs.ToArray());
 	}
 }
