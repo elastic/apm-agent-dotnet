@@ -154,11 +154,8 @@ namespace Elastic.Apm.OpenTelemetry
 					_activeTransactions.Remove(activity);
 					transaction.Duration = activity.Duration.TotalMilliseconds;
 
-					if (activity.TagObjects.Any())
-						transaction.Otel.Attributes = new Dictionary<string, object>();
-
-					foreach (var tag in activity.TagObjects)
-						transaction.Otel.Attributes.Add(tag.Key, tag.Value);
+						if (activity.TagObjects.Any())
+							transaction.Otel.Attributes = new Dictionary<string, object>(activity.TagObjects);
 
 					InferTransactionType(transaction, activity);
 
@@ -193,10 +190,7 @@ namespace Elastic.Apm.OpenTelemetry
 			span.Duration = activity.Duration.TotalMilliseconds;
 
 			if (activity.TagObjects.Any())
-				span.Otel.Attributes = new Dictionary<string, object>();
-
-			foreach (var tag in activity.TagObjects)
-				span.Otel.Attributes.Add(tag.Key, tag.Value);
+				span.Otel.Attributes = new Dictionary<string, object>(activity.TagObjects);
 
 			InferSpanTypeAndSubType(span, activity);
 
@@ -228,9 +222,6 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			if (activity.Kind == ActivityKind.Server && (TryGetStringValue(activity, SemanticConventions.RpcSystem, out _)
 					|| TryGetStringValue(activity, HttpAttributeKeys, out _)))
-			var isMessaging = activity.Tags.Any(n => n.Key == SemanticConventions.MessagingSystem);
-
-			if (activity.Kind == ActivityKind.Server && (isRpc || isHttp))
 				transaction.Type = ApiConstants.TypeRequest;
 			else if (activity.Kind == ActivityKind.Consumer && TryGetStringValue(activity, SemanticConventions.MessagingSystem, out _))
 				transaction.Type = ApiConstants.TypeMessaging;
