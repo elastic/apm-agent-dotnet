@@ -37,11 +37,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public string ApiKey => _mainConfiguration.ApiKey;
 		public IReadOnlyCollection<string> ApplicationNamespaces => _mainConfiguration.ApplicationNamespaces;
 
-		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnTransactions => _mainConfiguration.BaggageToAttachOnTransactions;
-
-		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnSpans => _mainConfiguration.BaggageToAttachOnSpans;
-
-		public IReadOnlyList<WildcardMatcher> BaggageToAttachOnErrors => _mainConfiguration.BaggageToAttachOnErrors;
+		public IReadOnlyList<WildcardMatcher> BaggageToAttach => _mainConfiguration.BaggageToAttach;
 
 		public string CaptureBody => _dynamicConfiguration?.CaptureBody ?? _mainConfiguration.CaptureBody;
 

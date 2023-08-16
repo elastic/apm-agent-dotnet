@@ -51,64 +51,6 @@ public class BaggageTests
 		payloadSender.FirstError.Context.InternalLabels.Value.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
 	}
 
-	[Fact]
-	public void CaptureBaggageOnlyOnTransaction()
-	{
-		var payloadSender = new MockPayloadSender();
-		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-			configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true", baggageToAttachOnErrors: "", baggageToAttachOnSpans: "")));
-
-		RunSample(agent);
-
-		payloadSender.FirstTransaction.Should().NotBeNull();
-		payloadSender.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
-
-		payloadSender.FirstSpan.Should().NotBeNull();
-		payloadSender.FirstSpan.Otel.Should().BeNull();
-
-		payloadSender.FirstError.Should().NotBeNull();
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().BeEmpty();
-	}
-
-	[Fact]
-	public void CaptureBaggageOnlyOnSpan()
-	{
-		var payloadSender = new MockPayloadSender();
-		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-			configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true", baggageToAttachOnErrors: "", baggageToAttachOnTransactions: "")));
-
-		RunSample(agent);
-
-		payloadSender.FirstTransaction.Should().NotBeNull();
-		payloadSender.FirstTransaction.Otel.Should().BeNull();
-
-		payloadSender.FirstSpan.Should().NotBeNull();
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
-
-		payloadSender.FirstError.Should().NotBeNull();
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().BeEmpty();
-	}
-
-	[Fact]
-	public void CaptureBaggageOnlyOnError()
-	{
-		var payloadSender = new MockPayloadSender();
-		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-			configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true", baggageToAttachOnTransactions: "", baggageToAttachOnSpans: "")));
-
-		RunSample(agent);
-
-		payloadSender.FirstTransaction.Should().NotBeNull();
-		payloadSender.FirstTransaction.Otel.Should().BeNull();
-
-		payloadSender.FirstSpan.Should().NotBeNull();
-		payloadSender.FirstSpan.Otel.Should().BeNull();
-
-		payloadSender.FirstError.Should().NotBeNull();
-		payloadSender.FirstError.Context.InternalLabels.Should().NotBeNull();
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().Contain(new KeyValuePair<string, string>("foo", "bar"));
-	}
-
 	/// <summary>
 	/// Sets baggageToAttachOn[*] configs to `foo` and writes 2 baggage items.
 	/// Asserts that only baggage with key `foo` is captured, and the other baggage is not captured.
@@ -118,7 +60,7 @@ public class BaggageTests
 	{
 		var payloadSender = new MockPayloadSender();
 		using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-			configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true", baggageToAttachOnTransactions: "foo", baggageToAttachOnErrors: "foo", baggageToAttachOnSpans: "foo")));
+			configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true", baggageToAttach: "foo")));
 
 		_activitySource.StartActivity("Activity1")?.AddBaggage("key1", "value1");
 		RunSample(agent);

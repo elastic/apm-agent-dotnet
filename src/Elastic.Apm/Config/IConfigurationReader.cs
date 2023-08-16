@@ -42,22 +42,11 @@ namespace Elastic.Apm.Config
 		IReadOnlyCollection<string> ApplicationNamespaces { get; }
 
 		/// <summary>
-		/// Controls which baggage values are automatically attached to the given transaction. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/.
+		/// Controls which baggage values are automatically attached to the given event (transactions, spans, errors). Baggage values are derived from the `baggage` header defined in
+		/// https://www.w3.org/TR/baggage/.
 		/// You can programmatically write and read baggage values via the Activity API.
 		/// </summary>
-		IReadOnlyList<WildcardMatcher> BaggageToAttachOnTransactions { get; }
-
-		/// <summary>
-		/// Controls which baggage values are automatically attached to the given span. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/.
-		/// You can programmatically write and read baggage values via the Activity API.
-		/// </summary>
-		IReadOnlyList<WildcardMatcher> BaggageToAttachOnSpans { get; }
-
-		/// <summary>
-		/// Controls which baggage values are automatically attached to the given error. Baggage values are derived from the `baggage` header defined in the https://www.w3.org/TR/baggage/.
-		/// You can programmatically write and read baggage values via the Activity API.
-		/// </summary>
-		IReadOnlyList<WildcardMatcher> BaggageToAttachOnErrors { get; }
+		IReadOnlyList<WildcardMatcher> BaggageToAttach { get; }
 
 		/// <summary>
 		/// For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables.

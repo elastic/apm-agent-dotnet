@@ -98,14 +98,8 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttachOnTransactions(ConfigurationKeyValue kv)
-			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttachOnTransactions, "BaggageToAttachOnTransactions");
-
-		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttachOnSpans(ConfigurationKeyValue kv)
-			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttachOnSpans, "BaggageToAttachOnSpans");
-
-		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttachOnErrors(ConfigurationKeyValue kv)
-			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttachOnErrors, "BaggageToAttachOnErrors");
+		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttach(ConfigurationKeyValue kv)
+			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttach, "BaggageToAttach");
 
 		private IReadOnlyList<WildcardMatcher> ParseWildcardMatcher(string stringValue, string configName)
 		{
