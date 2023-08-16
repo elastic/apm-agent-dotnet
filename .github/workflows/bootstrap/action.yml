@@ -43,13 +43,14 @@ runs:
           dotnet-version: |
             6.0.100
             7.0.100 
-    - shell: bash
-      id: dotnet
+    - id: dotnet
+      shell: bash
       run: |
         dotnet --list-sdks
         dotnet tool restore
-        echo "AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e) >> $GITHUB_ENV
-        echo "agent-version=$(dotnet minver -t=v -p=canary.0 -v=e) >> $GITHUB_OUTPUT
+        echo "Version Number: $(dotnet minver -t=v -p=canary.0 -v=e)"
+        echo "AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e)" >> $GITHUB_ENV
+        echo "agent-version=$(dotnet minver -t=v -p=canary.0 -v=e)" >> $GITHUB_OUTPUT
   
       
     # Setup git config
