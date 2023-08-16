@@ -48,11 +48,14 @@ jobs:
         roleId: ${{ secrets.VAULT_ROLE_ID }}
         secretId: ${{ secrets.VAULT_SECRET_ID }}
 
-    - name: Build/Push Profiler Docker Image
+    - name: Build Profiler Docker Image
       continue-on-error: true #continue for now until we see it working in action
       run: |
         docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
             --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+    - name: Push Profiler Docker Image
+      continue-on-error: true #continue for now until we see it working in action
+      run: |
         docker push docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }}
         
     - name: Attach Profiler And Startup Hooks
