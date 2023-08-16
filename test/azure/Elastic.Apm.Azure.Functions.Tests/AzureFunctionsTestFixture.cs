@@ -15,13 +15,25 @@ using FluentAssertions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
 
+public enum FunctionType { Isolated, InProcess }
+
+public class AzureFunctionsTestFixtureIsolated : AzureFunctionsTestFixtureBase
+{
+	public AzureFunctionsTestFixtureIsolated() : base(FunctionType.Isolated) { }
+}
+
+public class AzureFunctionsTestFixtureInProcess : AzureFunctionsTestFixtureBase
+{
+	public AzureFunctionsTestFixtureInProcess() : base(FunctionType.InProcess) { }
+}
+
 public abstract class AzureFunctionsTestFixtureBase : IDisposable
 {
 	private readonly AutoResetEvent _waitForTransactionDataEvent = new(false);
 	private readonly MockApmServer _apmServer;
 	private readonly Process _funcProcess;
 
-	internal AzureFunctionsTestFixtureBase(string funcAppDir)
+	internal AzureFunctionsTestFixtureBase(FunctionType functionType)
 	{
 		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsIsolatedTests));
 		_apmServer.OnReceive += o =>
@@ -34,7 +46,13 @@ public abstract class AzureFunctionsTestFixtureBase : IDisposable
 		_apmServer.RunInBackground(port);
 
 		var solutionRoot = SolutionPaths.Root;
-		var workingDir = Path.Combine(solutionRoot, "test", "azure", "Elastic.AzureFunctionApp.Isolated");
+		var name = functionType switch
+		{
+			FunctionType.Isolated => "Isolated",
+			FunctionType.InProcess => "InProcess",
+			_ => throw new Exception($"Unsupported Azure function type: {functionType}")
+		};
+		var workingDir = Path.Combine(solutionRoot, "test", "azure", "applications", $"Elastic.AzureFunctionApp.{name}");
 		LogLines.Add($"func working directory: {workingDir}");
 		Directory.Exists(workingDir).Should().BeTrue();
 
@@ -101,12 +119,3 @@ public abstract class AzureFunctionsTestFixtureBase : IDisposable
 	internal MetadataDto GetMetaData() => _apmServer.ReceivedData.Metadata.First();
 }
 
-public class AzureFunctionsTestFixtureIsolated : AzureFunctionsTestFixtureBase
-{
-	public AzureFunctionsTestFixtureIsolated() : base("../../../../../sample/Elastic.AzureFunctionApp.Isolated") { }
-}
-
-public class AzureFunctionsTestFixtureInProcess : AzureFunctionsTestFixtureBase
-{
-	public AzureFunctionsTestFixtureInProcess() : base("../../../../../sample/Elastic.AzureFunctionApp.InProcess") { }
-}
