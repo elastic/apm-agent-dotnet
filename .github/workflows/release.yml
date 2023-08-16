@@ -56,7 +56,7 @@ jobs:
     - name: Push Profiler Docker Image
       continue-on-error: true #continue for now until we see it working in action
       run: |
-        docker push docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }}
+        for i in $(seq 1 3); do [ $i -gt 1 ] && sleep 15; docker push docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} && s=0 && break || s=$?; done; (exit $s)
         
     - name: Attach Profiler And Startup Hooks
       continue-on-error: true #continue for now until we see it working in action
