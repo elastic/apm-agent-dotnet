@@ -252,7 +252,7 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 
 			var peerPort = string.Empty;
-			var netName = string.Empty;			
+			var netName = string.Empty;
 
 			if (TryGetStringValue(activity, SemanticConventions.ServerPort, SemanticConventions.NetPeerPort, out var netPortValue))
 				peerPort = netPortValue;

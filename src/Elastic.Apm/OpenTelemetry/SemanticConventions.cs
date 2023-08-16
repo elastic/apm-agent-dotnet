@@ -29,7 +29,7 @@ internal static class SemanticConventions
 	public const string ServerPort = "server.port";
 
 	// NET
-	public const string NetPeerIp = "net.peer.name";
+	public const string NetPeerIp = "net.peer.ip";
 	public const string NetPeerName = "net.peer.name";
 	public const string NetPeerPort = "net.peer.port";
 
