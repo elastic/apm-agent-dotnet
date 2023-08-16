@@ -108,10 +108,10 @@ namespace Elastic.Apm.Config
 				_logger?.Trace()?.Log("Try parsing {ConfigName}, values: {Values}", configName, stringValue);
 				var values = stringValue.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
-				var retVal = new List<WildcardMatcher>(values.Count);
+				var matchers = new List<WildcardMatcher>(values.Count);
 				foreach (var item in values)
-					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
-				return retVal;
+					matchers.Add(WildcardMatcher.ValueOf(item.Trim()));
+				return matchers;
 			}
 			catch (Exception e)
 			{
