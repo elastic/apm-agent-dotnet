@@ -22,8 +22,9 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener : IDisposable
 	{
-		private static readonly string[] ServerPortAttributeKeys = { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
-		private static readonly string[] ServerAddressAttributeKeys = { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
+		private static readonly string[] ServerAddressAttributeKeys = new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+		private static readonly string[] HttpAttributeKeys = new[] { SemanticConventions.HttpUrl, SemanticConventions.UrlFull, SemanticConventions.HttpScheme };
 
 		private readonly ConditionalWeakTable<Activity, Span> _activeSpans = new();
 		private readonly ConditionalWeakTable<Activity, Transaction> _activeTransactions = new();
@@ -222,13 +223,13 @@ namespace Elastic.Apm.OpenTelemetry
 
 		private static void InferTransactionType(Transaction transaction, Activity activity)
 		{
-			var isRpc = activity.Tags.Any(n => n.Key == SemanticConventions.RpcSystem);
-			var isHttp = activity.Tags.Any(n => n.Key == SemanticConventions.HttpUrl || n.Key == SemanticConventions.UrlFull || n.Key == SemanticConventions.HttpScheme);
+			if (activity.Kind == ActivityKind.Server && (TryGetStringValue(activity, SemanticConventions.RpcSystem, out _)
+					|| TryGetStringValue(activity, HttpAttributeKeys, out _)))
 			var isMessaging = activity.Tags.Any(n => n.Key == SemanticConventions.MessagingSystem);
 
 			if (activity.Kind == ActivityKind.Server && (isRpc || isHttp))
 				transaction.Type = ApiConstants.TypeRequest;
-			else if (activity.Kind == ActivityKind.Consumer && isMessaging)
+			else if (activity.Kind == ActivityKind.Consumer && TryGetStringValue(activity, SemanticConventions.MessagingSystem, out _))
 				transaction.Type = ApiConstants.TypeMessaging;
 			else
 				transaction.Type = "unknown";
