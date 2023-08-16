@@ -227,6 +227,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.AzureFunctionApp.In
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "applications", "applications", "{09CE5AC1-01F6-48C8-B266-2F891C408051}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AzureFunctionApp.Core", "test\azure\applications\Elastic.Apm.AzureFunctionApp.Core\Elastic.Apm.AzureFunctionApp.Core.csproj", "{50F14EA5-DF72-425B-81A6-C7D532D2DD07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -567,6 +569,10 @@ Global
 		{A1E60FBF-38AD-4B99-B697-D9F355AF9818}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1E60FBF-38AD-4B99-B697-D9F355AF9818}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1E60FBF-38AD-4B99-B697-D9F355AF9818}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50F14EA5-DF72-425B-81A6-C7D532D2DD07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50F14EA5-DF72-425B-81A6-C7D532D2DD07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50F14EA5-DF72-425B-81A6-C7D532D2DD07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50F14EA5-DF72-425B-81A6-C7D532D2DD07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -670,6 +676,7 @@ Global
 		{09CE5AC1-01F6-48C8-B266-2F891C408051} = {C2378D3C-2BA8-410F-AEF7-547C411C71C7}
 		{A1E60FBF-38AD-4B99-B697-D9F355AF9818} = {09CE5AC1-01F6-48C8-B266-2F891C408051}
 		{9879E646-63ED-474C-905B-1B469403F0A5} = {09CE5AC1-01F6-48C8-B266-2F891C408051}
+		{50F14EA5-DF72-425B-81A6-C7D532D2DD07} = {09CE5AC1-01F6-48C8-B266-2F891C408051}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

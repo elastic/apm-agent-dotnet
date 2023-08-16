@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
-using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
@@ -22,7 +21,6 @@ public static class AzureFunctionsExtensions
 		var subs = new List<IDiagnosticsSubscriber>
 		{
 			new AzureFunctionsDiagnosticSubscriber(),
-			new AspNetCoreErrorDiagnosticsSubscriber()
 		};
 		agent.Subscribe(subs.ToArray());
 	}

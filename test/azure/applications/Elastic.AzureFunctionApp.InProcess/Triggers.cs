@@ -10,12 +10,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Text;
+using System.Web.Http;
+using Elastic.Apm.AzureFunctionApp.Core;
 
 namespace Elastic.AzureFunctionApp.InProcess;
 
 public static class Triggers
 {
-	[FunctionName("SampleHttpTrigger")]
+	[FunctionName(FunctionName.SampleHttpTrigger)]
 	public static  IActionResult Run(
 		[HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
 		ILogger log)
@@ -33,5 +35,31 @@ public static class Triggers
 		responseMessage.AppendLine("======================");
 
 		return new OkObjectResult(responseMessage);
+	}
+
+	[FunctionName(FunctionName.HttpTriggerWithInternalServerError)]
+	public static IActionResult InternalServerError(
+		[HttpTrigger(AuthorizationLevel.Function, "get")]
+		HttpRequest req,
+		ILogger log)
+	{
+		log.LogInformation("C# HTTP trigger function processed a request.");
+
+		return new InternalServerErrorResult();
+	}
+
+	[FunctionName(FunctionName.HttpTriggerWithNotFound)]
+	public static IActionResult NotFound([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req,
+		ILogger log)
+	{
+		log.LogInformation("C# HTTP trigger function processed a request.");
+		return new NotFoundResult();
+	}
+
+	[FunctionName(FunctionName.HttpTriggerWithException)]
+	public static IActionResult Exception([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req, ILogger log)
+	{
+		log.LogInformation("C# HTTP trigger function processed a request.");
+		throw new Exception("whoops!");
 	}
 }

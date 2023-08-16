@@ -7,33 +7,47 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
 
 public enum FunctionType { Isolated, InProcess }
 
-public class AzureFunctionsTestFixtureIsolated : AzureFunctionsTestFixtureBase
+public class IsolatedContext : AzureFunctionTestContextBase
 {
-	public AzureFunctionsTestFixtureIsolated() : base(FunctionType.Isolated) { }
+	protected override Uri BaseUri { get; } = new("http://localhost:7071");
+	public override string WebsiteName { get; } = "testfaas";
+	public override string RuntimeName { get; } = "dotnet-isolated";
+
+	public IsolatedContext() : base(FunctionType.Isolated) { }
 }
 
-public class AzureFunctionsTestFixtureInProcess : AzureFunctionsTestFixtureBase
+public class InProcessContext : AzureFunctionTestContextBase
 {
-	public AzureFunctionsTestFixtureInProcess() : base(FunctionType.InProcess) { }
+	protected override Uri BaseUri { get; } = new("http://localhost:17073");
+	public override string WebsiteName { get; } = "testfaas";
+	public override string RuntimeName { get; } = "dotnet";
+
+	public InProcessContext() : base(FunctionType.InProcess) { }
 }
 
-public abstract class AzureFunctionsTestFixtureBase : IDisposable
+public abstract class AzureFunctionTestContextBase : IDisposable
 {
 	private readonly AutoResetEvent _waitForTransactionDataEvent = new(false);
 	private readonly MockApmServer _apmServer;
 	private readonly Process _funcProcess;
+	protected abstract Uri BaseUri { get; }
+	public abstract string WebsiteName { get;  }
+	public abstract string RuntimeName { get;  }
 
-	internal AzureFunctionsTestFixtureBase(FunctionType functionType)
+	internal AzureFunctionTestContextBase(FunctionType functionType)
 	{
 		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsIsolatedTests));
 		_apmServer.OnReceive += o =>
@@ -98,6 +112,38 @@ public abstract class AzureFunctionsTestFixtureBase : IDisposable
 				break;
 			}
 		}
+	}
+
+	public Uri CreateUri(string path) => new (BaseUri, path);
+
+	internal async Task<TransactionDto> InvokeFunction(ITestOutputHelper output, Uri uri)
+	{
+		var transactionName = $"GET {uri.AbsolutePath}";
+		output.WriteLine($"Invoking {uri} ...");
+		var attempt = 0;
+		const int maxAttempts = 60;
+		using var httpClient = new HttpClient();
+		httpClient.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+		while (++attempt < maxAttempts)
+		{
+			try
+			{
+				var result = await httpClient.GetAsync(uri);
+				var s = await result.Content.ReadAsStringAsync();
+				output.WriteLine(s);
+				break;
+			}
+			catch
+			{
+				await Task.Delay(TimeSpan.FromSeconds(1));
+			}
+		}
+
+		attempt.Should().BeLessThan(maxAttempts, $"Could not connect to function running on {uri}");
+		var transaction = WaitForTransaction(transactionName);
+		//Assert_MetaData(_context.GetMetaData());
+		//Assert_ColdStart(transaction);
+		return transaction;
 	}
 
 	public void Dispose()
