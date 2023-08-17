@@ -24,7 +24,8 @@ namespace Elastic.Apm.OpenTelemetry
 	{
 		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
 		private static readonly string[] ServerAddressAttributeKeys = new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
-		private static readonly string[] HttpAttributeKeys = new[] { SemanticConventions.HttpUrl, SemanticConventions.UrlFull, SemanticConventions.HttpScheme };
+		private static readonly string[] HttpAttributeKeys = new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl, SemanticConventions.HttpScheme };
+		private static readonly string[] HttpUrlAttributeKeys = new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl };
 
 		private readonly ConditionalWeakTable<Activity, Span> _activeSpans = new();
 		private readonly ConditionalWeakTable<Activity, Transaction> _activeTransactions = new();
@@ -279,9 +280,7 @@ namespace Elastic.Apm.OpenTelemetry
 			string serviceTargetName = null;
 			string resource = null;
 
-			var isDbSpan = TryGetStringValue(activity, SemanticConventions.DbSystem, out var dbSystem);
-
-			if (isDbSpan)
+			if (TryGetStringValue(activity, SemanticConventions.DbSystem, out var dbSystem))
 			{
 				span.Type = ApiConstants.TypeDb;
 				span.Subtype = dbSystem;
@@ -289,41 +288,37 @@ namespace Elastic.Apm.OpenTelemetry
 				serviceTargetName = TryGetStringValue(activity, SemanticConventions.DbName, out var dbName) ? dbName : null;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
 			}
-			else if (activity.Tags.Any(n => n.Key == SemanticConventions.MessagingSystem))
+			else if (TryGetStringValue(activity, SemanticConventions.MessagingSystem, out var messagingSystem))
 			{
 				span.Type = ApiConstants.TypeMessaging;
-				span.Subtype = activity.Tags.First(n => n.Key == SemanticConventions.MessagingSystem).Value;
+				span.Subtype = messagingSystem;
 				serviceTargetType = span.Subtype;
-				serviceTargetName = activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.MessagingDestination).Value;
+				serviceTargetName = TryGetStringValue(activity, SemanticConventions.MessagingDestination, out var messagingDestination) ? messagingDestination : null;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
 			}
-			else if (activity.Tags.Any(n => n.Key == SemanticConventions.RpcSystem))
+			else if (TryGetStringValue(activity, SemanticConventions.MessagingSystem, out var rpcSystem))
 			{
 				span.Type = ApiConstants.TypeExternal;
-				span.Subtype = activity.Tags.First(n => n.Key == SemanticConventions.RpcSystem).Value;
+				span.Subtype = rpcSystem;
 				serviceTargetType = span.Subtype;
 				serviceTargetName = !string.IsNullOrEmpty(netName)
 					? netName
-					: activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.RpcService).Value;
+					: TryGetStringValue(activity, SemanticConventions.RpcService, out var rpcService) ? rpcService : null;
 				resource = serviceTargetName ?? span.Subtype;
 			}
-			else if (activity.Tags.Any(n => n.Key == SemanticConventions.HttpUrl || n.Key == SemanticConventions.UrlFull || n.Key == SemanticConventions.HttpScheme))
+			else if (activity.TagObjects.Any(n => n.Key == SemanticConventions.HttpUrl || n.Key == SemanticConventions.UrlFull || n.Key == SemanticConventions.HttpScheme))
 			{
+				var hasHttpHost = TryGetStringValue(activity, SemanticConventions.HttpHost, out var httpHost);
+				var hasHttpScheme = TryGetStringValue(activity, SemanticConventions.HttpScheme, out var httpScheme);
 				span.Type = ApiConstants.TypeExternal;
 				span.Subtype = ApiConstants.SubtypeHttp;
 				serviceTargetType = span.Subtype;
-				if (activity.Tags.Any(n => n.Key == SemanticConventions.HttpHost) && activity.Tags.Any(n => n.Key == SemanticConventions.HttpScheme))
-				{
-					serviceTargetName = activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.HttpHost).Value + ":"
-						+ HttpPortFromScheme(activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.HttpScheme).Value);
-				}
-				else if (activity.Tags.Any(n => n.Key == SemanticConventions.HttpUrl))
-					serviceTargetName = ParseNetName(activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.HttpUrl).Value);
-				else if (activity.Tags.Any(n => n.Key == SemanticConventions.UrlFull))
-					serviceTargetName = ParseNetName(activity.Tags.FirstOrDefault(n => n.Key == SemanticConventions.UrlFull).Value);
+				if (hasHttpHost && hasHttpScheme)
+					serviceTargetName = $"{httpHost}:{HttpPortFromScheme(httpScheme)}";
+				else if (TryGetStringValue(activity, HttpUrlAttributeKeys, out var httpUrl))
+					serviceTargetName = ParseNetName(httpUrl);
 				else
 					serviceTargetName = netName;
-
 				resource = serviceTargetName;
 			}
 
