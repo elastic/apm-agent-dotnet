@@ -45,7 +45,8 @@ public class AzureFunctionsInProcessTests : AzureFunctionsTestBase, IClassFixtur
 
 		transaction.Outcome.Should().Be(Failure);
 		transaction.Result.Should().Be("HTTP 5xx");
-		transaction.Context.Response.Should().BeNull();
+		transaction.Context.Response.Should().NotBeNull();
+		transaction.Context.Response.StatusCode.Should().Be(500);
 	}
 
 	[Fact]

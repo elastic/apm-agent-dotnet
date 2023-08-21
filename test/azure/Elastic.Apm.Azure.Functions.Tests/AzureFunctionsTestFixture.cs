@@ -47,8 +47,11 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 	public abstract string WebsiteName { get; }
 	public abstract string RuntimeName { get; }
 
+	public bool IsFirst { get; internal set; }
+
 	internal AzureFunctionTestContextBase(FunctionType functionType)
 	{
+		IsFirst = true;
 		_apmServer = new MockApmServer(new InMemoryBlockingLogger(LogLevel.Warning), nameof(AzureFunctionsIsolatedTests));
 		_apmServer.OnReceive += o =>
 		{

@@ -16,8 +16,6 @@ public class AzureFunctionsTestBase : IDisposable
 	private readonly ITestOutputHelper _output;
 	private AzureFunctionTestContextBase Context { get; }
 
-	private static bool IsFirst = true;
-
 	protected AzureFunctionsTestBase(ITestOutputHelper output, AzureFunctionTestContextBase context)
 	{
 		_output = output;
@@ -50,10 +48,10 @@ public class AzureFunctionsTestBase : IDisposable
 		transaction.Context.Request.Url.Full.Should().Be(uri.ToString());
 	}
 
-	private static void AssertColdStart(TransactionDto transaction)
+	private void AssertColdStart(TransactionDto transaction)
 	{
-		transaction.FaaS.ColdStart.Should().Be(IsFirst);
-		IsFirst = false;
+		transaction.FaaS.ColdStart.Should().Be(Context.IsFirst);
+		Context.IsFirst = false;
 	}
 
 	private void AssertMetaData(MetadataDto metaData)
