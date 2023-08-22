@@ -4,6 +4,7 @@
 
 using System.Collections;
 using System.Net;
+using Elastic.Apm.AzureFunctionApp.Core;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ namespace Elastic.AzureFunctionApp.Isolated;
 
 public static class HttpTriggers
 {
-	[Function("SampleHttpTrigger")]
+	[Function(FunctionName.SampleHttpTrigger)]
 	public static HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req,
 		FunctionContext executionContext)
 	{
@@ -31,7 +32,7 @@ public static class HttpTriggers
 		return response;
 	}
 
-	[Function("HttpTriggerWithInternalServerError")]
+	[Function(FunctionName.HttpTriggerWithInternalServerError)]
 	public static HttpResponseData InternalServerError(
 		[HttpTrigger(AuthorizationLevel.Function, "get")]
 		HttpRequestData req,
@@ -43,7 +44,7 @@ public static class HttpTriggers
 		return req.CreateResponse(HttpStatusCode.InternalServerError);
 	}
 
-	[Function("HttpTriggerWithNotFound")]
+	[Function(FunctionName.HttpTriggerWithNotFound)]
 	public static HttpResponseData NotFound([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req,
 		FunctionContext executionContext)
 	{
@@ -53,7 +54,7 @@ public static class HttpTriggers
 		return req.CreateResponse(HttpStatusCode.NotFound);
 	}
 
-	[Function("HttpTriggerWithException")]
+	[Function(FunctionName.HttpTriggerWithException)]
 	public static HttpResponseData Exception([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req,
 		FunctionContext executionContext)
 	{
