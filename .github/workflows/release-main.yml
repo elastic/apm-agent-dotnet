@@ -19,6 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Bootstrap Action Workspace
+      id: bootstrap
       uses: ./.github/workflows/bootstrap
       with: 
         rust: 'true'

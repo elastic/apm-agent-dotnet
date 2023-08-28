@@ -98,6 +98,28 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttach(ConfigurationKeyValue kv)
+			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttach, "BaggageToAttach");
+
+		private IReadOnlyList<WildcardMatcher> ParseWildcardMatcher(string stringValue, string configName)
+		{
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing {ConfigName}, values: {Values}", configName, stringValue);
+				var values = stringValue.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+
+				var matchers = new List<WildcardMatcher>(values.Count);
+				foreach (var item in values)
+					matchers.Add(WildcardMatcher.ValueOf(item.Trim()));
+				return matchers;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()?.LogException(e, "Failed parsing {ConfigName}, values in the config: {stringValues}", configName, stringValue);
+				return default;
+			}
+		}
+
 		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null)

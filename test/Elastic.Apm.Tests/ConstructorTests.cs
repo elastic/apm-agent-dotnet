@@ -131,6 +131,8 @@ public class ConstructorTests
 
 		public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
 
+		public IReadOnlyList<WildcardMatcher> BaggageToAttach { get; }
+
 		public bool OpenTelemetryBridgeEnabled => ConfigConsts.DefaultValues.OpenTelemetryBridgeEnabled;
 
 		public bool TraceContextIgnoreSampledFalse => ConfigConsts.DefaultValues.TraceContextIgnoreSampledFalse;

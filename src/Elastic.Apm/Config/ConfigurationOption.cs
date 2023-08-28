@@ -16,6 +16,8 @@ namespace Elastic.Apm.Config
 		ApiKey,
 		/// <inheritdoc cref="IConfigurationReader.ApplicationNamespaces"/>
 		ApplicationNamespaces,
+		/// <inheritdoc cref="IConfigurationReader.BaggageToAttach"/>
+		BaggageToAttach,
 		/// <inheritdoc cref="IConfigurationReader.CaptureBody"/>
 		CaptureBody,
 		/// <inheritdoc cref="IConfigurationReader.CaptureBodyContentTypes"/>
@@ -138,6 +140,7 @@ namespace Elastic.Apm.Config
 			{
 				ApiKey => EnvPrefix + "API_KEY",
 				ApplicationNamespaces => EnvPrefix + "APPLICATION_NAMESPACES",
+				BaggageToAttach => EnvPrefix + "BAGGAGE_TO_ATTACH",
 				CaptureBody => EnvPrefix + "CAPTURE_BODY",
 				CaptureBodyContentTypes => EnvPrefix + "CAPTURE_BODY_CONTENT_TYPES",
 				CaptureHeaders => EnvPrefix + "CAPTURE_HEADERS",
@@ -189,6 +192,7 @@ namespace Elastic.Apm.Config
 			{
 				ApiKey => KeyPrefix + nameof(ApiKey),
 				ApplicationNamespaces => KeyPrefix + nameof(ApplicationNamespaces),
+				BaggageToAttach => KeyPrefix + nameof(BaggageToAttach),
 				CaptureBody => KeyPrefix + nameof(CaptureBody),
 				CaptureBodyContentTypes => KeyPrefix + nameof(CaptureBodyContentTypes),
 				CaptureHeaders => KeyPrefix + nameof(CaptureHeaders),

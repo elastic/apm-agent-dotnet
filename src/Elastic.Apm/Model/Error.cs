@@ -2,7 +2,10 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
@@ -52,10 +55,26 @@ namespace Elastic.Apm.Model
 				}
 			}
 
+			CheckAndCaptureBaggage();
+
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
 			logger.Trace()
 				?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+		}
+
+		private void CheckAndCaptureBaggage()
+		{
+			if (Activity.Current == null || !Activity.Current.Baggage.Any())
+				return;
+
+			foreach (var baggage in Activity.Current.Baggage)
+			{
+				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
+					continue;
+
+				Context.InternalLabels.Value.Add(baggage.Key, baggage.Value);
+			}
 		}
 
 		// This constructor is meant for serialization
