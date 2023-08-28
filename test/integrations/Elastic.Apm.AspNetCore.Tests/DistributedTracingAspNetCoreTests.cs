@@ -6,88 +6,18 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
-using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
-using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using SampleAspNetCoreApp;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
-	public class DistributedTracingAspNetCoreTests : IAsyncLifetime
+	public class DistributedTracingAspNetCoreTests : MultiApplicationTestBase
 	{
-		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
-		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
-		private ApmAgent _agent1;
-		private ApmAgent _agent2;
-
-		private Task _taskForApp1;
-		private Task _taskForApp2;
-		private readonly ITestOutputHelper _output;
-
-		public DistributedTracingAspNetCoreTests(ITestOutputHelper output) => _output = output;
-
-		public Task InitializeAsync()
-		{
-			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1,
-				configuration: new MockConfiguration(exitSpanMinDuration: "0")));
-			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2,
-				configuration: new MockConfiguration(exitSpanMinDuration: "0")));
-
-			_taskForApp1 = Program.CreateWebHostBuilder(null)
-				.ConfigureServices(services =>
-					{
-						Startup.ConfigureServicesExceptMvc(services);
-
-						services
-							.AddMvc()
-							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
-					}
-				)
-				.ConfigureLogging(logging => logging.AddXunit(_output))
-				.Configure(app =>
-				{
-					app.UseElasticApm(_agent1, new TestLogger(),
-						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
-					Startup.ConfigureAllExceptAgent(app);
-				})
-				.UseUrls("http://localhost:5901")
-				.Build()
-				.RunAsync(_cancellationTokenSource.Token);
-
-			_taskForApp2 = WebApiSample.Program.CreateWebHostBuilder(null)
-				.ConfigureLogging(logging => logging.AddXunit(_output))
-				.ConfigureServices(services =>
-				{
-					services.AddMvc()
-						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(WebApiSample))));
-				})
-				.Configure(app =>
-				{
-					//normally we would also subscribe to HttpDiagnosticsSubscriber and EfCoreDiagnosticsSubscriber,
-					//but in this test 2 web apps run in a single process, so subscribing once is enough, and we
-					//already do it above when we configure the SampleAspNetCoreApp.
-					app.UseElasticApm(_agent2, new TestLogger());
-					WebApiSample.Startup.ConfigureAllExceptAgent(app);
-				})
-				.UseUrls("http://localhost:5050")
-				.Build()
-				.RunAsync(_cancellationTokenSource.Token);
-
-			return Task.CompletedTask;
-		}
-
 		/// <summary>
 		/// Distributed tracing integration test.
 		/// It starts <see cref="SampleAspNetCoreApp" /> with 1 agent and <see cref="WebApiSample" /> with another agent.
@@ -499,15 +429,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// parentId aren't reused from `traceparent`.
 			_payloadSender1.FirstTransaction.Id.Should().NotBe("0af7651916cd43dd8448eb211c80319c");
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
-		}
-
-		public async Task DisposeAsync()
-		{
-			_cancellationTokenSource.Cancel();
-			await Task.WhenAll(_taskForApp1, _taskForApp2);
-
-			_agent1?.Dispose();
-			_agent2?.Dispose();
 		}
 
 		/// <summary>

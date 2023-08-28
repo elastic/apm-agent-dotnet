@@ -91,6 +91,23 @@ The code snippet above creates a transaction with the Elastic .NET APM Agent's <
 Of course these calls don't have to be in the same method. The concept described here works across different methods, types, or libraries.
 
 [float]
+[[baggage-api]]
+==== Baggage support
+
+The Elastic APM Agent also integrates with https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity.baggage?view=net-6.0#system-diagnostics-activity-baggage[Activity.Baggage].
+
+Here is an example that sets a baggage value with the above API:
+
+[source,csharp]
+----
+_activitySource.StartActivity("MyActivity")?.AddBaggage("foo", "bar");
+----
+
+The Elastic APM Agent will automatically propagate such values according to the https://www.w3.org/TR/baggage/[W3C Baggage specification] and `Activity.Baggage` is automatically populated based on the incoming `baggage` header.
+
+Furthermore, the agent offers the <<config-baggage-to-attach, BaggageToAttach>> configuration to automatically attach values from `Activity.Baggage` to captured events.
+
+[float]
 [[supported-opentelemetry-implementations]]
 ==== Supported OpenTelemetry implementations
 

@@ -14,7 +14,6 @@ namespace Elastic.Apm.Benchmarks
 	{
 		public static void Main(string[] args)
 		{
-
 			var esUrl = Environment.GetEnvironmentVariable("ES_URL");
 			var esPassword = Environment.GetEnvironmentVariable("ES_PASS");
 			var esUser = Environment.GetEnvironmentVariable("ES_USER");

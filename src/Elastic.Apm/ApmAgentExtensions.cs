@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
@@ -30,10 +31,14 @@ namespace Elastic.Apm
 		public static IDisposable Subscribe(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
 		{
 			var disposable = new CompositeDisposable();
-			agent.Logger.Trace()?.Log("Agent Subscribe(), Agent Enabled: {AgentEnabled} Subscriber count: {NumberOfSubscribers}",
-				agent.Configuration.Enabled, subscribers?.Length ?? 0);
 
-			if (!agent.Configuration.Enabled || subscribers is null || subscribers.Length == 0)
+			subscribers ??= Array.Empty<IDiagnosticsSubscriber>();
+			var subscribersList = string.Join(", ", subscribers.Select(s => s.GetType().Name));
+
+			agent.Logger.Trace()?.Log("Agent.Subscribe(), Agent Enabled: {AgentEnabled} Subscriber count: {NumberOfSubscribers}, ({Subscribers})",
+				agent.Configuration.Enabled, subscribers.Length, subscribersList);
+
+			if (!agent.Configuration.Enabled || subscribers.Length == 0)
 				return disposable;
 
 			foreach (var subscriber in subscribers)
