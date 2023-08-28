@@ -5,7 +5,7 @@
 
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="2.19.0" />
-    <PackageReference Include="Testcontainers.MongoDb" Version="3.0.0" />
+    <PackageReference Include="Testcontainers.MongoDb" Version="3.4.0" />
   </ItemGroup>
 
   <ItemGroup>
