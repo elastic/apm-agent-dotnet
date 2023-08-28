@@ -7,7 +7,7 @@ using System.Diagnostics;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 
-namespace Elastic.Apm.SqlClient
+namespace Elastic.Apm.Instrumentations.SqlClient
 {
 	/// <summary>
 	/// Subscribes to diagnostics events from System.Data.SqlClient and Microsoft.Data.SqlClient
