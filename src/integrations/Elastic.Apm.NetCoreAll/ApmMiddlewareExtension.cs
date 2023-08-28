@@ -48,8 +48,8 @@ namespace Elastic.Apm.NetCoreAll
 		) => AspNetCore.ApmMiddlewareExtension
 			.UseElasticApm(builder, configuration,
 				new HttpDiagnosticsSubscriber(),
-				new EfCoreDiagnosticsSubscriber(),
 				new SqlClientDiagnosticSubscriber(),
+				new EfCoreDiagnosticsSubscriber(),
 				new ElasticsearchDiagnosticsSubscriber(),
 				new GrpcClientDiagnosticSubscriber(),
 				new AzureMessagingServiceBusDiagnosticsSubscriber(),

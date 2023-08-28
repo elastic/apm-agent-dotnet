@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm
@@ -48,6 +49,23 @@ namespace Elastic.Apm
 				apmAgent.Disposables.Add(disposable);
 
 			return disposable;
+		}
+
+		/// <summary> Used by integrations to register all known subscribers that ship as part of Elastic.Apm and the integration itself</summary>
+		internal static IDisposable SubscribeIncludingAllDefaults(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
+		{
+			var defaultSubscribers = new IDiagnosticsSubscriber[]
+			{
+				new SqlClientDiagnosticSubscriber(),
+				new HttpDiagnosticsSubscriber()
+			};
+
+			var userProvidedAndDefaultSubs = (subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
+				.Concat(defaultSubscribers)
+				.GroupBy(s => s.GetType().FullName)
+				.Select(g => g.First())
+				.ToArray();
+			return agent.Subscribe(userProvidedAndDefaultSubs);
 		}
 
 		internal static IExecutionSegment GetCurrentExecutionSegment(this IApmAgent agent) =>
