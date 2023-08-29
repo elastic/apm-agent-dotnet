@@ -2,12 +2,16 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
@@ -15,6 +19,12 @@ namespace Elastic.Apm.Tests
 	[CaptureRestoreActivityIdFormat]
 	public class ActivityIntegrationTests
 	{
+		private readonly ITestOutputHelper _testOutputHelper;
+
+		public ActivityIntegrationTests(ITestOutputHelper testOutputHelper) {
+			_testOutputHelper = testOutputHelper;
+		}
+
 		/// <summary>
 		/// Makes sure that in case there is an active activity, the agent reuses its TraceId when it starts a new transaction.
 		/// The prerequisite is that the IdFormat is W3C
@@ -142,6 +152,50 @@ namespace Elastic.Apm.Tests
 			payloadSender.Transactions[1].TraceId.Should().Be(activity.TraceId.ToString());
 			payloadSender.Transactions[0].Id.Should().NotBe(payloadSender.Transactions[1].Id);
 			activity.Stop();
+		}
+
+		/// <summary>
+		/// Makes sure that transactions on the same Activity are part of the same trace.
+		/// </summary>
+		[Fact]
+		public async Task ActivityRespectsSampling()
+		{
+			const int count = 100;
+			const double rate = 0.5;
+
+			Activity.Current = null;
+			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+			var source = new ActivitySource(GetType().FullName, "1.0.0");
+
+			var payloadSender = new MockPayloadSender();
+			var config = new MockConfiguration(
+				transactionSampleRate: rate.ToString("N2")
+
+			);
+			using var components = new TestAgentComponents(
+				apmServerInfo: MockApmServerInfo.Version716,
+				configuration: config,
+				payloadSender: payloadSender
+
+			);
+			using var agent = new ApmAgent(components);
+			for (var i = 0; i < count; i++)
+			{
+				using var transaction = source.StartActivity($"Trace {i}");
+				using var span = new Activity("UnitTestActivity").Start();
+				await Task.Delay(1);
+			}
+			//Activity.Current.Should().BeNull();
+			payloadSender.WaitForTransactions(count: count);
+
+			var sampled = payloadSender.Transactions.Where(t => t.IsSampled).ToArray();
+			sampled.Length.Should().BeLessThan(count);
+			sampled.Length.Should().BeGreaterThan(count / 10);
+
+			var sampledSpans = payloadSender.Spans.Where(t => t.IsSampled).ToArray();
+			sampledSpans.Length.Should().Be(sampled.Length);
+
+
 		}
 	}
 }
