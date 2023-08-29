@@ -176,7 +176,7 @@ namespace Elastic.Apm
 		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
 		{
 #if NETFRAMEWORK
-			return logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
+			return logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(configurationReader?.LogLevel);
 #else
 			return logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 #endif
