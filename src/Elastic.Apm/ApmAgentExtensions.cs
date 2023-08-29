@@ -69,7 +69,7 @@ namespace Elastic.Apm
 			var userProvidedAndDefaultSubs = (subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
 				.Concat(defaultSubscribers)
 				.GroupBy(s => s.GetType().FullName)
-				.Where(g=> !rejectOldSubscribers.Contains(g.Key))
+				.Where(g => !rejectOldSubscribers.Contains(g.Key))
 				.Select(g => g.First())
 				.ToArray();
 
