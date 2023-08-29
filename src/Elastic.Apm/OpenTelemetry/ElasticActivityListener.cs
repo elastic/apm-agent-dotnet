@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DistributedTracing;
@@ -21,11 +22,11 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener : IDisposable
 	{
-		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
-		private static readonly string[] ServerAddressAttributeKeys = new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+		private static readonly string[] ServerPortAttributeKeys = { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
+		private static readonly string[] ServerAddressAttributeKeys = { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
 
-		private readonly ConcurrentDictionary<string, Span> _activeSpans = new();
-		private readonly ConcurrentDictionary<string, Transaction> _activeTransactions = new();
+		private readonly ConditionalWeakTable<Activity, Span> _activeSpans = new();
+		private readonly ConditionalWeakTable<Activity, Transaction> _activeTransactions = new();
 
 		internal ElasticActivityListener(IApmAgent agent, HttpTraceConfiguration httpTraceConfiguration) => (_logger, _httpTraceConfiguration) =
 			(agent.Logger?.Scoped(nameof(ElasticActivityListener)), httpTraceConfiguration);
@@ -40,6 +41,7 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			_httpTraceConfiguration?.AddTracer(new ElasticSearchHttpNonTracer());
 			_tracer = tracerInternal;
+
 
 			Listener = new ActivityListener
 			{
@@ -61,66 +63,73 @@ namespace Elastic.Apm.OpenTelemetry
 				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
 					return;
 
-				Transaction transaction = null;
-
 				var spanLinks = new List<SpanLink>(activity.Links.Count());
-				if (activity.Links != null && activity.Links.Any())
+				if (activity.Links.Any())
 				{
 					foreach (var link in activity.Links)
 						spanLinks.Add(new SpanLink(link.Context.SpanId.ToString(), link.Context.TraceId.ToString()));
 				}
 
-				if (activity?.Context != null && activity.ParentId != null && _tracer.CurrentTransaction == null)
-				{
-					var dt = TraceContext.TryExtractTracingData(activity.ParentId.ToString(), activity.Context.TraceState);
+				var timestamp = TimeUtils.ToTimestamp(activity.StartTimeUtc);
+				if (!CreateTransactionForActivity(activity, timestamp, spanLinks))
+					CreateSpanForActivity(activity, timestamp, spanLinks);
 
-					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
-						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
-						distributedTracingData: dt, links: spanLinks);
-				}
-				else if (activity.ParentId == null)
-				{
-					transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
-						TimeUtils.ToTimestamp(activity.StartTimeUtc), true, activity.SpanId.ToString(),
-						activity.TraceId.ToString(), links: spanLinks);
-				}
-				else
-				{
-					Span newSpan;
-					if (_tracer.CurrentSpan == null)
-					{
-						newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, "unknown",
-							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString(), links: spanLinks);
-					}
-					else
-					{
-						newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, "unknown",
-							timestamp: TimeUtils.ToTimestamp(activity.StartTimeUtc), id: activity.SpanId.ToString(), links: spanLinks);
-					}
-
-					if (newSpan != null)
-					{
-						newSpan.Otel = new OTel { SpanKind = activity.Kind.ToString() };
-
-						if (activity.Kind == ActivityKind.Internal)
-						{
-							newSpan.Type = "app";
-							newSpan.Subtype = "internal";
-						}
-
-						if (activity.Id != null)
-							_activeSpans.TryAdd(activity.Id, newSpan);
-					}
-				}
-
-				if (transaction != null)
-				{
-					transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
-
-					if (activity.Id != null)
-						_activeTransactions.TryAdd(activity.Id, transaction);
-				}
 			};
+
+		private bool CreateTransactionForActivity(Activity activity, long timestamp, List<SpanLink> spanLinks)
+		{
+			Transaction transaction = null;
+			if (activity.ParentId != null && _tracer.CurrentTransaction == null)
+			{
+				var dt = TraceContext.TryExtractTracingData(activity.ParentId, activity.Context.TraceState);
+
+				transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
+					timestamp, true, activity.SpanId.ToString(),
+					distributedTracingData: dt, links: spanLinks, current: activity);
+			}
+			else if (activity.ParentId == null)
+			{
+				transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
+					timestamp, true, activity.SpanId.ToString(),
+					activity.TraceId.ToString(), links: spanLinks, current: activity);
+			}
+
+			if (transaction == null) return false;
+
+			transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
+
+			if (activity.Id != null)
+				_activeTransactions.AddOrUpdate(activity, transaction);
+			return true;
+		}
+
+		private void CreateSpanForActivity(Activity activity, long timestamp, List<SpanLink> spanLinks)
+		{
+			Span newSpan;
+			if (_tracer.CurrentSpan == null)
+			{
+				newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, "unknown",
+					timestamp: timestamp, id: activity.SpanId.ToString(), links: spanLinks, current: activity);
+			}
+			else
+			{
+				newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, "unknown",
+					timestamp: timestamp, id: activity.SpanId.ToString(), links: spanLinks, current: activity);
+			}
+
+			if (newSpan == null) return;
+
+			newSpan.Otel = new OTel { SpanKind = activity.Kind.ToString() };
+
+			if (activity.Kind == ActivityKind.Internal)
+			{
+				newSpan.Type = "app";
+				newSpan.Subtype = "internal";
+			}
+
+			if (activity.Id != null)
+				_activeSpans.AddOrUpdate(activity, newSpan);
+		}
 
 		private Action<Activity> ActivityStopped =>
 			activity =>
@@ -130,49 +139,51 @@ namespace Elastic.Apm.OpenTelemetry
 					_logger.Trace()?.Log("ActivityStopped called with `null` activity. Ignoring `null` activity.");
 					return;
 				}
+				activity.Stop();
 
 				_logger.Trace()?.Log($"ActivityStopped: name:{activity.DisplayName} id:{activity.Id} traceId:{activity.TraceId}");
 
 				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
 					return;
 
-				if (activity.Id != null)
+				if (activity.Id == null) return;
+
+				if (_activeTransactions.TryGetValue(activity, out var transaction))
 				{
-					if (_activeTransactions.TryRemove(activity.Id, out var transaction))
-					{
-						transaction.Duration = activity.Duration.TotalMilliseconds;
+					_activeTransactions.Remove(activity);
+					transaction.Duration = activity.Duration.TotalMilliseconds;
 
-						if (activity.TagObjects.Any())
-							transaction.Otel.Attributes = new Dictionary<string, object>();
+					if (activity.TagObjects.Any())
+						transaction.Otel.Attributes = new Dictionary<string, object>();
 
-						foreach (var tag in activity.TagObjects)
-							transaction.Otel.Attributes.Add(tag.Key, tag.Value);
+					foreach (var tag in activity.TagObjects)
+						transaction.Otel.Attributes.Add(tag.Key, tag.Value);
 
-						InferTransactionType(transaction, activity);
+					InferTransactionType(transaction, activity);
 
-						// By default we set unknown outcome
-						transaction.Outcome = Outcome.Unknown;
+					// By default we set unknown outcome
+					transaction.Outcome = Outcome.Unknown;
 #if NET6_0_OR_GREATER
-						switch (activity.Status)
-						{
-							case ActivityStatusCode.Unset:
-								transaction.Outcome = Outcome.Unknown;
-								break;
-							case ActivityStatusCode.Ok:
-								transaction.Outcome = Outcome.Success;
-								break;
-							case ActivityStatusCode.Error:
-								transaction.Outcome = Outcome.Failure;
-								break;
-						}
+					switch (activity.Status)
+					{
+						case ActivityStatusCode.Unset:
+							transaction.Outcome = Outcome.Unknown;
+							break;
+						case ActivityStatusCode.Ok:
+							transaction.Outcome = Outcome.Success;
+							break;
+						case ActivityStatusCode.Error:
+							transaction.Outcome = Outcome.Failure;
+							break;
+					}
 #endif
 
-						transaction.End();
-					}
-					else if (_activeSpans.TryRemove(activity.Id, out var span))
-					{
-						UpdateSpan(activity, span);
-					}
+					transaction.End();
+				}
+				else if (_activeSpans.TryGetValue(activity, out var span))
+				{
+					_activeSpans.Remove(activity);
+					UpdateSpan(activity, span);
 				}
 			};
 

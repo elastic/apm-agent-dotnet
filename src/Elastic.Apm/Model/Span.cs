@@ -53,8 +53,7 @@ namespace Elastic.Apm.Model
 			ParentId = parentId;
 		}
 
-		public Span(
-			string name,
+		public Span(string name,
 			string type,
 			string parentId,
 			string traceId,
@@ -69,7 +68,8 @@ namespace Elastic.Apm.Model
 			long? timestamp = null,
 			bool isExitSpan = false,
 			string id = null,
-			IEnumerable<SpanLink> links = null
+			IEnumerable<SpanLink> links = null,
+			Activity current = null
 		)
 		{
 			InstrumentationFlag = instrumentationFlag;
@@ -387,11 +387,11 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null
+			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null, Activity current = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id, links);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id, links, current: current);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;

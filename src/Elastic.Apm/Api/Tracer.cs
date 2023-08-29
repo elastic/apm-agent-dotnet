@@ -67,18 +67,20 @@ namespace Elastic.Apm.Api
 		internal Transaction StartTransactionInternal(string name, string type,
 			long? timestamp = null, bool ignoreActivity = false, string id = null, string traceId = null,
 			DistributedTracingData distributedTracingData = null,
-			IEnumerable<SpanLink> links = null
+			IEnumerable<SpanLink> links = null,
+			Activity current = null
 		)
-			=> StartTransactionInternal(name, type, distributedTracingData, ignoreActivity, timestamp, id, traceId, links);
+			=> StartTransactionInternal(name, type, distributedTracingData, ignoreActivity, timestamp, id, traceId, links, current: current);
 
 		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null,
-			bool ignoreActivity = false, long? timestamp = null, string id = null, string traceId = null, IEnumerable<SpanLink> links = null
+			bool ignoreActivity = false, long? timestamp = null, string id = null, string traceId = null, IEnumerable<SpanLink> links = null,
+			Activity current = null
 		)
 		{
 			var currentConfig = _configurationProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
 				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, _breakdownMetricsProvider, ignoreActivity, timestamp, id,
-				traceId: traceId, links: links)
+				traceId: traceId, links: links, current: current)
 			{ Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
