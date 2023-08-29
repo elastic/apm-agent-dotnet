@@ -59,12 +59,20 @@ namespace Elastic.Apm
 				new SqlClientDiagnosticSubscriber(),
 				new HttpDiagnosticsSubscriber()
 			};
+			// on the off chance that someone manually references old nuget packages and injects them manually
+			// make sure we reject them and favor the builtin subscribers instead.
+			var rejectOldSubscribers = new[]
+			{
+				"Elastic.Apm.SqlClient.SqlClientDiagnosticSubscriber"
+			};
 
 			var userProvidedAndDefaultSubs = (subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
 				.Concat(defaultSubscribers)
 				.GroupBy(s => s.GetType().FullName)
+				.Where(g=> !rejectOldSubscribers.Contains(g.Key))
 				.Select(g => g.First())
 				.ToArray();
+
 			return agent.Subscribe(userProvidedAndDefaultSubs);
 		}
 
