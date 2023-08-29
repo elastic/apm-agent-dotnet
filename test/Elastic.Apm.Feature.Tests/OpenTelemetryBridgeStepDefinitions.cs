@@ -23,10 +23,10 @@ namespace Elastic.Apm.Feature.Tests
 		{
 			var mockPaylodSender = new MockPayloadSender();
 			_scenarioContext.Add("payloadSender", mockPaylodSender);
-			using (var agent = new ApmAgent(new TestAgentComponents(
-					   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"),
-					   apmServerInfo: MockApmServerInfo.Version716, payloadSender: mockPaylodSender)))
-				_scenarioContext.Add("agent", agent);
+			var agent = new ApmAgent(new TestAgentComponents(
+				configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"),
+				apmServerInfo: MockApmServerInfo.Version716, payloadSender: mockPaylodSender));
+			_scenarioContext.Add("agent", agent);
 		}
 
 		[Given(@"OTel span is created with remote context as parent")]
