@@ -41,7 +41,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 		internal void Start(Tracer tracerInternal)
 		{
-			_httpTraceConfiguration?.AddTracer(new ElasticSearchHttpNonTracer());
+			//_httpTraceConfiguration?.AddTracer(new ElasticSearchHttpNonTracer());
 			_tracer = tracerInternal;
 
 
@@ -287,6 +287,9 @@ namespace Elastic.Apm.OpenTelemetry
 				serviceTargetType = span.Subtype;
 				serviceTargetName = TryGetStringValue(activity, SemanticConventions.DbName, out var dbName) ? dbName : null;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
+				// This is a temporary addition, until we have this mapped in apm-data
+				if (TryGetStringValue(activity, "db.elasticsearch.cluster.name", out var clusterName))
+					span.Otel.Attributes.Add("db.instance", clusterName);
 			}
 			else if (TryGetStringValue(activity, SemanticConventions.MessagingSystem, out var messagingSystem))
 			{
