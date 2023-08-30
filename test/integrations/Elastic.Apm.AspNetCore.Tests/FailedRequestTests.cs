@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -27,12 +28,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private ApmAgent _agent1;
 
 		private Task _taskForApp1;
+		private readonly ITestOutputHelper _output;
+
+		public FailedRequestTests(ITestOutputHelper output) => _output = output;
 
 		public Task InitializeAsync()
 		{
 			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1, configuration: new MockConfiguration(exitSpanMinDuration: "0")));
 
 			_taskForApp1 = Program.CreateWebHostBuilder(null)
+				.ConfigureLogging(logging => logging.AddXunit(_output))
 				.ConfigureServices(services =>
 					{
 						Startup.ConfigureServicesExceptMvc(services);

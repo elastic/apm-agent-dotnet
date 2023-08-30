@@ -37,6 +37,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			return client;
 		}
 
+		private static IDiagnosticsSubscriber[] DiagnosticsOnlyListeners =>
+			new IDiagnosticsSubscriber[] { new AspNetCoreDiagnosticSubscriber(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber() };
+		private static IDiagnosticsSubscriber[] UseApmListeners =>
+			new IDiagnosticsSubscriber[] { new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber() };
+
 		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource) where T : class
 		{
 			var builder = factory
@@ -45,15 +50,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 					n.Configure(app =>
 					{
 						if (useOnlyDiagnosticSource)
-						{
-							var subs = new IDiagnosticsSubscriber[]
-							{
-								new AspNetCoreDiagnosticSubscriber(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber()
-							};
-							agent.Subscribe(subs);
-						}
+							agent.Subscribe(DiagnosticsOnlyListeners);
 						else
-							app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+							app.UseElasticApm(agent, agent.Logger, UseApmListeners);
 
 						app.UseDeveloperExceptionPage();
 
@@ -79,15 +78,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 					n.Configure(app =>
 					{
 						if (useOnlyDiagnosticSource)
-						{
-							var subs = new IDiagnosticsSubscriber[]
-							{
-								new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber(), new AspNetCoreDiagnosticSubscriber()
-							};
-							agent.Subscribe(subs);
-						}
+							agent.Subscribe(DiagnosticsOnlyListeners);
 						else
-							app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+							app.UseElasticApm(agent, agent.Logger, UseApmListeners);
 
 						Startup.ConfigureRoutingAndMvc(app);
 					});

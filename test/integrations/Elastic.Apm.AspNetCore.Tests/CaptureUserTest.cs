@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -18,6 +19,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -30,6 +33,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
 		private ApmAgent _agent;
+		private readonly ITestOutputHelper _output;
+
+		public CaptureUserTest(ITestOutputHelper output) => _output = output;
 
 		private void SetUpSut()
 		{
@@ -40,6 +46,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					app.UseElasticApm(_agent, _agent.Logger);
 					Startup.ConfigureAllExceptAgent(app);
 				})
+				.ConfigureLogging(logging => logging.AddXunit(_output))
 				.ConfigureServices(services =>
 				{
 					Startup.ConfigureServicesExceptMvc(services);
@@ -70,7 +77,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			const string userName = "TestUser";
 			const string password = "aaaaaa";
 
-			var client = new HttpClient { BaseAddress = new Uri("http://localhost:5900") };
+
+			//We need to ensure we are not propagating any unsampled current activities
+			var client = new HttpClient(new DisableActivityHandler(_output)) { BaseAddress = new Uri("http://localhost:5900") };
 
 			//Home/Index runs the migrations, so this makes sure the DB exists
 			var homeResult = await client.GetAsync("/Home/Index");

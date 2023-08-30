@@ -252,6 +252,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 					optionMetadata.ParseAndSetProperty(rawConfigSnapshot, this, parsingLogger);
 				}
+				if (IsRunningInIde)
+					LogLevel = LogLevel.Trace;
 
 				IApmLogger BuildXunitOutputLogger(LogLevel logLevel)
 				{

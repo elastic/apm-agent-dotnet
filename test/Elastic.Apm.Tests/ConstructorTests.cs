@@ -25,9 +25,13 @@ public class ConstructorTests
 	public void Compose()
 	{
 		//build AgentComponents manually so we can disable metrics collection. reason: creating metrics collector pro test and disposing it makes test failing (ETW or EventSource subscribe unsubscribe in each test in parallel if all tests are running)
-		using var agent = new ApmAgent(new AgentComponents(null, new LogConfiguration(LogLevel.Warning), null, null,
-			null, null, null));
+		using var agent = new ApmAgent(new AgentComponents(null, new LogConfiguration(LogLevel.Warning), null, null, null, null, null));
+
+#if NETFRAMEWORK
+		var logger = agent.Logger as TraceLogger;
+#else
 		var logger = agent.Logger as ConsoleLogger;
+#endif
 
 		logger.Should().NotBeNull();
 		logger.IsEnabled(LogLevel.Warning).Should().BeTrue();

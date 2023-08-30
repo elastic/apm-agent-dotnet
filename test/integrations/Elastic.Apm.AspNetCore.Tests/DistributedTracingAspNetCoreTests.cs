@@ -11,6 +11,7 @@ using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
