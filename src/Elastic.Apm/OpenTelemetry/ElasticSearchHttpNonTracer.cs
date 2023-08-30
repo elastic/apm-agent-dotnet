@@ -26,7 +26,7 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			if (Activity.Current == null || Activity.Current.Parent == null)
 				return false;
-			return Activity.Current.Parent.DisplayName.StartsWith("Elasticsearch:") && Activity.Current.Parent.Tags.Any(n => n is { Key: "db.system", Value: "elasticsearch" });
+			return Activity.Current.Parent.Tags.Any(n => n is { Key: "db.system", Value: "elasticsearch" });
 		}
 	}
 }
