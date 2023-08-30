@@ -21,6 +21,7 @@ open Tooling
 
 module Build =
     
+    //TODO remove oldDiagnosticSourceVersion
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
     let private diagnosticSourceVersion6 = SemVer.parse "6.0.0"
     

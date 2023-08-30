@@ -12,7 +12,7 @@ namespace Elastic.Apm.Api
 	/// Data captured by the agent representing a metric occurring in a monitored service
 	/// </summary>
 	[Specification("metricset.json")]
-	public interface IMetricSet
+	public interface IMetricSet : IIntakeRoot
 	{
 		/// <summary>
 		/// List of captured metrics as key - value pairs

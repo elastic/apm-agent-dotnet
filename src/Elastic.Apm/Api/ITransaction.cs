@@ -19,7 +19,7 @@ namespace Elastic.Apm.Api
 	/// provide different transaction implementations.
 	/// </remarks>
 	[Specification("transaction.json")]
-	public interface ITransaction : IExecutionSegment
+	public interface ITransaction : IExecutionSegment, IIntakeRoot
 	{
 		/// <summary>
 		/// Contains data related to FaaS (Function as a Service) events.
