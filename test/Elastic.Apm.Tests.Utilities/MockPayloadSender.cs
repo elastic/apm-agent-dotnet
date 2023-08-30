@@ -10,33 +10,34 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Elastic.Apm.Api;
+using Elastic.Apm.Ingest;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
+using Elastic.Transport;
 using FluentAssertions;
 
+#nullable  enable
 namespace Elastic.Apm.Tests.Utilities
 {
-	internal class MockPayloadSender : IPayloadSender
+	internal class MockPayloadSender : ApmChannel
 	{
 		private static readonly JObject JsonSpanTypesData =
 			JObject.Parse(File.ReadAllText("./TestResources/json-specs/span_types.json"));
 
-		private readonly List<IError> _errors = new List<IError>();
-		private readonly List<Func<IError, IError>> _errorFilters = new List<Func<IError, IError>>();
-		private readonly object _spanLock = new object();
-		private readonly object _transactionLock = new object();
-		private readonly object _metricsLock = new object();
-		private readonly object _errorLock = new object();
-		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
-		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
-		private readonly List<ISpan> _spans = new List<ISpan>();
-		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
-		private readonly List<ITransaction> _transactions = new List<ITransaction>();
+		private readonly object _spanLock = new();
+		private readonly object _transactionLock = new();
+		private readonly object _metricsLock = new();
+		private readonly object _errorLock = new();
+		private readonly List<IMetricSet> _metrics = new();
+		private readonly List<IError> _errors = new();
+		private readonly List<ISpan> _spans = new();
+		private readonly List<ITransaction> _transactions = new();
 
-		public MockPayloadSender(IApmLogger logger = null)
+		public MockPayloadSender(IApmLogger? logger = null)
+			: base(new ApmChannelOptions(new Uri("http://localhost:8080"), transportClient: new InMemoryConnection()), logger)
 		{
 			_waitHandles = new[] { new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false) };
 
@@ -45,7 +46,6 @@ namespace Elastic.Apm.Tests.Utilities
 			_errorWaitHandle = _waitHandles[2];
 			_metricSetWaitHandle = _waitHandles[3];
 
-			PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, _errorFilters, MockApmServerInfo.Version710, logger ?? new NoopLogger());
 		}
 
 		/// <summary>
@@ -60,6 +60,54 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly AutoResetEvent _metricSetWaitHandle;
 		private readonly AutoResetEvent[] _waitHandles;
 		private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(1);
+
+		public override bool TryWrite(IIntakeRoot item)
+		{
+			var written = base.TryWrite(item);
+			switch (item)
+			{
+				case IError error:
+					 _errors.Add(error);
+					 _errorWaitHandle.Set();
+					 break;
+				case ITransaction transaction:
+					 _transactions.Add(transaction);
+					 _transactionWaitHandle.Set();
+					 break;
+				case ISpan span:
+					 _spans.Add(span);
+					 _spanWaitHandle.Set();
+					 break;
+				case IMetricSet metricSet:
+					 _metrics.Add(metricSet);
+					 _metricSetWaitHandle.Set();
+					 break;
+			}
+			return written;
+		}
+
+		public override void QueueError(IError error)
+		{
+			lock (_errorLock) base.QueueError(error);
+		}
+
+		public override void QueueTransaction(ITransaction transaction)
+		{
+			lock (_transactionLock) base.QueueTransaction(transaction);
+		}
+
+		public override void QueueSpan(ISpan span)
+		{
+			VerifySpan(span);
+			lock (_spanLock) base.QueueSpan(span);
+		}
+
+		public override void QueueMetrics(IMetricSet metricSet)
+		{
+			lock (_metricsLock) base.QueueMetrics(metricSet);
+		}
+
+
 
 		/// <summary>
 		/// Waits for any events to be queued
@@ -191,19 +239,19 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				lock (_errorLock)
-					return CreateImmutableSnapshot<IError>(_errors);
+					return CreateImmutableSnapshot(_errors);
 			}
 		}
 
-		public Error FirstError => Errors.FirstOrDefault() as Error;
-		public MetricSet FirstMetric => Metrics.FirstOrDefault() as MetricSet;
+		public Error? FirstError => Errors.FirstOrDefault() as Error;
+		public MetricSet? FirstMetric => Metrics.FirstOrDefault() as MetricSet;
 
 		/// <summary>
 		/// The 1. Span on the 1. Transaction
 		/// </summary>
-		public Span FirstSpan => Spans.FirstOrDefault() as Span;
+		public Span? FirstSpan => Spans.FirstOrDefault() as Span;
 
-		public Transaction FirstTransaction =>
+		public Transaction? FirstTransaction =>
 			Transactions.FirstOrDefault() as Transaction;
 
 		public IReadOnlyList<IMetricSet> Metrics
@@ -211,7 +259,7 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				lock (_metricsLock)
-					return CreateImmutableSnapshot<IMetricSet>(_metrics);
+					return CreateImmutableSnapshot(_metrics);
 			}
 		}
 
@@ -220,7 +268,7 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				lock (_spanLock)
-					return CreateImmutableSnapshot<ISpan>(_spans);
+					return CreateImmutableSnapshot(_spans);
 			}
 		}
 
@@ -229,45 +277,15 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				lock (_transactionLock)
-					return CreateImmutableSnapshot<ITransaction>(_transactions);
+					return CreateImmutableSnapshot(_transactions);
 			}
 		}
 
 		public Span[] SpansOnFirstTransaction =>
-			Spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
-
-		public void QueueError(IError error)
-		{
-			lock (_errorLock)
-			{
-				error = _errorFilters.Aggregate(error,
-					(current, filter) => filter(current));
-				_errors.Add(error);
-				_errorWaitHandle.Set();
-			}
-		}
-
-		public virtual void QueueTransaction(ITransaction transaction)
-		{
-			lock (_transactionLock)
-			{
-				transaction = _transactionFilters.Aggregate(transaction,
-					(current, filter) => filter(current));
-				_transactions.Add(transaction);
-				_transactionWaitHandle.Set();
-			}
-		}
-
-		public void QueueSpan(ISpan span)
-		{
-			VerifySpan(span);
-			lock (_spanLock)
-			{
-				span = _spanFilters.Aggregate(span, (current, filter) => filter(current));
-				_spans.Add(span);
-				_spanWaitHandle.Set();
-			}
-		}
+			Spans
+				.Where(n => n.TransactionId == Transactions.First().Id)
+				.Select(n => (Span)n)
+				.ToArray();
 
 		private void VerifySpan(ISpan span)
 		{
@@ -279,7 +297,7 @@ namespace Elastic.Apm.Tests.Utilities
 				var spanTypeInfo = JsonSpanTypesData[type] as JObject;
 				spanTypeInfo.Should().NotBeNull($"span type '{type}' is not allowed by the spec");
 
-				var allowNullSubtype = spanTypeInfo["allow_null_subtype"]?.Value<bool>();
+				var allowNullSubtype = spanTypeInfo!["allow_null_subtype"]?.Value<bool>();
 				var allowUnlistedSubtype = spanTypeInfo["allow_unlisted_subtype"]?.Value<bool>();
 				var subTypes = spanTypeInfo["subtypes"];
 				var hasSubtypes = subTypes != null && subTypes.Any();
@@ -289,7 +307,7 @@ namespace Elastic.Apm.Tests.Utilities
 				{
 					if (!allowUnlistedSubtype.GetValueOrDefault() && hasSubtypes)
 					{
-						var subTypeInfo = subTypes[subType];
+						var subTypeInfo = subTypes![subType];
 						subTypeInfo.Should()
 							.NotBeNull($"span subtype '{subType}' is not allowed by the spec for type '{type}'");
 					}
@@ -302,15 +320,6 @@ namespace Elastic.Apm.Tests.Utilities
 							$"span type '{type}' requires non-null subtype (allow_null_subtype=false)");
 					}
 				}
-			}
-		}
-
-		public void QueueMetrics(IMetricSet metricSet)
-		{
-			lock (_metricsLock)
-			{
-				_metrics.Add(metricSet);
-				_metricSetWaitHandle.Set();
 			}
 		}
 

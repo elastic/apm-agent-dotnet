@@ -5,13 +5,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Channels;
 using Elastic.Ingest.Transport;
@@ -19,6 +22,7 @@ using Elastic.Transport;
 
 namespace Elastic.Apm.Ingest;
 
+#nullable enable
 internal static class ApmChannelStatics
 {
 	public static readonly byte[] LineFeed = { (byte)'\n' };
@@ -40,18 +44,56 @@ internal static class ApmChannelStatics
 /// </summary>
 public class ApmChannel
 	: TransportChannelBase<ApmChannelOptions, IIntakeRoot, EventIntakeResponse, IntakeErrorItem>
-	, IPayloadSender
+		, IPayloadSender
 {
+	private readonly List<Func<ITransaction, ITransaction?>> _transactionFilters = new();
+	private readonly List<Func<ISpan, ISpan?>> _spanFilters = new();
+	private readonly List<Func<IError, IError?>> _errorFilters = new();
+
 	/// <inheritdoc cref="ApmChannel"/>
-	public ApmChannel(ApmChannelOptions options) : base(options) { }
+	public ApmChannel(ApmChannelOptions options, IApmLogger? logger = null) : base(options) =>
+		PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, _errorFilters, null, logger ?? new TraceLogger(LogLevel.Trace));
 
-	void IPayloadSender.QueueError(IError error) => TryWrite(error);
+	public IError? Filter(IError error) => _errorFilters.Aggregate(error, (current, filter) => filter(current)!);
 
-	void IPayloadSender.QueueMetrics(IMetricSet metrics) => TryWrite(metrics);
+	public ISpan? Filter(ISpan span) => _spanFilters.Aggregate(span, (current, filter) => filter(current)!);
 
-	void IPayloadSender.QueueSpan(ISpan span) => TryWrite(span);
+	public ITransaction? Filter(ITransaction span) => _transactionFilters.Aggregate(span, (current, filter) => filter(current)!);
 
-	void IPayloadSender.QueueTransaction(ITransaction transaction) => TryWrite(transaction);
+	public bool TryFilter(IError error, [NotNullWhen(true)] out IError? filtered)
+	{
+		filtered = _errorFilters.Select(f => f(error)).TakeWhile(e => e != null).LastOrDefault();
+		return filtered != null;
+	}
+
+	public bool TryFilter(ISpan span, [NotNullWhen(true)] out ISpan? filtered)
+	{
+		filtered = _spanFilters.Select(f => f(span)).TakeWhile(e => e != null).LastOrDefault();
+		return filtered != null;
+	}
+
+	public bool TryFilter(ITransaction transaction, [NotNullWhen(true)] out ITransaction? filtered)
+	{
+		filtered = _transactionFilters.Select(f => f(transaction)).TakeWhile(e => e != null).LastOrDefault();
+		return filtered != null;
+	}
+
+	public virtual void QueueMetrics(IMetricSet metrics) => TryWrite(metrics);
+
+	public virtual void QueueError(IError error)
+	{
+		if (TryFilter(error, out var e)) TryWrite(e);
+	}
+
+	public virtual void QueueSpan(ISpan span)
+	{
+		if (TryFilter(span, out var s)) TryWrite(s);
+	}
+
+	public virtual void QueueTransaction(ITransaction transaction)
+	{
+		if (TryFilter(transaction, out var t)) TryWrite(t);
+	}
 
 	//retry if APM server returns 429
 	/// <inheritdoc cref="ResponseItemsBufferedChannelBase{TChannelOptions,TEvent,TResponse,TBulkResponseItem}.Retry"/>
@@ -74,7 +116,8 @@ public class ApmChannel
 	protected override bool RejectEvent((IIntakeRoot, IntakeErrorItem) @event) => false;
 
 	/// <inheritdoc cref="BufferedChannelBase{TChannelOptions,TEvent,TResponse}.ExportAsync"/>
-	protected override Task<EventIntakeResponse> ExportAsync(HttpTransport transport, ArraySegment<IIntakeRoot> page, CancellationToken ctx = default) =>
+	protected override Task<EventIntakeResponse>
+		ExportAsync(HttpTransport transport, ArraySegment<IIntakeRoot> page, CancellationToken ctx = default) =>
 		transport.RequestAsync<EventIntakeResponse>(HttpMethod.POST, "/intake/v2/events",
 			PostData.StreamHandler(page,
 				(_, _) =>
