@@ -83,19 +83,24 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			}
 
 			apmServer.ReceivedData.Transactions.Should().HaveCount(2);
-			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
+			if (npgsqlVersion.StartsWith("5.")) //version without its own DiagnosticSource
+				apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
 
 			var genericTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunAllAsync<TDbCommand>");
 			genericTransaction.Should().NotBeNull();
 
 			var genericSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == genericTransaction.Id).ToList();
-			genericSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunAllAsyncSpans);
+			genericSpans.Should().NotBeNull().And.NotBeEmpty();
+			if (npgsqlVersion.StartsWith("5.")) //version without its own DiagnosticSource
+				genericSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunAllAsyncSpans);
 
 			var baseTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunBaseTypesAsync");
 			baseTransaction.Should().NotBeNull();
 
 			var baseSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == baseTransaction.Id).ToList();
-			baseSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunBaseTypesAsyncSpans);
+			baseSpans.Should().NotBeNull().And.NotBeEmpty();
+			if (npgsqlVersion.StartsWith("5.")) //version without its own DiagnosticSource
+				baseSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunBaseTypesAsyncSpans);
 
 			await apmServer.StopAsync();
 		}

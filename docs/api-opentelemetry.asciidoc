@@ -6,10 +6,6 @@ endif::[]
 [[opentelemetry-bridge]]
 == OpenTelemetry Bridge
 
-preview::[]
-
-NOTE: This feature was added in v1.13.0. It is supported on .NET 5 and newer versions.
-
 The OpenTelemetry Bridge in the Elastic .NET APM Agent bridges OpenTelemetry spans into Elastic APM transactions and spans. The Elastic APM OpenTelemetry bridge allows you to use the vendor-neutral OpenTelemetry Tracing API to manually instrument your code and have the Elastic .NET APM agent handle those API calls. This means you can use the Elastic APM agent for tracing, without any vendor lock-in from adding manual tracing using the APM agent’s own <<public-api, Public API>>.
 
 [float]
@@ -20,13 +16,17 @@ The OpenTelemetry bridge is part of the core agent package (https://www.nuget.or
 
 [float]
 [[otel-enable-bridge]]
-==== Enable the OpenTelemetry Bridge
+==== Disabling the OpenTelemetry Bridge
 
-Currently the bridge is opt-in, so you need to enable it.
+The OpenTelemetry bridge is enabled out of the box starting version `1.23.0`. 
 
-If you configured the agent via environment variables, set the `ELASTIC_APM_OPENTELEMETRY_BRIDGE_ENABLED ` environment variable to `true``.
+This allows you to instrument code through `ActivitySource` and `StartActivity()` without any additional configuration.
 
-If you configured the agent via the `appsettings.json` file, then set `ElasticApm:EnableOpenTelemetryBridge` to `true`.
+If you want to disable the bridge you can disable it for now through the <<config-opentelemetry-bridge-enabled, OpenTelemetryBridgeEnabled>> configuration setting.
+
+If you configured the agent via environment variables, set the `ELASTIC_APM_OPENTELEMETRY_BRIDGE_ENABLED` environment variable to `false`.
+
+If you configured the agent via the `appsettings.json` file, then set `ElasticApm:OpenTelemetryBridgeEnabled` to `false`.
 
 [source,js]
 ----
@@ -35,7 +35,7 @@ If you configured the agent via the `appsettings.json` file, then set `ElasticAp
     {
       "ServerUrl":  "http://myapmserver:8200",
       "SecretToken":  "apm-server-secret-token",
-      "EnableOpenTelemetryBridge": true
+      "OpenTelemetryBridgeEnabled": false
     }
 }
 ----
@@ -44,7 +44,7 @@ If you configured the agent via the `appsettings.json` file, then set `ElasticAp
 [[create-activity-source-and-spans]]
 ==== Create an ActivitySource and start spans
 
-After enabling the bridge, you can create OpenTelemetry spans, or in .NET terminology, you can start creating new activities via the activity source, and the agent will bridge those spans automatically.
+You can create OpenTelemetry spans, or in .NET terminology, you can start creating new activities via the activity source, and the agent will bridge those spans automatically.
 
 [source,csharp]
 ----

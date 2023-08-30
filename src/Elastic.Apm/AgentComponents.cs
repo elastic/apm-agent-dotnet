@@ -20,6 +20,7 @@ using Elastic.Apm.ServerInfo;
 #if NET5_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
 #endif
+
 #if NETFRAMEWORK
 using Elastic.Apm.Config.Net4FullFramework;
 #endif
@@ -32,9 +33,7 @@ namespace Elastic.Apm
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender, null, null, null, null)
-		{
-		}
+		) : this(logger, configurationReader, payloadSender, null, null, null, null) { }
 
 		internal AgentComponents(
 			IApmLogger logger,
@@ -49,66 +48,31 @@ namespace Elastic.Apm
 		{
 			try
 			{
-				var config = DetermineConfiguration(logger, configurationReader);
+				var config = CreateConfiguration(logger, configurationReader);
 
-				Logger = logger ?? CheckForProfilerLogger(ConsoleLogger.LoggerOrDefault(config.LogLevel), config.LogLevel);
+				Logger = logger ?? CheckForProfilerLogger(DefaultLogger(null, configurationReader), config.LogLevel);
 				ConfigurationStore = new ConfigurationStore(new RuntimeConfigurationSnapshot(config), Logger);
 
-				Service = Service.GetDefaultService(Configuration, Logger);
+				Service = Service.GetDefaultService(config, Logger);
 
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-				// Called by PayloadSenderV2 after the ServerInfo is fetched
-				Action<bool, IApmServerInfo> serverInfoCallback = null;
-
 #if NET5_0_OR_GREATER
-				ElasticActivityListener activityListener = null;
-				if (Configuration.OpenTelemetryBridgeEnabled)
-				{
-					activityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
-
-					serverInfoCallback = (success, serverInfo) =>
-					{
-						if (success)
-						{
-							if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
-							{
-								Logger.Info()
-									?.Log("APM Server version ready - OpenTelemetry (Activity) bridge is active. Current Server version: {version}",
-										serverInfo.Version.ToString());
-							}
-							else
-							{
-								Logger.Warning()
-									?.Log(
-										"OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer - bridge won't be enabled. Current Server version: {version}",
-										serverInfo.Version.ToString());
-								activityListener?.Dispose();
-							}
-						}
-						else
-						{
-							Logger.Warning()
-								?.Log(
-									"Unable to read server version - OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer. "
-									+ "The bridge remains active, but due to unknown server version it may not work as expected.");
-						}
-					};
-				}
+				// Initialize early because ServerInfoCallback requires it and might execute
+				// before EnsureElasticActivityStarted runs
+				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 #endif
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName);
 
 				PayloadSender = payloadSender
-								?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
-									ApmServerInfo,
-									isEnabled: Configuration.Enabled, serverInfoCallback: serverInfoCallback);
+					?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
+						ApmServerInfo,
+						isEnabled: Configuration.Enabled, serverInfoCallback: ServerInfoCallback);
 
 				if (Configuration.Enabled)
 					breakdownMetricsProvider ??= new BreakdownMetricsProvider(Logger);
-
-				SubscribedListeners = new HashSet<Type>();
 
 				// initialize the tracer before central configuration or metric collection is started
 				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationStore,
@@ -116,28 +80,7 @@ namespace Elastic.Apm
 					breakdownMetricsProvider);
 
 #if NET5_0_OR_GREATER
-				if (Configuration.OpenTelemetryBridgeEnabled)
-				{
-					// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version
-					if (ApmServerInfo.Version == null || ApmServerInfo?.Version == new ElasticVersion(0, 0, 0, null))
-						activityListener?.Start(TracerInternal);
-					// Otherwise do a version check
-					else if (ApmServerInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
-					{
-						Logger.Info()
-							?.Log("Starting OpenTelemetry (Activity) bridge");
-
-						activityListener?.Start(TracerInternal);
-					}
-					else
-					{
-						Logger.Warning()
-							?.Log(
-								"OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer - bridge won't be enabled. Current Server version: {version}",
-								ApmServerInfo.Version.ToString());
-						activityListener?.Dispose();
-					}
-				}
+				EnsureElasticActivityStarted();
 #endif
 
 				if (Configuration.Enabled)
@@ -149,20 +92,14 @@ namespace Elastic.Apm
 					if (centralConfigurationFetcher != null)
 						CentralConfigurationFetcher = centralConfigurationFetcher;
 					else if (agentFeatures.Check(AgentFeature.RemoteConfiguration))
-					{
-						CentralConfigurationFetcher =
-							new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
-					}
+						CentralConfigurationFetcher = new CentralConfigurationFetcher(Logger, ConfigurationStore, Service);
 					//
 					// Metrics collection
 					//
 					if (metricsCollector != null)
 						MetricsCollector = metricsCollector;
 					else if (agentFeatures.Check(AgentFeature.MetricsCollection))
-					{
-						MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationStore,
-							breakdownMetricsProvider);
-					}
+						MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationStore, breakdownMetricsProvider);
 					MetricsCollector?.StartCollecting();
 				}
 				else
@@ -177,18 +114,87 @@ namespace Elastic.Apm
 			}
 		}
 
-		private static IConfigurationReader DetermineConfiguration(IApmLogger logger, IConfigurationReader configurationReader)
+		private void EnsureElasticActivityStarted()
 		{
-#if NETFRAMEWORK
-			var localLogger = logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
-			return configurationReader
-				?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(localLogger)
-				?? new AppSettingsConfiguration(localLogger);
+#if !NET5_0_OR_GREATER
+			return;
 #else
-			var localLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
-			return configurationReader ?? new EnvironmentConfiguration(localLogger);
+			if (!Configuration.OpenTelemetryBridgeEnabled) return;
+
+			// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version
+			if (ApmServerInfo.Version == null || ApmServerInfo.Version == new ElasticVersion(0, 0, 0, null))
+				ElasticActivityListener?.Start(TracerInternal);
+			// Otherwise do a version check
+			else if (ApmServerInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
+			{
+				Logger.Info()?.Log("Starting OpenTelemetry (Activity) bridge");
+				ElasticActivityListener?.Start(TracerInternal);
+			}
+			else
+			{
+				Logger.Warning()
+					?.Log(
+						"OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer - bridge won't be enabled. Current Server version: {version}",
+						ApmServerInfo.Version.ToString());
+				ElasticActivityListener?.Dispose();
+			}
 #endif
 		}
+
+		private void ServerInfoCallback(bool success, IApmServerInfo serverInfo)
+		{
+#if !NET5_0_OR_GREATER
+			return;
+#else
+			if (success)
+			{
+				if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
+				{
+					Logger.Info()
+						?.Log("APM Server version ready - OpenTelemetry (Activity) bridge is active. Current Server version: {version}",
+							serverInfo.Version.ToString());
+				}
+				else
+				{
+					Logger.Warning()
+						?.Log(
+							"OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer - bridge won't be enabled. Current Server version: {version}",
+							serverInfo.Version.ToString());
+					ElasticActivityListener?.Dispose();
+				}
+			}
+			else
+			{
+				Logger.Warning()
+					?.Log(
+						"Unable to read server version - OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer. "
+						+ "The bridge remains active, but due to unknown server version it may not work as expected.");
+			}
+#endif
+		}
+
+		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
+		{
+#if NETFRAMEWORK
+			return logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(configurationReader?.LogLevel);
+#else
+			return logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+#endif
+		}
+
+		private static IConfigurationReader CreateConfiguration(IApmLogger logger, IConfigurationReader configurationReader)
+		{
+			var configurationLogger = DefaultLogger(logger, configurationReader);
+
+#if NETFRAMEWORK
+			return configurationReader
+					?? FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(configurationLogger)
+					?? new AppSettingsConfiguration(configurationLogger);
+#else
+			return configurationReader ?? new EnvironmentConfiguration(configurationLogger);
+#endif
+		}
+
 
 		//
 		// This is the hooking point that checks for the existence of profiler-related
@@ -225,6 +231,10 @@ namespace Elastic.Apm
 			return fallbackLogger;
 		}
 
+#if NET5_0_OR_GREATER
+		private ElasticActivityListener ElasticActivityListener { get; }
+#endif
+
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
 
 		internal IConfigurationStore ConfigurationStore { get; }
@@ -235,7 +245,7 @@ namespace Elastic.Apm
 
 		internal HttpTraceConfiguration HttpTraceConfiguration { get; }
 
-		internal HashSet<Type> SubscribedListeners { get; }
+		HashSet<Type> IApmAgentComponents.SubscribedListeners { get; } = new();
 
 		internal Tracer TracerInternal { get; }
 
@@ -264,9 +274,10 @@ namespace Elastic.Apm
 
 			if (PayloadSender is IDisposable disposablePayloadSender)
 				disposablePayloadSender.Dispose();
-
 			CentralConfigurationFetcher?.Dispose();
+#if NET5_0_OR_GREATER
+			ElasticActivityListener?.Dispose();
+#endif
 		}
-
 	}
 }

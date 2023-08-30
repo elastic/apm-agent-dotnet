@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Model;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -32,6 +33,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
+
+		public List<SpanLinkDto> Links { get; set; }
+
+		public OTel Otel { get; set; }
 
 		public string Subtype { get; set; }
 
@@ -75,6 +80,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			Duration.DurationAssertValid();
 			Name?.NameAssertValid();
 			StackTrace?.AssertValid();
+			Links?.AssertValid();
 			Type?.AssertValid();
 		}
 	}

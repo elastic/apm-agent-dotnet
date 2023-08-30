@@ -108,7 +108,7 @@ namespace Elastic.Apm.Tests
 			var noopLogger = new NoopLogger();
 			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
 			var noopPayloadSender = new NoopPayloadSender();
-			var configurationReader = new MockConfiguration(noopLogger);
+			var configurationReader = new MockConfiguration(noopLogger, openTelemetryBridgeEnabled: "false");
 			var sampler = new Sampler(rate);
 
 			total.Repeat(i =>
