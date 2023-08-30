@@ -13,7 +13,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Reflection;
 
-namespace Elastic.Apm.SqlClient
+namespace Elastic.Apm.Instrumentations.SqlClient
 {
 	internal class SqlClientDiagnosticListener : DiagnosticListenerBase
 	{

@@ -486,7 +486,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 				_isCaptureHeadersEnabled = Agent.Instance.Configuration.CaptureHeaders;
 
-				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
+				Agent.Instance.SubscribeIncludingAllDefaults();
 			}) ?? false;
 
 		/// <summary>

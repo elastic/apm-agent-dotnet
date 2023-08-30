@@ -12,7 +12,7 @@ using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.GrpcClient;
-using Elastic.Apm.SqlClient;
+using Elastic.Apm.Instrumentations.SqlClient;
 using ElasticApmStartupHook;
 
 namespace Elastic.Apm.StartupHook.Loader

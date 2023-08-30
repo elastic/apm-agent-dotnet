@@ -9,8 +9,8 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.GrpcClient;
+using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.MongoDb;
-using Elastic.Apm.SqlClient;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 
@@ -48,8 +48,8 @@ namespace Elastic.Apm.NetCoreAll
 		) => AspNetCore.ApmMiddlewareExtension
 			.UseElasticApm(builder, configuration,
 				new HttpDiagnosticsSubscriber(),
-				new EfCoreDiagnosticsSubscriber(),
 				new SqlClientDiagnosticSubscriber(),
+				new EfCoreDiagnosticsSubscriber(),
 				new ElasticsearchDiagnosticsSubscriber(),
 				new GrpcClientDiagnosticSubscriber(),
 				new AzureMessagingServiceBusDiagnosticsSubscriber(),
