@@ -19,13 +19,6 @@ namespace Elastic.Apm.Tests
 	[CaptureRestoreActivityIdFormat]
 	public class ActivityIntegrationTests
 	{
-		private readonly ITestOutputHelper _testOutputHelper;
-
-		public ActivityIntegrationTests(ITestOutputHelper testOutputHelper)
-		{
-			_testOutputHelper = testOutputHelper;
-		}
-
 		/// <summary>
 		/// Makes sure that in case there is an active activity, the agent reuses its TraceId when it starts a new transaction.
 		/// The prerequisite is that the IdFormat is W3C
@@ -154,7 +147,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.Transactions[0].Id.Should().NotBe(payloadSender.Transactions[1].Id);
 			activity.Stop();
 		}
-
+#if NET5_0_OR_GREATER
 		/// <summary>
 		/// Makes sure that transactions on the same Activity are part of the same trace.
 		/// </summary>
@@ -198,5 +191,6 @@ namespace Elastic.Apm.Tests
 
 
 		}
+#endif
 	}
 }
