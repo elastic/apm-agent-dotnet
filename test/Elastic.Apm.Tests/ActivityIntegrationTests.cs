@@ -21,7 +21,8 @@ namespace Elastic.Apm.Tests
 	{
 		private readonly ITestOutputHelper _testOutputHelper;
 
-		public ActivityIntegrationTests(ITestOutputHelper testOutputHelper) {
+		public ActivityIntegrationTests(ITestOutputHelper testOutputHelper)
+		{
 			_testOutputHelper = testOutputHelper;
 		}
 
