@@ -1,0 +1,10 @@
+:nuget: https://www.nuget.org/packages
+:dot: .
+
+[[setup-web-apps]]
+=== Azure Web Apps
+
+[float]
+==== Quick start
+
+No-Code Auto Instrumentation 
