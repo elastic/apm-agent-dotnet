@@ -43,7 +43,6 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			_tracer = tracerInternal;
 
-
 			Listener = new ActivityListener
 			{
 				ActivityStarted = ActivityStarted,
@@ -75,7 +74,6 @@ namespace Elastic.Apm.OpenTelemetry
 				var timestamp = TimeUtils.ToTimestamp(activity.StartTimeUtc);
 				if (!CreateTransactionForActivity(activity, timestamp, spanLinks))
 					CreateSpanForActivity(activity, timestamp, spanLinks);
-
 			};
 
 		private bool CreateTransactionForActivity(Activity activity, long timestamp, List<SpanLink> spanLinks)
