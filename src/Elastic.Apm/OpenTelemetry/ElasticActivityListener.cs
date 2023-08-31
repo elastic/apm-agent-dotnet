@@ -41,7 +41,6 @@ namespace Elastic.Apm.OpenTelemetry
 
 		internal void Start(Tracer tracerInternal)
 		{
-			//_httpTraceConfiguration?.AddTracer(new ElasticSearchHttpNonTracer());
 			_tracer = tracerInternal;
 
 
@@ -52,6 +51,7 @@ namespace Elastic.Apm.OpenTelemetry
 				ShouldListenTo = _ => true,
 				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
 			};
+
 			ActivitySource.AddActivityListener(Listener);
 		}
 
