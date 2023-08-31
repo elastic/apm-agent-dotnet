@@ -1,9 +1,13 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.Docker;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
@@ -31,7 +35,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", IndexDataAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
+		payloadSender.Spans.Should().HaveCount(2);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: PUT /{index}/_doc/{id}");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
 		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
@@ -45,7 +49,6 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-
 	[DisabledOnWindowsGitHubActionsDockerFact]
 	public async Task GetDocumentTest()
 	{
@@ -56,7 +59,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", GetDocumentAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
+		payloadSender.Spans.Should().HaveCount(2);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: GET /{index}/_doc/{id}");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
 		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
@@ -80,7 +83,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", SearchDocumentAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
+		payloadSender.Spans.Should().HaveCount(2);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: POST /{index}/_search");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
 		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
@@ -113,7 +116,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 			await UpdateDocumentAsync(tweet);
 		});
 
-		payloadSender.Spans.Should().HaveCount(1);
+		payloadSender.Spans.Should().HaveCount(2);
 
 		var updateSpan = payloadSender.FirstSpan;
 
@@ -141,7 +144,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", DeleteDocumentAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
+		payloadSender.Spans.Should().HaveCount(2);
 		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: DELETE /{index}/_doc/{id}");
 		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
 		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;

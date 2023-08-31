@@ -296,7 +296,7 @@ namespace Elastic.Apm.OpenTelemetry
 				serviceTargetName = TryGetStringValue(activity, SemanticConventions.MessagingDestination, out var messagingDestination) ? messagingDestination : null;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
 			}
-			else if (TryGetStringValue(activity, SemanticConventions.MessagingSystem, out var rpcSystem))
+			else if (TryGetStringValue(activity, SemanticConventions.RpcSystem, out var rpcSystem))
 			{
 				span.Type = ApiConstants.TypeExternal;
 				span.Subtype = rpcSystem;
