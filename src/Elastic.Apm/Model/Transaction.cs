@@ -100,6 +100,7 @@ namespace Elastic.Apm.Model
 		/// <param name="id">An optional parameter to pass the id of the transaction</param>
 		/// <param name="traceId">An optional parameter to pass a trace id which will be applied to the transaction</param>
 		/// <param name="links">Span links associated with this transaction</param>
+		/// <param name="current">Current activity that represents this transaction</param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -115,7 +116,8 @@ namespace Elastic.Apm.Model
 			long? timestamp = null,
 			string id = null,
 			string traceId = null,
-			IEnumerable<SpanLink> links = null
+			IEnumerable<SpanLink> links = null,
+			Activity current = null
 		)
 		{
 			Configuration = configuration;
@@ -142,10 +144,19 @@ namespace Elastic.Apm.Model
 				(configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
 					&& (distributedTracingData?.TraceState == null || distributedTracingData is { TraceState: { SampleRate: null } }));
 
+
 			// For each new transaction, start an Activity if we're not ignoring them.
 			// If Activity.Current is not null, the started activity will be a child activity,
 			// so the traceid and tracestate of the parent will flow to it.
-			if (!ignoreActivity)
+
+			// If the transaction is created as the result of an activity that is passed directly use that as the activity representing this
+			// transaction
+			if (current != null)
+				_activity = current;
+
+			// Otherwise we will start an activity explicitly and ensure it trace_id and trace_state respect our bookkeeping.
+			// Unless explicitly asked not to through `ignoreActivity`: (https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
+			else if (!ignoreActivity)
 				_activity = StartActivity(shouldRestartTrace);
 
 			var isSamplingFromDistributedTracingData = false;
@@ -721,12 +732,12 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null
+			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null, Activity current = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
-				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp, id: id,
-				isExitSpan: isExitSpan, links: links);
+				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp,
+				isExitSpan: isExitSpan, id: id, links: links, current: current);
 
 			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))
