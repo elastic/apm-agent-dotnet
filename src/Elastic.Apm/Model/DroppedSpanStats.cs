@@ -18,12 +18,11 @@ namespace Elastic.Apm.Model
 			double durationSumUs
 		)
 		{
-			DurationCount = 1;
+			Duration = new DroppedSpanDuration { Count = 1, Sum = new DroppedSpanDuration.DroppedSpanDurationSum { Us = durationSumUs } };
 			ServiceTargetType = serviceTargetType;
 			ServiceTargetName = serviceTargetName;
 			DestinationServiceResource = destinationServiceResource;
 			Outcome = outcome;
-			DurationSumUs = durationSumUs;
 		}
 
 		/// <summary>
@@ -46,23 +45,32 @@ namespace Elastic.Apm.Model
 		public string ServiceTargetName { get; }
 
 		/// <summary>
-		/// Duration holds duration aggregations about the dropped span.
-		/// Count holds the number of times the dropped span happened.
-		/// </summary>
-		[JsonProperty("duration.count")]
-		public int DurationCount { get; set; }
-
-
-		/// <summary>
-		/// Duration holds duration aggregations about the dropped span.
-		/// Sum holds dimensions about the dropped span's duration.
-		/// </summary>
-		[JsonProperty("duration.sum.us")]
-		public double DurationSumUs { get; set; }
-
-		/// <summary>
 		/// Outcome of the aggregated spans.
 		/// </summary>
 		public Outcome Outcome { get; }
+
+
+		/// <summary>
+		/// Duration holds duration aggregations about the dropped span.
+		/// </summary>
+		public DroppedSpanDuration Duration { get; set; }
+
+		internal class DroppedSpanDuration
+		{
+			/// <summary>
+			/// Count holds the number of times the dropped span happened.
+			/// </summary>
+			public int Count { get; set; }
+
+			/// <summary>
+			///  Sum holds dimensions about the dropped span's duration.
+			/// </summary>
+			public DroppedSpanDurationSum Sum { get; set; }
+
+			internal class DroppedSpanDurationSum
+			{
+				public double Us { get; set; }
+			}
+		}
 	}
 }

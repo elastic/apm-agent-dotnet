@@ -472,6 +472,31 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Asserts that dropped span statistic is not flattened but sent as an object to APM Server.
+		/// APM Server expects object and flattening caused issues.
+		/// </summary>
+		[Fact]
+		public void DroppedSpanStatsTest()
+		{
+			using var apmAgent = new ApmAgent(new TestAgentComponents(configuration:new MockConfiguration(transactionMaxSpans: "1")));
+
+			var transaction = apmAgent.Tracer.StartTransaction("foo", "test");
+			//This is the span which won't be dropped
+			transaction.CaptureSpan("fooSpan", "test", () => { });
+
+			//This span will be dropped
+			var span1 = transaction.StartSpan("foo", "bar", isExitSpan: true);
+			span1.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = "https://foo.bar" };
+			span1.Duration = 100;
+			span1.End();
+
+			transaction.End();
+
+			var json = _payloadItemSerializer.Serialize(transaction);
+			json.Should().Contain("\"duration\":{\"count\":1,\"sum\":{\"us\":100.0}}");
+		}
+
+		/// <summary>
 		/// A dummy type for tests.
 		/// </summary>
 		private class DummyType

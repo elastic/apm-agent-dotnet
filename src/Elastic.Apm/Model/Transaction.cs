@@ -571,8 +571,10 @@ namespace Elastic.Apm.Model
 
 				if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome), out var item))
 				{
-					item.DurationCount++;
-					item.DurationSumUs += duration;
+					item.Duration ??= new DroppedSpanStats.DroppedSpanDuration {Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum()};
+
+					item.Duration.Count++;
+					item.Duration.Sum.Us += duration;
 				}
 				else
 				{
