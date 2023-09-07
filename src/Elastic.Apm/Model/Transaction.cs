@@ -68,8 +68,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type, long? timestamp = null)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, null, timestamp: timestamp)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, null, timestamp: timestamp) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -571,7 +570,8 @@ namespace Elastic.Apm.Model
 
 				if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome), out var item))
 				{
-					item.Duration ??= new DroppedSpanStats.DroppedSpanDuration {Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum()};
+					item.Duration ??=
+						new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
 					item.Duration.Count++;
 					item.Duration.Sum.Us += duration;
