@@ -75,7 +75,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetType.Should().Be("bar");
 			payloadSender.FirstTransaction.DroppedSpanStats.First().Outcome.Should().Be(Outcome.Success);
 			payloadSender.FirstTransaction.DroppedSpanStats.First().Duration.Count.Should().Be(1);
-			payloadSender.FirstTransaction.DroppedSpanStats.First().Duration.Sum.Should().Be(100);
+			payloadSender.FirstTransaction.DroppedSpanStats.First().Duration.Sum.Us.Should().Be(100);
 		}
 
 		[Fact]
