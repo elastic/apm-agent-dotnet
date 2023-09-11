@@ -34,7 +34,9 @@ internal static class ApmChannelStatics
 
 	public static readonly JsonSerializerOptions SerializerOptions = new()
 	{
-		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, MaxDepth = 64, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+		MaxDepth = 64,
+		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 	};
 }
 
@@ -82,17 +84,20 @@ public class ApmChannel
 
 	public virtual void QueueError(IError error)
 	{
-		if (TryFilter(error, out var e)) TryWrite(e);
+		if (TryFilter(error, out var e))
+			TryWrite(e);
 	}
 
 	public virtual void QueueSpan(ISpan span)
 	{
-		if (TryFilter(span, out var s)) TryWrite(s);
+		if (TryFilter(span, out var s))
+			TryWrite(s);
 	}
 
 	public virtual void QueueTransaction(ITransaction transaction)
 	{
-		if (TryFilter(transaction, out var t)) TryWrite(t);
+		if (TryFilter(transaction, out var t))
+			TryWrite(t);
 	}
 
 	//retry if APM server returns 429
@@ -159,7 +164,8 @@ public class ApmChannel
 		await WriteStanzaToStreamAsync(stream, ctx).ConfigureAwait(false);
 		foreach (var @event in b)
 		{
-			if (@event == null) continue;
+			if (@event == null)
+				continue;
 
 			var type = @event switch
 			{

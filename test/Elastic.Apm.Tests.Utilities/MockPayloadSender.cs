@@ -19,7 +19,7 @@ using Elastic.Apm.Report;
 using Elastic.Transport;
 using FluentAssertions;
 
-#nullable  enable
+#nullable enable
 namespace Elastic.Apm.Tests.Utilities
 {
 	internal class MockPayloadSender : ApmChannel
@@ -67,44 +67,48 @@ namespace Elastic.Apm.Tests.Utilities
 			switch (item)
 			{
 				case IError error:
-					 _errors.Add(error);
-					 _errorWaitHandle.Set();
-					 break;
+					_errors.Add(error);
+					_errorWaitHandle.Set();
+					break;
 				case ITransaction transaction:
-					 _transactions.Add(transaction);
-					 _transactionWaitHandle.Set();
-					 break;
+					_transactions.Add(transaction);
+					_transactionWaitHandle.Set();
+					break;
 				case ISpan span:
-					 _spans.Add(span);
-					 _spanWaitHandle.Set();
-					 break;
+					_spans.Add(span);
+					_spanWaitHandle.Set();
+					break;
 				case IMetricSet metricSet:
-					 _metrics.Add(metricSet);
-					 _metricSetWaitHandle.Set();
-					 break;
+					_metrics.Add(metricSet);
+					_metricSetWaitHandle.Set();
+					break;
 			}
 			return written;
 		}
 
 		public override void QueueError(IError error)
 		{
-			lock (_errorLock) base.QueueError(error);
+			lock (_errorLock)
+				base.QueueError(error);
 		}
 
 		public override void QueueTransaction(ITransaction transaction)
 		{
-			lock (_transactionLock) base.QueueTransaction(transaction);
+			lock (_transactionLock)
+				base.QueueTransaction(transaction);
 		}
 
 		public override void QueueSpan(ISpan span)
 		{
 			VerifySpan(span);
-			lock (_spanLock) base.QueueSpan(span);
+			lock (_spanLock)
+				base.QueueSpan(span);
 		}
 
 		public override void QueueMetrics(IMetricSet metricSet)
 		{
-			lock (_metricsLock) base.QueueMetrics(metricSet);
+			lock (_metricsLock)
+				base.QueueMetrics(metricSet);
 		}
 
 
