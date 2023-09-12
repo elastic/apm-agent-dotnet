@@ -45,8 +45,8 @@ namespace Elastic.Apm.Tests.Cloud
 			metadata.Instance.Id.Should().Be(stubMetadata.instance.id.ToString());
 			metadata.Instance.Name.Should().Be(stubMetadata.instance.name);
 			metadata.Project.Should().NotBeNull();
-			metadata.Project.Id.Should().Be(stubMetadata.project.numericProjectId.ToString());
-			metadata.Project.Name.Should().Be(stubMetadata.project.projectId);
+			metadata.Project.Id.Should().Be(stubMetadata.project.projectId);
+			metadata.Project.Name.Should().BeNull();
 			metadata.AvailabilityZone.Should().Be("us-west3-a");
 			metadata.Region.Should().Be("us-west3");
 			metadata.Machine.Should().NotBeNull();
