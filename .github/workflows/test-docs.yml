@@ -1,6 +1,6 @@
-# This workflow sets the test / pack and test / tests status check to success in case it's a docs only PR and test-linux.yml is not triggered
+# This workflow sets the 'test-linux / pack' and 'test-linux / tests' status check to success in case it's a docs only PR and test-linux.yml is not triggered
 # https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
-name: test-linux # The name must be the same as in test.yml
+name: test-linux # The name must be the same as in test-linux.yml
 
 on:
   pull_request:
