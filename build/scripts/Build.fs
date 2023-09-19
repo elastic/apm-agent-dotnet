@@ -185,7 +185,7 @@ module Build =
         if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
         
     let CleanProfiler () =
-        Cargo.Exec ["make"; "clean"; "--disable-check-for-update"]       
+        Cargo.ExecWithTimeout ["make"; "clean"; "--disable-check-for-update"] (TimeSpan.FromMinutes 10)
 
     /// Restores all packages for the solution
     let ToolRestore () =
