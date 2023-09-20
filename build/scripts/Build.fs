@@ -148,7 +148,7 @@ module Build =
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
         dotnet "build" (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
-        Cargo.Exec [ "make"; "build-release"; ]
+        Cargo.Exec [ "make"; "build-release"; "--disable-check-for-update"]
                               
     /// Publishes all projects with framework versions
     let Publish targets =        
@@ -185,7 +185,7 @@ module Build =
         if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
         
     let CleanProfiler () =
-        Cargo.Exec ["make"; "clean"]       
+        Cargo.ExecWithTimeout ["make"; "clean"; "--disable-check-for-update"] (TimeSpan.FromMinutes 10)
 
     /// Restores all packages for the solution
     let ToolRestore () =
