@@ -34,7 +34,7 @@ public class ExitSpanMinDurationTests
 
 		payloadSender.FirstTransaction.DroppedSpanStats.Should().NotBeEmpty();
 		payloadSender.FirstTransaction.DroppedSpanStats.First().DestinationServiceResource.Should().Be("test");
-		payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(1);
+		payloadSender.FirstTransaction.DroppedSpanStats.First().Duration.Count.Should().Be(1);
 
 		payloadSender.Spans[0].Name.Should().Be("span1");
 		payloadSender.Spans[1].Name.Should().Be("span3");
