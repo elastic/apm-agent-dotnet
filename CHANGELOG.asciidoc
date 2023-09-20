@@ -23,6 +23,21 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.24.0]]
+==== 1.24.0
+
+===== Features
+{pull}2157[#2157] Update and optimise OTel bridge
+{pull}2140[#2140] Enable OpenTelemetryBridge by default
+{pull}2147[#2147] Add Baggage support
+{pull}2160[#2160] Trace in-process Azure Functions
+{pull}2165[#2165] Internalize SqlClient Instrumentation
+
+===== Bug fixes
+{pull}2170[#2170] Ensure OpenTelemetryBridge respects Agents sampling decisions
+{pull}2180[#2180] Change 'cloud.project.id' for GCP metadata to be the 'project-id'
+{pull}2182[#2182] Handle SqlExceptions when accessing user claims
+
 [[release-notes-1.23.0]]
 ==== 1.23.0
 

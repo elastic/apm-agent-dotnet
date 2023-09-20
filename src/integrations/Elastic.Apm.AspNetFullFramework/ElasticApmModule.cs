@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -460,14 +461,21 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			if (context.User is ClaimsPrincipal claimsPrincipal)
 			{
-				static string GetClaimWithFallbackValue(ClaimsPrincipal principal, string claimType, string fallbackClaimType)
+				try
 				{
-					var claim = principal.Claims.FirstOrDefault(n => n.Type == claimType || n.Type == fallbackClaimType);
-					return claim != null ? claim.Value : string.Empty;
-				}
+					static string GetClaimWithFallbackValue(ClaimsPrincipal principal, string claimType, string fallbackClaimType)
+					{
+						var claim = principal.Claims.FirstOrDefault(n => n.Type == claimType || n.Type == fallbackClaimType);
+						return claim != null ? claim.Value : string.Empty;
+					}
 
-				user.Email = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.Email, OpenIdClaimTypes.Email);
-				user.Id = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.NameIdentifier, OpenIdClaimTypes.UserId);
+					user.Email = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.Email, OpenIdClaimTypes.Email);
+					user.Id = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.NameIdentifier, OpenIdClaimTypes.UserId);
+				}
+				catch (SqlException ex)
+				{
+					_logger.Error()?.Log("Unable to access user claims due to SqlException with message: {message}", ex.Message);
+				}
 			}
 
 			transaction.Context.User = user;
