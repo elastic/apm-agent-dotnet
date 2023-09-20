@@ -1,0 +1,28 @@
+# This workflow sets the 'test-windows / tests' status check to success in case it's a docs only PR and test-windows.yml is not triggered
+# https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
+name: test-windows # The name must be the same as in test-windows.yml
+
+on:
+  pull_request:
+    paths-ignore: # This expression needs to match the paths ignored on test-windows.yml.
+      - '**'
+      - '!**/*.md'
+      - '!**/*.asciidoc'
+      - '!docs/**'
+
+permissions:
+  contents: read
+
+## Concurrency only allowed in the main branch.
+## So old builds running for old commits within the same Pull Request are cancelled
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+
+  # dummy steps that allow to bypass those mandatory checks for tests
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "Not required for docs"'
