@@ -40,7 +40,7 @@ We attach 2 files to the release on GitHub:
 - `ElasticApmAgent_<major>.<minor>.<bug>(-<suffix>)?.zip`: This is the startup-hook based agent.
 - `elastic_apm_profiler_<major>.<minor>.<bug>(-<suffix>)?.zip`: This is the profiler-based agent. The CI currently generates 2 profiler zip files, one for Windows (with `libelastic_apm_profiler.dll`), and one for Linux (with `libelastic_apm_profiler.so`). The only difference in the zip files is the native agent, the remaining files are the same. We copy the 2 native files into a folder with the remaining files and zip that folder as `elastic_apm_profiler_<major>.<minor>.<bug>(-<suffix>)?.zip` which we attach to the release.
 
-The steps above aren't currently automated. All the necessary files can be found under "Artifacts" in Jenkins and the files need to be manually attached to the release on GitHub.
+The steps above are now automated.
 
 ### Updating the documentation
 
@@ -48,11 +48,20 @@ Each major version has a `<major>.x` branch in the repository (e.g. for major ve
 
 In case of minor and patch releases we just need to update the `<major>.x` branch to the currently released tag:
 
- ```bash
+```bash
 git checkout v<major>.<minor>.<bug>(-<suffix>)? -b <major>.x
 
-git push --force  upstream
- ```
+git push --force  upstream 1.x
+```
+
+NOTE: You may need to delete your local `1.x` branch before running the above commands.
+
+Example for 1.24.0 release:
+```bash
+git branch -D 1.x
+git checkout v1.24.0 -b 1.x
+git push --force  upstream 1.x
+```
 
 In case of a major release, we need to create the `<major>.x` branch from the currently released tag and push the new `<major>.x` branch.
 
