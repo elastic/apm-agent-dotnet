@@ -376,6 +376,14 @@ If the default directory cannot be written to for some reason, the profiler
 will try to write log files to a `logs` directory in the home directory specified 
 by `ELASTIC_APM_PROFILER_HOME` environment variable.
 
+[IMPORTANT]
+--
+The user account under which the profiler process runs must have permission to 
+write to the destination log directory. Specifically, ensure that when running 
+on IIS, the https://learn.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities[AppPool identity] 
+has write permissions in the target directory.
+--
+
 `ELASTIC_APM_PROFILER_LOG_TARGETS` _(optional)_::
 
 A semi-colon separated list of targets for profiler logs. Valid values are
