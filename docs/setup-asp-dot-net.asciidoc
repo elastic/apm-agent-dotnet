@@ -49,6 +49,17 @@ such as `.aspx` pages, add the `managedHandler` preCondition to your `web.config
 +
 NOTE: To learn more about adding modules, see the https://docs.microsoft.com/en-us/iis/configuration/system.webserver/modules/add[Microsoft docs].
 
+[NOTE]
+--
+Our IIS module requires:  
+
+* IIS 7 or later
+* Application pool's pipeline mode has to be set to integrated (default for IIS 7 and up)
+* The deployed .NET application must NOT run under quirks mode. This makes `LegacyAspNetSynchronizationContext` the async context handler and can break `HttpContext.Items` correctly 
+restoring when async code introduces a thread switch.
+--
+
+
 . Recompile your application and deploy it.
 +
 The `ElasticApmModule` instantiates the APM agent on the first initialization. However, there may be some scenarios where
