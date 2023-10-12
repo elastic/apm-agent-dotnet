@@ -137,9 +137,9 @@ namespace Elastic.Apm.AspNetFullFramework
 				}
 				catch (Exception e)
 				{
-					 _logger.Error()
-						  ?.LogException(e, "Failed to invoke OnExecuteRequestStep. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
-							  PlatformDetection.DotNetRuntimeDescription, HttpRuntime.IISVersion);
+					_logger.Error()
+						 ?.LogException(e, "Failed to invoke OnExecuteRequestStep. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
+							 PlatformDetection.DotNetRuntimeDescription, HttpRuntime.IISVersion);
 				}
 			}
 		}
@@ -160,7 +160,8 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 
 			var transaction = Agent.Instance?.Tracer?.CurrentTransaction;
-			if (transaction != null) return;
+			if (transaction != null)
+				return;
 
 			var transactionInCurrent = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
 			var transactionInApplicationInstance = context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
