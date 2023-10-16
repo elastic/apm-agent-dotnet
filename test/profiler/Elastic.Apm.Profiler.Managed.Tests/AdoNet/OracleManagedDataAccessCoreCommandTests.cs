@@ -32,6 +32,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		[ClassData(typeof(AdoNetTestData))]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
+			if (!TestEnvironment.IsWindows) return;
+
 			var apmLogger = new InMemoryBlockingLogger(Elastic.Apm.Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
 			var port = apmServer.FindAvailablePortToListen();
