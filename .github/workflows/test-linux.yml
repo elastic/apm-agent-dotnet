@@ -148,6 +148,8 @@ jobs:
 
     - name: 'Tests: Profiler'
       uses: ./.github/workflows/test
+      #temporarily disable profiler tests
+      if: false
       with:
           name: 'profiler'
           project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'

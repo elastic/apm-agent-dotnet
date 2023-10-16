@@ -16,5 +16,10 @@
     <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
     <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="..\..\integrations\Elastic.Apm.AspNetCore.Tests\Elastic.Apm.AspNetCore.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
