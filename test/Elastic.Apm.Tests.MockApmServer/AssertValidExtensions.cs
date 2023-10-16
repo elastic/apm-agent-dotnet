@@ -272,7 +272,6 @@ internal static class AssertValidExtensions
 		foreach (var stackFrame in thisObj)
 			stackFrame.AssertValid();
 	}
-
 	internal static void AssertValid(this CapturedStackFrame thisObj)
 	{
 		thisObj.Should().NotBeNull();
@@ -282,4 +281,12 @@ internal static class AssertValidExtensions
 		thisObj.Module?.Should().NotBeEmpty();
 		thisObj.Function?.Should().NotBeEmpty();
 	}
+
+	internal static void AssertValid(this List<SpanLinkDto> thisObj)
+	{
+		thisObj.Should().NotBeNull();
+		foreach (var link in thisObj)
+			link.AssertValid();
+	}
+	internal static void AssertValid(this SpanLinkDto thisObj) => thisObj.Should().NotBeNull();
 }

@@ -13,7 +13,6 @@ declare -a projectsToPublish=(
 "Elastic.Apm.NetCoreAll"
 "Elastic.Apm.EntityFramework6"
 "Elastic.Apm.AspNetFullFramework"
-"Elastic.Apm.SqlClient"
 "Elastic.Apm.Elasticsearch"
 "Elastic.Apm.Extensions.Hosting"
 "Elastic.Apm.GrpcClient"

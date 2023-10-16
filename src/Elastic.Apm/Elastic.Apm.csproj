@@ -19,7 +19,6 @@
     <InternalsVisibleTo Include="Elastic.Apm.EntityFrameworkCore.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.EntityFramework6" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.EntityFramework6.Tests" Key="$(ExposedPublicKey)" />
-    <InternalsVisibleTo Include="Elastic.Apm.SqlClient" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.SqlClient.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.OpenTelemetry.Tests" Key="$(ExposedPublicKey)" />

@@ -87,6 +87,8 @@ A package containing support for {nuget}/MongoDB.Driver/[MongoDB.Driver].
 
 A package containing {nuget}/System.Data.SqlClient[System.Data.SqlClient] and {nuget}/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient] instrumentation.
 
+NOTE: this functionality now included by default in `Elastic.Apm` as of 1.24.0
+
 <<setup-stackexchange-redis, **Elastic.Apm.StackExchange.Redis**>>::
 
 A package containing instrumentation to capture spans for commands sent to redis with {nuget}/StackExchange.Redis/[StackExchange.Redis] package.

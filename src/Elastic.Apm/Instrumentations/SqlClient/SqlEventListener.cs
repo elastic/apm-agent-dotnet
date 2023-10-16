@@ -11,7 +11,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
-namespace Elastic.Apm.SqlClient
+namespace Elastic.Apm.Instrumentations.SqlClient
 {
 	internal class SqlEventListener : EventListener
 	{
@@ -20,7 +20,7 @@ namespace Elastic.Apm.SqlClient
 		private readonly ApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
-		private readonly ConcurrentDictionary<int, (ISpan Span, long Start)> _processingSpans = new ConcurrentDictionary<int, (ISpan, long)>();
+		private readonly ConcurrentDictionary<int, (ISpan Span, long Start)> _processingSpans = new();
 
 		public SqlEventListener(IApmAgent apmAgent)
 		{

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm
@@ -50,6 +51,31 @@ namespace Elastic.Apm
 			return disposable;
 		}
 
+		/// <summary> Used by integrations to register all known subscribers that ship as part of Elastic.Apm and the integration itself</summary>
+		internal static IDisposable SubscribeIncludingAllDefaults(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
+		{
+			var defaultSubscribers = new IDiagnosticsSubscriber[]
+			{
+				new SqlClientDiagnosticSubscriber(),
+				new HttpDiagnosticsSubscriber()
+			};
+			// on the off chance that someone manually references old nuget packages and injects them manually
+			// make sure we reject them and favor the builtin subscribers instead.
+			var rejectOldSubscribers = new[]
+			{
+				"Elastic.Apm.SqlClient.SqlClientDiagnosticSubscriber"
+			};
+
+			var userProvidedAndDefaultSubs = (subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
+				.Concat(defaultSubscribers)
+				.GroupBy(s => s.GetType().FullName)
+				.Where(g => !rejectOldSubscribers.Contains(g.Key))
+				.Select(g => g.First())
+				.ToArray();
+
+			return agent.Subscribe(userProvidedAndDefaultSubs);
+		}
+
 		internal static IExecutionSegment GetCurrentExecutionSegment(this IApmAgent agent) =>
 			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
 	}
@@ -68,8 +94,8 @@ namespace Elastic.Apm
 	/// </summary>
 	internal class CompositeDisposable : IDisposable
 	{
-		private readonly List<IDisposable> _disposables = new List<IDisposable>();
-		private readonly object _lock = new object();
+		private readonly List<IDisposable> _disposables = new();
+		private readonly object _lock = new();
 
 		private bool _isDisposed;
 

@@ -12,13 +12,13 @@ namespace Elastic.Apm.Config.Net4FullFramework;
 
 internal static class FullFrameworkDefaultImplementations
 {
-	internal static IApmLogger CreateDefaultLogger()
+	internal static IApmLogger CreateDefaultLogger(LogLevel? configuredDefault)
 	{
 		var logLevel = ConfigurationManager.AppSettings[ConfigurationOption.LogLevel.ToConfigKey()];
 		if (string.IsNullOrEmpty(logLevel))
 			logLevel = Environment.GetEnvironmentVariable(ConfigurationOption.LogLevel.ToEnvironmentVariable());
 
-		var level = ConfigConsts.DefaultValues.LogLevel;
+		var level = configuredDefault ?? ConfigConsts.DefaultValues.LogLevel;
 		if (!string.IsNullOrEmpty(logLevel))
 			Enum.TryParse(logLevel, true, out level);
 

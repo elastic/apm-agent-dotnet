@@ -273,6 +273,10 @@ namespace Elastic.Apm.Report
 					if (receivedItems == null)
 						receivedItems = _eventQueue.Receive(CancellationTokenSource.Token);
 				}
+				catch (InvalidOperationException ex) when (ex.Message.StartsWith("The source completed without"))
+				{
+					_logger.Trace()?.Log("EventQueue completed before receiving data.");
+				}
 				catch (OperationCanceledException)
 				{
 					_logger.Trace()?.Log("Waiting on EventQueue cancelled.");
@@ -289,6 +293,10 @@ namespace Elastic.Apm.Report
 						try
 						{
 							receivedItems = _eventQueue.Receive(_flushInterval);
+						}
+						catch (InvalidOperationException ex) when (ex.Message.StartsWith("The source completed without"))
+						{
+							_logger.Trace()?.Log("EventQueue completed before receiving data.");
 						}
 						catch (TimeoutException)
 						{

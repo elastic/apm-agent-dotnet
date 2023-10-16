@@ -268,13 +268,15 @@ namespace Elastic.Apm.Tests
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
 			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfiguration(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
+				agent.PayloadSender, new MockConfiguration(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer,
+				MockApmServerInfo.Version710, null);
 			sampledTransaction.Context.Request = new Request("GET",
 				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
 			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfiguration(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710, null);
+				agent.PayloadSender, new MockConfiguration(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer,
+				MockApmServerInfo.Version710, null);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = _payloadItemSerializer.Serialize(sampledTransaction);
@@ -469,6 +471,31 @@ namespace Elastic.Apm.Tests
 
 			var json = _payloadItemSerializer.Serialize(destinationService);
 			json.Should().Contain("\"name\":\"\"").And.Contain("\"type\":\"\"");
+		}
+
+		/// <summary>
+		/// Asserts that dropped span statistic is not flattened but sent as an object to APM Server.
+		/// APM Server expects object and flattening caused issues.
+		/// </summary>
+		[Fact]
+		public void DroppedSpanStatsTest()
+		{
+			using var apmAgent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionMaxSpans: "1")));
+
+			var transaction = apmAgent.Tracer.StartTransaction("foo", "test");
+			//This is the span which won't be dropped
+			transaction.CaptureSpan("fooSpan", "test", () => { });
+
+			//This span will be dropped
+			var span1 = transaction.StartSpan("foo", "bar", isExitSpan: true);
+			span1.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = "https://foo.bar" };
+			span1.Duration = 100;
+			span1.End();
+
+			transaction.End();
+
+			var json = _payloadItemSerializer.Serialize(transaction);
+			json.Should().Contain("\"duration\":{\"count\":1,\"sum\":{\"us\":100.0}}");
 		}
 
 		/// <summary>

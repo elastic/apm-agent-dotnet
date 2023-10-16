@@ -70,7 +70,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				foreach (var item in transaction.SpanTimings)
 				{
-					var groupKey = new GroupKey(new TransactionInfo() { Name = transaction.Name, Type = transaction.Type },
+					var groupKey = new GroupKey(new TransactionInfo { Name = transaction.Name, Type = transaction.Type },
 						new SpanInfo { Type = item.Key.Type, SubType = item.Key.SubType });
 
 					if (_itemsToSend.TryGetValue(groupKey, out var itemToUpdate))

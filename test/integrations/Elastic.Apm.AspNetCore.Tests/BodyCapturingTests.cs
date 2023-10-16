@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,7 +15,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -25,6 +28,8 @@ using Newtonsoft.Json.Serialization;
 using SampleAspNetCoreApp;
 using SampleAspNetCoreApp.Controllers;
 using Xunit;
+using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigConsts.SupportedValues;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -41,13 +46,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private const string MyCustomContentType = "application/my-custom-content";
 		private SutEnv _sutEnv;
+		private readonly ITestOutputHelper _output;
+		private readonly XUnitLogger _logger;
 
 		public static IEnumerable<object[]> OptionsChangedAfterStartTestVariants =>
 			BuildOptionsTestVariants().ZipWithIndex().Select(x => new object[] { x.Item1, x.Item2 });
 
+		public BodyCapturingTests(ITestOutputHelper output)
+		{
+			_output = output;
+			_logger = new XUnitLogger(LogLevel.Trace, _output);
+		}
+
 		public Task InitializeAsync() => Task.CompletedTask;
 
 		public Task DisposeAsync() => _sutEnv?.DisposeAsync();
+
+		private MockConfiguration CreateConfiguration(string captureBody = CaptureBodyAll) =>
+			new(_logger, captureBody: captureBody, openTelemetryBridgeEnabled: "false");
 
 		/// <summary>
 		/// Calls <see cref="HomeController.Send(BaseReportFilter{SendMessageFilter})" />.
@@ -58,7 +74,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task ComplexDataSendCaptureBody()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			// build test data, which we send to the sample app
 			var data = new BaseReportFilter<SendMessageFilter>
@@ -89,7 +105,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Not_Error_When_Large_File()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			using (var tempFile = new TempFile())
 			{
@@ -107,9 +123,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				HttpResponseMessage response;
 				using (var formData = new MultipartFormDataContent
-				{
-					{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }
-				})
+					{
+						{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }
+					})
 					response = await sutEnv.HttpClient.PostAsync("Home/File", formData);
 
 				response.IsSuccessStatusCode.Should().BeTrue();
@@ -123,7 +139,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Stream()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var json = JsonConvert.SerializeObject(new { key1 = "value1" });
 			var count = Encoding.UTF8.GetByteCount(json);
@@ -147,7 +163,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Stream_Up_To_MaxLength()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var jObject = new JObject();
 			var charLength = 0;
@@ -185,12 +201,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Form()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var formValues = new List<KeyValuePair<string, string>>
 			{
-				new KeyValuePair<string, string>("key1", "value1"),
-				new KeyValuePair<string, string>("key2", "value2"),
+				new("key1", "value1"), new("key2", "value2"),
 			};
 
 			HttpResponseMessage response;
@@ -209,7 +224,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task Body_Capture_Should_Capture_Form_Up_To_MaxLength()
 		{
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			var charLength = 0;
 			var formValues = new List<KeyValuePair<string, string>>();
@@ -241,7 +256,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task ApmMiddleware_ShouldSkipCapturing_WhenInvalidContentType()
 		{
 			// Arrange
-			var sutEnv = StartSutEnv(new MockConfiguration(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
+			var sutEnv = StartSutEnv(CreateConfiguration(CaptureBodyErrors));
 
 			// build test data, which we send to the sample app
 			var data = new BaseReportFilter<SendMessageFilter>
@@ -277,7 +292,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				ConfigConsts.DefaultValues.CaptureBodyContentTypes + ", " + MyCustomContentType
 			};
 
-			foreach (var captureBody in ConfigConsts.SupportedValues.CaptureBodySupportedValues)
+			foreach (var captureBody in CaptureBodySupportedValues)
 			{
 				foreach (var captureBodyContentTypes in captureBodyContentTypesVariants)
 				{
@@ -357,12 +372,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 				if (!configSnapshot.CaptureBodyContentTypes.Contains(MyCustomContentType))
 					return false;
 
-				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyOff))
+				if (configSnapshot.CaptureBody.Equals(CaptureBodyOff))
 					return false;
-				if (configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll))
+				if (configSnapshot.CaptureBody.Equals(CaptureBodyAll))
 					return true;
 
-				return isError || configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions);
+				return isError || configSnapshot.CaptureBody.Equals(CaptureBodyTransactions);
 			}
 
 			// ReSharper disable once ImplicitlyCapturedClosure
@@ -391,7 +406,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 					capturedRequestBody = transaction.Context.Request.Body;
 
 					capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
-
 				}
 
 				if (isError)
@@ -403,7 +417,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 						error.Transaction.IsSampled.Should().BeTrue();
 						error.Context.Should().NotBeNull();
 						error.Context.Request.Body.Should().Be(capturedRequestBody);
-
 					}
 					else
 					{
@@ -425,7 +438,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			if (_sutEnv != null)
 				return _sutEnv;
 
-			_sutEnv = new SutEnv(startConfiguration);
+			_sutEnv = new SutEnv(startConfiguration, _logger, _output);
 			return _sutEnv;
 		}
 
@@ -448,14 +461,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 			private const string UrlForTestApp = "http://localhost:5903";
 			internal readonly ApmAgent Agent;
 			internal readonly HttpClient HttpClient;
-			internal readonly MockPayloadSender MockPayloadSender = new MockPayloadSender();
+			internal readonly MockPayloadSender MockPayloadSender;
 
-			private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+			private readonly CancellationTokenSource _cancellationTokenSource = new();
 			private readonly Task _taskForSampleApp;
 
-			internal SutEnv(IConfiguration startConfiguration = null)
+			internal SutEnv(IConfiguration startConfiguration, IApmLogger logger, ITestOutputHelper output)
 			{
-				Agent = new ApmAgent(new TestAgentComponents(new NoopLogger(), startConfiguration, MockPayloadSender));
+				MockPayloadSender = new MockPayloadSender(logger);
+				Agent = new ApmAgent(new TestAgentComponents(logger, startConfiguration, MockPayloadSender));
 
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)
 					.ConfigureServices(services =>
@@ -472,11 +486,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseElasticApm(Agent, new TestLogger());
 						Startup.ConfigureAllExceptAgent(app);
 					})
+					.ConfigureLogging(logging => logging.AddXunit(output))
 					.UseUrls(UrlForTestApp)
 					.Build()
 					.RunAsync(_cancellationTokenSource.Token);
 
-				HttpClient = new HttpClient { BaseAddress = new Uri(UrlForTestApp) };
+				//We need to ensure we are not propagating any unsampled current activities
+				HttpClient = new HttpClient(new DisableActivityHandler(output)) { BaseAddress = new Uri(UrlForTestApp) };
 			}
 
 			internal async Task DisposeAsync()

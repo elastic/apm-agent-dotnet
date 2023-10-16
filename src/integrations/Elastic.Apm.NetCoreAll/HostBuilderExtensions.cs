@@ -12,8 +12,8 @@ using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.GrpcClient;
+using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.MongoDb;
-using Elastic.Apm.SqlClient;
 using Microsoft.Extensions.Hosting;
 
 namespace Elastic.Apm.NetCoreAll

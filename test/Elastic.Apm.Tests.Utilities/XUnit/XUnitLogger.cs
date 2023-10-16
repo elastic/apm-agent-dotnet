@@ -31,7 +31,7 @@ namespace Elastic.Apm.Tests.Utilities.XUnit
 
 			var message = formatter(state, e);
 			if (_scope is null)
-				_output.WriteLine(message);
+				_output.WriteLine($"[{ConsoleLogger.LevelToString(level),-5}] {message}");
 			else
 				_output.WriteLine(_scope + ": " + message);
 		}

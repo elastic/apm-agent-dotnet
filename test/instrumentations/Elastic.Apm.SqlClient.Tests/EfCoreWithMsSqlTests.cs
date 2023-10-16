@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;

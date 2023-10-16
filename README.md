@@ -18,7 +18,6 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 | `Elastic.Apm.NetCoreAll` | References every .NET Core related Elastic APM package. It can be used to simply turn on the agent and activate all auto instrumentation. | [![NuGet Release][Elastic.Apm.NetCoreAll-image]][Elastic.Apm.NetCoreAll-nuget-url] |
 | `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] |
 | `Elastic.Apm.EntityFramework6` | Entity Framework 6 auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
-| `Elastic.Apm.SqlClient` | `System.Data.SqlClient` and `Microsoft.Data.SqlClient` auto instrumentation. [More details](/src/Elastic.Apm.SqlClient/README.md) | [![NuGet Release][Elastic.Apm.SqlClient-image]][Elastic.Apm.SqlClient-nuget-url] |
 | `Elastic.Apm.Elasticsearch` | Integration with the .NET clients for Elasticsearch. | [![NuGet Release][Elastic.Apm.Elasticsearch-image]][Elastic.Apm.Elasticsearch-nuget-url] |
 | `Elastic.Apm.StackExchange.Redis` | Integration with the StackExchange.Redis client for Redis. | [![NuGet Release][Elastic.Apm.StackExchange.Redis-image]][Elastic.Apm.StackExchange.Redis-nuget-url] |
 | `Elastic.Apm.MongoDb` | Integration with the MongoDb.Driver driver for MongoDb. | [![NuGet Release][Elastic.Apm.MongoDb-image]][Elastic.Apm.MongoDb-nuget-url] |
@@ -101,10 +100,6 @@ https://img.shields.io/nuget/v/Elastic.Apm.AspNetFullFramework.svg
 [Elastic.Apm.EntityFramework6-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.EntityFramework6/
 [Elastic.Apm.EntityFramework6-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.EntityFramework6.svg
-
-[Elastic.Apm.SqlClient-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.SqlClient/
-[Elastic.Apm.SqlClient-image]:
-https://img.shields.io/nuget/v/Elastic.Apm.SqlClient.svg
 
 [Elastic.Apm.Elasticsearch-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Elasticsearch/
 [Elastic.Apm.Elasticsearch-image]:
