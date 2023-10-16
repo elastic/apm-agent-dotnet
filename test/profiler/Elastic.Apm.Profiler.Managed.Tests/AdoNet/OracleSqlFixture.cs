@@ -26,7 +26,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 
 		public async Task InitializeAsync()
 		{
-			if (!TestEnvironment.IsWindows) return;
+			if (!TestEnvironment.IsWindows)
+				return;
 
 			await _container.StartAsync();
 			var (stdOut, stdErr) = await _container.GetLogsAsync();
