@@ -3,8 +3,11 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using DotNet.Testcontainers;
+using DotNet.Testcontainers.Configurations;
 using Elastic.Apm;
 using Elastic.Apm.Api;
+using Elastic.Apm.AspNetCore.Tests;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.Tests.Utilities;
@@ -20,6 +23,7 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 	private readonly ITestOutputHelper _testOutputHelper;
 	private readonly ElasticsearchTestFixture _esClientListenerFixture;
 	private readonly ElasticsearchClient _client;
+
 
 	public ElasticsearchTests(ITestOutputHelper testOutputHelper, ElasticsearchTestFixture esClientListenerFixture)
 	{
