@@ -148,19 +148,26 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			string EventName() => Enum.GetName(typeof(RequestNotification), context.CurrentNotification);
 
+			var urlPath = TryGetUrlPath(context);
+			var ignoreUrls = Agent.Instance?.Configuration.TransactionIgnoreUrls;
+			if (urlPath != null && ignoreUrls != null && WildcardMatcher.IsAnyMatch(ignoreUrls, urlPath))
+				return;
+
+
 			if (Agent.Instance == null)
 			{
-				_logger.Trace()?.Log($"Agent.Instance is null during {nameof(OnExecuteRequestStep)}:{EventName()}.");
+				_logger.Trace()?.Log($"Agent.Instance is null during {nameof(OnExecuteRequestStep)}:{EventName()}. url: {urlPath}");
 				return;
 			}
 			if (Agent.Instance.Tracer == null)
 			{
-				_logger.Trace()?.Log($"Agent.Instance.Tracer is null during {nameof(OnExecuteRequestStep)}:{EventName()}.");
+				_logger.Trace()?.Log($"Agent.Instance.Tracer is null during {nameof(OnExecuteRequestStep)}:{EventName()}. url: {urlPath}");
 				return;
 			}
-
 			var transaction = Agent.Instance?.Tracer?.CurrentTransaction;
 			if (transaction != null)
+				return;
+			if (Agent.Config.LogLevel <= LogLevel.Trace)
 				return;
 
 			var transactionInCurrent = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
@@ -169,13 +176,14 @@ namespace Elastic.Apm.AspNetFullFramework
 			var spanInApplicationInstance = context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey] is not null;
 
 			_logger.Trace()?
-				.Log($"{nameof(ITracer.CurrentTransaction)} is null during {nameof(OnExecuteRequestStep)}:{EventName()}. "
+				.Log($"{nameof(ITracer.CurrentTransaction)} is null during {nameof(OnExecuteRequestStep)}:{EventName()}. url: {urlPath} "
 					+ $"(HttpContext.Current Span: {spanInCurrent}, Transaction: {transactionInCurrent})"
 					+ $"(ApplicationContext Span: {spanInApplicationInstance}, Transaction: {transactionInApplicationInstance})");
 
 			if (HttpContext.Current == null)
 			{
-				_logger.Trace()?.Log($"HttpContext.Current is null during {nameof(OnExecuteRequestStep)}:{EventName()}. Unable to attempt to restore transaction");
+				_logger.Trace()?
+					.Log($"HttpContext.Current is null during {nameof(OnExecuteRequestStep)}:{EventName()}. Unable to attempt to restore transaction. url: {urlPath}");
 				return;
 			}
 
@@ -183,19 +191,34 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				HttpContext.Current.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] =
 					context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey];
-				_logger.Trace()?.Log($"Restored transaction to HttpContext.Current.Items {nameof(OnExecuteRequestStep)}:{EventName()}");
+				_logger.Trace()?.Log($"Restored transaction to HttpContext.Current.Items {nameof(OnExecuteRequestStep)}:{EventName()}. url: {urlPath}");
 			}
 			if (!spanInCurrent && spanInApplicationInstance)
 			{
 				HttpContext.Current.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey] =
 					context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey];
-				_logger.Trace()?.Log($"Restored span to HttpContext.Current.Items {nameof(OnExecuteRequestStep)}:{EventName()}");
+				_logger.Trace()?.Log($"Restored span to HttpContext.Current.Items {nameof(OnExecuteRequestStep)}:{EventName()}. url: {urlPath}");
+			}
+
+		}
+
+		private string TryGetUrlPath(HttpContextBase context)
+		{
+			try
+			{
+				return context.Request.Unvalidated.Path;
+			}
+			catch
+			{
+				//ignore
+				return string.Empty;
 			}
 
 		}
 
 		private void OnExecuteRequestStep(HttpContextBase context, Action step)
 		{
+
 			RestoreContextIfNeeded(context);
 			step();
 		}
