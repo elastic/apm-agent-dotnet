@@ -10,6 +10,8 @@ permissions:
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+  JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  SLACK_CHANNEL: "#apm-agent-dotnet"
 
 jobs:
   release:
@@ -71,10 +73,10 @@ jobs:
         url: ${{ secrets.VAULT_ADDR }}
         roleId: ${{ secrets.VAULT_ROLE_ID }}
         secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: "#apm-agent-dotnet"
+        channel: ${{ env.SLACK_CHANNEL }}
         message: |
           :large_green_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* published.
-          Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)
+          Build: (<${{ env.JOB_URL }}|here>)
           Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)"
 
     - if: ${{ failure() }}
@@ -83,10 +85,10 @@ jobs:
         url: ${{ secrets.VAULT_ADDR }}
         roleId: ${{ secrets.VAULT_ROLE_ID }}
         secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: "#apm-agent-dotnet"
+        channel: ${{ env.SLACK_CHANNEL }}
         message: |
           :large_yellow_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* could not be published.
-          Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)
+          Build: (<${{ env.JOB_URL }}|here>)
           
   release-windows:
     runs-on: windows-2022
