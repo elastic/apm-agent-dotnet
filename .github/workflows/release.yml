@@ -131,6 +131,7 @@ jobs:
 
       - name: Create GitHub Pull Request if minor release.
         run: |
+          # as long as there is a major.x branch
           existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
           if [ -z ${existed_in_local} ]; then
             echo "Target branch '${TARGET_BRANCH}' does not exist."
@@ -145,6 +146,13 @@ jobs:
             --base "$TARGET_BRANCH" \
             --repo "${{ github.repository }}"
 
-      - name: Create GitHub Pull Request if major release
+      - name: Create branch if major release
         run: |
-          echo 'TBC'
+          # as long as there is no a major.x branch
+          existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
+          if [ -n ${existed_in_local} ]; then
+            echo "Target branch '${TARGET_BRANCH}' does exist."
+            exit 0
+          fi
+          git branch -D $TARGET_BRANCH
+          git push origin $TARGET_BRANCH

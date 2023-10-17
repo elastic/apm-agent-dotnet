@@ -66,11 +66,9 @@ git checkout v1.24.0 -b 1.x
 git push --force  upstream 1.x
 ```
 
-#### For a major release
-
-> **NOTE**: The steps below are not yet automated with GitHub actions.
-
 In case of a major release, we need to create the `<major>.x` branch from the currently released tag and push the new `<major>.x` branch.
+
+#### For a major release
 
 Additionally, in case of a major version release, we need to create a PR in [elastic/docs](https://github.com/elastic/docs).
 
