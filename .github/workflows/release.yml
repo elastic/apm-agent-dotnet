@@ -95,6 +95,7 @@ jobs:
     needs: [ 'release']
     outputs:
       agent-version: ${{ steps.bootstrap.outputs.agent-version }}
+      major-version: ${{ steps.bootstrap.outputs.major-version }}
 
     steps:
       - uses: actions/checkout@v3
@@ -121,15 +122,20 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GIT_TAG: v${{ needs.release-windows.outputs.agent-version }}
       NEW_BRANCH: update/${{ needs.release-windows.outputs.agent-version }}
-      TARGET_BRANCH: 1.x
+      TARGET_BRANCH: ${{ needs.release-windows.outputs.major-version }}.x
 
     steps:
       - uses: actions/checkout@v4
         with:
           depth: 0
 
-      - name: Create GitHub Pull Request with the post-release steps
+      - name: Create GitHub Pull Request if minor release.
         run: |
+          existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
+          if [ -z ${existed_in_local} ]; then
+            echo "Target branch '${TARGET_BRANCH}' does not exist."
+            exit 0
+          fi
           git checkout $GIT_TAG -b ${NEW_BRANCH}
           git push origin ${NEW_BRANCH}
           gh pr create \
