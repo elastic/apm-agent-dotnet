@@ -93,10 +93,13 @@ jobs:
   release-windows:
     runs-on: windows-2022
     needs: [ 'release']
+    outputs:
+      agent-version: ${{ steps.bootstrap.outputs.agent-version }}
 
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap Action Workspace
+        id: bootstrap
         uses: ./.github/workflows/bootstrap
         with:
           rust: 'true'
@@ -110,3 +113,32 @@ jobs:
         continue-on-error: true #continue for now until we see it working in action
         run: |
           gh release upload ${{ github.ref_name }} "build/output/elastic_apm_profiler_*.zip"
+
+  post-release:
+    needs: [ 'release-windows']
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GIT_TAG: v${{ needs.release-windows.outputs.agent-version }}
+      NEW_BRANCH: update/${{ needs.release-windows.outputs.agent-version }}
+      TARGET_BRANCH: 1.x
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          depth: 0
+
+      - name: Create GitHub Pull Request with the post-release steps
+        run: |
+          git checkout $GIT_TAG -b ${NEW_BRANCH}
+          git push origin ${NEW_BRANCH}
+          gh pr create \
+            --title "post-release: ${GIT_TAG}" \
+            --body "Generated automatically with ${JOB_URL}" \
+            --head "elastic:${NEW_BRANCH}" \
+            --base "$TARGET_BRANCH" \
+            --repo "${{ github.repository }}"
+
+      - name: Create GitHub Pull Request if major release
+        run: |
+          echo 'TBC'
