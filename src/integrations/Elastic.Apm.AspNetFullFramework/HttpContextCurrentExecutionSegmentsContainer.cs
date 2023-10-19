@@ -15,10 +15,10 @@ namespace Elastic.Apm.AspNetFullFramework
 	/// </summary>
 	internal sealed class HttpContextCurrentExecutionSegmentsContainer : ICurrentExecutionSegmentsContainer
 	{
-		private readonly AsyncLocal<ISpan> _currentSpan = new AsyncLocal<ISpan>();
-		private readonly AsyncLocal<ITransaction> _currentTransaction = new AsyncLocal<ITransaction>();
+		private readonly AsyncLocal<ISpan> _currentSpan = new();
+		private readonly AsyncLocal<ITransaction> _currentTransaction = new();
 
-		private const string CurrentSpanKey = "Elastic.Apm.Agent.CurrentSpan";
+		internal const string CurrentSpanKey = "Elastic.Apm.Agent.CurrentSpan";
 		internal const string CurrentTransactionKey = "Elastic.Apm.Agent.CurrentTransaction";
 
 		public ISpan CurrentSpan
