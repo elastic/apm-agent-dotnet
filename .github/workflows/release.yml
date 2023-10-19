@@ -129,6 +129,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup git config
+        uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
+
       - name: Create GitHub Pull Request if minor release.
         run: |
           echo "as long as there is a major.x branch"
