@@ -127,7 +127,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          depth: 0
+          fetch-depth: 0
 
       - name: Create GitHub Pull Request if minor release.
         run: |
