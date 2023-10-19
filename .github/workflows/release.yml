@@ -133,11 +133,12 @@ jobs:
         run: |
           echo "as long as there is a major.x branch"
           existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
-          if [ -z ${existed_in_local} ]; then
+          if [ -z "${existed_in_local}" ]; then
             echo -e "::warning::Target branch '${TARGET_BRANCH}' does not exist."
             exit 0
           fi
-          git checkout ${TARGET_BRANCH} -b ${NEW_BRANCH}
+          git branch -D $TARGET_BRANCH
+          git checkout -b ${NEW_BRANCH}
           git format-patch -k --stdout ${TARGET_BRANCH}...main -- docs CHANGELOG.asciidoc | git am -3 -k
           git push origin ${NEW_BRANCH}
           gh pr create \
@@ -151,7 +152,7 @@ jobs:
         run: |
           echo "as long as there is no a major.x branch"
           existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
-          if [ -n ${existed_in_local} ]; then
+          if [ -n "${existed_in_local}" ]; then
             echo -e "::warning::Target branch '${TARGET_BRANCH}' does exist."
             exit 0
           fi
