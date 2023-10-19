@@ -137,7 +137,7 @@ jobs:
             echo -e "::warning::Target branch '${TARGET_BRANCH}' does not exist."
             exit 0
           fi
-          git branch -D $TARGET_BRANCH
+          git checkout $TARGET_BRANCH
           git checkout -b ${NEW_BRANCH}
           git format-patch -k --stdout ${TARGET_BRANCH}...main -- docs CHANGELOG.asciidoc | git am -3 -k
           git push origin ${NEW_BRANCH}
