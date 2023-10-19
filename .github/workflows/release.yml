@@ -143,7 +143,7 @@ jobs:
           fi
           git checkout $TARGET_BRANCH
           git checkout -b ${NEW_BRANCH}
-          git format-patch -k --stdout ${TARGET_BRANCH}...main -- docs CHANGELOG.asciidoc | git am -3 -k
+          git format-patch -k --stdout ${TARGET_BRANCH}...origin/main -- docs CHANGELOG.asciidoc | git am -3 -k
           git push origin ${NEW_BRANCH}
           gh pr create \
             --title "post-release: ${GIT_TAG}" \
