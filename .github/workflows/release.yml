@@ -5,8 +5,9 @@ on:
     types: [published]
 
 permissions:
-    contents: write
-    issues: write
+  contents: write
+  issues: write
+  pull-requests: write
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
@@ -127,18 +128,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          depth: 0
+          fetch-depth: 0
+
+      - name: Setup git config
+        uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
 
       - name: Create GitHub Pull Request if minor release.
         run: |
           echo "as long as there is a major.x branch"
           existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
-          if [ -z ${existed_in_local} ]; then
+          if [ -z "${existed_in_local}" ]; then
             echo -e "::warning::Target branch '${TARGET_BRANCH}' does not exist."
             exit 0
           fi
-          git checkout ${TARGET_BRANCH} -b ${NEW_BRANCH}
-          git format-patch -k --stdout ${TARGET_BRANCH}...main -- docs CHANGELOG.asciidoc | git am -3 -k
+          git checkout $TARGET_BRANCH
+          git checkout -b ${NEW_BRANCH}
+          git format-patch -k --stdout ${TARGET_BRANCH}...origin/main -- docs CHANGELOG.asciidoc | git am -3 -k
           git push origin ${NEW_BRANCH}
           gh pr create \
             --title "post-release: ${GIT_TAG}" \
@@ -151,7 +156,7 @@ jobs:
         run: |
           echo "as long as there is no a major.x branch"
           existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
-          if [ -n ${existed_in_local} ]; then
+          if [ -n "${existed_in_local}" ]; then
             echo -e "::warning::Target branch '${TARGET_BRANCH}' does exist."
             exit 0
           fi
