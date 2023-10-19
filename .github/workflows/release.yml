@@ -5,8 +5,9 @@ on:
     types: [published]
 
 permissions:
-    contents: write
-    issues: write
+  contents: write
+  issues: write
+  pull-requests: write
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
