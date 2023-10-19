@@ -39,9 +39,10 @@ namespace Elastic.Apm.SqlClient.Tests
 
 			_testOutputHelper = testOutputHelper;
 
-			_payloadSender = new MockPayloadSender();
+			var logger = new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper));
+			_payloadSender = new MockPayloadSender(logger);
 			_apmAgent = new ApmAgent(new TestAgentComponents(
-				new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
+				logger,
 				payloadSender: _payloadSender));
 			_subscription = _apmAgent.Subscribe(new SqlClientDiagnosticSubscriber());
 		}

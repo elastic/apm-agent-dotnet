@@ -22,4 +22,8 @@
     <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\xunit.runner.json" Link="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
