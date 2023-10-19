@@ -23,6 +23,12 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.25.0]]
+==== 1.25.0
+
+===== Features 
+{pull}2196[#2196] Support OnExecuteRequestStep available in new .NET versions for IIS modules.
+
 [[release-notes-1.24.0]]
 ==== 1.24.0
 
