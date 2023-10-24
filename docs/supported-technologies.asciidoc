@@ -47,7 +47,7 @@ Automatic instrumentation is supported for the following web frameworks
 |<<setup-asp-net-core, NuGet package>>
 
 |ASP.NET (.NET Framework) in IIS  added[1.1]
-|4.6.1+ (IIS 7.0 or newer)
+|4.6.2+ (IIS 7.0 or newer)
 |<<setup-auto-instrumentation, Profiler auto instrumentation>>
 
 _or_

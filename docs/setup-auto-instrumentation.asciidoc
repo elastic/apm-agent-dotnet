@@ -20,7 +20,7 @@ This approach works with the following
 
 |x64 
 
-|.NET Framework 4.6.1+
+|.NET Framework 4.6.2+
 
 .NET Core 2.1+
 
@@ -319,8 +319,8 @@ CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
 CORECLR_PROFILER_PATH=/<unzipped directory>/libelastic_apm_profiler.so <1>
 ELASTIC_APM_PROFILER_HOME=/<unzipped directory>
 ELASTIC_APM_PROFILER_INTEGRATIONS=/<unzipped directory>/integrations.yml
-ELASTIC_APM_SERVER_URL=<apm server url>" <2>
-ELASTIC_APM_SECRET_TOKEN=<secret token>" <3>
+ELASTIC_APM_SERVER_URL=<apm server url> <2>
+ELASTIC_APM_SECRET_TOKEN=<secret token> <3>
 ----
 <1> `<unzipped directory>` is the directory to which the zip file
 was unzipped.
