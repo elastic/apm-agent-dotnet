@@ -139,7 +139,24 @@ namespace Elastic.Apm.Model
 					continue;
 
 				Otel ??= new OTel() { Attributes = new Dictionary<string, object>() };
-				Otel.Attributes.Add(baggage.Key, baggage.Value);
+
+				// original code
+				//Otel.Attributes.Add(baggage.Key, baggage.Value);
+
+				// add if not already added, fail if values differ
+				//if (!Otel.Attributes.ContainsKey(baggage.Key))
+				//	Otel.Attributes.Add(baggage.Key, baggage.Value);
+				//else if (Otel.Attributes[baggage.Key].ToString() != baggage.Value)
+				//	throw new Exception($"Baggage key {baggage.Key} already exists with a different value. Current value: '{Otel.Attributes[baggage.Key]}'; New Value: '{baggage.Value}'");
+
+				// overwrite if already added
+				//Otel.Attributes[baggage.Key] = baggage.Value;
+
+				// if exists append to existing value
+				if (Otel.Attributes.ContainsKey(baggage.Key))
+					Otel.Attributes[baggage.Key] = Otel.Attributes[baggage.Key] + "," + baggage.Value;
+				else
+					Otel.Attributes.Add(baggage.Key, baggage.Value);
 			}
 		}
 
