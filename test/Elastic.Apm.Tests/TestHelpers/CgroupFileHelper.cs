@@ -14,7 +14,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		internal sealed class CgroupPaths : IDisposable
 		{
 			public CgroupPaths(CgroupVersion cgroupVersion) => CgroupVersion = cgroupVersion;
-			
+
 			public CgroupVersion CgroupVersion { get; }
 			public string RootPath { get; set; }
 			public string ProcPath { get; set; }
@@ -107,7 +107,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 				memoryLimitInBytes.WriteAsync($"{DefaultMemoryLimitBytes}\n");
 				memoryLimitInBytes.Flush();
 			}
-			
+
 			using (var cgroup = new StreamWriter(File.Create(Path.Combine(procSelfPath, "mountinfo"))))
 			{
 				sb.Clear();

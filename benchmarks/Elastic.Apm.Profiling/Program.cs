@@ -43,17 +43,17 @@ MemoryProfiler.CollectAllocations(false);
 
 static void UnlimitedMaxMemoryFiles(CgroupPaths paths)
 {
-    if (paths.CgroupVersion == CgroupVersion.CgroupV1)
-    {
-        using var sr = new StreamWriter(File.Create(Path.Combine(paths.CgroupV1MemoryControllerPath, "memory.limit_in_bytes")));
-        sr.WriteAsync($"9223372036854771712\n");
-    }
+	if (paths.CgroupVersion == CgroupVersion.CgroupV1)
+	{
+		using var sr = new StreamWriter(File.Create(Path.Combine(paths.CgroupV1MemoryControllerPath, "memory.limit_in_bytes")));
+		sr.WriteAsync($"9223372036854771712\n");
+	}
 
-    if (paths.CgroupVersion == CgroupVersion.CgroupV2)
-    {
-        using var sr = new StreamWriter(File.Create(Path.Combine(paths.CgroupV2SlicePath, "memory.max")));
-        sr.WriteAsync($"max\n");
-    }
+	if (paths.CgroupVersion == CgroupVersion.CgroupV2)
+	{
+		using var sr = new StreamWriter(File.Create(Path.Combine(paths.CgroupV2SlicePath, "memory.max")));
+		sr.WriteAsync($"max\n");
+	}
 }
 
 internal sealed class NoopLogger : IApmLogger

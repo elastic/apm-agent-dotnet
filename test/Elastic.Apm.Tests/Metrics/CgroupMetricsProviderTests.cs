@@ -53,7 +53,7 @@ namespace Elastic.Apm.Tests.Metrics
 		public void TestLimitedCgroup2()
 		{
 			using var paths = CreateDefaultCgroupFiles(CgroupVersion.CgroupV2);
-			
+
 			var sut = TestableCgroupMetricsProvider(new NoopLogger(), new List<WildcardMatcher>(), paths.RootPath, true);
 			var samples = sut.GetSamples().ToList();
 
