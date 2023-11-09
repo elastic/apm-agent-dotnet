@@ -29,7 +29,7 @@ namespace Elastic.Apm.Metrics.Linux
 #endif
 
 		public static (long totalMemory, long availableMemory) GetTotalAndAvailableSystemMemory(IApmLogger logger)
-			=> GetTotalAndAvailableSystemMemory(logger, ProcMemInfo, false);
+			=> GetTotalAndAvailableSystemMemory(logger, null, false);
 
 		internal static (long totalMemory, long availableMemory) GetTotalAndAvailableSystemMemory(
 			IApmLogger logger, string pathPrefix, bool ignoreOs)
@@ -59,7 +59,7 @@ namespace Elastic.Apm.Metrics.Linux
 			{
 #if NET6_0_OR_GREATER
 				using var fs = new FileStream(memInfoPath, Options);
-				var buffer = ArrayPool<byte>.Shared.Rent((int)fs.Length);
+				var buffer = ArrayPool<byte>.Shared.Rent(8192); // Should easily be large enough for max meminfo file.
 
 				try
 				{

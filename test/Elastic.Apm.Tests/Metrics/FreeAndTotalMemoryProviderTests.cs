@@ -25,10 +25,10 @@ public class FreeAndTotalMemoryProviderTests
 
 		var freeMemory = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == FreeAndTotalMemoryProvider.FreeMemory);
 		freeMemory.Should().NotBeNull();
-		freeMemory.KeyValue.Value.Should().BeGreaterThan(0);
+		freeMemory.KeyValue.Value.Should().BePositive();
 
 		var totalMemory = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == FreeAndTotalMemoryProvider.TotalMemory);
 		totalMemory.Should().NotBeNull();
-		totalMemory.KeyValue.Value.Should().BeGreaterThan(0);
+		totalMemory.KeyValue.Value.Should().BePositive();
 	}
 }
