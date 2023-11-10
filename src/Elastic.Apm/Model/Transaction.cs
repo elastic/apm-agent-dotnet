@@ -575,7 +575,7 @@ internal class Transaction : ITransaction
 					new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
 				item.Duration.Count++;
-				item.Duration.Sum.Us += duration;
+				item.Duration.Sum.UsRaw += duration;
 			}
 			else
 			{

@@ -40,7 +40,6 @@ namespace Elastic.Apm.Feature.Tests
 				unitTestRuntimeProvider.TestIgnore("Skipping azure function feature tests on Github Actions");
 		}
 
-
 		[Given(@"an agent configured with")]
 		[Scope(Feature = "Extracting Metadata for Azure App Service")]
 		public void AzureAppService_GivenAnAgentConfiguredWith(Table table) => Helper_GivenAnAgentConfiguredWith(table);
@@ -131,10 +130,7 @@ namespace Elastic.Apm.Feature.Tests
 			var token = payloadCollector.Payloads[0].Body[0].SelectToken($"metadata.cloud.{key}");
 
 			token.Should().NotBeNull();
-			var prop = token as JProperty;
-			prop.Should().NotBeNull();
-			prop.Value<string>().Should().Be(value);
-
+			token.Value<string>().Should().Be(value);
 		}
 	}
 }

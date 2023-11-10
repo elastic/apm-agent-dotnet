@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
@@ -18,7 +19,7 @@ namespace Elastic.Apm.Model
 			double durationSumUs
 		)
 		{
-			Duration = new DroppedSpanDuration { Count = 1, Sum = new DroppedSpanDuration.DroppedSpanDurationSum { Us = durationSumUs } };
+			Duration = new DroppedSpanDuration { Count = 1, Sum = new DroppedSpanDuration.DroppedSpanDurationSum { UsRaw = durationSumUs } };
 			ServiceTargetType = serviceTargetType;
 			ServiceTargetName = serviceTargetName;
 			DestinationServiceResource = destinationServiceResource;
@@ -49,7 +50,6 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public Outcome Outcome { get; }
 
-
 		/// <summary>
 		/// Duration holds duration aggregations about the dropped span.
 		/// </summary>
@@ -63,13 +63,17 @@ namespace Elastic.Apm.Model
 			public int Count { get; set; }
 
 			/// <summary>
-			///  Sum holds dimensions about the dropped span's duration.
+			/// Sum holds dimensions about the dropped span's duration.
 			/// </summary>
 			public DroppedSpanDurationSum Sum { get; set; }
 
 			internal class DroppedSpanDurationSum
 			{
-				public double Us { get; set; }
+				[JsonIgnore]
+				public double UsRaw { get; set; }
+
+				// As `duration.sum.us` is an integer in the intake API we round during serialization.
+				public int Us => Convert.ToInt32(UsRaw);
 			}
 		}
 	}
