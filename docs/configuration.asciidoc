@@ -704,6 +704,12 @@ Verification can be disabled by changing this setting to false.
 | `true`                  | Boolean
 |============
 
+[NOTE]
+====
+This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1. 
+We recommend upgrading to .NET Framework 4.7.2 or newer to use this configuration setting.
+====
+
 [float]
 [[config-server-cert]]
 ==== `ServerCert` (added[1.9])
@@ -725,6 +731,12 @@ the trust store, such as a self-signed certificate.
 | Default                 | Type
 | `<none>`                  | String
 |============
+
+[NOTE]
+====
+This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1. 
+We recommend upgrading to .NET Framework 4.7.2 or newer to use this configuration setting.
+====
 
 [float]
 [[config-flush-interval]]
