@@ -14,7 +14,7 @@ jobs:
       with:
         labels: agent-dotnet
     - name: Check team membership for user
-      uses: elastic/get-user-teams-membership@v1.0.4
+      uses: elastic/get-user-teams-membership@1.1.0
       id: checkUserMember
       with:
         username: ${{ github.actor }}
