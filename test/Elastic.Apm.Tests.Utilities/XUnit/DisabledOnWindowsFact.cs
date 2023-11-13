@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Elastic.Apm.Tests.Utilities.XUnit;
 
+#pragma warning disable IDE0021 // Use expression body for constructor
 public sealed class DisabledOnWindowsFact : FactAttribute
 {
 	public DisabledOnWindowsFact()
@@ -22,7 +23,18 @@ public sealed class DisabledOnFullFrameworkFact : FactAttribute
 	public DisabledOnFullFrameworkFact()
 	{
 #if NETFRAMEWORK
+
 		Skip = "This test is disabled on .NET Full Framework";
+#endif
+	}
+}
+
+public sealed class DisabledOnNet462FrameworkFact : FactAttribute
+{
+	public DisabledOnNet462FrameworkFact()
+	{
+#if NET462
+		Skip = "This test is disabled on .NET Framework 4.6.2";
 #endif
 	}
 }
@@ -58,3 +70,5 @@ public sealed class DisabledOnFullFrameworkTheory : TheoryAttribute
 #endif
 	}
 }
+
+#pragma warning restore IDE0021 // Use expression body for constructor

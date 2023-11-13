@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 
 // Copyright (c) 2007 James Newton-King
 //
@@ -1259,7 +1259,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 			// warning - this method use to cause errors with Intellitrace. Retest in VS Ultimate after changes
 			IValueProvider valueProvider;
 
-#if !(PORTABLE40 || PORTABLE || DOTNET || NETSTANDARD2_0 || NET5_0_OR_GREATER)
+#if !(PORTABLE40 || PORTABLE || DOTNET || NET472 || NETSTANDARD2_0 || NET5_0_OR_GREATER)
             if (DynamicCodeGeneration)
             {
                 valueProvider = new DynamicValueProvider(member);

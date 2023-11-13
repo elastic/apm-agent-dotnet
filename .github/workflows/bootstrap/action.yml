@@ -15,6 +15,9 @@ outputs:
   agent-version:
     description: "The current agent version number"
     value: ${{ steps.dotnet.outputs.agent-version }}
+  major-version:
+    description: "The current major version number, semver"
+    value: ${{ steps.dotnet.outputs.major-version }}
     
 runs:
   using: "composite"
@@ -48,9 +51,11 @@ runs:
       run: |
         dotnet --list-sdks
         dotnet tool restore
-        echo "Version Number: $(dotnet minver -t=v -p=canary.0 -v=e)"
-        echo "AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e)" >> $GITHUB_ENV
-        echo "agent-version=$(dotnet minver -t=v -p=canary.0 -v=e)" >> $GITHUB_OUTPUT
+        AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e)
+        echo "Version Number: ${AGENT_VERSION}"
+        echo "AGENT_VERSION=${AGENT_VERSION}" >> $GITHUB_ENV
+        echo "agent-version=${AGENT_VERSION}" >> $GITHUB_OUTPUT
+        echo "major-version=$(echo ${AGENT_VERSION} | cut -d"." -f1)" >> $GITHUB_OUTPUT
   
       
     # Setup git config

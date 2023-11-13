@@ -36,13 +36,16 @@ Creating a release will trigger the [release Github Action](.github/workflows/re
 
 ### Attaching files on GitHub
 
+> **NOTE**: The steps below are now automated with GitHub actions.
+
 We attach 2 files to the release on GitHub:
 - `ElasticApmAgent_<major>.<minor>.<bug>(-<suffix>)?.zip`: This is the startup-hook based agent.
 - `elastic_apm_profiler_<major>.<minor>.<bug>(-<suffix>)?.zip`: This is the profiler-based agent. The CI currently generates 2 profiler zip files, one for Windows (with `libelastic_apm_profiler.dll`), and one for Linux (with `libelastic_apm_profiler.so`). The only difference in the zip files is the native agent, the remaining files are the same. We copy the 2 native files into a folder with the remaining files and zip that folder as `elastic_apm_profiler_<major>.<minor>.<bug>(-<suffix>)?.zip` which we attach to the release.
 
-The steps above are now automated.
 
 ### Updating the documentation
+
+> **NOTE**: The steps below are now automated with GitHub actions.
 
 Each major version has a `<major>.x` branch in the repository (e.g. for major version `1` we have the branch `1.x`).
 
@@ -64,6 +67,8 @@ git push --force  upstream 1.x
 ```
 
 In case of a major release, we need to create the `<major>.x` branch from the currently released tag and push the new `<major>.x` branch.
+
+#### For a major release
 
 Additionally, in case of a major version release, we need to create a PR in [elastic/docs](https://github.com/elastic/docs).
 

@@ -28,7 +28,15 @@ the agent will not capture transactions.
 === .NET versions
 
 The agent works on every .NET flavor and version that supports .NET Standard 2.0.
-This means .NET Core 2.0 or newer, and .NET Framework 4.6.1 or newer.
+This means .NET Core 2.0 or newer, and .NET Framework 4.6.2* or newer.
+
+_* Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility._
+
+[IMPORTANT]
+====
+While this library *should* work on .NET Core 2.0+, we limit our support to only those 
+versions currently supported by Microsoft - .NET 6.0 and newer.
+====
 
 [float]
 [[supported-web-frameworks]]
@@ -47,7 +55,7 @@ Automatic instrumentation is supported for the following web frameworks
 |<<setup-asp-net-core, NuGet package>>
 
 |ASP.NET (.NET Framework) in IIS  added[1.1]
-|4.6.1+ (IIS 7.0 or newer)
+|4.6.2+ (IIS 7.0 or newer)
 |<<setup-auto-instrumentation, Profiler auto instrumentation>>
 
 _or_
