@@ -12,14 +12,12 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
-#if NET462 || NETSTANDARD
-using System.Globalization;
-#endif
-
 #if NET6_0_OR_GREATER
 using System.Buffers.Text;
 using System.Runtime.CompilerServices;
 using System.Text;
+#else
+using System.Globalization;
 #endif
 
 namespace Elastic.Apm.Metrics.MetricsProvider
