@@ -73,7 +73,9 @@ namespace Elastic.Apm.Model
 				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
 					continue;
 
-				Context.InternalLabels.Value.Add(baggage.Key, baggage.Value);
+				var newKey = $"baggage.{baggage.Key}";
+				var labels = Context.InternalLabels.Value;
+				labels[newKey] = baggage.Value;
 			}
 		}
 
