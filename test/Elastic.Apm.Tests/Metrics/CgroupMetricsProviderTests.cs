@@ -6,151 +6,174 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
+using System.Text;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Logging;
-using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
+using static Elastic.Apm.Tests.TestHelpers.CgroupFileHelper;
 
 namespace Elastic.Apm.Tests.Metrics
 {
 	public class CgroupMetricsProviderTests
 	{
-		private readonly string _projectRoot;
-		private readonly IApmLogger _logger;
-
-		public CgroupMetricsProviderTests(ITestOutputHelper output)
+		[Fact]
+		public void TestCgroup1Regex()
 		{
-			var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			_projectRoot = assemblyDirectory;
-			_logger = new XUnitLogger(LogLevel.Trace, output);
+			var actual = ApplyCgroupRegex(Cgroup1MountPoint, "39 30 0:36 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime shared:10 - cgroup cgroup rw,seclabel,memory");
+			actual.Should().Be("/sys/fs/cgroup/memory");
 		}
 
-		[DisabledOnWindowsTheory]
-		[InlineData(964778496, "/proc/cgroup", "/proc/limited/memory", 7964778496)]
-		[InlineData(964778496, "/proc/cgroup2", "/proc/sys_cgroup2", 7964778496)]
-		// stat have different values to inactive_file and total_inactive_file
-		[InlineData(964778496, "/proc/cgroup2_only_0", "/proc/sys_cgroup2_unlimited", null)]
-		// stat have different values to inactive_file and total_inactive_file different order
-		[InlineData(964778496, "/proc/cgroup2_only_memory", "/proc/sys_cgroup2_unlimited_stat_different_order", null)]
-		public void TestFreeCgroupMemory(double value, string selfCGroup, string sysFsGroup, double? memLimit)
+		[Fact]
+		public void TestCgroup2Regex()
 		{
-			var mountInfo = GetTestFilePath(sysFsGroup);
-			var tempFile = TempFile.CreateWithContents(
-				sysFsGroup.StartsWith("/proc/sys_cgroup2")
-					? $"30 23 0:26 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:4 - cgroup2 cgroup rw,seclabel\n"
-					: $"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - cgroup cgroup rw,seclabel,memory\n");
+			var actual = ApplyCgroupRegex(Cgroup2MountPoint, "39 30 0:36 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime shared:4 - cgroup2 cgroup rw,seclabel");
+			actual.Should().Be("/sys/fs/cgroup/memory");
+		}
 
-			using (tempFile)
+		[Fact]
+		public void TestLimitedCgroup1()
+		{
+			using var paths = CreateDefaultCgroupFiles(CgroupVersion.CgroupV1);
+
+			var sut = TestableCgroupMetricsProvider(new NoopLogger(), new List<WildcardMatcher>(), paths.RootPath, true);
+			var samples = sut.GetSamples().ToList();
+
+			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			memLimitSample.Should().NotBeNull();
+			memLimitSample.KeyValue.Value.Should().Be(DefaultMemoryLimitBytes);
+
+			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			memUsageSample.Should().NotBeNull();
+			memUsageSample.KeyValue.Value.Should().Be(DefaultMemoryUsageBytes);
+		}
+
+		[Fact]
+		public void TestLimitedCgroup2()
+		{
+			using var paths = CreateDefaultCgroupFiles(CgroupVersion.CgroupV2);
+
+			var sut = TestableCgroupMetricsProvider(new NoopLogger(), new List<WildcardMatcher>(), paths.RootPath, true);
+			var samples = sut.GetSamples().ToList();
+
+			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			memLimitSample.Should().NotBeNull();
+			memLimitSample.KeyValue.Value.Should().Be(DefaultMemoryLimitBytes);
+
+			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			memUsageSample.Should().NotBeNull();
+			memUsageSample.KeyValue.Value.Should().Be(DefaultMemoryUsageBytes);
+		}
+
+		[Fact]
+		public void TestUnlimitedCgroup1()
+		{
+			using var paths = CreateDefaultCgroupFiles(CgroupVersion.CgroupV1);
+			UnlimitedMaxMemoryFiles(paths);
+
+			var sut = TestableCgroupMetricsProvider(new NoopLogger(), new List<WildcardMatcher>(), paths.RootPath, true);
+			var samples = sut.GetSamples().ToList();
+
+			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			memLimitSample.Should().NotBeNull();
+			memLimitSample.KeyValue.Value.Should().Be(DefaultMemInfoTotalBytes);
+
+			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			memUsageSample.Should().NotBeNull();
+			memUsageSample.KeyValue.Value.Should().Be(DefaultMemoryUsageBytes);
+		}
+
+		[Fact]
+		public void TestUnlimitedCgroup2()
+		{
+			using var paths = CreateDefaultCgroupFiles(CgroupVersion.CgroupV2);
+			UnlimitedMaxMemoryFiles(paths);
+
+			var sut = TestableCgroupMetricsProvider(new NoopLogger(), new List<WildcardMatcher>(), paths.RootPath, true);
+			var samples = sut.GetSamples().ToList();
+
+			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			memLimitSample.Should().NotBeNull();
+			memLimitSample.KeyValue.Value.Should().Be(DefaultMemInfoTotalBytes);
+
+			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			memUsageSample.Should().NotBeNull();
+			memUsageSample.KeyValue.Value.Should().Be(DefaultMemoryUsageBytes);
+		}
+
+		private void UnlimitedMaxMemoryFiles(CgroupPaths paths)
+		{
+			if (paths.CgroupVersion == CgroupVersion.CgroupV1)
 			{
-				var provider = new CgroupMetricsProvider(GetTestFilePath(selfCGroup), tempFile.Path, _logger, new List<WildcardMatcher>(), ignoreOs: true);
+				using var sr = new StreamWriter(File.Create(Path.Combine(paths.CgroupV1MemoryControllerPath, "memory.limit_in_bytes")));
+				sr.WriteAsync($"9223372036854771712\n");
+			}
 
-				var samples = provider.GetSamples().ToList();
-
-				samples.First().Samples.Should().HaveCountGreaterOrEqualTo(2);
-
-				var inactiveFileBytesSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryStatsInactiveFileBytes);
-				inactiveFileBytesSample.Should().NotBeNull();
-
-				var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
-				memUsageSample.Should().NotBeNull();
-				memUsageSample?.KeyValue.Value.Should().Be(value);
-
-				if (memLimit.HasValue)
-				{
-					var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
-					memLimitSample.Should().NotBeNull();
-					memLimitSample?.KeyValue.Value.Should().Be(memLimit);
-				}
+			if (paths.CgroupVersion == CgroupVersion.CgroupV2)
+			{
+				using var sr = new StreamWriter(File.Create(Path.Combine(paths.CgroupV2SlicePath, "memory.max")));
+				sr.WriteAsync($"max\n");
 			}
 		}
 
-		[Theory]
-		[InlineData("39 30 0:36 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime shared:10 - cgroup cgroup rw,seclabel,memory", "/sys/fs/cgroup/memory")]
-		public void TestCgroup1Regex(string testString, string expected)
+		private void ReplaceMemStatInactiveFile(CgroupPaths paths, double inactiveFileValue, double totalInactiveFileValue, bool inactiveFirst)
 		{
-			var actual = ApplyCgroupRegex(Cgroup1MountPoint, testString);
-			actual.Should().Be(expected);
-		}
+			using var memoryStat = File.CreateText(Path.Combine(paths.CgroupV1MemoryControllerPath, "memory.stat"));
+			var sb = new StringBuilder();
 
-		[Theory]
-		[InlineData("39 30 0:36 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime shared:4 - cgroup2 cgroup rw,seclabel", "/sys/fs/cgroup/memory")]
-		public void TestCgroup2Regex(string testString, string expected)
-		{
-			var actual = ApplyCgroupRegex(Cgroup2MountPoint, testString);
-			actual.Should().Be(expected);
-		}
+			sb.Append("cache 10407936").Append("\n");
+			sb.Append("rss 778842112").Append("\n");
+			sb.Append("rss_huge 0").Append("\n");
+			sb.Append("shmem 0").Append("\n");
+			sb.Append("mapped_file 0").Append("\n");
+			sb.Append("dirty 0").Append("\n");
+			sb.Append("writeback 0").Append("\n");
+			sb.Append("swap 0").Append("\n");
+			sb.Append("pgpgin 234465").Append("\n");
+			sb.Append("pgpgout 41732").Append("\n");
+			sb.Append("pgfault 233838").Append("\n");
+			sb.Append("pgmajfault 0").Append("\n");
+			sb.Append("inactive_anon 0").Append("\n");
+			sb.Append("active_anon 778702848").Append("\n");
 
-		[DisabledTestFact("Sometimes fails in CI with `System.ArgumentNullException : Value cannot be null.`")]
-		public void TestUnlimitedCgroup1()
-		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup", "/proc/unlimited/memory", "cgroup cgroup");
-			var samples = cgroupMetrics.GetSamples().ToList();
-
-			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
-			memLimitSample.Should().BeNull();
-
-			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
-			memUsageSample.Should().NotBeNull();
-			memUsageSample.KeyValue.Value.Should().Be(964778496);
-		}
-
-		[DisabledTestFact("Flaky")]
-		public void TestUnlimitedCgroup2()
-		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2", "/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
-			var samples = cgroupMetrics.GetSamples().ToList();
-
-			var memLimitSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
-			memLimitSample.Should().BeNull();
-
-			var memUsageSample = samples.First().Samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
-			memUsageSample.Should().NotBeNull();
-			memUsageSample.KeyValue.Value.Should().Be(964778496);
-		}
-
-		/// <summary>
-		/// Makes sure that CGroup metrics collection exits with a log on non Linux OSs and only collects data on Linux.
-		/// </summary>
-		[Fact]
-		public void OsTest()
-		{
-			var logger = new InMemoryBlockingLogger(LogLevel.Trace);
-			var cgroupMetricsProvider = new CgroupMetricsProvider(logger, new List<WildcardMatcher>());
-
-			var samples = cgroupMetricsProvider.GetSamples();
-
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			if (inactiveFirst)
 			{
-				samples.Should().NotBeNullOrEmpty();
-				logger.Lines.Where(line => line.Contains("detected a non Linux OS, therefore Cgroup metrics will not be reported")).Should().BeNullOrEmpty();
+				sb.AppendLine($"inactive_file {inactiveFileValue}");
+				sb.AppendLine($"total_inactive_file {totalInactiveFileValue}");
 			}
 			else
 			{
-				samples.Should().BeNullOrEmpty();
-				logger.Lines.Where(line => line.Contains("detected a non Linux OS, therefore Cgroup metrics will not be reported")).Should().NotBeNullOrEmpty();
+				sb.AppendLine($"total_inactive_file {totalInactiveFileValue}");
+				sb.AppendLine($"inactive_file {inactiveFileValue}");
 			}
 
-		}
-
-		/// <summary>
-		/// Converts a test path into a path to a physical test file on disk
-		/// </summary>
-		private string GetTestFilePath(string linuxPath) => Path.GetFullPath(Path.Combine(_projectRoot, "TestResources" + linuxPath));
-
-		private CgroupMetricsProvider CreateUnlimitedSystemCgroupMetricsProvider(string cGroupPath, string mountPath, string cgroup)
-		{
-			var mountInfo = GetTestFilePath(mountPath).Replace("\\", "/");
-			var tempFile = TempFile.CreateWithContents(
-				$"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - {cgroup} rw,seclabel,memory\n");
-
-			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger(), new List<WildcardMatcher>(), true);
+			sb.Append("active_file 0").Append("\n");
+			sb.Append("unevictable 0").Append("\n");
+			sb.Append("hierarchical_memory_limit 1073741824").Append("\n");
+			sb.Append("hierarchical_memsw_limit 2147483648").Append("\n");
+			sb.Append("total_cache 10407936").Append("\n");
+			sb.Append("total_rss 778842112").Append("\n");
+			sb.Append("total_rss_huge 0").Append("\n");
+			sb.Append("total_shmem 0").Append("\n");
+			sb.Append("total_mapped_file 0").Append("\n");
+			sb.Append("total_dirty 0").Append("\n");
+			sb.Append("total_writeback 0").Append("\n");
+			sb.Append("total_swap 0").Append("\n");
+			sb.Append("total_pgpgin 234465").Append("\n");
+			sb.Append("total_pgpgout 41732").Append("\n");
+			sb.Append("total_pgfault 233838").Append("\n");
+			sb.Append("total_pgmajfault 0").Append("\n");
+			sb.Append("total_inactive_anon 0").Append("\n");
+			sb.Append("total_active_anon 778702848").Append("\n");
+			sb.Append("total_active_file 0").Append("\n");
+			sb.Append("total_unevictable 0").Append("\n");
+			sb.Append("recent_rotated_anon 231947").Append("\n");
+			sb.Append("recent_rotated_file 2").Append("\n");
+			sb.Append("recent_scanned_anon 231947").Append("\n");
+			sb.Append("recent_scanned_file 2622").Append("\n");
+			memoryStat.Write(sb.ToString());
+			memoryStat.Flush();
 		}
 	}
 }

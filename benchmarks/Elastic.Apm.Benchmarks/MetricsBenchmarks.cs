@@ -58,7 +58,7 @@ namespace Elastic.Apm.Benchmarks
 		[Benchmark]
 		public void CollectTotalAndFreeMemory2X()
 		{
-			var mockPayloadSender = new FreeAndTotalMemoryProvider(new List<WildcardMatcher>());
+			var mockPayloadSender = new FreeAndTotalMemoryProvider(new NoopLogger(), new List<WildcardMatcher>());
 
 			mockPayloadSender.GetSamples();
 			mockPayloadSender.GetSamples();
