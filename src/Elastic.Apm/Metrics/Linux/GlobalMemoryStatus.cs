@@ -63,6 +63,10 @@ namespace Elastic.Apm.Metrics.Linux
 
 				try
 				{
+					// We read from the file into our rented buffer so that we can parse data from the meminfo file.
+					// Specifically, we try to parse the values for `MemAvailable` and `MemTotal`. When these values 
+					// use the KB unit, we multiply them to return bytes.
+
 					var read = fs.Read(buffer);
 
 					if (read == 0)
