@@ -79,7 +79,7 @@ namespace Elastic.Apm.Metrics
 			AddIfEnabled(new ProcessTotalCpuTimeProvider(_logger));
 			AddIfEnabled(new SystemTotalCpuProvider(_logger));
 			AddIfEnabled(new ProcessWorkingSetAndVirtualMemoryProvider(disabledMetrics));
-			AddIfEnabled(new FreeAndTotalMemoryProvider(disabledMetrics));
+			AddIfEnabled(new FreeAndTotalMemoryProvider(_logger, disabledMetrics));
 			try
 			{
 				// We saw some Exceptions in GcMetricsProvider.ctor, so we try-catch it
@@ -183,7 +183,7 @@ namespace Elastic.Apm.Metrics
 				{
 					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
 
-					var samplesFromProvider = metricsProvider.GetSamples()?.ToArray();
+					var samplesFromProvider = metricsProvider.GetSamples()?.ToArray(); // TODO - Perf
 
 					if (samplesFromProvider != null && samplesFromProvider.Any())
 					{
@@ -191,8 +191,11 @@ namespace Elastic.Apm.Metrics
 
 						foreach (var item in samplesFromProvider)
 						{
+							if (item is null)
+								continue;
+
 							// filter out NaN and infinity
-							item.Samples = item.Samples.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value)).ToArray();
+							item.Samples = item.Samples.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value)).ToArray(); // TODO - Perf
 
 							if (item.Samples.Any())
 							{
