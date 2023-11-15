@@ -32,15 +32,6 @@ public class FreeAndTotalMemoryProviderBenchmarks
 	public void Cleanup()
 	=> Directory.Delete(_cgroupPaths.RootPath, true);
 
-	//[Benchmark(Baseline = true)]
-	//public void GetSamplesOriginal()
-	//{
-	//    foreach (var metricSet in _freeAndTotalMemoryProvider.GetSamplesOriginal())
-	//    {
-	//        metricSet.Samples.Consume(_consumer);
-	//    }
-	//}
-
 	[Benchmark]
 	public void GetSamples()
 	{
