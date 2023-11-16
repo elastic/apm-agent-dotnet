@@ -13,7 +13,7 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       
     # used by opbeans .NET to reference the on commit nuget packages
     # TODO: update opbeans to use our feedz.io packages

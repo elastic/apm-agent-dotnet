@@ -33,7 +33,7 @@ jobs:
     runs-on: windows-2022
         
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
@@ -56,7 +56,7 @@ jobs:
     runs-on: windows-2022
       
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
@@ -74,7 +74,7 @@ jobs:
     # Disable profiler tests for now
     # if: ${{ false }} 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
