@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Elastic.Apm.Model;
 using FluentAssertions;
 using Xunit;
 
@@ -14,6 +15,10 @@ namespace Elastic.Apm.AspNetCore.Tests;
 [Collection("DiagnosticListenerTest")]
 public class BaggageAspNetCoreTests : MultiApplicationTestBase
 {
+
+	private void ValidateOtelAttribute(Transaction transaction, string key, string value) =>
+		transaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>($"baggage.{key}", value));
+
 	[Fact]
 	public async Task AccessBaggageFromUpstream()
 	{
@@ -35,10 +40,11 @@ public class BaggageAspNetCoreTests : MultiApplicationTestBase
 			.Should()
 			.Be("key1=value1, key2 = value2, key3=value3");
 
-		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("key1", "value1"));
-		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("key2", "value2"));
-		_payloadSender1.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("key3", "value3"));
+		ValidateOtelAttribute(_payloadSender1.FirstTransaction, "key1", "value1");
+		ValidateOtelAttribute(_payloadSender1.FirstTransaction, "key2", "value2");
+		ValidateOtelAttribute(_payloadSender1.FirstTransaction, "key3", "value3");
 	}
+
 
 	/// <summary>
 	/// Calls the 1. service without any baggage, the /Home/WriteBaggage endpoint in the 1. service adds a baggage and then
@@ -73,6 +79,6 @@ public class BaggageAspNetCoreTests : MultiApplicationTestBase
 			.Should()
 			.Be("foo=bar");
 
-		_payloadSender2.FirstTransaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("foo", "bar"));
+		ValidateOtelAttribute(_payloadSender2.FirstTransaction, "foo", "bar");
 	}
 }
