@@ -3,13 +3,11 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Metrics.Windows;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
@@ -24,12 +22,27 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private readonly bool _collectFreeMemory;
 		private readonly bool _collectTotalMemory;
+		private readonly IApmLogger _logger;
+		private readonly string _pathPrefix;
+		private readonly bool _ignoreOs;
 
-		public FreeAndTotalMemoryProvider(IReadOnlyList<WildcardMatcher> disabledMetrics)
+		internal static FreeAndTotalMemoryProvider TestableFreeAndTotalMemoryProvider(IApmLogger logger,
+			IReadOnlyList<WildcardMatcher> disabledMetrics, string pathPrefix, bool ignoreOs) =>
+				new(logger, disabledMetrics, pathPrefix, ignoreOs);
+
+		public FreeAndTotalMemoryProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics) :
+			this(logger, disabledMetrics, string.Empty)
+		{ }
+
+		private FreeAndTotalMemoryProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics,
+			string pathPrefix, bool ignoreOs = false)
 		{
 			IsMetricAlreadyCaptured = true;
 			_collectFreeMemory = IsFreeMemoryEnabled(disabledMetrics);
 			_collectTotalMemory = IsTotalMemoryEnabled(disabledMetrics);
+			_logger = logger.Scoped(nameof(FreeAndTotalMemoryProvider));
+			_pathPrefix = pathPrefix;
+			_ignoreOs = ignoreOs;
 		}
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
@@ -40,96 +53,42 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
 			IsFreeMemoryEnabled(disabledMetrics) || IsTotalMemoryEnabled(disabledMetrics);
 
-		private bool IsFreeMemoryEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, FreeMemory);
+		private static bool IsFreeMemoryEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
+			!WildcardMatcher.IsAnyMatch(disabledMetrics, FreeMemory);
 
-		private bool IsTotalMemoryEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(disabledMetrics, TotalMemory);
+		private static bool IsTotalMemoryEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
+			!WildcardMatcher.IsAnyMatch(disabledMetrics, TotalMemory);
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
+			yield return new(TimeUtils.TimestampNow(), GetSamplesCore());
+		}
+
+		private IEnumerable<MetricSample> GetSamplesCore()
+		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				var (success, totalMemory, freeMemory) = GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
+				var (success, total, available) = Windows.GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
 
-				if (!success || totalMemory == 0 || freeMemory == 0)
-					return null;
-
-				var samples = new List<MetricSample>();
-
-				if (_collectFreeMemory)
-					samples.Add(new MetricSample(FreeMemory, freeMemory));
-
-				if (_collectTotalMemory)
-					samples.Add(new MetricSample(TotalMemory, totalMemory));
-
-				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
-			}
-
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-			{
-				var samples = new List<MetricSample>();
-
-				using (var sr = new StreamReader("/proc/meminfo"))
+				if (success && total != 0 && available != 0)
 				{
-					var hasMemFree = false;
-					var hasMemTotal = false;
+					if (_collectFreeMemory)
+						yield return new MetricSample(FreeMemory, available);
 
-					var line = sr.ReadLine();
-
-					while (line != null || samples.Count != 2)
-					{
-						//See: https://github.com/elastic/beats/issues/4202
-						if (line != null && line.Contains("MemAvailable:") && _collectFreeMemory)
-						{
-							var (suc, res) = GetEntry(line, "MemAvailable:");
-							if (suc)
-								samples.Add(new MetricSample(FreeMemory, res));
-							hasMemFree = true;
-						}
-						if (line != null && line.Contains("MemTotal:") && _collectTotalMemory)
-						{
-							var (suc, res) = GetEntry(line, "MemTotal:");
-							if (suc)
-								samples.Add(new MetricSample(TotalMemory, res));
-							hasMemTotal = true;
-						}
-
-						if ((hasMemFree || !_collectFreeMemory) && (hasMemTotal || !_collectTotalMemory))
-							break;
-
-						line = sr.ReadLine();
-					}
-				}
-
-				ConsecutiveNumberOfFailedReads = 0;
-
-				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
-			}
-
-			(bool, ulong) GetEntry(string line, string name)
-			{
-				var nameIndex = line.IndexOf(name, StringComparison.Ordinal);
-				if (nameIndex < 0)
-					return (false, 0);
-
-				var values = line.Substring(line.IndexOf(name, StringComparison.Ordinal) + name.Length);
-
-				if (string.IsNullOrWhiteSpace(values))
-					return (false, 0);
-
-				var items = values.Trim().Split(' ');
-
-				switch (items.Length)
-				{
-					case 1 when ulong.TryParse(items[0], out var res):
-						return (true, res);
-					case 2 when items[1].ToLowerInvariant() == "kb" && ulong.TryParse(items[0], out var res):
-						return (true, res * 1024);
-					default:
-						return (false, 0);
+					if (_collectTotalMemory)
+						yield return new MetricSample(TotalMemory, total);
 				}
 			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				var (totalMemory, availableMemory) = Linux.GlobalMemoryStatus.GetTotalAndAvailableSystemMemory(_logger);
 
-			return null;
+				if (_collectFreeMemory && availableMemory > -1)
+					yield return new MetricSample(FreeMemory, availableMemory);
+
+				if (_collectTotalMemory && totalMemory > -1)
+					yield return new MetricSample(TotalMemory, totalMemory);
+			}
 		}
 	}
 }

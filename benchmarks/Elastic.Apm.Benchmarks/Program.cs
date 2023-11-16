@@ -3,7 +3,10 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.IO;
+using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using Elastic.Apm.Benchmarks.Helpers;
 using Elastic.CommonSchema.BenchmarkDotNetExporter;
@@ -14,6 +17,11 @@ namespace Elastic.Apm.Benchmarks
 	{
 		public static void Main(string[] args)
 		{
+			//var thing = new FreeAndTotalMemoryProviderBenchmarks();
+			//thing.Setup();
+			//thing.GetSamplesOriginal();
+			//thing.Cleanup();
+
 			var esUrl = Environment.GetEnvironmentVariable("ES_URL");
 			var esPassword = Environment.GetEnvironmentVariable("ES_PASS");
 			var esUser = Environment.GetEnvironmentVariable("ES_USER");
@@ -46,8 +54,11 @@ namespace Elastic.Apm.Benchmarks
 				}
 			}
 
-			var exporter = new ElasticsearchBenchmarkExporter(options);
-			var config = DefaultConfig.Instance.AddExporter(exporter);
+			//var exporter = new ElasticsearchBenchmarkExporter(options);
+			var config = DefaultConfig.Instance
+				//.AddExporter(exporter)
+				.WithSummaryStyle(new SummaryStyle(null, false, null, null, ratioStyle: RatioStyle.Percentage));
+
 			BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 		}
 	}

@@ -495,7 +495,7 @@ namespace Elastic.Apm.Tests
 			transaction.End();
 
 			var json = _payloadItemSerializer.Serialize(transaction);
-			json.Should().Contain("\"duration\":{\"count\":1,\"sum\":{\"us\":100.0}}");
+			json.Should().Contain("\"duration\":{\"count\":1,\"sum\":{\"us\":100}}");
 		}
 
 		/// <summary>

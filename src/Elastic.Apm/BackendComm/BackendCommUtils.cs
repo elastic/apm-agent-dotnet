@@ -7,12 +7,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Security;
 using System.Reflection;
-#if NETSTANDARD2_0 || NET6_0_OR_GREATER
+#if !NET462
 using System.Security.Authentication;
-#endif
+using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+#endif
 using System.Text;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
@@ -126,8 +126,21 @@ namespace Elastic.Apm.BackendComm
 
 		private static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
 		{
+#if NET462
+			try
+			{
+				var systemNetHttpVersion = typeof(HttpClientHandler).Assembly.GetName().Version;
+				logger.Trace()?.Log("System.Net.Http assembly version if {Version}.", systemNetHttpVersion);
+			}
+			catch (Exception ex)
+			{
+				logger.Error()?.LogException(ex, "Could not determine the assembly version of System.Net.Http.");
+			}
+#endif
+
+#if !NET462
 			Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback = null;
-			var useWindowsCredentials = configuration.UseWindowsCredentials;
+
 			if (!configuration.VerifyServerCert)
 			{
 				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
@@ -192,18 +205,29 @@ namespace Elastic.Apm.BackendComm
 					return false;
 				};
 			}
+#endif
 
 			var httpClientHandler = new HttpClientHandler
 			{
-				ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback,
-				UseDefaultCredentials = useWindowsCredentials
+				UseDefaultCredentials = configuration.UseWindowsCredentials
 			};
-#if NETFRAMEWORK
-			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {ServicePointManager.SecurityProtocol}");
-#else
+
+			// Due to the potential for binding issues (e.g.https://github.com/dotnet/runtime/issues/29314)
+			// and runtime exceptions on .NET Framework versions <4.7.2, we don't attempt to set the certificate
+			// validation callback or SSL protocols on net462, which should also apply to .NET Framework <4.7.2 runtimes
+			// which resolve to that target.
+#if !NET462
+			httpClientHandler.ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
+			logger.Info()?.Log("CreateHttpClientHandler - Setting ServerCertificateCustomValidationCallback");
+
 			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
 			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {httpClientHandler.SslProtocols}");
+#else
+			// We don't set the ServerCertificateCustomValidationCallback on ServicePointManager here as it would
+			// apply to the whole AppDomain and that may not be desired. A consumer can set this themselves if they
+			// need custom validation behaviour.
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {ServicePointManager.SecurityProtocol}");
 #endif
 			return httpClientHandler;
 		}
