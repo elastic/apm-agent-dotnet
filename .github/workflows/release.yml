@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
       id: bootstrap
       uses: ./.github/workflows/bootstrap
@@ -30,7 +30,7 @@ jobs:
       run: ./build.sh pack
 
     - name: Prepare Nuget
-      uses: hashicorp/vault-action@v2.4.2
+      uses: hashicorp/vault-action@v2.7.4
       with:
         url: ${{ secrets.VAULT_ADDR }}
         method: approle
@@ -99,7 +99,7 @@ jobs:
       major-version: ${{ steps.bootstrap.outputs.major-version }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         id: bootstrap
         uses: ./.github/workflows/bootstrap
