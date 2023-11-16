@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
       with:
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
           
@@ -72,7 +72,7 @@ jobs:
       github.event_name != 'pull_request'
       || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
@@ -83,7 +83,7 @@ jobs:
         run: dotnet build -c Release --verbosity minimal
 
       - name: 'Read credentials'
-        uses: hashicorp/vault-action@v2.7.1
+        uses: hashicorp/vault-action@v2.7.4
         with:
           url: ${{ secrets.VAULT_ADDR }}
           roleId: ${{ secrets.VAULT_ROLE_ID }}
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
     
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
       id: bootstrap
       uses: ./.github/workflows/bootstrap

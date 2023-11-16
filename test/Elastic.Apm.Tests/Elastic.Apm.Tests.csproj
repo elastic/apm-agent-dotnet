@@ -14,6 +14,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Static.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.EntityFrameworkCore.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Benchmarks" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Profiling" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Docker.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Tests.MockApmServer" Key="$(ExposedPublicKey)" />

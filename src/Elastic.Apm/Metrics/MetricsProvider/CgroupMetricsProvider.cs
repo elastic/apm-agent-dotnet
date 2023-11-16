@@ -5,13 +5,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+
+#if NET6_0_OR_GREATER
+using System.Buffers.Text;
+using System.Runtime.CompilerServices;
+using System.Text;
+#else
+using System.Globalization;
+#endif
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
@@ -30,19 +37,25 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private const string DefaultSysFsCgroup = "/sys/fs/cgroup";
 		private const string ProcSelfCgroup = "/proc/self/cgroup";
 		private const string ProcSelfMountinfo = "/proc/self/mountinfo";
+		private const string ProcMeminfo = "/proc/meminfo";
 
 		internal const string SystemProcessCgroupMemoryMemLimitBytes = "system.process.cgroup.memory.mem.limit.bytes";
 		internal const string SystemProcessCgroupMemoryMemUsageBytes = "system.process.cgroup.memory.mem.usage.bytes";
-		internal const string SystemProcessCgroupMemoryStatsInactiveFileBytes = "system.process.cgroup.memory.stats.inactive_file.bytes";
+
 		internal static readonly Regex Cgroup1MountPoint = new("^\\d+? \\d+? .+? .+? (.*?) .*cgroup.*memory.*");
 		internal static readonly Regex Cgroup2MountPoint = new("^\\d+? \\d+? .+? .+? (.*?) .*cgroup2.*cgroup.*");
-
 		internal static readonly Regex MemoryCgroup = new("^\\d+:memory:.*");
+
+#if NET6_0_OR_GREATER
+		private static readonly FileStreamOptions Options = new() { BufferSize = 0, Mode = FileMode.Open, Access = FileAccess.Read };
+#endif
 
 		private readonly CgroupFiles _cGroupFiles;
 		private readonly bool _collectMemLimitBytes;
 		private readonly bool _collectMemUsageBytes;
-		private readonly bool _collectStatsInactiveFileBytes;
+		private readonly bool _collectTotalMemory;
+
+		private readonly string _pathPrefix;
 		private readonly bool _ignoreOs;
 		private readonly IApmLogger _logger;
 
@@ -51,44 +64,41 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// </summary>
 		/// <param name="logger">the logger</param>
 		/// <param name="disabledMetrics">List of disabled metrics</param>
-		public CgroupMetricsProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics
-		)
-			: this(ProcSelfCgroup, ProcSelfMountinfo, logger, disabledMetrics) { }
+		public CgroupMetricsProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics)
+			: this(logger, disabledMetrics, null) { }
 
 		/// <summary>
-		///  Initializes a new instance of <see cref="CgroupMetricsProvider" />
+		/// Get a testable <see cref="CgroupMetricsProvider"/> instance.
 		/// </summary>
-		/// <param name="procSelfCGroup">the <see cref="ProcSelfCgroup" /> file</param>
-		/// <param name="mountInfo">the <see cref="ProcSelfMountinfo" /> file</param>
-		/// <param name="logger">the logger</param>
-		/// <param name="disabledMetrics">List of disabled metrics</param>
-		/// <param name="ignoreOs">
-		/// Ignores the OS. If <code>true</code> then it tries to read CGroup metrics regardless of the
-		/// current OS
-		/// </param>
-		/// <remarks>
-		/// 	Used for testing
-		/// </remarks>
-		internal CgroupMetricsProvider(string procSelfCGroup, string mountInfo, IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics,
-			bool ignoreOs = false
-		)
+		internal static CgroupMetricsProvider TestableCgroupMetricsProvider(
+			IApmLogger logger,
+			IReadOnlyList<WildcardMatcher> disabledMetrics,
+			string pathPrefix,
+			bool ignoreOs = false) =>
+			new(logger, disabledMetrics, pathPrefix, ignoreOs);
+
+		private CgroupMetricsProvider(IApmLogger logger, IReadOnlyList<WildcardMatcher> disabledMetrics, string pathPrefix, bool ignoreOs = false)
 		{
+			_pathPrefix = pathPrefix ?? string.Empty;
 			_ignoreOs = ignoreOs;
+
 			_collectMemLimitBytes = IsSystemProcessCgroupMemoryMemLimitBytesEnabled(disabledMetrics);
 			_collectMemUsageBytes = IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics);
-			_collectStatsInactiveFileBytes = IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
+			_collectTotalMemory = IsTotalMemoryEnabled(disabledMetrics);
+
 			_logger = logger.Scoped(nameof(CgroupMetricsProvider));
 
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !_ignoreOs)
 			{
 				_logger.Trace()
-					?.Log("{MetricsProviderName} detected a non Linux OS, therefore"
+					?.Log("{MetricsProviderName} detected a non-Linux OS, therefore"
 						+ " Cgroup metrics will not be reported", nameof(CgroupMetricsProvider));
 
 				return;
 			}
 
-			_cGroupFiles = FindCGroupFiles(procSelfCGroup, mountInfo);
+			_cGroupFiles = FindCGroupFiles();
+
 			IsMetricAlreadyCaptured = true;
 		}
 
@@ -97,8 +107,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public bool IsMetricAlreadyCaptured { get; }
 
-		private CgroupFiles FindCGroupFiles(string procSelfCGroup, string mountInfo)
+		private CgroupFiles FindCGroupFiles()
 		{
+			// PERF: There are some allocations in this method, which we have not optimised
+			// as this method is invoked once from the constructor and we only expect a single
+			// instance of this type.
+
+			// This code block allocates only during profiling and testing
+			var procSelfCGroup = !string.IsNullOrEmpty(_pathPrefix)
+				? Path.Combine(_pathPrefix, ProcSelfCgroup.Substring(1))
+				: ProcSelfCgroup;
+
 			if (!File.Exists(procSelfCGroup))
 			{
 				_logger.Debug()?.Log("{File} does not exist. Cgroup metrics will not be reported", procSelfCGroup);
@@ -137,6 +156,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 
 			CgroupFiles cgroupFiles;
+
+			var mountInfo = !string.IsNullOrEmpty(_pathPrefix)
+				? Path.Combine(_pathPrefix, ProcSelfMountinfo.Substring(1))
+				: ProcSelfMountinfo;
 
 			if (File.Exists(mountInfo))
 			{
@@ -257,111 +280,122 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public IEnumerable<MetricSet> GetSamples()
 		{
-			if (_cGroupFiles is null)
-				return null;
+			if (_cGroupFiles is not null)
+				yield return new(TimeUtils.TimestampNow(), GetSamplesCore());
+		}
 
-			var samples = new List<MetricSample>(3);
-
-			if (_collectStatsInactiveFileBytes)
-				GetStatsInactiveFileBytesMetric(samples);
-
+		private IEnumerable<MetricSample> GetSamplesCore()
+		{
 			if (_collectMemUsageBytes)
-				GetMemoryMemUsageBytes(samples);
+			{
+				var sample = GetMemoryMemUsageBytes();
+				if (sample is not null)
+					yield return sample;
+			}
 
 			if (_collectMemLimitBytes)
-				GetMemoryMemLimitBytes(samples);
-
-			return new List<MetricSet> { new(TimeUtils.TimestampNow(), samples) };
+			{
+				var sample = GetMemoryMemLimitBytes();
+				if (sample is not null)
+					yield return sample;
+			}
 		}
 
 		// ReSharper disable once SuggestBaseTypeForParameter
-		private void GetMemoryMemLimitBytes(List<MetricSample> samples)
+		private MetricSample GetMemoryMemLimitBytes()
 		{
-			if (_cGroupFiles.MaxMemoryFile is null)
-				return;
-
 			try
 			{
+				if (_cGroupFiles.MaxMemoryFile is null)
+				{
+					// When the memory is unlimited, MaxMemoryFile will be null.
+					// Per the spec, we fall back to returning max memory instead.
+					var (totalMemory, _) = Linux.GlobalMemoryStatus.GetTotalAndAvailableSystemMemory(_logger, _pathPrefix, _ignoreOs);
+
+					if (totalMemory >= 0)
+						return new MetricSample(SystemProcessCgroupMemoryMemLimitBytes, totalMemory);
+				}
+
+#if NET6_0_OR_GREATER // Optimised code for newer runtimes
+				return GetLongValueFromFile(_cGroupFiles.MaxMemoryFile, SystemProcessCgroupMemoryMemLimitBytes);
+#else
 				using var reader = new StreamReader(_cGroupFiles.MaxMemoryFile);
 				var line = reader.ReadLine();
 				if (double.TryParse(line, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
-					samples.Add(new MetricSample(SystemProcessCgroupMemoryMemLimitBytes, value));
+					return new MetricSample(SystemProcessCgroupMemoryMemLimitBytes, value);
+#endif
+
 			}
 			catch (IOException e)
 			{
 				_logger.Info()?.LogException(e, "error collecting {Metric} metric", SystemProcessCgroupMemoryMemLimitBytes);
 			}
+
+			return null;
 		}
 
 		// ReSharper disable once SuggestBaseTypeForParameter
-		private void GetMemoryMemUsageBytes(List<MetricSample> samples)
+		private MetricSample GetMemoryMemUsageBytes()
 		{
 			try
 			{
+#if NET6_0_OR_GREATER // Optimised code for newer runtimes
+				return GetLongValueFromFile(_cGroupFiles.UsedMemoryFile, SystemProcessCgroupMemoryMemUsageBytes);
+#else
 				using var reader = new StreamReader(_cGroupFiles.UsedMemoryFile);
 				var line = reader.ReadLine();
 				if (double.TryParse(line, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
-					samples.Add(new MetricSample(SystemProcessCgroupMemoryMemUsageBytes, value));
+					return new MetricSample(SystemProcessCgroupMemoryMemUsageBytes, value);
+#endif
 			}
 			catch (IOException e)
 			{
 				_logger.Info()?.LogException(e, "error collecting {metric} metric", SystemProcessCgroupMemoryMemUsageBytes);
 			}
+
+			return null;
 		}
 
-		// ReSharper disable once SuggestBaseTypeForParameter
-		private void GetStatsInactiveFileBytesMetric(List<MetricSample> samples)
+#if NET6_0_OR_GREATER
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private MetricSample GetLongValueFromFile(string path, string sampleName)
 		{
-			try
-			{
-				using var reader = new StreamReader(_cGroupFiles.StatMemoryFile);
-				string statLine;
-				string inactiveBytes = null;
-				while ((statLine = reader.ReadLine()) != null)
-				{
-					var statLineSplit = statLine.Split(' ');
-					if (statLineSplit.Length > 1)
-					{
-						if ("total_inactive_file".Equals(statLineSplit[0]))
-						{
-							inactiveBytes = statLineSplit[1];
-							break;
-						}
+			using var fs = new FileStream(path, Options);
+			Span<byte> buffer = stackalloc byte[20]; // this size should always be sufficient to read the max long value as a string.
+			var bytes = fs.Read(buffer);
+#if DEBUG
+			var fileValue = Encoding.UTF8.GetString(buffer);
+#endif
+			if (bytes > 0 && Utf8Parser.TryParse(buffer, out long value, out _))
+				return new MetricSample(sampleName, value);
 
-						if ("inactive_file".Equals(statLineSplit[0]))
-							inactiveBytes = statLineSplit[1];
-					}
-				}
-
-				if (inactiveBytes != null && double.TryParse(inactiveBytes, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
-					samples.Add(new MetricSample(SystemProcessCgroupMemoryStatsInactiveFileBytes, value));
-			}
-			catch (IOException e)
-			{
-				_logger.Info()?.LogException(e, "error collecting {Metric} metric", SystemProcessCgroupMemoryStatsInactiveFileBytes);
-			}
+			return null;
 		}
+#endif
 
-		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => IsSystemProcessCgroupMemoryMemLimitBytesEnabled(disabledMetrics) ||
-			IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics)
-			|| IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(disabledMetrics);
+		private const byte Newline = (byte)'\n';
+		private const byte Space = (byte)' ';
+		private static ReadOnlySpan<byte> _totalInactiveFile => "total_inactive_file"u8;
+		private static ReadOnlySpan<byte> _inactiveFile => "inactive_file"u8;
 
+		public bool IsEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
+			IsSystemProcessCgroupMemoryMemLimitBytesEnabled(disabledMetrics) ||
+			IsSystemProcessCgroupMemoryMemUsageBytesEnabled(disabledMetrics);
 
-		private bool IsSystemProcessCgroupMemoryMemLimitBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(
+		private static bool IsSystemProcessCgroupMemoryMemLimitBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(
 			disabledMetrics, SystemProcessCgroupMemoryMemLimitBytes);
 
-		private bool IsSystemProcessCgroupMemoryMemUsageBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(
+		private static bool IsSystemProcessCgroupMemoryMemUsageBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) => !WildcardMatcher.IsAnyMatch(
 			disabledMetrics, SystemProcessCgroupMemoryMemUsageBytes);
 
-		private bool IsSystemProcessCgroupMemoryStatsInactiveFileBytesEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
-			!WildcardMatcher.IsAnyMatch(
-				disabledMetrics, SystemProcessCgroupMemoryStatsInactiveFileBytes);
+		private static bool IsTotalMemoryEnabled(IReadOnlyList<WildcardMatcher> disabledMetrics) =>
+			!WildcardMatcher.IsAnyMatch(disabledMetrics, FreeAndTotalMemoryProvider.TotalMemory);
 	}
 
 	/// <summary>
 	/// Holds the collection of relevant cgroup files
 	/// </summary>
-	internal class CgroupFiles
+	internal sealed class CgroupFiles
 	{
 		public CgroupFiles(string maxMemoryFile, string usedMemoryFile, string statMemoryFile)
 		{

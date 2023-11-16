@@ -202,7 +202,7 @@ module Build =
         //dotnet dotnet-format --exclude src/Elastic.Apm/Libraries/
         DotNet.Exec ["dotnet-format"; "--check"; "--exclude"; "src/Elastic.Apm/Libraries/"]
             
-    let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
+    let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =
         source.GetFiles()
         |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
         |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
@@ -214,7 +214,7 @@ module Build =
         let versionedName =
             sprintf "%s_%s" name (currentAssemblyVersion.ToString())
                 
-        let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
+        let agentDir = Paths.BuildOutput name |> DirectoryInfo
         agentDir.Create()
 
         // copy startup hook to root of agent directory
