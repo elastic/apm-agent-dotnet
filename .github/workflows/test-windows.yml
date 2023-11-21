@@ -40,6 +40,11 @@ jobs:
       - name: Build
         run: dotnet build -c Release --verbosity minimal
 
+      - name: Setup Testcontainers Cloud Client
+        uses: atomicjar/testcontainers-cloud-setup-action@v1
+        with:
+          token: ${{ secrets.TC_CLOUD_TOKEN }}
+
       - name: 'Tests: Unit'
         uses: ./.github/workflows/test
         with:
@@ -57,7 +62,7 @@ jobs:
 
       - name: Build agent-zip
         run: ./build.bat agent-zip
-
+        
       - name: 'Tests: StartupHooks'
         uses: ./.github/workflows/test
         with:
@@ -67,7 +72,7 @@ jobs:
   profiler-tests:
     runs-on: windows-2022
     # Disable profiler tests for now
-    if: ${{ false }} 
+    # if: ${{ false }} 
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -77,6 +82,11 @@ jobs:
 
       - name: Build profiler
         run: ./build.bat profiler-zip
+
+      - name: Setup Testcontainers Cloud Client
+        uses: atomicjar/testcontainers-cloud-setup-action@v1
+        with:
+          token: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Profiler'
         uses: ./.github/workflows/test
