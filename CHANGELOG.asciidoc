@@ -23,6 +23,16 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.26.0]]
+==== 1.25.1
+
+===== Bug fixes
+
+{pull}2213[#2213] Prevent server certificate callback runtime exception 
+{pull}2219[#2219] Fix duration.sum.us value in JSON
+{pull}2214[#2214] Return total memory when limit is max value.
+{pull}2220[#2220] Ensure baggage gets copied with baggage prefix by 
+
 [[release-notes-1.25.0]]
 ==== 1.25.0
 
