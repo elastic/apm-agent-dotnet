@@ -78,7 +78,7 @@ jobs:
         message: |
           :large_green_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* published.
           Build: (<${{ env.JOB_URL }}|here>)
-          Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)"
+          Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)
 
     - if: ${{ failure() }}
       uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
