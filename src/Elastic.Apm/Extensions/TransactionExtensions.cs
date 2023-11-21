@@ -42,8 +42,7 @@ namespace Elastic.Apm.Extensions
 			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest?.ContentType, logger))
 				body = httpRequest.ExtractBody(logger, transaction.Configuration);
 
-			// According to the documentation - the default value of 'body' is '[Redacted]'
-			transaction.Context.Request.Body = body ?? Consts.Redacted;
+			transaction.Context.Request.Body = body ?? string.Empty;
 		}
 
 		internal static bool IsCaptureRequestBodyEnabled(this ITransaction transaction, bool isForError) =>
