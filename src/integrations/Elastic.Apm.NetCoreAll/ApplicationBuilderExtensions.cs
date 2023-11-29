@@ -16,7 +16,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Elastic.Apm.NetCoreAll
 {
-	public static class ApmMiddlewareExtension
+	public static class ApplicationBuilderExtensions
 	{
 		/// <summary>
 		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline and enables
@@ -45,7 +45,7 @@ namespace Elastic.Apm.NetCoreAll
 		public static IApplicationBuilder UseAllElasticApm(
 			this IApplicationBuilder builder,
 			IConfiguration configuration = null
-		) => AspNetCore.ApmMiddlewareExtension
+		) => AspNetCore.ApplicationBuilderExtensions
 			.UseElasticApm(builder, configuration,
 				new HttpDiagnosticsSubscriber(),
 				new SqlClientDiagnosticSubscriber(),

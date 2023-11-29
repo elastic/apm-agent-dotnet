@@ -23,7 +23,6 @@ namespace SampleAspNetCoreApp.Controllers
 		public async Task<IActionResult> LoginUser([FromForm] string userName, [FromForm] string password)
 		{
 			var res = await _signInManager.PasswordSignInAsync(userName, password, true, false);
-
 			if (res.Succeeded)
 				return Redirect("/Home/Index");
 
@@ -35,7 +34,7 @@ namespace SampleAspNetCoreApp.Controllers
 		[HttpPost]
 		public async Task<IActionResult> RegisterUser([FromForm] string userName, [FromForm] string password)
 		{
-			var newUser = new IdentityUser { UserName = userName };
+			var newUser = new IdentityUser { UserName = userName, Email = $"{userName}@test.example" , Id = "123-456"};
 			var res = await _userManager.CreateAsync(newUser, password);
 
 			if (res.Succeeded)

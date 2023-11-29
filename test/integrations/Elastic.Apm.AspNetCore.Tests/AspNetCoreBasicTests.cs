@@ -476,18 +476,18 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		[Fact]
-		public async Task AspNetCoreErrorDiagnosticsSubscriber_Should_Be_Registered_Only_Once()
+		public async Task AspNetCoreDiagnosticSubscriber_Should_Be_Registered_Only_Once()
 		{
 			using var agent = CreateAspNetCoreAgent(out _);
 			await using var factory = new WebApplicationFactory<Startup>();
 			await using var builder = factory
 				.WithWebHostBuilder(n => n.Configure(app =>
-					app.UseElasticApm(agent, agent.Logger, new AspNetCoreErrorDiagnosticsSubscriber())));
+					app.UseElasticApm(agent, agent.Logger, new AspNetCoreDiagnosticSubscriber())));
 
 			using var client = builder.CreateClient();
 
 			agent.Disposables.Should().NotBeNull();
-			agent.SubscribedListeners().Should().Contain(typeof(AspNetCoreErrorDiagnosticListener));
+			agent.SubscribedListeners().Should().Contain(typeof(AspNetCoreDiagnosticListener));
 		}
 
 		/// <summary>

@@ -18,17 +18,21 @@ using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace Elastic.Apm.AspNetCore
 {
-	public static class ApmMiddlewareExtension
+	public static class ApplicationBuilderExtensions
 	{
 		/// <summary>
-		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline.
+		/// Sets up ASP.NET Core instrumentation to be sent over to Elastic APM.
+		/// <para>
 		/// You can customize the agent by passing additional IDiagnosticsSubscriber components to this method.
 		/// Use this method if you want to control what tracing capability of the agent you would like to use
 		/// or in case you want to minimize the number of dependencies added to your application.
+		/// </para>
+		/// <para>
 		/// Please note that by default without additional parameters this method only enables ASP.NET Core
 		/// monitoring - e.g. database statements or outgoing HTTP calls won't be traced.
 		/// If you want to simply enable every tracing component without configuration please use the
-		/// UseAllElasticApm extension method from the Elastic.Apm.NetCoreAll package.
+		/// <code>UseAllElasticApm()</code> extension method from the <c>Elastic.Apm.NetCoreAll</c> package.
+		/// </para>
 		/// </summary>
 		/// <returns>The elastic apm.</returns>
 		/// <param name="builder">Builder.</param>
@@ -38,8 +42,8 @@ namespace Elastic.Apm.AspNetCore
 		/// If no <see cref="Microsoft.Extensions.Configuration.IConfiguration" /> is passed to the agent then it will read configs from environment variables.
 		/// </param>
 		/// <param name="subscribers">
-		/// Specify which diagnostic source subscribers you want to connect. The
-		/// <see cref="AspNetCoreErrorDiagnosticsSubscriber" /> is by default enabled.
+		/// Specify which diagnostic source subscribers you want to connect.
+		/// <para>The <see cref="AspNetCoreDiagnosticSubscriber" /> will always be injected if not specified.</para>
 		/// </param>
 		public static IApplicationBuilder UseElasticApm(
 			this IApplicationBuilder builder,
@@ -80,11 +84,12 @@ namespace Elastic.Apm.AspNetCore
 
 			var subs = subscribers?.ToList() ?? new List<IDiagnosticsSubscriber>(1);
 
-			if (subs.Count == 0 || subs.All(s => s.GetType() != typeof(AspNetCoreErrorDiagnosticsSubscriber)))
-				subs.Add(new AspNetCoreErrorDiagnosticsSubscriber());
+			if (subs.Count == 0 || subs.All(s => s.GetType() != typeof(AspNetCoreDiagnosticSubscriber)))
+				subs.Add(new AspNetCoreDiagnosticSubscriber());
 
 			agent.Subscribe(subs.ToArray());
-			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
+			//return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
+			return builder;
 		}
 
 		private static string GetEnvironmentName(this IServiceProvider serviceProvider) =>

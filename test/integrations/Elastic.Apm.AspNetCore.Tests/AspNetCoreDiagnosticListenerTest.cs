@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
@@ -72,6 +73,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var context = error?.Context;
 				context?.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
 				context?.Request.Method.Should().Be(HttpMethod.Get.Method);
+
+				var transaction = capturedPayload.FirstTransaction;
+				transaction.Outcome.Should().Be(Outcome.Failure);
+
+				var transactionContext = capturedPayload.FirstTransaction.Context;
+				transactionContext.Should().NotBeNull();
+				transactionContext.Response.Should().NotBeNull();
+				transactionContext.Response.StatusCode.Should().Be(500);
 			}
 		}
 

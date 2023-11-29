@@ -487,6 +487,8 @@ impl Profiler {
         unsafe {
             unknown.AddRef();
         }
+        
+        println!("hello world init");
 
         let process_path = std::env::current_exe().map_err(|e| {
             // logging hasn't yet been initialized so unable to log

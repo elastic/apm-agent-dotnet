@@ -131,6 +131,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				response.IsSuccessStatusCode.Should().BeTrue();
 				var responseContent = int.Parse(await response.Content.ReadAsStringAsync());
 				responseContent.Should().Be(repeat * count);
+				sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
 				sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
 				sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
 			}
@@ -461,14 +462,23 @@ namespace Elastic.Apm.AspNetCore.Tests
 			private const string UrlForTestApp = "http://localhost:5903";
 			internal readonly ApmAgent Agent;
 			internal readonly HttpClient HttpClient;
-			internal readonly MockPayloadSender MockPayloadSender;
+			private readonly MockPayloadSender _mockPayloadSender;
+
+			public MockPayloadSender MockPayloadSender
+			{
+				get
+				{
+					_mockPayloadSender.WaitForAny(TimeSpan.FromSeconds(5));
+					return _mockPayloadSender;
+				}
+			}
 
 			private readonly CancellationTokenSource _cancellationTokenSource = new();
 			private readonly Task _taskForSampleApp;
 
 			internal SutEnv(IConfiguration startConfiguration, IApmLogger logger, ITestOutputHelper output)
 			{
-				MockPayloadSender = new MockPayloadSender(logger);
+				_mockPayloadSender = new MockPayloadSender(logger);
 				Agent = new ApmAgent(new TestAgentComponents(logger, startConfiguration, MockPayloadSender));
 
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)

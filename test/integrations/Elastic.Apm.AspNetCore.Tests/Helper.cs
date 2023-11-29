@@ -99,7 +99,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
+						//app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 
 						app.UseDeveloperExceptionPage();
 						app.UseHsts();
