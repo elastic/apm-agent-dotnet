@@ -310,7 +310,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 		}
 
-		[Theory]
+		[TheoryRequiresMvcTestingFix]
 		[MemberData(nameof(OptionsChangedAfterStartTestVariants))]
 		public async Task Options_changed_after_start(int startCfgVariantIndex, OptionsTestVariant startCfgVariant)
 		{

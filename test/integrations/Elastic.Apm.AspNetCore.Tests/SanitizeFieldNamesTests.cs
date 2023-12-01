@@ -63,15 +63,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 					testData.Add(new object[] { "mySecurityHeader", new[] { "mySECURITYHeader" } });
 					break;
 				case Tests.CustomSanitizeFieldNameSettingWithCaseSensitivityWithHeaders:
-					testData.Add(new object[] { "mysecurityheader", "mySECURITYHeader" });
-					testData.Add(new object[] { "(?-i)mysecurityheader", "mySECURITYHeader" });
-					testData.Add(new object[] { "(?-i)mySECURITYheader", "mySECURITYheader" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmySECURITYheader" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmysecURITYheader" });
-					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mySECURITYheaderTest" });
-					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mysecURITYheaderTest" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmySECURITYheaderTest" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmysecURITYheaderTest" });
+					testData.Add(new object[] { "mysecurityheader", "mySECURITYHeader", true });
+					testData.Add(new object[] { "(?-i)mysecurityheader", "mySECURITYHeader", false });
+					testData.Add(new object[] { "(?-i)mySECURITYheader", "mySECURITYheader", true });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmySECURITYheader", true });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmysecURITYheader", false });
+					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mySECURITYheaderTest", true });
+					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mysecURITYheaderTest", false });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmySECURITYheaderTest", true });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmysecURITYheaderTest", false });
 					break;
 				case Tests.DefaultsWithHeaders:
 					testData.Add(new object[] { "password" });
@@ -106,9 +106,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 					testData.Add(new object[] { "creditcardnumber" }); //*card
 					break;
 				case Tests.DefaultWithRequestBodySingleValueNoError:
-					testData.Add(new object[] { "password" });
-					testData.Add(new object[] { "pwd" });
-					testData.Add(new object[] { "Input" });
+					testData.Add(new object[] { "password", true });
+					testData.Add(new object[] { "pwd", true });
+					testData.Add(new object[] { "Input", false });
 					break;
 				case Tests.DefaultWithRequestBodyWithError:
 					testData.Add(new object[] { "password" });
@@ -121,47 +121,18 @@ namespace Elastic.Apm.AspNetCore.Tests
 					testData.Add(new object[] { "creditcardnumber" }); //*card
 					break;
 				case Tests.CustomWithRequestBodyNoError:
-					testData.Add(new object[] { "mysecurityheader", "mySECURITYHeader" });
-					testData.Add(new object[] { "(?-i)mysecurityheader", "mySECURITYHeader" });
-					testData.Add(new object[] { "(?-i)mySECURITYheader", "mySECURITYheader" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmySECURITYheader" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmysecURITYheader" });
-					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mySECURITYheaderTest" });
-					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mysecURITYheaderTest" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmySECURITYheaderTest" });
-					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmysecURITYheaderTest" });
+					testData.Add(new object[] { "mysecurityheader", "mySECURITYHeader", true });
+					testData.Add(new object[] { "(?-i)mysecurityheader", "mySECURITYHeader", false });
+					testData.Add(new object[] { "(?-i)mySECURITYheader", "mySECURITYheader", true });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmySECURITYheader", true });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader", "TestmysecURITYheader", false });
+					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mySECURITYheaderTest", true });
+					testData.Add(new object[] { "(?-i)mySECURITYheader*", "mysecURITYheaderTest", false });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmySECURITYheaderTest", true });
+					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmysecURITYheaderTest", false });
 					break;
 			}
-
-			var retVal = new List<object[]>();
-
-			// Add true and false to the end of each test data, so we test it both with middleware and with diagnosticsource
-			foreach (var testDataItem in testData)
-			{
-				//
-				// Skip "DiagnosticSourceOnly" tests on .NET 7
-				// until https://github.com/dotnet/aspnetcore/issues/45233 is resolved.
-				//
-				if (Environment.Version.Major < 7)
-				{
-					var newItem = new List<object>();
-					foreach (var item in testDataItem)
-						newItem.Add(item);
-					newItem.Add(true);
-
-					retVal.Add(newItem.ToArray());
-				}
-				{
-					var newItem = new List<object>();
-					foreach (var item in testDataItem)
-						newItem.Add(item);
-					newItem.Add(false);
-
-					retVal.Add(newItem.ToArray());
-				}
-			}
-
-			return retVal;
+			return testData;
 		}
 
 		private void CreateAgent(string sanitizeFieldNames = null)
@@ -376,14 +347,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 		///// <param name="formName"></param>
 		///// <returns></returns>
 		[MemberData(nameof(GetData), Tests.DefaultWithRequestBodyNoError)]
-		[Theory]
+		[TheoryRequiresMvcTestingFix]
 		public async Task DefaultWithRequestBodyNoError(string formName)
 		{
 			CreateAgent();
 
 			var nvc = new List<KeyValuePair<string, string>>
 			{
-				new KeyValuePair<string, string>("Input1", "test1"), new KeyValuePair<string, string>(formName, "test2")
+				new("Input1", "test1"), new(formName, "test2")
 			};
 
 			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/Post") { Content = new FormUrlEncodedContent(nvc) };
@@ -401,12 +372,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		[MemberData(nameof(GetData), Tests.DefaultWithRequestBodySingleValueNoError)]
-		[Theory]
+		[TheoryRequiresMvcTestingFix]
 		public async Task DefaultWithRequestBodySingleValueNoError(string formName, bool shouldBeSanitized)
 		{
 			CreateAgent();
 
-			var nvc = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(formName, "test") };
+			var nvc = new List<KeyValuePair<string, string>> { new(formName, "test") };
 
 			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/Post") { Content = new FormUrlEncodedContent(nvc) };
 			var res = await _client.SendAsync(req);
@@ -427,14 +398,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 		///// <param name="formName"></param>
 		///// <returns></returns>
 		[MemberData(nameof(GetData), Tests.DefaultWithRequestBodyWithError)]
-		[Theory]
+		[TheoryRequiresMvcTestingFix]
 		public async Task DefaultWithRequestBodyWithError(string formName)
 		{
 			CreateAgent();
 
 			var nvc = new List<KeyValuePair<string, string>>
 			{
-				new KeyValuePair<string, string>("Input1", "test1"), new KeyValuePair<string, string>(formName, "test2")
+				new("Input1", "test1"), new(formName, "test2")
 			};
 
 			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/PostError") { Content = new FormUrlEncodedContent(nvc) };
@@ -464,7 +435,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		///// <param name="shouldBeSanitized"></param>
 		///// <returns></returns>
 		[MemberData(nameof(GetData), Tests.CustomWithRequestBodyNoError)]
-		[Theory]
+		[TheoryRequiresMvcTestingFix]
 		public async Task CustomWithRequestBodyNoError(string sanitizeFieldNames, string formName, bool shouldBeSanitized)
 		{
 			CreateAgent(sanitizeFieldNames);
