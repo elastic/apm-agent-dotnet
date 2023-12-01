@@ -86,12 +86,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Configures the sample app without any diagnostic listener
 		/// </summary>
-		internal static HttpClient GetClientWithoutDiagnosticListeners<T>(WebApplicationFactory<T> factory) where T : class
+		internal static HttpClient GetClientWithoutDiagnosticListeners<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
 			=> factory.WithWebHostBuilder(n =>
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm();
+						app.UseElasticApm(agent, agent.Logger);
 						app.UseDeveloperExceptionPage();
 						app.UseHsts();
 						app.UseHttpsRedirection();

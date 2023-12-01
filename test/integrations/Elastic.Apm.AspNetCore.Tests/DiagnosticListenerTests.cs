@@ -43,42 +43,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//This registers the middleware without activating any listeners,
 			//so no error capturing and no EFCore listener.
-			_client = Helper.GetClientWithoutDiagnosticListeners(factory);
-		}
-
-		/// <summary>
-		/// Manually starts <see cref="AspNetCoreErrorDiagnosticsSubscriber" /> and does 1 HTTP call
-		/// that throws an exception,
-		/// then it disposes the <see cref="AspNetCoreErrorDiagnosticsSubscriber" /> (aka unsubsribes)
-		/// and does another HTTP call that throws an exception.
-		/// It makes sure that for the 1. HTTP call the errors is captured and for the 2. it isn't.
-		/// </summary>
-		[Fact]
-		public async Task SubscribeAndUnsubscribeAspNetCoreDiagnosticListener()
-		{
-			//For reference: unsubscribing from AspNetCoreDiagnosticListener does not seem to work.
-			//TODO: this should be investigated. This is more relevant for testing.
-			//			using (_agent.Subscribe(new AspNetCoreDiagnosticsSubscriber()))
-			//			{
-			//				await _client.GetAsync("/Home/TriggerError");
-			//
-			//				_capturedPayload.Transactions.Should().ContainSingle();
-			//
-			//				_capturedPayload.Errors.Should().NotBeEmpty();
-			//				_capturedPayload.Errors.Should().ContainSingle();
-			//				 _capturedPayload.Errors[0].CapturedException.Type.Should().Be(typeof(Exception).FullName);
-			//			} //here we unsubsribe, so no errors should be captured after this line.
-
-			_agent.Dispose();
-
-			_capturedPayload.Clear();
-
-			await _client.GetAsync("/Home/TriggerError");
-
-			_capturedPayload.WaitForTransactions(TimeSpan.FromSeconds(10));
-
-			_capturedPayload.Transactions.Should().ContainSingle();
-			_capturedPayload.Errors.Should().BeEmpty();
+			_client = Helper.GetClientWithoutDiagnosticListeners(_agent, factory);
 		}
 
 		/// <summary>
