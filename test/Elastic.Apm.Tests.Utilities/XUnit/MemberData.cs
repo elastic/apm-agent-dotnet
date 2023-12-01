@@ -13,7 +13,7 @@ public static class MemberData
 		yield return new object[] { false };
 		//
 		// Skip "DiagnosticSourceOnly" tests on .NET 7
-		// until https://github.com/dotnet/aspnetcore/issues/45233 is resolved.
+		// until  is resolved.
 		//
 		if (Environment.Version.Major < 7)
 			yield return new object[] { true };

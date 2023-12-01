@@ -39,14 +39,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// and makes sure that the error is captured.
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
+		[Fact]
+		public async Task TestErrorInAspNetCore()
 		{
 			var capturedPayload = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(exitSpanMinDuration: "0"))))
 			{
-				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
+				var client = Helper.GetClient(agent, _factory);
 
 				try
 				{
@@ -90,9 +89,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// retrieved from the HttpRequest
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore(bool useOnlyDiagnosticSource)
+		[Fact]
+		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
 		{
 			var capturedPayload = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(
@@ -101,7 +99,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes),
 				payloadSender: capturedPayload)))
 			{
-				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
+				var client = Helper.GetClient(agent, _factory);
 
 				var body = "{\"id\" : \"1\"}";
 				await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));

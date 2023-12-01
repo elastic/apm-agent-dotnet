@@ -60,13 +60,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task HomeSimplePageTransactionTest(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task HomeSimplePageTransactionTest()
 		{
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
 			await using var factory = new WebApplicationFactory<Startup>();
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
@@ -149,11 +148,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Creates an agent with Enabled=false and makes sure the agent does not capture anything.
 		/// </summary>
-		/// <param name="withDiagnosticSourceOnly"></param>
 		/// <returns></returns>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task HomeIndexTransactionWithEnabledFalse(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task HomeIndexTransactionWithEnabledFalse()
 		{
 			var payloadSender = new MockPayloadSender();
 			await using var factory = new WebApplicationFactory<Startup>();
@@ -161,7 +158,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				_logger,
 				new MockConfiguration(_logger, enabled: "false", exitSpanMinDuration: "0"), payloadSender));
 
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 
 			var response = await client.GetAsync("/Home/Index");
 
@@ -173,16 +170,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 			payloadSender.Errors.Should().BeNullOrEmpty();
 		}
 
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task HomeIndexTransactionWithToggleRecording(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task HomeIndexTransactionWithToggleRecording()
 		{
 			var payloadSender = new MockPayloadSender();
 			await using var factory = new WebApplicationFactory<Startup>();
 			using var agent = new ApmAgent(new TestAgentComponents(
 				_logger, new MockConfiguration(recording: "false", exitSpanMinDuration: "0"), payloadSender));
 
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 
 			var response = await client.GetAsync("/Home/Index");
 
@@ -214,13 +210,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP POST call to /home/simplePage and asserts on what the agent should send to the server
 		/// to test the 'CaptureBody' configuration option
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task HomeSimplePagePostTransactionTest(bool withDiagnosticSourceOnly)
+		[FactRequiresMvcTestingFix]
+		public async Task HomeSimplePagePostTransactionTest()
 		{
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
 			await using var factory = new WebApplicationFactory<Startup>();
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -310,13 +305,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP GET call to /home/index and asserts that the agent captures spans.
 		/// Prerequisite: The /home/index has to generate spans (which should be the case).
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task HomeIndexSpanTest(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task HomeIndexSpanTest()
 		{
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
 			await using var factory = new WebApplicationFactory<Startup>();
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 			var response = await client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -331,13 +325,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Prerequisite: The /home/index has to generate spans (which should be the case).
 		/// It also assumes that /home/index makes a requrst to github.com
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task HomeIndexDestinationTest(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task HomeIndexDestinationTest()
 		{
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
 			await using var factory = new WebApplicationFactory<Startup>();
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 			var response = await client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -357,13 +350,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP GET call to /Home/Index?captureControllerActionAsSpan=true
 		/// and asserts that all automatically captured spans are children of the span for controller's action.
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan()
 		{
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
 			await using var factory = new WebApplicationFactory<Startup>();
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 			var response = await client.GetAsync("/Home/Index?captureControllerActionAsSpan=true");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -398,13 +390,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request.
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task FailingRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task FailingRequestWithoutConfiguredExceptionPage()
 		{
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
 			await using var factory = new WebApplicationFactory<Startup>();
-			using var client = Helper.ConfigureHttpClient(false, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(false, agent, factory);
 
 			Func<Task> act = async () => await client.GetAsync("Home/TriggerError");
 			await act.Should().ThrowAsync<Exception>();
@@ -436,13 +427,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request along with the request body
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task FailingPostRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
+		[FactRequiresMvcTestingFix]
+		public async Task FailingPostRequestWithoutConfiguredExceptionPage()
 		{
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
 			await using var factory = new WebApplicationFactory<Startup>();
-			using var client = Helper.ConfigureHttpClient(false, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(false, agent, factory);
 
 			client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -494,13 +484,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// An HTTP call to an action method which manually sets <see cref="IExecutionSegment.Outcome"/>.
 		/// Makes sure auto instrumentation does not overwrite the outcome.
 		/// </summary>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task ManualTransactionOutcomeTest(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task ManualTransactionOutcomeTest()
 		{
 			await using var factory = new WebApplicationFactory<Startup>();
 			using var agent = CreateAspNetCoreAgent(out var payloadSender);
-			using var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, factory);
+			using var client = Helper.ConfigureHttpClient(true, agent, factory);
 
 			await client.GetAsync("/Home/SampleWithManuallySettingOutcome");
 
