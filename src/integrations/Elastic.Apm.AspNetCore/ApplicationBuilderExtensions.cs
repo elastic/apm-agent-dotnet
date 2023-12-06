@@ -88,7 +88,6 @@ namespace Elastic.Apm.AspNetCore
 				subs.Add(new AspNetCoreDiagnosticSubscriber());
 
 			agent.Subscribe(subs.ToArray());
-			//return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 			return builder;
 		}
 
