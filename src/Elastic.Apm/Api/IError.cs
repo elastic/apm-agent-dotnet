@@ -12,7 +12,7 @@ namespace Elastic.Apm.Api
 	/// Represents an error which was captured by the agent.
 	/// </summary>
 	[Specification("error.json")]
-	public interface IError
+	public interface IError : IIntakeRoot
 	{
 		/// <summary>
 		/// The culprit that caused this error.

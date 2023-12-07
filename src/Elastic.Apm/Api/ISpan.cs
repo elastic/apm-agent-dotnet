@@ -10,7 +10,7 @@ namespace Elastic.Apm.Api
 	/// An event captured by an agent occurring in a monitored service
 	/// </summary>
 	[Specification("span.json")]
-	public interface ISpan : IExecutionSegment
+	public interface ISpan : IExecutionSegment, IIntakeRoot
 	{
 		/// <summary>
 		/// The action of the span.

@@ -74,7 +74,8 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
+    <!--- TODO BUMP Elastic.Transport down to 6.0.0 -->
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.1" />
   </ItemGroup>
   <!-- DiagnosticSourceVersion MsBuild property can be used to compile the agent against a specific version of
        System.Diagnostics.DiagnosticSource. Used when creating the ElasticApmAgentStartupHook zip file to
@@ -91,6 +92,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <PackageReference Include="Elastic.Ingest.Transport" Version="0.5.5" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
     <!-- Used by Ben.Demystifier -->
     <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />

@@ -24,10 +24,10 @@ public class OpenTelemetryTests
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.Sample2(agent.Tracer);
 
-		payloadSender.FirstTransaction.Name.Should().Be("Sample2");
+		payloadSender.FirstTransaction!.Name.Should().Be("Sample2");
 		payloadSender.Spans.Should().HaveCount(2);
 
-		payloadSender.FirstSpan.Name.Should().Be("foo");
+		payloadSender.FirstSpan!.Name.Should().Be("foo");
 		payloadSender.Spans.ElementAt(1).Name.Should().Be("ElasticApmSpan");
 
 		payloadSender.FirstSpan.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
@@ -39,7 +39,7 @@ public class OpenTelemetryTests
 	private void AssertOnTraceIds(MockPayloadSender payloadSender)
 	{
 		foreach (var span in payloadSender.Spans)
-			span.TraceId.Should().Be(payloadSender.FirstTransaction.TraceId);
+			span.TraceId.Should().Be(payloadSender.FirstTransaction!.TraceId);
 	}
 
 	[Fact]
@@ -50,10 +50,10 @@ public class OpenTelemetryTests
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.Sample3(agent.Tracer);
 
-		payloadSender.FirstTransaction.Name.Should().Be("Sample3");
+		payloadSender.FirstTransaction!.Name.Should().Be("Sample3");
 		payloadSender.Spans.Should().HaveCount(2);
 
-		payloadSender.FirstSpan.Name.Should().Be("ElasticApmSpan");
+		payloadSender.FirstSpan!.Name.Should().Be("ElasticApmSpan");
 		payloadSender.Spans.ElementAt(1).Name.Should().Be("foo");
 
 		payloadSender.Spans.ElementAt(1).ParentId.Should().Be(payloadSender.FirstTransaction.Id);
@@ -72,10 +72,10 @@ public class OpenTelemetryTests
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.Sample4(agent.Tracer);
 
-		payloadSender.FirstTransaction.Name.Should().Be("Sample4");
+		payloadSender.FirstTransaction!.Name.Should().Be("Sample4");
 		payloadSender.Spans.Should().HaveCount(2);
 
-		payloadSender.FirstSpan.Name.Should().Be("ElasticApmSpan");
+		payloadSender.FirstSpan!.Name.Should().Be("ElasticApmSpan");
 		payloadSender.Spans.ElementAt(1).Name.Should().Be("foo");
 
 		payloadSender.Spans.ElementAt(1).ParentId.Should().Be(payloadSender.FirstTransaction.Id);
@@ -92,7 +92,7 @@ public class OpenTelemetryTests
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.OneSpanWithAttributes();
 
-		payloadSender.FirstTransaction.Name.Should().Be("foo");
+		payloadSender.FirstTransaction!.Name.Should().Be("foo");
 		payloadSender.FirstTransaction.Otel.Should().NotBeNull();
 		payloadSender.FirstTransaction.Otel.SpanKind.Should().Be("Server");
 		payloadSender.FirstTransaction.Otel.Attributes.Should().NotBeNull();
@@ -107,13 +107,13 @@ public class OpenTelemetryTests
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.TwoSpansWithAttributes();
 
-		payloadSender.FirstTransaction.Name.Should().Be("foo");
+		payloadSender.FirstTransaction!.Name.Should().Be("foo");
 		payloadSender.FirstTransaction.Otel.Should().NotBeNull();
 		payloadSender.FirstTransaction.Otel.SpanKind.Should().Be("Server");
 		payloadSender.FirstTransaction.Otel.Attributes.Should().NotBeNull();
 		payloadSender.FirstTransaction.Otel.Attributes.Should().Contain("foo1", "bar1");
 
-		payloadSender.FirstSpan.Name.Should().Be("bar");
+		payloadSender.FirstSpan!.Name.Should().Be("bar");
 		payloadSender.FirstSpan.Otel.Should().NotBeNull();
 		payloadSender.FirstSpan.Otel.SpanKind.Should().Be("Internal");
 		payloadSender.FirstSpan.Otel.Attributes.Should().NotBeNull();
@@ -128,7 +128,7 @@ public class OpenTelemetryTests
 				   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "true"))))
 			OTSamples.SpanKindSample();
 
-		payloadSender.FirstSpan.Type.Should().Be(ApiConstants.TypeExternal);
+		payloadSender.FirstSpan!.Type.Should().Be(ApiConstants.TypeExternal);
 		payloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
 
 		payloadSender.Spans.ElementAt(1).Type.Should().Be(ApiConstants.TypeDb);
@@ -178,7 +178,7 @@ public class OpenTelemetryTests
 
 		payloadSender.WaitForTransactions(count: 2);
 
-		payloadSender.FirstTransaction.TraceId.Should()
+		payloadSender.FirstTransaction!.TraceId.Should()
 			.Be(payloadSender.Transactions[1].TraceId, because: "The transactions should be under the same trace.");
 	}
 
@@ -196,7 +196,7 @@ public class OpenTelemetryTests
 		using (var activity = src.StartActivity("foo", ActivityKind.Server))
 			traceId = activity?.TraceId.ToString();
 		traceId.Should().NotBeNull();
-		payloadSender.FirstTransaction.TraceId.Should().Be(traceId);
+		payloadSender.FirstTransaction!.TraceId.Should().Be(traceId);
 	}
 
 	[Fact]
