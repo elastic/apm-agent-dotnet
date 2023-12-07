@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using Elastic.Apm.Model;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests;
 
 [Collection("DiagnosticListenerTest")]
 public class BaggageAspNetCoreTests : MultiApplicationTestBase
 {
+
+	public BaggageAspNetCoreTests(ITestOutputHelper output) : base(output) { }
 
 	private void ValidateOtelAttribute(Transaction transaction, string key, string value) =>
 		transaction.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>($"baggage.{key}", value));

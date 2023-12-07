@@ -10,9 +10,9 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="Elastic.Apm.AspNetCore.ApmMiddlewareExtension" /> type.
+	/// Tests the <see cref="ApplicationBuilderExtensions" /> type.
 	/// </summary>
-	public class ApmMiddlewareExtensionTest
+	public class ApplicationBuilderExtensionLoggingTest
 	{
 		[Fact]
 		public void UseElasticApmShouldUseAspNetLoggerWhenLoggingIsConfigured()

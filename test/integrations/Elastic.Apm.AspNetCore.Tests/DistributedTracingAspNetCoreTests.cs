@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -18,6 +19,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class DistributedTracingAspNetCoreTests : MultiApplicationTestBase
 	{
+		public DistributedTracingAspNetCoreTests(ITestOutputHelper output) : base(output) { }
+
 		/// <summary>
 		/// Distributed tracing integration test.
 		/// It starts <see cref="SampleAspNetCoreApp" /> with 1 agent and <see cref="WebApiSample" /> with another agent.
@@ -112,6 +115,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender2.FirstTransaction.IsSampled.Should().BeTrue();
 
@@ -136,6 +141,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 			_payloadSender1.FirstTransaction.TraceId.Should().Be(expectedTraceId);
 			_payloadSender1.FirstTransaction.ParentId.Should().Be(expectedParentId);
 		}
@@ -157,6 +164,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			// Assert that the transaction is sampled and the traceparent header was ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
@@ -185,6 +194,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 			// Assert that the transaction is not sampled, so the traceparent header was not ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
 
@@ -211,6 +222,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			// Assert that the transaction is sampled and the traceparent header was ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
@@ -240,6 +253,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 			// Assert that the transaction is not sampled and the traceparent header was not ignored
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
 
@@ -261,6 +276,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
@@ -284,6 +301,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
@@ -305,6 +324,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
@@ -330,6 +351,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().Be("b7ad6b7169203331");
 			_payloadSender1.FirstTransaction.TraceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
@@ -351,6 +374,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
@@ -375,6 +400,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 			_payloadSender1.FirstTransaction.ParentId.Should().NotBe("b7ad6b7169203331");
@@ -401,6 +428,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 			_payloadSender1.Transactions.Should().NotBeNullOrEmpty();
 		}
 
@@ -422,6 +451,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var res = await client.GetAsync("http://localhost:5901/Home/Index");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			_payloadSender1.Transactions.Should().NotBeNullOrEmpty();
 
@@ -453,6 +484,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var client = new HttpClient();
 			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.WaitForTransactions(TimeSpan.FromSeconds(10));
+			_payloadSender2.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			_payloadSender1.Transactions.Count.Should().Be(1);
 			_payloadSender2.Transactions.Count.Should().Be(1);

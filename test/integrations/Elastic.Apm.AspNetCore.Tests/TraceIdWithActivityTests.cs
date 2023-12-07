@@ -33,7 +33,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
 			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
-			_client = Helper.GetClient(_agent, _factory, true);
+			_client = Helper.GetClient(_agent, _factory);
 		}
 
 		public void Dispose()
