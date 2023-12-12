@@ -66,7 +66,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload ${{ github.ref_name }} "build/output/ElasticApmAgent_*.zip" "build/output/elastic_apm_profiler_*.zip"
+        gh release upload ${{ github.ref_name }} "build/output/ElasticApmAgent_${{ steps.bootstrap.outputs.agent-version }}.zip" "build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip"
 
     - if: ${{ success() }}
       uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
@@ -114,7 +114,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true #continue for now until we see it working in action
         run: |
-          gh release upload ${{ github.ref_name }} "build/output/elastic_apm_profiler_*.zip"
+          gh release upload ${{ github.ref_name }} "build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-win-x64.zip"
 
   post-release:
     needs: [ 'release-windows']
