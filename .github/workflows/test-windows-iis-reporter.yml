@@ -12,6 +12,11 @@ jobs:
   report:
     runs-on: ubuntu-latest
     name: IIS Test Summary
+    # disable IIS on CI for now.
+    # Run locally and started failing randomly on github actions
+    # Could be because of plethora of reasons including no disk space
+    # Requires longer investigation
+    if: ${{ false }}
     steps:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
         with:
