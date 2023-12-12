@@ -46,7 +46,8 @@ namespace ElasticApmStartupHook
 
 		public void WriteLine(string message)
 		{
-			if (!_enabled) return;
+			if (!_enabled)
+				return;
 
 			try
 			{
