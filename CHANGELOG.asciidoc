@@ -26,9 +26,9 @@ endif::[]
 [[release-notes-1.25.2]]
 ==== 1.25.2
 
-This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm()` not correctly setting statuscodes.
-The bug was not present in the more commonly used `Elastic.Apm.NetCoreAll` since it used an `DiagnosticListener` approach.
-With this release we ensure both packages used the exact same mechanism to instrument ASP.NET Core.
+This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm()` not correctly setting status codes.
+The bug was not present in the more commonly used `Elastic.Apm.NetCoreAll` since it uses a `DiagnosticListener` approach.
+With this release we ensure both packages use the exact same `DiagnosticListener` mechanism to instrument ASP.NET Core.
 
 ===== Bug fixes
 
