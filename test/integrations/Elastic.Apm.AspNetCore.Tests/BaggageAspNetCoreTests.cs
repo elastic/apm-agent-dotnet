@@ -36,6 +36,7 @@ public class BaggageAspNetCoreTests : MultiApplicationTestBase
 
 		(await res.Content.ReadAsStringAsync()).Should().Be("[key1, value1][key2, value2][key3, value3]");
 
+		_payloadSender1.WaitForTransactions();
 		_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
 
 		_payloadSender1.FirstTransaction.Context.Request.Headers.Should().ContainKey("baggage");
@@ -67,6 +68,7 @@ public class BaggageAspNetCoreTests : MultiApplicationTestBase
 		var res = await client.GetAsync("http://localhost:5901/Home/WriteBaggage");
 		res.IsSuccessStatusCode.Should().BeTrue();
 
+		_payloadSender1.WaitForTransactions();
 		_payloadSender1.Transactions.Should().HaveCount(1);
 
 		// Service 1 has no incoming baggage header and no captured baggage on the transaction
