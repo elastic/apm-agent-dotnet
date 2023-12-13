@@ -23,8 +23,13 @@ namespace Elastic.Apm.OpenTelemetry
 	public class ElasticActivityListener : IDisposable
 	{
 		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
-		private static readonly string[] ServerAddressAttributeKeys = new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
-		private static readonly string[] HttpAttributeKeys = new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl, SemanticConventions.HttpScheme };
+
+		private static readonly string[] ServerAddressAttributeKeys =
+			new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+
+		private static readonly string[] HttpAttributeKeys =
+			new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl, SemanticConventions.HttpScheme };
+
 		private static readonly string[] HttpUrlAttributeKeys = new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl };
 
 		private readonly ConditionalWeakTable<Activity, Span> _activeSpans = new();
@@ -153,8 +158,7 @@ namespace Elastic.Apm.OpenTelemetry
 					_activeTransactions.Remove(activity);
 					transaction.Duration = activity.Duration.TotalMilliseconds;
 
-						if (activity.TagObjects.Any())
-							transaction.Otel.Attributes = new Dictionary<string, object>(activity.TagObjects);
+					UpdateOTelAttributes(activity, transaction.Otel);
 
 					InferTransactionType(transaction, activity);
 
@@ -184,12 +188,20 @@ namespace Elastic.Apm.OpenTelemetry
 				}
 			};
 
+		private static void UpdateOTelAttributes(Activity activity, OTel otel)
+		{
+			if (!activity.TagObjects.Any()) return;
+
+			otel.Attributes ??= new Dictionary<string, object>();
+			foreach (var (key, value) in activity.TagObjects)
+				otel.Attributes[key] = value;
+		}
+
 		private static void UpdateSpan(Activity activity, Span span)
 		{
 			span.Duration = activity.Duration.TotalMilliseconds;
 
-			if (activity.TagObjects.Any())
-				span.Otel.Attributes = new Dictionary<string, object>(activity.TagObjects);
+			UpdateOTelAttributes(activity, span.Otel);
 
 			InferSpanTypeAndSubType(span, activity);
 
@@ -291,7 +303,9 @@ namespace Elastic.Apm.OpenTelemetry
 				span.Type = ApiConstants.TypeMessaging;
 				span.Subtype = messagingSystem;
 				serviceTargetType = span.Subtype;
-				serviceTargetName = TryGetStringValue(activity, SemanticConventions.MessagingDestination, out var messagingDestination) ? messagingDestination : null;
+				serviceTargetName = TryGetStringValue(activity, SemanticConventions.MessagingDestination, out var messagingDestination)
+					? messagingDestination
+					: null;
 				resource = ToResourceName(span.Subtype, serviceTargetName);
 			}
 			else if (TryGetStringValue(activity, SemanticConventions.RpcSystem, out var rpcSystem))
@@ -301,10 +315,13 @@ namespace Elastic.Apm.OpenTelemetry
 				serviceTargetType = span.Subtype;
 				serviceTargetName = !string.IsNullOrEmpty(netName)
 					? netName
-					: TryGetStringValue(activity, SemanticConventions.RpcService, out var rpcService) ? rpcService : null;
+					: TryGetStringValue(activity, SemanticConventions.RpcService, out var rpcService)
+						? rpcService
+						: null;
 				resource = serviceTargetName ?? span.Subtype;
 			}
-			else if (activity.TagObjects.Any(n => n.Key == SemanticConventions.HttpUrl || n.Key == SemanticConventions.UrlFull || n.Key == SemanticConventions.HttpScheme))
+			else if (activity.TagObjects.Any(n =>
+						 n.Key == SemanticConventions.HttpUrl || n.Key == SemanticConventions.UrlFull || n.Key == SemanticConventions.HttpScheme))
 			{
 				var hasHttpHost = TryGetStringValue(activity, SemanticConventions.HttpHost, out var httpHost);
 				var hasHttpScheme = TryGetStringValue(activity, SemanticConventions.HttpScheme, out var httpScheme);
