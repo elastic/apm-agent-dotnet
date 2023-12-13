@@ -195,12 +195,20 @@ namespace Elastic.Apm.Logging
 					args[offset + i] = new KeyValuePair<string, object>(ValueNames[j], values[i]);
 			}
 
-			return new LogValues(args);
+			return new LogValues(this, values, args);
 		}
 
 		public class LogValues : ReadOnlyCollection<KeyValuePair<string, object>>
 		{
-			public LogValues(IList<KeyValuePair<string, object>> list) : base(list) { }
+			internal LogValuesFormatter Formatter { get; }
+			internal object[] Args { get; }
+
+			public LogValues(LogValuesFormatter formatter, object[] args, IList<KeyValuePair<string, object>> list)
+				: base(list)
+			{
+				Formatter = formatter;
+				Args = args;
+			}
 		}
 	}
 }
