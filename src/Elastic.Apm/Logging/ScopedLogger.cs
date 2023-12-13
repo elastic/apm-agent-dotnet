@@ -26,7 +26,8 @@ internal class ScopedLogger : IApmLogger
 
 	internal LogValuesFormatter GetOrAddFormatter(string message, IReadOnlyCollection<object> args)
 	{
-		if (Formatters.TryGetValue(message, out var formatter)) return formatter;
+		if (Formatters.TryGetValue(message, out var formatter))
+			return formatter;
 
 		formatter = new LogValuesFormatter($"{{{{{{Scope}}}}}} {message}", args, Scope);
 #if NET6_0_OR_GREATER
@@ -35,7 +36,8 @@ internal class ScopedLogger : IApmLogger
 #else
 		lock (_lock)
 		{
-			if (!Formatters.TryGetValue(message, out var f)) return f;
+			if (!Formatters.TryGetValue(message, out var f))
+				return f;
 			Formatters.Add(message, formatter);
 			return formatter;
 		}
