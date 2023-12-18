@@ -36,7 +36,7 @@ internal class ScopedLogger : IApmLogger
 #else
 		lock (_lock)
 		{
-			if (!Formatters.TryGetValue(message, out var f))
+			if (Formatters.TryGetValue(message, out var f))
 				return f;
 			Formatters.Add(message, formatter);
 			return formatter;
