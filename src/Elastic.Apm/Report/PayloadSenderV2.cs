@@ -474,7 +474,6 @@ namespace Elastic.Apm.Report
 			{
 				try
 				{
-					_logger?.Trace()?.Log("Start executing filter on transaction");
 					var itemAfterFilter = filter(item);
 					if (itemAfterFilter != null)
 					{

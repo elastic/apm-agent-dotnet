@@ -140,8 +140,10 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan && currentSpan.IsExitSpan)
+			if (_realAgent?.TracerInternal.CurrentSpan is Span { IsExitSpan: true } currentSpan)
 			{
+				Logger.Trace()?
+					.Log("Exit span detected: {RequestUrl}, propagating without creating a child span", requestUrl.Sanitize());
 				PropagateTraceContext(request, transaction, currentSpan);
 				return;
 			}
@@ -151,22 +153,20 @@ namespace Elastic.Apm.DiagnosticListeners
 			var suppressSpanCreation = false;
 			if (_configuration?.HasTracers ?? false)
 			{
-				using (var httpTracers = _configuration.GetTracers())
+				using var httpTracers = _configuration.GetTracers();
+				foreach (var httpSpanTracer in httpTracers)
 				{
-					foreach (var httpSpanTracer in httpTracers)
-					{
-						suppressSpanCreation = httpSpanTracer.ShouldSuppressSpanCreation();
-						if (suppressSpanCreation)
-							break;
+					suppressSpanCreation = httpSpanTracer.ShouldSuppressSpanCreation();
+					if (suppressSpanCreation)
+						break;
 
-						if (httpSpanTracer.IsMatch(method, requestUrl,
-								header => RequestTryGetHeader(request, header, out var value) ? value : null))
-						{
-							span = httpSpanTracer.StartSpan(ApmAgent, method, requestUrl,
-								header => RequestTryGetHeader(request, header, out var value) ? value : null);
-							if (span != null)
-								break;
-						}
+					if (httpSpanTracer.IsMatch(method, requestUrl,
+							header => RequestTryGetHeader(request, header, out var value) ? value : null))
+					{
+						span = httpSpanTracer.StartSpan(ApmAgent, method, requestUrl,
+							header => RequestTryGetHeader(request, header, out var value) ? value : null);
+						if (span != null)
+							break;
 					}
 				}
 			}
@@ -223,27 +223,36 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void PropagateTraceContext(TRequest request, ITransaction transaction, ISpan span)
 		{
-			if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderName))
+			if (RequestTryGetHeader(request, TraceContext.TraceParentHeaderName, out var existingParent))
+			{
+				var traceParent = TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData);
+				Logger.Trace()?
+					.Log("Skipping adding {HeaderName}: with value {TraceParent} since it already has value: {ExistingParent}",
+						TraceContext.TraceParentHeaderName, traceParent, existingParent);
+			}
+			else
+			{
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
 				// but here we want the string to be in W3C 'traceparent' header format.
-				RequestHeadersAdd(request, TraceContext.TraceParentHeaderName, TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
-
-			if (transaction is Transaction t)
-			{
-				if (t.Configuration.UseElasticTraceparentHeader)
-				{
-					if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderNamePrefixed))
-					{
-						RequestHeadersAdd(request, TraceContext.TraceParentHeaderNamePrefixed,
-							TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
-					}
-				}
+				var traceParent = TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData);
+				RequestHeadersAdd(request, TraceContext.TraceParentHeaderName, traceParent);
 			}
 
-			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && span.OutgoingDistributedTracingData != null
-				&& span.OutgoingDistributedTracingData.HasTraceState)
-				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, span.OutgoingDistributedTracingData.TraceState.ToTextHeader());
+			if (transaction is Transaction t
+				&& t.Configuration.UseElasticTraceparentHeader
+				&& !RequestHeadersContain(request, TraceContext.TraceParentHeaderNamePrefixed))
+			{
+				var traceParent = TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData);
+				RequestHeadersAdd(request, TraceContext.TraceParentHeaderNamePrefixed, traceParent);
+			}
+
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName)
+				&& span.OutgoingDistributedTracingData is { HasTraceState: true })
+			{
+				var traceState = TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData);
+				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, traceState);
+			}
 
 			if (!RequestHeadersContain(request, BaggageHeaderName) && Activity.Current != null && Activity.Current.Baggage.Any())
 			{
