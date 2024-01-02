@@ -250,7 +250,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName)
 				&& span.OutgoingDistributedTracingData is { HasTraceState: true })
 			{
-				var traceState = TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData);
+				var traceState = span.OutgoingDistributedTracingData.TraceState.ToTextHeader();
 				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, traceState);
 			}
 
