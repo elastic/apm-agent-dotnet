@@ -64,10 +64,11 @@ namespace Elastic.Apm.OpenTelemetry
 		private Action<Activity> ActivityStarted =>
 			activity =>
 			{
-				_logger.Trace()?.Log($"ActivityStarted: name:{activity.DisplayName} id:{activity.Id} traceId:{activity.TraceId}");
-
 				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
 					return;
+
+				_logger.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+					activity.DisplayName, activity.Id, activity.TraceId);
 
 				var spanLinks = new List<SpanLink>(activity.Links.Count());
 				if (activity.Links.Any())
@@ -146,7 +147,8 @@ namespace Elastic.Apm.OpenTelemetry
 				}
 				activity.Stop();
 
-				_logger.Trace()?.Log($"ActivityStopped: name:{activity.DisplayName} id:{activity.Id} traceId:{activity.TraceId}");
+				_logger.Trace()?.Log("ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+					activity.DisplayName, activity.Id, activity.TraceId);
 
 				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
 					return;

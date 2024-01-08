@@ -65,15 +65,15 @@ namespace Elastic.Apm.Config
 				var info = logger.Info()!.Value;
 				var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 				info.Log("********************************************************************************");
-				info.Log($"Elastic APM .NET Agent, version: {version}");
-				info.Log($"Process ID: {Process.GetCurrentProcess().Id}");
-				info.Log($"Process Name: {Process.GetCurrentProcess().ProcessName}");
-				info.Log($"Command line arguments: '{string.Join(", ", System.Environment.GetCommandLineArgs())}'");
-				info.Log($"Operating System: {RuntimeInformation.OSDescription}");
-				info.Log($"CPU architecture: {RuntimeInformation.OSArchitecture}");
-				info.Log($"Host: {System.Environment.MachineName}");
-				info.Log($"Time zone: {TimeZoneInfo.Local}");
-				info.Log($"Runtime: {RuntimeInformation.FrameworkDescription}");
+				info.Log("Elastic APM .NET Agent, version: {ApmAgentVersion}", version);
+				info.Log("Process ID: {ProcessId}", Process.GetCurrentProcess().Id);
+				info.Log("Process Name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
+				info.Log("Command line arguments: '{ProcessArguments}'", string.Join(", ", System.Environment.GetCommandLineArgs()));
+				info.Log("Operating System: {OSDescription}", RuntimeInformation.OSDescription);
+				info.Log("CPU architecture: {OSArchitecture}", RuntimeInformation.OSArchitecture);
+				info.Log("Host: {HostName}", System.Environment.MachineName);
+				info.Log("Time zone: {TimeZone}", TimeZoneInfo.Local);
+				info.Log("Runtime: {RunTime}", RuntimeInformation.FrameworkDescription);
 				PrintAgentConfiguration(logger, configurationReader);
 			}
 			catch (Exception e)
@@ -90,7 +90,8 @@ namespace Elastic.Apm.Config
 			{
 				var info = logger.Info()!.Value;
 				info.Log("********************************************************************************");
-				info.Log($"Agent Configuration (via '{configurationReader.Description ?? configurationReader.GetType().ToString()}'):");
+				info.Log("Agent Configuration (via '{ConfigurationProvider}'):"
+					, configurationReader.Description ?? configurationReader.GetType().ToString());
 
 				var activeConfiguration = OptionLoggingInstructions
 					.Select(instruction =>
@@ -107,7 +108,10 @@ namespace Elastic.Apm.Config
 					.ThenBy(t => string.IsNullOrEmpty(t.configuration.Value) ? 1 : 0);
 
 				foreach (var (_, configuration) in activeConfiguration)
-					info.Log($"{configuration}");
+				{
+					configuration.Log(info, static (l, type, name, value, origin) =>
+						l.Log("{Type}->{Name}: '{Value}' ({Origin})", type, name, value, origin));
+				}
 
 				info.Log("********************************************************************************");
 			}

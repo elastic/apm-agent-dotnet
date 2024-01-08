@@ -21,7 +21,7 @@ internal class AzureFunctionsContext
 		UpdateServiceInformation(Agent.Instance.Service);
 		FaasIdPrefix =
 			$"/subscriptions/{MetaData.SubscriptionId}/resourceGroups/{MetaData.WebsiteResourceGroup}/providers/Microsoft.Web/sites/{MetaData.WebsiteSiteName}/functions/";
-		Logger.Trace()?.Log($"FaasIdPrefix: {FaasIdPrefix}");
+		Logger.Trace()?.Log("FaasIdPrefix: {FaasIdPrefix}", FaasIdPrefix);
 	}
 
 	internal IApmLogger Logger { get; }
