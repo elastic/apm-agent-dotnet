@@ -96,7 +96,7 @@ jobs:
 
     - name: Store test results
       if: success() || failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results-iis
         path: build/output/junit-*.xml
