@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" />
     <PackageReference Include="Elastic.CommonSchema.BenchmarkDotNetExporter" Version="1.5.0" />
   </ItemGroup>
 
