@@ -17,12 +17,12 @@ jobs:
       
     # used by opbeans .NET to reference the on commit nuget packages
     # TODO: update opbeans to use our feedz.io packages
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: snapshoty-linux
         path: build/output
 
-    # - uses: actions/download-artifact@v3
+    # - uses: actions/download-artifact@v4
     #   with:
     #     name: snapshoty-windows
     #     path: build/output
