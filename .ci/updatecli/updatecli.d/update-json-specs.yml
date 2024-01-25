@@ -78,5 +78,7 @@ targets:
     disablesourceinput: true
     kind: shell
     spec:
+      # git diff helps to print what it changed, If it is empty, then updatecli report a success with no changes applied.
+      # See https://www.updatecli.io/docs/plugins/resource/shell/#_shell_target
       command: 'tar -xzf {{ requiredEnv "GITHUB_WORKSPACE" }}/json-specs.tgz && git --no-pager diff'
       workdir: "{{ .apm_agent.json_specs_path }}"
