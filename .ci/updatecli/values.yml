@@ -9,6 +9,6 @@ specs:
   apm_json_path: "tests/agents/json-specs"
   apm_gherkin_path: "tests/agents/gherkin-specs"
 apm_agent:
-  gherkin_specs_path: "tests/APM_Agents_shared/gherkin-specs"
-  json_specs_path: "tests/APM_Agents_shared/json-specs"
-  server_schema_specs_path: "tests/APM_Server_intake_API_schema/latest_used"
+  gherkin_specs_path: "test/Elastic.Apm.Feature.Tests/Features"
+  json_specs_path: "test/Elastic.Apm.Tests.Utilities/TestResources/json-specs"
+  server_schema_specs_path: "src/Elastic.Apm.Specification/specs"

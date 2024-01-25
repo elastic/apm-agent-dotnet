@@ -1,6 +1,5 @@
 name: update-gherkin-specs
 pipelineid: update-gherkin-specs
-title: synchronize gherkin specs
 
 scms:
   default:
@@ -8,17 +7,27 @@ scms:
     spec:
       user: '{{ requiredEnv "GIT_USER" }}'
       email: '{{ requiredEnv "GIT_EMAIL" }}'
-      owner: elastic
-      repository: apm-agent-dotnet
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
       token: '{{ requiredEnv "GITHUB_TOKEN" }}'
       username: '{{ requiredEnv "GIT_USER" }}'
-      branch: main
+      branch: "{{ .github.branch }}"
+  apm:
+    kind: github
+    spec:
+      user: '{{ requiredEnv "GIT_USER" }}'
+      email: '{{ requiredEnv "GIT_EMAIL" }}'
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.apm_repository }}"
+      token: '{{ requiredEnv "GITHUB_TOKEN" }}'
+      username: '{{ requiredEnv "GIT_USER" }}'
+      branch: "{{ .github.branch }}"
 
 sources:
   sha:
     kind: file
     spec:
-      file: 'https://github.com/elastic/apm/commit/main.patch'
+      file: 'https://github.com/{{ .github.owner }}/{{ .github.apm_repository }}/commit/{{ .github.branch }}.patch'
       matchpattern: "^From\\s([0-9a-f]{40})\\s"
     transformers:
       - findsubmatch:
@@ -28,40 +37,25 @@ sources:
     dependson:
       - sha
     spec:
-      command: gh api /repos/elastic/apm/commits/{{ source "sha" }}/pulls --jq '.[].html_url'
+      command: gh api /repos/{{ .github.owner }}/{{ .github.apm_repository }}/commits/{{ source "sha" }}/pulls --jq '.[].html_url'
       environments:
         - name: GITHUB_TOKEN
         - name: PATH
-  api_key.feature:
-    kind: file
+  agents-gherkin-specs-tarball:
+    kind: shell
+    scmid: apm
+    dependson:
+      - sha
     spec:
-      file: https://raw.githubusercontent.com/elastic/apm/main/tests/agents/gherkin-specs/api_key.feature
-  azure_app_service_metadata.feature:
-    kind: file
-    spec:
-      file: https://raw.githubusercontent.com/elastic/apm/main/tests/agents/gherkin-specs/azure_app_service_metadata.feature
-  azure_functions_metadata.feature:
-    kind: file
-    spec:
-      file: https://raw.githubusercontent.com/elastic/apm/main/tests/agents/gherkin-specs/azure_functions_metadata.feature
-  otel_bridge.feature:
-    kind: file
-    spec:
-      file: https://raw.githubusercontent.com/elastic/apm/main/tests/agents/gherkin-specs/otel_bridge.feature
-  outcome.feature:
-    kind: file
-    spec:
-      file: https://raw.githubusercontent.com/elastic/apm/main/tests/agents/gherkin-specs/outcome.feature
-  user_agent.feature:
-    kind: file
-    spec:
-      file: https://raw.githubusercontent.com/elastic/apm/main/tests/agents/gherkin-specs/user_agent.feature
+      command: tar cvzf {{ requiredEnv "GITHUB_WORKSPACE" }}/gherkin-specs.tgz .
+      environments:
+        - name: PATH
+      workdir: "{{ .specs.apm_gherkin_path }}"
 
 actions:
   pr:
     kind: "github/pullrequest"
     scmid: default
-    title: '[Automation] Update Gherkin specs'
     spec:
       automerge: false
       draft: false
@@ -70,57 +64,19 @@ actions:
       description: |-
         ### What
         APM agent Gherkin specs automatic sync
+
         ### Why
         *Changeset*
-        * https://github.com/elastic/apm/commit/{{ source "sha" }}
         * {{ source "pull_request" }}
+        * https://github.com/elastic/apm/commit/{{ source "sha" }}
+      title: '[Automation] Update Gherkin specs'
 
 targets:
-  api_key.feature:
-    name: api_key.feature
+  agent-gherkin-specs:
+    name: APM agent gherkin specs {{ source "sha" }}
     scmid: default
-    sourceid: api_key.feature
-    kind: file
+    disablesourceinput: true
+    kind: shell
     spec:
-      file: test/Elastic.Apm.Feature.Tests/Features/api_key.feature
-      forcecreate: true
-  azure_app_service_metadata.feature:
-    name: azure_app_service_metadata.feature
-    scmid: default
-    sourceid: azure_app_service_metadata.feature
-    kind: file
-    spec:
-      file: test/Elastic.Apm.Feature.Tests/Features/azure_app_service_metadata.feature
-      forcecreate: true
-  azure_functions_metadata.feature:
-    name: azure_functions_metadata.feature
-    scmid: default
-    sourceid: azure_functions_metadata.feature
-    kind: file
-    spec:
-      file: test/Elastic.Apm.Feature.Tests/Features/azure_functions_metadata.feature
-      forcecreate: true
-  otel_bridge.feature:
-    name: otel_bridge.feature
-    scmid: default
-    sourceid: otel_bridge.feature
-    kind: file
-    spec:
-      file: test/Elastic.Apm.Feature.Tests/Features/otel_bridge.feature
-      forcecreate: true
-  outcome.feature:
-    name: outcome.feature
-    scmid: default
-    sourceid: outcome.feature
-    kind: file
-    spec:
-      file: test/Elastic.Apm.Feature.Tests/Features/outcome.feature
-      forcecreate: true
-  user_agent.feature:
-    name: user_agent.feature
-    scmid: default
-    sourceid: user_agent.feature
-    kind: file
-    spec:
-      file: test/Elastic.Apm.Feature.Tests/Features/user_agent.feature
-      forcecreate: true
+      command: 'tar -xzf {{ requiredEnv "GITHUB_WORKSPACE" }}/gherkin-specs.tgz && git --no-pager diff'
+      workdir: "{{ .apm_agent.gherkin_specs_path }}"
