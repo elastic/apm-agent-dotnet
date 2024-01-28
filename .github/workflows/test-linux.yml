@@ -41,7 +41,7 @@ jobs:
     - name: Package
       run: ./build.sh pack
     
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
       with:
           name: snapshoty-linux
