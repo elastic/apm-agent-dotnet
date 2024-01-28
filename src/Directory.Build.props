@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Authors>Elastic and contributors</Authors>
     <Copyright>2022 Elasticsearch BV</Copyright>
-    <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
+    <PackageProjectUrl>https://www.elastic.co/guide/en/apm/agent/dotnet/current/index.html</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageIcon>nuget-icon.png</PackageIcon>
