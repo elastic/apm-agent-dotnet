@@ -89,7 +89,7 @@ namespace Elastic.Apm.Report
 			_apmServerInfo = apmServerInfo ?? new ApmServerInfo();
 			_serverInfoCallback = serverInfoCallback;
 			var process = ProcessInformation.Create();
-			_metadata = new Metadata { Service = service, System = System, Process = process};
+			_metadata = new Metadata { Service = service, System = System, Process = process };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
