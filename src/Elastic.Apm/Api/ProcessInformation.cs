@@ -4,8 +4,9 @@
 // See the LICENSE file in the project root for more information
 
 using System.Diagnostics;
+using Elastic.Apm.Helpers;
 
-namespace Elastic.Apm.Model;
+namespace Elastic.Apm.Api;
 
 internal class ProcessInformation
 {
@@ -19,4 +20,9 @@ internal class ProcessInformation
 		return new ProcessInformation { Pid = p.Id, Title = p.ProcessName };
 	}
 
+	public override string ToString() => new ToStringBuilder(nameof(Service))
+	{
+		{ nameof(Pid), Pid },
+		{ nameof(Title), Title }
+	}.ToString();
 }

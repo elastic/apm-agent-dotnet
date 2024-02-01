@@ -27,6 +27,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			new ToStringBuilder(nameof(MetadataDto))
 			{
 				{ nameof(Service), Service },
+				{ nameof(Process), Process },
 				{ nameof(System), System },
 				{ nameof(Labels), AbstractConfigurationReader.ToLogString(Labels) },
 				{ nameof(Cloud), Cloud },
