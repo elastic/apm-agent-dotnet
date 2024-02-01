@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Diagnostics;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Api;
@@ -12,6 +13,7 @@ internal class ProcessInformation
 {
 	public int Pid { get; set; }
 
+	[MaxLength]
 	public string Title { get; set; }
 
 	public static ProcessInformation Create()
