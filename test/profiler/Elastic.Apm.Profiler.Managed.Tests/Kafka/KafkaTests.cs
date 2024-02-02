@@ -28,7 +28,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Kafka
 			_output = output;
 		}
 
-		[DockerFact]
+		[DockerTheory]
 		[InlineData("net7.0")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{

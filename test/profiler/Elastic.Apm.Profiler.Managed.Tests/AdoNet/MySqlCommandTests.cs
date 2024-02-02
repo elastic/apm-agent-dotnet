@@ -28,7 +28,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			_output = output;
 		}
 
-		[DockerFact]
+		[DockerTheory]
 		[ClassData(typeof(AdoNetTestData))]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
