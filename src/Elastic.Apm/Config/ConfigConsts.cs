@@ -69,13 +69,13 @@ namespace Elastic.Apm.Config
 					"Giraffe."
 				}.AsReadOnly();
 
-			public static readonly IReadOnlyCollection<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>().AsReadOnly();
+			public static readonly IReadOnlyList<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>().AsReadOnly();
 
-			public static readonly IReadOnlyCollection<WildcardMatcher> IgnoreMessageQueues = new List<WildcardMatcher>().AsReadOnly();
+			public static readonly IReadOnlyList<WildcardMatcher> IgnoreMessageQueues = new List<WildcardMatcher>().AsReadOnly();
 
-			public static readonly IReadOnlyCollection<WildcardMatcher> SanitizeFieldNames;
+			public static readonly IReadOnlyList<WildcardMatcher> SanitizeFieldNames;
 
-			public static readonly IReadOnlyCollection<WildcardMatcher> TransactionIgnoreUrls;
+			public static readonly IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls;
 
 			static DefaultValues()
 			{
