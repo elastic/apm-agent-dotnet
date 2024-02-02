@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.Docker;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -28,7 +28,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			_output = output;
 		}
 
-		[DockerTheory]
+		[DockerFact]
 		[ClassData(typeof(AdoNetTestData))]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{

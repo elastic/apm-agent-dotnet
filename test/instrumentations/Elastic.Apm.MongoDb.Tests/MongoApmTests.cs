@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.MongoDb.Tests.Fixture;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.Docker;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using MongoDB.Bson;
