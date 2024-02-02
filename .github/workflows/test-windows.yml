@@ -46,11 +46,22 @@ jobs:
         with:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
 
+      # Forked Pull Requests don't have access to GitHub secrets hence cannot use Test Containers Cloud
+      # this will disable the tests that require access to the Test Containers Cloud.
+      - name: Disable the required tests if needed
+        id: disabled-tests
+        run:
+          if [ "${{github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false}}" = "true" ] ; then
+            echo "list=" >> "$GITHUB_OUTPUT"
+          else
+            echo "list=&FullyQualifiedName!~Elastic.Apm.MongoDb.Tests" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: 'Tests: Unit'
         uses: ./.github/workflows/test
         with:
           name: 'unit'
-          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
+          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure${{ steps.disabled-tests.outputs.list }}'
           framework: '' # reset to test all .NET frameworks including net462
     
   startup-hook-tests:
