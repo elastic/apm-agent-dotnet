@@ -50,7 +50,7 @@ jobs:
       # this will disable the tests that require access to the Test Containers Cloud.
       - name: Disable the required tests if needed
         id: disabled-tests
-        run:
+        run: |-
           if [ "${{github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false}}" = "true" ] ; then
             echo "list=" >> "$GITHUB_OUTPUT"
           else
