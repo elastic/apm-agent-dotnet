@@ -111,11 +111,11 @@ namespace Elastic.Apm
 
 			lock (_lock)
 			{
-				 if (_isDisposed)
-					 throw new ObjectDisposedException(nameof(CompositeDisposable));
+				if (_isDisposed)
+					throw new ObjectDisposedException(nameof(CompositeDisposable));
 
-				 _disposables.Add(disposable);
-				 return this;
+				_disposables.Add(disposable);
+				return this;
 			}
 		}
 

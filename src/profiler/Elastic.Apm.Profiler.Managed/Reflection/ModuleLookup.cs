@@ -49,10 +49,12 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 			var failures = Interlocked.Read(ref _failures);
 			if (failures >= MaxFailures)
 			{
-				if (_shortCircuitLogicHasLogged) return null;
+				if (_shortCircuitLogicHasLogged)
+					return null;
 				lock (_logLock)
 				{
-					if (_shortCircuitLogicHasLogged) return null;
+					if (_shortCircuitLogicHasLogged)
+						return null;
 					Logger.Log(LogLevel.Warn,
 						"Elastic APM is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
 					_shortCircuitLogicHasLogged = true;
