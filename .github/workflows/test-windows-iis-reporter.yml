@@ -21,8 +21,8 @@ jobs:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
         with:
           artifact: test-results-iis       # artifact name
-          name: IIS Tests Summary              # Name of the check run which will be created
-          path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
+          name: IIS Tests Summary          # Name of the check run which will be created
+          path: "junit-*.xml"              # Path to test results (inside artifact .zip)
           reporter: java-junit             # Format of test results
           list-suites: 'failed'
           list-tests: 'failed'

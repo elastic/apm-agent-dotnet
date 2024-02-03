@@ -41,6 +41,7 @@ jobs:
         run: dotnet build -c Release --verbosity minimal
 
       - name: Setup Testcontainers Cloud Client
+        if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: atomicjar/testcontainers-cloud-setup-action@v1
         with:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
@@ -84,6 +85,7 @@ jobs:
         run: ./build.bat profiler-zip
 
       - name: Setup Testcontainers Cloud Client
+        if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: atomicjar/testcontainers-cloud-setup-action@v1
         with:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
