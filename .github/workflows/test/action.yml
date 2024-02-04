@@ -49,7 +49,7 @@ runs:
 
     - name: "Test Report Store: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
       if: success() || failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
           name: "test-results-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
           path: build/output/junit-*.xml
