@@ -28,7 +28,7 @@ runs:
 
     - name: Install cargo-make using cache
       if: "${{ inputs.rust == 'true' }}"
-      uses: baptiste0928/cargo-install@v2
+      uses: baptiste0928/cargo-install@v3
       with:
         crate: cargo-make
         version: "^0.36.8"
