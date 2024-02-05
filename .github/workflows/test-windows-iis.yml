@@ -40,9 +40,19 @@ jobs:
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
+        
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.3.1
+      uses: microsoft/setup-msbuild@v2
 
+
+    - name: Clean the application
+      shell: cmd
+      run: msbuild /t:Clean /p:Configuration=Release
+      
+    - name: Restore the application
+      shell: cmd
+      run: msbuild /t:Restore /p:Configuration=Release
+        
     - name: Build the application
       shell: cmd
       run: |
