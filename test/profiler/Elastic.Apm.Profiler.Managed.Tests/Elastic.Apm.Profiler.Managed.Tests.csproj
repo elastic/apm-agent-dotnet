@@ -23,7 +23,7 @@
     <PackageReference Include="Testcontainers.Oracle" Version="3.4.0" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="3.4.0" />
     <PackageReference Include="Testcontainers.RabbitMq" Version="3.4.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.5"/>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6"/>
   </ItemGroup>
 
   <ItemGroup>
