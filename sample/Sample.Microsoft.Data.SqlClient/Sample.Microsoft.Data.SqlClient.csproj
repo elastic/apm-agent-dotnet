@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>net462;net6.0;net7.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <PlatformTarget>x64</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Sample.SqlClient.DiagnosticSourceListener</RootNamespace>
