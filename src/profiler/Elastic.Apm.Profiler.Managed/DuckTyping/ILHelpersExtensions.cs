@@ -21,7 +21,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 	/// </summary>
 	internal static class ILHelpersExtensions
 	{
-		private static List<DynamicMethod> _dynamicMethods = new List<DynamicMethod>();
+		private static readonly List<DynamicMethod> _dynamicMethods = new();
 
 		internal static DynamicMethod GetDynamicMethodForIndex(int index)
 		{
