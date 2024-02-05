@@ -150,6 +150,28 @@ namespace Elastic.Apm.Tests
 		/// This test uses scoped logger.
 		/// </summary>
 		[Fact]
+		public void EnsureFormattersAreShared()
+		{
+			var consoleLogger = new ConsoleLogger(LogLevel.Trace, TextWriter.Null, TextWriter.Null);
+			var scopedLogger = consoleLogger.Scoped("MyTestScope");
+			for (var i = 0; i < 10; i++)
+				scopedLogger.Warning()?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1}", i);
+#if NET6_0_OR_GREATER
+			var cachedFormatterCount = scopedLogger.Formatters.Count();
+			cachedFormatterCount.Should().Be(1);
+
+			scopedLogger.Warning()?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg2}", 2);
+			cachedFormatterCount = scopedLogger.Formatters.Count();
+			cachedFormatterCount.Should().Be(2);
+#endif
+
+		}
+
+		/// <summary>
+		/// Makes sure the logger does not throw in case of templates for structured logs with non-existing corresponding values.
+		/// This test uses scoped logger.
+		/// </summary>
+		[Fact]
 		public void StructuredLogTemplateWith1MissingArgument_ScopedLogger()
 		{
 			var consoleLogger = new ConsoleLogger(LogLevel.Trace, TextWriter.Null, TextWriter.Null);

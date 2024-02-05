@@ -31,7 +31,8 @@ namespace Elastic.Apm.Features
 		internal bool Check(AgentFeature agentFeature)
 		{
 			var enabled = (_enabledFeatures & agentFeature) == agentFeature;
-			_logger?.Trace()?.Log($"[Agent Feature] '{agentFeature}' enabled: {enabled.ToString(DateTimeFormatInfo.InvariantInfo)}");
+			_logger?.Trace()?.Log("[Agent Feature] '{AgentFeature}' enabled: {AgentFeatureEnabled}"
+				, agentFeature, enabled.ToString(DateTimeFormatInfo.InvariantInfo));
 			return enabled;
 		}
 

@@ -88,7 +88,8 @@ namespace Elastic.Apm.Report
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(configuration.CloudProvider, _logger, environmentVariables);
 			_apmServerInfo = apmServerInfo ?? new ApmServerInfo();
 			_serverInfoCallback = serverInfoCallback;
-			_metadata = new Metadata { Service = service, System = System };
+			var process = ProcessInformation.Create();
+			_metadata = new Metadata { Service = service, System = System, Process = process };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
@@ -474,7 +475,6 @@ namespace Elastic.Apm.Report
 			{
 				try
 				{
-					_logger?.Trace()?.Log("Start executing filter on transaction");
 					var itemAfterFilter = filter(item);
 					if (itemAfterFilter != null)
 					{

@@ -45,7 +45,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 #if HAVE_LINQ
         private const string BinaryTypeName = "System.Data.Linq.Binary";
         private const string BinaryToArrayName = "ToArray";
-        private static ReflectionObject? _reflectionObject;
+        private ReflectionObject? _reflectionObject;
 #endif
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
         }
 
 #if HAVE_LINQ
-        private static void EnsureReflectionObject(Type t)
+        private void EnsureReflectionObject(Type t)
         {
             if (_reflectionObject == null)
             {

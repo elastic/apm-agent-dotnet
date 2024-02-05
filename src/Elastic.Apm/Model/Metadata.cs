@@ -18,6 +18,8 @@ namespace Elastic.Apm.Model
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
 
+		public ProcessInformation Process { get; set; }
+
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public Api.System System { get; set; }
 
