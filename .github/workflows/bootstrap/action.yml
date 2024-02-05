@@ -28,7 +28,7 @@ runs:
         git fetch --prune --unshallow --tags
         git tag --list
         
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
@@ -36,12 +36,12 @@ runs:
           ${{ runner.os }}-nuget
           
     # Install .NET version as mandated by global.json
-    #- uses: actions/setup-dotnet@v3
+    #- uses: actions/setup-dotnet@v4
     #  with:
     #      global-json-file: global.json
 
     -   name: Setup dotnet
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
             6.0.100

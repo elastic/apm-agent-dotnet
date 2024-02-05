@@ -103,7 +103,7 @@ namespace Elastic.Apm.Api
 			else if (CheckForLoadedAssembly("Elastic.Apm.StartupHook.Loader"))
 				activationMethod = Consts.ActivationMethodStartupHook;
 
-			logger.Info()?.Log($"Detected agent activation method: {activationMethod}");
+			logger.Info()?.Log("Detected agent activation method: {ActivationMethod}", activationMethod);
 			service.Agent.ActivationMethod = activationMethod;
 		}
 

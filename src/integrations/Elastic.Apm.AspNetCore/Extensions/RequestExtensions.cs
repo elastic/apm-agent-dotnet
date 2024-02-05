@@ -14,6 +14,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		internal static string ExtractRequestBody(this HttpRequest request, IConfiguration configuration, out bool longerThanMaxLength)
 		{
 			//Ensure the request Microsoft.AspNetCore.Http.HttpRequest.Body can be read multiple times
+#pragma warning disable CS0162 // Unreachable code detected
 			request.EnableBuffering();
 
 			if (request.HasFormContentType)
@@ -21,16 +22,14 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				var form = new AspNetCoreHttpForm(request.Form);
 				return form.AsSanitizedString(configuration, out longerThanMaxLength);
 			}
-			else
-			{
-				// allow synchronous reading of the request stream, which is false by default from 3.0 onwards.
-				// Reading must be synchronous as it can happen within a synchronous diagnostic listener method
-				var bodyControlFeature = request.HttpContext.Features.Get<IHttpBodyControlFeature>();
-				if (bodyControlFeature != null)
-					bodyControlFeature.AllowSynchronousIO = true;
+			// allow synchronous reading of the request stream, which is false by default from 3.0 onwards.
+			// Reading must be synchronous as it can happen within a synchronous diagnostic listener method
+			var bodyControlFeature = request.HttpContext.Features.Get<IHttpBodyControlFeature>();
+			if (bodyControlFeature != null)
+				bodyControlFeature.AllowSynchronousIO = true;
 
-				return RequestBodyStreamHelper.ToString(request.Body, out longerThanMaxLength);
-			}
+			return RequestBodyStreamHelper.ToString(request.Body, out longerThanMaxLength);
+#pragma warning restore CS0162 // Unreachable code detected
 		}
 	}
 }

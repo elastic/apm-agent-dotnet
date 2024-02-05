@@ -23,6 +23,32 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+
+
+[[release-notes-1.25.3]]
+==== 1.25.3
+
+===== Bug fixes
+
+{pull}2241[#2241] TagObjects not guaranteed to be unique
+{pull}2242[#2242] Move logging caching over to ConditionalWeaktable
+{pull}2247[#2247] Add additional logging to outgoing http call propagation
+{pull}2249[#2249] address multiple structured logging violations
+{pull}2245[#2245] Update MongoDB drivers to 2.19.0
+
+[[release-notes-1.25.2]]
+==== 1.25.2
+
+This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm()` not correctly setting status codes.
+The bug was not present in the more commonly used `Elastic.Apm.NetCoreAll` since it uses a `DiagnosticListener` approach.
+With this release we ensure both packages use the exact same `DiagnosticListener` mechanism to instrument ASP.NET Core.
+
+===== Bug fixes
+
+{pull}2213[#2213] Remove ApmMiddleWare, only use DiagnosticSource listener for ASP.NET Core.  
+{pull}2239[#2239] Move StartupHooks over to netstandard2.0.
+
+
 [[release-notes-1.25.1]]
 ==== 1.25.1
 

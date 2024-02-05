@@ -57,13 +57,16 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private CentralConfiguration ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
 		{
-			if (configPayload.UnknownKeys != null && configPayload.UnknownKeys.Any())
+			if (configPayload.UnknownKeys != null && configPayload.UnknownKeys.Any()
+				&& _logger.IsEnabled(LogLevel.Information))
 			{
+				var keys = string.Join(", ", configPayload.UnknownKeys.Select(k => $"`[{k.Key}, {k.Value}]'")).Truncate(1024);
+				var values = string.Join(", ", CentralConfigPayload.SupportedOptions.Select(k => $"`{k}'")).Truncate(1024);
 				_logger.Info()
 					?.Log("Central configuration response contains keys that are not in the list of options"
 						+ " that can be changed after Agent start: {UnknownKeys}. Supported options: {ReloadableOptions}."
-						, string.Join(", ", configPayload.UnknownKeys.Select(k => $"`[{k.Key}, {k.Value}]'"))
-						, string.Join(", ", CentralConfigPayload.SupportedOptions.Select(k => $"`{k}'")));
+						, keys
+						, values);
 			}
 
 			var eTag = httpResponse.Headers.ETag.ToString();

@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +26,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
+		private MockPayloadSender _payloadSender1;
 		private ApmAgent _agent1;
 
 		private Task _taskForApp1;
@@ -34,7 +36,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public Task InitializeAsync()
 		{
-			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1, configuration: new MockConfiguration(exitSpanMinDuration: "0")));
+			var logger = new XUnitLogger(LogLevel.Trace, _output);
+			_payloadSender1 = new MockPayloadSender(logger);
+			_agent1 = new ApmAgent(new TestAgentComponents(
+				payloadSender: _payloadSender1,
+				configuration: new MockConfiguration(exitSpanMinDuration: "0", flushInterval: "0"),
+				logger: logger
+			));
 
 			_taskForApp1 = Program.CreateWebHostBuilder(null)
 				.ConfigureLogging(logging => logging.AddXunit(_output))
@@ -71,6 +79,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var client = new HttpClient();
 			var res = await client.GetAsync("http://localhost:5901/Home/TriggerError");
 			res.IsSuccessStatusCode.Should().BeFalse();
+			_payloadSender1.WaitForAny();
 
 			_payloadSender1.Transactions.Count.Should().Be(1);
 			_payloadSender1.FirstTransaction.Should().NotBeNull();

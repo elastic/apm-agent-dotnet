@@ -221,13 +221,13 @@ namespace Elastic.Apm.BackendComm
 			logger.Info()?.Log("CreateHttpClientHandler - Setting ServerCertificateCustomValidationCallback");
 
 			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
-			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {httpClientHandler.SslProtocols}");
+			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", httpClientHandler.SslProtocols);
 #else
 			// We don't set the ServerCertificateCustomValidationCallback on ServicePointManager here as it would
 			// apply to the whole AppDomain and that may not be desired. A consumer can set this themselves if they
 			// need custom validation behaviour.
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-			logger.Info()?.Log($"CreateHttpClientHandler - SslProtocols: {ServicePointManager.SecurityProtocol}");
+			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
 #endif
 			return httpClientHandler;
 		}

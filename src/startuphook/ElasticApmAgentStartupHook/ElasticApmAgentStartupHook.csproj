@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- TODO make this netstandard 2.0 and ref System.Runtime.Loader -->
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>ElasticApmAgentStartupHook</AssemblyName>
     <IsPackable>false</IsPackable>
     <RootNamespace>ElasticApmStartupHook</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+  </ItemGroup>
 </Project>

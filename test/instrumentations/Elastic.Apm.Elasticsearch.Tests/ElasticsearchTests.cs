@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.Docker;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using Elasticsearch.Net;
 using FluentAssertions;

@@ -8,11 +8,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests;
 
@@ -21,8 +24,9 @@ namespace Elastic.Apm.AspNetCore.Tests;
 /// </summary>
 public abstract class MultiApplicationTestBase : IAsyncLifetime
 {
-	internal readonly MockPayloadSender _payloadSender1 = new();
-	internal readonly MockPayloadSender _payloadSender2 = new();
+	private readonly ITestOutputHelper _output;
+	internal MockPayloadSender _payloadSender1;
+	internal MockPayloadSender _payloadSender2;
 	private readonly CancellationTokenSource _cancellationTokenSource = new();
 	internal ApmAgent _agent1;
 	internal ApmAgent _agent2;
@@ -30,12 +34,18 @@ public abstract class MultiApplicationTestBase : IAsyncLifetime
 	private Task _taskForApp1;
 	private Task _taskForApp2;
 
+	public MultiApplicationTestBase(ITestOutputHelper output) => _output = output;
+
 	public Task InitializeAsync()
 	{
-		_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1,
-			configuration: new MockConfiguration(exitSpanMinDuration: "0")));
-		_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2,
-			configuration: new MockConfiguration(exitSpanMinDuration: "0")));
+		var logger1 = new XUnitLogger(LogLevel.Trace, _output, "Sender 1");
+		_payloadSender1 = new MockPayloadSender(logger1);
+		var logger2 = new XUnitLogger(LogLevel.Trace, _output, "Sender 2");
+		_payloadSender2 = new MockPayloadSender(logger2);
+
+		var configuration = new MockConfiguration(exitSpanMinDuration: "0", flushInterval: "3s");
+		_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1, configuration: configuration, logger: logger1));
+		_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2, configuration: configuration, logger: logger2));
 
 		_taskForApp1 = Program.CreateWebHostBuilder(null)
 			.ConfigureServices(services =>

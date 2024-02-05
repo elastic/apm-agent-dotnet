@@ -109,8 +109,14 @@ namespace Elastic.Apm
 			if (_isDisposed)
 				throw new ObjectDisposedException(nameof(CompositeDisposable));
 
-			_disposables.Add(disposable);
-			return this;
+			lock (_lock)
+			{
+				if (_isDisposed)
+					throw new ObjectDisposedException(nameof(CompositeDisposable));
+
+				_disposables.Add(disposable);
+				return this;
+			}
 		}
 
 		public void Dispose()

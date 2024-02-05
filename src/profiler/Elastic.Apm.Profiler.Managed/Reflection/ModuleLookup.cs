@@ -22,14 +22,16 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 		/// </summary>
 		private const int MaxFailures = 50;
 
-		private static ManualResetEventSlim _populationResetEvent = new ManualResetEventSlim(initialState: true);
-		private static ConcurrentDictionary<Guid, Module> _modules = new ConcurrentDictionary<Guid, Module>();
+		private static readonly ManualResetEventSlim _populationResetEvent = new(initialState: true);
+		private static readonly ConcurrentDictionary<Guid, Module> _modules = new();
 
-		private static int _failures;
-		private static bool _shortCircuitLogicHasLogged = false;
+		private static long _failures;
 
 		public static Module GetByPointer(long moduleVersionPointer) =>
 			Get(Marshal.PtrToStructure<Guid>(new IntPtr(moduleVersionPointer)));
+
+		private static readonly object _logLock = new();
+		private static bool _shortCircuitLogicHasLogged = false;
 
 		public static Module Get(Guid moduleVersionId)
 		{
@@ -44,15 +46,20 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 			if (_modules.TryGetValue(moduleVersionId, out value))
 				return value;
 
-			if (_failures >= MaxFailures)
+			var failures = Interlocked.Read(ref _failures);
+			if (failures >= MaxFailures)
 			{
-				// For some unforeseeable reason we have failed on a lot of AppDomain lookups
-				if (!_shortCircuitLogicHasLogged)
+				if (_shortCircuitLogicHasLogged)
+					return null;
+				lock (_logLock)
 				{
+					if (_shortCircuitLogicHasLogged)
+						return null;
 					Logger.Log(LogLevel.Warn,
 						"Elastic APM is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
-				}
+					_shortCircuitLogicHasLogged = true;
 
+				}
 				return null;
 			}
 
@@ -65,7 +72,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 			}
 			catch (Exception ex)
 			{
-				_failures++;
+				Interlocked.Increment(ref _failures);
 				Logger.Log(LogLevel.Error, ex, "Error when populating modules.");
 			}
 			finally

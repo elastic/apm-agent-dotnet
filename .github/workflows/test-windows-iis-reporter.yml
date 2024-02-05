@@ -12,12 +12,17 @@ jobs:
   report:
     runs-on: ubuntu-latest
     name: IIS Test Summary
+    # disable IIS on CI for now.
+    # Run locally and started failing randomly on github actions
+    # Could be because of plethora of reasons including no disk space
+    # Requires longer investigation
+    if: ${{ false }}
     steps:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
         with:
           artifact: test-results-iis       # artifact name
-          name: IIS Tests Summary              # Name of the check run which will be created
-          path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
+          name: IIS Tests Summary          # Name of the check run which will be created
+          path: "junit-*.xml"              # Path to test results (inside artifact .zip)
           reporter: java-junit             # Format of test results
           list-suites: 'failed'
           list-tests: 'failed'

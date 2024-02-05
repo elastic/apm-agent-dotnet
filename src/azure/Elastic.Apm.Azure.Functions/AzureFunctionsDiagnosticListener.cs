@@ -27,7 +27,7 @@ internal class AzureFunctionsDiagnosticListener : DiagnosticListenerBase
 
 	protected override void HandleOnNext(KeyValuePair<string, object> kv)
 	{
-		Context.Logger.Trace()?.Log($"'{nameof(AzureFunctionsDiagnosticListener)}.{nameof(HandleOnNext)}': {kv.Key}");
+		Context.Logger.Trace()?.Log($"'{nameof(AzureFunctionsDiagnosticListener)}.{nameof(HandleOnNext)}': {{DiagnosticsEventName}}", kv.Key);
 		if (kv.Key == "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start")
 			HandleRequestInStart(kv.Value as DefaultHttpContext);
 		else if (kv.Key == "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop")
