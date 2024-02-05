@@ -20,6 +20,8 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		private const string SoapActionHeaderName = "SOAPAction";
 		private const string ContentTypeHeaderName = "Content-Type";
 		private const string SoapAction12ContentType = "application/soap+xml";
+		private const int MaxRequestBodySizeInBytesToCapture = 1024 * 10;
+		private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Create(MaxRequestBodySizeInBytesToCapture, 50);
 
 		/// <summary>
 		/// Try to extract a Soap 1.1 or Soap 1.2 action from the request.
@@ -102,20 +104,25 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 
 		internal static string GetSoap12ActionFromInputStream(IApmLogger logger, Stream stream)
 		{
-			var shared = ArrayPool<byte>.Shared;
-			var bytes = shared.Rent((int)stream.Length);
+			var bytes = ArrayPool.Rent((int)stream.Length);
 			try
 			{
+				int bytesToCapture;
+				if (stream.Length <= MaxRequestBodySizeInBytesToCapture)
+					bytesToCapture = (int)stream.Length;
+				else
+				{
+					bytesToCapture = MaxRequestBodySizeInBytesToCapture;
+					logger.Info()
+						?.Log(
+							$"SOAP request body exceeds {MaxRequestBodySizeInBytesToCapture} bytes - only capturing data up to {MaxRequestBodySizeInBytesToCapture} bytes.");
+				}
+
 				stream.Position = 0;
-				var _ = stream.Read(bytes, 0, bytes.Length);
+				var _ = stream.Read(bytes, 0, bytesToCapture);
 				stream.Position = 0;
 
-				var settings = new XmlReaderSettings
-				{
-					IgnoreProcessingInstructions = true,
-					IgnoreComments = true,
-					IgnoreWhitespace = true
-				};
+				var settings = new XmlReaderSettings { IgnoreProcessingInstructions = true, IgnoreComments = true, IgnoreWhitespace = true };
 				using var streamReader = new StreamReader(new MemoryStream(bytes));
 				using var reader = XmlReader.Create(streamReader, settings);
 				reader.MoveToContent();
@@ -140,7 +147,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 			}
 			finally
 			{
-				shared.Return(bytes);
+				ArrayPool.Return(bytes);
 			}
 			return null;
 		}
