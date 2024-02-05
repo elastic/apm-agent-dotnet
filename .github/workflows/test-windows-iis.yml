@@ -78,9 +78,13 @@ jobs:
       shell: cmd
       run: |
         REM enable permissions for the Application Pool Identity group
+        icacls C:\Windows\Temp /grant "IIS_IUSRS:(OI)(CI)F" /T
+        icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IIS_IUSRS:(OI)(CI)F" /T
         icacls %cd% /t /q /grant "IIS_IUSRS:(OI)(CI)(IO)(RX)"
         REM enable permissions for the anonymous access group
         icacls %cd% /t /q /grant "IUSR:(OI)(CI)(IO)(RX)"
+        icacls C:\Windows\Temp /grant "IUSR:(OI)(CI)F" /T
+        icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IUSR:(OI)(CI)F" /T
     
     - name: Run tests
       shell: cmd
