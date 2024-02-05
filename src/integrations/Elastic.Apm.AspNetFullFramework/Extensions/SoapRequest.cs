@@ -104,19 +104,22 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 
 		internal static string GetSoap12ActionFromInputStream(IApmLogger logger, Stream stream)
 		{
-			if (stream.Length > MaxRequestBodySizeInBytesToCapture)
-			{
-				logger.Info()
-					?.Log(
-						$"SOAP request body exceeds {MaxRequestBodySizeInBytesToCapture} bytes - skipping request body capturing to limit memory usage");
-				return null;
-			}
-
 			var bytes = ArrayPool.Rent((int)stream.Length);
 			try
 			{
+				int bytesToCapture;
+				if (stream.Length <= MaxRequestBodySizeInBytesToCapture)
+					bytesToCapture = (int)stream.Length;
+				else
+				{
+					bytesToCapture = MaxRequestBodySizeInBytesToCapture;
+					logger.Info()
+						?.Log(
+							$"SOAP request body exceeds {MaxRequestBodySizeInBytesToCapture} bytes - only capturing data up to {MaxRequestBodySizeInBytesToCapture} bytes.");
+				}
+
 				stream.Position = 0;
-				var _ = stream.Read(bytes, 0, bytes.Length);
+				var _ = stream.Read(bytes, 0, bytesToCapture);
 				stream.Position = 0;
 
 				var settings = new XmlReaderSettings { IgnoreProcessingInstructions = true, IgnoreComments = true, IgnoreWhitespace = true };
