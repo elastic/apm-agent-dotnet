@@ -559,23 +559,27 @@ internal class Transaction : ITransaction
 	{
 		//lock the lazy initialization of the dictionary
 		if (_droppedSpanStatsMap == null)
+		{
 			lock (_lock)
 				_droppedSpanStatsMap ??= new ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats>();
+		}
 
 		lock (_lock)
 		{
+			if (_droppedSpanStatsMap.Count >= 128)
+				return;
 			//AddOrUpdate callbacks can run multiple times so still wrapping this in a lock
 			var key = new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome);
 			_droppedSpanStatsMap.AddOrUpdate(key,
-				 key => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration),
-				 (_, value) =>
+				 _ => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration),
+				 (_, stats) =>
 				 {
-					 value.Duration ??=
+					 stats.Duration ??=
 						 new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
-					 value.Duration.Count++;
-					 value.Duration.Sum.UsRaw += duration;
-					 return value;
+					 stats.Duration.Count++;
+					 stats.Duration.Sum.UsRaw += duration;
+					 return stats;
 				 });
 		}
 	}
