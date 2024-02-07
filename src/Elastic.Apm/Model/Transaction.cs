@@ -569,15 +569,12 @@ internal class Transaction : ITransaction
 				 key => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration),
 				 (_, value) =>
 				 {
-					 lock (_lock)
-					 {
-						  value.Duration ??=
-							   new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
+					value.Duration ??=
+						new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
-						  value.Duration.Count++;
-						  value.Duration.Sum.UsRaw += duration;
-						  return value;
-					 }
+					value.Duration.Count++;
+					value.Duration.Sum.UsRaw += duration;
+					return value;
 				 });
 		}
 	}
