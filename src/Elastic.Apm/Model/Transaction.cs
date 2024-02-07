@@ -559,7 +559,8 @@ internal class Transaction : ITransaction
 	{
 		//lock the lazy initialization of the dictionary
 		if (_droppedSpanStatsMap == null)
-			lock (_lock) _droppedSpanStatsMap ??= new ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats>();
+			lock (_lock)
+				_droppedSpanStatsMap ??= new ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats>();
 
 		lock (_lock)
 		{
@@ -569,12 +570,12 @@ internal class Transaction : ITransaction
 				 key => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration),
 				 (_, value) =>
 				 {
-					value.Duration ??=
-						new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
+					 value.Duration ??=
+						 new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
-					value.Duration.Count++;
-					value.Duration.Sum.UsRaw += duration;
-					return value;
+					 value.Duration.Count++;
+					 value.Duration.Sum.UsRaw += duration;
+					 return value;
 				 });
 		}
 	}
