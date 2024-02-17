@@ -9,6 +9,9 @@ on:
 env:
   MY_GITHUB_TOKEN: ${{ secrets.APM_TECH_USER_TOKEN }}
 
+permissions:
+  contents: read
+
 jobs:
   assign_one_project:
     runs-on: ubuntu-latest
