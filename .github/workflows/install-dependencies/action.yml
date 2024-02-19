@@ -19,7 +19,7 @@ runs:
     - name: Rustup
       if: "${{ inputs.rust == 'true' }}"
       shell: bash
-      run: rustup default 1.67.1
+      run: rustup default 1.69.0
 
     # - name: Cargo make
     #   if: "${{ inputs.rust == 'true' }}"
