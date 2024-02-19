@@ -357,7 +357,7 @@ internal class Transaction : ITransaction
 	/// <summary>
 	/// Internal dictionary to keep track of and look up dropped span stats.
 	/// </summary>
-	private Dictionary<DroppedSpanStatsKey, DroppedSpanStats> _droppedSpanStatsMap;
+	private ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats> _droppedSpanStatsMap;
 
 	private bool _isEnded;
 
@@ -552,38 +552,35 @@ internal class Transaction : ITransaction
 		return activity;
 	}
 
+	private readonly object _lock = new();
 	internal void UpdateDroppedSpanStats(string serviceTargetType, string serviceTargetName, string destinationServiceResource, Outcome outcome,
 		double duration
 	)
 	{
+		//lock the lazy initialization of the dictionary
 		if (_droppedSpanStatsMap == null)
 		{
-			_droppedSpanStatsMap = new Dictionary<DroppedSpanStatsKey, DroppedSpanStats>
-			{
-				{
-					new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
-					new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration)
-				}
-			};
+			lock (_lock)
+				_droppedSpanStatsMap ??= new ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats>();
 		}
-		else
+
+		lock (_lock)
 		{
 			if (_droppedSpanStatsMap.Count >= 128)
 				return;
+			//AddOrUpdate callbacks can run multiple times so still wrapping this in a lock
+			var key = new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome);
+			_droppedSpanStatsMap.AddOrUpdate(key,
+				 _ => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration),
+				 (_, stats) =>
+				 {
+					 stats.Duration ??=
+						 new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
-			if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome), out var item))
-			{
-				item.Duration ??=
-					new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
-
-				item.Duration.Count++;
-				item.Duration.Sum.UsRaw += duration;
-			}
-			else
-			{
-				_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
-					new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration));
-			}
+					 stats.Duration.Count++;
+					 stats.Duration.Sum.UsRaw += duration;
+					 return stats;
+				 });
 		}
 	}
 
