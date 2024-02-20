@@ -34,7 +34,7 @@ to the `SanitizeFieldNames` configuration. Response headers are now correctly sa
 ===== Features
 
 {pull}2290[#2290] Fully implement the sanitization spec for request/response headers
-{pull}2272[#2272] Include process information in metadata stanza when emiting events to apm-server
+{pull}2272[#2272] Include process information in metadata stanza when emitting events to apm-server
 {pull}2264[#2264] Switch to Licence expression rather than file
 
 ===== Bug fixes
