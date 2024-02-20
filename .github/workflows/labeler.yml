@@ -6,7 +6,7 @@ on:
     types: [opened]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   triage:
