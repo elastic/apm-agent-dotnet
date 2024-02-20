@@ -119,6 +119,13 @@ namespace SampleAspNetCoreApp.Controllers
 			return View();
 		}
 
+		public IActionResult CookiePage()
+		{
+			HttpContext.Response.Cookies.Append("MySecureCookie", "SHOULD BE REDACTED!!");
+			HttpContext.Response.Cookies.Append("SafeCookie", "123");
+			return View();
+		}
+
 		public string TraceId() => Activity.Current.TraceId.ToString();
 
 		public async Task<IActionResult> DistributedTracingMiniSample()
