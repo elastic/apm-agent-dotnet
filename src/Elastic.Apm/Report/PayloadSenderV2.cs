@@ -134,12 +134,16 @@ namespace Elastic.Apm.Report
 			IApmLogger logger
 		)
 		{
-			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
-			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
+			transactionFilters.Add(TransactionIgnoreUrlsFilter.Filter);
+			transactionFilters.Add(RequestCookieExtractionFilter.Filter);
+			transactionFilters.Add(HeaderDictionarySanitizerFilter.Filter);
+
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
-			errorFilters.Add(new ErrorContextSanitizerFilter().Filter);
-			errorFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
+
+			errorFilters.Add(ErrorContextSanitizerFilter.Filter);
+			errorFilters.Add(RequestCookieExtractionFilter.Filter);
+			errorFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 		}
 
 		private bool _getApmServerVersion;

@@ -458,5 +458,37 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Body.Should()
 				.Be(shouldBeSanitized ? $"Input1=test1&{formName}=[REDACTED]" : $"Input1=test1&{formName}=test2");
 		}
+
+		[Fact]
+		public async Task SanitizesCookieHeaders()
+		{
+			CreateAgent("set-cookie, mysecurecookie");
+
+			await _client.GetAsync("/Home/CookiePage");
+
+			_capturedPayload.WaitForTransactions();
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Response.Should().NotBeNull();
+
+			_capturedPayload.FirstTransaction.Context.Response.Headers["Set-Cookie"].Should().Be(Apm.Consts.Redacted);
+
+			_capturedPayload.Clear();
+
+			// On this second request, the client should include the `Cookie` header on the request, containing our two cookies
+			await _client.GetAsync("/Home/CookiePage");
+
+			_capturedPayload.WaitForTransactions();
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Cookies.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Response.Should().NotBeNull();
+
+			_capturedPayload.FirstTransaction.Context.Request.Headers["Cookie"].Should().Be(Apm.Consts.Redacted);
+			_capturedPayload.FirstTransaction.Context.Request.Cookies["MySecureCookie"].Should().Be(Apm.Consts.Redacted);
+			_capturedPayload.FirstTransaction.Context.Request.Cookies["SafeCookie"].Should().Be("123");
+		}
 	}
 }

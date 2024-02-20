@@ -24,7 +24,7 @@ Prerequisites to execute tests are:
 
    Specific features such as HTTP Errors **must** be enabled. Here's an example set of IIS 10 on Windows 10 features that work:
   
-   ![Enabled Windows features for IIS](../../docs/images/iis_windows_features.png)
+   ![Enabled Windows features for IIS](../../../docs/images/iis_windows_features.png)
 
 3. Process running the tests has environment variable `ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED` set to `true`. There is no need to set this environment variable globally - for example, IIS worker process, running sample application used by the tests, does not depend on this environment variable.
 4. Run tests as a user with local administrator permissions (a member in local `Administrators` group).
