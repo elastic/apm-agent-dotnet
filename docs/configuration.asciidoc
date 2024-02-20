@@ -448,22 +448,30 @@ the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elastic APM.
-This config accepts a list of wildcard patterns of field names which should be sanitized.
-These apply to HTTP headers and `application/x-www-form-urlencoded` data.
+Sometimes, sanitizing, i.e., redacting sensitive data sent to Elastic APM, is necessary.
+This configuration accepts a comma-separated list of wildcard patterns of field names that should be sanitized.
+These apply to HTTP headers for requests and responses, cookies and `application/x-www-form-urlencoded` data.
 
-IMPORTANT: This setting only applies to values that are captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn't apply, and the agent won't sanitize the body.
+IMPORTANT: This setting only applies to values captured automatically by the agent. If you capture the request 
+body manually with the public API, this configuration doesn't apply, and the agent won't sanitize the body.
 
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
 Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 
-Please be sure to review the data captured by Elastic APM carefully to make sure it does not contain sensitive information.
-If you do find sensitive data in your {es} index, add an additional entry to this list.
-Setting a value here will overwrite the defaults, so be sure to include the default entries as well.
+Please review the data captured by Elastic APM carefully to ensure it does not contain sensitive information.
+If you find sensitive data in your {es} index, add an additional entry to this list.
+Setting a value here will *overwrite* the defaults, so be sure to include the default entries as well.
 
 NOTE: Sensitive information should not be sent in the query string. Data in the query string is considered non-sensitive.
 See https://www.owasp.org/index.php/Information_exposure_through_query_strings_in_url[owasp.org] for more information.
+
+*`Cookie` header sanitization:*
+
+The `Cookie` header is automatically redacted for incoming HTTP request transactions. Each name-value pair from the 
+Cookie header is parsed by the agent and sent to the APM Server. Before the name-value pairs are recorded, they are 
+sanitized based on the `SanitizeFieldNames` configuration. Cookies with sensitive data in 
+their value can be redacted by adding the cookie's name to the comma-separated list.
 
 [options="header"]
 |============

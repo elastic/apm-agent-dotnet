@@ -245,3 +245,21 @@ If this is too much in your environment, consider disabling stack trace capturin
 
 - To disable stack trace capturing for spans, but continue to capture stack traces for errors, set the <<config-span-stack-trace-min-duration>> to `-1` and leave the <<config-stack-trace-limit>> on its default.
 - To disable stack trace capturing entirely –which in most applications reduces the agent overhead dramatically– set <<config-stack-trace-limit>> to `0`.
+
+[float]
+[[iisexpress-classic-pipeline]]
+=== The ElasticApmModule does not load or capture transactions and there are no agent logs generated on IISExpress 
+
+When debugging applications using Visual Studio and IISExpress, the same requirement to use the `Integrated` managed 
+pipeline mode exists. Select your web application project in the solution explorer and press F4 to load the properties
+window. If the managed pipeline mode is set to classic, the ElasticApmModule will not load.
+
+For example:
+
+image::./images/classic-pipeline.png[Classic Managed Pipeline Mode in Properties]
+
+Should be changed to:
+
+image::./images/integrated-pipeline.png[Integrated Managed Pipeline Mode in Properties]
+
+You may need to restart Visual Studio for these changes to fully apply.
