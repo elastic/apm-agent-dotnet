@@ -23,6 +23,30 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.26.0]]
+==== 1.26.0
+
+This release introduces more thorough sanitization of request/response cookies to align with the APM spec. 
+The incoming `Cookie` is now redacted by default. The cookies it contains are extracted and sanitized according 
+to the `SanitizeFieldNames` configuration. Response headers are now correctly sanitized, including the 
+`Set-Cookie` header. This is a behaviour change!
+
+===== Features
+
+{pull}2290[#2290] Fully implement the sanitization spec for request/response headers
+{pull}2272[#2272] Include process information in metadata stanza when emiting events to apm-server
+{pull}2264[#2264] Switch to Licence expression rather than file
+
+===== Bug fixes
+
+{pull}2267[#2267] Cleanup of packages thanks to Framework reference
+{pull}2274[#2274] Limit memory usage when capturing SOAP request bodies
+{pull}2276[#2276] Address a few synchronization issues in the codebase
+{pull}2277[#2277] Truncate unknown keys logging from central config parser
+{pull}2278[#2278] Ensure exposed default constants are readonly
+{pull}2283[#2283] Fix duplicate key errors on dropped span stats update
+{pull}2279[#2279] Remove RegexConverter, not used in serialization from and to apm-server
+{pull}2280[#2280] Cleanup some dead code and one instance of null propagation in tooling NOT userfacing code
 
 
 [[release-notes-1.25.3]]
