@@ -29,7 +29,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 		}
 
 		[DockerTheory]
-		[InlineData("net7.0")]
+		[InlineData("net8.0")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);
