@@ -82,37 +82,6 @@ named my_log_file.log:
 ----
 <1> Define listeners under a source with name `"Elastic.Apm"` to capture agent logs
 
-In rare situations, a critical exception may occur before the `IApmLogger` is available. To avoid crashing the application, such exceptions 
-will be caught and the module code will emit a Trace message to any available listeners in such situations. If you are missing 
-application traces after registering the `ElasticApmModule`, you can temporarily enable a listener to catch all other trace events.
-
-[source,xml]
-----
-<configuration>
-  <!-- other sections .... -->
-  <system.diagnostics>
-    <trace autoflush="true">
-      <listeners>
-        <add name="everything"
-          type="System.Diagnostics.TextWriterTraceListener"
-          initializeData="everything_logfile.log" /> <1>
-        <remove name="Default" />
-      </listeners>
-    </trace>
-    <sources>
-      <source name="Elastic.Apm">
-      <listeners>
-        <add name="file" 
-          type="System.Diagnostics.TextWriterTraceListener" 
-          initializeData="my_log_file.log" />
-      </listeners>
-    </source>
-    </sources>
-  </system.diagnostics>
-</configuration>  
-----
-<1> Check the `everything_logfile.log` for any critical exception logs that may indicate a failure to initialize the Agent.
-
 [float]
 [[collect-logs-class-other-logging-systems]]
 ===== Other logging systems
