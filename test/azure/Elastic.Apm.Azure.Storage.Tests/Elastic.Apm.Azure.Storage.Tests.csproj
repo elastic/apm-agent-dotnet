@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <RootNamespace>Elastic.Apm.Azure.Storage.Tests</RootNamespace>
   </PropertyGroup>
@@ -11,7 +11,7 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
     <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.2" />
     <PackageReference Include="Azure.Storage.Files.Shares" Version="12.7.0" />
-    <PackageReference Include="Proc" Version="0.6.2" />
+    <PackageReference Include="Proc" Version="0.8.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   

@@ -4,7 +4,7 @@
     <RabbitMqVersion Condition="'$(RabbitMqVersion)' == ''">6.2.2</RabbitMqVersion>
     <DefineConstants Condition="$(RabbitMqVersion) &gt;= 6.0.0">$(DefineConstants);RABBITMQ_6_0</DefineConstants>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

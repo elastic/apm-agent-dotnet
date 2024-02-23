@@ -3,7 +3,7 @@
     <PropertyGroup>
       <KafkaVersion Condition="'$(KafkaVersion)' == ''">1.4.3</KafkaVersion>
       <OutputType>Exe</OutputType>
-      <TargetFramework>net7.0</TargetFramework>
+      <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>

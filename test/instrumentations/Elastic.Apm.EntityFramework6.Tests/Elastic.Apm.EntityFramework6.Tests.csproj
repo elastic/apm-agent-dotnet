@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;net7.0</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0</TargetFrameworks>
     <RootNamespace>Elastic.Apm.EntityFramework6.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFramework6.Tests</AssemblyName>
     
@@ -27,10 +27,10 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <PackageReference Include="EntityFramework" Version="6.2.0" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net461' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
     <PackageReference Include="EntityFramework" Version="6.3.0" />
   </ItemGroup>
   <ItemGroup>

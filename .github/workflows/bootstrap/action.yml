@@ -8,9 +8,9 @@ inputs:
     required: false
     default: "false"
   azure:
-      description: 'Install azure functions tool chain ("true" or "false")'
-      required: false
-      default: "false"
+    description: 'Install azure functions tool chain ("true" or "false")'
+    required: false
+    default: "false"
 outputs:
   agent-version:
     description: "The current agent version number"
@@ -35,17 +35,15 @@ runs:
         restore-keys: |
           ${{ runner.os }}-nuget
           
-    # Install .NET version as mandated by global.json
-    #- uses: actions/setup-dotnet@v4
-    #  with:
-    #      global-json-file: global.json
+    # Install latest .NET SDKs for supported LTS versions
+    - name: Setup dotnet
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          '6.0.x'
+          '8.0.x'
+        dotnet-quality: 'ga'
 
-    -   name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            6.0.100
-            7.0.100 
     - id: dotnet
       shell: bash
       run: |
@@ -56,14 +54,13 @@ runs:
         echo "AGENT_VERSION=${AGENT_VERSION}" >> $GITHUB_ENV
         echo "agent-version=${AGENT_VERSION}" >> $GITHUB_OUTPUT
         echo "major-version=$(echo ${AGENT_VERSION} | cut -d"." -f1)" >> $GITHUB_OUTPUT
-  
-      
+
     # Setup git config
     - uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
-    
+
     # install common dependencies
     - name: Install common dependencies
       uses: ./.github/workflows/install-dependencies
       with:
-          rust: '${{ inputs.rust }}'
-          azure: '${{ inputs.azure }}'
+        rust: '${{ inputs.rust }}'
+        azure: '${{ inputs.azure }}'

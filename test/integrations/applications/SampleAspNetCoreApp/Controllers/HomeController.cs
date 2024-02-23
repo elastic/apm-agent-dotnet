@@ -115,7 +115,7 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult SimplePage()
 		{
-			Response.Headers.Add("X-Additional-Header", "For-Elastic-Apm-Agent");
+			Response.Headers.Append("X-Additional-Header", "For-Elastic-Apm-Agent");
 			return View();
 		}
 
