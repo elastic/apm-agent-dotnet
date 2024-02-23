@@ -6,7 +6,8 @@ on:
     types: [opened]
 
 permissions:
-  contents: write
+  contents: read
+  issues: write
 
 jobs:
   triage:
@@ -45,4 +46,3 @@ jobs:
           It may take some time before we review a PR, so even if you don’t see activity for some time, it **does not** mean that we have forgotten about it. 
           
           Every once in a while we go through a process of prioritization, after which we are focussing on the tasks that were planned for the upcoming [milestone](https://github.com/elastic/apm-agent-dotnet/milestones). The prioritization status is typically reflected through the PR labels. It could be pending triage, a candidate for a future milestone, or have a target milestone set to it.
-          
