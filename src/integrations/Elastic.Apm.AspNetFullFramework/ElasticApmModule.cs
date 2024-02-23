@@ -59,12 +59,9 @@ namespace Elastic.Apm.AspNetFullFramework
 		/// <inheritdoc />
 		public void Init(HttpApplication application)
 		{
-			// We create the logger as early as possible so we can log failures to it.
-			AssignScopedLogger();
-
-			// If the preceeding code to initialize and assign a logger failed, this line will be omitted from the written logs.
-			// Note the null change on the _logger field.
-			_logger?.Trace()?.Log($"{nameof(ElasticApmModule)}.{nameof(Init)} was invoked and called {nameof(AttemptAgentInitialization)}.");
+			// This is not guarded inside a try/catch as it should not be possible for this to throw an exception.
+			_logger ??= (AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(null)).Scoped(_dbgInstanceName);
+			_logger.Trace()?.Log($"{nameof(ElasticApmModule)}.{nameof(Init)} was invoked and called {nameof(AttemptAgentInitialization)}.");
 
 			try
 			{
@@ -123,43 +120,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				const string message = $"Exception thrown by {nameof(ElasticApmModule)}.{nameof(Init)}.";
-
-				// Prefer logging to the IApmLogger if that was able to be assigned.
-				if (_logger is not null)
-				{
-					_logger.Critical()?.LogException(ex, message);
-					return;
-				}
-
-				// Fallback to writing to any trace listeners.
-				WriteTraceLog(ex, message);
-			}
-		}
-
-		private void WriteTraceLog(Exception ex, string message)
-		{
-			const string linePrefix = "Elastic APM .NET Agent: ";
-
-			Trace.WriteLine($"{linePrefix}[CRITICAL] {message}"
-				+ Environment.NewLine + linePrefix + $"+-> Exception: {ex.GetType().FullName}: {ex.Message}"
-				+ Environment.NewLine + TextUtils.PrefixEveryLine(ex.StackTrace, linePrefix + " ".Repeat(4)));
-		}
-
-		private void AssignScopedLogger()
-		{
-			try
-			{
-				var logger = AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(null);
-				_logger = logger.Scoped(_dbgInstanceName);
-			}
-			catch (Exception ex)
-			{
-				const string message = $"Exception thrown by {nameof(ElasticApmModule)}.{nameof(AssignScopedLogger)}.";
-
-				// As we failed to create a trace logger, something critical has occurred.
-				// We won't be able to log to the Elastic APM TraceSource so we write to the basic trace output (any trace listeners) instead.
-				WriteTraceLog(ex, message);
+				_logger.Critical()?.LogException(ex, $"Exception thrown by {nameof(ElasticApmModule)}.{nameof(Init)}.");
 			}
 		}
 
