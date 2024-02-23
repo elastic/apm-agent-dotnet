@@ -9,7 +9,9 @@ on:
       - completed
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
+  checks: write
 
 jobs:
   report:
