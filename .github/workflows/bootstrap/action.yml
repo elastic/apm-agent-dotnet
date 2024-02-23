@@ -37,7 +37,7 @@ runs:
           
     # Install latest .NET SDKs for supported LTS versions
     - name: Setup dotnet
-    - uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
           '6.0.x'
