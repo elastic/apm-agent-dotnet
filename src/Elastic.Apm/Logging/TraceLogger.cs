@@ -64,7 +64,7 @@ namespace Elastic.Apm.Logging
 				if (exception == null)
 					return;
 
-				builder.Append($"+-> {caption}: ")
+				builder.Append($" +-> {caption}: ")
 					.Append(exception.GetType().FullName)
 					.Append(": ")
 					.AppendLine(exception.Message)

@@ -59,6 +59,13 @@ namespace Elastic.Apm.AspNetFullFramework
 		/// <inheritdoc />
 		public void Init(HttpApplication application)
 		{
+			// We create the logger as early as possible so we can log failures to it.
+			AssignScopedLogger();
+
+			// If the preceeding code to initialize and assign a logger failed, this line will be omitted from the written logs.
+			// Note the null change on the _logger field.
+			_logger?.Trace()?.Log($"{nameof(ElasticApmModule)}.{nameof(Init)} was invoked and called {nameof(AttemptAgentInitialization)}.");
+
 			try
 			{
 				// If we've already attempted initialisation and determined we are not in integrated mode, we can return quickly here.
@@ -68,12 +75,11 @@ namespace Elastic.Apm.AspNetFullFramework
 
 				if (!ApplicationStarted)
 				{
-					AttemptAgentInitialization();
-					_logger.Trace()
-						?.Log($"{nameof(ElasticApmModule)}.{nameof(Init)} was invoked and called {nameof(AttemptAgentInitialization)}.");
+					AttemptAgentInitialization(_logger);
 				}
 				else
 				{
+					// If the app was already started by the time Init was called, we won't yet have a scoped logger to use, so create one.
 					_logger ??= CreateScopedLogger();
 					_logger.Trace()
 						?.Log($"{nameof(ElasticApmModule)}.{nameof(Init)} was invoked by an instance when the Agent has already been initialized. " +
@@ -81,10 +87,15 @@ namespace Elastic.Apm.AspNetFullFramework
 				}
 
 				if (!Agent.Config.Enabled)
+				{
+					_logger.Trace()?.Log("Agent not enabled. Skipping registration of HttpApplication event handlers.");
 					return;
+				}
 
 				_routeDataTemplateGetter = CreateWebApiAttributeRouteTemplateGetter();
 				_routePrecedenceGetter = CreateRoutePrecedenceGetter();
+
+				_logger.Trace()?.Log("Registering to HttpApplication event handlers.");
 
 				application.BeginRequest += OnBeginRequest;
 				application.EndRequest += OnEndRequest;
@@ -92,6 +103,9 @@ namespace Elastic.Apm.AspNetFullFramework
 
 				if (OnExecuteRequestStepMethodInfo != null)
 				{
+					_logger.Trace()
+						?.Log("Registering to HttpApplication.OnExecuteRequestStep.");
+
 					// OnExecuteRequestStep is available starting with 4.7.1
 					try
 					{
@@ -109,15 +123,47 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				const string linePrefix = "Elastic APM .NET Agent: ";
-				Trace.WriteLine($"{linePrefix}[CRITICAL] Exception thrown by {nameof(ElasticApmModule)}.{nameof(Init)}."
-					+ Environment.NewLine + linePrefix + $"+-> Exception: {ex.GetType().FullName}: {ex.Message}"
-					+ Environment.NewLine + TextUtils.PrefixEveryLine(ex.StackTrace, linePrefix + " ".Repeat(4))
-				);
+				const string message = $"Exception thrown by {nameof(ElasticApmModule)}.{nameof(Init)}.";
+
+				// Prefer logging to the IApmLogger if that was able to be assigned.
+				if (_logger is not null)
+				{
+					_logger.Critical()?.LogException(ex, message);
+					return;
+				}
+
+				// Fallback to writing to any trace listeners.
+				WriteTraceLog(ex, message);
 			}
 		}
 
-		private void AttemptAgentInitialization()
+		private void WriteTraceLog(Exception ex, string message)
+		{
+			const string linePrefix = "Elastic APM .NET Agent: ";
+
+			Trace.WriteLine($"{linePrefix}[CRITICAL] {message}"
+				+ Environment.NewLine + linePrefix + $"+-> Exception: {ex.GetType().FullName}: {ex.Message}"
+				+ Environment.NewLine + TextUtils.PrefixEveryLine(ex.StackTrace, linePrefix + " ".Repeat(4)));
+		}
+
+		private void AssignScopedLogger()
+		{
+			try
+			{
+				var logger = AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(null);
+				_logger = logger.Scoped(_dbgInstanceName);
+			}
+			catch (Exception ex)
+			{
+				const string message = $"Exception thrown by {nameof(ElasticApmModule)}.{nameof(AssignScopedLogger)}.";
+
+				// As we failed to create a trace logger, something critical has occurred.
+				// We won't be able to log to the Elastic APM TraceSource so we write to the basic trace output (any trace listeners) instead.
+				WriteTraceLog(ex, message);
+			}
+		}
+
+		private void AttemptAgentInitialization(IApmLogger logger)
 		{
 			// We use a lock here to ensure that if multiple `HttpApplication` instances are created, each calling the `Init` method
 			// on registered module, that we initialise the agent only once. The first instance wins and any concurrent calls to `Init`
@@ -131,7 +177,7 @@ namespace Elastic.Apm.AspNetFullFramework
 					return;
 				}
 
-				var agentComponents = CreateAgentComponents(_dbgInstanceName);
+				var agentComponents = CreateAgentComponents(_dbgInstanceName, logger);
 
 				_logger = agentComponents.Logger.Scoped(_dbgInstanceName);
 				_logger.Trace()?.Log("Initializing singleton Agent.");
@@ -176,9 +222,9 @@ namespace Elastic.Apm.AspNetFullFramework
 		/// <returns>a new instance of <see cref="AgentComponents"/></returns>
 		public static AgentComponents CreateAgentComponents() => CreateAgentComponents($"{nameof(ElasticApmModule)}.#0");
 
-		internal static AgentComponents CreateAgentComponents(string debugName)
+		internal static AgentComponents CreateAgentComponents(string debugName, IApmLogger apmLogger = null)
 		{
-			var logger = AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(null);
+			var logger = apmLogger ?? AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(null);
 
 			var config = FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(logger)
 				?? new ElasticApmModuleConfiguration(logger);
