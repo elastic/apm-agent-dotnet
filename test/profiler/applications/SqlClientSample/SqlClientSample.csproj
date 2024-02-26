@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <SqlVersion Condition="'$(SqlVersion)'==''">4.7.0</SqlVersion>
+    <SqlVersion Condition="'$(SqlVersion)'==''">4.8.6</SqlVersion>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
   </PropertyGroup>
