@@ -11,7 +11,7 @@ open ProcNet.Std
 module Tooling = 
     type ExecResult = { ExitCode: int; Output: LineOut seq;}
     
-    let private defaultTimeout = TimeSpan.FromMinutes 5.
+    let private defaultTimeout = TimeSpan.FromMinutes 10.
     
     type NoopWriter () =
         interface IConsoleOutWriter with
