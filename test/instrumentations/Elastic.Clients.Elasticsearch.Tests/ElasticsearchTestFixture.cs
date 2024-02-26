@@ -17,29 +17,29 @@ public sealed class ElasticsearchTestFixture(IMessageSink sink) : IAsyncLifetime
 {
 	private readonly IMessageSink _sink = sink;
 
-	public ElasticsearchContainer Container { get; } = new ElasticsearchBuilder().Build();
+public ElasticsearchContainer Container { get; } = new ElasticsearchBuilder().Build();
 
-	public ElasticsearchClient? Client { get; private set; }
+public ElasticsearchClient? Client { get; private set; }
 
-	public async Task InitializeAsync()
-	{
-		await Container.StartAsync();
+public async Task InitializeAsync()
+{
+	await Container.StartAsync();
 
-		var (stdOut, stdErr) = await Container.GetLogsAsync();
+	var (stdOut, stdErr) = await Container.GetLogsAsync();
 
-		_sink.OnMessage(new DiagnosticMessage(stdOut));
-		_sink.OnMessage(new DiagnosticMessage(stdErr));
+	_sink.OnMessage(new DiagnosticMessage(stdOut));
+	_sink.OnMessage(new DiagnosticMessage(stdErr));
 
-		var settings = new ElasticsearchClientSettings(new Uri(Container.GetConnectionString()));
-		settings.ServerCertificateValidationCallback(CertificateValidations.AllowAll);
+	var settings = new ElasticsearchClientSettings(new Uri(Container.GetConnectionString()));
+	settings.ServerCertificateValidationCallback(CertificateValidations.AllowAll);
 
-		Client = new ElasticsearchClient(settings);
-		if (Client == null)
-			throw new Exception("`new ElasticsearchClient(settings)` returned `null`");
+	Client = new ElasticsearchClient(settings);
+	if (Client == null)
+		throw new Exception("`new ElasticsearchClient(settings)` returned `null`");
 
-		//Increase Elasticsearch high disk watermarks, Github Actions container typically has around
-		//~7GB free (8%) of the available space.
-		var response = await Client.Transport.RequestAsync<StringResponse>(HttpMethod.PUT, "_cluster/settings", PostData.String(@"{
+	//Increase Elasticsearch high disk watermarks, Github Actions container typically has around
+	//~7GB free (8%) of the available space.
+	var response = await Client.Transport.RequestAsync<StringResponse>(HttpMethod.PUT, "_cluster/settings", PostData.String(@"{
 			""persistent"": {
 				""cluster.routing.allocation.disk.watermark.low"": ""90%"",
 				""cluster.routing.allocation.disk.watermark.low.max_headroom"": ""100GB"",
@@ -52,16 +52,16 @@ public sealed class ElasticsearchTestFixture(IMessageSink sink) : IAsyncLifetime
 			}
 		}"));
 
-		if (!response.ApiCallDetails.HasSuccessfulStatusCode)
-			throw new Exception(response.ToString());
-	}
+	if (!response.ApiCallDetails.HasSuccessfulStatusCode)
+		throw new Exception(response.ToString());
+}
 
-	async Task IAsyncLifetime.DisposeAsync()
+async Task IAsyncLifetime.DisposeAsync()
+{
+	if (Container.State == TestcontainersStates.Running)
 	{
-		if (Container.State == TestcontainersStates.Running)
-		{
-			await Container.StopAsync();
-			await Container.DisposeAsync();
-		}
+		await Container.StopAsync();
+		await Container.DisposeAsync();
 	}
+}
 }
