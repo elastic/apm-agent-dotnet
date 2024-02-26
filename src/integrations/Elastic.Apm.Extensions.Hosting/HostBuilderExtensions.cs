@@ -110,8 +110,12 @@ namespace Elastic.Apm.Extensions.Hosting
 			var aspNetCoreVersion = GetAssemblyVersion("Microsoft.AspNetCore");
 			var hostingVersion = GetAssemblyVersion("Microsoft.Extensions.Hosting");
 			var version = aspNetCoreVersion ?? hostingVersion ?? "n/a";
+			var isCore = false;
 
-			service.Framework = new Framework { Name = aspNetCoreVersion != null ? "ASP.NET Core" : ".NET Core", Version = version };
+			if (aspNetCoreVersion is null && hostingVersion is not null && Version.TryParse(hostingVersion, out var v))
+				isCore = v.Major < 5;
+
+			service.Framework = new Framework { Name = aspNetCoreVersion != null ? "ASP.NET Core" : isCore ? ".NET Core" : ".NET", Version = version };
 			service.Language = new Language { Name = "C#" }; //TODO
 		}
 
