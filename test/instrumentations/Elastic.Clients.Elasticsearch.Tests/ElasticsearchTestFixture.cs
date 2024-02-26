@@ -13,20 +13,13 @@ using HttpMethod = Elastic.Transport.HttpMethod;
 
 namespace Elastic.Clients.Elasticsearch.Tests;
 
-public sealed class ElasticsearchTestFixture : IAsyncLifetime
+public sealed class ElasticsearchTestFixture(IMessageSink sink) : IAsyncLifetime
 {
-	private readonly IMessageSink _sink;
-	public ElasticsearchContainer Container { get; }
+	private readonly IMessageSink _sink = sink;
+
+	public ElasticsearchContainer Container { get; } = new ElasticsearchBuilder().Build();
 
 	public ElasticsearchClient? Client { get; private set; }
-
-	public ElasticsearchTestFixture(IMessageSink sink)
-	{
-		_sink = sink;
-		Container = new ElasticsearchBuilder()
-			.Build();
-	}
-
 
 	public async Task InitializeAsync()
 	{
