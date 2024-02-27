@@ -63,7 +63,7 @@ public class AzureFunctionsTestBase : IDisposable
 		metaData.Service.Runtime.Name.Should().Be(Context.RuntimeName);
 		metaData.Service.Framework.Name.Should().Be("Azure Functions");
 		metaData.Service.Framework.Version.Should().Be("4");
-		// TODO - removing this assertion as we can no longer seem to set this value without causing a host error
+		// TODO - temporarily removing this assertion as we can no longer seem to set this value without causing a host error
 		//metaData.Service.Node.ConfiguredName.Should().Be("20367ea8-70b9-41b4-a552-b2a826b3aa0b");
 	}
 
