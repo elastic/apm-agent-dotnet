@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
-    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
-    <OutputType>Library</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
