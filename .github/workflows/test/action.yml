@@ -17,6 +17,10 @@ inputs:
       description: 'test filter to select tests from solution projects'
       required: false
       default: 'net7.0'
+  verbosity:
+    description: 'logging verbosity'
+    required: false
+    default: 'minimal'
 
 runs:
   using: "composite"
@@ -25,7 +29,7 @@ runs:
       shell: bash
       run: |
           dotnet test -c Release ${{ inputs.project }} --no-build \
-              --verbosity minimal \
+              --verbosity ${{ inputs.verbosity }} \
               ${{ inputs.filter != '' && format('--filter "{0}"', inputs.filter) || '' }} \
               ${{ inputs.framework != '' && format('-f {0}', inputs.framework) || '' }} \
               --logger:"junit;LogFilePath=${GITHUB_WORKSPACE}/build/output/junit-${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \

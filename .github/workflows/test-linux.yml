@@ -60,11 +60,18 @@ jobs:
         shell: bash
         run: dotnet build -c Release --verbosity minimal
 
-      - name: 'Tests: Unit'
+      - name: 'Tests: Feature Tests'
         uses: ./.github/workflows/test
         with:
             name: 'unit'
-            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
+            filter: 'FullyQualifiedName~Elastic.Apm.Feature.Tests'
+            verbosity: detailed
+            
+      - name: 'Tests: Unit'
+        uses: ./.github/workflows/test
+        with:
+          name: 'unit'
+          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
             
   azure-tests:
     runs-on: ubuntu-latest
