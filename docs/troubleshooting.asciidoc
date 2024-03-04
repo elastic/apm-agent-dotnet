@@ -50,7 +50,7 @@ ASP.NET (classic) does not have a predefined logging system. By default, the age
 emit log messages to a 
 https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracesource[`System.Diagnostics.TraceSource`] 
 with the source name `"Elastic.Apm"`. The TraceSource adheres to the log levels defined in the
-APM agent configuration.
+APM agent configuration. Typically, you will configure a preferred log level using an application setting in `web.config`.
 
 [IMPORTANT]
 --
@@ -67,7 +67,7 @@ named my_log_file.log:
 ----
 <configuration>
   <!-- other sections .... -->
-<system.diagnostics>
+  <system.diagnostics>
   <sources>
     <source name="Elastic.Apm"> <1>
       <listeners>
