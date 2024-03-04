@@ -16,7 +16,6 @@ using ProcNet.Std;
 
 namespace Elastic.Apm.Profiler.Managed.Tests
 {
-
 	public class ProfiledIntegrationApplication : ProfiledApplication
 	{
 		public ProfiledIntegrationApplication(string projectName)

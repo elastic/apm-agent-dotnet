@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- needed because of MockApmServer version -->
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <!-- Don't run Roslyn analyzers as part of build. The StyleCop analyzers conflict with editorconfig -->
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -17,12 +16,12 @@
   <ItemGroup>
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.90"/>
     <PackageReference Include="Proc" Version="0.6.2"/>
-    <PackageReference Include="Testcontainers.Kafka" Version="3.4.0" />
-    <PackageReference Include="Testcontainers.MsSql" Version="3.4.0" />
-    <PackageReference Include="Testcontainers.MySql" Version="3.4.0" />
-    <PackageReference Include="Testcontainers.Oracle" Version="3.4.0" />
-    <PackageReference Include="Testcontainers.PostgreSql" Version="3.4.0" />
-    <PackageReference Include="Testcontainers.RabbitMq" Version="3.4.0" />
+    <PackageReference Include="Testcontainers.Kafka" Version="3.7.0" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.7.0" />
+    <PackageReference Include="Testcontainers.MySql" Version="3.7.0" />
+    <PackageReference Include="Testcontainers.Oracle" Version="3.7.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.7.0" />
+    <PackageReference Include="Testcontainers.RabbitMq" Version="3.7.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6"/>
   </ItemGroup>
 

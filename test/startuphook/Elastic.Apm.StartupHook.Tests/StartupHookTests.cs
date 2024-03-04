@@ -24,10 +24,11 @@ namespace Elastic.Apm.StartupHook.Tests
 {
 	public class StartupHookTests
 	{
+		// NOTE: We test the two latest supported LTS releases.
 		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
 		{
 			yield return ("net6.0", ".NET 6", "6.0.0.0", "60");
-			yield return ("net7.0", ".NET 7", "7.0.0.0", "70");
+			yield return ("net8.0", ".NET 8", "8.0.0.0", "80");
 		}
 
 		public static IEnumerable<object[]> DotNetFrameworkVersionInfos()
@@ -41,9 +42,9 @@ namespace Elastic.Apm.StartupHook.Tests
 			var testData = new List<string[]>();
 			foreach (var i in GetDotNetFrameworkVersionInfos())
 			{
-				testData.Add(new[] { "webapi", $"WebApi{i.ShortVersion}", i.TargetFramework, "weatherforecast" });
-				testData.Add(new[] { "webapp", $"WebApp{i.ShortVersion}", i.TargetFramework, "" });
-				testData.Add(new[] { "mvc", $"Mvc{i.ShortVersion}", i.TargetFramework, "" });
+				testData.Add(["webapi", $"WebApi{i.ShortVersion}", i.TargetFramework, "weatherforecast"]);
+				testData.Add(["webapp", $"WebApp{i.ShortVersion}", i.TargetFramework, ""]);
+				testData.Add(["mvc", $"Mvc{i.ShortVersion}", i.TargetFramework, ""]);
 			}
 			return testData;
 		}

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
     <IsPackable>false</IsPackable>
@@ -35,10 +35,10 @@
     <PackageReference Include="Fake.IO.Zip" Version="5.20.4" />
     <PackageReference Include="Fake.Tools.Git" Version="5.20.4" />
 
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
     <PackageReference Include="Octokit" Version="0.32.0" />
-    <PackageReference Include="Proc" Version="0.6.1" />
+    <PackageReference Include="Proc" Version="0.6.2" />
   </ItemGroup>
 
 </Project>

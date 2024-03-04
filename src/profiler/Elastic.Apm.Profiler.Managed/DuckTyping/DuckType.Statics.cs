@@ -45,8 +45,9 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 		private static readonly PropertyInfo DuckTypeInstancePropertyInfo = typeof(IDuckType).GetProperty(nameof(IDuckType.Instance));
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private static readonly MethodInfo _methodBuilderGetToken =
-			typeof(MethodBuilder).GetMethod("GetToken", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+		private static readonly MethodInfo _methodBuilderGetToken = typeof(MethodBuilder)
+			.GetMethod("GetToken", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+				?? typeof(MethodBuilder).GetProperty("MetadataToken", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetMethod;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private static readonly Dictionary<Assembly, ModuleBuilder> ActiveBuilders = new Dictionary<Assembly, ModuleBuilder>();
