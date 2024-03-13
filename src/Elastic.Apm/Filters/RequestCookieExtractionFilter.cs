@@ -14,7 +14,7 @@ namespace Elastic.Apm.Filters
 	/// </summary>
 	internal class RequestCookieExtractionFilter
 	{
-		private static readonly WildcardMatcher[] CookieMatcher = new WildcardMatcher[] { new WildcardMatcher.VerbatimMatcher("Cookie", true) };
+		private static readonly WildcardMatcher[] CookieMatcher = [new WildcardMatcher.VerbatimMatcher("Cookie", true)];
 
 		public static IError Filter(IError error)
 		{

@@ -42,7 +42,11 @@ internal static class CookieHeaderParser
 			var trimmed = cookieValue.Trim();
 			var parts = trimmed.Split('=');
 
-			if (parts.Length == 2 && !string.IsNullOrEmpty(parts[0]) && !string.IsNullOrEmpty(parts[1]))
+			// Fow now, we store only the first value for a given key. This aligns to our nodeJS agent behavior.
+			if (parts.Length == 2 
+				&& !string.IsNullOrEmpty(parts[0]) 
+				&& !cookies.ContainsKey(parts[0])
+				&& !string.IsNullOrEmpty(parts[1]))
 			{
 				cookies.Add(parts[0], parts[1]);
 			}
@@ -51,7 +55,7 @@ internal static class CookieHeaderParser
 		return cookies;
 #else
 		var span = cookieHeader.AsSpan();
-
+		
 		while (span.Length > 0)
 		{
 			var foundComma = true;
@@ -75,8 +79,14 @@ internal static class CookieHeaderParser
 				var keyString = key.ToString();
 				var valueString = value.ToString();
 
-				if (!string.IsNullOrEmpty(keyString) && !string.IsNullOrEmpty(valueString))
+				// Fow now, we store only the first value for a given key. This aligns to our nodeJS agent behavior.
+#if NETSTANDARD2_0
+				if (!string.IsNullOrEmpty(keyString) && !cookies.ContainsKey(keyString) && !string.IsNullOrEmpty(valueString))
 					cookies.Add(keyString, valueString);
+#else
+				if (!string.IsNullOrEmpty(keyString) && !string.IsNullOrEmpty(valueString))
+					cookies.TryAdd(keyString, valueString);
+#endif
 			}
 
 			span = span.Slice(foundComma ? separatorIndex + 1 : span.Length);
