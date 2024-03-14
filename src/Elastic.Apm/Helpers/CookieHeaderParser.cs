@@ -55,7 +55,7 @@ internal static class CookieHeaderParser
 		return cookies;
 #else
 		var span = cookieHeader.AsSpan();
-		
+
 		while (span.Length > 0)
 		{
 			var foundComma = true;
