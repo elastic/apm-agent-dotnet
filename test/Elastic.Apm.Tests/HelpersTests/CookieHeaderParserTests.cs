@@ -26,31 +26,36 @@ public class CookieHeaderParserTests
 		result.Should().Contain(expected);
 	}
 
-	public static IEnumerable<object[]> TestData() => new[] {
-		new object[] { null, null },
-		new object[] { "", null },
-		new object[] { "Key1=Value1", new Dictionary<string, string>() { { "Key1", "Value1" }} },
-		new object[] { "Key1=Value1,Key2=Value2", new Dictionary<string, string>()
+	public static IEnumerable<object[]> TestData() => [
+		[null, null],
+		["", null],
+		["Key1=Value1", new Dictionary<string, string>() { { "Key1", "Value1" }}],
+		[ "Key1=Value1,Key2=Value2", new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" }
-		}},
-		new object[] { "Key1=Value1,Key2=Value2,Key3=Value3", new Dictionary<string, string>()
+		}],
+		[ "Key1=Value1,Key2=Value2,Key3=Value3", new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" },
 			{ "Key3", "Value3" }
-		}},
-		new object[] { "Key1=Value1; Key2=Value2", new Dictionary<string, string>()
+		}],
+		[ "Key1=Value1; Key2=Value2", new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" }
-		}},
-		new object[] { "Key1=Value1; Key2=Value2; Key3=Value3", new Dictionary<string, string>()
+		}],
+		[ "Key1=Value1; Key2=Value2; Key3=Value3", new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" },
 			{ "Key3", "Value3" }
-		}}
-	};
+		}],
+		[ "Key1=Value1; Key2=Value2; Key1=Value3", new Dictionary<string, string>()
+		{
+			{ "Key1", "Value1" },
+			{ "Key2", "Value2" }
+		}],
+	];
 }
