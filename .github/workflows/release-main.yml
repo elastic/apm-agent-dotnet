@@ -5,9 +5,10 @@ on:
     branches: [ "main" ]
 
 permissions:
-    contents: write
-    issues: write
-    packages: write
+  contents: write
+  id-token: write
+  issues: write
+  packages: write
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
@@ -37,7 +38,12 @@ jobs:
         secrets: |
           secret/apm-team/ci/elastic-observability-feedz.io apiKey | REPO_API_KEY ;
           secret/apm-team/ci/elastic-observability-feedz.io url | REPO_API_URL
-            
+
+    - name: generate build provenance
+      uses: github-early-access/generate-build-provenance@main
+      with:
+        subject-path: "${{ github.workspace }}/build/output/_packages/*.nupkg"
+
     # Github packages requires authentication, this is likely going away in the future so for now we publish to feedz.io
     - name: publish canary packages to feedz.io
       run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${REPO_API_KEY} -s ${REPO_API_URL} --skip-duplicate --no-symbols
