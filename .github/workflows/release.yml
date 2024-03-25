@@ -58,16 +58,24 @@ jobs:
         roleId: ${{ secrets.VAULT_ROLE_ID }}
         secretId: ${{ secrets.VAULT_SECRET_ID }}
 
-    - name: Build Profiler Docker Image
+    - name: Build and Push Profiler Docker Image
+      id: push
       continue-on-error: true #continue for now until we see it working in action
-      run: |
-        docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
-            --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+      uses: docker/build-push-action@v5.3.0
+      with:
+        context: .
+        push: true
+        tags: |
+          docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }}
+        build-args: |
+          AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
-    - name: Push Profiler Docker Image
-      continue-on-error: true #continue for now until we see it working in action
-      run: |
-        for i in $(seq 1 3); do [ $i -gt 1 ] && sleep 15; docker push docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} && s=0 && break || s=$?; done; (exit $s)
+    - name: Attest image
+      uses: github-early-access/generate-build-provenance@main
+      with:
+        subject-name: "docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }}"
+        subject-digest: ${{ steps.push.outputs.digest }}
+        push-to-registry: false
 
     - name: generate build provenance (APM Agent)
       uses: github-early-access/generate-build-provenance@main
