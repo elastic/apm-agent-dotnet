@@ -22,6 +22,9 @@ jobs:
       PREFIX_APM_PROFILER: "build/output/elastic_apm_profiler_"
       SUFFIX_APM_AGENT: ".zip"
       SUFFIX_APM_PROFILER: "-linux-x64.zip"
+    permissions:
+      id-token: write
+      contents: write
     steps:
     - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
@@ -60,6 +63,7 @@ jobs:
       run: |
         docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
             --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+
     - name: Push Profiler Docker Image
       continue-on-error: true #continue for now until we see it working in action
       run: |
@@ -114,6 +118,9 @@ jobs:
     env:
       PREFIX_ZIP_FILE: "build/output/elastic_apm_profiler_"
       SUFFIX_ZIP_FILE: "-win-x64.zip"
+    permissions:
+      id-token: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
