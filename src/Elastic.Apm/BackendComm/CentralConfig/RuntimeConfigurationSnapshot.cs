@@ -73,6 +73,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public int MaxQueueEventCount => _mainConfiguration.MaxQueueEventCount;
 
 		public double MetricsIntervalInMilliseconds => _mainConfiguration.MetricsIntervalInMilliseconds;
+
+		public bool OverwriteDiscoverDefaultServiceName => _mainConfiguration.OverwriteDiscoverDefaultServiceName;
+
 		public bool Recording => _dynamicConfiguration?.Recording ?? _mainConfiguration.Recording;
 
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _dynamicConfiguration?.SanitizeFieldNames ?? _mainConfiguration.SanitizeFieldNames;

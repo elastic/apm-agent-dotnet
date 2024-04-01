@@ -36,6 +36,7 @@ namespace Elastic.Apm.Config
 			public const int MaxQueueEventCount = 1000;
 			public const string MetricsInterval = "30s";
 			public const double MetricsIntervalInMilliseconds = 30 * 1000;
+			public const bool OverwriteDiscoverDefaultServiceName = true;
 			public const bool SpanCompressionEnabled = true;
 			public const string SpanCompressionExactMatchMaxDuration = "50ms";
 			public const double SpanCompressionExactMatchMaxDurationInMilliseconds = 50;

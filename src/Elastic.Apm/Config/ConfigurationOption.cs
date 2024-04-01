@@ -56,6 +56,8 @@ namespace Elastic.Apm.Config
 		MaxQueueEventCount,
 		/// <inheritdoc cref="IConfigurationReader.MetricsIntervalInMilliseconds"/>
 		MetricsInterval,
+		/// <inheritdoc cref="IConfigurationReader.OverwriteDiscoverDefaultServiceName"/>
+		OverwriteDiscoverDefaultServiceName,
 		/// <inheritdoc cref="IConfigurationReader.Recording"/>
 		Recording,
 		/// <inheritdoc cref="IConfigurationReader.SanitizeFieldNames"/>
@@ -160,6 +162,7 @@ namespace Elastic.Apm.Config
 				MaxBatchEventCount => EnvPrefix + "MAX_BATCH_EVENT_COUNT",
 				MaxQueueEventCount => EnvPrefix + "MAX_QUEUE_EVENT_COUNT",
 				MetricsInterval => EnvPrefix + "METRICS_INTERVAL",
+				OverwriteDiscoverDefaultServiceName => EnvPrefix + "OVERWRITE_DISCOVER_DEFAULT_SERVICE_NAME",
 				Recording => EnvPrefix + "RECORDING",
 				SanitizeFieldNames => EnvPrefix + "SANITIZE_FIELD_NAMES",
 				SecretToken => EnvPrefix + "SECRET_TOKEN",
@@ -212,6 +215,7 @@ namespace Elastic.Apm.Config
 				MaxBatchEventCount => KeyPrefix + nameof(MaxBatchEventCount),
 				MaxQueueEventCount => KeyPrefix + nameof(MaxQueueEventCount),
 				MetricsInterval => KeyPrefix + nameof(MetricsInterval),
+				OverwriteDiscoverDefaultServiceName => KeyPrefix + nameof(OverwriteDiscoverDefaultServiceName),
 				Recording => KeyPrefix + nameof(Recording),
 				SanitizeFieldNames => KeyPrefix + nameof(SanitizeFieldNames),
 				SecretToken => KeyPrefix + nameof(SecretToken),

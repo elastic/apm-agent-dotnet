@@ -104,6 +104,7 @@ namespace Elastic.Apm.Config
 			MaxBatchEventCount = ParseMaxBatchEventCount(Lookup(ConfigurationOption.MaxBatchEventCount));
 			MaxQueueEventCount = ParseMaxQueueEventCount(Lookup(ConfigurationOption.MaxQueueEventCount));
 			MetricsIntervalInMilliseconds = ParseMetricsInterval(Lookup(MetricsInterval));
+			OverwriteDiscoverDefaultServiceName = ParseRecording(Lookup(ConfigurationOption.OverwriteDiscoverDefaultServiceName));
 			Recording = ParseRecording(Lookup(ConfigurationOption.Recording));
 			SanitizeFieldNames = ParseSanitizeFieldNames(Lookup(ConfigurationOption.SanitizeFieldNames));
 			SecretToken = ParseSecretToken(Lookup(ConfigurationOption.SecretToken));
@@ -194,6 +195,8 @@ namespace Elastic.Apm.Config
 		public int MaxQueueEventCount { get; }
 
 		public double MetricsIntervalInMilliseconds { get; }
+
+		public bool OverwriteDiscoverDefaultServiceName { get; }
 
 		public bool Recording { get; }
 
