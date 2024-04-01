@@ -18,7 +18,7 @@ internal class AzureFunctionsContext
 	{
 		Logger = Agent.Instance.Logger.Scoped(loggerScopeName);
 		MetaData = AzureFunctionsMetadataProvider.GetAzureFunctionsMetaData(Logger);
-		UpdateServiceInformation(Agent.Instance.Service);
+		UpdateServiceInformation(Agent.Instance.Service, Agent.Instance.Configuration.OverwriteDiscoverDefaultServiceName);
 		FaasIdPrefix =
 			$"/subscriptions/{MetaData.SubscriptionId}/resourceGroups/{MetaData.WebsiteResourceGroup}/providers/Microsoft.Web/sites/{MetaData.WebsiteSiteName}/functions/";
 		Logger.Trace()?.Log("FaasIdPrefix: {FaasIdPrefix}", FaasIdPrefix);
@@ -32,7 +32,7 @@ internal class AzureFunctionsContext
 
 	internal static bool IsColdStart() => Interlocked.Exchange(ref ColdStart, 0) == 1;
 
-	private void UpdateServiceInformation(Service? service)
+	private void UpdateServiceInformation(Service? service, bool overwriteDiscoverDefaultServiceName)
 	{
 		if (service == null)
 		{
@@ -40,7 +40,7 @@ internal class AzureFunctionsContext
 			return;
 		}
 
-		if (service.Name == AbstractConfigurationReader.AdaptServiceName(AbstractConfigurationReader.DiscoverDefaultServiceName()))
+		if (overwriteDiscoverDefaultServiceName && service.Name == AbstractConfigurationReader.AdaptServiceName(AbstractConfigurationReader.DiscoverDefaultServiceName()))
 		{
 			// Only override the service name if it was set to default.
 			service.Name = MetaData.WebsiteSiteName;
