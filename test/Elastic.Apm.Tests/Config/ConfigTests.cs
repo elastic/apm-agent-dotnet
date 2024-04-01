@@ -1157,6 +1157,43 @@ namespace Elastic.Apm.Tests.Config
 			excludedNamespaces.Should().BeEquivalentTo(DefaultValues.DefaultExcludedNamespaces);
 		}
 
+		/// <summary>
+		/// Makes sure that in case OverwriteDiscoverDefaultServiceName is not set, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void OverwriteDiscoverDefaultServiceNameTestWithNoValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					configuration: new MockConfiguration()));
+			agent.Configuration.OverwriteDiscoverDefaultServiceName.Should().BeTrue();
+		}
+
+		/// <summary>
+		/// Makes sure that in case OverwriteDiscoverDefaultServiceName is set to invalid value, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void OverwriteDiscoverDefaultServiceNameTestWithInvalidValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					configuration: new MockConfiguration(overwritediscoverdefaultservicename: "foobar")));
+			agent.Configuration.OverwriteDiscoverDefaultServiceName.Should().BeTrue();
+		}
+
+		[Theory]
+		[InlineData("true", true)]
+		[InlineData("false", false)]
+		[InlineData("True", true)]
+		[InlineData("False", false)]
+		[InlineData("       True         ", true)]
+		[InlineData("       False        ", false)]
+		public void OverwriteDiscoverDefaultServiceNameTestWithValidValue(string value, bool expected)
+		{
+			using var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(overwritediscoverdefaultservicename: value)));
+			agent.Configuration.OverwriteDiscoverDefaultServiceName.Should().Be(expected);
+		}
+
 		private static double MetricsIntervalTestCommon(string configValue)
 		{
 			Environment.SetEnvironmentVariable(MetricsInterval.ToEnvironmentVariable(), configValue);

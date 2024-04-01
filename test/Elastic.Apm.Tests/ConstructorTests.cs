@@ -104,6 +104,7 @@ public class ConstructorTests
 		public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
 		public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
 		public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+		public bool OverwriteDiscoverDefaultServiceName => ConfigConsts.DefaultValues.OverwriteDiscoverDefaultServiceName;
 		public string SecretToken { get; }
 		public string ServerCert { get; }
 		public string ApiKey { get; }

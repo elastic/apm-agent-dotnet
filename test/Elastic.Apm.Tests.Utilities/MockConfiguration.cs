@@ -68,7 +68,8 @@ namespace Elastic.Apm.Tests.Utilities
 			string spanCompressionEnabled = null,
 			string spanCompressionExactMatchMaxDuration = null,
 			string spanCompressionSameKindMaxDuration = null,
-			string traceContinuationStrategy = null
+			string traceContinuationStrategy = null,
+			string overwritediscoverdefaultservicename = null
 		) : base(
 			logger,
 			new ConfigurationDefaults { DebugName = nameof(MockConfiguration) },
@@ -97,6 +98,7 @@ namespace Elastic.Apm.Tests.Utilities
 				ConfigurationOption.MaxBatchEventCount => maxBatchEventCount,
 				ConfigurationOption.MaxQueueEventCount => maxQueueEventCount,
 				ConfigurationOption.MetricsInterval => metricsInterval,
+				ConfigurationOption.OverwriteDiscoverDefaultServiceName => overwritediscoverdefaultservicename,
 				ConfigurationOption.Recording => recording,
 				ConfigurationOption.SanitizeFieldNames => sanitizeFieldNames,
 				ConfigurationOption.SecretToken => secretToken,

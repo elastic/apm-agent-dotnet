@@ -25,8 +25,19 @@ public class IsolatedContext : AzureFunctionTestContextBase
 	protected override Uri BaseUri { get; } = new("http://localhost:7071");
 	public override string WebsiteName { get; } = "testfaas";
 	public override string RuntimeName { get; } = "dotnet-isolated";
+	public override bool? OverwriteDiscoverDefaultServiceName { get; } = null;
 
 	public IsolatedContext() : base(FunctionType.Isolated) { }
+}
+
+public class IsolatedContextNotOverwite : AzureFunctionTestContextBase
+{
+	protected override Uri BaseUri { get; } = new("http://localhost:7071");
+	public override string WebsiteName { get; } = "testfaas";
+	public override string RuntimeName { get; } = "dotnet-isolated";
+	public override bool? OverwriteDiscoverDefaultServiceName { get; } = false;
+
+	public IsolatedContextNotOverwite() : base(FunctionType.Isolated) { }
 }
 
 public class InProcessContext : AzureFunctionTestContextBase
@@ -34,6 +45,7 @@ public class InProcessContext : AzureFunctionTestContextBase
 	protected override Uri BaseUri { get; } = new("http://localhost:17073");
 	public override string WebsiteName { get; } = "testfaas";
 	public override string RuntimeName { get; } = "dotnet";
+	public override bool? OverwriteDiscoverDefaultServiceName { get; } = null;
 
 	public InProcessContext() : base(FunctionType.InProcess) { }
 }
@@ -46,6 +58,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 	protected abstract Uri BaseUri { get; }
 	public abstract string WebsiteName { get; }
 	public abstract string RuntimeName { get; }
+	public abstract bool? OverwriteDiscoverDefaultServiceName { get; }
 
 	public bool IsFirst { get; internal set; }
 
@@ -85,7 +98,8 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 				EnvironmentVariables =
 				{
 					["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
-					["ELASTIC_APM_FLUSH_INTERVAL"] = "0"
+					["ELASTIC_APM_FLUSH_INTERVAL"] = "0",
+					["ELASTIC_APM_OVERWRITE_DISCOVER_DEFAULT_SERVICE_NAME"] = $"{OverwriteDiscoverDefaultServiceName}"
 				},
 				UseShellExecute = false
 			}
