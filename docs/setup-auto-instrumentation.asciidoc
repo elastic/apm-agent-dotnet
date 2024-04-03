@@ -134,7 +134,7 @@ can be used as part of a https://docs.docker.com/develop/develop-images/multista
 
 [source,sh]
 ----
-ARG AGENT_VERSION=1.19.0
+ARG AGENT_VERSION=<VERSION> <1>
 
 FROM alpine:latest AS build
 ARG AGENT_VERSION
@@ -147,6 +147,7 @@ RUN apk update && apk add zip curl
 RUN curl -L -o elastic_apm_profiler_${AGENT_VERSION}.zip https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/elastic_apm_profiler_${AGENT_VERSION}.zip && \ 
     unzip elastic_apm_profiler_${AGENT_VERSION}.zip -d /elastic_apm_profiler_${AGENT_VERSION}
 ----
+<1> Replace `<VERSION>` with the newest release version number for the profiler zip file to be downloaded (e.g. ARG AGENT_VERSION=1.26.0).
 
 The files can then be copied into a subsequent stage
 
