@@ -200,7 +200,7 @@ module Build =
     let Format () =
         ToolRestore()
         //dotnet dotnet-format --exclude src/Elastic.Apm/Libraries/
-        DotNet.Exec ["dotnet-format"; "--check"; "--exclude"; "src/Elastic.Apm/Libraries/"]
+        DotNet.Exec ["format"; "--check"; "--verify-no-changes"; "src/Elastic.Apm/Libraries/"]
             
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =
         source.GetFiles()
