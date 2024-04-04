@@ -27,8 +27,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public override string ToString()
 		{
-			var resultBuilder = new ToStringBuilder(nameof(MetricSetDto));
-			resultBuilder.Add("Timestamp", Timestamp);
+			var resultBuilder = new ToStringBuilder(nameof(MetricSetDto))
+			{
+				{ "Timestamp", Timestamp }
+			};
 			var samplesToStringBuilder = new ToStringBuilder("");
 			foreach (var sample in Samples)
 				resultBuilder.Add(sample.Key, sample.Value);

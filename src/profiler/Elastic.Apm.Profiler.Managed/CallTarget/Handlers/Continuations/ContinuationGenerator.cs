@@ -17,6 +17,9 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 		public virtual TReturn SetContinuation(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state) => returnValue;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+/* Unmerged change from project 'Elastic.Apm.Profiler.Managed(netstandard2.1)'
+Before:
 		protected static TReturn ToTReturn<TFrom>(TFrom returnValue)
 		{
 #if NETSTANDARD2_1_OR_GREATER
@@ -25,8 +28,26 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 			return ContinuationsHelper.Convert<TFrom, TReturn>(returnValue);
 #endif
 		}
+After:
+		protected static TReturn ToTReturn<TFrom>(TFrom returnValue) =>
+#if NETSTANDARD2_1_OR_GREATER
+			Unsafe.As<TFrom, TReturn>(ref returnValue);
+#else
+			return ContinuationsHelper.Convert<TFrom, TReturn>(returnValue);
+#endif
+*/
+		protected static TReturn ToTReturn<TFrom>(TFrom returnValue) =>
+#if NETSTANDARD2_1_OR_GREATER
+			return Unsafe.As<TFrom, TReturn>(ref returnValue);
+#else
+			ContinuationsHelper.Convert<TFrom, TReturn>(returnValue);
+#endif
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+/* Unmerged change from project 'Elastic.Apm.Profiler.Managed(netstandard2.1)'
+Before:
 		protected static TTo FromTReturn<TTo>(TReturn returnValue)
 		{
 #if NETSTANDARD2_1_OR_GREATER
@@ -35,5 +56,20 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 			return ContinuationsHelper.Convert<TReturn, TTo>(returnValue);
 #endif
 		}
+After:
+		protected static TTo FromTReturn<TTo>(TReturn returnValue) =>
+#if NETSTANDARD2_1_OR_GREATER
+			Unsafe.As<TReturn, TTo>(ref returnValue);
+#else
+			return ContinuationsHelper.Convert<TReturn, TTo>(returnValue);
+#endif
+*/
+		protected static TTo FromTReturn<TTo>(TReturn returnValue) =>
+#if NETSTANDARD2_1_OR_GREATER
+			return Unsafe.As<TReturn, TTo>(ref returnValue);
+#else
+			ContinuationsHelper.Convert<TReturn, TTo>(returnValue);
+#endif
+
 	}
 }

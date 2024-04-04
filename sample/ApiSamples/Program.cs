@@ -274,40 +274,37 @@ namespace ApiSamples
 		}
 
 		// ReSharper disable ArrangeMethodOrOperatorBody
-		public static void SampleSpanWithCustomContext()
-		{
-			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType",
+		public static void SampleSpanWithCustomContext() => Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType",
 				transaction =>
 				{
 					transaction.CaptureSpan("SampleSpan", "SampleSpanType",
 						span => { span.Context.Db = new Database { Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch }; });
 				});
-		}
 
-		public static void SampleSpanWithCustomContextFillAll()
-		{
-			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
-			{
-				transaction.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
-				{
-					// ReSharper disable once UseObjectOrCollectionInitializer
-					span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET" };
-					// send request, get response with status code
-					span.Context.Http.StatusCode = 200;
-				});
+		public static void SampleSpanWithCustomContextFillAll() => Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
+																			{
+																				transaction.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
+																				{
+																					// ReSharper disable once UseObjectOrCollectionInitializer
+																					span.Context.Http = new Http
+																					{
+																						Url = "http://mysite.com",
+																						Method = "GET",                     // send request, get response with status code
+																						StatusCode = 200
+																					};
+																				});
 
-				transaction.CaptureSpan("SampleSpan2", "SampleSpanType",
-					span =>
-					{
-						span.Context.Db = new Database
-						{
-							Statement = "GET /_all/_search?q=tag:wow",
-							Type = Database.TypeElasticsearch,
-							Instance = "MyInstance"
-						};
-					});
-			});
-		}
+																				transaction.CaptureSpan("SampleSpan2", "SampleSpanType",
+																					span =>
+																					{
+																						span.Context.Db = new Database
+																						{
+																							Statement = "GET /_all/_search?q=tag:wow",
+																							Type = Database.TypeElasticsearch,
+																							Instance = "MyInstance"
+																						};
+																					});
+																			});
 		// ReSharper restore ArrangeMethodOrOperatorBody
 
 #if NET6_0_OR_GREATER

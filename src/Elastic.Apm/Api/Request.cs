@@ -36,7 +36,7 @@ namespace Elastic.Apm.Api
 		[MaxLength]
 		public string HttpVersion { get; set; }
 
-		[MaxLength] [Required] public string Method { get; set; }
+		[MaxLength][Required] public string Method { get; set; }
 
 		public Socket Socket { get; set; }
 
@@ -82,9 +82,9 @@ namespace Elastic.Apm.Api
 			set => _full = Sanitization.TrySanitizeUrl(value, out var newValue, out _) ? newValue : value;
 		}
 
-		[MaxLength] [JsonProperty("hostname")] public string HostName { get; set; }
+		[MaxLength][JsonProperty("hostname")] public string HostName { get; set; }
 
-		[MaxLength] [JsonProperty("pathname")] public string PathName { get; set; }
+		[MaxLength][JsonProperty("pathname")] public string PathName { get; set; }
 
 		[MaxLength] public string Protocol { get; set; }
 

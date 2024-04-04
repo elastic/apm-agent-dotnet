@@ -22,13 +22,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 {
 	public class ObscureObject
 	{
-		private static FieldPublicObject fieldPublicObject = new FieldPublicObject();
-		private static FieldInternalObject fieldInternalObject = new FieldInternalObject();
-		private static FieldPrivateObject fieldPrivateObject = new FieldPrivateObject();
+		private static readonly FieldPublicObject fieldPublicObject = new FieldPublicObject();
+		private static readonly FieldInternalObject fieldInternalObject = new FieldInternalObject();
+		private static readonly FieldPrivateObject fieldPrivateObject = new FieldPrivateObject();
 
-		private static PropertyPublicObject propertyPublicObject = new PropertyPublicObject();
-		private static PropertyInternalObject propertyInternalObject = new PropertyInternalObject();
-		private static PropertyPrivateObject propertyPrivateObject = new PropertyPrivateObject();
+		private static readonly PropertyPublicObject propertyPublicObject = new PropertyPublicObject();
+		private static readonly PropertyInternalObject propertyInternalObject = new PropertyInternalObject();
+		private static readonly PropertyPrivateObject propertyPrivateObject = new PropertyPrivateObject();
 
 		public static object GetFieldPublicObject() => fieldPublicObject;
 
@@ -89,7 +89,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static int _publicStaticValueTypeField = 20;
 			internal static int _internalStaticValueTypeField = 21;
 			protected static int _protectedStaticValueTypeField = 22;
-			private static int _privateStaticValueTypeField = 23;
+			private static readonly int _privateStaticValueTypeField = 23;
 
 			public readonly int _publicReadonlyValueTypeField = 30;
 			internal readonly int _internalReadonlyValueTypeField = 31;
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public int _publicValueTypeField = 40;
 			internal int _internalValueTypeField = 41;
 			protected int _protectedValueTypeField = 42;
-			private int _privateValueTypeField = 43;
+			private readonly int _privateValueTypeField = 43;
 
 			// ***
 
@@ -111,7 +111,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static string _publicStaticReferenceTypeField = "20";
 			internal static string _internalStaticReferenceTypeField = "21";
 			protected static string _protectedStaticReferenceTypeField = "22";
-			private static string _privateStaticReferenceTypeField = "23";
+			private static readonly string _privateStaticReferenceTypeField = "23";
 
 			public readonly string _publicReadonlyReferenceTypeField = "30";
 			internal readonly string _internalReadonlyReferenceTypeField = "31";
@@ -121,7 +121,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public string _publicReferenceTypeField = "40";
 			internal string _internalReferenceTypeField = "41";
 			protected string _protectedReferenceTypeField = "42";
-			private string _privateReferenceTypeField = "43";
+			private readonly string _privateReferenceTypeField = "43";
 
 			// ***
 
@@ -133,7 +133,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static DummyFieldObject _publicStaticSelfTypeField = DummyFieldObject.Default;
 			internal static DummyFieldObject _internalStaticSelfTypeField = DummyFieldObject.Default;
 			protected static DummyFieldObject _protectedStaticSelfTypeField = DummyFieldObject.Default;
-			private static DummyFieldObject _privateStaticSelfTypeField = DummyFieldObject.Default;
+			private static readonly DummyFieldObject _privateStaticSelfTypeField = DummyFieldObject.Default;
 
 			public readonly DummyFieldObject _publicReadonlySelfTypeField = DummyFieldObject.Default;
 			internal readonly DummyFieldObject _internalReadonlySelfTypeField = DummyFieldObject.Default;
@@ -143,14 +143,14 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public DummyFieldObject _publicSelfTypeField = DummyFieldObject.Default;
 			internal DummyFieldObject _internalSelfTypeField = DummyFieldObject.Default;
 			protected DummyFieldObject _protectedSelfTypeField = DummyFieldObject.Default;
-			private DummyFieldObject _privateSelfTypeField = DummyFieldObject.Default;
+			private readonly DummyFieldObject _privateSelfTypeField = DummyFieldObject.Default;
 
 			// ***
 
 			public static int? _publicStaticNullableIntField = null;
-			private static int? _privateStaticNullableIntField = null;
+			private static readonly int? _privateStaticNullableIntField = null;
 			public int? _publicNullableIntField = null;
-			private int? _privateNullableIntField = null;
+			private readonly int? _privateNullableIntField = null;
 		}
 
 		internal class FieldInternalObject
@@ -163,7 +163,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static int _publicStaticValueTypeField = 20;
 			internal static int _internalStaticValueTypeField = 21;
 			protected static int _protectedStaticValueTypeField = 22;
-			private static int _privateStaticValueTypeField = 23;
+			private static readonly int _privateStaticValueTypeField = 23;
 
 			public readonly int _publicReadonlyValueTypeField = 30;
 			internal readonly int _internalReadonlyValueTypeField = 31;
@@ -173,7 +173,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public int _publicValueTypeField = 40;
 			internal int _internalValueTypeField = 41;
 			protected int _protectedValueTypeField = 42;
-			private int _privateValueTypeField = 43;
+			private readonly int _privateValueTypeField = 43;
 
 			// ***
 
@@ -185,7 +185,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static string _publicStaticReferenceTypeField = "20";
 			internal static string _internalStaticReferenceTypeField = "21";
 			protected static string _protectedStaticReferenceTypeField = "22";
-			private static string _privateStaticReferenceTypeField = "23";
+			private static readonly string _privateStaticReferenceTypeField = "23";
 
 			public readonly string _publicReadonlyReferenceTypeField = "30";
 			internal readonly string _internalReadonlyReferenceTypeField = "31";
@@ -195,7 +195,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public string _publicReferenceTypeField = "40";
 			internal string _internalReferenceTypeField = "41";
 			protected string _protectedReferenceTypeField = "42";
-			private string _privateReferenceTypeField = "43";
+			private readonly string _privateReferenceTypeField = "43";
 
 			// ***
 
@@ -207,7 +207,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static DummyFieldObject _publicStaticSelfTypeField = DummyFieldObject.Default;
 			internal static DummyFieldObject _internalStaticSelfTypeField = DummyFieldObject.Default;
 			protected static DummyFieldObject _protectedStaticSelfTypeField = DummyFieldObject.Default;
-			private static DummyFieldObject _privateStaticSelfTypeField = DummyFieldObject.Default;
+			private static readonly DummyFieldObject _privateStaticSelfTypeField = DummyFieldObject.Default;
 
 			public readonly DummyFieldObject _publicReadonlySelfTypeField = DummyFieldObject.Default;
 			internal readonly DummyFieldObject _internalReadonlySelfTypeField = DummyFieldObject.Default;
@@ -217,14 +217,14 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public DummyFieldObject _publicSelfTypeField = DummyFieldObject.Default;
 			internal DummyFieldObject _internalSelfTypeField = DummyFieldObject.Default;
 			protected DummyFieldObject _protectedSelfTypeField = DummyFieldObject.Default;
-			private DummyFieldObject _privateSelfTypeField = DummyFieldObject.Default;
+			private readonly DummyFieldObject _privateSelfTypeField = DummyFieldObject.Default;
 
 			// ***
 
 			public static int? _publicStaticNullableIntField = null;
-			private static int? _privateStaticNullableIntField = null;
+			private static readonly int? _privateStaticNullableIntField = null;
 			public int? _publicNullableIntField = null;
-			private int? _privateNullableIntField = null;
+			private readonly int? _privateNullableIntField = null;
 		}
 
 		private class FieldPrivateObject
@@ -237,7 +237,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static int _publicStaticValueTypeField = 20;
 			internal static int _internalStaticValueTypeField = 21;
 			protected static int _protectedStaticValueTypeField = 22;
-			private static int _privateStaticValueTypeField = 23;
+			private static readonly int _privateStaticValueTypeField = 23;
 
 			public readonly int _publicReadonlyValueTypeField = 30;
 			internal readonly int _internalReadonlyValueTypeField = 31;
@@ -247,7 +247,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public int _publicValueTypeField = 40;
 			internal int _internalValueTypeField = 41;
 			protected int _protectedValueTypeField = 42;
-			private int _privateValueTypeField = 43;
+			private readonly int _privateValueTypeField = 43;
 
 			// ***
 
@@ -259,7 +259,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static string _publicStaticReferenceTypeField = "20";
 			internal static string _internalStaticReferenceTypeField = "21";
 			protected static string _protectedStaticReferenceTypeField = "22";
-			private static string _privateStaticReferenceTypeField = "23";
+			private static readonly string _privateStaticReferenceTypeField = "23";
 
 			public readonly string _publicReadonlyReferenceTypeField = "30";
 			internal readonly string _internalReadonlyReferenceTypeField = "31";
@@ -269,7 +269,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public string _publicReferenceTypeField = "40";
 			internal string _internalReferenceTypeField = "41";
 			protected string _protectedReferenceTypeField = "42";
-			private string _privateReferenceTypeField = "43";
+			private readonly string _privateReferenceTypeField = "43";
 
 			// ***
 
@@ -281,7 +281,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public static DummyFieldObject _publicStaticSelfTypeField = DummyFieldObject.Default;
 			internal static DummyFieldObject _internalStaticSelfTypeField = DummyFieldObject.Default;
 			protected static DummyFieldObject _protectedStaticSelfTypeField = DummyFieldObject.Default;
-			private static DummyFieldObject _privateStaticSelfTypeField = DummyFieldObject.Default;
+			private static readonly DummyFieldObject _privateStaticSelfTypeField = DummyFieldObject.Default;
 
 			public readonly DummyFieldObject _publicReadonlySelfTypeField = DummyFieldObject.Default;
 			internal readonly DummyFieldObject _internalReadonlySelfTypeField = DummyFieldObject.Default;
@@ -291,22 +291,22 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public DummyFieldObject _publicSelfTypeField = DummyFieldObject.Default;
 			internal DummyFieldObject _internalSelfTypeField = DummyFieldObject.Default;
 			protected DummyFieldObject _protectedSelfTypeField = DummyFieldObject.Default;
-			private DummyFieldObject _privateSelfTypeField = DummyFieldObject.Default;
+			private readonly DummyFieldObject _privateSelfTypeField = DummyFieldObject.Default;
 
 			// ***
 
 			public static int? _publicStaticNullableIntField = null;
-			private static int? _privateStaticNullableIntField = null;
+			private static readonly int? _privateStaticNullableIntField = null;
 			public int? _publicNullableIntField = null;
-			private int? _privateNullableIntField = null;
+			private readonly int? _privateNullableIntField = null;
 		}
 
 		// ***
 
 		public class PropertyPublicObject
 		{
-			private Dictionary<int, int> _dictioInt = new Dictionary<int, int>();
-			private Dictionary<string, string> _dictioString = new Dictionary<string, string>();
+			private readonly Dictionary<int, int> _dictioInt = new Dictionary<int, int>();
+			private readonly Dictionary<string, string> _dictioString = new Dictionary<string, string>();
 
 			// *********
 
@@ -518,8 +518,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
 		internal class PropertyInternalObject
 		{
-			private Dictionary<int, int> _dictioInt = new Dictionary<int, int>();
-			private Dictionary<string, string> _dictioString = new Dictionary<string, string>();
+			private readonly Dictionary<int, int> _dictioInt = new Dictionary<int, int>();
+			private readonly Dictionary<string, string> _dictioString = new Dictionary<string, string>();
 
 			public static int PublicStaticGetValueType { get; } = 10;
 
@@ -729,8 +729,8 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
 		private class PropertyPrivateObject
 		{
-			private Dictionary<int, int> _dictioInt = new Dictionary<int, int>();
-			private Dictionary<string, string> _dictioString = new Dictionary<string, string>();
+			private readonly Dictionary<int, int> _dictioInt = new Dictionary<int, int>();
+			private readonly Dictionary<string, string> _dictioString = new Dictionary<string, string>();
 
 			public static int PublicStaticGetValueType { get; } = 10;
 

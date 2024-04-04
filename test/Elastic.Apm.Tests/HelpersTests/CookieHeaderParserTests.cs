@@ -29,30 +29,35 @@ public class CookieHeaderParserTests
 	public static IEnumerable<object[]> TestData() => [
 		[null, null],
 		["", null],
-		["Key1=Value1", new Dictionary<string, string>() { { "Key1", "Value1" }}],
-		[ "Key1=Value1,Key2=Value2", new Dictionary<string, string>()
+		["Key1=Value1", new Dictionary<string, string>() { { "Key1", "Value1" } }],
+		["Key1=Value1,Key2=Value2",
+			new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" }
 		}],
-		[ "Key1=Value1,Key2=Value2,Key3=Value3", new Dictionary<string, string>()
+		["Key1=Value1,Key2=Value2,Key3=Value3",
+			new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" },
 			{ "Key3", "Value3" }
 		}],
-		[ "Key1=Value1; Key2=Value2", new Dictionary<string, string>()
+		["Key1=Value1; Key2=Value2",
+			new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" }
 		}],
-		[ "Key1=Value1; Key2=Value2; Key3=Value3", new Dictionary<string, string>()
+		["Key1=Value1; Key2=Value2; Key3=Value3",
+			new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" },
 			{ "Key3", "Value3" }
 		}],
-		[ "Key1=Value1; Key2=Value2; Key1=Value3", new Dictionary<string, string>()
+		["Key1=Value1; Key2=Value2; Key1=Value3",
+			new Dictionary<string, string>()
 		{
 			{ "Key1", "Value1" },
 			{ "Key2", "Value2" }

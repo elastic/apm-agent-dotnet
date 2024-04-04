@@ -173,6 +173,9 @@ namespace Elastic.Apm
 #endif
 		}
 
+
+/* Unmerged change from project 'Elastic.Apm(net462)'
+Before:
 		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
 		{
 #if NETFRAMEWORK
@@ -181,6 +184,40 @@ namespace Elastic.Apm
 			return logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 #endif
 		}
+After:
+		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader) =>
+#if NETFRAMEWORK
+			logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(configurationReader?.LogLevel);
+#else
+			return logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+#endif
+*/
+
+/* Unmerged change from project 'Elastic.Apm(net472)'
+Before:
+		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
+		{
+#if NETFRAMEWORK
+			return logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(configurationReader?.LogLevel);
+#else
+			return logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+#endif
+		}
+After:
+		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader) =>
+#if NETFRAMEWORK
+			logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(configurationReader?.LogLevel);
+#else
+			return logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+#endif
+*/
+		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader) =>
+#if NETFRAMEWORK
+			return logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(configurationReader?.LogLevel);
+#else
+			logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+#endif
+
 
 		private static IConfigurationReader CreateConfiguration(IApmLogger logger, IConfigurationReader configurationReader)
 		{

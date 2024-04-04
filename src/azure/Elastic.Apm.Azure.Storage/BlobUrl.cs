@@ -28,7 +28,7 @@ namespace Elastic.Apm.Azure.Storage
 
 	internal abstract class StorageUrl
 	{
-		private static char[] SplitDomain = { '.' };
+		private static readonly char[] SplitDomain = { '.' };
 
 		protected StorageUrl(Uri url)
 		{

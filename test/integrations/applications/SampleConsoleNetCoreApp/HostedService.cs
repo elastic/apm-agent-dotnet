@@ -39,9 +39,7 @@ namespace SampleConsoleNetCoreApp
 				using var fooScope = _logger.BeginScope("foo");
 
 				// Make sure Agent.Tracer.CurrentTransaction is not null
-				var currentTransaction = Agent.Tracer.CurrentTransaction;
-				if (currentTransaction == null)
-					throw new Exception("Agent.Tracer.CurrentTransaction returns null");
+				var currentTransaction = Agent.Tracer.CurrentTransaction ?? throw new Exception("Agent.Tracer.CurrentTransaction returns null");
 
 				var httpClient = new HttpClient();
 				return await httpClient.GetAsync("https://elastic.co", cancellationToken);
