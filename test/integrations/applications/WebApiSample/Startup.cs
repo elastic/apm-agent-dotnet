@@ -2,7 +2,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.NetCoreAll;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +17,7 @@ namespace WebApiSample
 
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services) =>
-			services.AddMvc();
+			services.AddAllElasticApm().AddMvc();
 
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -27,10 +26,7 @@ namespace WebApiSample
 #else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 #endif
-		{
-			app.UseAllElasticApm(_configuration);
-			ConfigureAllExceptAgent(app);
-		}
+			=> ConfigureAllExceptAgent(app);
 
 		public static void ConfigureAllExceptAgent(IApplicationBuilder app)
 		{

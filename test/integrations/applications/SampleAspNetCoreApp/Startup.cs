@@ -33,6 +33,9 @@ namespace SampleAspNetCoreApp
 
 		public static void ConfigureServicesExceptMvc(IServiceCollection services)
 		{
+			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKIP_AGENT_REGISTRATION")))
+				services.AddAllElasticApm();
+
 			const string connection = @"Data Source=blogging.db";
 			services.AddDbContext<SampleDataContext>
 				(options => options.UseSqlite(connection));
@@ -59,12 +62,7 @@ namespace SampleAspNetCoreApp
 #else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 #endif
-		{
-			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKIP_AGENT_REGISTRATION")))
-				app.UseAllElasticApm(Configuration);
-
-			ConfigureAllExceptAgent(app);
-		}
+			=> ConfigureAllExceptAgent(app);
 
 		public static void ConfigureAllExceptAgent(IApplicationBuilder app)
 		{
