@@ -33,9 +33,6 @@ namespace SampleAspNetCoreApp
 
 		public static void ConfigureServicesExceptMvc(IServiceCollection services)
 		{
-			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKIP_AGENT_REGISTRATION")))
-				services.AddAllElasticApm();
-
 			const string connection = @"Data Source=blogging.db";
 			services.AddDbContext<SampleDataContext>
 				(options => options.UseSqlite(connection));
@@ -57,12 +54,15 @@ namespace SampleAspNetCoreApp
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NET6_0_OR_GREATER
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-#else
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-#endif
-			=> ConfigureAllExceptAgent(app);
+		{
+			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKIP_AGENT_REGISTRATION")))
+#pragma warning disable CS0618 // Type or member is obsolete
+				app.UseAllElasticApm(Configuration);
+#pragma warning restore CS0618 // Type or member is obsolete
+
+			ConfigureAllExceptAgent(app);
+		}
 
 		public static void ConfigureAllExceptAgent(IApplicationBuilder app)
 		{
