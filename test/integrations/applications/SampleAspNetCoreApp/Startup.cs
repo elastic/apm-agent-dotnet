@@ -11,10 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp.Data;
-#if NET5_0
-using OpenTelemetry;
-using OpenTelemetry.Trace;
-#endif
 
 namespace SampleAspNetCoreApp
 {
@@ -76,7 +72,6 @@ namespace SampleAspNetCoreApp
 
 		public static void ConfigureRoutingAndMvc(IApplicationBuilder app)
 		{
-#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0_OR_GREATER
 			app.UseRouting();
 
 			app.UseAuthentication();
@@ -96,25 +91,6 @@ namespace SampleAspNetCoreApp
 				endpoints.MapControllers();
 				endpoints.MapRazorPages();
 			});
-#else
-			app.UseAuthentication();
-
-			app.UseMvc(routes =>
-			{
-				routes.MapAreaRoute(
-					"MyOtherArea",
-					"MyOtherArea",
-					"MyOtherArea/{controller=Home}/{action=Index}/{id?}");
-
-				routes.MapRoute(
-					"MyArea",
-					"{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
-				routes.MapRoute(
-					"default",
-					"{controller=Home}/{action=Index}/{id?}");
-			});
-#endif
 		}
 	}
 }

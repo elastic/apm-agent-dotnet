@@ -20,13 +20,8 @@ namespace WebApiSample
 		public void ConfigureServices(IServiceCollection services) =>
 			services.AddMvc();
 
-
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NET6_0_OR_GREATER
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-#else
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-#endif
 		{
 #pragma warning disable CS0618 // Type or member is obsolete
 			app.UseAllElasticApm(_configuration);
@@ -40,13 +35,9 @@ namespace WebApiSample
 
 			app.UseHttpsRedirection();
 
-#if NET6_0_OR_GREATER
 			app.UseRouting();
 
 			app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-#else
-			app.UseMvc();
-#endif
 		}
 	}
 }
