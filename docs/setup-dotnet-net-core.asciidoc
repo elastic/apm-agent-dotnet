@@ -2,7 +2,7 @@
 :dot: .
 
 [[setup-dotnet-net-core]]
-=== .NET with Microsoft.Extensions.Hosting
+=== .NET Core and .NET 5+
 
 [float]
 ==== Quick start
