@@ -90,10 +90,14 @@ namespace Elastic.Apm.Config
 		TransactionIgnoreUrls,
 		/// <inheritdoc cref="IConfigurationReader.TransactionMaxSpans"/>
 		TransactionMaxSpans,
+		/// <inheritdoc cref="IConfigurationReader.TransactionNameGroups"/>
+		TransactionNameGroups,
 		/// <inheritdoc cref="IConfigurationReader.TransactionSampleRate"/>
 		TransactionSampleRate,
 		/// <inheritdoc cref="IConfigurationReader.UseElasticTraceparentHeader"/>
 		UseElasticTraceparentHeader,
+		/// <inheritdoc cref="IConfigurationReader.UsePathAsTransactionName"/>
+		UsePathAsTransactionName,
 		/// <inheritdoc cref="IConfigurationReader.VerifyServerCert"/>
 		VerifyServerCert,
 		/// <inheritdoc cref="IConfigurationReader.ServerUrls"/>
@@ -180,11 +184,13 @@ namespace Elastic.Apm.Config
 				TraceContinuationStrategy => EnvPrefix + "TRACE_CONTINUATION_STRATEGY",
 				TransactionIgnoreUrls => EnvPrefix + "TRANSACTION_IGNORE_URLS",
 				TransactionMaxSpans => EnvPrefix + "TRANSACTION_MAX_SPANS",
+				TransactionNameGroups => EnvPrefix + "TRANSACTION_NAME_GROUPS",
 				TransactionSampleRate => EnvPrefix + "TRANSACTION_SAMPLE_RATE",
 				UseElasticTraceparentHeader => EnvPrefix + "USE_ELASTIC_TRACEPARENT_HEADER",
+				UsePathAsTransactionName => EnvPrefix + "USE_PATH_AS_TRANSACTION_NAME",
 				VerifyServerCert => EnvPrefix + "VERIFY_SERVER_CERT",
 				FullFrameworkConfigurationReaderType => EnvPrefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE",
-				_ => throw new System.ArgumentOutOfRangeException(nameof(option), option, null)
+				_ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
 			};
 
 		public static string ToConfigKey(this ConfigurationOption option) =>
@@ -229,14 +235,16 @@ namespace Elastic.Apm.Config
 				TraceContinuationStrategy => KeyPrefix + nameof(TraceContinuationStrategy),
 				TransactionIgnoreUrls => KeyPrefix + nameof(TransactionIgnoreUrls),
 				TransactionMaxSpans => KeyPrefix + nameof(TransactionMaxSpans),
+				TransactionNameGroups => KeyPrefix + nameof(TransactionNameGroups),
 				TransactionSampleRate => KeyPrefix + nameof(TransactionSampleRate),
 				UseElasticTraceparentHeader => KeyPrefix + nameof(UseElasticTraceparentHeader),
+				UsePathAsTransactionName => KeyPrefix + nameof(UsePathAsTransactionName),
 				VerifyServerCert => KeyPrefix + nameof(VerifyServerCert),
 				ServerUrls => KeyPrefix + nameof(ServerUrls),
 				SpanFramesMinDuration => KeyPrefix + nameof(SpanFramesMinDuration),
 				TraceContextIgnoreSampledFalse => KeyPrefix + nameof(TraceContextIgnoreSampledFalse),
 				FullFrameworkConfigurationReaderType => KeyPrefix + nameof(FullFrameworkConfigurationReaderType),
-				_ => throw new System.ArgumentOutOfRangeException(nameof(option), option, null)
+				_ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
 			};
 	}
 }

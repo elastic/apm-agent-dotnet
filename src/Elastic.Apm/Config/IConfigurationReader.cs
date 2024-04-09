@@ -375,6 +375,24 @@ namespace Elastic.Apm.Config
 		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		/// <summary>
+		/// A list of patterns to be used to group incoming HTTP server transactions by matching names contain dynamic parts
+		/// to a more suitable route name.
+		/// </summary>
+		/// <remarks>
+		/// This setting can be particularly useful in scenarios where the APM agent is unable to determine a suitable
+		/// transaction name for a request. For example, in ASP.NET Core, we can leverage the routing information to
+		/// provide sensible transaction names and avoid high-cardinality. In other frameworks, such as WCF, there is no
+		/// such suitable available. In that case, the APM agent will use the request path in the transaction name, which
+		/// can lead to a high-cardinality problem. By using this setting, you can group similar transactions together.
+		/// <para>
+		///	For example, the pattern '<c>GET /user/*/cart</c>' would consolidate transactions, such as `GET /users/42/cart` and
+		///	'GET /users/73/cart' into a single transaction name 'GET /users/*/cart', hence reducing the transaction
+		///	name cardinality."
+		/// </para>
+		/// </remarks>
+		IReadOnlyCollection<WildcardMatcher> TransactionNameGroups { get; }
+
+		/// <summary>
 		/// The number of spans that are recorded per transaction.
 		/// <list type="bullet">
 		/// 	<item>
@@ -407,6 +425,12 @@ namespace Elastic.Apm.Config
 		/// Otherwise, it'll use the official w3c "traceparent" header name.
 		/// </summary>
 		bool UseElasticTraceparentHeader { get; }
+
+		/// <summary>
+		/// If <c>true</c>, the default, the agent will use the path of the incoming HTTP request as the transaction name in situations
+		/// when a more general lower-cardinality route name cannot be determined.
+		/// </summary>
+		bool UsePathAsTransactionName { get; }
 
 		/// <summary>
 		/// The agent verifies the server's certificate if an HTTPS connection to the APM server is used.

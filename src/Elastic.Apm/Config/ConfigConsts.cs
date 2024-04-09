@@ -51,6 +51,7 @@ namespace Elastic.Apm.Config
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown-" + Consts.AgentName + "-service";
 			public const bool UseElasticTraceparentHeader = true;
+			public const bool UsePathAsTransactionName = true;
 			public const bool VerifyServerCert = true;
 			public const string TraceContinuationStrategy = "continue";
 
@@ -76,6 +77,8 @@ namespace Elastic.Apm.Config
 			public static readonly IReadOnlyList<WildcardMatcher> SanitizeFieldNames;
 
 			public static readonly IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls;
+
+			public static readonly IReadOnlyCollection<WildcardMatcher> TransactionNameGroups = new List<WildcardMatcher>().AsReadOnly();
 
 			static DefaultValues()
 			{

@@ -66,8 +66,10 @@ namespace Elastic.Apm.Feature.Tests
 		public string TraceContinuationStrategy { get; } = DefaultValues.TraceContinuationStrategy;
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; set; } = DefaultValues.TransactionIgnoreUrls;
 		public int TransactionMaxSpans { get; set; } = DefaultValues.TransactionMaxSpans;
+		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups { get; set; } = DefaultValues.TransactionNameGroups;
 		public double TransactionSampleRate { get; set; } = DefaultValues.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader { get; set; } = DefaultValues.UseElasticTraceparentHeader;
+		public bool UsePathAsTransactionName { get; set; } = DefaultValues.UsePathAsTransactionName;
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
 		public bool OpenTelemetryBridgeEnabled { get; set; }
 
