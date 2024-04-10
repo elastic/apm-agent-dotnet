@@ -220,6 +220,14 @@ namespace Elastic.Apm.Config
 		double MetricsIntervalInMilliseconds { get; }
 
 		/// <summary>
+		/// Overwrite the discover default service name by the Azure Functions name.
+		/// </summary>
+		/// <remarks>
+		/// This option is only used during the setup of Azure Functions agent
+		/// </remarks>
+		bool OverwriteDiscoverDefaultServiceName { get; }
+
+		/// <summary>
 		/// Whether the agent is recording.
 		/// When set to <c>true</c>. the agent instruments and capture requests, tracks errors, and
 		/// collects and sends metrics.

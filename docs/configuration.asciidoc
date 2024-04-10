@@ -135,6 +135,29 @@ The service must then be restarted for the change to take effect
 Restart-Service <service-name>
 ----
 
+[[configuration-for-azure-functions]]
+=== Configuration for Azure Functions
+Configuration for Azure Functions can be provided by setting environment variables for
+the specific Azure Functions using https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#settings[application settings in the Azure Portal].
+
+[float]
+[[config-overwritediscoverdefaultservicename]]
+==== `Enabled` (added[1.27.0])
+
+Setting this to `false` keeps the discover default service name. Else, the discover default service name is replaced by the Azure Functions name.
+
+[options="header"]
+|============
+| Environment variable name       | IConfiguration or Web.config key
+| `ELASTIC_APM_OVERWRITE_DISCOVER_DEFAULT_SERVICE_NAME`           | `ElasticApm:OverwriteDiscoverDefaultServiceName`
+|============
+
+[options="header"]
+|============
+| Default        | Type
+| `true`         | Boolean
+|============
+
 [[configuration-on-asp-net]]
 === Configuration on ASP.NET
 

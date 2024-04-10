@@ -59,12 +59,20 @@ public class AzureFunctionsTestBase : IDisposable
 		metaData.Service.Agent.ActivationMethod.Should().Be(Consts.ActivationMethodNuGet);
 		metaData.Cloud.Provider.Should().Be("azure");
 		metaData.Cloud.Service.Name.Should().Be("functions");
-		metaData.Service.Name.Should().Be(Context.WebsiteName);
+		AssertServiceName(metaData.Service.Name);
 		metaData.Service.Runtime.Name.Should().Be(Context.RuntimeName);
 		metaData.Service.Framework.Name.Should().Be("Azure Functions");
 		metaData.Service.Framework.Version.Should().Be("4");
 		// TODO - temporarily removing this assertion as we can no longer seem to set this value without causing a host error
 		//metaData.Service.Node.ConfiguredName.Should().Be("20367ea8-70b9-41b4-a552-b2a826b3aa0b");
+	}
+
+	private void AssertServiceName(string name)
+	{
+		if (Context.OverwriteDiscoverDefaultServiceName == null || (bool)Context.OverwriteDiscoverDefaultServiceName)
+			name.Should().Be(Context.WebsiteName);
+		else
+			name.Should().NotBe(Context.WebsiteName);
 	}
 
 	private static void AssertTracing(TransactionDto transaction) =>
