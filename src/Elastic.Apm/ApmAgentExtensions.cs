@@ -33,7 +33,7 @@ namespace Elastic.Apm
 		{
 			var disposable = new CompositeDisposable();
 
-			subscribers ??= Array.Empty<IDiagnosticsSubscriber>();
+			subscribers ??= [];
 			var subscribersList = string.Join(", ", subscribers.Select(s => s.GetType().Name));
 
 			agent.Logger.Trace()?.Log("Agent.Subscribe(), Agent Enabled: {AgentEnabled} Subscriber count: {NumberOfSubscribers}, ({Subscribers})",
