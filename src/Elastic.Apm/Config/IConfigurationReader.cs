@@ -428,7 +428,7 @@ namespace Elastic.Apm.Config
 
 		/// <summary>
 		/// If <c>true</c>, the default, the agent will use the path of the incoming HTTP request as the transaction name in situations
-		/// when a more general lower-cardinality route name cannot be determined.
+		/// when a more accurate route name cannot be determined from route data or request headers.
 		/// </summary>
 		bool UsePathAsTransactionName { get; }
 
