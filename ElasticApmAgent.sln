@@ -233,13 +233,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Profiling", "be
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiExample", "sample\WebApiExample\WebApiExample.csproj", "{00A025F1-0A31-4676-AA06-1773FC9744ED}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorkerServiceSample", "sample\WorkerServiceSample\WorkerServiceSample.csproj", "{C73BF86B-5359-4811-B698-8BE9A66C5EFA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkerServiceSample", "sample\WorkerServiceSample\WorkerServiceSample.csproj", "{C73BF86B-5359-4811-B698-8BE9A66C5EFA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HostingTestApp", "test\integrations\applications\HostingTestApp\HostingTestApp.csproj", "{61F5A733-DC79-44FC-B9CB-4EF34FC9D96B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HostingTestApp", "test\integrations\applications\HostingTestApp\HostingTestApp.csproj", "{61F5A733-DC79-44FC-B9CB-4EF34FC9D96B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Tests.Shared", "test\integrations\Elastic.Apm.Extensions.Tests.Shared\Elastic.Apm.Extensions.Tests.Shared.csproj", "{7482D2D9-BBF7-4C8B-B26C-BEA9BCF345B0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WcfServiceSample", "sample\WcfExample\WcfServiceSample.csproj", "{2F0B5919-8BCE-4EC7-A494-84A0B7100327}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Tests.Shared", "test\integrations\Elastic.Apm.Extensions.Tests.Shared\Elastic.Apm.Extensions.Tests.Shared.csproj", "{7482D2D9-BBF7-4C8B-B26C-BEA9BCF345B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -601,10 +599,6 @@ Global
 		{7482D2D9-BBF7-4C8B-B26C-BEA9BCF345B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7482D2D9-BBF7-4C8B-B26C-BEA9BCF345B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7482D2D9-BBF7-4C8B-B26C-BEA9BCF345B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2F0B5919-8BCE-4EC7-A494-84A0B7100327}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F0B5919-8BCE-4EC7-A494-84A0B7100327}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F0B5919-8BCE-4EC7-A494-84A0B7100327}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F0B5919-8BCE-4EC7-A494-84A0B7100327}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -711,7 +705,6 @@ Global
 		{C73BF86B-5359-4811-B698-8BE9A66C5EFA} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{61F5A733-DC79-44FC-B9CB-4EF34FC9D96B} = {59F3FB6E-4B48-4E87-AF3B-78DFED427EF1}
 		{7482D2D9-BBF7-4C8B-B26C-BEA9BCF345B0} = {67A4BFE3-F96E-4BDE-9383-DD0ACE6D3BA1}
-		{2F0B5919-8BCE-4EC7-A494-84A0B7100327} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
