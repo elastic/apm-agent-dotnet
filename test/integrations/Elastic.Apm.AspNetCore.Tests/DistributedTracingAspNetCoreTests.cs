@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -29,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// by calling <see cref="WebApiSample" /> via HTTP.
 		/// Makes sure that all spans and transactions across the 2 services have the same trace id.
 		/// </summary>
-		[Fact]
+		[DisabledTestFact("Sometimes fails in CI with 'Expected _payloadSender1.Transactions.Count to be 1, but found 0.'")]
 		public async Task DistributedTraceAcross2Service()
 		{
 			await ExecuteAndCheckDistributedCall();
