@@ -118,7 +118,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_dynamicConfiguration?.TransactionIgnoreUrls ?? _mainConfiguration.TransactionIgnoreUrls;
 
 		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups =>
-			_mainConfiguration.TransactionNameGroups;
+			 _dynamicConfiguration?.TransactionNameGroups ?? _mainConfiguration.TransactionNameGroups;
 
 		public int TransactionMaxSpans => _dynamicConfiguration?.TransactionMaxSpans ?? _mainConfiguration.TransactionMaxSpans;
 
@@ -126,7 +126,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		public bool UseElasticTraceparentHeader => _mainConfiguration.UseElasticTraceparentHeader;
 
-		public bool UsePathAsTransactionName => _mainConfiguration.UsePathAsTransactionName;
+		public bool UsePathAsTransactionName => _dynamicConfiguration?.UsePathAsTransactionName ?? _mainConfiguration.UsePathAsTransactionName;
 
 		public bool VerifyServerCert => _mainConfiguration.VerifyServerCert;
 	}

@@ -1078,9 +1078,11 @@ NOTE: Changing this configuration will overwrite the default value.
 [[config-transaction-name-groups]]
 ==== `TransactionNameGroups` (added[1.27.0])
 
-With this option, you can group transaction names that contain dynamic parts with a wildcard expression. For example, the pattern `GET /user/*/cart` would consolidate transactions, such as 'GET /users/42/cart' and 'GET /users/73/cart' into a single transaction name 'GET /users/*/cart', hence reducing the transaction name cardinality.
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-This option supports the wildcard *, which matches zero or more characters. Examples: GET /foo/*/bar/*/baz*, *foo*. Matching is case insensitive by default. Prepending an element with (?-i) makes the matching case sensitive.
+With this option, you can group transaction names that contain dynamic parts with a wildcard expression. For example, the pattern `GET /user/*/cart` would consolidate transactions, such as `GET /users/42/cart` and `GET /users/73/cart` into a single transaction name `GET /users/*/cart`, hence reducing the transaction name cardinality.
+
+This option supports the wildcard `*`, which matches zero or more characters. Examples: `GET /foo/*/bar/*/baz*``, `*foo*`. Matching is case insensitive by default. Prepending an element with (?-i) makes the matching case sensitive.
 
 [options="header"]
 |============
@@ -1118,8 +1120,9 @@ When this setting is `true`, the agent also adds the header `elasticapm-tracepar
 [[config-use-path-as-transaction-name]]
 ==== `UsePathAsTransactionName` (added[1.27.0])
 
-If set to `true`,
-transaction names of unsupported or partially-supported frameworks will be in the form of `$method $path` instead of just `$method unknown route`.
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+If set to `true`, transaction names of unsupported or partially-supported frameworks will be in the form of `$method $path` instead of just `$method unknown route`.
 
 WARNING: If your URLs contain path parameters like `/user/$userId`,
 you should be very careful when enabling this flag,
@@ -1412,12 +1415,12 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-stack-trace-limit,`StackTraceLimit`>> | Yes | Stacktrace, Performance
 | <<config-trace-context-ignore-sampled-false,`TraceContextIgnoreSampledFalse`>> | No | Core
 | <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | Yes | HTTP, Performance
-| <<config-transaction-name-groups,`TransactionNameGroups`>>  | No | HTTP
+| <<config-transaction-name-groups,`TransactionNameGroups`>>  | Yes | HTTP
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
 | <<config-trace-continuation-strategy,`TraceContinuationStrategy`>> | Yes | HTTP, Performance
 | <<config-use-elastic-apm-traceparent-header,`UseElasticTraceparentHeader`>> | No | HTTP
-| <<config-use-path-as-transaction-name,`UsePathAsTransactionName`>>  | No | HTTP
+| <<config-use-path-as-transaction-name,`UsePathAsTransactionName`>>  | Yes | HTTP
 | <<config-use-windows-credentials,`UseWindowsCredentials`>> | No | Reporter
 | <<config-verify-server-cert,`VerifyServerCert`>> | No | Reporter
 
