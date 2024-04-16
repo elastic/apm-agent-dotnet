@@ -1078,13 +1078,9 @@ NOTE: Changing this configuration will overwrite the default value.
 [[config-transaction-name-groups]]
 ==== `TransactionNameGroups` (added[1.27.0])
 
-With this option, you can group transaction names that contain dynamic parts with a wildcard expression. For example, the pattern GET /user/*/cart would consolidate transactions, such as GET /users/42/cart and GET /users/73/cart into a single transaction name GET /users/*/cart, hence reducing the transaction name cardinality.
+With this option, you can group transaction names that contain dynamic parts with a wildcard expression. For example, the pattern `GET /user/*/cart` would consolidate transactions, such as 'GET /users/42/cart' and 'GET /users/73/cart' into a single transaction name 'GET /users/*/cart', hence reducing the transaction name cardinality.
 
-This option supports the wildcard *, which matches zero or more characters. Examples: /foo/*/bar/*/baz*, *foo*. Matching is case insensitive by default. Prepending an element with (?-i) makes the matching case sensitive.
-
-This property should be set to a comma separated string containing one or more paths.
-
-For example, in order to define multiple groups handling urls, such as `foo/1` and `bar/10`, set the configuration value to `"foo/*,bar/*"`.
+This option supports the wildcard *, which matches zero or more characters. Examples: GET /foo/*/bar/*/baz*, *foo*. Matching is case insensitive by default. Prepending an element with (?-i) makes the matching case sensitive.
 
 [options="header"]
 |============
