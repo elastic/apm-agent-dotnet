@@ -24,7 +24,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class FailedRequestTests : IAsyncLifetime
 	{
-		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+		private readonly CancellationTokenSource _cancellationTokenSource = new();
 
 		private MockPayloadSender _payloadSender1;
 		private ApmAgent _agent1;
@@ -73,8 +73,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls Home/TriggerError (which throws an exception) and makes sure the result and the outcome are captured
 		/// </summary>
 		/// <returns></returns>
-		[Fact]
-		public async Task DistributedTraceAcross2Service()
+		[DisabledTestFact("Sometimes fails in CI with 'Expected _payloadSender1.Transactions.Count to be 1, but found 0.'")]
+		public async Task FailedRequest()
 		{
 			var client = new HttpClient();
 			var res = await client.GetAsync("http://localhost:5901/Home/TriggerError");
@@ -90,8 +90,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();
-			await Task.WhenAll(_taskForApp1);
-
+			await _taskForApp1;
 			_agent1?.Dispose();
 		}
 	}

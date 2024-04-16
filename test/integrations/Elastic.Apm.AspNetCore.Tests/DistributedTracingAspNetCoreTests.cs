@@ -30,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// by calling <see cref="WebApiSample" /> via HTTP.
 		/// Makes sure that all spans and transactions across the 2 services have the same trace id.
 		/// </summary>
-		[DisabledTestFact("Sometimes fails in CI with 'Expected _payloadSender1.Transactions.Count to be 1, but found 0.'")]
+		[Fact]
 		public async Task DistributedTraceAcross2Service()
 		{
 			await ExecuteAndCheckDistributedCall();
