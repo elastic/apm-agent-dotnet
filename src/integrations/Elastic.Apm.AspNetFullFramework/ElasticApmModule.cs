@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
@@ -20,6 +21,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Reflection;
+using Environment = System.Environment;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 
 namespace Elastic.Apm.AspNetFullFramework
@@ -506,129 +508,99 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			var response = context.Response;
 
-			var realTransaction = transaction as Transaction;
-
-			// Update the transaction name based on transaction name groups, route values or SOAP headers, if applicable.
-			if (realTransaction is not null && !realTransaction.HasCustomName)
+			// update the transaction name based on route values, if applicable
+			if (transaction is Transaction t && !t.HasCustomName)
 			{
-				var transactionRenamed = false;
-
-				// Attempt to match the URL against a configured transaction name group.
-				// This takes precedence over further attempts at renaming if a match is found.
-				if (Agent.Instance.Configuration.TransactionNameGroups.Count > 0)
+				var values = request.RequestContext?.RouteData?.Values;
+				if (values?.Count > 0)
 				{
-					var matched = WildcardMatcher.AnyMatch(Agent.Instance.Configuration.TransactionNameGroups, request.Unvalidated.Path, null);
-					if (matched is not null)
+					// Determine if the route data *actually* routed to a controller action or not i.e.
+					// we need to differentiate between
+					// 1. route data that didn't route to a controller action and returned a 404
+					// 2. route data that did route to a controller action, and the action result returned a 404
+					//
+					// In normal MVC setup, the former will set a HttpException with a 404 status code with System.Web.Mvc as the source.
+					// We need to check the source of the exception because we want to differentiate between a 404 HttpException from the
+					// framework and a 404 HttpException from the application.
+					if (context.Error is not HttpException httpException ||
+						httpException.Source != "System.Web.Mvc" ||
+						httpException.GetHttpCode() != 404)
 					{
-						var matchedTransactionNameGroup = matched.GetMatcher();
-						transaction.Name = $"{context.Request.HttpMethod} {matchedTransactionNameGroup}";
-						transactionRenamed = true;
-
-						_logger?.Trace()?.Log("Path '{Path}' matched transaction name group '{TransactionNameGroup}' from configuration",
-							request.Unvalidated.Path, matchedTransactionNameGroup);
-					}
-				}
-
-				if (!transactionRenamed)
-				{
-					// If we didn't match a transaction name group, attempt to rename the transaction based on route data.
-					var values = request.RequestContext?.RouteData?.Values;
-					if (values?.Count > 0)
-					{
-						// Determine if the route data *actually* routed to a controller action or not i.e.
-						// we need to differentiate between
-						// 1. route data that didn't route to a controller action and returned a 404
-						// 2. route data that did route to a controller action, and the action result returned a 404
-						//
-						// In normal MVC setup, the former will set a HttpException with a 404 status code with System.Web.Mvc as the source.
-						// We need to check the source of the exception because we want to differentiate between a 404 HttpException from the
-						// framework and a 404 HttpException from the application.
-						if (context.Error is not HttpException httpException ||
-							httpException.Source != "System.Web.Mvc" ||
-							httpException.GetHttpCode() != 404)
+						// handle MVC areas. The area name will be included in the DataTokens.
+						object area = null;
+						request.RequestContext?.RouteData?.DataTokens?.TryGetValue("area", out area);
+						IDictionary<string, object> routeData;
+						if (area != null)
 						{
-							// handle MVC areas. The area name will be included in the DataTokens.
-							object area = null;
-							request.RequestContext?.RouteData?.DataTokens?.TryGetValue("area", out area);
-							IDictionary<string, object> routeData;
-							if (area != null)
-							{
-								routeData = new Dictionary<string, object>(values.Count + 1);
-								foreach (var value in values)
-									routeData.Add(value.Key, value.Value);
-								routeData.Add("area", area);
-							}
-							else
-								routeData = values;
+							routeData = new Dictionary<string, object>(values.Count + 1);
+							foreach (var value in values)
+								routeData.Add(value.Key, value.Value);
+							routeData.Add("area", area);
+						}
+						else
+							routeData = values;
 
-							string name = null;
+						string name = null;
 
-							// if we're dealing with Web API attribute routing, get transaction name from the route template
-							if (routeData.TryGetValue("MS_SubRoutes", out var template) && _httpRouteDataInterfaceType.Value != null)
+						// if we're dealing with Web API attribute routing, get transaction name from the route template
+						if (routeData.TryGetValue("MS_SubRoutes", out var template) && _httpRouteDataInterfaceType.Value != null)
+						{
+							if (template is IEnumerable enumerable)
 							{
-								if (template is IEnumerable enumerable)
+								var minPrecedence = decimal.MaxValue;
+								var enumerator = enumerable.GetEnumerator();
+								while (enumerator.MoveNext())
 								{
-									var minPrecedence = decimal.MaxValue;
-									var enumerator = enumerable.GetEnumerator();
-									while (enumerator.MoveNext())
+									var subRoute = enumerator.Current;
+									if (subRoute != null && _httpRouteDataInterfaceType.Value.IsInstanceOfType(subRoute))
 									{
-										var subRoute = enumerator.Current;
-										if (subRoute != null && _httpRouteDataInterfaceType.Value.IsInstanceOfType(subRoute))
+										var precedence = _routePrecedenceGetter(subRoute);
+										if (precedence < minPrecedence)
 										{
-											var precedence = _routePrecedenceGetter(subRoute);
-											if (precedence < minPrecedence)
-											{
-												_logger?.Trace()
-													?.Log(
-														$"Calculating transaction name from web api attribute routing (route precedence: {precedence})");
-												minPrecedence = precedence;
-												name = _routeDataTemplateGetter(subRoute);
-											}
+											_logger?.Trace()
+												?.Log(
+													$"Calculating transaction name from web api attribute routing (route precedence: {precedence})");
+											minPrecedence = precedence;
+											name = _routeDataTemplateGetter(subRoute);
 										}
 									}
 								}
 							}
-							else
-							{
-								_logger?.Trace()?.Log("Calculating transaction name based on route data");
-								name = Transaction.GetNameFromRouteContext(routeData);
-							}
-
-							if (!string.IsNullOrWhiteSpace(name))
-							{
-								transaction.Name = $"{context.Request.HttpMethod} {name}";
-								transactionRenamed = true;
-							}
 						}
 						else
 						{
-							// dealing with a 404 HttpException that came from System.Web.Mvc
-							_logger?.Trace()?.Log(
-									"Route data found but a HttpException with 404 status code was thrown " +
-									"from System.Web.Mvc - setting transaction name to 'unknown route'.");
-
-							transaction.Name = $"{context.Request.HttpMethod} unknown route";
-							transactionRenamed = true;
+							_logger?.Trace()?.Log("Calculating transaction name based on route data");
+							name = Transaction.GetNameFromRouteContext(routeData);
 						}
-					}
-				}
 
-				// Final attempt to	rename the transaction based on the SOAP action if it's a SOAP request and we haven't already
-				// matched a transaction name group or route data.
-				if (!transactionRenamed && SoapRequest.TryExtractSoapAction(_logger, context.Request, out var soapAction))
-				{
-					if (!Agent.Instance.Configuration.UsePathAsTransactionName)
-						transaction.Name = $"{context.Request.HttpMethod} {request.Unvalidated.Path} {soapAction}";
+						if (!string.IsNullOrWhiteSpace(name))
+							transaction.Name = $"{context.Request.HttpMethod} {name}";
+					}
 					else
-						transaction.Name += $" {soapAction}";
+					{
+						// dealing with a 404 HttpException that came from System.Web.Mvc
+						_logger?.Trace()
+							?
+							.Log(
+								"Route data found but a HttpException with 404 status code was thrown from System.Web.Mvc - setting transaction name to 'unknown route");
+						transaction.Name = $"{context.Request.HttpMethod} unknown route";
+					}
 				}
 			}
 
 			transaction.Result = Transaction.StatusCodeToResult("HTTP", response.StatusCode);
 
+			var realTransaction = transaction as Transaction;
 			realTransaction?.SetOutcome(response.StatusCode >= 500
 				? Outcome.Failure
 				: Outcome.Success);
+
+			// Try and update transaction name with SOAP action if applicable.
+			if (realTransaction == null || !realTransaction.HasCustomName)
+			{
+				if (SoapRequest.TryExtractSoapAction(_logger, context.Request, out var soapAction))
+					transaction.Name += $" {soapAction}";
+			}
 
 			if (transaction.IsSampled)
 			{

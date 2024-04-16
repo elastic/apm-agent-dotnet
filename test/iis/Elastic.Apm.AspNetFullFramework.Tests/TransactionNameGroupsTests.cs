@@ -16,7 +16,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests;
 [Collection(Consts.AspNetFullFrameworkTestsCollection)]
 public class TransactionNameGroupsTests : TestsBase
 {
-	private const string GroupName = "*/myArea/*";
+	// NOTE: The main situation where ASP.NET instrumentation may produce high-cardinality transaction names is when the application
+	// is using WCF. In such cases, the transaction name will default to being the path of the request. We can't easily spin up WCF in
+	// CI so this test simply ensures that any transaction name group configuration is working as expected by setting a transaction
+	// group name that matches the transaction name of a request that hits an MVC controller action from an Area.
+
+	private const string GroupName = "GET MyArea/*";
 
 	public TransactionNameGroupsTests(ITestOutputHelper xUnitOutputHelper)
 		: base(xUnitOutputHelper,
@@ -36,7 +41,7 @@ public class TransactionNameGroupsTests : TestsBase
 		{
 			receivedData.Transactions.Count.Should().Be(1);
 			var transaction = receivedData.Transactions.Single();
-			transaction.Name.Should().Be($"GET {GroupName}");
+			transaction.Name.Should().Be(GroupName);
 		});
 	}
 }

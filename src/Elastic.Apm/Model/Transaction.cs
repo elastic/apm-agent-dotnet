@@ -697,7 +697,28 @@ internal class Transaction : ITransaction
 		}
 
 		if (IsSampled || _apmServerInfo?.Version < new ElasticVersion(8, 0, 0, string.Empty))
+		{
+			// Apply any transaction name groups
+			if (Configuration.TransactionNameGroups.Count > 0)
+			{
+				var matched = WildcardMatcher.AnyMatch(Configuration.TransactionNameGroups, Name, null);
+				if (matched is not null)
+				{
+					var matchedTransactionNameGroup = matched.GetMatcher();
+
+					if (!string.IsNullOrEmpty(matchedTransactionNameGroup))
+					{
+						_logger?.Trace()?.Log("Transaction name '{TransactionName}' matched transaction " +
+							"name group '{TransactionNameGroup}' from configuration",
+								Name, matchedTransactionNameGroup);
+
+						Name = matchedTransactionNameGroup;
+					}
+				}
+			}
+
 			_sender.QueueTransaction(this);
+		}
 		else
 		{
 			_logger?.Debug()
