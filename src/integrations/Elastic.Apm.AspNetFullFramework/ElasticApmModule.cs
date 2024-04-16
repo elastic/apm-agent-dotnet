@@ -348,7 +348,10 @@ namespace Elastic.Apm.AspNetFullFramework
 				return;
 			}
 
-			var transactionName = $"{request.HttpMethod} {request.Unvalidated.Path}";
+			// Set the initial transaction name based on the request path, if enabled in configuration (default is true).
+			var transactionName = Agent.Instance.Configuration.UsePathAsTransactionName
+				? $"{request.HttpMethod} {request.Unvalidated.Path}"
+				: $"{request.HttpMethod} unknown route";
 
 			var distributedTracingData = ExtractIncomingDistributedTracingData(request);
 			ITransaction transaction;

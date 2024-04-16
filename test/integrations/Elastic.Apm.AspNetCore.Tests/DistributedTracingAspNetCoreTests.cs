@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;

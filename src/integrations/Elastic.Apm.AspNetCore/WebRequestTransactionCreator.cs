@@ -36,8 +36,12 @@ namespace Elastic.Apm.AspNetCore
 					return null;
 				}
 
+				// For completeness we set the initial transaction name based on the config.
+				// I don't believe there are any valid scenarios where this will not be overwritten later.
 				ITransaction transaction;
-				var transactionName = $"{context.Request.Method} {context.Request.Path}";
+				var transactionName = configuration?.UsePathAsTransactionName ?? ConfigConsts.DefaultValues.UsePathAsTransactionName
+					? $"{context.Request.Method} {context.Request.Path}"
+					: $"{context.Request.Method} unknown route";
 
 				var containsTraceParentHeader =
 					context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderName, out var traceParentHeader);
