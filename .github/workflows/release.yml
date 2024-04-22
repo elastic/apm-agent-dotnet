@@ -80,7 +80,7 @@ jobs:
     - name: generate build provenance (APM Agent)
       uses: github-early-access/generate-build-provenance@main
       with:
-          subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}"
+        subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}"
 
     - name: generate build provenance (APM Profiler)
       uses: github-early-access/generate-build-provenance@main
