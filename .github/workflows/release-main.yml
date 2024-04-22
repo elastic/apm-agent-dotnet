@@ -2,7 +2,7 @@ name: release-main
 
 on:
   push:
-    branches: [ "main", "feature/provenance" ]
+    branches: [ "main" ]
 
 permissions:
   contents: write
