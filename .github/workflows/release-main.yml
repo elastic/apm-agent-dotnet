@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
 
 permissions:
+  attestations: write
   contents: write
   id-token: write
   issues: write
