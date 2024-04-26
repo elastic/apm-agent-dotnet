@@ -34,6 +34,8 @@ namespace Elastic.Apm.StackExchange.Redis
 			_logger = new Lazy<IApmLogger>(() => _agent.Value.Logger.Scoped(nameof(ElasticApmProfiler)));
 		}
 
+		private readonly object _lock = new();
+
 		/// <summary>
 		/// Gets a profiling session for StackExchange.Redis to add redis commands to.
 		/// Creates a profiling session per span or transaction
@@ -63,12 +65,18 @@ namespace Elastic.Apm.StackExchange.Redis
 			if (_executionSegmentSessions.TryGetValue(executionSegment, out var session))
 				return session;
 
-			_logger.Value.Trace()?.Log("Creating profiling session for {ExecutionSegment} {Id}",
-				isSpan ? "span" : "transaction", executionSegment.Id);
+			lock (_lock)
+			{
+				if (_executionSegmentSessions.TryGetValue(executionSegment, out session))
+					return session;
 
-			session = new ProfilingSession();
+				_logger.Value.Trace()?.Log("Creating profiling session for {ExecutionSegment} {Id}",
+					isSpan ? "span" : "transaction", executionSegment.Id);
 
-			_executionSegmentSessions.Add(executionSegment, session);
+				session = new ProfilingSession();
+
+				_executionSegmentSessions.Add(executionSegment, session);
+			}
 
 			if (isSpan)
 				realSpan.Ended += (sender, _) => EndProfilingSession(sender, session);

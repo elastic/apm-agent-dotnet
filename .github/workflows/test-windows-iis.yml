@@ -31,12 +31,6 @@ jobs:
   test-iis:
     runs-on: windows-latest
     
-    # disable IIS on CI for now.
-    # Run locally and started failing randomly on github actions
-    # Could be because of plethora of reasons including no disk space
-    # Requires longer investigation
-    if: ${{ false }}
-    
     steps:
     - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
@@ -46,9 +40,19 @@ jobs:
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
+        
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.3.1
+      uses: microsoft/setup-msbuild@v2
 
+
+    - name: Clean the application
+      shell: cmd
+      run: msbuild /t:Clean /p:Configuration=Release
+      
+    - name: Restore the application
+      shell: cmd
+      run: msbuild /t:Restore /p:Configuration=Release
+        
     - name: Build the application
       shell: cmd
       run: |
@@ -74,9 +78,13 @@ jobs:
       shell: cmd
       run: |
         REM enable permissions for the Application Pool Identity group
+        icacls C:\Windows\Temp /grant "IIS_IUSRS:(OI)(CI)F" /T
+        icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IIS_IUSRS:(OI)(CI)F" /T
         icacls %cd% /t /q /grant "IIS_IUSRS:(OI)(CI)(IO)(RX)"
         REM enable permissions for the anonymous access group
         icacls %cd% /t /q /grant "IUSR:(OI)(CI)(IO)(RX)"
+        icacls C:\Windows\Temp /grant "IUSR:(OI)(CI)F" /T
+        icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IUSR:(OI)(CI)F" /T
     
     - name: Run tests
       shell: cmd

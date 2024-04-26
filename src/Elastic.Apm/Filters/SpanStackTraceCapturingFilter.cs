@@ -29,7 +29,7 @@ namespace Elastic.Apm.Filters
 
 		public ISpan Filter(ISpan iSpan)
 		{
-			if (!(iSpan is Span span))
+			if (iSpan is not Span span)
 				return iSpan;
 
 			if (span.RawStackTrace == null)

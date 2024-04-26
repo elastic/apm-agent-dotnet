@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using Elastic.Apm.Azure.CosmosDb;
 using Elastic.Apm.Azure.ServiceBus;
 using Elastic.Apm.Azure.Storage;
@@ -42,6 +43,8 @@ namespace Elastic.Apm.NetCoreAll
 		/// The agent reads agent-related configuration from the <see cref="IConfiguration"/> instance, and uses it to configure the agent.
 		/// If no <see cref="IConfiguration" /> is provided, the agent reads agent-related configuration from environment variables.
 		/// </param>
+		[Obsolete("This extension is maintained for backward compatibility." +
+			" We recommend registering the agent via the IServiceCollection using the AddAllElasticApm extension method instead. This method may be removed in a future release.")]
 		public static IApplicationBuilder UseAllElasticApm(
 			this IApplicationBuilder builder,
 			IConfiguration configuration = null

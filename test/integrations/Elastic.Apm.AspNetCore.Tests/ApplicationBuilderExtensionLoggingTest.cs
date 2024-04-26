@@ -20,7 +20,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var services = new ServiceCollection()
 				.AddLogging();
 
-			var logger = services.BuildServiceProvider().GetApmLogger();
+			var logger = NetCoreLogger.GetApmLogger(services.BuildServiceProvider());
 
 			Assert.IsType<NetCoreLogger>(logger);
 		}
@@ -30,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var services = new ServiceCollection();
 
-			var logger = services.BuildServiceProvider().GetApmLogger();
+			var logger = NetCoreLogger.GetApmLogger(services.BuildServiceProvider());
 
 			Assert.IsType<ConsoleLogger>(logger);
 			Assert.Same(ConsoleLogger.Instance, logger);

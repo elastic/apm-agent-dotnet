@@ -8,6 +8,11 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
 jobs:
   report:
     runs-on: ubuntu-latest
@@ -16,8 +21,8 @@ jobs:
       - uses: elastic/apm-pipeline-library/.github/actions/test-report@current
         with:
           artifact: test-results-windows   # artifact name
-          name: Windows Tests Summary              # Name of the check run which will be created
-          path: "junit-*.xml"		       # Path to test results (inside artifact .zip)
+          name: Windows Tests Summary      # Name of the check run which will be created
+          path: "junit-*.xml"              # Path to test results (inside artifact .zip)
           reporter: java-junit             # Format of test results
           list-suites: 'failed'
           list-tests: 'failed'

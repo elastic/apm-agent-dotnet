@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -469,7 +470,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <returns></returns>
 		private async Task ExecuteAndCheckDistributedCall(bool startActivityBeforeHttpCall = true)
 		{
-#if NET5_0_OR_GREATER
 			// .NET 5 has built-in W3C TraceContext support and Activity uses the W3C id format by default (pre .NET 5 it was opt-in)
 			// This means if there is no active activity, the outgoing HTTP request on HttpClient will add the traceparent header with
 			// a flag recorded=false. The agent would pick this up on the incoming call and start an unsampled transaction.
@@ -480,7 +480,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				activity = new Activity("foo").Start();
 				activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 			}
-#endif
+
 			var client = new HttpClient();
 			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
 			res.IsSuccessStatusCode.Should().BeTrue();
@@ -493,10 +493,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//make sure the 2 transactions have the same traceid:
 			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
-#if NET5_0
+
 			if (startActivityBeforeHttpCall)
 				activity.Dispose();
-#endif
 		}
 	}
 }

@@ -54,6 +54,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				GetSimpleConfigurationValue(DynamicConfigurationOption.ExitSpanMinDuration, ParseExitSpanMinDuration);
 			TraceContinuationStrategy =
 				GetConfigurationValue(DynamicConfigurationOption.TraceContinuationStrategy, ParseTraceContinuationStrategy);
+			TransactionNameGroups = GetConfigurationValue(DynamicConfigurationOption.TransactionNameGroups, ParseTransactionNameGroups);
+			UsePathAsTransactionName = GetSimpleConfigurationValue(DynamicConfigurationOption.UsePathAsTransactionName, ParseUsePathAsTransactionName);
 		}
 
 		public string Description => $"Central configuration (ETag: `{ETag}')";
@@ -92,9 +94,13 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; private set; }
 
+		internal IReadOnlyCollection<WildcardMatcher> TransactionNameGroups { get; private set; }
+
 		internal int? TransactionMaxSpans { get; private set; }
 
 		internal double? TransactionSampleRate { get; private set; }
+
+		internal bool? UsePathAsTransactionName { get; private set; }
 
 		private CentralConfigurationKeyValue BuildKv(DynamicConfigurationOption option, string value) => new(option, value, Description);
 

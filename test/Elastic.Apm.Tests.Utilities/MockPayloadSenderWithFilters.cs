@@ -12,9 +12,9 @@ namespace Elastic.Apm.Tests.Utilities
 {
 	internal class MockPayloadSenderWithFilters : MockPayloadSender
 	{
-		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
+		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new();
 
-		public MockPayloadSenderWithFilters() => _transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
+		public MockPayloadSenderWithFilters() => _transactionFilters.Add(TransactionIgnoreUrlsFilter.Filter);
 
 		public override void QueueTransaction(ITransaction transaction)
 		{

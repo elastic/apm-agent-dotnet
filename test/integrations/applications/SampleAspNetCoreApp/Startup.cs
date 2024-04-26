@@ -11,10 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp.Data;
-#if NET5_0
-using OpenTelemetry;
-using OpenTelemetry.Trace;
-#endif
 
 namespace SampleAspNetCoreApp
 {
@@ -54,14 +50,12 @@ namespace SampleAspNetCoreApp
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NET6_0_OR_GREATER
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-#else
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-#endif
 		{
 			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKIP_AGENT_REGISTRATION")))
+#pragma warning disable CS0618 // Type or member is obsolete
 				app.UseAllElasticApm(Configuration);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			ConfigureAllExceptAgent(app);
 		}
@@ -78,7 +72,6 @@ namespace SampleAspNetCoreApp
 
 		public static void ConfigureRoutingAndMvc(IApplicationBuilder app)
 		{
-#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0_OR_GREATER
 			app.UseRouting();
 
 			app.UseAuthentication();
@@ -98,25 +91,6 @@ namespace SampleAspNetCoreApp
 				endpoints.MapControllers();
 				endpoints.MapRazorPages();
 			});
-#else
-			app.UseAuthentication();
-
-			app.UseMvc(routes =>
-			{
-				routes.MapAreaRoute(
-					"MyOtherArea",
-					"MyOtherArea",
-					"MyOtherArea/{controller=Home}/{action=Index}/{id?}");
-
-				routes.MapRoute(
-					"MyArea",
-					"{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
-				routes.MapRoute(
-					"default",
-					"{controller=Home}/{action=Index}/{id?}");
-			});
-#endif
 		}
 	}
 }

@@ -54,7 +54,7 @@ You can execute the Azure tests using `dotnet test` from a terminal (you may req
 administrator priviledges). To run only the Azure tests you can specifically 
 filter them:
 
-`dotnet test -c Release --filter:"FullyQualifiedName~Elastic.Apm.Azure" -f net7.0`
+`dotnet test -c Release --filter:"FullyQualifiedName~Elastic.Apm.Azure" -f net8.0`
 
 This will run all tests for Azure services. It will run them again the .NET 7 
 target framework. On Windows, without specifying the framework, it will run against 

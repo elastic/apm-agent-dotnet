@@ -483,6 +483,29 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		protected IReadOnlyCollection<WildcardMatcher> ParseTransactionNameGroups(ConfigurationKeyValue kv)
+		{
+			if (kv?.Value == null)
+				return DefaultValues.TransactionNameGroups;
+
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing TransactionNameGroups, values: {TransactionNameGroups}", kv.Value);
+				var transactionNameGroups = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+
+				var retVal = new List<WildcardMatcher>(transactionNameGroups.Count);
+				foreach (var item in transactionNameGroups)
+					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				return retVal;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()
+					?.LogException(e, "Failed parsing TransactionNameGroups, values in the config: {TransactionNameGroupsValues}", kv.Value);
+				return DefaultValues.TransactionNameGroups;
+			}
+		}
+
 		protected bool ParseSpanCompressionEnabled(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value))
@@ -979,6 +1002,9 @@ namespace Elastic.Apm.Config
 
 			return DefaultValues.TransactionMaxSpans;
 		}
+
+		protected bool ParseUsePathAsTransactionName(ConfigurationKeyValue kv) =>
+			ParseBoolOption(kv, DefaultValues.UsePathAsTransactionName, "UsePathAsTransactionName");
 
 		internal static bool IsMsOrElastic(byte[] array)
 		{

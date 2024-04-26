@@ -1,6 +1,6 @@
 ifdef::env-github[]
 NOTE: Release notes are best read in our documentation at
-https://www.elastic.co/guide/en/apm/agent/dotnet/current/release-notes.html[elastic.co]
+https://www.elastic.co/guide/en/apm/agent/dotnet/current/release-notes.html[elastic.co].
 endif::[]
 
 :issue: https://github.com/elastic/apm-agent-dotnet/issues/
@@ -23,10 +23,34 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.26.0]]
+==== 1.26.0 - 2024/02/20
+
+This release introduces more thorough sanitization of request/response cookies to align with the APM spec. 
+The incoming `Cookie` is now redacted by default. The cookies it contains are extracted and sanitized according 
+to the `SanitizeFieldNames` configuration. Response headers are now correctly sanitized, including the 
+`Set-Cookie` header. This is a behaviour change!
+
+===== Features
+
+{pull}2290[#2290] Fully implement the sanitization spec for request/response headers
+{pull}2272[#2272] Include process information in metadata stanza when emitting events to apm-server
+{pull}2264[#2264] Switch to Licence expression rather than file
+
+===== Bug fixes
+
+{pull}2267[#2267] Cleanup of packages thanks to Framework reference
+{pull}2274[#2274] Limit memory usage when capturing SOAP request bodies
+{pull}2276[#2276] Address a few synchronization issues in the codebase
+{pull}2277[#2277] Truncate unknown keys logging from central config parser
+{pull}2278[#2278] Ensure exposed default constants are readonly
+{pull}2283[#2283] Fix duplicate key errors on dropped span stats update
+{pull}2279[#2279] Remove RegexConverter, not used in serialization from and to apm-server
+{pull}2280[#2280] Cleanup some dead code and one instance of null propagation in tooling NOT userfacing code
 
 
 [[release-notes-1.25.3]]
-==== 1.25.3
+==== 1.25.3 - 2024/01/08
 
 ===== Bug fixes
 
@@ -37,7 +61,7 @@ endif::[]
 {pull}2245[#2245] Update MongoDB drivers to 2.19.0
 
 [[release-notes-1.25.2]]
-==== 1.25.2
+==== 1.25.2 - 2023/12/13
 
 This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm()` not correctly setting status codes.
 The bug was not present in the more commonly used `Elastic.Apm.NetCoreAll` since it uses a `DiagnosticListener` approach.
@@ -50,7 +74,7 @@ With this release we ensure both packages use the exact same `DiagnosticListener
 
 
 [[release-notes-1.25.1]]
-==== 1.25.1
+==== 1.25.1 - 2023/11/21
 
 ===== Bug fixes
 
@@ -60,13 +84,13 @@ With this release we ensure both packages use the exact same `DiagnosticListener
 {pull}2220[#2220] Ensure baggage gets copied with baggage prefix by 
 
 [[release-notes-1.25.0]]
-==== 1.25.0
+==== 1.25.0 - 2023/10/19
 
 ===== Features 
 {pull}2196[#2196] Support OnExecuteRequestStep available in new .NET versions for IIS modules.
 
 [[release-notes-1.24.0]]
-==== 1.24.0
+==== 1.24.0 - 2023/09/20
 
 ===== Features
 {pull}2140[#2140] Enable OpenTelemetryBridge by default
@@ -82,7 +106,7 @@ With this release we ensure both packages use the exact same `DiagnosticListener
 {pull}2182[#2182] Handle SqlExceptions when accessing user claims
 
 [[release-notes-1.23.0]]
-==== 1.23.0
+==== 1.23.0 - 2023/08/08
 
 ===== Features
 {pull}2069[#2069] .NET Full Framework now always loads configuration from web or app.config
@@ -98,7 +122,7 @@ With this release we ensure both packages use the exact same `DiagnosticListener
 {pull}2148[#2148] Move Redis Profiler registration to ConditionalWeakTable 
 
 [[release-notes-1.22.0]]
-==== 1.22.0
+==== 1.22.0 - 2023/04/28
 
 ===== Features
 - {pull}2050[#2050] Enable listening to `Microsoft.Data.SqlClient.EventSource` on .NET full framework.
@@ -109,7 +133,7 @@ With this release we ensure both packages use the exact same `DiagnosticListener
 
 
 [[release-notes-1.21.0]]
-==== 1.21.0
+==== 1.21.0 - 2023/04/05
 
 This release includes two breaking changes that have minimal impact.
 
@@ -127,7 +151,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}2041[#2041] Prevent sending activation_method in metadata for 8.7.0 
 
 [[release-notes-1.20.0]]
-==== 1.20.0
+==== 1.20.0 - 2023/02/27
 
 ===== Features
 - {pull}1981[#1981] Support for Azure Functions through new `Elastic.Apm.Azure.Functions` nuget package!
@@ -148,7 +172,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 
 
 [[release-notes-1.19.0]]
-==== 1.19.0
+==== 1.19.0 - 2022/12/05
 
 ===== Features
 - {pull}1867[#1867] Improve handling of multiple agent initialization.
@@ -167,7 +191,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}1933[#1933] Enable DOTNET_STARTUP_HOOKS for .NET 7 (issue: {issue}1900[#1900]).
 
 [[release-notes-1.18.0]]
-==== 1.18.0
+==== 1.18.0 - 2022/10/13
 
 ===== Features
 - Profiler based agent is now GA
@@ -183,7 +207,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}1816[#1816] Group MetricSets in BreakdownMetricsProvider (issue: {issue}1678[#1678]).
 
 [[release-notes-1.17.0]]
-==== 1.17.0
+==== 1.17.0 - 2022/08/24
 
 ===== Features
 - {pull}1739[#1739] Introduce the `TraceContinuationStrategy` config (issue: {issue}1637[#1637]).
@@ -200,7 +224,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}1787[#1787] Fix FillApmServerInfo : Invalid ElasticApm_ApiKey throws Exception (issue: {issue}1735[#1735]).
 
 [[release-notes-1.16.1]]
-==== 1.16.1
+==== 1.16.1 - 2022/06/15
 
 ===== Features
 - {pull}1732[#1732] Improved logging around fetching central configuration (issue: {issue}1626[#1626]).
@@ -210,7 +234,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - Handling RouteData with `null` in legacy ASP.NET Core 2.2 apps (issue: {issue}1729[#1729]).
 
 [[release-notes-1.16.0]]
-==== 1.16.0
+==== 1.16.0 - 2022/06/02
 
 [float]
 ===== Features
@@ -221,7 +245,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}1723[#1723] Transaction names for incoming HTTP requests returning 404 but matching a valid route, will include the URL path instead of using `unknown route` (issue: {issue}1715[#1715]).
 
 [[release-notes-1.15.0]]
-==== 1.15.0
+==== 1.15.0 - 2022/05/12
 
 [float]
 ===== Features
@@ -236,7 +260,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}1685[#1685] Handle missing `.Stop` events in `AspNetCoreDiagnosticListener` (issue: {issue}1676[#1676])
 
 [[release-notes-1.14.1]]
-==== 1.14.1
+==== 1.14.1 - 2022/03/10
 
 [float]
 ===== Bug fixes
@@ -245,7 +269,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}1648[#1648] OpenTelemetry (Activity) bridge - APM Server version check
 
 [[release-notes-1.14.0]]
-==== 1.14.0
+==== 1.14.0 - 2022/02/09
 
 [float]
 ===== Features
@@ -262,7 +286,7 @@ Since these are currently not displayed in the APM UI, while technically breakin
 - {pull}1586[#1586] Change unknown service.name to align with other agents. In the very rare cases when the agent is not able to autoamtically detect the name of a service, or it's not manually set, it'll use the default service name `unknown-dotnet-service`. In prior versions this was just `unknown`. (issue: {issue}1585[#1585])
 
 [[release-notes-1.13.0]]
-==== 1.13.0
+==== 1.13.0 - 2022/01/12
 
 [float]
 ===== Features

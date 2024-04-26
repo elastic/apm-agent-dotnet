@@ -12,5 +12,4 @@ namespace Elastic.Apm.Config
 	public interface IConfiguration : IConfigurationReader
 	{
 	}
-
 }

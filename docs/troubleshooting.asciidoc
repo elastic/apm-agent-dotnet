@@ -39,8 +39,28 @@ The way to collect logs depends on the setup of your application.
 ==== ASP.NET Core
 
 If you added the agent to your application as per the <<setup-asp-net-core>> document with the `UseAllElasticApm` or `UseElasticApm` method, it will integrate with the
-https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1[ASP.NET Core logging infrastructure].
+https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging[ASP.NET Core logging infrastructure].
 This means the Agent will pick up the configured logging provider and log as any other component logs.
+
+[IMPORTANT]
+--
+In this scenario, the `LogLevel` APM agent configuration (e.g. setting the `ELASTIC_APM_LOG_LEVEL` environment variable) DOES NOT control the 
+verbosity of the agent logs. The agent logs are controlled by the ASP.NET Core logging configuration from `IConfiguration`, typically configured 
+via `appsettings.json`.
+--
+
+For example, the following configuration in `appsettings.json` limits APM agents logs to those with a log level of `Warning` or higher:
+
+[source,xml]
+----
+"Logging": {
+  "LogLevel": {
+    "Default": "Information",
+    "Elastic.Apm": "Warning" <1>
+  }
+},
+----
+<1> Control the verbosity of the agent logs by setting the log level for the `Elastic.Apm` category
 
 [float]
 [[collect-logs-classic]]
@@ -50,7 +70,7 @@ ASP.NET (classic) does not have a predefined logging system. By default, the age
 emit log messages to a 
 https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracesource[`System.Diagnostics.TraceSource`] 
 with the source name `"Elastic.Apm"`. The TraceSource adheres to the log levels defined in the
-APM agent configuration.
+APM agent configuration. Typically, you will configure a preferred log level using an application setting in `web.config`.
 
 [IMPORTANT]
 --
@@ -67,7 +87,7 @@ named my_log_file.log:
 ----
 <configuration>
   <!-- other sections .... -->
-<system.diagnostics>
+  <system.diagnostics>
   <sources>
     <source name="Elastic.Apm"> <1>
       <listeners>
