@@ -224,7 +224,7 @@ module Build =
         |> Seq.iter (copyDllsAndPdbs agentDir)
             
         // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
-        !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
+        !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netstandard2.0")
         ++ (Paths.BuildOutput "Elastic.Apm/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
