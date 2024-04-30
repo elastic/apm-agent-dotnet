@@ -22,10 +22,11 @@ jobs:
       PREFIX_APM_PROFILER: "build/output/elastic_apm_profiler_"
       SUFFIX_APM_AGENT: ".zip"
       SUFFIX_APM_PROFILER: "-linux-x64.zip"
+      DOCKER_IMAGE: "docker.elastic.co/observability/apm-agent-dotnet"
     permissions:
       attestations: write
-      id-token: write
       contents: write
+      id-token: write
     steps:
     - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
@@ -60,25 +61,25 @@ jobs:
         secretId: ${{ secrets.VAULT_SECRET_ID }}
 
     - name: Build and Push Profiler Docker Image
-      id: push
-      continue-on-error: true #continue for now until we see it working in action
-      uses: docker/build-push-action@v5.3.0
+      id: docker-push
+      continue-on-error: true # continue for now until we see it working in action
+      uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0  # v5.3.0
       with:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         context: .
         push: true
         tags: |
-          docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }}
+          ${{ env.DOCKER_IMAGE }}:${{ steps.bootstrap.outputs.agent-version }}
         build-args: |
           AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
     - name: Attest image
       uses: github-early-access/generate-build-provenance@main
       with:
-        subject-name: "docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }}"
-        subject-digest: ${{ steps.push.outputs.digest }}
-        push-to-registry: false
+        subject-name: ${{ env.DOCKER_IMAGE }}
+        subject-digest: ${{ steps.docker-push.outputs.digest }}
+        push-to-registry: true
 
     - name: generate build provenance (APM Agent)
       uses: github-early-access/generate-build-provenance@main
@@ -130,8 +131,9 @@ jobs:
       PREFIX_ZIP_FILE: "build/output/elastic_apm_profiler_"
       SUFFIX_ZIP_FILE: "-win-x64.zip"
     permissions:
-      id-token: write
+      attestations: write
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
