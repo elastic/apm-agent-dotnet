@@ -23,6 +23,25 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.27.0]]
+==== 1.27.0 - 2024/04/30
+
+===== Features
+
+{pull}2326[#2326] Add `IServiceCollection` extension methods to register ApmAgent
+{pull}2331[#2331] Add support for `transaction_name_groups` and `use_path_as_transaction_name`
+
+===== Bug fixes
+
+{pull}2298[#2298] Refine agent initialization within ElasticApmModule
+{pull}2303[#2303] Fix race condition on Add in redis profiler
+{pull}2299[#2299] Further logging refinements in ElasticApmModule
+{pull}2304[#2304] Update to .NET 8 SDK
+{pull}2302[#2302] Update troubleshooting section of docs
+{pull}2310[#2310] Fix bug when handling of multiple cookie entries with the same name
+{pull}2314[#2314] Clarify logging behaviour in troubleshooting doc
+{pull}2336[#2336] Fix agent-zip for 5.0.0
+
 [[release-notes-1.26.0]]
 ==== 1.26.0 - 2024/02/20
 
