@@ -83,7 +83,7 @@ jobs:
         run: dotnet build -c Release --verbosity minimal
 
       - name: 'Read credentials'
-        uses: hashicorp/vault-action@v2.7.4
+        uses: hashicorp/vault-action@v3.0.0
         with:
           url: ${{ secrets.VAULT_ADDR }}
           roleId: ${{ secrets.VAULT_ROLE_ID }}
