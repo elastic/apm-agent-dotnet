@@ -34,16 +34,16 @@ artifacts:
   # Path to use for artifacts discovery 
   - path: './build/output'
     # Files pattern to match
-    files_pattern: 'elastic_apm_profiler_(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>\w+)-(?P<os>\w+)-(?P<arch>\w+)\.zip'
+    files_pattern: 'elastic_apm_profiler_(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>[\w\.]+)-(?P<os>\w+)-(?P<arch>\w+)\.zip'
     # File layout on GCS bucket
     output_pattern: '{project}/{github_branch_name}/elastic-apm-dotnet-profiler-{app_version}-{app_version}-{os}-{arch}-{github_sha_short}.jar'
     # List of metadata processors to use.
     metadata: *metadata
   - path: './build/output'
-    files_pattern: 'ElasticApmAgent_(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>\w+)\.zip'
+    files_pattern: 'ElasticApmAgent_(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>[\w\.]+)\.zip'
     output_pattern: '{project}/{github_branch_name}/elastic-apm-dotnet-agent-{app_version}-{revision}-{github_sha_short}.zip'
     metadata: *metadata
   - path: './build/output/_packages'
-    files_pattern: 'Elastic\.Apm\.(?P<component>[\w\.]*)\.(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>\w+)-(?P<revision_dup>\w+)-(?P<date>[\d-]+)\.nupkg'
+    files_pattern: 'Elastic\.Apm(?P<component>[\w\.]*)\.(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>[\w\.]+)(-(?P<revision_dup>\w+)-(?P<date>[\d-]+))?\.nupkg'
     output_pattern: '{project}/{github_branch_name}/elastic-apm-dotnet-{component}-{app_version}-{revision}-{github_sha_short}.nupkg'
     metadata: *metadata
