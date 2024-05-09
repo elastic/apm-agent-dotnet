@@ -8,10 +8,16 @@ on:
     workflows: ['test-linux']
     types:
       - completed
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   upload:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - uses: actions/checkout@v4
       
