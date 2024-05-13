@@ -20,19 +20,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 	/// CallTarget instrumentation for:
 	/// object [Command].ExecuteScalar(CommandBehavior)
 	/// </summary>
-	[InstrumentMySqlAttribute(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentOracleManagedDataAccess(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
-		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentOracleManagedDataAccessCore(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
-		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentMicrosoftDataSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
-		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
 	[InstrumentSystemDataSqlite(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentSystemDataSql(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object, ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentSystemDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
-		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
-	[InstrumentMicrosoftDataSqlClient(Method = ExecuteScalar, ReturnType = ClrTypeNames.Object,
-		ParameterTypes = new[] { AdoNetTypeNames.CommandBehavior })]
 	public class CommandExecuteScalarWithBehaviorIntegration
 	{
 		/// <summary>
