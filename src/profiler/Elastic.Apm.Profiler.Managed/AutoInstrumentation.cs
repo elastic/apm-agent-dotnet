@@ -46,7 +46,7 @@ namespace Elastic.Apm.Profiler.Managed
 					skipInstantiation = true;
 #endif
 				Logger.Log(LogLevel.Debug,
-					"{methodName}: value of {skipInstantiation}", $"{nameof(AutoInstrumentation)}.{nameof(Initialize)}", skipInstantiation);
+					"{0}: value of {1}", $"{nameof(AutoInstrumentation)}.{nameof(Initialize)}", skipInstantiation);
 
 				// ensure global instance is created if it's not already
 				if (!skipInstantiation)
