@@ -148,7 +148,7 @@ namespace Elastic.Apm
 #else
 			if (success)
 			{
-				if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
+				if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty) && (!Configuration.OpenTelemetryBridgeEnabled))
 				{
 					Logger.Info()
 						?.Log("APM Server version ready - OpenTelemetry (Activity) bridge is active. Current Server version: {version}",
