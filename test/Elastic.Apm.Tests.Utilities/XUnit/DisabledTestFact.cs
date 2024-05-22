@@ -18,7 +18,6 @@ public sealed class DisabledTestFact : FactAttribute
 	}
 }
 
-
 public sealed class FlakyCiTestFact : FactAttribute
 {
 	public FlakyCiTestFact(int issueNumber)
