@@ -22,7 +22,8 @@ public sealed class FlakyCiTestFact : FactAttribute
 {
 	public FlakyCiTestFact(int issueNumber)
 	{
-		if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"))) return;
+		if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
+			return;
 
 		var issueLink = $"https://github.com/elastic/apm-agent-dotnet/issues/{issueNumber}";
 		Skip = $"Flaky test on CI see: {issueLink}";
