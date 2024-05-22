@@ -70,13 +70,14 @@ module Build =
         DotNet.Exec [target; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
         
     let private msBuild target projectOrSln =
-        MSBuild.build (fun p ->
+        MSBuild.build (fun (p: MSBuildParams) ->
                 { p with
                     Verbosity = Some(Quiet)
                     Targets = [target]
                     Properties = [
                         "Configuration", "Release"
                         "Optimize", "True"
+                        "dummy", "test" // See https://github.com/fsprojects/FAKE/issues/2738
                     ]
                     // current version of Fake MSBuild module does not support latest bin log file
                     // version of MSBuild in VS 16.8, so disable for now.

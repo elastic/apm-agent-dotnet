@@ -44,6 +44,10 @@ artifacts:
     output_pattern: '{project}/{github_branch_name}/elastic-apm-dotnet-agent-{app_version}-{revision}-{github_sha_short}.zip'
     metadata: *metadata
   - path: './build/output/_packages'
-    files_pattern: 'Elastic\.Apm(?P<component>[\w\.]*)\.(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>[\w\.]+)(-(?P<revision_dup>\w+)-(?P<date>[\d-]+))?\.nupkg'
+    files_pattern: 'Elastic\.Apm\.(?P<component>[\w\.]*)\.(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>[\w\.]+)(-(?P<revision_dup>\w+)-(?P<date>[\d-]+))?\.nupkg'
     output_pattern: '{project}/{github_branch_name}/elastic-apm-dotnet-{component}-{app_version}-{revision}-{github_sha_short}.nupkg'
+    metadata: *metadata
+  - path: './build/output/_packages'
+    files_pattern: 'Elastic\.Apm\.(?P<app_version>\d+\.\d+\.\d+)-(?P<revision>[\w\.]+)(-(?P<revision_dup>\w+)-(?P<date>[\d-]+))?\.nupkg'
+    output_pattern: '{project}/{github_branch_name}/elastic-apm-dotnet-{app_version}-{revision}-{github_sha_short}.nupkg'
     metadata: *metadata
