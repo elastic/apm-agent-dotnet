@@ -8,24 +8,28 @@ on:
     workflows: ['test-linux']
     types:
       - completed
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   upload:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - uses: actions/checkout@v4
       
     # used by opbeans .NET to reference the on commit nuget packages
     # TODO: update opbeans to use our feedz.io packages
-    - uses: actions/download-artifact@v3
+    - name: Retrieve the artifact uploaded from `test-linux.yml` workflow
+      uses: actions/download-artifact@v4
       with:
         name: snapshoty-linux
         path: build/output
-
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: snapshoty-windows
-    #     path: build/output
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        run-id: ${{ github.event.workflow_run.id }}
 
     - name: Display structure of downloaded files
       run: find build -type f

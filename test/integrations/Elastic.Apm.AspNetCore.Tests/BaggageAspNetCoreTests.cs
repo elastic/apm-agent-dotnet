@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Model;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -56,7 +57,7 @@ public class BaggageAspNetCoreTests : MultiApplicationTestBase
 	///
 	/// The test makes sure that the agent in the 2. service captures the baggage added by the 1. service.
 	/// </summary>
-	[Fact]
+	[FlakyCiTestFact(2358)]
 	public async Task MultipleServices()
 	{
 		var client = new HttpClient();
