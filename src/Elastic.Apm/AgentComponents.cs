@@ -146,6 +146,8 @@ namespace Elastic.Apm
 #if !NET5_0_OR_GREATER
 			return;
 #else
+			if (!Configuration.OpenTelemetryBridgeEnabled) return;
+			
 			if (success)
 			{
 				if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
