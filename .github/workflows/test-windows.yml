@@ -73,7 +73,7 @@ jobs:
         if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
         uses: ./.github/workflows/bootstrap
         with: 
-          tc-cloud: true
+          tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: Build
         if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
@@ -115,7 +115,7 @@ jobs:
         uses: ./.github/workflows/bootstrap
         with:
           rust: 'true'
-          tc-cloud: true
+          tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: Build profiler
         run: ./build.bat profiler-zip

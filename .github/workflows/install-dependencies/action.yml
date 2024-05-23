@@ -8,9 +8,13 @@ inputs:
     required: false
     default: "false"
   azure:
-      description: 'Install azure functions tool chain ("true" or "false")'
-      required: false
-      default: "false"
+    description: 'Install azure functions tool chain ("true" or "false")'
+    required: false
+    default: "false"
+  tc-cloud:
+    description: 'Bootstrap TestContainers Cloud ("true" or "false")'
+    required: false
+    default: "false"
       
 runs:
   using: "composite"
@@ -59,7 +63,7 @@ runs:
     # If no PR event or if a PR event that's caused by a non-fork and non dependabot actor
     - name: Setup TestContainers Cloud Client
       if: |
-        inputs.tc-cloud == 'true'
+        inputs.tc-cloud != 'false'
         && (github.event_name != 'pull_request' 
         || (github.event_name == 'pull_request' 
             && github.event.pull_request.head.repo.fork == false 
@@ -68,7 +72,7 @@ runs:
         )
       uses: atomicjar/testcontainers-cloud-setup-action@v1
       with:
-        token: ${{ secrets.TC_CLOUD_TOKEN }}
+        token: ${{ inputs.tc-cloud }}
 
 
         
