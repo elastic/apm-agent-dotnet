@@ -40,14 +40,14 @@ jobs:
     needs: [ 'changeset' ]
     steps:
       - run: 'echo "Skipping prerequisite step [format] because only doc changes are detected"'
-        if: ${{ needs.changeset.outputs.docs-changes-only }}
+        if: ${{ needs.changeset.outputs.docs-changes-only == 'true' }}
       - uses: actions/checkout@v4
-        if: ${{ !needs.changeset.outputs.docs-changes-only }}
+        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
       - name: Bootstrap Action Workspace
-        if: ${{ !needs.changeset.outputs.docs-changes-only }}
+        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
         uses: ./.github/workflows/bootstrap
       - name: Format
-        if: ${{ !needs.changeset.outputs.docs-changes-only }}
+        if: ${{ needs.changeset.outputs.docs-changes-only == 'false'  }}
         run: ./build.sh format
         
   #required step
