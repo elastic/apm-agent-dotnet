@@ -40,7 +40,7 @@ jobs:
       ci-changes-only: ${{ steps.changeset.outputs.ci-changes-only }}
   
   format:
-    runs-on: ubuntu-latest
+    runs-on: windows-2022
     needs: [ 'changeset' ]
     steps:
       - run: 'echo "Skipping prerequisite step [format] because only doc changes are detected"'
