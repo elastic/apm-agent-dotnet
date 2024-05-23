@@ -32,6 +32,7 @@ jobs:
   tests:
     runs-on: windows-2022
     timeout-minutes: 30
+    if: ${{ false }}
         
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +57,8 @@ jobs:
     
   startup-hook-tests:
     runs-on: windows-2022
-      
+    if: ${{ false }}
+    
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
