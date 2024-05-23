@@ -28,7 +28,7 @@ jobs:
       - name: Echo changeset output
         continue-on-error: true #continue for now until we see it working in action
         run: |
-          echo docs_build {{ steps.changeset.outputs.docs-changes-only }} ci_build {{ steps.changeset.outputs.ci-changes-only }}
+          echo docs_build ${{ steps.changeset.outputs.docs-changes-only }} ci_build ${{ steps.changeset.outputs.ci-changes-only }}
     outputs:
       docs-changes-only: ${{ steps.changeset.outputs.docs-changes-only }}
         
