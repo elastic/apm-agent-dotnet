@@ -19,10 +19,6 @@ outputs:
     description: "The current major version number, semver"
     value: ${{ steps.dotnet.outputs.major-version }}
     
-  docs-changes-only:
-    description: "The current major version number, semver"
-    value: ${{ steps.changed-files.outputs.docs_any_changed == 'true' && steps.changed-files.outputs.not_docs_any_changed == 'false' }}
-    
 runs:
   using: "composite"
   steps:
@@ -32,20 +28,6 @@ runs:
         git fetch --prune --unshallow --tags
         git tag --list
 
-    - uses: tj-actions/changed-files@v44
-      name: 'Gets the current changeset'
-      id: changed-files
-      with:
-        files_yaml: |
-          doc:
-            - '*.md'
-            - '*.asciidoc'
-            - 'docs/**'
-          not_docs:
-          - !'*.md'
-          - !'*.asciidoc'
-          - !'docs/**'
-        
     - uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
