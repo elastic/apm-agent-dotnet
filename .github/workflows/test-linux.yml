@@ -43,19 +43,19 @@ jobs:
       if: ${{ needs.changeset.outputs.ci-changes-only }}
       
     - uses: actions/checkout@v4
-      if: ${{ needs.changeset.outputs.ci-changes-only == 'false' }}
+      if: ${{ !needs.changeset.outputs.ci-changes-only }}
     - name: Bootstrap Action Workspace
-      if: ${{ needs.changeset.outputs.ci-changes-only == 'false' }}
+      if: ${{ !needs.changeset.outputs.ci-changes-only }}
       uses: ./.github/workflows/bootstrap
       with:
           rust: 'true'
           
     - name: Format
-      if: ${{ needs.changeset.outputs.ci-changes-only == 'false' }} 
+      if: ${{ !needs.changeset.outputs.ci-changes-only }} 
       run: ./build.sh format
     
     - name: Package
-      if: ${{ needs.changeset.outputs.ci-changes-only == 'false' }}
+      if: ${{ !needs.changeset.outputs.ci-changes-only }}
       run: ./build.sh pack
     
     - uses: actions/upload-artifact@v4
