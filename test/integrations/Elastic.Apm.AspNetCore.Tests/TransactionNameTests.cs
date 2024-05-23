@@ -49,7 +49,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls a URL that maps to a route with optional parameter (id).
 		/// Makes sure the Transaction.Name contains "{id}" instead of the value.
 		/// </summary>
-		[Fact]
+		[FlakyCiTestFact(2361)]
 		public async Task OptionalRouteParameter()
 		{
 			var httpClient = Helper.GetClient(_agent, _factory);
