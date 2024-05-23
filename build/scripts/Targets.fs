@@ -122,10 +122,6 @@ module Main =
                 Build.AgentZip()
             )
             
-            Targets.Target("agent-docker", ["agent-zip"], fun _ ->
-                Build.AgentDocker()
-            )   
-            
             Targets.Target("release-notes", fun _ ->
                 let version = cmdLine.ValueForOption<string>("version")
                 let currentVersion = Versioning.CurrentVersion.AssemblyVersion
