@@ -107,7 +107,7 @@ jobs:
             
   azure-tests:
     runs-on: ubuntu-latest
-    needs: [ 'changeset', 'format' ]
+    needs: [ 'changeset', 'format', 'tests' ]
     if: ${{ false && needs.changeset.outputs.docs-changes-only }}
     #if: |
     #  github.event_name != 'pull_request'
@@ -157,7 +157,7 @@ jobs:
 
   startup-hook-tests:
     runs-on: ubuntu-latest
-    needs: [ 'changeset', 'format' ]
+    needs: [ 'changeset', 'format', 'tests' ]
     if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
 
     steps:
@@ -177,7 +177,7 @@ jobs:
 
   profiler-tests:
     runs-on: ubuntu-latest
-    needs: [ 'changeset', 'format' ]
+    needs: [ 'changeset', 'format', 'tests' ]
     if: ${{ !needs.changeset.outputs.docs-changes-only }}
 
     steps:
