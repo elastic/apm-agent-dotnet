@@ -70,13 +70,14 @@ module Build =
         DotNet.Exec [target; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
         
     let private msBuild target projectOrSln =
-        MSBuild.build (fun p ->
+        MSBuild.build (fun (p: MSBuildParams) ->
                 { p with
                     Verbosity = Some(Quiet)
                     Targets = [target]
                     Properties = [
                         "Configuration", "Release"
                         "Optimize", "True"
+                        "dummy", "test" // See https://github.com/fsprojects/FAKE/issues/2738
                     ]
                     // current version of Fake MSBuild module does not support latest bin log file
                     // version of MSBuild in VS 16.8, so disable for now.
@@ -248,13 +249,6 @@ module Build =
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
       
       
-    /// Builds docker image including the ElasticApmAgent  
-    let AgentDocker() =
-        let agentVersion = Versioning.CurrentVersion.FileVersion.ToString()        
-        
-        Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
-                      "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
-        
     let ProfilerIntegrations () =
         DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
                      "-i"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
