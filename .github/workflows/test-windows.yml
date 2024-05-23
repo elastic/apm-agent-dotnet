@@ -35,9 +35,6 @@ jobs:
       - uses: actions/checkout@v4
       - id: changeset
         uses: ./.github/workflows/changeset
-
-      - name: 'changeset output'
-        run: "echo docs-changes-only: ${{ steps.changeset.outputs.docs-changes-only }}"
     outputs:
       docs-changes-only: ${{ steps.changeset.outputs.docs-changes-only }}
       ci-changes-only: ${{ steps.changeset.outputs.ci-changes-only }}
