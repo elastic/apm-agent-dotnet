@@ -12,7 +12,7 @@ inputs:
     required: false
     default: "false"
   tc-cloud:
-    description: 'Bootstrap TestContainers Cloud ("true" or "false")'
+    description: 'Bootstrap TestContainers Cloud (TOKEN or "false")'
     required: false
     default: "false"
       

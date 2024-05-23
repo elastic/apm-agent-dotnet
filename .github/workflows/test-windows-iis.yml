@@ -19,18 +19,37 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: '${{ github.workflow }}-${{ github.ref }}'
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  
+defaults:
+  run:
+    shell: cmd
 
 env:
   ELASTIC_STACK_VERSION: '8.4.0'
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
 jobs:
+  
+  changeset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: changeset
+        uses: ./.github/workflows/changeset
 
+      - name: 'changeset output'
+        run: "echo docs-changes-only: ${{ steps.changeset.outputs.docs-changes-only }}"
+    outputs:
+      docs-changes-only: ${{ steps.changeset.outputs.docs-changes-only }}
+      ci-changes-only: ${{ steps.changeset.outputs.ci-changes-only }}
+  
+  
   test-iis:
     runs-on: windows-latest
-    if: ${{ false }}
+    needs: [ 'changeset' ]
+    if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
     
     steps:
     - uses: actions/checkout@v4
@@ -47,15 +66,12 @@ jobs:
 
 
     - name: Clean the application
-      shell: cmd
       run: msbuild /t:Clean /p:Configuration=Release
       
     - name: Restore the application
-      shell: cmd
       run: msbuild /t:Restore /p:Configuration=Release
         
     - name: Build the application
-      shell: cmd
       run: |
         set INCLUDE_CSHARP_TARGETS=true
         msbuild ^
@@ -64,19 +80,16 @@ jobs:
           /t:Build /p:Configuration=Release /restore
         
     #- name: Discover Windows Features
-    # shell: cmd
     # run: |
     #    DISM /online /get-features /format:table
         
     # TODO See if this really needed 
     - name: Enable Windows Features
-      shell: cmd
       run: |
         DISM /online /enable-feature /featurename:IIS-HttpErrors
         DISM /online /enable-feature /featurename:IIS-HttpRedirect
             
     - name: Ensure AppPool Permissions
-      shell: cmd
       run: |
         REM enable permissions for the Application Pool Identity group
         icacls C:\Windows\Temp /grant "IIS_IUSRS:(OI)(CI)F" /T
@@ -88,7 +101,6 @@ jobs:
         icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IUSR:(OI)(CI)F" /T
     
     - name: Run tests
-      shell: cmd
       run: |
         set ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED=true
         set sample_app_log_dir=C:\Elastic_APM_TEMP

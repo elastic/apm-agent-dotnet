@@ -115,6 +115,7 @@ jobs:
   azure-tests:
     runs-on: ubuntu-latest
     needs: [ 'changeset', 'format', 'tests' ]
+    #TODO merge the two ifs again, the clean up is timing out
     if: ${{ false && needs.changeset.outputs.docs-changes-only == 'false' }}
     #if: |
     #  github.event_name != 'pull_request'
