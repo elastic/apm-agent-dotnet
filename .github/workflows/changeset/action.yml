@@ -8,7 +8,7 @@ outputs:
     value: ${{ steps.changed-files.outputs.docs_any_changed == 'true' && steps.changed-files.outputs.not_docs_any_changed == 'false' }}
   ci-changes-only:
     description: "True if only ci files changed"
-    value: ${{ steps.changed-files.outputs.ci_any_changed == 'true' && steps.changed-files.outputs.not__any_changed == 'false' }}
+    value: ${{ steps.changed-files.outputs.ci_any_changed == 'true' && steps.changed-files.outputs.not_ci_any_changed == 'false' }}
     
 runs:
   using: "composite"
