@@ -23,11 +23,11 @@ runs:
             - '*.asciidoc'
             - 'docs/**'
           not_docs:
-            - !'*.md'
-            - !'*.asciidoc'
-            - !'docs/**'
+            - '!*.md'
+            - '!*.asciidoc'
+            - '!docs/**'
           
           ci:
             - '.github/**'
           not_ci:
-            - !'.github/**'
+            - '!.github/**'
