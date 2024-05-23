@@ -8,13 +8,16 @@ inputs:
     required: false
     default: "false"
   azure:
-      description: 'Install azure functions tool chain ("true" or "false")'
-      required: false
-      default: "false"
+    description: 'Install azure functions tool chain ("true" or "false")'
+    required: false
+    default: "false"
 outputs:
   agent-version:
     description: "The current agent version number"
     value: ${{ steps.dotnet.outputs.agent-version }}
+  major-version:
+    description: "The current major version number, semver"
+    value: ${{ steps.dotnet.outputs.major-version }}
     
 runs:
   using: "composite"
@@ -25,40 +28,38 @@ runs:
         git fetch --prune --unshallow --tags
         git tag --list
         
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
         restore-keys: |
           ${{ runner.os }}-nuget
           
-    # Install .NET version as mandated by global.json
-    #- uses: actions/setup-dotnet@v3
-    #  with:
-    #      global-json-file: global.json
+    # Install latest .NET SDKs for supported LTS versions
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          6.0.x
+          8.0.x
 
-    -   name: Setup dotnet
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: |
-            6.0.100
-            7.0.100 
     - id: dotnet
       shell: bash
       run: |
         dotnet --list-sdks
         dotnet tool restore
-        echo "Version Number: $(dotnet minver -t=v -p=canary.0 -v=e)"
-        echo "AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e)" >> $GITHUB_ENV
-        echo "agent-version=$(dotnet minver -t=v -p=canary.0 -v=e)" >> $GITHUB_OUTPUT
-  
-      
+        AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e)
+        echo "Version Number: ${AGENT_VERSION}"
+        echo "AGENT_VERSION=${AGENT_VERSION}" >> $GITHUB_ENV
+        echo "agent-version=${AGENT_VERSION}" >> $GITHUB_OUTPUT
+        echo "major-version=$(echo ${AGENT_VERSION} | cut -d"." -f1)" >> $GITHUB_OUTPUT
+
     # Setup git config
     - uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
-    
+
     # install common dependencies
     - name: Install common dependencies
       uses: ./.github/workflows/install-dependencies
       with:
-          rust: '${{ inputs.rust }}'
-          azure: '${{ inputs.azure }}'
+        rust: '${{ inputs.rust }}'
+        azure: '${{ inputs.azure }}'

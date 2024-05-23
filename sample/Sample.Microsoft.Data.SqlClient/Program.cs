@@ -1,6 +1,6 @@
 using Elastic.Apm;
+using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Logging;
-using Elastic.Apm.SqlClient;
 using Elastic.Apm.Tests.Utilities;
 using Microsoft.Data.SqlClient;
 using Testcontainers.MsSql;

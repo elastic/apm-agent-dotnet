@@ -17,7 +17,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 {
 	public static class Helper
 	{
-		internal static HttpClient ConfigureHttpClient<T>(bool createDefaultClient, bool useOnlyDiagnosticSource, ApmAgent agent,
+		internal static HttpClient ConfigureHttpClient<T>(bool createDefaultClient, ApmAgent agent,
 			WebApplicationFactory<T> factory
 		) where T : class
 		{
@@ -25,35 +25,29 @@ namespace Elastic.Apm.AspNetCore.Tests
 			if (createDefaultClient)
 			{
 #pragma warning disable IDE0022 // Use expression body for methods
-				client = GetClient(agent, factory, useOnlyDiagnosticSource);
+				client = GetClient(agent, factory);
 #pragma warning restore IDE0022 // Use expression body for methods
 #if NETCOREAPP3_0 || NETCOREAPP3_1
 				client.DefaultRequestVersion = new Version(2, 0);
 #endif
 			}
 			else
-				client = GetClientWithoutExceptionPage(agent, factory, useOnlyDiagnosticSource);
+				client = GetClientWithoutExceptionPage(agent, factory);
 
 			return client;
 		}
 
-		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource) where T : class
+		private static IDiagnosticsSubscriber[] UseApmListeners =>
+			new IDiagnosticsSubscriber[] { new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber() };
+
+		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
 		{
 			var builder = factory
 				.WithWebHostBuilder(n =>
 				{
 					n.Configure(app =>
 					{
-						if (useOnlyDiagnosticSource)
-						{
-							var subs = new IDiagnosticsSubscriber[]
-							{
-								new AspNetCoreDiagnosticSubscriber(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber()
-							};
-							agent.Subscribe(subs);
-						}
-						else
-							app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+						app.UseElasticApm(agent, agent.Logger, UseApmListeners);
 
 						app.UseDeveloperExceptionPage();
 
@@ -70,7 +64,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			return builder.CreateClient();
 		}
 
-		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource)
+		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory)
 			where T : class
 		{
 			var builder = factory
@@ -78,16 +72,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						if (useOnlyDiagnosticSource)
-						{
-							var subs = new IDiagnosticsSubscriber[]
-							{
-								new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber(), new AspNetCoreDiagnosticSubscriber()
-							};
-							agent.Subscribe(subs);
-						}
-						else
-							app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+						app.UseElasticApm(agent, agent.Logger, UseApmListeners);
 
 						Startup.ConfigureRoutingAndMvc(app);
 					});
@@ -106,8 +91,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
-
+						app.UseElasticApm(agent, agent.Logger);
 						app.UseDeveloperExceptionPage();
 						app.UseHsts();
 						app.UseHttpsRedirection();

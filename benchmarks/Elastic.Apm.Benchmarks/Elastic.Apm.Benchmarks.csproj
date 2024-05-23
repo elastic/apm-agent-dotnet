@@ -2,27 +2,20 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-    <LangVersion>11</LangVersion>
+    <TargetFramework>net8.0</TargetFramework>
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" />
-    <PackageReference Include="Elastic.CommonSchema.BenchmarkDotNetExporter" Version="1.5.0"/>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" />
+    <PackageReference Include="Elastic.CommonSchema.BenchmarkDotNetExporter" Version="1.5.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(SolutionRoot)\test\integrations\applications\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj"/>
-    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj"/>
-    <ProjectReference Include="..\..\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="TestResources\**\*.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ProjectReference Include="$(SolutionRoot)\test\integrations\applications\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\test\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
   </ItemGroup>
 
 </Project>

@@ -68,7 +68,9 @@ namespace Elastic.Apm.Tests.Utilities
 			string spanCompressionEnabled = null,
 			string spanCompressionExactMatchMaxDuration = null,
 			string spanCompressionSameKindMaxDuration = null,
-			string traceContinuationStrategy = null
+			string traceContinuationStrategy = null,
+			string transactionNameGroups = null,
+			string usePathAsTransactionName = null
 		) : base(
 			logger,
 			new ConfigurationDefaults { DebugName = nameof(MockConfiguration) },
@@ -116,9 +118,11 @@ namespace Elastic.Apm.Tests.Utilities
 				ConfigurationOption.TraceContextIgnoreSampledFalse => traceContextIgnoreSampledFalse,
 				ConfigurationOption.TraceContinuationStrategy => traceContinuationStrategy,
 				ConfigurationOption.TransactionIgnoreUrls => transactionIgnoreUrls,
+				ConfigurationOption.TransactionNameGroups => transactionNameGroups,
 				ConfigurationOption.TransactionMaxSpans => transactionMaxSpans,
 				ConfigurationOption.TransactionSampleRate => transactionSampleRate,
 				ConfigurationOption.UseElasticTraceparentHeader => useElasticTraceparentHeader,
+				ConfigurationOption.UsePathAsTransactionName => usePathAsTransactionName,
 				ConfigurationOption.VerifyServerCert => verifyServerCert,
 				ConfigurationOption.FullFrameworkConfigurationReaderType => null,
 				_ => throw new Exception($"{nameof(MockConfiguration)} does not have implementation for configuration : {key}")

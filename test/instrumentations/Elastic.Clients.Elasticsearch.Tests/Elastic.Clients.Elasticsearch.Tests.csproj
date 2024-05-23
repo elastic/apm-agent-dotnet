@@ -1,21 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.1" />
-    <PackageReference Include="Testcontainers.Elasticsearch" Version="3.0.0" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.12.0" />
+    <PackageReference Include="Testcontainers.Elasticsearch" Version="3.7.0" />
   </ItemGroup>
 
   <ItemGroup>
     <!--Only adding this for testing: make sure `ElasticsearchDiagnosticsSubscriber` does not cause any issue with the new client  -->
     <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
-
     <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="..\..\integrations\Elastic.Apm.AspNetCore.Tests\Elastic.Apm.AspNetCore.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\xunit.runner.json" Link="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

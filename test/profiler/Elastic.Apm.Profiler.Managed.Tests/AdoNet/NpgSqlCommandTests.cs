@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.Docker;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -36,16 +36,16 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				var npgSqlVersion = "5.0.7";
 
 				// TODO: Add x64/x86 options. macOS and Linux do not support x86
-				yield return new object[] { "net7.0", npgSqlVersion };
+				yield return new object[] { "net8.0", npgSqlVersion };
 
 				if (TestEnvironment.IsWindows)
 					yield return new object[] { "net462", npgSqlVersion };
 
 				npgSqlVersion = "6.0.2";
-				yield return new object[] { "net7.0", npgSqlVersion };
+				yield return new object[] { "net8.0", npgSqlVersion };
 
 				npgSqlVersion = "7.0.2";
-				yield return new object[] { "net7.0", npgSqlVersion };
+				yield return new object[] { "net8.0", npgSqlVersion };
 			}
 		}
 
@@ -83,19 +83,24 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 			}
 
 			apmServer.ReceivedData.Transactions.Should().HaveCount(2);
-			apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
+			if (npgsqlVersion.StartsWith("5.")) //version without its own DiagnosticSource
+				apmServer.ReceivedData.Spans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedTotalSpans);
 
 			var genericTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunAllAsync<TDbCommand>");
 			genericTransaction.Should().NotBeNull();
 
 			var genericSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == genericTransaction.Id).ToList();
-			genericSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunAllAsyncSpans);
+			genericSpans.Should().NotBeNull().And.NotBeEmpty();
+			if (npgsqlVersion.StartsWith("5.")) //version without its own DiagnosticSource
+				genericSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunAllAsyncSpans);
 
 			var baseTransaction = apmServer.ReceivedData.Transactions.FirstOrDefault(t => t.Name == "RunBaseTypesAsync");
 			baseTransaction.Should().NotBeNull();
 
 			var baseSpans = apmServer.ReceivedData.Spans.Where(s => s.TransactionId == baseTransaction.Id).ToList();
-			baseSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunBaseTypesAsyncSpans);
+			baseSpans.Should().NotBeNull().And.NotBeEmpty();
+			if (npgsqlVersion.StartsWith("5.")) //version without its own DiagnosticSource
+				baseSpans.Should().HaveCount(AdoNetTestData.DbRunnerExpectedRunBaseTypesAsyncSpans);
 
 			await apmServer.StopAsync();
 		}

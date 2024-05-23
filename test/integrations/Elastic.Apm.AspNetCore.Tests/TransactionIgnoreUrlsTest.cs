@@ -47,10 +47,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private HttpClient _client;
 
-		private void Setup(bool useOnlyDiagnosticSource)
+		private void Setup()
 		{
 #pragma warning disable IDE0022 // Use expression body for methods
-			_client = Helper.GetClient(_agent, _factory, useOnlyDiagnosticSource);
+			_client = Helper.GetClient(_agent, _factory);
 #pragma warning restore IDE0022 // Use expression body for methods
 #if NETCOREAPP3_0 || NETCOREAPP3_1
 			_client.DefaultRequestVersion = new Version(2, 0);
@@ -60,11 +60,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Changes the transactionIgnoreUrls during startup and asserts that the agent reacts accordingly.
 		/// </summary>
-		/// <param name="useDiagnosticSourceOnly"></param>
 		/// <returns></returns>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task ChangeTransactionIgnoreUrlsAfterStart(bool useDiagnosticSourceOnly)
+		[Fact]
+		public async Task ChangeTransactionIgnoreUrlsAfterStart()
 		{
 			// Start with default config
 			var startConfigSnapshot = new MockConfiguration(new NoopLogger());
@@ -76,7 +74,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new CurrentExecutionSegmentsContainer());
 
 			_agent = new ApmAgent(agentComponents);
-			_client = Helper.GetClient(_agent, _factory, useDiagnosticSourceOnly);
+			_client = Helper.GetClient(_agent, _factory);
 
 			_client.DefaultRequestHeaders.Add("foo", "bar");
 			await _client.GetAsync("/Home/SimplePage");
@@ -118,11 +116,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// In the ctor we add `*SimplePage` to the ignoreUrl list. This test makes sure that /home/SimplePage is indeed ignored.
 		/// </summary>
 		/// <returns></returns>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task IgnoreSimplePage(bool useOnlyDiagnosticSource)
+		[Fact]
+		public async Task IgnoreSimplePage()
 		{
-			Setup(useOnlyDiagnosticSource);
+			Setup();
 			var response = await _client.GetAsync("/Home/SimplePage?myUrlParam=123");
 
 			response.IsSuccessStatusCode.Should().BeTrue();

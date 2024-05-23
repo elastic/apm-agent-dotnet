@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 
@@ -72,7 +73,9 @@ namespace Elastic.Apm.Tests
 			transaction.Context.Labels.MergedDictionary.Should().ContainKey("self_signed_cert");
 		}
 
-		[Fact]
+		// We don't support certificate validation on net462 due to .NET Framework binding issues with
+		// the APIs used.
+		[DisabledOnNet462FrameworkFact]
 		public void VerifyServerCert_Should_Allow_Https_To_Apm_Server()
 		{
 			var configuration = new MockConfiguration(

@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
@@ -18,12 +19,11 @@ namespace Elastic.Apm.Model
 			double durationSumUs
 		)
 		{
-			DurationCount = 1;
+			Duration = new DroppedSpanDuration { Count = 1, Sum = new DroppedSpanDuration.DroppedSpanDurationSum { UsRaw = durationSumUs } };
 			ServiceTargetType = serviceTargetType;
 			ServiceTargetName = serviceTargetName;
 			DestinationServiceResource = destinationServiceResource;
 			Outcome = outcome;
-			DurationSumUs = durationSumUs;
 		}
 
 		/// <summary>
@@ -46,23 +46,35 @@ namespace Elastic.Apm.Model
 		public string ServiceTargetName { get; }
 
 		/// <summary>
-		/// Duration holds duration aggregations about the dropped span.
-		/// Count holds the number of times the dropped span happened.
-		/// </summary>
-		[JsonProperty("duration.count")]
-		public int DurationCount { get; set; }
-
-
-		/// <summary>
-		/// Duration holds duration aggregations about the dropped span.
-		/// Sum holds dimensions about the dropped span's duration.
-		/// </summary>
-		[JsonProperty("duration.sum.us")]
-		public double DurationSumUs { get; set; }
-
-		/// <summary>
 		/// Outcome of the aggregated spans.
 		/// </summary>
 		public Outcome Outcome { get; }
+
+		/// <summary>
+		/// Duration holds duration aggregations about the dropped span.
+		/// </summary>
+		public DroppedSpanDuration Duration { get; set; }
+
+		internal class DroppedSpanDuration
+		{
+			/// <summary>
+			/// Count holds the number of times the dropped span happened.
+			/// </summary>
+			public int Count { get; set; }
+
+			/// <summary>
+			/// Sum holds dimensions about the dropped span's duration.
+			/// </summary>
+			public DroppedSpanDurationSum Sum { get; set; }
+
+			internal class DroppedSpanDurationSum
+			{
+				[JsonIgnore]
+				public double UsRaw { get; set; }
+
+				// As `duration.sum.us` is an integer in the intake API we round during serialization.
+				public int Us => Convert.ToInt32(UsRaw);
+			}
+		}
 	}
 }

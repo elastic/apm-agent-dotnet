@@ -70,13 +70,14 @@ module Build =
         DotNet.Exec [target; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
         
     let private msBuild target projectOrSln =
-        MSBuild.build (fun p ->
+        MSBuild.build (fun (p: MSBuildParams) ->
                 { p with
                     Verbosity = Some(Quiet)
                     Targets = [target]
                     Properties = [
                         "Configuration", "Release"
                         "Optimize", "True"
+                        "dummy", "test" // See https://github.com/fsprojects/FAKE/issues/2738
                     ]
                     // current version of Fake MSBuild module does not support latest bin log file
                     // version of MSBuild in VS 16.8, so disable for now.
@@ -148,7 +149,7 @@ module Build =
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
         dotnet "build" (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
-        Cargo.Exec [ "make"; "build-release"; ]
+        Cargo.Exec [ "make"; "build-release"; "--disable-check-for-update"]
                               
     /// Publishes all projects with framework versions
     let Publish targets =        
@@ -185,7 +186,7 @@ module Build =
         if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
         
     let CleanProfiler () =
-        Cargo.Exec ["make"; "clean"]       
+        Cargo.ExecWithTimeout ["make"; "clean"; "--disable-check-for-update"] (TimeSpan.FromMinutes 10)
 
     /// Restores all packages for the solution
     let ToolRestore () =
@@ -202,7 +203,7 @@ module Build =
         //dotnet dotnet-format --exclude src/Elastic.Apm/Libraries/
         DotNet.Exec ["dotnet-format"; "--check"; "--exclude"; "src/Elastic.Apm/Libraries/"]
             
-    let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =        
+    let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =
         source.GetFiles()
         |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
         |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
@@ -214,31 +215,31 @@ module Build =
         let versionedName =
             sprintf "%s_%s" name (currentAssemblyVersion.ToString())
                 
-        let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
+        let agentDir = Paths.BuildOutput name |> DirectoryInfo
         agentDir.Create()
 
         // copy startup hook to root of agent directory
-        !! (Paths.BuildOutput "ElasticApmAgentStartupHook/netcoreapp2.2")
+        !! (Paths.BuildOutput "ElasticApmAgentStartupHook/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs agentDir)
             
         // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
-        !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
+        !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netstandard2.0")
         ++ (Paths.BuildOutput "Elastic.Apm/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major)))
                  
         // assemblies compiled against older version of System.Diagnostics.DiagnosticSource 
-        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major))
+        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major))
         ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
         
         // assemblies compiled against 6.0 version of System.Diagnostics.DiagnosticSource 
-        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major)) //using old version here, because it the netcoreapp2.2 app can't build with diagnosticsource6
+        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major)) //using old version here, because it the netcoreapp2.2 app can't build with diagnosticsource6
         ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/net6.0" diagnosticSourceVersion6.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
@@ -248,13 +249,6 @@ module Build =
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
       
       
-    /// Builds docker image including the ElasticApmAgent  
-    let AgentDocker() =
-        let agentVersion = Versioning.CurrentVersion.FileVersion.ToString()        
-        
-        Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
-                      "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
-        
     let ProfilerIntegrations () =
         DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
                      "-i"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"

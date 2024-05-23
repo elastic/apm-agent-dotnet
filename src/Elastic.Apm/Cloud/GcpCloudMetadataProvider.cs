@@ -81,8 +81,7 @@ namespace Elastic.Apm.Cloud
 						},
 					Project = new CloudProject
 					{
-						Id = metadata["project"]["numericProjectId"].Value<long>().ToString(CultureInfo.InvariantCulture),
-						Name = metadata["project"]["projectId"].Value<string>()
+						Id = metadata["project"]["projectId"].Value<string>()
 					},
 					AvailabilityZone = availabilityZone,
 					Machine = new CloudMachine { Type = machineType },

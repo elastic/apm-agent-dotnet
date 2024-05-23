@@ -21,7 +21,7 @@ public class UnsampledTransactionTests
 	{
 		var payloadSender = new MockPayloadSender();
 		using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
-				   configuration: new MockConfiguration(transactionSampleRate: "0"))))
+				   configuration: new MockConfiguration(transactionSampleRate: "0", openTelemetryBridgeEnabled: "false"))))
 			agent.Tracer.CaptureTransaction("foo", "bar", () => { });
 
 		payloadSender.WaitForTransactions(TimeSpan.FromMilliseconds(100));

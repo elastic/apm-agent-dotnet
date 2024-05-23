@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Azure.CosmosDb;
 using Elastic.Apm.Azure.ServiceBus;
@@ -12,8 +13,8 @@ using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.GrpcClient;
+using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.MongoDb;
-using Elastic.Apm.SqlClient;
 using Microsoft.Extensions.Hosting;
 
 namespace Elastic.Apm.NetCoreAll
@@ -37,6 +38,8 @@ namespace Elastic.Apm.NetCoreAll
 		/// and <see cref="MongoDbDiagnosticsSubscriber"/>.
 		/// </summary>
 		/// <param name="builder">Builder.</param>
+		[Obsolete("This extension is maintained for backward compatibility." +
+			" We recommend registering the agent via the IServiceCollection using the AddAllElasticApm extension method instead.")]
 		public static IHostBuilder UseAllElasticApm(this IHostBuilder builder) => builder.UseElasticApm(
 			new HttpDiagnosticsSubscriber(),
 			new AspNetCoreDiagnosticSubscriber(),

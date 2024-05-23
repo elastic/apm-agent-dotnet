@@ -6,14 +6,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.Config.Net4FullFramework;
-using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Extensions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -29,43 +31,150 @@ namespace Elastic.Apm.AspNetFullFramework
 	/// </summary>
 	public class ElasticApmModule : IHttpModule
 	{
-		private static bool _isCaptureHeadersEnabled;
-		// ReSharper disable once RedundantDefaultMemberInitializer
-		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new();
+		private static volatile bool ApplicationStarted = false;
+		private static readonly object ApplicationStartedLock = new();
+		private static bool IsCaptureHeadersEnabled;
+		private static bool UsingIntegratedPipeline = true;
+
 		private static readonly LazyContextualInit InitOnceHelper = new();
+		private static readonly MethodInfo OnExecuteRequestStepMethodInfo = typeof(HttpApplication).GetMethod("OnExecuteRequestStep");
 
 		private readonly string _dbgInstanceName;
-		private HttpApplication _application;
 		private IApmLogger _logger;
 
 		private readonly Lazy<Type> _httpRouteDataInterfaceType =
-			new Lazy<Type>(() => Type.GetType("System.Web.Http.Routing.IHttpRouteData,System.Web.Http"));
+			new(() => Type.GetType("System.Web.Http.Routing.IHttpRouteData,System.Web.Http"));
 
 		private Func<object, string> _routeDataTemplateGetter;
 		private Func<object, decimal> _routePrecedenceGetter;
 
-		public ElasticApmModule() =>
-			// ReSharper disable once ImpureMethodCallOnReadonlyValueField
-			_dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
+		private static int InstanceCount;
 
-		public void Dispose() => _application = null;
+		public ElasticApmModule()
+		{
+			var instanceCounter = Interlocked.Increment(ref InstanceCount);
+			_dbgInstanceName = $"{nameof(ElasticApmModule)}.#{instanceCounter}";
+		}
 
 		/// <inheritdoc />
 		public void Init(HttpApplication application)
 		{
+			// This is not guarded inside a try/catch as it should not be possible for this to throw an exception.
+			_logger ??= (AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(null)).Scoped(_dbgInstanceName);
+			_logger.Trace()?.Log($"{nameof(ElasticApmModule)}.{nameof(Init)} was invoked and called {nameof(AttemptAgentInitialization)}.");
+
 			try
 			{
-				InitImpl(application);
+				// If we've already attempted initialisation and determined we are not in integrated mode, we can return quickly here.
+				// As `UsingIntegratedPipeline` is initialised as `true`, we pass through here at least once.
+				if (!UsingIntegratedPipeline)
+					return;
+
+				if (!ApplicationStarted)
+				{
+					AttemptAgentInitialization(_logger);
+				}
+				else
+				{
+					// If the app was already started by the time Init was called, we won't yet have a scoped logger to use, so create one.
+					_logger ??= CreateScopedLogger();
+					_logger.Trace()
+						?.Log($"{nameof(ElasticApmModule)}.{nameof(Init)} was invoked by an instance when the Agent has already been initialized. " +
+							"No further initialization required.");
+				}
+
+				if (!Agent.Config.Enabled)
+				{
+					_logger.Trace()?.Log("Agent not enabled. Skipping registration of HttpApplication event handlers.");
+					return;
+				}
+
+				_routeDataTemplateGetter = CreateWebApiAttributeRouteTemplateGetter();
+				_routePrecedenceGetter = CreateRoutePrecedenceGetter();
+
+				_logger.Trace()?.Log("Registering to HttpApplication event handlers.");
+
+				application.BeginRequest += OnBeginRequest;
+				application.EndRequest += OnEndRequest;
+				application.Error += OnError;
+
+				if (OnExecuteRequestStepMethodInfo != null)
+				{
+					_logger.Trace()
+						?.Log("Registering to HttpApplication.OnExecuteRequestStep.");
+
+					// OnExecuteRequestStep is available starting with 4.7.1
+					try
+					{
+#pragma warning disable IDE0300 // Simplify collection initialization
+						OnExecuteRequestStepMethodInfo.Invoke(application, new object[] { (Action<HttpContextBase, Action>)OnExecuteRequestStep });
+#pragma warning restore IDE0300 // Simplify collection initialization
+					}
+					catch (Exception e)
+					{
+						_logger.Error()
+							 ?.LogException(e, "Failed to invoke OnExecuteRequestStep. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
+								 PlatformDetection.DotNetRuntimeDescription, HttpRuntime.IISVersion);
+					}
+				}
 			}
 			catch (Exception ex)
 			{
-				const string linePrefix = "Elastic APM .NET Agent: ";
-				System.Diagnostics.Trace.WriteLine($"{linePrefix}[CRITICAL] Exception thrown by {nameof(ElasticApmModule)}.{nameof(InitImpl)}."
-					+ Environment.NewLine + linePrefix + $"+-> Exception: {ex.GetType().FullName}: {ex.Message}"
-					+ Environment.NewLine + TextUtils.PrefixEveryLine(ex.StackTrace, linePrefix + " ".Repeat(4))
-				);
+				_logger.Critical()?.LogException(ex, $"Exception thrown by {nameof(ElasticApmModule)}.{nameof(Init)}.");
 			}
 		}
+
+		private void AttemptAgentInitialization(IApmLogger logger)
+		{
+			// We use a lock here to ensure that if multiple `HttpApplication` instances are created, each calling the `Init` method
+			// on registered module, that we initialise the agent only once. The first instance wins and any concurrent calls to `Init`
+			// should block until this is completed such that they only continue once our initialisation is completed.
+			lock (ApplicationStartedLock)
+			{
+				if (ApplicationStarted)
+				{
+					_logger ??= CreateScopedLogger();
+					_logger.Trace()?.Log("Lock aquired, but Agent singleton has already been initialized. Skipping initialization.");
+					return;
+				}
+
+				var agentComponents = CreateAgentComponents(_dbgInstanceName, logger);
+
+				_logger = agentComponents.Logger.Scoped(_dbgInstanceName);
+				_logger.Trace()?.Log("Initializing singleton Agent.");
+
+				// We store this in a static field as it should be consistent for all invocations.  We can then log our error once but
+				// also short-circuit subsequent `Init` calls when we've already determined the app is hosted on an incompatible pipeline.
+				UsingIntegratedPipeline = HttpRuntime.UsingIntegratedPipeline;
+
+				if (!UsingIntegratedPipeline)
+				{
+					_logger.Error()
+						?.Log("Skipping Agent initialization. Elastic APM Module requires the IIS Application Pool to run under an Integrated Pipeline."
+							+ " .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
+							PlatformDetection.DotNetRuntimeDescription, HttpRuntime.IISVersion);
+
+					return;
+				}
+
+				Agent.Setup(agentComponents);
+
+				_logger.Debug()
+					?.Log("Initialized Agent singleton. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
+						PlatformDetection.DotNetRuntimeDescription, HttpRuntime.IISVersion);
+
+				if (!Agent.Instance.Configuration.Enabled)
+					return;
+
+				IsCaptureHeadersEnabled = Agent.Instance.Configuration.CaptureHeaders;
+
+				Agent.Instance.SubscribeIncludingAllDefaults();
+
+				ApplicationStarted = true;
+			}
+		}
+
+		private ScopedLogger CreateScopedLogger() => Agent.Instance.Logger.Scoped(_dbgInstanceName);
 
 		/// <summary>
 		/// Creates a new instance of <see cref="AgentComponents"/> configured
@@ -74,9 +183,9 @@ namespace Elastic.Apm.AspNetFullFramework
 		/// <returns>a new instance of <see cref="AgentComponents"/></returns>
 		public static AgentComponents CreateAgentComponents() => CreateAgentComponents($"{nameof(ElasticApmModule)}.#0");
 
-		internal static AgentComponents CreateAgentComponents(string debugName)
+		internal static AgentComponents CreateAgentComponents(string debugName, IApmLogger apmLogger = null)
 		{
-			var logger = AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger();
+			var logger = apmLogger ?? AgentDependencies.Logger ?? FullFrameworkDefaultImplementations.CreateDefaultLogger(null);
 
 			var config = FullFrameworkDefaultImplementations.CreateConfigurationReaderFromConfiguredType(logger)
 				?? new ElasticApmModuleConfiguration(logger);
@@ -91,28 +200,90 @@ namespace Elastic.Apm.AspNetFullFramework
 			return agentComponents;
 		}
 
-		private void InitImpl(HttpApplication application)
+		private void RestoreContextIfNeeded(HttpContextBase context)
 		{
-			var isInitedByThisCall = InitOnceForAllInstancesUnderLock(_dbgInstanceName);
+			string EventName() => Enum.GetName(typeof(RequestNotification), context.CurrentNotification);
 
-			_logger = Agent.Instance.Logger.Scoped(_dbgInstanceName);
-
-			if (!Agent.Config.Enabled)
+			var urlPath = TryGetUrlPath(context);
+			var ignoreUrls = Agent.Instance?.Configuration.TransactionIgnoreUrls;
+			if (urlPath != null && ignoreUrls != null && WildcardMatcher.IsAnyMatch(ignoreUrls, urlPath))
 				return;
 
-			if (isInitedByThisCall)
+			if (Agent.Instance == null)
 			{
-				_logger.Debug()
-					?.Log("Initialized Agent singleton. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
-						PlatformDetection.DotNetRuntimeDescription, HttpRuntime.IISVersion);
+				_logger.Trace()?
+					.Log("Agent.Instance is null during {RequestNotification}. url: {{UrlPath}}",
+						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath);
+				return;
+			}
+			if (Agent.Instance.Tracer == null)
+			{
+				_logger.Trace()?
+					.Log("Agent.Instance.Tracer is null during {RequestNotification}. url: {{UrlPath}}",
+						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath);
+				return;
+			}
+			var transaction = Agent.Instance?.Tracer?.CurrentTransaction;
+			if (transaction != null)
+				return;
+			if (Agent.Config.LogLevel <= LogLevel.Trace)
+				return;
+
+			var transactionInCurrent = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
+			var transactionInApplicationInstance = context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] is not null;
+			var spanInCurrent = HttpContext.Current?.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey] is not null;
+			var spanInApplicationInstance = context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey] is not null;
+
+			_logger.Trace()?
+				.Log($"{nameof(ITracer.CurrentTransaction)} is null during {{RequestNotification}}. url: {{UrlPath}}"
+					+ "(HttpContext.Current Span: {HttpContextCurrentHasSpan}, Transaction: {HttpContextCurrenHasTransaction})"
+					+ "(ApplicationContext Span: {ApplicationContextHasSpan}, Transaction: {ApplicationContextHasTransaction})",
+						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath, spanInCurrent, transactionInCurrent, spanInApplicationInstance, transactionInApplicationInstance
+				);
+
+			if (HttpContext.Current == null)
+			{
+				_logger.Trace()?
+					.Log("HttpContext.Current is null during {RequestNotification}. Unable to attempt to restore transaction. url: {UrlPath}",
+						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath);
+				return;
 			}
 
-			_routeDataTemplateGetter = CreateWebApiAttributeRouteTemplateGetter();
-			_routePrecedenceGetter = CreateRoutePrecedenceGetter();
-			_application = application;
-			_application.BeginRequest += OnBeginRequest;
-			_application.EndRequest += OnEndRequest;
-			_application.Error += OnError;
+			if (!transactionInCurrent && transactionInApplicationInstance)
+			{
+				HttpContext.Current.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey] =
+					context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentTransactionKey];
+				_logger.Trace()?.Log("Restored transaction to HttpContext.Current.Items {RequestNotification}. url: {UrlPath}",
+						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath);
+			}
+			if (!spanInCurrent && spanInApplicationInstance)
+			{
+				HttpContext.Current.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey] =
+					context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey];
+				_logger.Trace()?.Log("Restored span to HttpContext.Current.Items {RequestNotification}:{EventName()}. url: {UrlPath}",
+						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath);
+			}
+
+		}
+
+		private string TryGetUrlPath(HttpContextBase context)
+		{
+			try
+			{
+				return context.Request.Unvalidated.Path;
+			}
+			catch
+			{
+				//ignore
+				return string.Empty;
+			}
+
+		}
+
+		private void OnExecuteRequestStep(HttpContextBase context, Action step)
+		{
+			RestoreContextIfNeeded(context);
+			step();
 		}
 
 		private void OnBeginRequest(object sender, EventArgs e)
@@ -177,7 +348,10 @@ namespace Elastic.Apm.AspNetFullFramework
 				return;
 			}
 
-			var transactionName = $"{request.HttpMethod} {request.Unvalidated.Path}";
+			// Set the initial transaction name based on the request path, if enabled in configuration (default is true).
+			var transactionName = Agent.Instance.Configuration.UsePathAsTransactionName
+				? $"{request.HttpMethod} {request.Unvalidated.Path}"
+				: $"{request.HttpMethod} unknown route";
 
 			var distributedTracingData = ExtractIncomingDistributedTracingData(request);
 			ITransaction transaction;
@@ -263,7 +437,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Socket = new Socket { RemoteAddress = request.UserHostAddress },
 				HttpVersion = GetHttpVersion(request.ServerVariables["SERVER_PROTOCOL"]),
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(request.Unvalidated.Headers) : null
+				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(request.Unvalidated.Headers) : null
 			};
 		}
 
@@ -444,7 +618,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Finished = true,
 				StatusCode = response.StatusCode,
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
+				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
@@ -460,34 +634,27 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			if (context.User is ClaimsPrincipal claimsPrincipal)
 			{
-				static string GetClaimWithFallbackValue(ClaimsPrincipal principal, string claimType, string fallbackClaimType)
+				try
 				{
-					var claim = principal.Claims.FirstOrDefault(n => n.Type == claimType || n.Type == fallbackClaimType);
-					return claim != null ? claim.Value : string.Empty;
-				}
+					static string GetClaimWithFallbackValue(ClaimsPrincipal principal, string claimType, string fallbackClaimType)
+					{
+						var claim = principal.Claims.FirstOrDefault(n => n.Type == claimType || n.Type == fallbackClaimType);
+						return claim != null ? claim.Value : string.Empty;
+					}
 
-				user.Email = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.Email, OpenIdClaimTypes.Email);
-				user.Id = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.NameIdentifier, OpenIdClaimTypes.UserId);
+					user.Email = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.Email, OpenIdClaimTypes.Email);
+					user.Id = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.NameIdentifier, OpenIdClaimTypes.UserId);
+				}
+				catch (SqlException ex)
+				{
+					_logger.Error()?.Log("Unable to access user claims due to SqlException with message: {message}", ex.Message);
+				}
 			}
 
 			transaction.Context.User = user;
 
 			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 		}
-
-		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
-			InitOnceHelper.IfNotInited?.Init(() =>
-			{
-				var agentComponents = CreateAgentComponents(dbgInstanceName);
-				Agent.Setup(agentComponents);
-
-				if (!Agent.Instance.Configuration.Enabled)
-					return;
-
-				_isCaptureHeadersEnabled = Agent.Instance.Configuration.CaptureHeaders;
-
-				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
-			}) ?? false;
 
 		/// <summary>
 		/// Compiles a delegate from a lambda expression to get a route's DataTokens property,
@@ -556,5 +723,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			return null;
 		}
+
+		public void Dispose() { }
 	}
 }

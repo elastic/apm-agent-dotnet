@@ -16,7 +16,7 @@ inputs:
   framework:
       description: 'test filter to select tests from solution projects'
       required: false
-      default: 'net7.0'
+      default: 'net8.0'
 
 runs:
   using: "composite"
@@ -36,7 +36,7 @@ runs:
       run: find ./build/output/junit-* -exec grep -q '<testsuites />' '{}' \; -delete
       
     - name: "Test Report Summary: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
-      uses: phoenix-actions/test-reporting@v12
+      uses: phoenix-actions/test-reporting@v14
       if: success() || failure()
       with:
         name: " Tests: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"

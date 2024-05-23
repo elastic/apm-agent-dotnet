@@ -5,7 +5,6 @@
 using System;
 using System.Reflection;
 using System.Threading;
-using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
@@ -25,6 +24,7 @@ namespace Elastic.Apm.Benchmarks.AspNetCorePerf
 						Startup.ConfigureServicesExceptMvc(services);
 
 						services
+							.AddElasticApm(new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber())
 							.AddMvc()
 							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 					}
@@ -34,10 +34,6 @@ namespace Elastic.Apm.Benchmarks.AspNetCorePerf
 					if (withAgent)
 					{
 						Environment.SetEnvironmentVariable("ELASTIC_APM_FLUSH_INTERVAL", "0");
-						app.UseElasticApm(subscribers: new IDiagnosticsSubscriber[]
-						{
-							new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber()
-						});
 					}
 
 					Startup.ConfigureAllExceptAgent(app);

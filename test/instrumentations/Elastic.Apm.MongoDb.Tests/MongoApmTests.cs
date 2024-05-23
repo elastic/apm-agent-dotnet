@@ -64,7 +64,7 @@ namespace Elastic.Apm.MongoDb.Tests
 
 		private readonly MockPayloadSender _payloadSender;
 
-		[DisabledOnWindowsFact]
+		[DockerFact]
 		public async Task ApmAgent_ShouldCorrectlyCaptureSpan()
 		{
 			// Arrange
@@ -101,7 +101,7 @@ namespace Elastic.Apm.MongoDb.Tests
 			});
 		}
 
-		[DisabledOnWindowsFact]
+		[DockerFact]
 		public async Task ApmAgent_ShouldCorrectlyCaptureSpanAndError_WhenMongoCommandFailed()
 		{
 			// Arrange

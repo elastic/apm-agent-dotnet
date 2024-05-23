@@ -39,8 +39,28 @@ The way to collect logs depends on the setup of your application.
 ==== ASP.NET Core
 
 If you added the agent to your application as per the <<setup-asp-net-core>> document with the `UseAllElasticApm` or `UseElasticApm` method, it will integrate with the
-https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1[ASP.NET Core logging infrastructure].
+https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging[ASP.NET Core logging infrastructure].
 This means the Agent will pick up the configured logging provider and log as any other component logs.
+
+[IMPORTANT]
+--
+In this scenario, the `LogLevel` APM agent configuration (e.g. setting the `ELASTIC_APM_LOG_LEVEL` environment variable) DOES NOT control the 
+verbosity of the agent logs. The agent logs are controlled by the ASP.NET Core logging configuration from `IConfiguration`, typically configured 
+via `appsettings.json`.
+--
+
+For example, the following configuration in `appsettings.json` limits APM agents logs to those with a log level of `Warning` or higher:
+
+[source,xml]
+----
+"Logging": {
+  "LogLevel": {
+    "Default": "Information",
+    "Elastic.Apm": "Warning" <1>
+  }
+},
+----
+<1> Control the verbosity of the agent logs by setting the log level for the `Elastic.Apm` category
 
 [float]
 [[collect-logs-classic]]
@@ -50,7 +70,7 @@ ASP.NET (classic) does not have a predefined logging system. By default, the age
 emit log messages to a 
 https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracesource[`System.Diagnostics.TraceSource`] 
 with the source name `"Elastic.Apm"`. The TraceSource adheres to the log levels defined in the
-APM agent configuration.
+APM agent configuration. Typically, you will configure a preferred log level using an application setting in `web.config`.
 
 [IMPORTANT]
 --
@@ -67,7 +87,7 @@ named my_log_file.log:
 ----
 <configuration>
   <!-- other sections .... -->
-<system.diagnostics>
+  <system.diagnostics>
   <sources>
     <source name="Elastic.Apm"> <1>
       <listeners>
@@ -174,6 +194,51 @@ You may use the Public Agent API with the `Elastic.Apm.Agent` class in code that
 To prevent the `InstanceAlreadyCreatedException` in these scenarios, first use the `Elastic.Apm.Agent.IsConfigured` method to check if the agent is already initialized. After the check, you can safely use other methods in the Public Agent API. This will prevent accidental implicit agent initialization.
 
 [float]
+[[legacy-asp-net-sync-context]]
+=== ASP.NET is using LegacyAspNetSynchronizationContext and might not behave well for asynchronous code
+
+If you see this warning being logged it means your classic ASP.NET Application is running under quirks mode and is using a deprecated but backwards compatible asynchronous context.
+This may prevent our agent from working correctly when asynchronous code introduces a thread switch since this context does not reliably restore `HttpContext.Items`. 
+
+To break out of quirks mode the runtime must be explicitly specified in web.config:
+
+
+[source,xml]
+----
+<httpRuntime targetFramework="4.5" />
+----
+
+Read more about ASP.NET quirks mode here: https://devblogs.microsoft.com/dotnet/all-about-httpruntime-targetframework
+
+[float]
+[[sql-failed-to-remove-from-processing-spans]]
+=== SqlEventListener Failed capturing sql statement (failed to remove from ProcessingSpans).
+
+We log this warning when our SQL even listener is unable to find the active transaction. 
+This has been only observed under IIS when the application is running under quirks mode.
+See "<<legacy-asp-net-sync-context>>" section for more backfround information and possible fixes.
+
+
+[float]
+[[http-no-transaction]]
+=== HttpDiagnosticListenerFullFrameworkImpl No current transaction, skip creating span for outgoing HTTP request
+
+We log this trace warning when our outgoing HTTP listener is not able to get the current transaction.
+This has been only observed under IIS when the application is running under quirks mode.
+See "<<legacy-asp-net-sync-context>>" section for more backfround information and possible fixes.
+
+
+[float]
+[[iis-integrated-pipeline-mode]]
+=== Exception: System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode
+
+This exception happens if the classic ASP.NET application run under an Application pool that enforces the classic pipeline mode. 
+This prevents our agent to modify headers and thus will break distributed tracing. 
+
+The agent is only supported on IIS7 and higher where the `Integrated Pipeline Mode` is the default.
+
+
+[float]
 [[startup-hook-failure]]
 === Startup hooks failure
 
@@ -200,3 +265,21 @@ If this is too much in your environment, consider disabling stack trace capturin
 
 - To disable stack trace capturing for spans, but continue to capture stack traces for errors, set the <<config-span-stack-trace-min-duration>> to `-1` and leave the <<config-stack-trace-limit>> on its default.
 - To disable stack trace capturing entirely –which in most applications reduces the agent overhead dramatically– set <<config-stack-trace-limit>> to `0`.
+
+[float]
+[[iisexpress-classic-pipeline]]
+=== The ElasticApmModule does not load or capture transactions and there are no agent logs generated on IISExpress 
+
+When debugging applications using Visual Studio and IISExpress, the same requirement to use the `Integrated` managed 
+pipeline mode exists. Select your web application project in the solution explorer and press F4 to load the properties
+window. If the managed pipeline mode is set to classic, the ElasticApmModule will not load.
+
+For example:
+
+image::./images/classic-pipeline.png[Classic Managed Pipeline Mode in Properties]
+
+Should be changed to:
+
+image::./images/integrated-pipeline.png[Integrated Managed Pipeline Mode in Properties]
+
+You may need to restart Visual Studio for these changes to fully apply.

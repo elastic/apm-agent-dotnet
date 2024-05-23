@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,8 +36,12 @@ namespace Elastic.Apm.AspNetCore
 					return null;
 				}
 
+				// For completeness we set the initial transaction name based on the config.
+				// I don't believe there are any valid scenarios where this will not be overwritten later.
 				ITransaction transaction;
-				var transactionName = $"{context.Request.Method} {context.Request.Path}";
+				var transactionName = configuration?.UsePathAsTransactionName ?? ConfigConsts.DefaultValues.UsePathAsTransactionName
+					? $"{context.Request.Method} {context.Request.Path}"
+					: $"{context.Request.Method} unknown route";
 
 				var containsTraceParentHeader =
 					context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderName, out var traceParentHeader);
@@ -206,6 +214,8 @@ namespace Elastic.Apm.AspNetCore
 					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
 					transaction.SetOutcome(GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result));
 				}
+
+				logger?.Trace()?.Log("Transaction is sampled {Sampled}", transaction.IsSampled);
 
 				if (transaction.IsSampled)
 				{

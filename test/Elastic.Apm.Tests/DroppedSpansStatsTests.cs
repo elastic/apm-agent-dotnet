@@ -60,7 +60,7 @@ namespace Elastic.Apm.Tests
 				//This span will be dropped
 				var span1 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 				span1.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = "https://foo.bar" };
-				span1.Duration = 100;
+				span1.Duration = 100.001;
 				span1.End();
 
 				transaction.End();
@@ -74,8 +74,8 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetName.Should().Be("foo.bar:443");
 			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetType.Should().Be("bar");
 			payloadSender.FirstTransaction.DroppedSpanStats.First().Outcome.Should().Be(Outcome.Success);
-			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(1);
-			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationSumUs.Should().Be(100);
+			payloadSender.FirstTransaction.DroppedSpanStats.First().Duration.Count.Should().Be(1);
+			payloadSender.FirstTransaction.DroppedSpanStats.First().Duration.Sum.Us.Should().Be(100); // This should be rounded and will be sent in the JSON
 		}
 
 		[Fact]
@@ -130,22 +130,22 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
-					&& n.DurationCount == 2 && Math.Abs(n.DurationSumUs - 250) < 1 && n.DestinationServiceResource == "foo.bar:443"
+					&& n.Duration.Count == 2 && Math.Abs(n.Duration.Sum.UsRaw - 250) < 1 && n.DestinationServiceResource == "foo.bar:443"
 					&& n.ServiceTargetName == "foo.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Failure
-					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 50) < 1 && n.DestinationServiceResource == "foo.bar:443"
+					&& n.Duration.Count == 1 && Math.Abs(n.Duration.Sum.UsRaw - 50) < 1 && n.DestinationServiceResource == "foo.bar:443"
 					&& n.ServiceTargetName == "foo.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
-					&& n.DurationCount == 1 && Math.Abs(n.DurationSumUs - 15) < 1 && n.DestinationServiceResource == "foo2.bar:443"
+					&& n.Duration.Count == 1 && Math.Abs(n.Duration.Sum.UsRaw - 15) < 1 && n.DestinationServiceResource == "foo2.bar:443"
 					&& n.ServiceTargetName == "foo2.bar:443" && n.ServiceTargetType == "bar");
 
 			payloadSender.FirstTransaction.DroppedSpanStats.Should()
 				.Contain(n => n.Outcome == Outcome.Success
-					&& n.DurationCount == 50 && Math.Abs(n.DurationSumUs - 50 * 50) < 1 && n.DestinationServiceResource == "mysql");
+					&& n.Duration.Count == 50 && Math.Abs(n.Duration.Sum.UsRaw - 50 * 50) < 1 && n.DestinationServiceResource == "mysql");
 		}
 
 		/// <summary>
@@ -205,7 +205,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.DroppedSpanStats.First().DestinationServiceResource.Should().Be("bar");
 			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetType.Should().Be("bar");
 			payloadSender.FirstTransaction.DroppedSpanStats.First().ServiceTargetName.Should().BeNullOrEmpty();
-			payloadSender.FirstTransaction.DroppedSpanStats.First().DurationCount.Should().Be(500);
+			payloadSender.FirstTransaction.DroppedSpanStats.First().Duration.Count.Should().Be(500);
 		}
 	}
 }

@@ -7,10 +7,10 @@
 [float]
 ==== Quick start
 
-[NOTE]
+[IMPORTANT]
 --
-We suggest using the approach described in the <<setup-dotnet-net-core, .NET Core setup instructions>>, 
-to register the agent on `IHostBuilder`, as opposed to using `IApplicationBuilder` as described below.
+We strongly suggest using the approach described in the <<setup-dotnet-net-core, .NET applications using Microsoft.Extensions.Hosting instructions>>, 
+to register the agent on the `IServiceCollection`, as opposed to using `IApplicationBuilder` as described below.
 
 We keep the `IApplicationBuilder` introduced here only for backwards compatibility.
 --

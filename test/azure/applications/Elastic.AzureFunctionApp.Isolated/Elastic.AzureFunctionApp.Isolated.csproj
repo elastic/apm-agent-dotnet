@@ -1,18 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <AzureFunctionsVersion>V4</AzureFunctionsVersion>
+    <TargetFramework>net8.0</TargetFramework>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.8.0"/>
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.7.0"/>
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13"/>
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.1.0"/>
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage.Queues" Version="5.0.0"/>
+    <!-- 
+    The versions below are NOT the latest but anything newer breaks when attempting to run func
+    See: https://github.com/Azure/azure-functions-core-tools/issues/3594
+    -->
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0"/>
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.16.1"/>
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.1.0"/>
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

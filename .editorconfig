@@ -202,6 +202,8 @@ resharper_csharp_accessor_owner_body=expression_body
 resharper_redundant_case_label_highlighting=do_not_show
 resharper_redundant_argument_default_value_highlighting=do_not_show
 
+dotnet_diagnostic.IDE0057.severity = none
+
 [*.{sh,bat,ps1}]
 trim_trailing_whitespace=true
 insert_final_newline=true

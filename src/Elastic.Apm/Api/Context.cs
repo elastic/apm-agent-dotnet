@@ -12,12 +12,12 @@ namespace Elastic.Apm.Api
 {
 	public class Context
 	{
-		private Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
+		private Lazy<Dictionary<string, string>> _custom = new();
 
 		[JsonConverter(typeof(CustomJsonConverter))]
 		public Dictionary<string, string> Custom => _custom.Value;
 
-		internal Lazy<LabelsDictionary> InternalLabels = new Lazy<LabelsDictionary>();
+		internal Lazy<LabelsDictionary> InternalLabels = new();
 
 		/// <summary>
 		/// <seealso cref="ShouldSerializeLabels" />

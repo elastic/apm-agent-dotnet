@@ -16,6 +16,7 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests;
 
+[Collection("DiagnosticListenerTest")]
 public class TransactionQueueTests
 {
 	/// <summary>

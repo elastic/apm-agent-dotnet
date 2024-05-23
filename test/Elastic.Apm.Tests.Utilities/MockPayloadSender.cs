@@ -22,23 +22,23 @@ namespace Elastic.Apm.Tests.Utilities
 	internal class MockPayloadSender : IPayloadSender
 	{
 		private static readonly JObject JsonSpanTypesData =
-			JObject.Parse(File.ReadAllText("./TestResources/json-specs/span_types.json"));
+			JObject.Parse(File.ReadAllText(Path.Combine(SolutionPaths.Root, "test/Elastic.Apm.Tests.Utilities/TestResources/json-specs/span_types.json")));
 
-		private readonly List<IError> _errors = new List<IError>();
-		private readonly List<Func<IError, IError>> _errorFilters = new List<Func<IError, IError>>();
-		private readonly object _spanLock = new object();
-		private readonly object _transactionLock = new object();
-		private readonly object _metricsLock = new object();
-		private readonly object _errorLock = new object();
-		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
-		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
-		private readonly List<ISpan> _spans = new List<ISpan>();
-		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
-		private readonly List<ITransaction> _transactions = new List<ITransaction>();
+		private readonly List<IError> _errors = [];
+		private readonly List<Func<IError, IError>> _errorFilters = [];
+		private readonly object _spanLock = new();
+		private readonly object _transactionLock = new();
+		private readonly object _metricsLock = new();
+		private readonly object _errorLock = new();
+		private readonly List<IMetricSet> _metrics = [];
+		private readonly List<Func<ISpan, ISpan>> _spanFilters = [];
+		private readonly List<ISpan> _spans = [];
+		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = [];
+		private readonly List<ITransaction> _transactions = [];
 
 		public MockPayloadSender(IApmLogger logger = null)
 		{
-			_waitHandles = new[] { new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false) };
+			_waitHandles = [new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false), new AutoResetEvent(false)];
 
 			_transactionWaitHandle = _waitHandles[0];
 			_spanWaitHandle = _waitHandles[1];

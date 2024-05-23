@@ -6,6 +6,7 @@
     "FUNCTIONS_EXTENSION_VERSION": "4",
     "WEBSITE_OWNER_NAME": "abcd1234-abcd-acdc-1234-112233445566+testfaas_group-CentralUSwebspace-Linux",
     "WEBSITE_SITE_NAME": "testfaas",
-    "WEBSITE_INSTANCE_ID": "20367ea8-70b9-41b4-a552-b2a826b3aa0b"
+    // Include this breaks on the latest version of func - Excluding it for now.
+    //"WEBSITE_INSTANCE_ID": "20367ea8-70b9-41b4-a552-b2a826b3aa0b"
   }
 }

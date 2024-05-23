@@ -46,19 +46,19 @@ namespace ElasticApmStartupHook
 
 		public void WriteLine(string message)
 		{
-			if (_enabled)
+			if (!_enabled)
+				return;
+
+			try
 			{
-				try
-				{
-					var log = $"[{DateTime.Now:u}] {message}";
-					Console.Out.WriteLine(log);
-					Console.Out.Flush();
-					File.AppendAllLines(_logPath, new[] { log });
-				}
-				catch
-				{
-					// if we can't log a log message, there's not much that can be done, so ignore
-				}
+				var log = $"[{DateTime.Now:u}] {message}";
+				Console.Out.WriteLine(log);
+				Console.Out.Flush();
+				File.AppendAllLines(_logPath, new[] { log });
+			}
+			catch
+			{
+				// if we can't log a log message, there's not much that can be done, so ignore
 			}
 		}
 	}

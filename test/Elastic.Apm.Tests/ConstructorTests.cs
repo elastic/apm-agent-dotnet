@@ -25,9 +25,13 @@ public class ConstructorTests
 	public void Compose()
 	{
 		//build AgentComponents manually so we can disable metrics collection. reason: creating metrics collector pro test and disposing it makes test failing (ETW or EventSource subscribe unsubscribe in each test in parallel if all tests are running)
-		using var agent = new ApmAgent(new AgentComponents(null, new LogConfiguration(LogLevel.Warning), null, null,
-			null, null, null));
+		using var agent = new ApmAgent(new AgentComponents(null, new LogConfiguration(LogLevel.Warning), null, null, null, null, null));
+
+#if NETFRAMEWORK
+		var logger = agent.Logger as TraceLogger;
+#else
 		var logger = agent.Logger as ConsoleLogger;
+#endif
 
 		logger.Should().NotBeNull();
 		logger.IsEnabled(LogLevel.Warning).Should().BeTrue();
@@ -145,8 +149,13 @@ public class ConstructorTests
 		public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
 
 		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
-		// ReSharper restore UnassignedGetOnlyAutoProperty
 
+		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups =>
+			ConfigConsts.DefaultValues.TransactionNameGroups;
+
+		public bool UsePathAsTransactionName => ConfigConsts.DefaultValues.UsePathAsTransactionName;
+
+		// ReSharper restore UnassignedGetOnlyAutoProperty
 		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }

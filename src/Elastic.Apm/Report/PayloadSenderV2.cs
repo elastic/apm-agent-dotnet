@@ -88,7 +88,8 @@ namespace Elastic.Apm.Report
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(configuration.CloudProvider, _logger, environmentVariables);
 			_apmServerInfo = apmServerInfo ?? new ApmServerInfo();
 			_serverInfoCallback = serverInfoCallback;
-			_metadata = new Metadata { Service = service, System = System };
+			var process = ProcessInformation.Create();
+			_metadata = new Metadata { Service = service, System = System, Process = process };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
@@ -133,12 +134,16 @@ namespace Elastic.Apm.Report
 			IApmLogger logger
 		)
 		{
-			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
-			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
+			transactionFilters.Add(TransactionIgnoreUrlsFilter.Filter);
+			transactionFilters.Add(RequestCookieExtractionFilter.Filter);
+			transactionFilters.Add(HeaderDictionarySanitizerFilter.Filter);
+
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
-			errorFilters.Add(new ErrorContextSanitizerFilter().Filter);
-			errorFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
+
+			errorFilters.Add(ErrorContextSanitizerFilter.Filter);
+			errorFilters.Add(RequestCookieExtractionFilter.Filter);
+			errorFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 		}
 
 		private bool _getApmServerVersion;
@@ -273,6 +278,10 @@ namespace Elastic.Apm.Report
 					if (receivedItems == null)
 						receivedItems = _eventQueue.Receive(CancellationTokenSource.Token);
 				}
+				catch (InvalidOperationException ex) when (ex.Message.StartsWith("The source completed without"))
+				{
+					_logger.Trace()?.Log("EventQueue completed before receiving data.");
+				}
 				catch (OperationCanceledException)
 				{
 					_logger.Trace()?.Log("Waiting on EventQueue cancelled.");
@@ -289,6 +298,10 @@ namespace Elastic.Apm.Report
 						try
 						{
 							receivedItems = _eventQueue.Receive(_flushInterval);
+						}
+						catch (InvalidOperationException ex) when (ex.Message.StartsWith("The source completed without"))
+						{
+							_logger.Trace()?.Log("EventQueue completed before receiving data.");
 						}
 						catch (TimeoutException)
 						{
@@ -466,7 +479,6 @@ namespace Elastic.Apm.Report
 			{
 				try
 				{
-					_logger?.Trace()?.Log("Start executing filter on transaction");
 					var itemAfterFilter = filter(item);
 					if (itemAfterFilter != null)
 					{

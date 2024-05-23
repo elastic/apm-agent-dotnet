@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -18,6 +19,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -30,6 +33,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
 		private ApmAgent _agent;
+		private readonly ITestOutputHelper _output;
+
+		public CaptureUserTest(ITestOutputHelper output) => _output = output;
 
 		private void SetUpSut()
 		{
@@ -40,6 +46,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					app.UseElasticApm(_agent, _agent.Logger);
 					Startup.ConfigureAllExceptAgent(app);
 				})
+				.ConfigureLogging(logging => logging.AddXunit(_output))
 				.ConfigureServices(services =>
 				{
 					Startup.ConfigureServicesExceptMvc(services);
@@ -70,7 +77,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			const string userName = "TestUser";
 			const string password = "aaaaaa";
 
-			var client = new HttpClient { BaseAddress = new Uri("http://localhost:5900") };
+
+			//We need to ensure we are not propagating any unsampled current activities
+			var client = new HttpClient(new DisableActivityHandler(_output)) { BaseAddress = new Uri("http://localhost:5900") };
 
 			//Home/Index runs the migrations, so this makes sure the DB exists
 			var homeResult = await client.GetAsync("/Home/Index");
@@ -97,35 +106,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transactionWithUser
 				.Context.User.UserName.Should()
 				.Be(userName);
-		}
 
-		/// <summary>
-		/// A unit test that directly calls InvokeAsync on the <see cref="ApmMiddleware" />.
-		/// It tests for OpenID claims.
-		/// It creates a <see cref="DefaultHttpContext" /> with email and sub claims on it (those are OpenID standard)
-		/// and make sure that the agent captured the userid and the email address of the user.
-		/// </summary>
-		[Fact]
-		public async Task OpenIdClaimsTest()
-		{
-			const string mail = "my@mail.com";
-			const string sub = "123-456";
+			transactionWithUser
+				.Context.User.Email.Should()
+				.StartWith(userName);
 
-			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
-			{
-				var context = new DefaultHttpContext
-				{
-					User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("email", mail), new Claim("sub", sub) }, "someAuthTypeName"))
-				};
-
-				var middleware = new ApmMiddleware(async _ => { await Task.Delay(1); }, agent.TracerInternal, agent);
-
-				await middleware.InvokeAsync(context);
-			}
-
-			payloadSender.FirstTransaction.Context.User.Email.Should().Be(mail);
-			payloadSender.FirstTransaction.Context.User.Id.Should().Be(sub);
+			transactionWithUser
+				.Context.User.Id.Should()
+				.NotBeEmpty();
 		}
 
 		public void Dispose() => _agent?.Dispose();

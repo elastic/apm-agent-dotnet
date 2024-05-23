@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\test\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Benchmarks\Elastic.Apm.Benchmarks.csproj" />
+  </ItemGroup>
+
+</Project>

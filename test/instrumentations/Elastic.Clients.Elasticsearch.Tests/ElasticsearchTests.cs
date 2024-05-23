@@ -1,9 +1,13 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.Docker;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
@@ -24,29 +28,35 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 		_client = _esClientListenerFixture.Client ?? throw new Exception("ElasticsearchClient is `null`");
 	}
 
-	[DisabledOnWindowsGitHubActionsDockerFact]
+	[DockerFact]
 	public async Task IndexDataTest()
 	{
 		var (payloadSender, apmAgent) = SetUpAgent();
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", IndexDataAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
-		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: PUT /{index}/_doc/{id}");
-		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
-		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
-		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+		payloadSender.WaitForSpans();
+		payloadSender.Spans.Should().HaveCount(2);
+		var databaseSpan = payloadSender.Spans.SingleOrDefault(s => s.Type == ApiConstants.TypeDb);
+		var elasticsearchSpan = databaseSpan.Should().NotBeNull().And.BeOfType<Apm.Model.Span>().Subject;
 
-		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.system", "elasticsearch"));
-		payloadSender.FirstSpan.Otel.Attributes.Should()
-			.Contain(new KeyValuePair<string, object>("http.url",
+		elasticsearchSpan.Name.Should().Be("index");
+		elasticsearchSpan.Outcome.Should().Be(Outcome.Success);
+		elasticsearchSpan.Type = ApiConstants.TypeDb;
+		elasticsearchSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+
+		elasticsearchSpan.Otel.SpanKind.ToLower().Should().Be("client");
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.operation", "index"));
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("http.request.method", "PUT"));
+
+		VerifyCommonAttributes(elasticsearchSpan.Otel.Attributes);
+
+		elasticsearchSpan.Otel.Attributes.Should()
+			.Contain(new KeyValuePair<string, object>("url.full",
 				$"{_esClientListenerFixture.Container.GetConnectionString()}my-tweet-index/_doc/1"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-
-	[DisabledOnWindowsGitHubActionsDockerFact]
+	[DockerFact]
 	public async Task GetDocumentTest()
 	{
 		// make sure data is present
@@ -56,21 +66,28 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", GetDocumentAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
-		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: GET /{index}/_doc/{id}");
-		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
-		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
-		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+		payloadSender.WaitForSpans();
+		payloadSender.Spans.Should().HaveCount(2);
+		var databaseSpan = payloadSender.Spans.SingleOrDefault(s => s.Type == ApiConstants.TypeDb);
+		var elasticsearchSpan = databaseSpan.Should().NotBeNull().And.BeOfType<Apm.Model.Span>().Subject;
 
-		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.system", "elasticsearch"));
-		payloadSender.FirstSpan.Otel.Attributes.Should()
-			.Contain(new KeyValuePair<string, object>("http.url",
+		elasticsearchSpan.Name.Should().Be("get");
+		elasticsearchSpan.Outcome.Should().Be(Outcome.Success);
+		elasticsearchSpan.Type = ApiConstants.TypeDb;
+		elasticsearchSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+
+		elasticsearchSpan.Otel.SpanKind.ToLower().Should().Be("client");
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.operation", "get"));
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("http.request.method", "GET"));
+
+		VerifyCommonAttributes(elasticsearchSpan.Otel.Attributes);
+
+		elasticsearchSpan.Otel.Attributes.Should()
+			.Contain(new KeyValuePair<string, object>("url.full",
 				$"{_esClientListenerFixture.Container.GetConnectionString()}my-tweet-index/_doc/1"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-	[DisabledOnWindowsGitHubActionsDockerFact]
+	[DockerFact]
 	public async Task SearchDocumentTest()
 	{
 		// make sure data is present
@@ -80,21 +97,27 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", SearchDocumentAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
-		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: POST /{index}/_search");
-		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
-		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
-		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+		payloadSender.Spans.Should().HaveCount(2);
+		var databaseSpan = payloadSender.Spans.SingleOrDefault(s => s.Type == ApiConstants.TypeDb);
+		var elasticsearchSpan = databaseSpan.Should().NotBeNull().And.BeOfType<Apm.Model.Span>().Subject;
 
-		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.system", "elasticsearch"));
-		payloadSender.FirstSpan.Otel.Attributes.Should()
-			.Contain(new KeyValuePair<string, object>("http.url",
+		elasticsearchSpan.Name.Should().Be("search");
+		elasticsearchSpan.Outcome.Should().Be(Outcome.Success);
+		elasticsearchSpan.Type = ApiConstants.TypeDb;
+		elasticsearchSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+
+		elasticsearchSpan.Otel.SpanKind.ToLower().Should().Be("client");
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.operation", "search"));
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("http.request.method", "POST"));
+
+		VerifyCommonAttributes(elasticsearchSpan.Otel.Attributes, false);
+
+		elasticsearchSpan.Otel.Attributes.Should()
+			.Contain(new KeyValuePair<string, object>("url.full",
 				$"{_esClientListenerFixture.Container.GetConnectionString()}my-tweet-index/_search"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-	[DisabledOnWindowsGitHubActionsDockerFact]
+	[DockerFact]
 	public async Task UpdateDocumentTest()
 	{
 		// make sure data is present
@@ -113,25 +136,28 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 			await UpdateDocumentAsync(tweet);
 		});
 
-		payloadSender.Spans.Should().HaveCount(1);
+		payloadSender.Spans.Should().HaveCount(2);
+		var databaseSpan = payloadSender.Spans.SingleOrDefault(s => s.Type == ApiConstants.TypeDb);
+		var elasticsearchSpan = databaseSpan.Should().NotBeNull().And.BeOfType<Apm.Model.Span>().Subject;
 
-		var updateSpan = payloadSender.FirstSpan;
+		elasticsearchSpan.Should().NotBeNull();
+		elasticsearchSpan.Type = ApiConstants.TypeDb;
+		elasticsearchSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+		elasticsearchSpan.Name.Should().Be("update");
+		elasticsearchSpan.Outcome.Should().Be(Outcome.Success);
 
-		updateSpan.Should().NotBeNull();
-		updateSpan.Type = ApiConstants.TypeDb;
-		updateSpan.Subtype = ApiConstants.SubtypeElasticsearch;
-		updateSpan.Name.Should().Be("Elasticsearch: POST /{index}/_update/{id}");
-		updateSpan.Outcome.Should().Be(Outcome.Success);
+		elasticsearchSpan.Otel.SpanKind.ToLower().Should().Be("client");
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.operation", "update"));
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("http.request.method", "POST"));
 
-		updateSpan.Otel.SpanKind.ToLower().Should().Be("client");
-		updateSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.system", "elasticsearch"));
-		updateSpan.Otel.Attributes.Should()
-			.Contain(new KeyValuePair<string, object>("http.url",
+		VerifyCommonAttributes(elasticsearchSpan.Otel.Attributes);
+
+		elasticsearchSpan.Otel.Attributes.Should()
+			.Contain(new KeyValuePair<string, object>("url.full",
 				$"{_esClientListenerFixture.Container.GetConnectionString()}my-tweet-index/_update/1"));
-		updateSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("net.peer.name", _esClientListenerFixture.Container.Hostname));
 	}
 
-	[DisabledOnWindowsGitHubActionsDockerFact]
+	[DockerFact]
 	public async Task DeleteDocumentTest()
 	{
 		// make sure data is present
@@ -141,18 +167,43 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		await apmAgent.Tracer.CaptureTransaction("Test", "Foo", DeleteDocumentAsync);
 
-		payloadSender.Spans.Should().HaveCount(1);
-		payloadSender.FirstSpan.Name.Should().Be("Elasticsearch: DELETE /{index}/_doc/{id}");
-		payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
-		payloadSender.FirstSpan.Type = ApiConstants.TypeDb;
-		payloadSender.FirstSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+		payloadSender.Spans.Should().HaveCount(2);
+		var databaseSpan = payloadSender.Spans.SingleOrDefault(s => s.Type == ApiConstants.TypeDb);
+		var elasticsearchSpan = databaseSpan.Should().NotBeNull().And.BeOfType<Apm.Model.Span>().Subject;
 
-		payloadSender.FirstSpan.Otel.SpanKind.ToLower().Should().Be("client");
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.system", "elasticsearch"));
-		payloadSender.FirstSpan.Otel.Attributes.Should()
-			.Contain(new KeyValuePair<string, object>("http.url",
+		elasticsearchSpan.Name.Should().Be("delete");
+		elasticsearchSpan.Outcome.Should().Be(Outcome.Success);
+		elasticsearchSpan.Type = ApiConstants.TypeDb;
+		elasticsearchSpan.Subtype = ApiConstants.SubtypeElasticsearch;
+
+		elasticsearchSpan.Otel.SpanKind.ToLower().Should().Be("client");
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("db.operation", "delete"));
+		elasticsearchSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("http.request.method", "DELETE"));
+
+		VerifyCommonAttributes(elasticsearchSpan.Otel.Attributes);
+
+		elasticsearchSpan.Otel.Attributes.Should()
+			.Contain(new KeyValuePair<string, object>("url.full",
 				$"{_esClientListenerFixture.Container.GetConnectionString()}my-tweet-index/_doc/1"));
-		payloadSender.FirstSpan.Otel.Attributes.Should().Contain(new KeyValuePair<string, object>("net.peer.name", _esClientListenerFixture.Container.Hostname));
+	}
+
+	private void VerifyCommonAttributes(Dictionary<string, object> attributes, bool expectId = true)
+	{
+		attributes.Should().ContainKey("db.elasticsearch.schema_url");
+		attributes.Should().Contain(new KeyValuePair<string, object>("db.system", "elasticsearch"));
+		attributes.Should().Contain(new KeyValuePair<string, object>("server.address", _esClientListenerFixture.Container.Hostname));
+
+		attributes.Should().Contain(new KeyValuePair<string, object>("db.elasticsearch.path_parts.index", "my-tweet-index"));
+
+		if (expectId)
+			attributes.Should().Contain(new KeyValuePair<string, object>("db.elasticsearch.path_parts.id", "1"));
+
+		attributes.Should().Contain(new KeyValuePair<string, object>("elastic.transport.product.name", "elasticsearch-net"));
+
+		attributes.Should().ContainKey("elastic.transport.product.version");
+		attributes["elastic.transport.product.version"].Should().BeOfType<string>().Subject.Should().StartWith("8.12.0+");
+
+		attributes.Should().Contain(new KeyValuePair<string, object>("elastic.transport.attempted_nodes", 1));
 	}
 
 	private (MockPayloadSender, ApmAgent) SetUpAgent()
@@ -193,14 +244,14 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 
 		var response = await _client.IndexAsync(tweet, request => request.Index("my-tweet-index"));
 
-		response.IsSuccess().Should().BeTrue();
+		response.IsSuccess().Should().BeTrue("{0}", response.DebugInformation);
 	}
 
 	private async Task GetDocumentAsync()
 	{
 		var response = await _client.GetAsync<Tweet>(1, idx => idx.Index("my-tweet-index"));
 
-		response.IsSuccess().Should().BeTrue();
+		response.IsSuccess().Should().BeTrue("{0}", response.DebugInformation);
 		var tweet = response.Source;
 		tweet.Should().NotBeNull();
 	}
@@ -226,14 +277,14 @@ public class ElasticsearchTests : IClassFixture<ElasticsearchTestFixture>
 	private async Task UpdateDocumentAsync(Tweet tweet)
 	{
 		tweet.Message = "This is a new message";
-		var response2 = await _client.UpdateAsync<Tweet, object>("my-tweet-index", 1, u => u
+		var response = await _client.UpdateAsync<Tweet, object>("my-tweet-index", 1, u => u
 			.Doc(tweet));
-		response2.IsValidResponse.Should().BeTrue();
+		response.IsValidResponse.Should().BeTrue("{0}", response.DebugInformation);
 	}
 
 	private async Task DeleteDocumentAsync()
 	{
 		var response = await _client.DeleteAsync("my-tweet-index", 1);
-		response.IsValidResponse.Should().BeTrue();
+		response.IsValidResponse.Should().BeTrue("{0}", response.DebugInformation);
 	}
 }

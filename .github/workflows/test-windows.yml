@@ -31,14 +31,21 @@ env:
 jobs:
   tests:
     runs-on: windows-2022
+    timeout-minutes: 30
         
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
       - name: Build
         run: dotnet build -c Release --verbosity minimal
+
+      - name: Setup Testcontainers Cloud Client
+        if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+        uses: atomicjar/testcontainers-cloud-setup-action@v1
+        with:
+          token: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Unit'
         uses: ./.github/workflows/test
@@ -51,13 +58,13 @@ jobs:
     runs-on: windows-2022
       
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
       - name: Build agent-zip
         run: ./build.bat agent-zip
-
+        
       - name: 'Tests: StartupHooks'
         uses: ./.github/workflows/test
         with:
@@ -69,7 +76,7 @@ jobs:
     # Disable profiler tests for now
     if: ${{ false }} 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
@@ -77,6 +84,12 @@ jobs:
 
       - name: Build profiler
         run: ./build.bat profiler-zip
+
+      - name: Setup Testcontainers Cloud Client
+        if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+        uses: atomicjar/testcontainers-cloud-setup-action@v1
+        with:
+          token: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Profiler'
         uses: ./.github/workflows/test

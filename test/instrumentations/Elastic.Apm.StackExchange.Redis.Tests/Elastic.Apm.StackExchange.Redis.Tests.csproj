@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.12.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.0.495" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.20" />
     <PackageReference Include="Proc" Version="0.6.2" />
-    <PackageReference Include="Testcontainers.Redis" Version="3.0.0" />
+    <PackageReference Include="Testcontainers.Redis" Version="3.7.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SrcInstrumentations)\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj" />

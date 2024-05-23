@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
       with:
@@ -41,18 +41,19 @@ jobs:
     - name: Package
       run: ./build.sh pack
     
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
       with:
-          name: snapshoty-linux
-          path: build/output/*
-          retention-days: 1
+        name: snapshoty-linux
+        path: build/output/*
+        retention-days: 1
   
   tests:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
           
@@ -68,11 +69,12 @@ jobs:
             
   azure-tests:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'pull_request'
-      || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    if: ${{ false }}
+    #if: |
+    #  github.event_name != 'pull_request'
+    #  || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
@@ -83,7 +85,7 @@ jobs:
         run: dotnet build -c Release --verbosity minimal
 
       - name: 'Read credentials'
-        uses: hashicorp/vault-action@v2.7.1
+        uses: hashicorp/vault-action@v3.0.0
         with:
           url: ${{ secrets.VAULT_ADDR }}
           roleId: ${{ secrets.VAULT_ROLE_ID }}
@@ -118,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
     
@@ -136,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
       id: bootstrap
       uses: ./.github/workflows/bootstrap

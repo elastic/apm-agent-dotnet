@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
@@ -38,14 +39,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// and makes sure that the error is captured.
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
+		[Fact]
+		public async Task TestErrorInAspNetCore()
 		{
 			var capturedPayload = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload, configuration: new MockConfiguration(exitSpanMinDuration: "0"))))
 			{
-				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
+				var client = Helper.GetClient(agent, _factory);
 
 				try
 				{
@@ -72,6 +72,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var context = error?.Context;
 				context?.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
 				context?.Request.Method.Should().Be(HttpMethod.Get.Method);
+
+				var transaction = capturedPayload.FirstTransaction;
+				transaction.Outcome.Should().Be(Outcome.Failure);
+
+				var transactionContext = capturedPayload.FirstTransaction.Context;
+				transactionContext.Should().NotBeNull();
+				transactionContext.Response.Should().NotBeNull();
+				transactionContext.Response.StatusCode.Should().Be(500);
 			}
 		}
 
@@ -81,9 +89,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// retrieved from the HttpRequest
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore(bool useOnlyDiagnosticSource)
+		[Fact]
+		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
 		{
 			var capturedPayload = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(
@@ -92,7 +99,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes),
 				payloadSender: capturedPayload)))
 			{
-				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
+				var client = Helper.GetClient(agent, _factory);
 
 				var body = "{\"id\" : \"1\"}";
 				await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
