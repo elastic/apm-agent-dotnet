@@ -13,7 +13,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: tj-actions/changed-files@v44
+    - uses: tj-actions/changed-files@03334d095e2739fa9ac4034ec16f66d5d01e9eba # v44.5.1
       name: 'Gets the current changeset'
       id: changed-files
       with:
