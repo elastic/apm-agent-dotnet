@@ -56,6 +56,7 @@ jobs:
       run: |
         docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
             --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+        
     - name: Push Profiler Docker Image
       continue-on-error: true #continue for now until we see it working in action
       run: |

@@ -249,13 +249,6 @@ module Build =
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
       
       
-    /// Builds docker image including the ElasticApmAgent  
-    let AgentDocker() =
-        let agentVersion = Versioning.CurrentVersion.FileVersion.ToString()        
-        
-        Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
-                      "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
-        
     let ProfilerIntegrations () =
         DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
                      "-i"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
