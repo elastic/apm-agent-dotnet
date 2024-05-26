@@ -36,7 +36,7 @@ runs:
       run: find ./build/output/junit-* -exec grep -q '<testsuites />' '{}' \; -delete
       
     - name: "Test Report Summary: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
-      uses: phoenix-actions/test-reporting@v14
+      uses: phoenix-actions/test-reporting@v15
       if: success() || failure()
       with:
         name: " Tests: ${{ inputs.name }}-${{ runner.os == 'Linux' && 'linux' || 'windows' }}"
