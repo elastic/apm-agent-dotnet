@@ -184,7 +184,7 @@ module Build =
             @ (match framework with None -> [] | Some f -> ["-f"; f])
             @ (match logger with None -> [] | Some l -> [l])
             
-        DotNet.Exec command
+        DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
         
         
     /// Builds the CLR profiler and supporting .NET managed assemblies
