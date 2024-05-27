@@ -103,36 +103,48 @@ module Main =
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
-            Targets.Target("test", ["build"], fun _ ->
-                let suite = cmdLine.ValueForOption<TestSuite>("test-suite")
-                printfn $"Running test suite: %s{Enum.GetName(typeof<TestSuite>, suite)}";
-                Build.Test suite
-            )
-            
             Targets.Target("profiler-integrations", Build.ProfilerIntegrations)
             
             Targets.Target("build-profiler", ["build"; "profiler-integrations"; "clean-profiler" ], Build.BuildProfiler)
-                        
-            Targets.Target("profiler-zip", ["build-profiler"], fun _ ->
-                
+            
+            let profilerZip () =
                 printfn "Running profiler-zip..."
                 let projs = !! (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
                 Build.Publish(Some projs)
                 Build.ProfilerZip()
-            )
+                
+            Targets.Target("profiler-zip", ["build-profiler"], profilerZip)
             
             Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
                   
             Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack())
             
-            Targets.Target("agent-zip", ["build"], fun _ ->
-                printfn "Running profiler-zip..."
+            let startupHookZip () = 
+                printfn "Running startup hooks zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm")
                             ++ (Paths.StartupHookProjFile "Elastic.Apm.StartupHook.Loader")
                 
                 Build.Publish(Some projs)
                 Build.AgentZip()
+            Targets.Target("agent-zip", ["build"], startupHookZip)
+            
+            Targets.Target("test", ["build"], fun _ ->
+                let suite = cmdLine.ValueForOption<TestSuite>("test-suite")
+                let clean = cmdLine.ValueForOption<bool>("clean")
+                
+                match (clean, suite) with
+                | false, TestSuite.StartupHooks 
+                | false, TestSuite.Profiler ->
+                    printfn "Skip building dependent startup hooks zip or profilers because --clean false was specified"
+                | _, TestSuite.Profiler -> profilerZip()
+                | _, TestSuite.StartupHooks -> startupHookZip()
+                | _ -> ignore()
+                
+                printfn $"Running test suite: %s{Enum.GetName(typeof<TestSuite>, suite)}";
+                Build.Test suite
             )
+            
+            
             
             Targets.Target("release-notes", fun _ ->
                 let version = cmdLine.ValueForOption<string>("version")

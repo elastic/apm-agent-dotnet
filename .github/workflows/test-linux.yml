@@ -80,10 +80,6 @@ jobs:
         with:
           azure: 'true'
 
-      - name: Build
-        shell: bash
-        run: dotnet build -c Release --verbosity minimal
-
       - name: 'Read credentials'
         uses: hashicorp/vault-action@v3.0.0
         with:
@@ -124,9 +120,6 @@ jobs:
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
     
-    - name: Build agent-zip
-      run: ./build.sh agent-zip
-
     - name: 'Tests: StartupHooks'
       uses: ./.github/workflows/test
       with:
@@ -145,9 +138,6 @@ jobs:
       with:
           rust: 'true'
     
-    - name: Build profiler
-      run: ./build.sh profiler-zip
-
     - name: 'Tests: Profiler'
       uses: ./.github/workflows/test
       with:

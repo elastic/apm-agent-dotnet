@@ -62,9 +62,6 @@ jobs:
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - name: Build agent-zip
-        run: ./build.bat agent-zip
-        
       - name: 'Tests: StartupHooks'
         uses: ./.github/workflows/test
         with:
@@ -81,9 +78,6 @@ jobs:
         uses: ./.github/workflows/bootstrap
         with:
           rust: 'true'
-
-      - name: Build profiler
-        run: ./build.bat profiler-zip
 
       - name: Setup Testcontainers Cloud Client
         if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
