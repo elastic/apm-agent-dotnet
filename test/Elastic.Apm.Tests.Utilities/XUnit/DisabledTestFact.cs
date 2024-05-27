@@ -29,3 +29,12 @@ public sealed class FlakyCiTestFact : FactAttribute
 		Skip = $"Flaky test on CI see: {issueLink}";
 	}
 }
+
+public sealed class DisabledOnOsxFact : FactAttribute
+{
+	public DisabledOnOsxFact()
+	{
+		if (TestEnvironment.IsOsx)
+			Skip = "This test is disabled on OSX.";
+	}
+}

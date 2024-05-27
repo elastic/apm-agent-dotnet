@@ -13,6 +13,7 @@ open Fake.IO
 open ProcNet
 open Fake.Core
 open Fake.IO.Globbing.Operators
+open Scripts.TestEnvironment
 open TestEnvironment
 
 module Main =  
@@ -20,6 +21,8 @@ module Main =
         "--verbose"
         "--clear"
         "--parallel"
+        "--clear"
+        "--list-tree"
     ]
     
     // Command line options for Bullseye, excluding ones where we want to use the name
@@ -33,6 +36,8 @@ module Main =
         Option<string>([| "-v"; "--version" |], "The version to use for the build")
         Option<string>([| "-f"; "--framework" |], "The framework version to use for diffs. Used by diff")
         Option<string[]>([| "-p"; "--packageids" |], "The ids of nuget packages to diff. Used by diff")
+        Option<TestSuite>([| "-t"; "--test-suite" |], (fun _ -> TestSuite.Unit), "The test suite to run")
+        Option<bool>([| "-c"; "--clean" |], (fun _ -> true), "The version to use for the build")
     ]
     
     /// Exception relating to passed options/arguments. Used by Bullseye to only include the message if this
@@ -78,10 +83,11 @@ module Main =
             Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
             
             Targets.Target("clean", fun _ ->
-                if isCI then
-                    printfn "skipping clean as running on CI"
-                else
-                    Build.Clean()
+                let clean = cmdLine.ValueForOption<bool>("clean")
+                match (clean, isCI) with
+                | _, true -> printfn "skipping clean as running on CI"
+                | false, _ -> printfn "skip clean because --clean false was provided"
+                | _ -> Build.Clean()
             )
             
             Targets.Target("clean-profiler", fun _ ->
@@ -96,6 +102,12 @@ module Main =
             Targets.Target("format", Build.Format)
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
+            
+            Targets.Target("test", ["build"], fun _ ->
+                let suite = cmdLine.ValueForOption<TestSuite>("test-suite")
+                printfn $"Running test suite: %s{Enum.GetName(typeof<TestSuite>, suite)}";
+                Build.Test suite
+            )
             
             Targets.Target("profiler-integrations", Build.ProfilerIntegrations)
             

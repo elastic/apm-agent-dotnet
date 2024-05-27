@@ -16,6 +16,7 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
+open Scripts.TestEnvironment
 open TestEnvironment
 open Tooling
 
@@ -144,6 +145,44 @@ module Build =
         dotnet "build" Paths.Solution
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
+        
+    /// Runs dotnet build on all .NET core projects in the solution.
+    /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
+    let Test (suite: TestSuite) =
+        let sln = 
+            match suite with
+            | TestSuite.Profiler -> "test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj"
+            | TestSuite.StartupHooks -> "test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj"
+            | TestSuite.IIS -> "test\iis\Elastic.Apm.AspNetFullFramework.Tests"
+            | TestSuite.Azure 
+            | TestSuite.CI
+            | TestSuite.Unit
+            | _ -> "ElasticApmAgent.sln"
+            
+        //ensure we test all listed frameworks on windows (net462 and latest .NET version we support).
+        let framework = if isWindows then None else Some "net8.0"
+        
+        let logger =
+            match BuildServer.isGitHubActionsBuild with
+            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false\""
+            | fase -> None 
+            
+        let filter = 
+            match suite with
+            | TestSuite.Azure -> Some "FullyQualifiedName~Elastic.Apm.Azure"
+            | TestSuite.Unit ->
+                Some "FullyQualifiedName~Elastic.Apm.Tests|FullyQualifiedName~Elastic.Apm.OpenTelemetry.Tests"
+            | TestSuite.CI ->
+                Some "FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure"
+            | _ -> None 
+        
+        let command =
+            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; "minimal"; "-s"; "test/.runsettings"]
+            @ (match filter with None -> [] | Some f -> ["--filter"; f])
+            @ (match framework with None -> [] | Some f -> ["-f"; f])
+            @ (match logger with None -> [] | Some l -> [l])
+            
+        DotNet.Exec command
         
         
     /// Builds the CLR profiler and supporting .NET managed assemblies
