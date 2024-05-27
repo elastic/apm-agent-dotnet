@@ -49,7 +49,7 @@ jobs:
         
       - name: 'Tests: Integrations'
         shell: bash
-        run: ./build.sh test --test-suite Integrations
+        run: ./build.bat test --test-suite Integrations
     
   startup-hook-tests:
     runs-on: windows-2022
