@@ -155,7 +155,7 @@ module Build =
             | TestSuite.StartupHooks -> "test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj"
             | TestSuite.IIS -> "test\iis\Elastic.Apm.AspNetFullFramework.Tests"
             | TestSuite.Azure 
-            | TestSuite.CI
+            | TestSuite.Integrations
             | TestSuite.Unit
             | _ -> "ElasticApmAgent.sln"
             
@@ -172,8 +172,10 @@ module Build =
             | TestSuite.Azure -> Some "FullyQualifiedName~Elastic.Apm.Azure"
             | TestSuite.Unit ->
                 Some "FullyQualifiedName~Elastic.Apm.Tests|FullyQualifiedName~Elastic.Apm.OpenTelemetry.Tests"
-            | TestSuite.CI ->
-                Some "FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure"
+            | TestSuite.Integrations ->
+                let testElseWhere = ["Tests"; "OpenTelemetry.Tests"; "StartupHook.Tests"; "Profiler.Managed.Tests"; "Azure"]
+                let filter = testElseWhere |> List.map (fun s -> $"FullyQualifiedName!~Elastic.Apm.%s{s}") |> String.concat "&"
+                Some filter
             | _ -> None 
         
         let command =
