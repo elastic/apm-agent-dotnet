@@ -153,7 +153,7 @@ module Build =
             match suite with
             | TestSuite.Profiler -> "test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj"
             | TestSuite.StartupHooks -> "test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj"
-            | TestSuite.IIS -> "test\iis\Elastic.Apm.AspNetFullFramework.Tests"
+            | TestSuite.IIS -> "test/iis/Elastic.Apm.AspNetFullFramework.Tests"
             | TestSuite.Azure 
             | TestSuite.Integrations
             | TestSuite.Unit
