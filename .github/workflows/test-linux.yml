@@ -27,7 +27,6 @@ env:
 jobs:
   pack:
     runs-on: ubuntu-latest
-    name: ':windows: '
 
     steps:
     - uses: actions/checkout@v4
