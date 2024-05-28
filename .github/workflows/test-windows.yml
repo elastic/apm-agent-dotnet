@@ -78,9 +78,20 @@ jobs:
         
       - name: 'Tests: Integrations'
         if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
-        shell: bash
         run: ./build.bat test --test-suite integrations
     
+  integrations-tests:
+    runs-on: windows-2022
+    needs: [ 'changeset', 'format', 'tests' ]
+    if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+
+      - name: 'Tests: Integrations'
+        run: ./build.bat test --test-suite integrations
+  
   startup-hook-tests:
     runs-on: windows-2022
     needs: [ 'changeset', 'format', 'tests' ]
