@@ -13,6 +13,7 @@ open Fake.IO
 open ProcNet
 open Fake.Core
 open Fake.IO.Globbing.Operators
+open Scripts.TestEnvironment
 open TestEnvironment
 
 module Main =  
@@ -20,6 +21,8 @@ module Main =
         "--verbose"
         "--clear"
         "--parallel"
+        "--clear"
+        "--list-tree"
     ]
     
     // Command line options for Bullseye, excluding ones where we want to use the name
@@ -33,6 +36,8 @@ module Main =
         Option<string>([| "-v"; "--version" |], "The version to use for the build")
         Option<string>([| "-f"; "--framework" |], "The framework version to use for diffs. Used by diff")
         Option<string[]>([| "-p"; "--packageids" |], "The ids of nuget packages to diff. Used by diff")
+        Option<TestSuite>([| "-t"; "--test-suite" |], (fun _ -> TestSuite.Unit), "The test suite to run")
+        Option<bool>([| "-c"; "--clean" |], (fun _ -> true), "The version to use for the build")
     ]
     
     /// Exception relating to passed options/arguments. Used by Bullseye to only include the message if this
@@ -78,10 +83,11 @@ module Main =
             Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
             
             Targets.Target("clean", fun _ ->
-                if isCI then
-                    printfn "skipping clean as running on CI"
-                else
-                    Build.Clean()
+                let clean = cmdLine.ValueForOption<bool>("clean")
+                match (clean, isCI) with
+                | _, true -> printfn "skipping clean as running on CI"
+                | false, _ -> printfn "skip clean because --clean false was provided"
+                | _ -> Build.Clean()
             )
             
             Targets.Target("clean-profiler", fun _ ->
@@ -100,27 +106,47 @@ module Main =
             Targets.Target("profiler-integrations", Build.ProfilerIntegrations)
             
             Targets.Target("build-profiler", ["build"; "profiler-integrations"; "clean-profiler" ], Build.BuildProfiler)
-                        
-            Targets.Target("profiler-zip", ["build-profiler"], fun _ ->
-                
+            
+            let profilerZip () =
                 printfn "Running profiler-zip..."
                 let projs = !! (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
                 Build.Publish(Some projs)
                 Build.ProfilerZip()
-            )
+                
+            Targets.Target("profiler-zip", ["build-profiler"], profilerZip)
             
             Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
                   
             Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack())
             
-            Targets.Target("agent-zip", ["build"], fun _ ->
-                printfn "Running profiler-zip..."
+            let startupHookZip () = 
+                printfn "Running startup hooks zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm")
                             ++ (Paths.StartupHookProjFile "Elastic.Apm.StartupHook.Loader")
                 
                 Build.Publish(Some projs)
                 Build.AgentZip()
+            Targets.Target("agent-zip", ["build"], startupHookZip)
+            
+            Targets.Target("test", ["build"], fun _ ->
+                let suite = cmdLine.ValueForOption<TestSuite>("test-suite")
+                let clean = cmdLine.ValueForOption<bool>("clean")
+                
+                match (clean, suite) with
+                | false, TestSuite.StartupHooks 
+                | false, TestSuite.Profiler ->
+                    printfn "Skip building dependent startup hooks zip or profilers because --clean false was specified"
+                | _, TestSuite.Profiler ->
+                    Targets.RunTargetsWithoutExiting (["profiler-integrations"; "clean-profiler"; "build-profiler"])
+                    profilerZip()
+                | _, TestSuite.StartupHooks -> startupHookZip()
+                | _ -> ignore()
+                
+                printfn $"Running test suite: %s{Enum.GetName(typeof<TestSuite>, suite)}";
+                Build.Test suite
             )
+            
+            
             
             Targets.Target("release-notes", fun _ ->
                 let version = cmdLine.ValueForOption<string>("version")

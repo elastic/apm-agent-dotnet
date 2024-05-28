@@ -72,17 +72,14 @@ jobs:
         with: 
           tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
-      - name: Build
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
-        run: dotnet build -c Release --verbosity minimal
-      
       - name: 'Tests: Unit'
         if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
-        uses: ./.github/workflows/test
-        with:
-          name: 'unit'
-          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
-          framework: '' # reset to test all .NET frameworks including net462
+        run: ./build.bat test --test-suite unit
+        
+      - name: 'Tests: Integrations'
+        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
+        shell: bash
+        run: ./build.bat test --test-suite integrations
     
   startup-hook-tests:
     runs-on: windows-2022
@@ -93,14 +90,8 @@ jobs:
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - name: Build agent-zip
-        run: ./build.bat agent-zip
-        
       - name: 'Tests: StartupHooks'
-        uses: ./.github/workflows/test
-        with:
-          name: 'startuphooks'
-          project: 'test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+        run: ./build.bat test --test-suite startuphooks
           
   profiler-tests:
     runs-on: windows-2022
@@ -114,11 +105,5 @@ jobs:
           rust: 'true'
           tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
-      - name: Build profiler
-        run: ./build.bat profiler-zip
-
       - name: 'Tests: Profiler'
-        uses: ./.github/workflows/test
-        with:
-          name: 'profiler'
-          project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+        run: ./build.bat test --test-suite profiler

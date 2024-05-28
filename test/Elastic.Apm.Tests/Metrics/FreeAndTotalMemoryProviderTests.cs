@@ -8,6 +8,7 @@ using System.Linq;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 
@@ -15,7 +16,7 @@ namespace Elastic.Apm.Tests.Metrics;
 
 public class FreeAndTotalMemoryProviderTests
 {
-	[Fact]
+	[DisabledOnOsxFact]
 	public void FreeAndTotalMemoryProvider_ShouldReturnValues()
 	{
 		var sut = new FreeAndTotalMemoryProvider(new NoopLogger(), new List<WildcardMatcher>());

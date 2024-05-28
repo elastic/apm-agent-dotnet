@@ -1,0 +1,8 @@
+<RunSettings>
+  <LoggerRunSettings>
+    <Loggers>
+        <Logger friendlyName="Console" enabled="False"/>
+        <Logger friendlyName="pretty" enabled="True"/>
+    </Loggers>
+  </LoggerRunSettings>
+</RunSettings>
