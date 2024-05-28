@@ -45,11 +45,11 @@ jobs:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Unit'
-        run: ./build.bat test --test-suite Unit
+        run: ./build.bat test --test-suite unit
         
       - name: 'Tests: Integrations'
         shell: bash
-        run: ./build.bat test --test-suite Integrations
+        run: ./build.bat test --test-suite integrations
     
   startup-hook-tests:
     runs-on: windows-2022
@@ -60,7 +60,7 @@ jobs:
         uses: ./.github/workflows/bootstrap
 
       - name: 'Tests: StartupHooks'
-        run: ./build.bat test --test-suite StartupHooks
+        run: ./build.bat test --test-suite startuphooks
           
   profiler-tests:
     runs-on: windows-2022
@@ -80,4 +80,4 @@ jobs:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Profiler'
-        run: ./build.bat test --test-suite Profiler
+        run: ./build.bat test --test-suite profiler
