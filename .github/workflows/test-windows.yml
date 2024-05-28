@@ -38,9 +38,6 @@ jobs:
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - name: Build
-        run: dotnet build -c Release --verbosity minimal
-
       - name: Setup Testcontainers Cloud Client
         if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: atomicjar/testcontainers-cloud-setup-action@v1
@@ -48,11 +45,11 @@ jobs:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Unit'
-        uses: ./.github/workflows/test
-        with:
-          name: 'unit'
-          filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
-          framework: '' # reset to test all .NET frameworks including net462
+        run: ./build.bat test --test-suite unit
+        
+      - name: 'Tests: Integrations'
+        shell: bash
+        run: ./build.bat test --test-suite integrations
     
   startup-hook-tests:
     runs-on: windows-2022
@@ -62,14 +59,8 @@ jobs:
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - name: Build agent-zip
-        run: ./build.bat agent-zip
-        
       - name: 'Tests: StartupHooks'
-        uses: ./.github/workflows/test
-        with:
-          name: 'startuphooks'
-          project: 'test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
+        run: ./build.bat test --test-suite startuphooks
           
   profiler-tests:
     runs-on: windows-2022
@@ -82,9 +73,6 @@ jobs:
         with:
           rust: 'true'
 
-      - name: Build profiler
-        run: ./build.bat profiler-zip
-
       - name: Setup Testcontainers Cloud Client
         if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: atomicjar/testcontainers-cloud-setup-action@v1
@@ -92,7 +80,4 @@ jobs:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Profiler'
-        uses: ./.github/workflows/test
-        with:
-          name: 'profiler'
-          project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+        run: ./build.bat test --test-suite profiler

@@ -22,7 +22,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     
     <PackageReference Include="JunitXml.TestLogger" Version="3.1.12" PrivateAssets="All" />
-    <PackageReference Include="Nullean.VsTest.Pretty.TestLogger" Version="0.3.0" PrivateAssets="All" />
+    <PackageReference Include="GitHubActionsTestLogger" Version="2.3.3" PrivateAssets="All" />
+    <PackageReference Include="Nullean.VsTest.Pretty.TestLogger" Version="0.4.0" PrivateAssets="All" />
 
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
     <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />

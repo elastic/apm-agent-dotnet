@@ -40,16 +40,3 @@ updates:
       github-actions:
         patterns:
           - "*"
-  - package-ecosystem: "github-actions"
-    directory: "/.github/workflows/test"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-      time: "22:00"
-    reviewers:
-      - "elastic/observablt-ci"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
-
