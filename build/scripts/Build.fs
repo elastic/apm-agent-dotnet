@@ -164,8 +164,8 @@ module Build =
         
         let logger =
             match BuildServer.isGitHubActionsBuild with
-            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false\""
-            | fase -> None 
+            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false;summary.includeNotFoundTests=false\""
+            | _ -> None 
             
         let filter = 
             match suite with
