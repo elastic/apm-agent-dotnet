@@ -8,21 +8,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-#if APM_LOADER
+#if PROFILER_MANAGED_LOADER
 using static Elastic.Apm.Profiler.Managed.Loader.LogEnvironmentVariables;
-
 namespace Elastic.Apm.Profiler.Managed.Loader;
-#elif STARTUP_HOOKS
-using static ElasticApmStartupHook.LogEnvironmentVariables;
-
-namespace ElasticApmStartupHook;
 #elif PROFILER_MANAGED
 using static Elastic.Apm.Profiler.Managed.LogEnvironmentVariables;
-
 namespace Elastic.Apm.Profiler.Managed;
+#elif STARTUP_HOOKS
+using static ElasticApmStartupHook.LogEnvironmentVariables;
+namespace ElasticApmStartupHook;
 #else
 using static Elastic.Apm.Logging.LogEnvironmentVariables;
-
 namespace Elastic.Apm.Logging;
 #endif
 

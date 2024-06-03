@@ -5,7 +5,7 @@
       <TargetFrameworks>net462;netcoreapp2.0</TargetFrameworks>
       <CheckEolTargetFramework>false</CheckEolTargetFramework>
       <IsPackable>false</IsPackable>
-      <DefineConstants>$(DefineConstants);APM_LOADER</DefineConstants>
+      <DefineConstants>$(DefineConstants);PROFILER_MANAGED_LOADER</DefineConstants>
     </PropertyGroup>
   
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

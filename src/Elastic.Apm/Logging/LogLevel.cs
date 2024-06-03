@@ -2,12 +2,12 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-#if APM_LOADER
+#if PROFILER_MANAGED_LOADER
 namespace Elastic.Apm.Profiler.Managed.Loader;
-#elif STARTUP_HOOKS
-namespace ElasticApmStartupHook;
 #elif PROFILER_MANAGED
 namespace Elastic.Apm.Profiler.Managed;
+#elif STARTUP_HOOKS
+namespace ElasticApmStartupHook;
 #else
 namespace Elastic.Apm.Logging;
 #endif
