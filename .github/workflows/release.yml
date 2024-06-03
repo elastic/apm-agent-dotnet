@@ -43,13 +43,12 @@ jobs:
     - name: Release to Nuget
       run: .ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}
 
-    - uses: elastic/apm-pipeline-library/.github/actions/docker-login@current
+    - name: Log in to the Elastic Container registry
+      uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
       with:
-        registry: docker.elastic.co
-        secret: secret/observability-team/ci/docker-registry/prod
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        registry: ${{ secrets.ELASTIC_DOCKER_REGISTRY }}
+        username: ${{ secrets.ELASTIC_DOCKER_USERNAME }}
+        password: ${{ secrets.ELASTIC_DOCKER_PASSWORD }}
 
     - name: Build Profiler Docker Image
       continue-on-error: true #continue for now until we see it working in action
