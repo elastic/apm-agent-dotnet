@@ -14,6 +14,7 @@ using Elastic.Apm.Report;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.Extensions.Hosting
 {
@@ -54,7 +55,13 @@ namespace Elastic.Apm.Extensions.Hosting
 				//If the static agent doesn't exist, we create one here. If there is already 1 agent created, we reuse it.
 				if (!Agent.IsConfigured)
 				{
-					services.AddSingleton<IApmLogger, NetCoreLogger>();
+					services.AddSingleton(sp =>
+					{
+						var netCoreLogger = ApmExtensionsLogger.GetApmLogger(sp);
+						var globalLogger = AgentComponents.GetGlobalLogger(netCoreLogger, LogLevel.Error);
+						var logger = globalLogger is TraceLogger g ? new CompositeLogger(g, netCoreLogger) : netCoreLogger;
+						return logger;
+					});
 					services.AddSingleton<IConfigurationReader>(sp =>
 						new ApmConfiguration(ctx.Configuration, sp.GetService<IApmLogger>(), GetHostingEnvironmentName(ctx, sp.GetService<IApmLogger>())));
 				}

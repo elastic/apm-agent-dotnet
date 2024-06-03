@@ -14,6 +14,7 @@ using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.GrpcClient;
 using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Logging;
+using IApmLogger = Elastic.Apm.Logging.IApmLogger;
 
 namespace Elastic.Apm.StartupHook.Loader
 {

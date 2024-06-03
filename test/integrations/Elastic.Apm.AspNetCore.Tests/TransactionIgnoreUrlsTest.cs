@@ -14,6 +14,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
+using IApmLogger = Elastic.Apm.Logging.IApmLogger;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {

@@ -52,7 +52,7 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			var logger = NetCoreLogger.GetApmLogger(builder.ApplicationServices);
+			var logger = ApmExtensionsLogger.GetApmLogger(builder.ApplicationServices);
 
 			var configReader = configuration == null
 				? new EnvironmentConfiguration(logger)
@@ -70,7 +70,7 @@ namespace Elastic.Apm.AspNetCore
 		internal static IApplicationBuilder UseElasticApm(
 			this IApplicationBuilder builder,
 			ApmAgent agent,
-			IApmLogger logger,
+			Logging.IApmLogger logger,
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
