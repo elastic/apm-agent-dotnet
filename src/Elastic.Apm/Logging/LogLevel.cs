@@ -6,6 +6,8 @@
 namespace Elastic.Apm.Profiler.Managed.Loader;
 #elif STARTUP_HOOKS
 namespace ElasticApmStartupHook;
+#elif PROFILER_MANAGED
+namespace Elastic.Apm.Profiler.Managed;
 #else
 namespace Elastic.Apm.Logging;
 #endif

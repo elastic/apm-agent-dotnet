@@ -17,6 +17,10 @@ namespace Elastic.Apm.Profiler.Managed.Loader;
 using static ElasticApmStartupHook.LogEnvironmentVariables;
 
 namespace ElasticApmStartupHook;
+#elif PROFILER_MANAGED
+using static Elastic.Apm.Profiler.Managed.LogEnvironmentVariables;
+
+namespace Elastic.Apm.Profiler.Managed;
 #else
 using static Elastic.Apm.Logging.LogEnvironmentVariables;
 
