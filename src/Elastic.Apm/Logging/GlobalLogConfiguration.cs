@@ -75,17 +75,25 @@ internal class EnvironmentLoggingConfiguration(IDictionary environmentVariables 
 			return GlobalLogTarget.File;
 
 		var logTargets = GlobalLogTarget.None;
+		var found = false;
+
 		foreach (var target in targets.Split(new [] {';'}, StringSplitOptions.RemoveEmptyEntries))
 		{
-			if (target.Trim().Equals("stdout", StringComparison.InvariantCultureIgnoreCase))
+			if (IsSet(target, "stdout"))
 				logTargets |= GlobalLogTarget.StdOut;
-			else if (target.Trim().Equals("file", StringComparison.InvariantCultureIgnoreCase))
+			else if (IsSet(target, "file"))
 				logTargets |= GlobalLogTarget.File;
+			else if (IsSet(target, "none"))
+				logTargets |= GlobalLogTarget.None;
 		}
-		if (logTargets == GlobalLogTarget.None)
-			logTargets = GlobalLogTarget.File;
-		return logTargets;
+		return !found ? GlobalLogTarget.File : logTargets;
 
+		bool IsSet(string k, string v)
+		{
+			var b = k.Trim().Equals(v, StringComparison.InvariantCultureIgnoreCase);
+			if (b) found = true;
+			return b;
+		}
 	}
 
 	internal static string GetDefaultLogDirectory() =>
@@ -151,22 +159,22 @@ internal readonly struct GlobalLogConfiguration
 	internal static GlobalLogConfiguration FromEnvironment(IDictionary environmentVariables = null)
 	{
 		var config = new EnvironmentLoggingConfiguration(environmentVariables);
-		var logLevel = config.GetLogLevel(ELASTIC_OTEL_FILE_LOG_LEVEL, ELASTIC_APM_LOG_LEVEL, ELASTIC_APM_PROFILER_LOG);
-		var logFileDirectory = config.GetLogFilePath(ELASTIC_OTEL_FILE_LOG_DIRECTORY, ELASTIC_APM_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR);
+		var logLevel = config.GetLogLevel(ELASTIC_OTEL_FILE_LOG_LEVEL, ELASTIC_APM_PROFILER_LOG, ELASTIC_APM_LOG_LEVEL);
+		var logFileDirectory = config.GetLogFilePath(ELASTIC_OTEL_FILE_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR, ELASTIC_APM_LOG_DIRECTORY);
 		var logFilePrefix = GetLogFilePrefix();
 		var logTarget = config.ParseLogTargets(ELASTIC_OTEL_LOG_TARGETS, ELASTIC_APM_PROFILER_LOG_TARGETS);
 
 		var isActive = config.AnyConfigured(
 			ELASTIC_OTEL_FILE_LOG_LEVEL,
 			ELASTIC_OTEL_FILE_LOG_DIRECTORY,
+			ELASTIC_OTEL_LOG_TARGETS,
 			ELASTIC_APM_LOG_DIRECTORY,
 			ELASTIC_APM_PROFILER_LOG,
 			ELASTIC_APM_PROFILER_LOG_DIR,
-			ELASTIC_OTEL_LOG_TARGETS,
 			ELASTIC_APM_PROFILER_LOG_TARGETS,
 			ELASTIC_APM_STARTUP_HOOKS_LOGGING
 
-		) && logTarget != GlobalLogTarget.None;
+		) && logTarget != GlobalLogTarget.None && logLevel != LogLevel.None;
 
 		return new(isActive, logLevel, logTarget, logFileDirectory, logFilePrefix);
 	}
