@@ -32,7 +32,59 @@ If you don't see anything suspicious in the agent logs (no warning or error), it
 [[collect-agent-logs]]
 === Collecting agent logs
 
-The way to collect logs depends on the setup of your application.
+[float]
+[[collect-logs-globally]]
+==== Enable global file logging.
+
+To easiest way to get debug information from the Agent, regardless of the way its run, is to enable global file logging.
+
+Specifying atleast one of the following environment variables will ensure the agent logs to a file
+
+`ELASTIC_OTEL_FILE_LOG_LEVEL` _(optional)_::
+
+The log level at which the profiler should log. Valid values are
+
+* trace
+* debug
+* info
+* warn
+* error
+* none
+
+
+The default value is `warn`. More verbose log levels like `trace` and `debug` can
+affect the runtime performance of profiler auto instrumentation, so are recommended
+_only_ for diagnostics purposes.
+
+`ELASTIC_OTEL_FILE_LOG_DIRECTORY` _(optional)_::
+
+The directory in which to write profiler log files. If unset, defaults to
+
+* `%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` on Windows
+* `/var/log/elastic/apm-agent-dotnet` on Linux
+
+If the default directory cannot be written to for some reason, the profiler
+will try to write log files to a `logs` directory in the home directory specified
+by `ELASTIC_APM_PROFILER_HOME` environment variable.
+
+[IMPORTANT]
+--
+The user account under which the profiler process runs must have permission to
+write to the destination log directory. Specifically, ensure that when running
+on IIS, the https://learn.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities[AppPool identity]
+has write permissions in the target directory.
+--
+
+`ELASTIC_OTEL_LOG_TARGETS` _(optional)_::
+
+A semi-colon separated list of targets for profiler logs. Valid values are
+
+* file
+* stdout
+
+The default value is `file`, which logs to the directory specified by
+`ELASTIC_APM_PROFILER_LOG_DIR` environment variable.
+
 
 [float]
 [[collect-logs-core]]
@@ -63,48 +115,8 @@ For example, the following configuration in `appsettings.json` limits APM agents
 <1> Control the verbosity of the agent logs by setting the log level for the `Elastic.Apm` category
 
 [float]
-[[collect-logs-classic]]
-==== ASP.NET Classic
-
-ASP.NET (classic) does not have a predefined logging system. By default, the agent is configured to
-emit log messages to a 
-https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracesource[`System.Diagnostics.TraceSource`] 
-with the source name `"Elastic.Apm"`. The TraceSource adheres to the log levels defined in the
-APM agent configuration. Typically, you will configure a preferred log level using an application setting in `web.config`.
-
-[IMPORTANT]
---
-System.Diagnostics.TraceSource requires the https://docs.microsoft.com/en-us/dotnet/framework/debug-trace-profile/how-to-compile-conditionally-with-trace-and-debug[`TRACE` compiler directive to be specified], which is specified
-by default for both Debug and Release build configurations.
---
-
-https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracelistener[TraceListeners]
-can be configured to monitor log messages for the trace source, using the https://docs.microsoft.com/en-us/dotnet/framework/configure-apps/file-schema/trace-debug/system-diagnostics-element[`<system.diagnostics>`] section of
-web.config. For example, the following web.config section writes Elastic.Apm log messages to a file
-named my_log_file.log:
-
-[source,xml]
-----
-<configuration>
-  <!-- other sections .... -->
-  <system.diagnostics>
-  <sources>
-    <source name="Elastic.Apm"> <1>
-      <listeners>
-        <add name="file" 
-          type="System.Diagnostics.TextWriterTraceListener" 
-          initializeData="my_log_file.log" />
-      </listeners>
-    </source>
-  </sources>
-</system.diagnostics>
-</configuration>  
-----
-<1> Define listeners under a source with name `"Elastic.Apm"` to capture agent logs
-
-[float]
 [[collect-logs-class-other-logging-systems]]
-===== Other logging systems
+==== Other logging systems
 
 If you have a logging system in place such as https://nlog-project.org/[NLog], https://serilog.net/[Serilog], 
 or similar, you can direct the agent logs into your logging system by creating an adapter between 
@@ -242,17 +254,7 @@ The agent is only supported on IIS7 and higher where the `Integrated Pipeline Mo
 [[startup-hook-failure]]
 === Startup hooks failure
 
-If the <<zero-code-change-setup, startup hook>> integration throws an exception, additional detail can be obtained by 
-setting the `ELASTIC_APM_STARTUP_HOOKS_LOGGING` environment variable before starting the application
-
-[source,sh]
-----
-set ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
-----
-
-and then running the application in a context where the environment variable will be visible. In setting this value,
-an `ElasticApmAgentStartupHook.log` file is written to the directory containing the startup hook assembly, in addition to
-writing to standard output.
+If the <<zero-code-change-setup, startup hook>> integration throws an exception, additional detail can be obtained through <<collect-logs-globally, enabling the global log collection>>.
 
 [float]
 [[agent-overhead]]
