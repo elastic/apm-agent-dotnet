@@ -42,7 +42,7 @@ namespace Elastic.Apm.Tests.Config
 		[InlineData(ELASTIC_APM_PROFILER_LOG_TARGETS, "BadEnumValue")]
 		public void CheckActivation(string environmentVariable, string value)
 		{
-			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable { { environmentVariable, value}});
+			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable { { environmentVariable, value } });
 			config.IsActive.Should().BeTrue();
 		}
 
@@ -58,7 +58,7 @@ namespace Elastic.Apm.Tests.Config
 		[InlineData(ELASTIC_APM_PROFILER_LOG, "None")]
 		public void CheckNonActivation(string environmentVariable, string value)
 		{
-			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable { { environmentVariable , value}});
+			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable { { environmentVariable, value } });
 			config.IsActive.Should().BeFalse();
 		}
 

@@ -26,79 +26,80 @@ internal class EnvironmentLoggingConfiguration(IDictionary environmentVariables 
 {
 	public IDictionary EnvironmentVariables { get; } = environmentVariables ?? Environment.GetEnvironmentVariables();
 
-	public string GetSafeEnvironmentVariable(string key)
-	{
-		var value = EnvironmentVariables.Contains(key) ? EnvironmentVariables[key]?.ToString() : null;
-		return value ?? string.Empty;
-	}
+public string GetSafeEnvironmentVariable(string key)
+{
+	var value = EnvironmentVariables.Contains(key) ? EnvironmentVariables[key]?.ToString() : null;
+	return value ?? string.Empty;
+}
 
-	public LogLevel GetLogLevel(params string[] keys)
-	{
-		var level = keys
-			.Select(k => GetSafeEnvironmentVariable(k))
-			.Select<string, LogLevel?>(v => v.ToLowerInvariant() switch
-			{
-				"trace" => LogLevel.Trace,
-				"debug" => LogLevel.Debug,
-				"info" => LogLevel.Information,
-				"warn" => LogLevel.Warning,
-				"error" => LogLevel.Error,
-				"none" => LogLevel.None,
-				_ => null
-			})
-			.FirstOrDefault(l => l != null);
-		return level ?? LogLevel.Warning;
-	}
-
-	public string GetLogFilePath(params string[] keys)
-	{
-		var path = keys
-			.Select(k => GetSafeEnvironmentVariable(k))
-			.FirstOrDefault(p => !string.IsNullOrEmpty(p));
-
-		return path ?? GetDefaultLogDirectory();
-	}
-
-	public bool AnyConfigured(params string[] keys) =>
-		keys
-			.Select(k => GetSafeEnvironmentVariable(k))
-			.Any(p => !string.IsNullOrEmpty(p));
-
-	public GlobalLogTarget ParseLogTargets(params string[] keys)
-	{
-
-		var targets = keys
-			.Select(k => GetSafeEnvironmentVariable(k))
-			.FirstOrDefault(p => !string.IsNullOrEmpty(p));
-		if (string.IsNullOrWhiteSpace(targets))
-			return GlobalLogTarget.File;
-
-		var logTargets = GlobalLogTarget.None;
-		var found = false;
-
-		foreach (var target in targets.Split(new [] {';'}, StringSplitOptions.RemoveEmptyEntries))
+public LogLevel GetLogLevel(params string[] keys)
+{
+	var level = keys
+		.Select(k => GetSafeEnvironmentVariable(k))
+		.Select<string, LogLevel?>(v => v.ToLowerInvariant() switch
 		{
-			if (IsSet(target, "stdout"))
-				logTargets |= GlobalLogTarget.StdOut;
-			else if (IsSet(target, "file"))
-				logTargets |= GlobalLogTarget.File;
-			else if (IsSet(target, "none"))
-				logTargets |= GlobalLogTarget.None;
-		}
-		return !found ? GlobalLogTarget.File : logTargets;
+			"trace" => LogLevel.Trace,
+			"debug" => LogLevel.Debug,
+			"info" => LogLevel.Information,
+			"warn" => LogLevel.Warning,
+			"error" => LogLevel.Error,
+			"none" => LogLevel.None,
+			_ => null
+		})
+		.FirstOrDefault(l => l != null);
+	return level ?? LogLevel.Warning;
+}
 
-		bool IsSet(string k, string v)
-		{
-			var b = k.Trim().Equals(v, StringComparison.InvariantCultureIgnoreCase);
-			if (b) found = true;
-			return b;
-		}
+public string GetLogFilePath(params string[] keys)
+{
+	var path = keys
+		.Select(k => GetSafeEnvironmentVariable(k))
+		.FirstOrDefault(p => !string.IsNullOrEmpty(p));
+
+	return path ?? GetDefaultLogDirectory();
+}
+
+public bool AnyConfigured(params string[] keys) =>
+	keys
+		.Select(k => GetSafeEnvironmentVariable(k))
+		.Any(p => !string.IsNullOrEmpty(p));
+
+public GlobalLogTarget ParseLogTargets(params string[] keys)
+{
+
+	var targets = keys
+		.Select(k => GetSafeEnvironmentVariable(k))
+		.FirstOrDefault(p => !string.IsNullOrEmpty(p));
+	if (string.IsNullOrWhiteSpace(targets))
+		return GlobalLogTarget.File;
+
+	var logTargets = GlobalLogTarget.None;
+	var found = false;
+
+	foreach (var target in targets.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+	{
+		if (IsSet(target, "stdout"))
+			logTargets |= GlobalLogTarget.StdOut;
+		else if (IsSet(target, "file"))
+			logTargets |= GlobalLogTarget.File;
+		else if (IsSet(target, "none"))
+			logTargets |= GlobalLogTarget.None;
 	}
+	return !found ? GlobalLogTarget.File : logTargets;
 
-	internal static string GetDefaultLogDirectory() =>
-		Environment.OSVersion.Platform == PlatformID.Win32NT
-		? Path.Combine(Environment.GetEnvironmentVariable("PROGRAMDATA")!, "elastic", "apm-agent-dotnet", "logs")
-		: "/var/log/elastic/apm-agent-dotnet";
+	bool IsSet(string k, string v)
+	{
+		var b = k.Trim().Equals(v, StringComparison.InvariantCultureIgnoreCase);
+		if (b)
+			found = true;
+		return b;
+	}
+}
+
+internal static string GetDefaultLogDirectory() =>
+	Environment.OSVersion.Platform == PlatformID.Win32NT
+	? Path.Combine(Environment.GetEnvironmentVariable("PROGRAMDATA")!, "elastic", "apm-agent-dotnet", "logs")
+	: "/var/log/elastic/apm-agent-dotnet";
 
 }
 

@@ -74,7 +74,8 @@ public class GlobalLogConfigurationPrecedenceTests
 	private static GlobalLogConfiguration CreateConfig(params (string key, string v)[] values)
 	{
 		var environment = new Hashtable();
-		foreach (var kv in values) environment.Add(kv.key, kv.v);
+		foreach (var kv in values)
+			environment.Add(kv.key, kv.v);
 		var config = GlobalLogConfiguration.FromEnvironment(environment);
 		return config;
 	}

@@ -65,7 +65,8 @@ internal static class Logger
 		if (!IsActive || Level > level)
 			return;
 
-		if (string.IsNullOrWhiteSpace(LogFile)) return;
+		if (string.IsNullOrWhiteSpace(LogFile))
+			return;
 
 		try
 		{

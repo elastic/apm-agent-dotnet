@@ -11,25 +11,25 @@ namespace Elastic.Apm.Extensions.Hosting;
 internal sealed class CompositeLogger(TraceLogger traceLogger, IApmLogger logger) : IDisposable , IApmLogger
 {
 	public TraceLogger TraceLogger { get; } = traceLogger;
-	public IApmLogger ApmLogger { get; } = logger;
+public IApmLogger ApmLogger { get; } = logger;
 
-	private bool _isDisposed;
+private bool _isDisposed;
 
-	public void Dispose() => _isDisposed = true;
+public void Dispose() => _isDisposed = true;
 
-	public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
-	{
-		if (_isDisposed)
-			return;
+public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
+{
+	if (_isDisposed)
+		return;
 
-		if (TraceLogger.IsEnabled(level))
-			TraceLogger.Log(level, state, e, formatter);
+	if (TraceLogger.IsEnabled(level))
+		TraceLogger.Log(level, state, e, formatter);
 
-		if (ApmLogger.IsEnabled(level))
-			ApmLogger.Log(level, state, e, formatter);
-	}
+	if (ApmLogger.IsEnabled(level))
+		ApmLogger.Log(level, state, e, formatter);
+}
 
-	public bool IsEnabled(LogLevel logLevel) => ApmLogger.IsEnabled(logLevel) || TraceLogger.IsEnabled(logLevel);
+public bool IsEnabled(LogLevel logLevel) => ApmLogger.IsEnabled(logLevel) || TraceLogger.IsEnabled(logLevel);
 
 
 }
