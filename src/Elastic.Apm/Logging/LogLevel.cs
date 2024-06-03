@@ -4,6 +4,8 @@
 
 #if APM_LOADER
 namespace Elastic.Apm.Profiler.Managed.Loader;
+#elif STARTUP_HOOKS
+namespace ElasticApmStartupHook;
 #else
 namespace Elastic.Apm.Logging;
 #endif

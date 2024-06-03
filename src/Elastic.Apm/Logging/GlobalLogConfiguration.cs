@@ -13,6 +13,10 @@ using System.Runtime.InteropServices;
 using static Elastic.Apm.Profiler.Managed.Loader.LogEnvironmentVariables;
 
 namespace Elastic.Apm.Profiler.Managed.Loader;
+#elif STARTUP_HOOKS
+using static ElasticApmStartupHook.LogEnvironmentVariables;
+
+namespace ElasticApmStartupHook;
 #else
 using static Elastic.Apm.Logging.LogEnvironmentVariables;
 
@@ -84,7 +88,7 @@ internal class EnvironmentLoggingConfiguration(IDictionary environmentVariables 
 
 	}
 
-	private static string GetDefaultLogDirectory() =>
+	internal static string GetDefaultLogDirectory() =>
 		Environment.OSVersion.Platform == PlatformID.Win32NT
 		? Path.Combine(Environment.GetEnvironmentVariable("PROGRAMDATA")!, "elastic", "apm-agent-dotnet", "logs")
 		: "/var/log/elastic/apm-agent-dotnet";
@@ -114,6 +118,9 @@ public static class LogEnvironmentVariables
 	public const string ELASTIC_APM_PROFILER_LOG = nameof(ELASTIC_APM_PROFILER_LOG);
 	public const string ELASTIC_APM_PROFILER_LOG_DIR = nameof(ELASTIC_APM_PROFILER_LOG_DIR);
 	public const string ELASTIC_APM_PROFILER_LOG_TARGETS = nameof(ELASTIC_APM_PROFILER_LOG_TARGETS);
+
+	// deprected startup hooks logging configuration, we still listen to it to enable logging
+	public const string ELASTIC_APM_STARTUP_HOOKS_LOGGING = nameof(ELASTIC_APM_STARTUP_HOOKS_LOGGING);
 
 	// ReSharper enable once InconsistentNaming
 }
@@ -156,7 +163,9 @@ internal readonly struct GlobalLogConfiguration
 			ELASTIC_APM_PROFILER_LOG,
 			ELASTIC_APM_PROFILER_LOG_DIR,
 			ELASTIC_OTEL_LOG_TARGETS,
-			ELASTIC_APM_PROFILER_LOG_TARGETS
+			ELASTIC_APM_PROFILER_LOG_TARGETS,
+			ELASTIC_APM_STARTUP_HOOKS_LOGGING
+
 		) && logTarget != GlobalLogTarget.None;
 
 		return new(isActive, logLevel, logTarget, logFileDirectory, logFilePrefix);

@@ -18,8 +18,8 @@ namespace Elastic.Apm.Tests.Config
 			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable());
 			config.IsActive.Should().BeFalse();
 			config.LogLevel.Should().Be(LogLevel.Warning);
-			config.LogFilePath.Should().StartWith(EnvironmentLoggingConfiguration.GetDefaultLogDirectory());
-			config.LogFilePath.Should().EndWith(".agent.log");
+			config.AgentLogFilePath.Should().StartWith(EnvironmentLoggingConfiguration.GetDefaultLogDirectory());
+			config.AgentLogFilePath.Should().EndWith(".agent.log");
 			config.LogTargets.Should().Be(GlobalLogTarget.File);
 		}
 
@@ -58,8 +58,8 @@ namespace Elastic.Apm.Tests.Config
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG_DIR", "/foo/bar" } };
 			var config = GlobalLogConfiguration.FromEnvironment(environment);
-			config.LogFilePath.Should().StartWith("/foo/bar");
-			config.LogFilePath.Should().EndWith(".agent.log");
+			config.AgentLogFilePath.Should().StartWith("/foo/bar");
+			config.AgentLogFilePath.Should().EndWith(".agent.log");
 		}
 
 		[Theory]
