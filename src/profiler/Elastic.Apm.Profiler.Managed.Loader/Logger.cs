@@ -11,31 +11,22 @@ using System.Text;
 
 namespace Elastic.Apm.Profiler.Managed.Loader
 {
-	// match the log levels of the profiler logger
-	internal enum LogLevel
-	{
-		Trace = 0,
-		Debug = 1,
-		Info = 2,
-		Warn = 3,
-		Error = 4,
-		Off = 5,
-	}
-
 	internal static class Logger
 	{
 		static Logger()
 		{
-			Level = GetLogLevel(LogLevel.Warn);
-			var logDirectory = GetLogDirectory();
-			LogFile = GetLogFile(logDirectory);
+			var config = GlobalLogConfiguration.FromEnvironment(Environment.GetEnvironmentVariables());
+
+			Level = config.LogLevel;
+			LogFile = config.CreateLogFileName("managed_loader");
 			Levels = new Dictionary<LogLevel, string>
 			{
-				[LogLevel.Off] = "OFF  ",
+				[LogLevel.None] = "OFF  ",
 				[LogLevel.Error] = "ERROR",
-				[LogLevel.Warn] = "WARN ",
-				[LogLevel.Info] = "INFO ",
+				[LogLevel.Warning] = "WARN ",
+				[LogLevel.Information] = "INFO ",
 				[LogLevel.Debug] = "DEBUG",
+				[LogLevel.Critical] = "CRITICAL",
 				[LogLevel.Trace] = "TRACE",
 			};
 		}
@@ -86,26 +77,6 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 			{
 				// ignore
 			}
-		}
-
-		private static string GetLogFile(string logDirectory)
-		{
-			if (logDirectory is null)
-				return null;
-
-			var process = Process.GetCurrentProcess();
-			return Path.Combine(logDirectory, $"Elastic.Apm.Profiler.Managed.Loader_{process.ProcessName}_{process.Id}.log");
-		}
-
-		private static LogLevel GetLogLevel(LogLevel defaultLevel)
-		{
-			var level = Environment.GetEnvironmentVariable("ELASTIC_APM_PROFILER_LOG");
-			if (string.IsNullOrEmpty(level))
-				return defaultLevel;
-
-			return Enum.TryParse<LogLevel>(level, true, out var parsedLevel)
-				? parsedLevel
-				: defaultLevel;
 		}
 
 		private static string GetLogDirectory()

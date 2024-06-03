@@ -8,9 +8,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Elastic.Apm.Logging;
 
-namespace Elastic.Apm.Config;
+#if APM_LOADER
+using static Elastic.Apm.Profiler.Managed.Loader.LogEnvironmentVariables;
+
+namespace Elastic.Apm.Profiler.Managed.Loader;
+#else
+using static Elastic.Apm.Logging.LogEnvironmentVariables;
+
+namespace Elastic.Apm.Logging;
+#endif
 
 internal class EnvironmentLoggingConfiguration(IDictionary environmentVariables = null)
 {
@@ -54,13 +61,6 @@ internal class EnvironmentLoggingConfiguration(IDictionary environmentVariables 
 			.Select(k => GetSafeEnvironmentVariable(k))
 			.Any(p => !string.IsNullOrEmpty(p));
 
-	public string CreateLogFileName(string logFilePath)
-	{
-		var process = Process.GetCurrentProcess();
-		var logFileName = Path.Combine(logFilePath, $"{process.ProcessName}_{process.Id}_{Environment.TickCount}.agent.log");
-		return logFileName;
-	}
-
 	public GlobalLogTarget ParseLogTargets(params string[] keys)
 	{
 
@@ -84,7 +84,8 @@ internal class EnvironmentLoggingConfiguration(IDictionary environmentVariables 
 
 	}
 
-	internal static string GetDefaultLogDirectory() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+	private static string GetDefaultLogDirectory() =>
+		Environment.OSVersion.Platform == PlatformID.Win32NT
 		? Path.Combine(Environment.GetEnvironmentVariable("PROGRAMDATA")!, "elastic", "apm-agent-dotnet", "logs")
 		: "/var/log/elastic/apm-agent-dotnet";
 
@@ -98,41 +99,80 @@ internal enum GlobalLogTarget
 	StdOut = 2
 }
 
+public static class LogEnvironmentVariables
+{
+	// ReSharper disable once InconsistentNaming
+	public const string ELASTIC_OTEL_FILE_LOG_LEVEL = nameof(ELASTIC_OTEL_FILE_LOG_LEVEL);
+	public const string ELASTIC_OTEL_FILE_LOG_DIRECTORY = nameof(ELASTIC_OTEL_FILE_LOG_DIRECTORY);
+	public const string ELASTIC_OTEL_LOG_TARGETS = nameof(ELASTIC_OTEL_LOG_TARGETS);
+
+	public const string ELASTIC_APM_LOG_LEVEL = nameof(ELASTIC_APM_LOG_LEVEL);
+	public const string ELASTIC_APM_LOG_DIRECTORY = nameof(ELASTIC_APM_LOG_DIRECTORY);
+
+
+	// profiler logs are deprecated in favor of ELASTIC_OTEL_FILE_*
+	public const string ELASTIC_APM_PROFILER_LOG = nameof(ELASTIC_APM_PROFILER_LOG);
+	public const string ELASTIC_APM_PROFILER_LOG_DIR = nameof(ELASTIC_APM_PROFILER_LOG_DIR);
+	public const string ELASTIC_APM_PROFILER_LOG_TARGETS = nameof(ELASTIC_APM_PROFILER_LOG_TARGETS);
+
+	// ReSharper enable once InconsistentNaming
+}
+
 internal readonly struct GlobalLogConfiguration
 {
-	private GlobalLogConfiguration(bool isActive, LogLevel logLevel, GlobalLogTarget logTarget, string logFilePath) : this()
+	private GlobalLogConfiguration(bool isActive, LogLevel logLevel, GlobalLogTarget logTarget, string logFileDirectory, string logFilePrefix) : this()
 	{
 		IsActive = isActive;
 		LogLevel = logLevel;
 		LogTargets = logTarget;
-		LogFilePath = logFilePath;
+		LogFileDirectory = logFileDirectory;
+		LogFilePrefix = logFilePrefix;
+
+		AgentLogFilePath = CreateLogFileName();
 	}
 
 	internal bool IsActive { get; }
-	internal string LogFilePath { get; }
+	internal string AgentLogFilePath { get; }
 	internal LogLevel LogLevel { get; }
 	internal GlobalLogTarget LogTargets { get; }
 
-	public override string ToString() => $"LogLevel: '{LogLevel}',  LogFilePath: '{LogFilePath}'";
+	internal string LogFileDirectory { get; }
+	internal string LogFilePrefix { get; }
+
+	public override string ToString() => $"IsActive: '{IsActive}', Targets: '{LogTargets}',   Level: '{LogLevel}',  FilePath: '{AgentLogFilePath}'";
 
 	internal static GlobalLogConfiguration FromEnvironment(IDictionary environmentVariables = null)
 	{
 		var config = new EnvironmentLoggingConfiguration(environmentVariables);
-		var logLevel = config.GetLogLevel("ELASTIC_OTEL_FILE_LOG_LEVEL", "ELASTIC_APM_LOG_LEVEL", "ELASTIC_APM_PROFILER_LOG");
-		var logFileDirectory = config.GetLogFilePath("ELASTIC_OTEL_FILE_LOG_DIRECTORY", "ELASTIC_APM_LOG_DIRECTORY", "ELASTIC_APM_PROFILER_LOG_DIR");
-		var logFilePath = config.CreateLogFileName(logFileDirectory);
-		var logTarget = config.ParseLogTargets("ELASTIC_APM_PROFILER_LOG_TARGETS");
+		var logLevel = config.GetLogLevel(ELASTIC_OTEL_FILE_LOG_LEVEL, ELASTIC_APM_LOG_LEVEL, ELASTIC_APM_PROFILER_LOG);
+		var logFileDirectory = config.GetLogFilePath(ELASTIC_OTEL_FILE_LOG_DIRECTORY, ELASTIC_APM_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR);
+		var logFilePrefix = GetLogFilePrefix();
+		var logTarget = config.ParseLogTargets(ELASTIC_OTEL_LOG_TARGETS, ELASTIC_APM_PROFILER_LOG_TARGETS);
 
 		var isActive = config.AnyConfigured(
-			"ELASTIC_OTEL_FILE_LOG_LEVEL",
-			"ELASTIC_OTEL_FILE_LOG_DIRECTORY",
-			"ELASTIC_APM_LOG_DIRECTORY",
-			"ELASTIC_APM_PROFILER_LOG",
-			"ELASTIC_APM_PROFILER_LOG_DIR",
-			"ELASTIC_APM_PROFILER_LOG_TARGETS"
+			ELASTIC_OTEL_FILE_LOG_LEVEL,
+			ELASTIC_OTEL_FILE_LOG_DIRECTORY,
+			ELASTIC_APM_LOG_DIRECTORY,
+			ELASTIC_APM_PROFILER_LOG,
+			ELASTIC_APM_PROFILER_LOG_DIR,
+			ELASTIC_OTEL_LOG_TARGETS,
+			ELASTIC_APM_PROFILER_LOG_TARGETS
 		) && logTarget != GlobalLogTarget.None;
 
-		return new(isActive, logLevel, logTarget, logFilePath);
+		return new(isActive, logLevel, logTarget, logFileDirectory, logFilePrefix);
 	}
+
+	private static string GetLogFilePrefix()
+	{
+		var process = Process.GetCurrentProcess();
+		return $"{process.ProcessName}_{process.Id}_{Environment.TickCount}";
+	}
+
+	public string CreateLogFileName(string applicationName = "agent")
+	{
+		var logFileName = Path.Combine(LogFileDirectory, $"{LogFilePrefix}.{applicationName}.log");
+		return logFileName;
+	}
+
 }
 
