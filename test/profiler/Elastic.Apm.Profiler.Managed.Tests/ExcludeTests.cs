@@ -13,6 +13,7 @@ using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Logging.LogEnvironmentVariables;
 
 namespace Elastic.Apm.Profiler.Managed.Tests;
 
@@ -39,7 +40,7 @@ public class ExcludeTests
 				["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 				["ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS"] = "SqliteCommand;AdoNet",
 				["ELASTIC_APM_DISABLE_METRICS"] = "*",
-				["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout"
+				[ELASTIC_OTEL_LOG_TARGETS] = "file;stdout"
 			};
 
 			profiledApplication.Start(
@@ -95,7 +96,7 @@ public class ExcludeTests
 			{
 				["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 				["ELASTIC_APM_DISABLE_METRICS"] = "*",
-				["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout",
+				[ELASTIC_OTEL_LOG_TARGETS] = "file;stdout",
 				["ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES"] = excludeProcess
 			};
 
@@ -142,7 +143,7 @@ public class ExcludeTests
 			{
 				["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 				["ELASTIC_APM_DISABLE_METRICS"] = "*",
-				["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout",
+				[ELASTIC_OTEL_LOG_TARGETS] = "file;stdout",
 				["ELASTIC_APM_SERVICE_NAME"] = serviceName,
 				["ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES"] = serviceName
 			};

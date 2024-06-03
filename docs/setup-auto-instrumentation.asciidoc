@@ -394,7 +394,7 @@ A semi-colon separated list of APM service names to exclude from auto-instrument
 Values defined are checked against the value of <<config-service-name,`ELASTIC_APM_SERVICE_NAME`>>
 environment variable.
 
-`ELASTIC_APM_PROFILER_LOG` _(optional)_::
+`ELASTIC_OTEL_FILE_LOG_LEVEL` _(optional)_::
 
 The log level at which the profiler should log. Valid values are
 
@@ -405,11 +405,15 @@ The log level at which the profiler should log. Valid values are
 * error
 * none
 
+
 The default value is `warn`. More verbose log levels like `trace` and `debug` can
 affect the runtime performance of profiler auto instrumentation, so are recommended
 _only_ for diagnostics purposes.
 
-`ELASTIC_APM_PROFILER_LOG_DIR` _(optional)_::
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG`
+
+
+`ELASTIC_OTEL_FILE_LOG_DIRECTORY` _(optional)_::
 
 The directory in which to write profiler log files. If unset, defaults to
 
@@ -420,6 +424,8 @@ If the default directory cannot be written to for some reason, the profiler
 will try to write log files to a `logs` directory in the home directory specified 
 by `ELASTIC_APM_PROFILER_HOME` environment variable.
 
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_DIR`
+
 [IMPORTANT]
 --
 The user account under which the profiler process runs must have permission to 
@@ -428,7 +434,8 @@ on IIS, the https://learn.microsoft.com/en-us/iis/manage/configuring-security/ap
 has write permissions in the target directory.
 --
 
-`ELASTIC_APM_PROFILER_LOG_TARGETS` _(optional)_::
+
+`ELASTIC_OTEL_LOG_TARGETS` _(optional)_::
 
 A semi-colon separated list of targets for profiler logs. Valid values are
 
@@ -437,3 +444,5 @@ A semi-colon separated list of targets for profiler logs. Valid values are
 
 The default value is `file`, which logs to the directory specified by
 `ELASTIC_APM_PROFILER_LOG_DIR` environment variable.
+
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_TARGETS`

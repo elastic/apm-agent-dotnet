@@ -13,6 +13,7 @@ using System.Text;
 using Elastic.Apm.Tests.Utilities;
 using ProcNet;
 using ProcNet.Std;
+using static Elastic.Apm.Logging.LogEnvironmentVariables;
 
 namespace Elastic.Apm.Profiler.Managed.Tests
 {
@@ -143,11 +144,11 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			environmentVariables["ELASTIC_APM_PROFILER_INTEGRATIONS"] =
 				Path.Combine(SolutionPaths.Root, "src", "profiler", "Elastic.Apm.Profiler.Managed", "integrations.yml");
 
-			environmentVariables["ELASTIC_APM_PROFILER_LOG"] = "trace";
+			environmentVariables[ELASTIC_OTEL_FILE_LOG_LEVEL] = "trace";
 			// log to relative logs directory for managed loader
-			environmentVariables["ELASTIC_APM_PROFILER_LOG_DIR"] = Path.Combine(SolutionPaths.Root, "logs");
+			environmentVariables[ELASTIC_OTEL_FILE_LOG_DIRECTORY] = Path.Combine(SolutionPaths.Root, "logs");
 
-			environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout";
+			environmentVariables[ELASTIC_OTEL_LOG_TARGETS] = "file;stdout";
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_IL"] = "true";
 
 			// use the .exe for net462
