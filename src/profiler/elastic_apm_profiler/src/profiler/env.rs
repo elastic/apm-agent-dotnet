@@ -212,8 +212,8 @@ pub fn read_log_level_from_env_var(default: LevelFilter) -> LevelFilter {
         std::env::var(ELASTIC_APM_LOG_DIRECTORY_ENV_VAR)
     ) {
         (Ok(value), _, _) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
-        (None, Ok(value), _) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
-        (None, None, Ok(value)) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
+        (_, Ok(value), _) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
+        (_, _, Ok(value)) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
         _ => default,
     }
 }
