@@ -7,7 +7,6 @@ using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 #if APM_LOADER
 using static Elastic.Apm.Profiler.Managed.Loader.LogEnvironmentVariables;
