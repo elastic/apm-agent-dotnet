@@ -10,17 +10,17 @@ using Xunit;
 
 namespace Elastic.Apm.Tests.Config
 {
-	public class ProfilerLogConfigTests
+	public class GlobalLogConfigurationTests
 	{
 		[Fact]
 		public void Check_Defaults()
 		{
-			var config = ProfilerLogConfig.Check(new Hashtable());
+			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable());
 			config.IsActive.Should().BeFalse();
 			config.LogLevel.Should().Be(LogLevel.Warning);
-			config.LogFilePath.Should().StartWith(ProfilerLogConfig.GetDefaultProfilerLogDirectory());
+			config.LogFilePath.Should().StartWith(EnvironmentLoggingConfiguration.GetDefaultLogDirectory());
 			config.LogFilePath.Should().EndWith(".agent.log");
-			config.LogTargets.Should().Be(ProfilerLogTarget.File);
+			config.LogTargets.Should().Be(GlobalLogTarget.File);
 		}
 
 		[Theory]
@@ -35,7 +35,7 @@ namespace Elastic.Apm.Tests.Config
 		public void Check_LogLevelValues_AreMappedCorrectly(string envVarValue, LogLevel logLevel)
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG", envVarValue } };
-			var config = ProfilerLogConfig.Check(environment);
+			var config = GlobalLogConfiguration.FromEnvironment(environment);
 			config.IsActive.Should().BeTrue();
 			config.LogLevel.Should().Be(logLevel);
 		}
@@ -48,7 +48,7 @@ namespace Elastic.Apm.Tests.Config
 		public void Check_InvalidLogLevelValues_AreMappedToDefaultWarn(string envVarValue, bool isActive)
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG", envVarValue } };
-			var config = ProfilerLogConfig.Check(environment);
+			var config = GlobalLogConfiguration.FromEnvironment(environment);
 			config.LogLevel.Should().Be(LogLevel.Warning);
 			config.IsActive.Should().Be(isActive);
 		}
@@ -57,29 +57,29 @@ namespace Elastic.Apm.Tests.Config
 		public void Check_LogDir_IsEvaluatedCorrectly()
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG_DIR", "/foo/bar" } };
-			var config = ProfilerLogConfig.Check(environment);
+			var config = GlobalLogConfiguration.FromEnvironment(environment);
 			config.LogFilePath.Should().StartWith("/foo/bar");
 			config.LogFilePath.Should().EndWith(".agent.log");
 		}
 
 		[Theory]
-		[InlineData(null, ProfilerLogTarget.File)]
-		[InlineData("", ProfilerLogTarget.File)]
-		[InlineData("foo", ProfilerLogTarget.File)]
-		[InlineData("foo,bar", ProfilerLogTarget.File)]
-		[InlineData("foo;bar", ProfilerLogTarget.File)]
-		[InlineData("file;foo;bar", ProfilerLogTarget.File)]
-		[InlineData("file", ProfilerLogTarget.File)]
-		[InlineData("stdout", ProfilerLogTarget.StdOut)]
-		[InlineData("StdOut", ProfilerLogTarget.StdOut)]
-		[InlineData("file;stdout", ProfilerLogTarget.File | ProfilerLogTarget.StdOut)]
-		[InlineData("FILE;StdOut", ProfilerLogTarget.File | ProfilerLogTarget.StdOut)]
-		[InlineData("file;stdout;file", ProfilerLogTarget.File | ProfilerLogTarget.StdOut)]
-		[InlineData("FILE;StdOut;stdout", ProfilerLogTarget.File | ProfilerLogTarget.StdOut)]
-		internal void Check_LogTargets_AreEvaluatedCorrectly(string envVarValue, ProfilerLogTarget targets)
+		[InlineData(null, GlobalLogTarget.File)]
+		[InlineData("", GlobalLogTarget.File)]
+		[InlineData("foo", GlobalLogTarget.File)]
+		[InlineData("foo,bar", GlobalLogTarget.File)]
+		[InlineData("foo;bar", GlobalLogTarget.File)]
+		[InlineData("file;foo;bar", GlobalLogTarget.File)]
+		[InlineData("file", GlobalLogTarget.File)]
+		[InlineData("stdout", GlobalLogTarget.StdOut)]
+		[InlineData("StdOut", GlobalLogTarget.StdOut)]
+		[InlineData("file;stdout", GlobalLogTarget.File | GlobalLogTarget.StdOut)]
+		[InlineData("FILE;StdOut", GlobalLogTarget.File | GlobalLogTarget.StdOut)]
+		[InlineData("file;stdout;file", GlobalLogTarget.File | GlobalLogTarget.StdOut)]
+		[InlineData("FILE;StdOut;stdout", GlobalLogTarget.File | GlobalLogTarget.StdOut)]
+		internal void Check_LogTargets_AreEvaluatedCorrectly(string envVarValue, GlobalLogTarget targets)
 		{
 			var environment = new Hashtable { { "ELASTIC_APM_PROFILER_LOG_TARGETS", envVarValue } };
-			var config = ProfilerLogConfig.Check(environment);
+			var config = GlobalLogConfiguration.FromEnvironment(environment);
 			config.LogTargets.Should().Be(targets);
 		}
 	}

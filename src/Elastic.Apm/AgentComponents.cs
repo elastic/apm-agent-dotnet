@@ -50,7 +50,7 @@ namespace Elastic.Apm
 			{
 				var config = CreateConfiguration(logger, configurationReader);
 
-				Logger = logger ?? CheckForProfilerLogger(DefaultLogger(null, configurationReader), config.LogLevel);
+				Logger = logger ?? GetGlobalLogger(DefaultLogger(null, configurationReader), config.LogLevel);
 				ConfigurationStore = new ConfigurationStore(new RuntimeConfigurationSnapshot(config), Logger);
 
 				Service = Service.GetDefaultService(config, Logger);
@@ -147,7 +147,7 @@ namespace Elastic.Apm
 			return;
 #else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
-			
+
 			if (success)
 			{
 				if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
@@ -197,38 +197,40 @@ namespace Elastic.Apm
 #endif
 		}
 
-
-		//
-		// This is the hooking point that checks for the existence of profiler-related
-		// logging settings.
-		// If no agent logging is configured but we detect profiler logging settings, those
-		// will be honoured.
-		// The finer-grained log-level (agent vs profiler) will be used.
-		// This has the benefit that users will also get agent logs in addition to profiler-only
-		// logs.
-		//
-		internal static IApmLogger CheckForProfilerLogger(IApmLogger fallbackLogger, LogLevel agentLogLevel, IDictionary environmentVariables = null)
+		/// <summary>
+		/// This ensures agents will log respect externally provided loggers.
+		/// <para>If the agent is started as part of profiling it should adhere to profiling configuration</para>
+		/// <para>If file logging environment variables are set we should always log to that location</para>
+		/// </summary>
+		/// <param name="fallbackLogger"></param>
+		/// <param name="agentLogLevel"></param>
+		/// <param name="environmentVariables"></param>
+		/// <returns></returns>
+		internal static IApmLogger GetGlobalLogger(IApmLogger fallbackLogger, LogLevel agentLogLevel, IDictionary environmentVariables = null)
 		{
 			try
 			{
-				var profilerLogConfig = ProfilerLogConfig.Check(environmentVariables);
-				if (profilerLogConfig.IsActive)
+				var fileLogConfig = GlobalLogConfiguration.FromEnvironment(environmentVariables);
+				if (!fileLogConfig.IsActive)
 				{
-					var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, profilerLogConfig.LogLevel);
-
-					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.File) == ProfilerLogTarget.File)
-						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(profilerLogConfig.LogFilePath));
-					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.StdOut) == ProfilerLogTarget.StdOut)
-						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
-
-					var logger = new TraceLogger(effectiveLogLevel);
-					logger.Info()?.Log($"{nameof(ProfilerLogConfig)} - {profilerLogConfig}");
-					return logger;
+					fallbackLogger.Info()?.Log("No system wide logging configured, defaulting to fallback logger");
+					return fallbackLogger;
 				}
+
+				var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, fileLogConfig.LogLevel);
+
+				if ((fileLogConfig.LogTargets & GlobalLogTarget.File) == GlobalLogTarget.File)
+					TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(fileLogConfig.LogFilePath));
+				if ((fileLogConfig.LogTargets & GlobalLogTarget.StdOut) == GlobalLogTarget.StdOut)
+					TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
+
+				var logger = new TraceLogger(effectiveLogLevel);
+				logger.Info()?.Log($"{nameof(fileLogConfig)} - {fileLogConfig}");
+				return logger;
 			}
 			catch (Exception e)
 			{
-				fallbackLogger.Warning()?.LogException(e, "Error in CheckForProfilerLogger");
+				fallbackLogger.Warning()?.LogException(e, "Error in GetGlobalLogger");
 			}
 			return fallbackLogger;
 		}
