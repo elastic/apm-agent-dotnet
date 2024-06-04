@@ -112,7 +112,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
+          key: "${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}"
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -132,9 +132,9 @@ jobs:
              -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
             /t:Build /p:Configuration=Release /restore
           
-          #- name: Discover Windows Features
-          # run: |
-          #    DISM /online /get-features /format:table
+      #- name: Discover Windows Features
+      # run: |
+      #    DISM /online /get-features /format:table
       
       # TODO See if this really needed 
       - name: Enable Windows Features
