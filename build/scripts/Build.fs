@@ -164,8 +164,8 @@ module Build =
         
         let logger =
             match BuildServer.isGitHubActionsBuild with
-            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false\""
-            | fase -> None 
+            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false;summary.includeNotFoundTests=false\""
+            | _ -> None 
             
         let filter = 
             match suite with
@@ -183,6 +183,7 @@ module Build =
             @ (match filter with None -> [] | Some f -> ["--filter"; f])
             @ (match framework with None -> [] | Some f -> ["-f"; f])
             @ (match logger with None -> [] | Some l -> [l])
+            @ ["--"; "RunConfiguration.CollectSourceInformation=true"]
             
         DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
         
