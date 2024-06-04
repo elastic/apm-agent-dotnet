@@ -4,7 +4,15 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
   pull_request:
+    paths-ignore:
+    - '*.md'
+    - '*.asciidoc'
+    - 'docs/**'
 
 permissions:
   contents: read
@@ -23,67 +31,42 @@ env:
 # 'tests' is a required check in this workflow.
 
 # To not burn unneeded CI cycles:
-# - The 'changeset' job detects doc only changes and allows us to skip several jobs.
 # - Our required checks will always succeed if doc only changes are detected.
-# - all jobs depend on 'changeset' and 'format' to not waste cycles on quickly fixable errors.
+# - all jobs depend on 'format' to not waste cycles on quickly fixable errors.
 
 jobs:
   
-  changeset:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - id: changeset
-        uses: ./.github/workflows/changeset
-    outputs:
-      docs-changes-only: ${{ steps.changeset.outputs.docs-changes-only }}
-      ci-changes-only: ${{ steps.changeset.outputs.ci-changes-only }}
-  
   format:
     runs-on: windows-2022
-    needs: [ 'changeset' ]
     steps:
-      - run: 'echo "Skipping prerequisite step [format] because only doc changes are detected"'
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'true' }}
       - uses: actions/checkout@v4
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
       - name: Bootstrap Action Workspace
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
         uses: ./.github/workflows/bootstrap
       - name: Format
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false'  }}
         run: ./build.bat format
   
   #required step
   tests:
     runs-on: windows-2022
-    needs: [ 'changeset', 'format' ]
+    needs: [ 'format' ]
     timeout-minutes: 30
         
     steps:
-      - run: 'echo "Skipping required step [tests] because only doc changes are detected"'
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'true' }}
-      
       - uses: actions/checkout@v4
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
       - name: Bootstrap Action Workspace
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
         uses: ./.github/workflows/bootstrap
         with: 
           tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Unit'
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
         run: ./build.bat test --test-suite unit
         
       - name: 'Tests: Integrations'
-        if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
         run: ./build.bat test --test-suite integrations
     
   integrations-tests:
     runs-on: windows-2022
-    needs: [ 'changeset', 'format', 'tests' ]
-    if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -94,8 +77,7 @@ jobs:
   
   startup-hook-tests:
     runs-on: windows-2022
-    needs: [ 'changeset', 'format', 'tests' ]
-    if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -106,8 +88,7 @@ jobs:
           
   profiler-tests:
     runs-on: windows-2022
-    needs: [ 'changeset', 'format', 'tests' ]
-    if: ${{ needs.changeset.outputs.docs-changes-only == 'false' }}
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
