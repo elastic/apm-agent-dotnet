@@ -114,15 +114,15 @@ internal enum GlobalLogTarget
 public static class LogEnvironmentVariables
 {
 	// ReSharper disable once InconsistentNaming
-	public const string ELASTIC_OTEL_FILE_LOG_LEVEL = nameof(ELASTIC_OTEL_FILE_LOG_LEVEL);
-	public const string ELASTIC_OTEL_FILE_LOG_DIRECTORY = nameof(ELASTIC_OTEL_FILE_LOG_DIRECTORY);
+	public const string ELASTIC_OTEL_LOG_LEVEL = nameof(ELASTIC_OTEL_LOG_LEVEL);
+	public const string ELASTIC_OTEL_LOG_DIRECTORY = nameof(ELASTIC_OTEL_LOG_DIRECTORY);
 	public const string ELASTIC_OTEL_LOG_TARGETS = nameof(ELASTIC_OTEL_LOG_TARGETS);
 
 	public const string ELASTIC_APM_LOG_LEVEL = nameof(ELASTIC_APM_LOG_LEVEL);
 	public const string ELASTIC_APM_LOG_DIRECTORY = nameof(ELASTIC_APM_LOG_DIRECTORY);
 
 
-	// profiler logs are deprecated in favor of ELASTIC_OTEL_FILE_*
+	// profiler logs are deprecated in favor of ELASTIC_OTEL_*
 	public const string ELASTIC_APM_PROFILER_LOG = nameof(ELASTIC_APM_PROFILER_LOG);
 	public const string ELASTIC_APM_PROFILER_LOG_DIR = nameof(ELASTIC_APM_PROFILER_LOG_DIR);
 	public const string ELASTIC_APM_PROFILER_LOG_TARGETS = nameof(ELASTIC_APM_PROFILER_LOG_TARGETS);
@@ -159,14 +159,14 @@ internal readonly struct GlobalLogConfiguration
 	internal static GlobalLogConfiguration FromEnvironment(IDictionary environmentVariables = null)
 	{
 		var config = new EnvironmentLoggingConfiguration(environmentVariables);
-		var logLevel = config.GetLogLevel(ELASTIC_OTEL_FILE_LOG_LEVEL, ELASTIC_APM_PROFILER_LOG, ELASTIC_APM_LOG_LEVEL);
-		var logFileDirectory = config.GetLogFilePath(ELASTIC_OTEL_FILE_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR, ELASTIC_APM_LOG_DIRECTORY);
+		var logLevel = config.GetLogLevel(ELASTIC_OTEL_LOG_LEVEL, ELASTIC_APM_PROFILER_LOG, ELASTIC_APM_LOG_LEVEL);
+		var logFileDirectory = config.GetLogFilePath(ELASTIC_OTEL_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR, ELASTIC_APM_LOG_DIRECTORY);
 		var logFilePrefix = GetLogFilePrefix();
 		var logTarget = config.ParseLogTargets(ELASTIC_OTEL_LOG_TARGETS, ELASTIC_APM_PROFILER_LOG_TARGETS);
 
 		var isActive = config.AnyConfigured(
-			ELASTIC_OTEL_FILE_LOG_LEVEL,
-			ELASTIC_OTEL_FILE_LOG_DIRECTORY,
+			ELASTIC_OTEL_LOG_LEVEL,
+			ELASTIC_OTEL_LOG_DIRECTORY,
 			ELASTIC_OTEL_LOG_TARGETS,
 			ELASTIC_APM_LOG_DIRECTORY,
 			ELASTIC_APM_PROFILER_LOG,

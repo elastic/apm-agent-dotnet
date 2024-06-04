@@ -16,7 +16,7 @@ public class GlobalLogConfigurationPrecedenceTests
 	public void CheckLogLevelPrecedence()
 	{
 		var config = CreateConfig([
-			(ELASTIC_OTEL_FILE_LOG_LEVEL, "trace"),
+			(ELASTIC_OTEL_LOG_LEVEL, "trace"),
 			(ELASTIC_APM_PROFILER_LOG, "info"),
 			(ELASTIC_APM_LOG_LEVEL, "error"),
 		]);
@@ -38,11 +38,11 @@ public class GlobalLogConfigurationPrecedenceTests
 	public void CheckLogDirPrecedence()
 	{
 		var config = CreateConfig([
-			(ELASTIC_OTEL_FILE_LOG_DIRECTORY, nameof(ELASTIC_OTEL_FILE_LOG_DIRECTORY)),
+			(ELASTIC_OTEL_LOG_DIRECTORY, nameof(ELASTIC_OTEL_LOG_DIRECTORY)),
 			(ELASTIC_APM_PROFILER_LOG_DIR, nameof(ELASTIC_APM_PROFILER_LOG_DIR)),
 			(ELASTIC_APM_LOG_DIRECTORY, nameof(ELASTIC_APM_LOG_DIRECTORY)),
 		]);
-		config.LogFileDirectory.Should().Be(nameof(ELASTIC_OTEL_FILE_LOG_DIRECTORY));
+		config.LogFileDirectory.Should().Be(nameof(ELASTIC_OTEL_LOG_DIRECTORY));
 
 		config = CreateConfig([
 			(ELASTIC_APM_PROFILER_LOG_DIR, nameof(ELASTIC_APM_PROFILER_LOG_DIR)),

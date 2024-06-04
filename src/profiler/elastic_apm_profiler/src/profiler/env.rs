@@ -45,8 +45,8 @@ const ELASTIC_OTEL_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_OTEL_LOG_TARGETS";
 const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
 const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
 
-const ELASTIC_OTEL_FILE_LOG_LEVEL_ENV_VAR: &str = "ELASTIC_OTEL_FILE_LOG_LEVEL";
-const ELASTIC_OTEL_FILE_LOG_DIRECTORY_ENV_VAR: &str = "ELASTIC_OTEL_FILE_LOG_DIRECTORY";
+const ELASTIC_OTEL_LOG_LEVEL_ENV_VAR: &str = "ELASTIC_OTEL_LOG_LEVEL";
+const ELASTIC_OTEL_LOG_DIRECTORY_ENV_VAR: &str = "ELASTIC_OTEL_LOG_DIRECTORY";
 
 const ELASTIC_APM_LOG_LEVEL_ENV_VAR: &str = "ELASTIC_APM_LOG_LEVEL";
 const ELASTIC_APM_LOG_DIRECTORY_ENV_VAR: &str = "ELASTIC_APM_LOG_DIRECTORY";
@@ -207,7 +207,7 @@ fn read_log_targets_from_env_var() -> HashSet<String> {
 
 pub fn read_log_level_from_env_var(default: LevelFilter) -> LevelFilter {
     match (
-        std::env::var(ELASTIC_OTEL_FILE_LOG_LEVEL_ENV_VAR), 
+        std::env::var(ELASTIC_OTEL_LOG_LEVEL_ENV_VAR),
         std::env::var(ELASTIC_APM_PROFILER_LOG_ENV_VAR),
         std::env::var(ELASTIC_APM_LOG_DIRECTORY_ENV_VAR)
     ) {
@@ -311,7 +311,7 @@ fn get_home_log_dir() -> PathBuf {
 
 fn get_log_dir() -> PathBuf {
     match (
-        std::env::var(ELASTIC_OTEL_FILE_LOG_DIRECTORY_ENV_VAR),
+        std::env::var(ELASTIC_OTEL_LOG_DIRECTORY_ENV_VAR),
         std::env::var(ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR),
         std::env::var(ELASTIC_APM_LOG_DIRECTORY_ENV_VAR),
     ) {

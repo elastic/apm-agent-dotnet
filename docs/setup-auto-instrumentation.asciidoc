@@ -394,7 +394,7 @@ A semi-colon separated list of APM service names to exclude from auto-instrument
 Values defined are checked against the value of <<config-service-name,`ELASTIC_APM_SERVICE_NAME`>>
 environment variable.
 
-`ELASTIC_OTEL_FILE_LOG_LEVEL` _(optional)_::
+`ELASTIC_OTEL_LOG_LEVEL` _(optional)_::
 
 The log level at which the profiler should log. Valid values are
 
@@ -413,7 +413,7 @@ _only_ for diagnostics purposes.
 This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG`
 
 
-`ELASTIC_OTEL_FILE_LOG_DIRECTORY` _(optional)_::
+`ELASTIC_OTEL_LOG_DIRECTORY` _(optional)_::
 
 The directory in which to write profiler log files. If unset, defaults to
 

@@ -40,7 +40,7 @@ The easiest way to get debug information from the Agent, regardless of the way i
 
 Specifying at least one of the following environment variables will ensure the agent logs to a file
 
-`ELASTIC_OTEL_FILE_LOG_LEVEL` _(optional)_::
+`ELASTIC_OTEL_LOG_LEVEL` _(optional)_::
 
 The log level at which the profiler should log. Valid values are
 
@@ -56,7 +56,7 @@ The default value is `warn`. More verbose log levels like `trace` and `debug` ca
 affect the runtime performance of profiler auto instrumentation, so are recommended
 _only_ for diagnostics purposes.
 
-`ELASTIC_OTEL_FILE_LOG_DIRECTORY` _(optional)_::
+`ELASTIC_OTEL_LOG_DIRECTORY` _(optional)_::
 
 The directory in which to write profiler log files. If unset, defaults to
 
