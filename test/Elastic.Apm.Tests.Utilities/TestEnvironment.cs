@@ -34,14 +34,18 @@ namespace Elastic.Apm.Tests.Utilities
 		/// </summary>
 		public static bool IsWindows { get; }
 
+		/// <summary>
+		/// Will be <see langword="true"/> when the tests are running on OSX.
+		/// </summary>
+		public static bool IsOsx { get; }
+
 		static TestEnvironment()
 		{
-			// TODO this IsCi check is no longer valid, once we are green on Github Action
-			// we should be able to remove all special handling related to this
-			IsCi = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_ID"));
+			IsCi = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"));
 			IsGitHubActions = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTION"));
 			IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 			IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+			IsOsx = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 		}
 	}
 }

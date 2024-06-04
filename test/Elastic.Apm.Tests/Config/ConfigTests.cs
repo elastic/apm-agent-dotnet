@@ -452,8 +452,8 @@ namespace Elastic.Apm.Tests.Config
 		[Fact]
 		public void DefaultTransactionSampleRateTest()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
-				agent.Configuration.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+			using var agent = new ApmAgent(new TestAgentComponents());
+			agent.Configuration.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
 		}
 
 
@@ -477,8 +477,8 @@ namespace Elastic.Apm.Tests.Config
 		[Fact]
 		public void DefaultTransactionMaxSpansTest()
 		{
-			var reader = new EnvironmentConfiguration();
-			reader.TransactionMaxSpans.Should().Be(DefaultValues.TransactionMaxSpans);
+			using var agent = new ApmAgent(new TestAgentComponents());
+			agent.Configuration.TransactionMaxSpans.Should().Be(DefaultValues.TransactionMaxSpans);
 		}
 
 		[Theory]

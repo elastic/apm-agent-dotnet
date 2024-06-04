@@ -19,7 +19,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		public IEnumerator<object[]> GetEnumerator()
 		{
 			// TODO: Add x64/x86 options. macOS and Linux do not support x86
-			yield return new object[] { "net7.0" };
+			yield return new object[] { "net8.0" };
 			yield return new object[] { "net6.0" };
 		}
 

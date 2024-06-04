@@ -61,6 +61,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.StaticExplicitInitialization.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Clients.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Sample.Microsoft.Data.SqlClient" Key="$(ExposedPublicKeySampleApps)" />
+    <InternalsVisibleTo Include="HostingTestApp" Key="$(ExposedPublicKey)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net462'">
@@ -73,7 +74,7 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and ('$(TargetFramework)'=='net472' or '$(TargetFramework)'=='net462' or '$(TargetFramework)' == 'netstandard2.0')">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
   </ItemGroup>
   <!-- DiagnosticSourceVersion MsBuild property can be used to compile the agent against a specific version of
@@ -83,18 +84,27 @@
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' != ''">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="$(DiagnosticSourceVersion)" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="6.0.1" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net472' or '$(TargetFramework)'=='net462'">
     <!-- Used by Ben.Demystifier -->
     <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
+    <!-- Used by Ben.Demystifier -->
+    <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="6.0.1" />
   </ItemGroup>
 
   <!-- Newtonsoft.Json constants -->
@@ -112,5 +122,5 @@
       <PackagePath>.</PackagePath>
     </None>
   </ItemGroup>
-  
+
 </Project>

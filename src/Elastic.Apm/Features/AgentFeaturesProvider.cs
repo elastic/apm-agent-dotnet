@@ -24,7 +24,7 @@ namespace Elastic.Apm.Features
 					AgentFeatures = new AzureFunctionsAgentFeatures(logger);
 				else
 					AgentFeatures = new DefaultAgentFeatures(logger);
-				logger?.Trace()?.Log($"[Agent Features] Using '{AgentFeatures.Name}' feature set]");
+				logger?.Trace()?.Log("[Agent Features] Using '{AgentFeaturesName}' feature set]", AgentFeatures.Name);
 			}
 			return AgentFeatures;
 		}

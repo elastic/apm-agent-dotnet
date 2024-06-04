@@ -86,7 +86,6 @@ namespace Elastic.Apm.Helpers
 			return new CompoundWildcardMatcher(matcher, matchers);
 		}
 
-
 		/// <summary>
 		/// Returns <code>true</code>, if any of the matchers match the provided string.
 		/// </summary>

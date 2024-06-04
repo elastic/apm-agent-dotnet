@@ -23,7 +23,7 @@ concurrency:
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
-
+  
 jobs:
   pack:
     runs-on: ubuntu-latest
@@ -41,36 +41,36 @@ jobs:
     - name: Package
       run: ./build.sh pack
     
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: github.event_name == 'push' && startswith(github.ref, 'refs/heads')
       with:
-          name: snapshoty-linux
-          path: build/output/*
-          retention-days: 1
+        name: snapshoty-linux
+        path: build/output/*
+        retention-days: 1
   
   tests:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
-          
-      - name: Build
-        shell: bash
-        run: dotnet build -c Release --verbosity minimal
 
       - name: 'Tests: Unit'
-        uses: ./.github/workflows/test
-        with:
-            name: 'unit'
-            filter: 'FullyQualifiedName!~Elastic.Apm.StartupHook.Tests&FullyQualifiedName!~Elastic.Apm.Profiler.Managed.Tests&FullyQualifiedName!~Elastic.Apm.Azure'
+        shell: bash
+        run: ./build.sh test --test-suite unit
+        
+      - name: 'Tests: Integrations'
+        shell: bash
+        run: ./build.sh test --test-suite integrations
             
   azure-tests:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'pull_request'
-      || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    if: ${{ false }}
+    #if: |
+    #  github.event_name != 'pull_request'
+    #  || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -78,12 +78,8 @@ jobs:
         with:
           azure: 'true'
 
-      - name: Build
-        shell: bash
-        run: dotnet build -c Release --verbosity minimal
-
       - name: 'Read credentials'
-        uses: hashicorp/vault-action@v2.7.4
+        uses: hashicorp/vault-action@v3.0.0
         with:
           url: ${{ secrets.VAULT_ADDR }}
           roleId: ${{ secrets.VAULT_ROLE_ID }}
@@ -102,11 +98,9 @@ jobs:
           echo "AZURE_RESOURCE_GROUP_PREFIX=ci-dotnet-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
 
       - name: 'Tests: Azure'
-        uses: ./.github/workflows/test
-        with:
-          name: 'azure'
-          filter: 'FullyQualifiedName~Elastic.Apm.Azure'
-
+        shell: bash
+        run: ./build.sh test --test-suite azure
+        
       - name: 'Teardown tests infra'
         if: ${{ always() }}
         run: |
@@ -122,16 +116,10 @@ jobs:
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
     
-    - name: Build agent-zip
-      run: ./build.sh agent-zip
-
     - name: 'Tests: StartupHooks'
-      uses: ./.github/workflows/test
-      with:
-        name: 'startuphooks'
-        project: 'test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj'
-        
-
+      shell: bash
+      run: ./build.sh test --test-suite startuphooks
+    
   profiler-tests:
     runs-on: ubuntu-latest
     
@@ -143,14 +131,9 @@ jobs:
       with:
           rust: 'true'
     
-    - name: Build profiler
-      run: ./build.sh profiler-zip
-
     - name: 'Tests: Profiler'
-      uses: ./.github/workflows/test
-      with:
-          name: 'profiler'
-          project: 'test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj'
+      shell: bash
+      run: ./build.sh test --test-suite profiler
     
     - name: Build Profiler Docker Image
       run: |

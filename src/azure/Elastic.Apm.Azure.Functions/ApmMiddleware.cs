@@ -23,7 +23,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 
 	public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
 	{
-		Context.Logger.Trace()?.Log($"{nameof(Invoke)} - {context.FunctionDefinition.Name}");
+		Context.Logger.Trace()?.Log($"{nameof(Invoke)} - {{FunctionName}}", context.FunctionDefinition.Name);
 
 		var data = GetTriggerSpecificData(context);
 		await Agent.Tracer.CaptureTransaction(data.Name, ApiConstants.TypeRequest, async t =>

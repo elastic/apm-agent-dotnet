@@ -130,10 +130,14 @@ namespace Elastic.Apm.Config
 				ParseTraceContinuationStrategy(Lookup(ConfigurationOption.TraceContinuationStrategy));
 			TransactionIgnoreUrls =
 				ParseTransactionIgnoreUrls(Lookup(ConfigurationOption.TransactionIgnoreUrls));
+			TransactionNameGroups =
+				ParseTransactionNameGroups(Lookup(ConfigurationOption.TransactionNameGroups));
 			TransactionMaxSpans = ParseTransactionMaxSpans(Lookup(ConfigurationOption.TransactionMaxSpans));
 			TransactionSampleRate = ParseTransactionSampleRate(Lookup(ConfigurationOption.TransactionSampleRate));
 			UseElasticTraceparentHeader =
 				ParseUseElasticTraceparentHeader(Lookup(ConfigurationOption.UseElasticTraceparentHeader));
+			UsePathAsTransactionName =
+				ParseUsePathAsTransactionName(Lookup(ConfigurationOption.UsePathAsTransactionName));
 			VerifyServerCert = ParseVerifyServerCert(Lookup(ConfigurationOption.VerifyServerCert));
 
 			var urlConfig = Lookup(ConfigurationOption.ServerUrl);
@@ -237,11 +241,15 @@ namespace Elastic.Apm.Config
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
+		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups { get; }
+
 		public int TransactionMaxSpans { get; }
 
 		public double TransactionSampleRate { get; }
 
 		public bool UseElasticTraceparentHeader { get; }
+
+		public bool UsePathAsTransactionName { get; }
 
 		public bool VerifyServerCert { get; }
 

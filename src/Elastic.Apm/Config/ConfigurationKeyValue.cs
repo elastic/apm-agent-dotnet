@@ -48,6 +48,10 @@ namespace Elastic.Apm.Config
 		}
 
 
+
+		public void Log<T>(T state, Action<T, string, string, string, string> logCallback) =>
+			logCallback(state, $"{Type,13}", Option.ToNormalizedName(), ValueForLogging, ReadFrom);
+
 		public override string ToString() => $"{Type,13}->{Option.ToNormalizedName()}: '{ValueForLogging}' ({ReadFrom})";
 	}
 

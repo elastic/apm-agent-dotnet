@@ -116,7 +116,7 @@ Automatic instrumentation is supported for the following data access technologie
 |<<setup-auto-instrumentation, Profiler auto instrumentation>>
 
 |MongoDB added[1.9]
-|MongoDB.Driver 2.4.4+
+|MongoDB.Driver 2.19.0+
 |<<setup-mongo-db, NuGet package>>
 
 |Oracle added[1.12]

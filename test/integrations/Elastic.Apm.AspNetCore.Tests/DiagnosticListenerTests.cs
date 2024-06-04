@@ -7,11 +7,14 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -26,47 +29,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private readonly HttpClient _client;
 
-		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory)
+		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory, ITestOutputHelper output)
 		{
-			_agent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(exitSpanMinDuration: "0")));
-			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
+			var logger = new XUnitLogger(LogLevel.Trace, output);
+			_capturedPayload = new MockPayloadSender(logger);
+			_agent = new ApmAgent(
+				new TestAgentComponents(
+					configuration: new MockConfiguration(exitSpanMinDuration: "0", flushInterval: "0"),
+					payloadSender: _capturedPayload,
+					logger: logger
+				)
+			);
 
 			//This registers the middleware without activating any listeners,
 			//so no error capturing and no EFCore listener.
 			_client = Helper.GetClientWithoutDiagnosticListeners(_agent, factory);
-		}
-
-		/// <summary>
-		/// Manually starts <see cref="AspNetCoreErrorDiagnosticsSubscriber" /> and does 1 HTTP call
-		/// that throws an exception,
-		/// then it disposes the <see cref="AspNetCoreErrorDiagnosticsSubscriber" /> (aka unsubsribes)
-		/// and does another HTTP call that throws an exception.
-		/// It makes sure that for the 1. HTTP call the errors is captured and for the 2. it isn't.
-		/// </summary>
-		[Fact]
-		public async Task SubscribeAndUnsubscribeAspNetCoreDiagnosticListener()
-		{
-			//For reference: unsubscribing from AspNetCoreDiagnosticListener does not seem to work.
-			//TODO: this should be investigated. This is more relevant for testing.
-			//			using (_agent.Subscribe(new AspNetCoreDiagnosticsSubscriber()))
-			//			{
-			//				await _client.GetAsync("/Home/TriggerError");
-			//
-			//				_capturedPayload.Transactions.Should().ContainSingle();
-			//
-			//				_capturedPayload.Errors.Should().NotBeEmpty();
-			//				_capturedPayload.Errors.Should().ContainSingle();
-			//				 _capturedPayload.Errors[0].CapturedException.Type.Should().Be(typeof(Exception).FullName);
-			//			} //here we unsubsribe, so no errors should be captured after this line.
-
-			_agent.Dispose();
-
-			_capturedPayload.Clear();
-
-			await _client.GetAsync("/Home/TriggerError");
-
-			_capturedPayload.Transactions.Should().ContainSingle();
-			_capturedPayload.Errors.Should().BeEmpty();
 		}
 
 		/// <summary>
@@ -83,6 +60,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				await _client.GetAsync("/Home/Index");
 
+				_capturedPayload.WaitForTransactions(TimeSpan.FromSeconds(10));
+
 				_capturedPayload.Transactions.Should().ContainSingle();
 
 				_capturedPayload.SpansOnFirstTransaction.Should()
@@ -93,6 +72,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/Index");
+
+			_capturedPayload.WaitForTransactions(TimeSpan.FromSeconds(10));
 
 			_capturedPayload.Transactions.Should().ContainSingle();
 

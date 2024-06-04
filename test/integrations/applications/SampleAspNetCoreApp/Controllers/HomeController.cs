@@ -115,7 +115,14 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult SimplePage()
 		{
-			Response.Headers.Add("X-Additional-Header", "For-Elastic-Apm-Agent");
+			Response.Headers.Append("X-Additional-Header", "For-Elastic-Apm-Agent");
+			return View();
+		}
+
+		public IActionResult CookiePage()
+		{
+			HttpContext.Response.Cookies.Append("MySecureCookie", "SHOULD BE REDACTED!!");
+			HttpContext.Response.Cookies.Append("SafeCookie", "123");
 			return View();
 		}
 

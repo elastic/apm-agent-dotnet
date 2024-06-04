@@ -27,6 +27,11 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		public Dictionary<string, string> Headers { get; set; }
 
+		/// <summary>
+		/// This field is sanitized by a filter
+		/// </summary>
+		public Dictionary<string, string> Cookies { get; set; }
+
 		[JsonProperty("http_version")]
 		[MaxLength]
 		public string HttpVersion { get; set; }
@@ -42,6 +47,8 @@ namespace Elastic.Apm.Api
 			var newItem = (Request)MemberwiseClone();
 			if (Headers != null)
 				newItem.Headers = Headers.ToDictionary(entry => entry.Key, entry => entry.Value);
+			if (Cookies != null)
+				newItem.Cookies = Cookies.ToDictionary(entry => entry.Key, entry => entry.Value);
 
 			newItem.Socket = Socket?.DeepCopy();
 			newItem.Url = Url?.DeepCopy();

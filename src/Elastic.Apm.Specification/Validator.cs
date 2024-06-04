@@ -284,7 +284,7 @@ namespace Elastic.Apm.Specification
 					continue;
 
 				var implementationProperty = new ImplementationProperty(jsonProperty.PropertyName, jsonProperty.PropertyType, specType);
-				var maxLength = (MaxLengthAttribute)(jsonProperty.AttributeProvider.GetAttributes(typeof(MaxLengthAttribute), true).FirstOrDefault());
+				var maxLength = (MaxLengthAttribute)jsonProperty.AttributeProvider?.GetAttributes(typeof(MaxLengthAttribute), true).FirstOrDefault();
 
 				if (maxLength != null)
 					implementationProperty.MaxLength = maxLength.Length;

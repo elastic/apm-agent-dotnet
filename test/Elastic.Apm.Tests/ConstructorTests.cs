@@ -149,8 +149,13 @@ public class ConstructorTests
 		public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
 
 		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
-		// ReSharper restore UnassignedGetOnlyAutoProperty
 
+		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups =>
+			ConfigConsts.DefaultValues.TransactionNameGroups;
+
+		public bool UsePathAsTransactionName => ConfigConsts.DefaultValues.UsePathAsTransactionName;
+
+		// ReSharper restore UnassignedGetOnlyAutoProperty
 		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}
 }
