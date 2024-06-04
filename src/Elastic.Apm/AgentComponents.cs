@@ -198,7 +198,7 @@ namespace Elastic.Apm
 		}
 
 		/// <summary>
-		/// This ensures agents will log respect externally provided loggers.
+		/// This ensures agents will respect externally provided loggers.
 		/// <para>If the agent is started as part of profiling it should adhere to profiling configuration</para>
 		/// <para>If file logging environment variables are set we should always log to that location</para>
 		/// </summary>

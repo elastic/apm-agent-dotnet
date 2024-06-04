@@ -36,9 +36,9 @@ If you don't see anything suspicious in the agent logs (no warning or error), it
 [[collect-logs-globally]]
 ==== Enable global file logging.
 
-To easiest way to get debug information from the Agent, regardless of the way its run, is to enable global file logging.
+The easiest way to get debug information from the Agent, regardless of the way it's run, is to enable global file logging.
 
-Specifying atleast one of the following environment variables will ensure the agent logs to a file
+Specifying at least one of the following environment variables will ensure the agent logs to a file
 
 `ELASTIC_OTEL_FILE_LOG_LEVEL` _(optional)_::
 
