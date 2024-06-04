@@ -35,12 +35,10 @@ jobs:
       run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json --skip-duplicate --no-symbols
     
     - if: ${{ failure() }}
-      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      uses: elastic/oblt-actions/slack/send@v1.7.0
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: "#apm-agent-dotnet"
+        bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+        channel-id: "#apm-agent-dotnet"
         message: |
           :large_yellow_circle: [${{ github.repository }}] Snapshot could not be published to feedz.io.
           Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)

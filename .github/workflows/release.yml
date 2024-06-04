@@ -58,24 +58,20 @@ jobs:
         gh release upload ${{ github.ref_name }} "build/output/ElasticApmAgent_${{ steps.bootstrap.outputs.agent-version }}.zip" "build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip"
 
     - if: ${{ success() }}
-      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      uses: elastic/oblt-actions/slack/send@v1.7.0
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: ${{ env.SLACK_CHANNEL }}
+        bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+        channel-id: ${{ env.SLACK_CHANNEL }}
         message: |
           :large_green_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* published.
           Build: (<${{ env.JOB_URL }}|here>)
           Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)
 
     - if: ${{ failure() }}
-      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      uses: elastic/oblt-actions/slack/send@v1.7.0
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: ${{ env.SLACK_CHANNEL }}
+        bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+        channel-id: ${{ env.SLACK_CHANNEL }}
         message: |
           :large_yellow_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* could not be published.
           Build: (<${{ env.JOB_URL }}|here>)
