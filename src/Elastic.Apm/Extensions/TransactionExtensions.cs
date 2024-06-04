@@ -46,7 +46,7 @@ namespace Elastic.Apm.Extensions
 				body = httpRequest.ExtractBody(logger, transaction.Configuration);
 
 			if (transaction.Context != null)
-				transaction.Context.Request.Body = body ?? string.Empty;
+				transaction.Context.Request.Body = body;
 		}
 
 		internal static bool IsCaptureRequestBodyEnabled(this ITransaction transaction, bool isForError) =>
