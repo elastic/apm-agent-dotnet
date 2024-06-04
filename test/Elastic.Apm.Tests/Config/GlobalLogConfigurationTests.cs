@@ -21,15 +21,15 @@ namespace Elastic.Apm.Tests.Config
 			config.LogLevel.Should().Be(LogLevel.Warning);
 			config.AgentLogFilePath.Should().StartWith(EnvironmentLoggingConfiguration.GetDefaultLogDirectory());
 			config.AgentLogFilePath.Should().EndWith(".agent.log");
-			config.LogTargets.Should().Be(GlobalLogTarget.File);
+			//because is active is false log targets defaults to none;
+			config.LogTargets.Should().Be(GlobalLogTarget.None);
 		}
+
+
 		//
 		[Theory]
 		[InlineData(ELASTIC_OTEL_LOG_LEVEL, "Info")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG, "Info")]
-		//only if explicitly specified to 'none' should we not default to file logging.
-		[InlineData(ELASTIC_OTEL_LOG_LEVEL, "BadEnumValue")]
-		[InlineData(ELASTIC_APM_PROFILER_LOG, "BadEnumValue")]
 
 		[InlineData(ELASTIC_OTEL_LOG_DIRECTORY, "1")]
 		[InlineData(ELASTIC_APM_LOG_DIRECTORY, "1")]
@@ -37,13 +37,30 @@ namespace Elastic.Apm.Tests.Config
 		[InlineData(ELASTIC_APM_STARTUP_HOOKS_LOGGING, "1")]
 		//only if explicitly specified to 'none' should we not default to file logging.
 		[InlineData(ELASTIC_OTEL_LOG_TARGETS, "file")]
-		[InlineData(ELASTIC_OTEL_LOG_TARGETS, "BadEnumValue")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG_TARGETS, "file")]
-		[InlineData(ELASTIC_APM_PROFILER_LOG_TARGETS, "BadEnumValue")]
 		public void CheckActivation(string environmentVariable, string value)
 		{
 			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable { { environmentVariable, value } });
 			config.IsActive.Should().BeTrue();
+			config.LogTargets.Should().Be(GlobalLogTarget.File);
+		}
+
+		//
+		[Theory]
+		[InlineData(ELASTIC_OTEL_LOG_LEVEL, "none")]
+		[InlineData(ELASTIC_APM_PROFILER_LOG, "None")]
+		//only if explicitly specified to 'none' should we not default to file logging.
+		[InlineData(ELASTIC_OTEL_LOG_TARGETS, "none")]
+		[InlineData(ELASTIC_APM_PROFILER_LOG_TARGETS, "none")]
+		public void CheckDeactivation(string environmentVariable, string value)
+		{
+			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable
+			{
+				{ ELASTIC_OTEL_LOG_DIRECTORY, "" },
+				{ environmentVariable, value }
+			});
+			config.IsActive.Should().BeFalse();
+			config.LogTargets.Should().Be(GlobalLogTarget.None);
 		}
 
 		[Theory]
@@ -121,11 +138,11 @@ namespace Elastic.Apm.Tests.Config
 		}
 
 		[Theory]
-		[InlineData(null, GlobalLogTarget.File)]
-		[InlineData("", GlobalLogTarget.File)]
-		[InlineData("foo", GlobalLogTarget.File)]
-		[InlineData("foo,bar", GlobalLogTarget.File)]
-		[InlineData("foo;bar", GlobalLogTarget.File)]
+		[InlineData(null, GlobalLogTarget.None)]
+		[InlineData("", GlobalLogTarget.None)]
+		[InlineData("foo", GlobalLogTarget.None)]
+		[InlineData("foo,bar", GlobalLogTarget.None)]
+		[InlineData("foo;bar", GlobalLogTarget.None)]
 		[InlineData("file;foo;bar", GlobalLogTarget.File)]
 		[InlineData("file", GlobalLogTarget.File)]
 		[InlineData("stdout", GlobalLogTarget.StdOut)]
@@ -134,13 +151,13 @@ namespace Elastic.Apm.Tests.Config
 		[InlineData("FILE;StdOut", GlobalLogTarget.File | GlobalLogTarget.StdOut)]
 		[InlineData("file;stdout;file", GlobalLogTarget.File | GlobalLogTarget.StdOut)]
 		[InlineData("FILE;StdOut;stdout", GlobalLogTarget.File | GlobalLogTarget.StdOut)]
-		internal void Check_LogTargets_AreEvaluatedCorrectly(string envVarValue, GlobalLogTarget targets)
+		internal void Check_LogTargets_AreEvaluatedCorrectly(string envVarValue, GlobalLogTarget? targets)
 		{
 			Check(ELASTIC_APM_PROFILER_LOG_TARGETS, envVarValue, targets);
 			Check(ELASTIC_OTEL_LOG_TARGETS, envVarValue, targets);
 			return;
 
-			static void Check(string key, string envVarValue, GlobalLogTarget targets)
+			static void Check(string key, string envVarValue, GlobalLogTarget? targets)
 			{
 				var config = CreateConfig(key, envVarValue);
 				config.LogTargets.Should().Be(targets, "{0}", key);

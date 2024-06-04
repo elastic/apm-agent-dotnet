@@ -19,6 +19,7 @@ using static ElasticApmStartupHook.LogEnvironmentVariables;
 namespace ElasticApmStartupHook;
 #else
 using static Elastic.Apm.Logging.LogEnvironmentVariables;
+
 namespace Elastic.Apm.Logging;
 #endif
 
@@ -26,81 +27,79 @@ internal class EnvironmentLoggingConfiguration(IDictionary environmentVariables 
 {
 	public IDictionary EnvironmentVariables { get; } = environmentVariables ?? Environment.GetEnvironmentVariables();
 
-public string GetSafeEnvironmentVariable(string key)
-{
-	var value = EnvironmentVariables.Contains(key) ? EnvironmentVariables[key]?.ToString() : null;
-	return value ?? string.Empty;
-}
+	public string GetSafeEnvironmentVariable(string key)
+	{
+		var value = EnvironmentVariables.Contains(key) ? EnvironmentVariables[key]?.ToString() : null;
+		return value ?? string.Empty;
+	}
 
-public LogLevel GetLogLevel(params string[] keys)
-{
-	var level = keys
-		.Select(k => GetSafeEnvironmentVariable(k))
-		.Select<string, LogLevel?>(v => v.ToLowerInvariant() switch
+	public LogLevel? GetLogLevel(params string[] keys)
+	{
+		var level = keys
+			.Select(k => GetSafeEnvironmentVariable(k))
+			.Select<string, LogLevel?>(v => v.ToLowerInvariant() switch
+			{
+				"trace" => LogLevel.Trace,
+				"debug" => LogLevel.Debug,
+				"info" => LogLevel.Information,
+				"warn" => LogLevel.Warning,
+				"error" => LogLevel.Error,
+				"none" => LogLevel.None,
+				_ => null
+			})
+			.FirstOrDefault(l => l != null);
+		return level;
+	}
+
+	public string GetLogDirectory(params string[] keys)
+	{
+		var path = keys
+			.Select(k => GetSafeEnvironmentVariable(k))
+			.FirstOrDefault(p => !string.IsNullOrEmpty(p));
+
+		return path;
+	}
+
+	public bool AnyConfigured(params string[] keys) =>
+		keys
+			.Select(k => GetSafeEnvironmentVariable(k))
+			.Any(p => !string.IsNullOrEmpty(p));
+
+	public GlobalLogTarget? ParseLogTargets(params string[] keys)
+	{
+		var targets = keys
+			.Select(k => GetSafeEnvironmentVariable(k))
+			.FirstOrDefault(p => !string.IsNullOrEmpty(p));
+		if (string.IsNullOrWhiteSpace(targets))
+			return null;
+
+		var logTargets = GlobalLogTarget.None;
+		var found = false;
+
+		foreach (var target in targets.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 		{
-			"trace" => LogLevel.Trace,
-			"debug" => LogLevel.Debug,
-			"info" => LogLevel.Information,
-			"warn" => LogLevel.Warning,
-			"error" => LogLevel.Error,
-			"none" => LogLevel.None,
-			_ => null
-		})
-		.FirstOrDefault(l => l != null);
-	return level ?? LogLevel.Warning;
-}
+			if (IsSet(target, "stdout"))
+				logTargets |= GlobalLogTarget.StdOut;
+			else if (IsSet(target, "file"))
+				logTargets |= GlobalLogTarget.File;
+			else if (IsSet(target, "none"))
+				logTargets |= GlobalLogTarget.None;
+		}
+		return !found ? null : logTargets;
 
-public string GetLogFilePath(params string[] keys)
-{
-	var path = keys
-		.Select(k => GetSafeEnvironmentVariable(k))
-		.FirstOrDefault(p => !string.IsNullOrEmpty(p));
-
-	return path ?? GetDefaultLogDirectory();
-}
-
-public bool AnyConfigured(params string[] keys) =>
-	keys
-		.Select(k => GetSafeEnvironmentVariable(k))
-		.Any(p => !string.IsNullOrEmpty(p));
-
-public GlobalLogTarget ParseLogTargets(params string[] keys)
-{
-
-	var targets = keys
-		.Select(k => GetSafeEnvironmentVariable(k))
-		.FirstOrDefault(p => !string.IsNullOrEmpty(p));
-	if (string.IsNullOrWhiteSpace(targets))
-		return GlobalLogTarget.File;
-
-	var logTargets = GlobalLogTarget.None;
-	var found = false;
-
-	foreach (var target in targets.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-	{
-		if (IsSet(target, "stdout"))
-			logTargets |= GlobalLogTarget.StdOut;
-		else if (IsSet(target, "file"))
-			logTargets |= GlobalLogTarget.File;
-		else if (IsSet(target, "none"))
-			logTargets |= GlobalLogTarget.None;
+		bool IsSet(string k, string v)
+		{
+			var b = k.Trim().Equals(v, StringComparison.InvariantCultureIgnoreCase);
+			if (b)
+				found = true;
+			return b;
+		}
 	}
-	return !found ? GlobalLogTarget.File : logTargets;
 
-	bool IsSet(string k, string v)
-	{
-		var b = k.Trim().Equals(v, StringComparison.InvariantCultureIgnoreCase);
-		if (b)
-			found = true;
-		return b;
-	}
-}
-
-internal static string GetDefaultLogDirectory() =>
-	Environment.OSVersion.Platform == PlatformID.Win32NT
-	? Path.Combine(Environment.GetEnvironmentVariable("PROGRAMDATA")!, "elastic", "apm-agent-dotnet", "logs")
-	: "/var/log/elastic/apm-agent-dotnet";
-
+	internal static string GetDefaultLogDirectory() =>
+		Environment.OSVersion.Platform == PlatformID.Win32NT
+			? Path.Combine(Environment.GetEnvironmentVariable("PROGRAMDATA")!, "elastic", "apm-agent-dotnet", "logs")
+			: "/var/log/elastic/apm-agent-dotnet";
 }
 
 [Flags]
@@ -135,7 +134,8 @@ public static class LogEnvironmentVariables
 
 internal readonly struct GlobalLogConfiguration
 {
-	private GlobalLogConfiguration(bool isActive, LogLevel logLevel, GlobalLogTarget logTarget, string logFileDirectory, string logFilePrefix) : this()
+	private GlobalLogConfiguration(bool isActive, LogLevel logLevel, GlobalLogTarget logTarget, string logFileDirectory, string logFilePrefix) :
+		this()
 	{
 		IsActive = isActive;
 		LogLevel = logLevel;
@@ -160,23 +160,28 @@ internal readonly struct GlobalLogConfiguration
 	{
 		var config = new EnvironmentLoggingConfiguration(environmentVariables);
 		var logLevel = config.GetLogLevel(ELASTIC_OTEL_LOG_LEVEL, ELASTIC_APM_PROFILER_LOG, ELASTIC_APM_LOG_LEVEL);
-		var logFileDirectory = config.GetLogFilePath(ELASTIC_OTEL_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR, ELASTIC_APM_LOG_DIRECTORY);
+		var logFileDirectory = config.GetLogDirectory(ELASTIC_OTEL_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR, ELASTIC_APM_LOG_DIRECTORY);
 		var logFilePrefix = GetLogFilePrefix();
 		var logTarget = config.ParseLogTargets(ELASTIC_OTEL_LOG_TARGETS, ELASTIC_APM_PROFILER_LOG_TARGETS);
 
-		var isActive = config.AnyConfigured(
-			ELASTIC_OTEL_LOG_LEVEL,
-			ELASTIC_OTEL_LOG_DIRECTORY,
-			ELASTIC_OTEL_LOG_TARGETS,
-			ELASTIC_APM_LOG_DIRECTORY,
-			ELASTIC_APM_PROFILER_LOG,
-			ELASTIC_APM_PROFILER_LOG_DIR,
-			ELASTIC_APM_PROFILER_LOG_TARGETS,
-			ELASTIC_APM_STARTUP_HOOKS_LOGGING
+		//The presence of some variables enable file logging for historical purposes
+		var isActive = config.AnyConfigured(ELASTIC_APM_STARTUP_HOOKS_LOGGING);
+		if (logLevel.HasValue || !string.IsNullOrWhiteSpace(logFileDirectory) || logTarget.HasValue)
+		{
+			isActive = true;
+			if (logLevel is LogLevel.None)
+				isActive = false;
+			else if (logTarget is GlobalLogTarget.None)
+				isActive = false;
+		}
 
-		) && logTarget != GlobalLogTarget.None && logLevel != LogLevel.None;
+		// now that we know what's actively configured, assign defaults
+		logFileDirectory ??= EnvironmentLoggingConfiguration.GetDefaultLogDirectory();
+		var level = logLevel ?? LogLevel.Warning;
 
-		return new(isActive, logLevel, logTarget, logFileDirectory, logFilePrefix);
+		var target = logTarget ?? (isActive ? GlobalLogTarget.File : GlobalLogTarget.None);
+
+		return new(isActive, level, target, logFileDirectory, logFilePrefix);
 	}
 
 	private static string GetLogFilePrefix()
@@ -190,6 +195,4 @@ internal readonly struct GlobalLogConfiguration
 		var logFileName = Path.Combine(LogFileDirectory, $"{LogFilePrefix}.{applicationName}.log");
 		return logFileName;
 	}
-
 }
-

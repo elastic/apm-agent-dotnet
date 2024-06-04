@@ -218,7 +218,6 @@ namespace Elastic.Apm
 				}
 
 				var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, fileLogConfig.LogLevel);
-
 				if ((fileLogConfig.LogTargets & GlobalLogTarget.File) == GlobalLogTarget.File)
 					TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(fileLogConfig.AgentLogFilePath));
 				if ((fileLogConfig.LogTargets & GlobalLogTarget.StdOut) == GlobalLogTarget.StdOut)
