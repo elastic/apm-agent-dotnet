@@ -15,8 +15,8 @@ namespace Elastic.Apm.Tests.Utilities;
 
 public struct CgroupFiles
 {
-		public string ProcSelfCgroup;
-		public string[] MountInfo;
+	public string ProcSelfCgroup;
+	public string[] MountInfo;
 }
 
 public struct CGroupTestData

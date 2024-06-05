@@ -30,7 +30,7 @@ namespace Elastic.Apm.Helpers
 			=> _logger = logger.Scoped(nameof(SystemInfoHelper));
 
 
-        //3997 3984 253:1 /var/lib/docker/containers/6548c6863fb748e72d1e2a4f824fde92f720952d062dede1318c2d6219a672d6/hostname /etc/hostname rw,relatime shared:1877 - ext4 /dev/mapper/vgubuntu-root rw,errors=remount-ro
+		//3997 3984 253:1 /var/lib/docker/containers/6548c6863fb748e72d1e2a4f824fde92f720952d062dede1318c2d6219a672d6/hostname /etc/hostname rw,relatime shared:1877 - ext4 /dev/mapper/vgubuntu-root rw,errors=remount-ro
 		internal void ParseMountInfo(Api.System system, string reportedHostName, string line)
 		{
 
@@ -42,7 +42,8 @@ namespace Elastic.Apm.Helpers
 			foreach (var folder in path.Split('/'))
 			{
 				//naive implementation to check for guid.
-				if (folder.Length != 64) continue;
+				if (folder.Length != 64)
+					continue;
 				system.Container = new Container { Id = folder };
 			}
 
@@ -68,7 +69,7 @@ namespace Elastic.Apm.Helpers
 			// Legacy, e.g.: /system.slice/docker-<CID>.scope or cri-containerd-<CID>.scope
 			if (idPart.EndsWith(".scope"))
 			{
-				var idParts = idPart.Split(new[] { '-'}, StringSplitOptions.RemoveEmptyEntries);
+				var idParts = idPart.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
 				var containerIdWithScope = idParts.Last();
 
 				idPart = containerIdWithScope.Substring(0, containerIdWithScope.Length - ".scope".Length);
@@ -232,7 +233,8 @@ namespace Elastic.Apm.Helpers
 
 				while ((line = mi.ReadLine()) != null)
 				{
-					if (!line.Contains("/etc/hostname")) continue;
+					if (!line.Contains("/etc/hostname"))
+						continue;
 					ParseMountInfo(system, reportedHostName, line);
 					if (system.Container != null)
 						return;
