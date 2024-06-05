@@ -26,32 +26,19 @@ jobs:
 
     - name: Package with canary suffix
       run: ./build.sh pack
-
-    - name: Prepare feedz.io
-      uses: hashicorp/vault-action@v3.0.0
-      with:
-        url: ${{ secrets.VAULT_ADDR }}
-        method: approle
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        secrets: |
-          secret/apm-team/ci/elastic-observability-feedz.io apiKey | REPO_API_KEY ;
-          secret/apm-team/ci/elastic-observability-feedz.io url | REPO_API_URL
             
     # Github packages requires authentication, this is likely going away in the future so for now we publish to feedz.io
     - name: publish canary packages to feedz.io
-      run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${REPO_API_KEY} -s ${REPO_API_URL} --skip-duplicate --no-symbols
+      run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{ secrets.FEEDZ_IO_API_KEY }} -s ${{ secrets.FEEDZ_IO_API_URL }} --skip-duplicate --no-symbols
       
     - name: publish canary packages github package repository
       run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json --skip-duplicate --no-symbols
     
     - if: ${{ failure() }}
-      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      uses: elastic/oblt-actions/slack/send@v1.7.0
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: "#apm-agent-dotnet"
+        bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+        channel-id: "#apm-agent-dotnet"
         message: |
           :large_yellow_circle: [${{ github.repository }}] Snapshot could not be published to feedz.io.
           Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)
