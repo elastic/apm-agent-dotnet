@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;net7.0</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0</TargetFrameworks>
     <RootNamespace>Elastic.Apm.EntityFramework6.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFramework6.Tests</AssemblyName>
     
@@ -10,14 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
     <PackageReference Include="coverlet.collector" Version="1.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="xunit" Version="2.7.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
     <PackageReference Include="TestEnvironment.Docker" Version="1.2.2" />
     <PackageReference Include="TestEnvironment.Docker.Containers.Mssql" Version="1.0.3" />
@@ -27,10 +27,10 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <PackageReference Include="EntityFramework" Version="6.2.0" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net461' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
     <PackageReference Include="EntityFramework" Version="6.3.0" />
   </ItemGroup>
   <ItemGroup>

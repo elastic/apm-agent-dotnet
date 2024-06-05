@@ -35,9 +35,8 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 		/// Tests for: https://github.com/elastic/apm-agent-dotnet/issues/1077
 		/// </summary>
 		/// <param name="withDiagnosticSourceOnly"></param>
-		[Theory]
-		[MemberData(nameof(MemberData.TestWithDiagnosticSourceOnly), MemberType = typeof(MemberData))]
-		public async Task AgentDisabledInAppConfig(bool withDiagnosticSourceOnly)
+		[Fact]
+		public async Task AgentDisabledInAppConfig()
 		{
 			var defaultServerUrlConnectionMade = false;
 
@@ -65,9 +64,8 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 				new NoopLogger(),
 				new RuntimeConfigurationSnapshot(configReader)));
 
-			var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, _factory);
-			if (withDiagnosticSourceOnly)
-				Agent.Setup(agent);
+			var client = Helper.ConfigureHttpClient(true, agent, _factory);
+			Agent.Setup(agent);
 
 			var response = await client.GetAsync("/Home/StartTransactionWithAgentApi");
 			response.IsSuccessStatusCode.Should().BeTrue();

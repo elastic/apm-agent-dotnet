@@ -53,6 +53,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string GenNSpansPageRelativePath = HomePageRelativePath + "/" + nameof(GenNSpans);
 		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 		internal const string HomePageRelativePath = "Home";
+		internal const string CookiesPageRelativePath = HomePageRelativePath + "/" + nameof(Cookies);
 		internal const string LabelsTestRelativePath = HomePageRelativePath + "/" + nameof(LabelsTest);
 		internal const string NotFoundPageRelativePath = HomePageRelativePath + "/" + nameof(NotFound);
 
@@ -77,6 +78,14 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		public ActionResult About()
 		{
 			ViewBag.Message = "Your application description page.";
+
+			return View();
+		}
+
+		public ActionResult Cookies()
+		{
+			HttpContext.Response.Cookies.Add(new HttpCookie("MySecureCookie", "SHOULD BE REDACTED!!"));
+			HttpContext.Response.Cookies.Add(new HttpCookie("SafeCookie", "This is safe to record and should not be redacted."));
 
 			return View();
 		}

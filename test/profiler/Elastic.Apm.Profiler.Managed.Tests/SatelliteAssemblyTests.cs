@@ -41,7 +41,7 @@ public class SatelliteAssemblyTests
 			};
 
 			profiledApplication.Start(
-				"net6.0",
+				"net8.0",
 				TimeSpan.FromMinutes(4),
 				environmentVariables,
 				null,

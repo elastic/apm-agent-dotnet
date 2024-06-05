@@ -20,7 +20,6 @@ On **.NET Core 3.0+ or .NET 5+**, the agent supports auto instrumentation withou
 any recompilation of your projects. See <<zero-code-change-setup, Zero code change setup on .NET Core>>
 for more details.
 
-
 [float]
 == Get started
 

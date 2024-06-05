@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Linq;
 using Elastic.Apm.Api;
@@ -41,6 +45,8 @@ namespace Elastic.Apm.Extensions.Hosting
 		/// </summary>
 		/// <param name="builder">Builder.</param>
 		/// <param name="subscribers">Specify which diagnostic source subscribers you want to connect.</param>
+		[Obsolete("This extension is maintained for backward compatibility." +
+			" We recommend registering the agent via the IServiceCollection using the AddElasticApm extension method instead. This method may be removed in a future release.")]
 		public static IHostBuilder UseElasticApm(this IHostBuilder builder, params IDiagnosticsSubscriber[] subscribers)
 		{
 			builder.ConfigureServices((ctx, services) =>
@@ -96,7 +102,7 @@ namespace Elastic.Apm.Extensions.Hosting
 
 				// Only add ElasticApmErrorLoggingProvider after the agent is created, because it depends on the agent
 				services.AddSingleton<ILoggerProvider, ApmErrorLoggingProvider>(sp =>
-					new ApmErrorLoggingProvider(sp.GetService<IApmAgent>()));
+					new ApmErrorLoggingProvider(apmAgent));
 
 				if (subscribers != null && subscribers.Any() && Agent.IsConfigured)
 					apmAgent.Subscribe(subscribers);
@@ -110,8 +116,12 @@ namespace Elastic.Apm.Extensions.Hosting
 			var aspNetCoreVersion = GetAssemblyVersion("Microsoft.AspNetCore");
 			var hostingVersion = GetAssemblyVersion("Microsoft.Extensions.Hosting");
 			var version = aspNetCoreVersion ?? hostingVersion ?? "n/a";
+			var isCore = false;
 
-			service.Framework = new Framework { Name = aspNetCoreVersion != null ? "ASP.NET Core" : ".NET Core", Version = version };
+			if (aspNetCoreVersion is null && hostingVersion is not null && Version.TryParse(hostingVersion, out var v))
+				isCore = v.Major < 5;
+
+			service.Framework = new Framework { Name = aspNetCoreVersion != null ? "ASP.NET Core" : isCore ? ".NET Core" : ".NET", Version = version };
 			service.Language = new Language { Name = "C#" }; //TODO
 		}
 

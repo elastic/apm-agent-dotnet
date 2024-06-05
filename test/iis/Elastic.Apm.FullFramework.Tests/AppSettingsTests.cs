@@ -34,7 +34,8 @@ namespace Elastic.Apm.FullFramework.Tests
 			var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 			var appSettings = (AppSettingsSection)config.GetSection("appSettings");
 			appSettings.Settings.Clear();
-			foreach (var v in values) appSettings.Settings.Add(v.Key.ToConfigKey(), v.Value);
+			foreach (var v in values)
+				appSettings.Settings.Add(v.Key.ToConfigKey(), v.Value);
 			config.Save();
 			ConfigurationManager.RefreshSection("appSettings");
 		}
@@ -74,9 +75,10 @@ namespace Elastic.Apm.FullFramework.Tests
 		public void CreateConfigurationReaderThroughApSettings()
 		{
 			var logger = new ConsoleLogger(LogLevel.Information);
-			var config = new Dictionary<ConfigurationOption, string>();
-
-			config.Add(FullFrameworkConfigurationReaderType, ConfigType);
+			var config = new Dictionary<ConfigurationOption, string>
+			{
+				{ FullFrameworkConfigurationReaderType, ConfigType }
+			};
 
 			UpdateAppSettings(config);
 

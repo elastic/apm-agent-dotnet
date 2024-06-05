@@ -16,6 +16,7 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
+open Scripts.TestEnvironment
 open TestEnvironment
 open Tooling
 
@@ -70,13 +71,14 @@ module Build =
         DotNet.Exec [target; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
         
     let private msBuild target projectOrSln =
-        MSBuild.build (fun p ->
+        MSBuild.build (fun (p: MSBuildParams) ->
                 { p with
                     Verbosity = Some(Quiet)
                     Targets = [target]
                     Properties = [
                         "Configuration", "Release"
                         "Optimize", "True"
+                        "dummy", "test" // See https://github.com/fsprojects/FAKE/issues/2738
                     ]
                     // current version of Fake MSBuild module does not support latest bin log file
                     // version of MSBuild in VS 16.8, so disable for now.
@@ -143,6 +145,47 @@ module Build =
         dotnet "build" Paths.Solution
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
+        
+    /// Runs dotnet build on all .NET core projects in the solution.
+    /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
+    let Test (suite: TestSuite) =
+        let sln = 
+            match suite with
+            | TestSuite.Profiler -> "test/profiler/Elastic.Apm.Profiler.Managed.Tests/Elastic.Apm.Profiler.Managed.Tests.csproj"
+            | TestSuite.StartupHooks -> "test/startuphook/Elastic.Apm.StartupHook.Tests/Elastic.Apm.StartupHook.Tests.csproj"
+            | TestSuite.IIS -> "test/iis/Elastic.Apm.AspNetFullFramework.Tests"
+            | TestSuite.Azure 
+            | TestSuite.Integrations
+            | TestSuite.Unit
+            | _ -> "ElasticApmAgent.sln"
+            
+        //ensure we test all listed frameworks on windows (net462 and latest .NET version we support).
+        let framework = if isWindows then None else Some "net8.0"
+        
+        let logger =
+            match BuildServer.isGitHubActionsBuild with
+            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false;summary.includeNotFoundTests=false\""
+            | _ -> None 
+            
+        let filter = 
+            match suite with
+            | TestSuite.Azure -> Some "FullyQualifiedName~Elastic.Apm.Azure"
+            | TestSuite.Unit ->
+                Some "FullyQualifiedName~Elastic.Apm.Tests|FullyQualifiedName~Elastic.Apm.OpenTelemetry.Tests"
+            | TestSuite.Integrations ->
+                let testElseWhere = ["Tests"; "OpenTelemetry.Tests"; "StartupHook.Tests"; "Profiler.Managed.Tests"; "Azure"]
+                let filter = testElseWhere |> List.map (fun s -> $"FullyQualifiedName!~Elastic.Apm.%s{s}") |> String.concat "&"
+                Some filter
+            | _ -> None 
+        
+        let command =
+            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; "minimal"; "-s"; "test/.runsettings"]
+            @ (match filter with None -> [] | Some f -> ["--filter"; f])
+            @ (match framework with None -> [] | Some f -> ["-f"; f])
+            @ (match logger with None -> [] | Some l -> [l])
+            @ ["--"; "RunConfiguration.CollectSourceInformation=true"]
+            
+        DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
         
         
     /// Builds the CLR profiler and supporting .NET managed assemblies
@@ -218,27 +261,27 @@ module Build =
         agentDir.Create()
 
         // copy startup hook to root of agent directory
-        !! (Paths.BuildOutput "ElasticApmAgentStartupHook/netcoreapp2.2")
+        !! (Paths.BuildOutput "ElasticApmAgentStartupHook/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs agentDir)
             
         // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
-        !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
+        !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netstandard2.0")
         ++ (Paths.BuildOutput "Elastic.Apm/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major)))
                  
         // assemblies compiled against older version of System.Diagnostics.DiagnosticSource 
-        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major))
+        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major))
         ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
         
         // assemblies compiled against 6.0 version of System.Diagnostics.DiagnosticSource 
-        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major)) //using old version here, because it the netcoreapp2.2 app can't build with diagnosticsource6
+        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major)) //using old version here, because it the netcoreapp2.2 app can't build with diagnosticsource6
         ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/net6.0" diagnosticSourceVersion6.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
@@ -248,13 +291,6 @@ module Build =
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
       
       
-    /// Builds docker image including the ElasticApmAgent  
-    let AgentDocker() =
-        let agentVersion = Versioning.CurrentVersion.FileVersion.ToString()        
-        
-        Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
-                      "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
-        
     let ProfilerIntegrations () =
         DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
                      "-i"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"

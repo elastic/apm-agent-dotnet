@@ -244,7 +244,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent = new ApmAgent(
 				new AgentComponents(payloadSender: capturedPayload, configurationReader: config, logger: _logger));
-			_client = Helper.GetClient(_agent, _factory, true);
+			_client = Helper.GetClient(_agent, _factory);
 		}
 
 		/// <summary>

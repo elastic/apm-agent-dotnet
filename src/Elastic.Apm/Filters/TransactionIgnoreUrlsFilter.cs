@@ -14,7 +14,7 @@ namespace Elastic.Apm.Filters
 	/// </summary>
 	internal class TransactionIgnoreUrlsFilter
 	{
-		public ITransaction Filter(ITransaction transaction)
+		public static ITransaction Filter(ITransaction transaction)
 		{
 			if (transaction is Transaction realTransaction)
 			{

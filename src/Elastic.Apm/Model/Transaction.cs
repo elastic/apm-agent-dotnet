@@ -347,15 +347,17 @@ internal class Transaction : ITransaction
 			if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
 				continue;
 
-			Otel ??= new OTel() { Attributes = new Dictionary<string, object>() };
-			Otel.Attributes.Add(baggage.Key, baggage.Value);
+			Otel ??= new OTel { Attributes = new Dictionary<string, object>() };
+
+			var newKey = $"baggage.{baggage.Key}";
+			Otel.Attributes[newKey] = baggage.Value;
 		}
 	}
 
 	/// <summary>
 	/// Internal dictionary to keep track of and look up dropped span stats.
 	/// </summary>
-	private Dictionary<DroppedSpanStatsKey, DroppedSpanStats> _droppedSpanStatsMap;
+	private ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats> _droppedSpanStatsMap;
 
 	private bool _isEnded;
 
@@ -550,38 +552,35 @@ internal class Transaction : ITransaction
 		return activity;
 	}
 
+	private readonly object _lock = new();
 	internal void UpdateDroppedSpanStats(string serviceTargetType, string serviceTargetName, string destinationServiceResource, Outcome outcome,
 		double duration
 	)
 	{
+		//lock the lazy initialization of the dictionary
 		if (_droppedSpanStatsMap == null)
 		{
-			_droppedSpanStatsMap = new Dictionary<DroppedSpanStatsKey, DroppedSpanStats>
-			{
-				{
-					new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
-					new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration)
-				}
-			};
+			lock (_lock)
+				_droppedSpanStatsMap ??= new ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats>();
 		}
-		else
+
+		lock (_lock)
 		{
 			if (_droppedSpanStatsMap.Count >= 128)
 				return;
+			//AddOrUpdate callbacks can run multiple times so still wrapping this in a lock
+			var key = new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome);
+			_droppedSpanStatsMap.AddOrUpdate(key,
+				 _ => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration),
+				 (_, stats) =>
+				 {
+					 stats.Duration ??=
+						 new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
-			if (_droppedSpanStatsMap.TryGetValue(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome), out var item))
-			{
-				item.Duration ??=
-					new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
-
-				item.Duration.Count++;
-				item.Duration.Sum.UsRaw += duration;
-			}
-			else
-			{
-				_droppedSpanStatsMap.Add(new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome),
-					new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration));
-			}
+					 stats.Duration.Count++;
+					 stats.Duration.Sum.UsRaw += duration;
+					 return stats;
+				 });
 		}
 	}
 
@@ -698,7 +697,28 @@ internal class Transaction : ITransaction
 		}
 
 		if (IsSampled || _apmServerInfo?.Version < new ElasticVersion(8, 0, 0, string.Empty))
+		{
+			// Apply any transaction name groups
+			if (Configuration.TransactionNameGroups.Count > 0)
+			{
+				var matched = WildcardMatcher.AnyMatch(Configuration.TransactionNameGroups, Name, null);
+				if (matched is not null)
+				{
+					var matchedTransactionNameGroup = matched.GetMatcher();
+
+					if (!string.IsNullOrEmpty(matchedTransactionNameGroup))
+					{
+						_logger?.Trace()?.Log("Transaction name '{TransactionName}' matched transaction " +
+							"name group '{TransactionNameGroup}' from configuration",
+								Name, matchedTransactionNameGroup);
+
+						Name = matchedTransactionNameGroup;
+					}
+				}
+			}
+
 			_sender.QueueTransaction(this);
+		}
 		else
 		{
 			_logger?.Debug()

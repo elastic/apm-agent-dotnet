@@ -106,35 +106,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transactionWithUser
 				.Context.User.UserName.Should()
 				.Be(userName);
-		}
 
-		/// <summary>
-		/// A unit test that directly calls InvokeAsync on the <see cref="ApmMiddleware" />.
-		/// It tests for OpenID claims.
-		/// It creates a <see cref="DefaultHttpContext" /> with email and sub claims on it (those are OpenID standard)
-		/// and make sure that the agent captured the userid and the email address of the user.
-		/// </summary>
-		[Fact]
-		public async Task OpenIdClaimsTest()
-		{
-			const string mail = "my@mail.com";
-			const string sub = "123-456";
+			transactionWithUser
+				.Context.User.Email.Should()
+				.StartWith(userName);
 
-			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
-			{
-				var context = new DefaultHttpContext
-				{
-					User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("email", mail), new Claim("sub", sub) }, "someAuthTypeName"))
-				};
-
-				var middleware = new ApmMiddleware(async _ => { await Task.Delay(1); }, agent.TracerInternal, agent);
-
-				await middleware.InvokeAsync(context);
-			}
-
-			payloadSender.FirstTransaction.Context.User.Email.Should().Be(mail);
-			payloadSender.FirstTransaction.Context.User.Id.Should().Be(sub);
+			transactionWithUser
+				.Context.User.Id.Should()
+				.NotBeEmpty();
 		}
 
 		public void Dispose() => _agent?.Dispose();

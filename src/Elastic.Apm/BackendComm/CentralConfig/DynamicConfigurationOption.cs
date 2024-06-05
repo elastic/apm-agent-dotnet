@@ -30,8 +30,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		StackTraceLimit = ConfigurationOption.StackTraceLimit,
 		TraceContinuationStrategy = ConfigurationOption.TraceContinuationStrategy,
 		TransactionIgnoreUrls = ConfigurationOption.TransactionIgnoreUrls,
+		TransactionNameGroups = ConfigurationOption.TransactionNameGroups,
 		TransactionMaxSpans = ConfigurationOption.TransactionMaxSpans,
 		TransactionSampleRate = ConfigurationOption.TransactionSampleRate,
+		UsePathAsTransactionName = ConfigurationOption.UsePathAsTransactionName
 	}
 
 	internal static class DynamicConfigurationExtensions
@@ -64,6 +66,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				TransactionIgnoreUrls => ConfigurationOption.TransactionIgnoreUrls,
 				TransactionMaxSpans => ConfigurationOption.TransactionMaxSpans,
 				TransactionSampleRate => ConfigurationOption.TransactionSampleRate,
+				TransactionNameGroups => ConfigurationOption.TransactionNameGroups,
+				UsePathAsTransactionName => ConfigurationOption.UsePathAsTransactionName,
 				_ => throw new ArgumentOutOfRangeException(nameof(dynamicOption), dynamicOption, null)
 			};
 
@@ -75,7 +79,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				ConfigurationOption.CaptureHeaders => CaptureHeaders,
 				ConfigurationOption.ExitSpanMinDuration => ExitSpanMinDuration,
 				ConfigurationOption.IgnoreMessageQueues => IgnoreMessageQueues,
-				ConfigurationOption.LogLevel => DynamicConfigurationOption.LogLevel,
+				ConfigurationOption.LogLevel => LogLevel,
 				ConfigurationOption.Recording => Recording,
 				ConfigurationOption.SanitizeFieldNames => SanitizeFieldNames,
 				ConfigurationOption.SpanCompressionEnabled => SpanCompressionEnabled,
@@ -90,6 +94,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				ConfigurationOption.TransactionIgnoreUrls => TransactionIgnoreUrls,
 				ConfigurationOption.TransactionMaxSpans => TransactionMaxSpans,
 				ConfigurationOption.TransactionSampleRate => TransactionSampleRate,
+				ConfigurationOption.TransactionNameGroups => TransactionNameGroups,
+				ConfigurationOption.UsePathAsTransactionName => UsePathAsTransactionName,
 				_ => null
 			};
 
@@ -101,7 +107,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				CaptureHeaders => "capture_headers",
 				ExitSpanMinDuration => "exit_span_min_duration",
 				IgnoreMessageQueues => "ignore_message_queues",
-				DynamicConfigurationOption.LogLevel => "log_level",
+				LogLevel => "log_level",
 				Recording => "recording",
 				SanitizeFieldNames => "sanitize_field_names",
 				SpanCompressionEnabled => "span_compression_enabled",
@@ -116,6 +122,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				TransactionIgnoreUrls => "transaction_ignore_urls",
 				TransactionMaxSpans => "transaction_max_spans",
 				TransactionSampleRate => "transaction_sample_rate",
+				TransactionNameGroups => "transaction_name_groups",
+				UsePathAsTransactionName => "use_path_as_transaction_name",
 				_ => throw new ArgumentOutOfRangeException(nameof(dynamicOption), dynamicOption, null)
 			};
 	}

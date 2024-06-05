@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <HasWebTargets Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')">true</HasWebTargets>
@@ -13,6 +13,8 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <NoWarn>MSB4011</NoWarn>
     <MSBuildWarningsAsMessages>MSB4011</MSBuildWarningsAsMessages>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
 
   <!-- prevents NU1503 -->
@@ -80,7 +82,6 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionRoot)\build\elasticapmsample.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-
 
   <ItemGroup>
     <PackageReference Include="Antlr3.Runtime" Version="3.5.1" />
@@ -210,6 +211,7 @@
     <Content Include="Scripts\esm\popper.js.map" />
     <Content Include="Scripts\esm\popper-utils.min.js.map" />
     <Content Include="Scripts\esm\popper-utils.js.map" />
+    <Content Include="Views\Home\Cookies.cshtml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />

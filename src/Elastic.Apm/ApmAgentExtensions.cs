@@ -33,7 +33,7 @@ namespace Elastic.Apm
 		{
 			var disposable = new CompositeDisposable();
 
-			subscribers ??= Array.Empty<IDiagnosticsSubscriber>();
+			subscribers ??= [];
 			var subscribersList = string.Join(", ", subscribers.Select(s => s.GetType().Name));
 
 			agent.Logger.Trace()?.Log("Agent.Subscribe(), Agent Enabled: {AgentEnabled} Subscriber count: {NumberOfSubscribers}, ({Subscribers})",
@@ -109,8 +109,14 @@ namespace Elastic.Apm
 			if (_isDisposed)
 				throw new ObjectDisposedException(nameof(CompositeDisposable));
 
-			_disposables.Add(disposable);
-			return this;
+			lock (_lock)
+			{
+				if (_isDisposed)
+					throw new ObjectDisposedException(nameof(CompositeDisposable));
+
+				_disposables.Add(disposable);
+				return this;
+			}
 		}
 
 		public void Dispose()

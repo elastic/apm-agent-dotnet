@@ -12,12 +12,13 @@ using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using StackExchange.Redis;
 using Testcontainers.Redis;
+using Xunit;
 
 namespace Elastic.Apm.StackExchange.Redis.Tests
 {
 	public class ProfilingSessionTests
 	{
-		[DisabledOnWindowsGitHubActionsDockerFact]
+		[DockerFact]
 		public async Task Capture_Redis_Commands_On_Transaction()
 		{
 			await using var container = new RedisBuilder().Build();
@@ -75,7 +76,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 			await container.StopAsync();
 		}
 
-		[DisabledOnWindowsGitHubActionsDockerFact]
+		[DockerFact]
 		public async Task Capture_Redis_Commands_On_Span()
 		{
 			await using var container = new RedisBuilder().Build();

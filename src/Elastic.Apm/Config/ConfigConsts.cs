@@ -51,6 +51,7 @@ namespace Elastic.Apm.Config
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown-" + Consts.AgentName + "-service";
 			public const bool UseElasticTraceparentHeader = true;
+			public const bool UsePathAsTransactionName = true;
 			public const bool VerifyServerCert = true;
 			public const string TraceContinuationStrategy = "continue";
 
@@ -69,17 +70,19 @@ namespace Elastic.Apm.Config
 					"Giraffe."
 				}.AsReadOnly();
 
-			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
+			public static readonly IReadOnlyList<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>().AsReadOnly();
 
-			public static List<WildcardMatcher> IgnoreMessageQueues = new List<WildcardMatcher>();
+			public static readonly IReadOnlyList<WildcardMatcher> IgnoreMessageQueues = new List<WildcardMatcher>().AsReadOnly();
 
-			public static List<WildcardMatcher> SanitizeFieldNames;
+			public static readonly IReadOnlyList<WildcardMatcher> SanitizeFieldNames;
 
-			public static List<WildcardMatcher> TransactionIgnoreUrls;
+			public static readonly IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls;
+
+			public static readonly IReadOnlyCollection<WildcardMatcher> TransactionNameGroups = new List<WildcardMatcher>().AsReadOnly();
 
 			static DefaultValues()
 			{
-				SanitizeFieldNames = new List<WildcardMatcher>();
+				var sanitizeFieldNames = new List<WildcardMatcher>();
 				foreach (var item in new List<string>
 						 {
 							 "password",
@@ -95,9 +98,10 @@ namespace Elastic.Apm.Config
 							 "set-cookie",
 							 "*principal*"
 						 })
-					SanitizeFieldNames.Add(WildcardMatcher.ValueOf(item));
+					sanitizeFieldNames.Add(WildcardMatcher.ValueOf(item));
+				SanitizeFieldNames = sanitizeFieldNames.AsReadOnly();
 
-				TransactionIgnoreUrls = new List<WildcardMatcher>();
+				var transactionIgnoreUrls = new List<WildcardMatcher>();
 
 				foreach (var item in new List<string>
 						 {
@@ -115,7 +119,8 @@ namespace Elastic.Apm.Config
 							 "*.woff",
 							 "*.woff2"
 						 })
-					TransactionIgnoreUrls.Add(WildcardMatcher.ValueOf(item));
+					transactionIgnoreUrls.Add(WildcardMatcher.ValueOf(item));
+				TransactionIgnoreUrls = transactionIgnoreUrls.AsReadOnly();
 			}
 
 			public static Uri ServerUri => new Uri($"http://127.0.0.1:{ApmServerPort}");
@@ -138,11 +143,11 @@ namespace Elastic.Apm.Config
 			public const string CloudProviderGcp = GcpCloudMetadataProvider.Name;
 			public const string CloudProviderNone = "none";
 
-			public static readonly List<string> CaptureBodySupportedValues = new() { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
+			public static readonly IReadOnlyCollection<string> CaptureBodySupportedValues = new List<string> { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions }.AsReadOnly();
 
-			public static readonly List<string> TraceContinuationStrategySupportedValues = new() { Continue, Restart, RestartExternal };
+			public static readonly IReadOnlyCollection<string> TraceContinuationStrategySupportedValues = new List<string> { Continue, Restart, RestartExternal }.AsReadOnly();
 
-			public static readonly HashSet<string> CloudProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+			public static readonly IReadOnlyCollection<string> CloudProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{
 				CloudProviderAuto,
 				CloudProviderAws,

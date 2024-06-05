@@ -169,6 +169,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			configDelta.LogLevel.Should().BeNull();
 			configDelta.SpanFramesMinDurationInMilliseconds.Should().BeNull();
 			configDelta.StackTraceLimit.Should().BeNull();
+			configDelta.TransactionNameGroups.Should().BeNull();
+			configDelta.UsePathAsTransactionName.Should().BeNull();
 		}
 
 		[Fact]
@@ -307,6 +309,29 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 						})
 					};
 				}
+
+				yield return new object[]
+				{
+					$"{{\"{DynamicConfigurationOption.UsePathAsTransactionName.ToJsonKey()}\": \"{true}\"}}",
+					new Action<CentralConfiguration>(cfg =>
+					{
+						cfg.UsePathAsTransactionName.Should()
+							.NotBeNull()
+							.And.Be(true);
+					})
+				};
+
+				var transactionNameGroups = "GET /customers/*, GET /orders/*";
+				yield return new object[]
+				{
+					$"{{\"{DynamicConfigurationOption.TransactionNameGroups.ToJsonKey()}\": \"{transactionNameGroups}\"}}",
+					new Action<CentralConfiguration>(cfg =>
+					{
+						cfg.TransactionNameGroups.Should()
+							.NotBeNull()
+							.And.HaveCount(2);
+					})
+				};
 			}
 		}
 

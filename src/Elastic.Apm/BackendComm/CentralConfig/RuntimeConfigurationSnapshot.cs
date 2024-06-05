@@ -117,11 +117,16 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			_dynamicConfiguration?.TransactionIgnoreUrls ?? _mainConfiguration.TransactionIgnoreUrls;
 
+		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups =>
+			 _dynamicConfiguration?.TransactionNameGroups ?? _mainConfiguration.TransactionNameGroups;
+
 		public int TransactionMaxSpans => _dynamicConfiguration?.TransactionMaxSpans ?? _mainConfiguration.TransactionMaxSpans;
 
 		public double TransactionSampleRate => _dynamicConfiguration?.TransactionSampleRate ?? _mainConfiguration.TransactionSampleRate;
 
 		public bool UseElasticTraceparentHeader => _mainConfiguration.UseElasticTraceparentHeader;
+
+		public bool UsePathAsTransactionName => _dynamicConfiguration?.UsePathAsTransactionName ?? _mainConfiguration.UsePathAsTransactionName;
 
 		public bool VerifyServerCert => _mainConfiguration.VerifyServerCert;
 	}

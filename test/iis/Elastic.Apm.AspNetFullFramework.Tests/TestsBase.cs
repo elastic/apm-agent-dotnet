@@ -120,6 +120,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
 
+			internal static readonly SampleAppUrlPathData CookiesPage =
+				new SampleAppUrlPathData(HomeController.CookiesPageRelativePath, 200);
+
 			internal static readonly SampleAppUrlPathData PageThatDoesNotExist =
 				new SampleAppUrlPathData("dummy_URL_path_to_page_that_does_not_exist", 404, errorsCount: 1);
 

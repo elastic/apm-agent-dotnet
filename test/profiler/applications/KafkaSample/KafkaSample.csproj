@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-      <KafkaVersion Condition="'$(KafkaVersion)' == ''">1.4.3</KafkaVersion>
+      <KafkaVersion Condition="'$(KafkaVersion)' == ''">1.9.3</KafkaVersion>
       <OutputType>Exe</OutputType>
-      <TargetFramework>net7.0</TargetFramework>
+      <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Confluent.Kafka" Version="$(KafkaVersion)" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
     <ItemGroup>

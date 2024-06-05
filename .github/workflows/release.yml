@@ -29,33 +29,22 @@ jobs:
     - name: Package
       run: ./build.sh pack
 
-    - name: Prepare Nuget
-      uses: hashicorp/vault-action@v2.7.4
-      with:
-        url: ${{ secrets.VAULT_ADDR }}
-        method: approle
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        secrets: |
-          secret/apm-team/ci/elastic-observability-nuget apiKey | REPO_API_KEY ;
-          secret/apm-team/ci/elastic-observability-nuget url | REPO_API_URL
-
     - name: Release to Nuget
-      run: .ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}
+      run: .ci/linux/deploy.sh ${{ secrets.NUGET_API_KEY }} ${{ secrets.NUGET_API_URL }}
 
-    - uses: elastic/apm-pipeline-library/.github/actions/docker-login@current
+    - name: Log in to the Elastic Container registry
+      uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
       with:
-        registry: docker.elastic.co
-        secret: secret/observability-team/ci/docker-registry/prod
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        registry: ${{ secrets.ELASTIC_DOCKER_REGISTRY }}
+        username: ${{ secrets.ELASTIC_DOCKER_USERNAME }}
+        password: ${{ secrets.ELASTIC_DOCKER_PASSWORD }}
 
     - name: Build Profiler Docker Image
       continue-on-error: true #continue for now until we see it working in action
       run: |
         docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
             --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+        
     - name: Push Profiler Docker Image
       continue-on-error: true #continue for now until we see it working in action
       run: |
@@ -66,27 +55,23 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload ${{ github.ref_name }} "build/output/ElasticApmAgent_*.zip" "build/output/elastic_apm_profiler_*.zip"
+        gh release upload ${{ github.ref_name }} "build/output/ElasticApmAgent_${{ steps.bootstrap.outputs.agent-version }}.zip" "build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip"
 
     - if: ${{ success() }}
-      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      uses: elastic/oblt-actions/slack/send@v1.7.0
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: ${{ env.SLACK_CHANNEL }}
+        bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+        channel-id: ${{ env.SLACK_CHANNEL }}
         message: |
           :large_green_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* published.
           Build: (<${{ env.JOB_URL }}|here>)
-          Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)"
+          Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)
 
     - if: ${{ failure() }}
-      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+      uses: elastic/oblt-actions/slack/send@v1.7.0
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: ${{ env.SLACK_CHANNEL }}
+        bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+        channel-id: ${{ env.SLACK_CHANNEL }}
         message: |
           :large_yellow_circle: [${{ github.repository }}] Release *${{ github.ref_name }}* could not be published.
           Build: (<${{ env.JOB_URL }}|here>)
@@ -114,7 +99,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true #continue for now until we see it working in action
         run: |
-          gh release upload ${{ github.ref_name }} "build/output/elastic_apm_profiler_*.zip"
+          gh release upload ${{ github.ref_name }} "build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-win-x64.zip"
 
   post-release:
     needs: [ 'release-windows']

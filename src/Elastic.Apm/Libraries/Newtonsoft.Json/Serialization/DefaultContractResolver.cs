@@ -87,7 +87,6 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 #pragma warning disable 618
 			new BsonObjectIdConverter(),
 #pragma warning restore 618
-			new RegexConverter()
 		};
 
 		private readonly DefaultJsonNameTable _nameTable = new();
