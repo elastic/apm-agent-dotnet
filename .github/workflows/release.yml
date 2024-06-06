@@ -22,7 +22,7 @@ jobs:
       PREFIX_APM_PROFILER: "build/output/elastic_apm_profiler_"
       SUFFIX_APM_AGENT: ".zip"
       SUFFIX_APM_PROFILER: "-linux-x64.zip"
-      DOCKER_IMAGE: "docker.elastic.co/observability/apm-agent-dotnet"
+      DOCKER_IMAGE_NAME: "docker.elastic.co/observability/apm-agent-dotnet"
     permissions:
       attestations: write
       contents: write
@@ -61,14 +61,14 @@ jobs:
         context: .
         push: true
         tags: |
-          ${{ env.DOCKER_IMAGE }}:${{ steps.bootstrap.outputs.agent-version }}
+          ${{ env.DOCKER_IMAGE_NAME }}:${{ steps.bootstrap.outputs.agent-version }}
         build-args: |
           AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
     - name: Attest image
       uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919  # v1.2.0
       with:
-        subject-name: ${{ env.DOCKER_IMAGE }}
+        subject-name: ${{ env.DOCKER_IMAGE_NAME }}
         subject-digest: ${{ steps.docker-push.outputs.digest }}
         push-to-registry: true
 
