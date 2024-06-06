@@ -51,6 +51,19 @@ jobs:
         username: ${{ secrets.ELASTIC_DOCKER_USERNAME }}
         password: ${{ secrets.ELASTIC_DOCKER_PASSWORD }}
 
+    - name: Extract metadata (tags, labels)
+      id: docker-meta
+      uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81  # v5.5.1
+      with:
+        images: ${{ env.DOCKER_IMAGE_NAME }}
+        flavor: |
+          latest=auto
+        tags: |
+          # "1.2.3" and "latest" Docker tags on push of git tag "v1.2.3"
+          type=semver,value=${{ steps.bootstrap.outputs.agent-version }}
+          # "edge" Docker tag on git push to default branch
+          type=edge
+
     - name: Build and Push Profiler Docker Image
       id: docker-push
       continue-on-error: true # continue for now until we see it working in action
@@ -60,13 +73,14 @@ jobs:
         cache-to: type=gha,mode=max
         context: .
         push: true
-        tags: |
-          ${{ env.DOCKER_IMAGE_NAME }}:${{ steps.bootstrap.outputs.agent-version }}
+        tags: ${{ steps.docker-meta.outputs.tags }}
+        labels: ${{ steps.docker-meta.outputs.labels }}
         build-args: |
           AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
     - name: Attest image
       uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919  # v1.2.0
+      continue-on-error: true # continue for now until we see it working in action
       with:
         subject-name: ${{ env.DOCKER_IMAGE_NAME }}
         subject-digest: ${{ steps.docker-push.outputs.digest }}
