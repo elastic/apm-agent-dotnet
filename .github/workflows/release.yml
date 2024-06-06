@@ -63,19 +63,19 @@ jobs:
           AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
     - name: Attest image
-      uses: github-early-access/generate-build-provenance@main
+      uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919  # v1.2.0
       with:
         subject-name: ${{ env.DOCKER_IMAGE }}
         subject-digest: ${{ steps.docker-push.outputs.digest }}
         push-to-registry: true
 
     - name: generate build provenance (APM Agent)
-      uses: github-early-access/generate-build-provenance@main
+      uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919  # v1.2.0
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}"
 
     - name: generate build provenance (APM Profiler)
-      uses: github-early-access/generate-build-provenance@main
+      uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919  # v1.2.0
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
 
@@ -130,7 +130,7 @@ jobs:
         run: ./build.bat profiler-zip
 
       - name: generate build provenance (APM Profiler)
-        uses: github-early-access/generate-build-provenance@main
+        uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919  # v1.2.0
         with:
           subject-path: "${{ github.workspace }}/${{ env.PREFIX_ZIP_FILE }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_ZIP_FILE }}"
 
