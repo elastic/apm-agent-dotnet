@@ -5,9 +5,11 @@ on:
     branches: [ "main" ]
 
 permissions:
-    contents: write
-    issues: write
-    packages: write
+  attestations: write
+  contents: write
+  id-token: write
+  issues: write
+  packages: write
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
@@ -26,7 +28,12 @@ jobs:
 
     - name: Package with canary suffix
       run: ./build.sh pack
-            
+
+    - name: generate build provenance
+      uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919  # v1.2.0
+      with:
+        subject-path: "${{ github.workspace }}/build/output/_packages/*.nupkg"
+
     # Github packages requires authentication, this is likely going away in the future so for now we publish to feedz.io
     - name: publish canary packages to feedz.io
       run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{ secrets.FEEDZ_IO_API_KEY }} -s ${{ secrets.FEEDZ_IO_API_URL }} --skip-duplicate --no-symbols
