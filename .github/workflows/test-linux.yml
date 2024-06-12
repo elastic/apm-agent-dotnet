@@ -80,6 +80,11 @@ jobs:
     #if: |
     #  github.event_name != 'pull_request'
     #  || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -89,8 +94,8 @@ jobs:
 
       - name: 'Login to Azure'
         run: |
-          az login --service-principal --username ${{ secrets.ARM_CLIENT_ID }} --password ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
-          az account set --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          az login --service-principal --username ${{ env.ARM_CLIENT_ID }} --password ${{ env.ARM_CLIENT_SECRET }} --tenant ${{ env.ARM_TENANT_ID }}
+          az account set --subscription ${{ env.ARM_SUBSCRIPTION_ID }}
           echo "AZURE_RESOURCE_GROUP_PREFIX=ci-dotnet-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
 
       - name: 'Tests: Azure'
