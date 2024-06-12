@@ -88,23 +88,10 @@ jobs:
         with:
           azure: 'true'
 
-      - name: 'Read credentials'
-        uses: hashicorp/vault-action@v3.0.0
-        with:
-          url: ${{ secrets.VAULT_ADDR }}
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
-          method: approle
-          secrets: |
-            secret/apm-team/ci/apm-agent-dotnet-azure client_id | ARM_CLIENT_ID ;
-            secret/apm-team/ci/apm-agent-dotnet-azure client_secret | ARM_CLIENT_SECRET ;
-            secret/apm-team/ci/apm-agent-dotnet-azure subscription_id | ARM_SUBSCRIPTION_ID ;
-            secret/apm-team/ci/apm-agent-dotnet-azure tenant_id | ARM_TENANT_ID
-
       - name: 'Login to Azure'
         run: |
-          az login --service-principal --username ${{ env.ARM_CLIENT_ID }} --password ${{ env.ARM_CLIENT_SECRET }} --tenant ${{ env.ARM_TENANT_ID }}
-          az account set --subscription ${{ env.ARM_SUBSCRIPTION_ID }}
+          az login --service-principal --username ${{ secrets.ARM_CLIENT_ID }} --password ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
+          az account set --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }}
           echo "AZURE_RESOURCE_GROUP_PREFIX=ci-dotnet-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
 
       - name: 'Tests: Azure'
