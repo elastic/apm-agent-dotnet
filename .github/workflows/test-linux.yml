@@ -81,25 +81,17 @@ jobs:
     #if: |
     #  github.event_name != 'pull_request'
     #  || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
           azure: 'true'
-
-      - name: 'Read credentials'
-        uses: hashicorp/vault-action@v3.0.0
-        with:
-          url: ${{ secrets.VAULT_ADDR }}
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
-          method: approle
-          secrets: |
-            secret/apm-team/ci/apm-agent-dotnet-azure client_id | ARM_CLIENT_ID ;
-            secret/apm-team/ci/apm-agent-dotnet-azure client_secret | ARM_CLIENT_SECRET ;
-            secret/apm-team/ci/apm-agent-dotnet-azure subscription_id | ARM_SUBSCRIPTION_ID ;
-            secret/apm-team/ci/apm-agent-dotnet-azure tenant_id | ARM_TENANT_ID
 
       - name: 'Login to Azure'
         run: |
