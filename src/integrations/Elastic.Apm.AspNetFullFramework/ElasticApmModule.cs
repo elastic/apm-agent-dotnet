@@ -631,8 +631,9 @@ namespace Elastic.Apm.AspNetFullFramework
 				return;
 
 			var user = new User { UserName = userIdentity.Name };
+			var sqlProviderConfigured = System.Web.Security.Membership.Providers.Cast<object>().Any(provider => provider.GetType().Name == "SqlMembershipProvider");
 
-			if (context.User is ClaimsPrincipal claimsPrincipal)
+			if (!sqlProviderConfigured && context.User is ClaimsPrincipal claimsPrincipal)
 			{
 				try
 				{
