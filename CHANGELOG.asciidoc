@@ -23,8 +23,15 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.27.3]]
+==== 1.27.3 - 2024/06/18
+
+===== Bug fixes
+
+{pull}2380[#2380] Release Automation fix
+
 [[release-notes-1.27.2]]
-==== 1.27.1 - 2024/06/18
+==== 1.27.2 - 2024/06/18
 
 ===== Bug fixes
 
