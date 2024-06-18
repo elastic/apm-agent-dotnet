@@ -97,14 +97,14 @@ jobs:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
 
     - name: Attach Profiler And Startup Hooks
-      continue-on-error: true #continue for now until we see it working in action
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh release upload ${{ github.ref_name }} "${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}" "${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
 
     - if: ${{ success() }}
-      uses: elastic/oblt-actions/slack/send@v1.7.0
+      uses: elastic/oblt-actions/slack/send@v1
+      continue-on-error: true #continue for now until we see it working in action
       with:
         bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
         channel-id: ${{ env.SLACK_CHANNEL }}
@@ -114,7 +114,8 @@ jobs:
           Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)
 
     - if: ${{ failure() }}
-      uses: elastic/oblt-actions/slack/send@v1.7.0
+      uses: elastic/oblt-actions/slack/send@v1
+      continue-on-error: true #continue for now until we see it working in action
       with:
         bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
         channel-id: ${{ env.SLACK_CHANNEL }}
@@ -154,7 +155,6 @@ jobs:
       - name: Attach Profiler
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true #continue for now until we see it working in action
         run: |
           gh release upload ${{ github.ref_name }} "${{ env.PREFIX_ZIP_FILE }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_ZIP_FILE }}"
 
