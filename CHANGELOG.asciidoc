@@ -23,12 +23,24 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.27.2]]
+==== 1.27.1 - 2024/06/18
+
+===== Bug fixes
+
+{pull}2308[#2308] Clean up dependency graph for .NET core installations
+{pull}2356[#2356] Open Telemetry Bridge should only log when enabled
+{pull}2166[#2166] Bump Microsoft.AspNetCore.Http dep to 2.1.22 
+{pull}2350[#2350] Fix message format for logging in managed profiler 
+{pull}2225[#2225] Only mark bodies as redacted if explicitly configured to do so. 
+{pull}2377[#2377] Do not read claims from SqlRoleProvider under classic ASP.NET 
+
 [[release-notes-1.27.1]]
 ==== 1.27.1 - 2024/05/16
 
 ===== Bug fixes
 
-* Remove invalid profiler method integrations by @stevejgordon in https://github.com/elastic/apm-agent-dotnet/pull/2349
+{pull}2349[#2349] Remove invalid profiler method integrations by @stevejgordon in https://github.com/elastic/apm-agent-dotnet/pull2349i/
 
 [[release-notes-1.27.0]]
 ==== 1.27.0 - 2024/04/30
