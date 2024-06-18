@@ -40,7 +40,7 @@ endif::[]
 
 ===== Bug fixes
 
-{pull}2349[#2349] Remove invalid profiler method integrations by @stevejgordon in https://github.com/elastic/apm-agent-dotnet/pull2349i/
+{pull}2349[#2349] Remove invalid profiler method integrations
 
 [[release-notes-1.27.0]]
 ==== 1.27.0 - 2024/04/30
