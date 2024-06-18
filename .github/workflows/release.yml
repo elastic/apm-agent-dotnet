@@ -114,7 +114,7 @@ jobs:
           Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)
 
     - if: ${{ failure() }}
-      uses: elastic/oblt-actions/slack/send@v1.7.0
+      uses: elastic/oblt-actions/slack/send@v1
       continue-on-error: true #continue for now until we see it working in action
       with:
         bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
