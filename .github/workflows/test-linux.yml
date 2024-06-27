@@ -86,7 +86,7 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_USE_OIDC: true
-      AZURE_RESOURCE_GROUP_PREFIX: ci-dotnet-${GITHUB_RUN_ID}
+      AZURE_RESOURCE_GROUP_PREFIX: ci-dotnet-${{ github.run_id }}
     permissions:
       contents: read
       id-token: write
