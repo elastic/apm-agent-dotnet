@@ -77,10 +77,9 @@ jobs:
   azure-tests:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
-    if: ${{ true }}
-    #if: |
-    #  github.event_name != 'pull_request'
-    #  || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    if: |
+      github.event_name != 'pull_request'
+      || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
