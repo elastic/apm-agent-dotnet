@@ -35,6 +35,15 @@ description = "Builds CLR Profiler for release"
 # loader assembly is embedded in the profiler
 dependencies = ["build-loader"]
 
+[tasks.build-release-linux]
+description = "Builds CLR Profiler for release against a known version of glibc"
+install_crate = false
+toolchain = "${CARGO_MAKE_RUST_DEFAULT_TOOLCHAIN}"
+command = "cargo"
+args = ["zigbuild", "--release", "--target", "x86_64-unknown-linux-gnu.2.14", "@@split(CARGO_MAKE_CARGO_BUILD_TEST_FLAGS, )"]
+# loader assembly is embedded in the profiler
+dependencies = ["build-loader"]
+
 [tasks.build-integrations]
 description = "Builds Managed Profiler .NET integrations"
 command = "dotnet"
@@ -83,7 +92,7 @@ cargo expand --manifest-path src/profiler/elastic_apm_profiler/Cargo.toml --colo
 
 [tasks.set-profiler-env]
 private = true
-env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/release/libelastic_apm_profiler.so" }
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/x86_64-unknown-linux-gnu/release/libelastic_apm_profiler.so" }
 
 [tasks.set-profiler-env.mac]
 env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/release/libelastic_apm_profiler.dylib" }
