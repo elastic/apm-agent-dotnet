@@ -14,7 +14,7 @@ c_vec = "2.0.0"
 com = { version = "0.6.0", features = ["production"] }
 hex = "0.4.3"
 log = "0.4.14"
-log4rs = { version = "1.0.0", default_features = false, features = ["console_appender", "rolling_file_appender", "compound_policy", "size_trigger", "fixed_window_roller"] }
+log4rs = { version = "1.0.0", default-features = false, features = ["console_appender", "rolling_file_appender", "compound_policy", "size_trigger", "fixed_window_roller"] }
 num-derive = "0.3"
 num-traits = "0.2"
 once_cell = "1.8.0"

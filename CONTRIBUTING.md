@@ -15,17 +15,21 @@ feedback and ideas are always welcome.
 ### .NET source
 
 In order to build the .NET source code, you'll need
- * [.NET 6.0 or later](https://dotnet.microsoft.com/download/dotnet/6.0)
+ * [.NET 8.0 or later](https://dotnet.microsoft.com/download/dotnet/8.0)
  * **If** you're running on Windows **and** also wish to build projects that target .NET Framework,
-you'll need a minimum of .NET Framework 4.6.1 installed.
+you'll need a minimum of .NET Framework 4.6.2 installed.
 
 You can use any IDE that supports .NET development, and you can use any OS that is supported by .NET.
 
 ### Rust source
 
-In order to build the CLR profiler source code, you'll need
- * [Rust 1.54 or later](https://www.rust-lang.org/tools/install)
+In order to build the CLR profiler source code, you'll need:
+ * [Rust 1.79 or later](https://www.rust-lang.org/tools/install)
  * [Cargo make](https://github.com/sagiegurari/cargo-make#installation)
+
+ On Linux, you will also require:
+ * [Cargo zigbuild](https://github.com/rust-cross/cargo-zigbuild)
+ * [Zig](https://github.com/ziglang/zig)
 
 You can use any IDE that supports Rust development; we typically use [CLion](https://www.jetbrains.com/clion/)
 with the [Rust plugin](https://plugins.jetbrains.com/plugin/8182-rust/docs),

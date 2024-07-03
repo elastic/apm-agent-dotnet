@@ -55,7 +55,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			else
 				profilerFile = "libelastic_apm_profiler.dylib";
 
-			_profilerPath = Path.Combine(SolutionPaths.Root, "target", "release", profilerFile);
+			_profilerPath = TestEnvironment.IsLinux ?
+				Path.Combine(SolutionPaths.Root, "target", "x86_64-unknown-linux-gnu", "release", profilerFile) :
+				Path.Combine(SolutionPaths.Root, "target", "release", profilerFile);
 
 			if (!File.Exists(_profilerPath))
 			{
