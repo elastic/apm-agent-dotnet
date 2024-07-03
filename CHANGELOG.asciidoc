@@ -23,6 +23,13 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.28.0]]
+==== 1.28.0 - 2024/07/03
+
+===== Bug fixes
+
+{pull}2389[#2389] Fix Linux build dependency of glibc
+
 [[release-notes-1.27.3]]
 ==== 1.27.3 - 2024/06/18
 
