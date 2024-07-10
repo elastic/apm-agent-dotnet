@@ -2,7 +2,7 @@ name: release-main
 
 on:
   push:
-    branches: [ "main", "feature/support-multiplatform" ]
+    branches: [ "main" ]
 
 permissions:
   attestations: write
