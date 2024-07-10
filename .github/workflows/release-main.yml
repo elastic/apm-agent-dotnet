@@ -42,7 +42,7 @@ jobs:
       run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json --skip-duplicate --no-symbols
     
     - if: ${{ failure() }}
-      uses: elastic/oblt-actions/slack/send@v1.7.0
+      uses: elastic/oblt-actions/slack/send@v1
       with:
         bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
         channel-id: "#apm-agent-dotnet"
