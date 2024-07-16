@@ -59,10 +59,8 @@ jobs:
         flavor: |
           latest=auto
         tags: |
-          # set latest tag for default branch
-          type=raw,value=latest,enable={{is_default_branch}}
-          # "1.2.3" and "latest" Docker tags on push of git tag "v1.2.3"
-          type=raw,value=${{ steps.bootstrap.outputs.agent-version }}
+          # "1.2.3" and "latest" Docker tags on push of git tag "v1.2.3"          
+          type=semver,pattern={{version}},value=${{ steps.bootstrap.outputs.agent-version }}
           # "edge" Docker tag on git push to default branch
           type=edge
 
