@@ -238,7 +238,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
 				centralConfigurationFetcher: new CentralConfigurationFetcher(LoggerBase, configStore, service, handler),
 				payloadSender: new PayloadSenderV2(LoggerBase, snapshot, service,
-					new SystemInfoHelper(LoggerBase).GetSystemInfo(null), MockApmServerInfo.Version710))))
+					new SystemInfoHelper(LoggerBase).GetSystemInfo(null, new TestHostNameDetector("detected_hostname")), MockApmServerInfo.Version710))))
 			{
 				lastCentralConfigurationFetcher = (CentralConfigurationFetcher)agent.CentralConfigurationFetcher;
 				lastCentralConfigurationFetcher.IsRunning.Should().BeTrue();
@@ -283,7 +283,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 					LoggerBase,
 					snapshot,
 					service,
-					new SystemInfoHelper(LoggerBase).GetSystemInfo(null),
+					new SystemInfoHelper(LoggerBase).GetSystemInfo(null, new TestHostNameDetector("detected_hostname")),
 					MockApmServerInfo.Version710);
 
 				var components = new TestAgentComponents(LoggerBase, centralConfigurationFetcher: centralConfigFetcher, payloadSender: payloadSender);

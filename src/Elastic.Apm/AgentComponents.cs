@@ -43,12 +43,14 @@ namespace Elastic.Apm
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			ICentralConfigurationFetcher centralConfigurationFetcher,
 			IApmServerInfo apmServerInfo,
-			BreakdownMetricsProvider breakdownMetricsProvider = null
+			BreakdownMetricsProvider breakdownMetricsProvider = null,
+			IHostNameDetector hostNameDetector = null
 		)
 		{
 			try
 			{
 				var config = CreateConfiguration(logger, configurationReader);
+				hostNameDetector ??= new HostNameDetector();
 
 				Logger = logger ?? CheckForProfilerLogger(DefaultLogger(null, configurationReader), config.LogLevel);
 				ConfigurationStore = new ConfigurationStore(new RuntimeConfigurationSnapshot(config), Logger);
@@ -64,7 +66,7 @@ namespace Elastic.Apm
 				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 #endif
 				var systemInfoHelper = new SystemInfoHelper(Logger);
-				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName);
+				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName, hostNameDetector);
 
 				PayloadSender = payloadSender
 					?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
@@ -147,7 +149,7 @@ namespace Elastic.Apm
 			return;
 #else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
-			
+
 			if (success)
 			{
 				if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
