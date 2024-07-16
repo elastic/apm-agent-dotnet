@@ -144,9 +144,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			environmentVariables["ELASTIC_APM_PROFILER_INTEGRATIONS"] =
 				Path.Combine(SolutionPaths.Root, "src", "profiler", "Elastic.Apm.Profiler.Managed", "integrations.yml");
 
-			environmentVariables[ELASTIC_OTEL_LOG_LEVEL] = "trace";
+			environmentVariables[OTEL_LOG_LEVEL] = "trace";
 			// log to relative logs directory for managed loader
-			environmentVariables[ELASTIC_OTEL_LOG_DIRECTORY] = Path.Combine(SolutionPaths.Root, "logs");
+			environmentVariables[OTEL_DOTNET_AUTO_LOG_DIRECTORY] = Path.Combine(SolutionPaths.Root, "logs");
 
 			environmentVariables[ELASTIC_OTEL_LOG_TARGETS] = "file;stdout";
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_IL"] = "true";

@@ -28,10 +28,10 @@ namespace Elastic.Apm.Tests.Config
 
 		//
 		[Theory]
-		[InlineData(ELASTIC_OTEL_LOG_LEVEL, "Info")]
+		[InlineData(OTEL_LOG_LEVEL, "Info")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG, "Info")]
 
-		[InlineData(ELASTIC_OTEL_LOG_DIRECTORY, "1")]
+		[InlineData(OTEL_DOTNET_AUTO_LOG_DIRECTORY, "1")]
 		[InlineData(ELASTIC_APM_LOG_DIRECTORY, "1")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG_DIR, "1")]
 		[InlineData(ELASTIC_APM_STARTUP_HOOKS_LOGGING, "1")]
@@ -47,7 +47,7 @@ namespace Elastic.Apm.Tests.Config
 
 		//
 		[Theory]
-		[InlineData(ELASTIC_OTEL_LOG_LEVEL, "none")]
+		[InlineData(OTEL_LOG_LEVEL, "none")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG, "None")]
 		//only if explicitly specified to 'none' should we not default to file logging.
 		[InlineData(ELASTIC_OTEL_LOG_TARGETS, "none")]
@@ -56,7 +56,7 @@ namespace Elastic.Apm.Tests.Config
 		{
 			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable
 			{
-				{ ELASTIC_OTEL_LOG_DIRECTORY, "" },
+				{ OTEL_DOTNET_AUTO_LOG_DIRECTORY, "" },
 				{ environmentVariable, value }
 			});
 			config.IsActive.Should().BeFalse();
@@ -70,7 +70,7 @@ namespace Elastic.Apm.Tests.Config
 		[InlineData(ELASTIC_OTEL_LOG_TARGETS, "None")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG_TARGETS, "None")]
 		//setting file log level to none will result in no global trace logging
-		[InlineData(ELASTIC_OTEL_LOG_LEVEL, "None")]
+		[InlineData(OTEL_LOG_LEVEL, "None")]
 		//setting profiler log level to none will result in no global trace logging
 		[InlineData(ELASTIC_APM_PROFILER_LOG, "None")]
 		public void CheckNonActivation(string environmentVariable, string value)
@@ -92,7 +92,7 @@ namespace Elastic.Apm.Tests.Config
 		{
 			Check(ELASTIC_APM_PROFILER_LOG, envVarValue, logLevel);
 			Check(ELASTIC_APM_LOG_LEVEL, envVarValue, logLevel);
-			Check(ELASTIC_OTEL_LOG_LEVEL, envVarValue, logLevel);
+			Check(OTEL_LOG_LEVEL, envVarValue, logLevel);
 			return;
 
 			static void Check(string key, string envVarValue, LogLevel level)
@@ -111,7 +111,7 @@ namespace Elastic.Apm.Tests.Config
 		{
 			Check(ELASTIC_APM_PROFILER_LOG, envVarValue);
 			Check(ELASTIC_APM_LOG_LEVEL, envVarValue);
-			Check(ELASTIC_OTEL_LOG_LEVEL, envVarValue);
+			Check(OTEL_LOG_LEVEL, envVarValue);
 			return;
 
 			static void Check(string key, string envVarValue)
@@ -126,7 +126,7 @@ namespace Elastic.Apm.Tests.Config
 		{
 			Check(ELASTIC_APM_PROFILER_LOG_DIR, "/foo/bar");
 			Check(ELASTIC_APM_LOG_DIRECTORY, "/foo/bar");
-			Check(ELASTIC_OTEL_LOG_DIRECTORY, "/foo/bar");
+			Check(OTEL_DOTNET_AUTO_LOG_DIRECTORY, "/foo/bar");
 			return;
 
 			static void Check(string key, string envVarValue)
