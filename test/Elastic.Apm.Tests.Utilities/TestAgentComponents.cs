@@ -4,7 +4,6 @@
 
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
@@ -34,18 +33,5 @@ namespace Elastic.Apm.Tests.Utilities
 
 		)
 		{ }
-	}
-
-	internal class TestHostNameDetector : IHostNameDetector
-	{
-		private readonly string _hostName;
-
-		public TestHostNameDetector(IConfiguration configuration) =>
-			_hostName = configuration?.HostName ?? "MY_COMPUTER";
-
-		public TestHostNameDetector(string detectedHostName) =>
-			_hostName = detectedHostName;
-
-		public string GetDetectedHostName(IApmLogger logger) => _hostName;
 	}
 }
