@@ -46,6 +46,7 @@ namespace Elastic.Apm.Tests.Utilities.Terraform
 			{
 				WorkingDirectory = _resourceDirectory
 			};
+			_credentials.AddToArguments(startArguments);
 
 			return new ObservableProcess(startArguments);
 		}
