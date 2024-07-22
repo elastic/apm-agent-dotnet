@@ -27,7 +27,10 @@ namespace Elastic.Apm.Tests.Utilities
 			new FakeMetricsCollector(),
 			currentExecutionSegmentsContainer,
 			centralConfigurationFetcher ?? new NoopCentralConfigurationFetcher(),
-			apmServerInfo ?? MockApmServerInfo.Version710
+			apmServerInfo ?? MockApmServerInfo.Version710,
+			null,
+			new TestHostNameDetector(configuration)
+
 		)
 		{ }
 	}

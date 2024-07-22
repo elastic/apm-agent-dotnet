@@ -5,9 +5,11 @@ on:
     branches: [ "main" ]
 
 permissions:
-    contents: write
-    issues: write
-    packages: write
+  attestations: write
+  contents: write
+  id-token: write
+  issues: write
+  packages: write
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
@@ -15,7 +17,12 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
-
+    env:
+      DOCKER_IMAGE_NAME: "docker.elastic.co/observability/apm-agent-dotnet"
+      PREFIX_APM_AGENT: "build/output/ElasticApmAgent_"
+      PREFIX_APM_PROFILER: "build/output/elastic_apm_profiler_"
+      SUFFIX_APM_AGENT: ".zip"
+      SUFFIX_APM_PROFILER: "-linux-x64.zip"
     steps:
     - uses: actions/checkout@v4
     - name: Bootstrap Action Workspace
@@ -27,31 +34,79 @@ jobs:
     - name: Package with canary suffix
       run: ./build.sh pack
 
-    - name: Prepare feedz.io
-      uses: hashicorp/vault-action@v3.0.0
+    - name: generate build provenance
+      uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        method: approle
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        secrets: |
-          secret/apm-team/ci/elastic-observability-feedz.io apiKey | REPO_API_KEY ;
-          secret/apm-team/ci/elastic-observability-feedz.io url | REPO_API_URL
-            
+        subject-path: "${{ github.workspace }}/build/output/_packages/*.nupkg"
+
     # Github packages requires authentication, this is likely going away in the future so for now we publish to feedz.io
     - name: publish canary packages to feedz.io
-      run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${REPO_API_KEY} -s ${REPO_API_URL} --skip-duplicate --no-symbols
+      run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{ secrets.FEEDZ_IO_API_KEY }} -s ${{ secrets.FEEDZ_IO_API_URL }} --skip-duplicate --no-symbols
       
     - name: publish canary packages github package repository
       run: dotnet nuget push 'build/output/_packages/*.nupkg' -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/elastic/index.json --skip-duplicate --no-symbols
-    
-    - if: ${{ failure() }}
-      uses: elastic/apm-pipeline-library/.github/actions/slack-message@current
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@d70bba72b1f3fd22344832f00baa16ece964efeb # v3.3.0
+
+    - name: Log in to the Elastic Container registry
+      uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3.2.0
       with:
-        url: ${{ secrets.VAULT_ADDR }}
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        channel: "#apm-agent-dotnet"
+        registry: ${{ secrets.ELASTIC_DOCKER_REGISTRY }}
+        username: ${{ secrets.ELASTIC_DOCKER_USERNAME }}
+        password: ${{ secrets.ELASTIC_DOCKER_PASSWORD }}
+
+    - name: Extract metadata (tags, labels)
+      id: docker-meta
+      uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81  # v5.5.1
+      with:
+        images: ${{ env.DOCKER_IMAGE_NAME }}
+        flavor: |
+          latest=auto
+        tags: |
+          # "1.2.3" and "latest" Docker tags on push of git tag "v1.2.3"
+          type=raw,value=${{ steps.bootstrap.outputs.agent-version }}
+          # "edge" Docker tag on git push to default branch
+          type=edge
+
+    - name: Build and Push Profiler Docker Image
+      id: docker-push
+      continue-on-error: true # continue for now until we see it working in action
+      uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003  # v6.1.0
+      with:
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.docker-meta.outputs.tags }}
+        labels: ${{ steps.docker-meta.outputs.labels }}
+        build-args: |
+          AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
+
+    - name: Attest image
+      uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
+      continue-on-error: true # continue for now until we see it working in action
+      with:
+        subject-name: ${{ env.DOCKER_IMAGE_NAME }}
+        subject-digest: ${{ steps.docker-push.outputs.digest }}
+        push-to-registry: true
+
+    - name: generate build provenance (APM Agent)
+      uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
+      with:
+        subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}"
+
+    - name: generate build provenance (APM Profiler)
+      uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
+      with:
+        subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
+
+    - if: ${{ failure() }}
+      uses: elastic/oblt-actions/slack/send@v1
+      with:
+        bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+        channel-id: "#apm-agent-dotnet"
         message: |
           :large_yellow_circle: [${{ github.repository }}] Snapshot could not be published to feedz.io.
           Build: (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>)

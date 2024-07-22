@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: '${{ github.workflow }}-${{ github.ref }}'
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 defaults:
@@ -28,32 +28,56 @@ defaults:
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
+# 'tests' is a required check in this workflow.
+
+# To not burn unneeded CI cycles:
+# - Our required checks will always succeed if doc only changes are detected.
+# - all jobs depend on 'format' to not waste cycles on quickly fixable errors.
+
 jobs:
+  
+  format:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+      - name: Format
+        run: ./build.bat format
+  
+  #required step
   tests:
     runs-on: windows-2022
+    needs: [ 'format' ]
     timeout-minutes: 30
         
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
-
-      - name: Setup Testcontainers Cloud Client
-        if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        uses: atomicjar/testcontainers-cloud-setup-action@v1
-        with:
-          token: ${{ secrets.TC_CLOUD_TOKEN }}
+        with: 
+          tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Unit'
         run: ./build.bat test --test-suite unit
         
       - name: 'Tests: Integrations'
-        shell: bash
         run: ./build.bat test --test-suite integrations
     
+  integrations-tests:
+    runs-on: windows-2022
+    needs: [ 'format', 'tests' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+
+      - name: 'Tests: Integrations'
+        run: ./build.bat test --test-suite integrations
+  
   startup-hook-tests:
     runs-on: windows-2022
-      
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -64,20 +88,89 @@ jobs:
           
   profiler-tests:
     runs-on: windows-2022
-    # Disable profiler tests for now
-    if: ${{ false }} 
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
           rust: 'true'
-
-      - name: Setup Testcontainers Cloud Client
-        if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        uses: atomicjar/testcontainers-cloud-setup-action@v1
-        with:
-          token: ${{ secrets.TC_CLOUD_TOKEN }}
+          tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
       - name: 'Tests: Profiler'
         run: ./build.bat test --test-suite profiler
+        
+  test-iis:
+    runs-on: windows-latest
+    needs: [ 'format', 'tests' ]
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: "${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}"
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
+
+
+      - name: Clean the application
+        run: msbuild /t:Clean /p:Configuration=Release
+
+      - name: Restore the application
+        run: msbuild /t:Restore /p:Configuration=Release
+
+      - name: Build the application
+        run: |
+          set INCLUDE_CSHARP_TARGETS=true
+          msbuild ^
+            /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
+             -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
+            /t:Build /p:Configuration=Release /restore
+          
+      #- name: Discover Windows Features
+      # run: |
+      #    DISM /online /get-features /format:table
+      
+      # TODO See if this really needed 
+      - name: Enable Windows Features
+        run: |
+          DISM /online /enable-feature /featurename:IIS-HttpErrors
+          DISM /online /enable-feature /featurename:IIS-HttpRedirect
+
+      - name: Ensure AppPool Permissions
+        run: |
+          REM enable permissions for the Application Pool Identity group
+          icacls C:\Windows\Temp /grant "IIS_IUSRS:(OI)(CI)F" /T
+          icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IIS_IUSRS:(OI)(CI)F" /T
+          icacls %cd% /t /q /grant "IIS_IUSRS:(OI)(CI)(IO)(RX)"
+          REM enable permissions for the anonymous access group
+          icacls %cd% /t /q /grant "IUSR:(OI)(CI)(IO)(RX)"
+          icacls C:\Windows\Temp /grant "IUSR:(OI)(CI)F" /T
+          icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IUSR:(OI)(CI)F" /T
+
+      - name: Run tests
+        run: |
+          set ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED=true
+          set sample_app_log_dir=C:\Elastic_APM_TEMP
+          if not exist "%sample_app_log_dir%" mkdir "%sample_app_log_dir%"
+          icacls %sample_app_log_dir% /t /q /grant Everyone:F
+          set ELASTIC_APM_ASP_NET_FULL_FRAMEWORK_SAMPLE_APP_LOG_FILE=%sample_app_log_dir%\Elastic.Apm.AspNetFullFramework.Tests.SampleApp.log
+          
+          dotnet test -c Release test\iis\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
+            --verbosity normal ^
+            --results-directory build/output ^
+            --diag build/output/diag-iis.log ^
+            --filter "FullyQualifiedName=Elastic.Apm.AspNetFullFramework.Tests.CustomServiceNodeNameSetViaSettings.Test" ^
+            --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+
+      - name: Store test results
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-iis
+          path: build/output/junit-*.xml

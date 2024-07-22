@@ -164,8 +164,8 @@ module Build =
         
         let logger =
             match BuildServer.isGitHubActionsBuild with
-            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false\""
-            | fase -> None 
+            | true -> Some "--logger:\"GitHubActions;summary.includePassedTests=false;summary.includeNotFoundTests=false\""
+            | _ -> None 
             
         let filter = 
             match suite with
@@ -183,22 +183,23 @@ module Build =
             @ (match filter with None -> [] | Some f -> ["--filter"; f])
             @ (match framework with None -> [] | Some f -> ["-f"; f])
             @ (match logger with None -> [] | Some l -> [l])
+            @ ["--"; "RunConfiguration.CollectSourceInformation=true"]
             
         DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
-        
-        
+
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
         dotnet "build" (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
-        Cargo.Exec [ "make"; "build-release"; "--disable-check-for-update"]
-                              
+        if isWindows then Cargo.Exec [ "make"; "build-release"; "--disable-check-for-update"]
+        else Cargo.Exec [ "make"; "build-release-linux"; "--disable-check-for-update"]
+
     /// Publishes all projects with framework versions
-    let Publish targets =        
+    let Publish targets =
         let projs =
             match targets with
             | Some t -> t
             | None -> allSrcProjects
-        
+
         projs
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
@@ -289,7 +290,6 @@ module Build =
         // include version in the zip file name    
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
       
-      
     let ProfilerIntegrations () =
         DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
                      "-i"; Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/bin/Release/netstandard2.0/Elastic.Apm.Profiler.Managed.dll"
@@ -298,20 +298,25 @@ module Build =
     /// Creates versioned elastic_apm_profiler.zip file containing all components needed for profiler auto-instrumentation  
     let ProfilerZip () =
         let name = "elastic_apm_profiler"
+        let directory = Paths.BuildOutput name
+
+        if Directory.Exists(directory) then
+            Directory.Delete(directory, true)
+
         let currentAssemblyVersion = Versioning.CurrentVersion.FileVersion
         let versionedName =
             let os =
                 if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then "win-x64"
-                else "linux-x64"      
+                else "linux-x64"
             sprintf "%s_%s-%s" name (currentAssemblyVersion.ToString()) os
                 
-        let profilerDir = Paths.BuildOutput name |> DirectoryInfo                    
+        let profilerDir = directory |> DirectoryInfo
         profilerDir.Create()
-        
+
         seq {
             Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/integrations.yml"
             "target/release/elastic_apm_profiler.dll"
-            "target/release/libelastic_apm_profiler.so"
+            "target/x86_64-unknown-linux-gnu/release/libelastic_apm_profiler.so"
             Paths.SrcProfiler "elastic_apm_profiler/NOTICE"
             Paths.SrcProfiler "elastic_apm_profiler/README"
             "LICENSE"
@@ -320,12 +325,13 @@ module Build =
         |> Seq.filter (fun file -> file.Exists)
         |> Seq.iter (fun file ->
             let destination = Path.combine profilerDir.FullName file.Name
-            let newFile = file.CopyTo(destination, true)      
+            let newFile = file.CopyTo(destination, true)
             if newFile.Name = "README" then
                 File.applyReplace (fun s -> s.Replace("${VERSION}", sprintf "%i.%i" currentAssemblyVersion.Major currentAssemblyVersion.Minor)) newFile.FullName
         )
-            
+
         Directory.GetDirectories((Paths.BuildOutput "Elastic.Apm.Profiler.Managed"), "*", SearchOption.TopDirectoryOnly)
+        |> Array.filter (fun dir -> isWindows || not (dir.EndsWith("net462")))
         |> Seq.map DirectoryInfo
         |> Seq.iter (fun sourceDir -> copyDllsAndPdbs (profilerDir.CreateSubdirectory(sourceDir.Name)) sourceDir)
         
@@ -335,7 +341,3 @@ module Build =
             printf $"%s{zip} already exists on disk"
             File.delete zip
         ZipFile.CreateFromDirectory(profilerDir.FullName, zip)
-        
-        
-        
-        

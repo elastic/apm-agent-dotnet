@@ -5,8 +5,7 @@
 using System;
 using System.Data.Common;
 using System.IO;
-using System.Net;
-using System.Net.NetworkInformation;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
@@ -28,6 +27,28 @@ namespace Elastic.Apm.Helpers
 		public SystemInfoHelper(IApmLogger logger)
 			=> _logger = logger.Scoped(nameof(SystemInfoHelper));
 
+
+		//3997 3984 253:1 /var/lib/docker/containers/6548c6863fb748e72d1e2a4f824fde92f720952d062dede1318c2d6219a672d6/hostname /etc/hostname rw,relatime shared:1877 - ext4 /dev/mapper/vgubuntu-root rw,errors=remount-ro
+		internal void ParseMountInfo(Api.System system, string reportedHostName, string line)
+		{
+
+			var fields = line.Split(' ');
+			if (fields.Length <= 3)
+				return;
+
+			var path = fields[3];
+			foreach (var folder in path.Split('/'))
+			{
+				//naive implementation to check for guid.
+				if (folder.Length != 64)
+					continue;
+				system.Container = new Container { Id = folder };
+			}
+
+		}
+
+		// "1:name=systemd:/ecs/03752a671e744971a862edcee6195646/03752a671e744971a862edcee6195646-4015103728"
+		// "0::/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod121157b5_c67d_4c3e_9052_cb27bbb711fb.slice/cri-containerd-1cd3449e930b8a28c7595240fa32ba20c84f36d059e5fbe63104ad40057992d1.scope"
 		internal void ParseContainerId(Api.System system, string reportedHostName, string line)
 		{
 			var fields = line.Split(':');
@@ -43,11 +64,13 @@ namespace Elastic.Apm.Helpers
 			if (string.IsNullOrWhiteSpace(idPart))
 				return;
 
-			// Legacy, e.g.: /system.slice/docker-<CID>.scope
+			// Legacy, e.g.: /system.slice/docker-<CID>.scope or cri-containerd-<CID>.scope
 			if (idPart.EndsWith(".scope"))
 			{
-				idPart = idPart.Substring(0, idPart.Length - ".scope".Length)
-					.Substring(idPart.IndexOf("-", StringComparison.Ordinal) + 1);
+				var idParts = idPart.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
+				var containerIdWithScope = idParts.Last();
+
+				idPart = containerIdWithScope.Substring(0, containerIdWithScope.Length - ".scope".Length);
 			}
 
 			// Looking for kubernetes info
@@ -84,9 +107,9 @@ namespace Elastic.Apm.Helpers
 				_logger.Info()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 		}
 
-		internal Api.System GetSystemInfo(string hostName)
+		internal Api.System GetSystemInfo(string hostName, IHostNameDetector detector)
 		{
-			var detectedHostName = GetHostName();
+			var detectedHostName = detector.GetDetectedHostName(_logger);
 			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
 
 			if (AgentFeaturesProvider.Get(_logger).Check(AgentFeature.ContainerInfo))
@@ -98,83 +121,13 @@ namespace Elastic.Apm.Helpers
 			return system;
 		}
 
-		internal string GetHostName()
-		{
-			var fqdn = string.Empty;
-
-			try
-			{
-				fqdn = Dns.GetHostEntry(string.Empty).HostName;
-			}
-			catch (Exception e)
-			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via Dns.GetHostEntry(string.Empty).HostName.");
-			}
-
-			if (!string.IsNullOrEmpty(fqdn))
-				return NormalizeHostName(fqdn);
-
-			try
-			{
-				var hostName = IPGlobalProperties.GetIPGlobalProperties().HostName;
-				var domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
-
-				if (!string.IsNullOrEmpty(domainName))
-				{
-					hostName = $"{hostName}.{domainName}";
-				}
-
-				fqdn = hostName;
-
-			}
-			catch (Exception e)
-			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via IPGlobalProperties.GetIPGlobalProperties().");
-			}
-
-			if (!string.IsNullOrEmpty(fqdn))
-				return NormalizeHostName(fqdn);
-
-			try
-			{
-				fqdn = Environment.MachineName;
-			}
-			catch (Exception e)
-			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via Environment.MachineName.");
-			}
-
-			if (!string.IsNullOrEmpty(fqdn))
-				return NormalizeHostName(fqdn);
-
-			_logger.Debug()?.Log("Falling back to environment variables to get hostname.");
-
-			try
-			{
-				fqdn = (Environment.GetEnvironmentVariable("COMPUTERNAME")
-					?? Environment.GetEnvironmentVariable("HOSTNAME"))
-					?? Environment.GetEnvironmentVariable("HOST");
-
-				if (string.IsNullOrEmpty(fqdn))
-					_logger.Error()?.Log("Failed to get hostname via environment variables.");
-
-				return NormalizeHostName(fqdn);
-			}
-			catch (Exception e)
-			{
-				_logger.Error()?.LogException(e, "Failed to get hostname.");
-			}
-
-			return null;
-
-			static string NormalizeHostName(string hostName) =>
-				string.IsNullOrEmpty(hostName) ? null : hostName.Trim().ToLower();
-		}
 
 		private void ParseContainerInfo(Api.System system, string reportedHostName)
 		{
+			//0::/
 			try
 			{
+				var fallBackToMountInfo = false;
 				using var sr = GetCGroupAsStream();
 				if (sr is null)
 				{
@@ -183,10 +136,32 @@ namespace Elastic.Apm.Helpers
 					return;
 				}
 
+				var i = 0;
 				string line;
 				while ((line = sr.ReadLine()) != null)
 				{
+					if (line == "0::/" && i == 0)
+						fallBackToMountInfo = true;
 					ParseContainerId(system, reportedHostName, line);
+					if (system.Container != null)
+						return;
+					i++;
+				}
+				if (!fallBackToMountInfo)
+					return;
+
+				using var mi = GetMountInfoAsStream();
+				if (mi is null)
+				{
+					_logger.Debug()?.Log("No /proc/self/mountinfo found - no information to fallback to");
+					return;
+				}
+
+				while ((line = mi.ReadLine()) != null)
+				{
+					if (!line.Contains("/etc/hostname"))
+						continue;
+					ParseMountInfo(system, reportedHostName, line);
 					if (system.Container != null)
 						return;
 				}
@@ -201,8 +176,12 @@ namespace Elastic.Apm.Helpers
 					"Failed parsing container id - the agent will not report container id. Likely the application is not running within a container");
 		}
 
-		protected virtual StreamReader GetCGroupAsStream()
-			=> File.Exists("/proc/self/cgroup") ? new StreamReader("/proc/self/cgroup") : null;
+		protected virtual StreamReader GetCGroupAsStream() =>
+			File.Exists("/proc/self/cgroup") ? new StreamReader("/proc/self/cgroup") : null;
+
+		protected virtual StreamReader GetMountInfoAsStream() =>
+			File.Exists("/proc/self/mountinfo") ? new StreamReader("/proc/self/mountinfo") : null;
+
 
 		internal const string Namespace = "KUBERNETES_NAMESPACE";
 		internal const string PodName = "KUBERNETES_POD_NAME";

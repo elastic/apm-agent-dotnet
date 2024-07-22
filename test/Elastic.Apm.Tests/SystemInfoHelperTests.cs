@@ -4,12 +4,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Features;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Elastic.Apm.Tests;
@@ -25,7 +27,7 @@ public class SystemInfoHelperTests : IDisposable
 	public void ParseSystemInfo_Should_Use_HostName_For_ConfiguredHostName()
 	{
 		var hostName = "This_is_my_host";
-		var system = _systemInfoHelper.GetSystemInfo(hostName);
+		var system = _systemInfoHelper.GetSystemInfo(hostName, new TestHostNameDetector("detected_host_name"));
 
 #pragma warning disable 618
 		system.HostName.Should().Be(hostName);
@@ -41,7 +43,7 @@ public class SystemInfoHelperTests : IDisposable
 		var logger = new TestLogger(LogLevel.Trace);
 		using (new AgentFeaturesProviderScope(new AzureFunctionsAgentFeatures(logger)))
 		{
-			new SystemInfoHelper(logger).GetSystemInfo("bert");
+			new SystemInfoHelper(logger).GetSystemInfo("bert", new TestHostNameDetector("detected_host_name"));
 			//
 			// The actual parsing (not happening) is hard to test currently.
 			// Let's assert the log output that tells us that this part gets skipped.
@@ -61,30 +63,33 @@ public class SystemInfoHelperTests : IDisposable
 		system.Kubernetes.Should().BeNull();
 	}
 
-	public struct CGroupTestData
-	{
-		public string GroupLine;
-		public string ContainerId;
-		public string PodId;
-	}
-
 	// Remove warning about unused test parameter "name"
 #pragma warning disable xUnit1026
 	[Theory]
-	[JsonFileData("./TestResources/json-specs/cgroup_parsing.json", typeof(CGroupTestData))]
+	[CGroupTestCases]
 	public void ParseKubernetesInfo_FromCGroupLine(string name, CGroupTestData data)
 	{
-		var line = data.GroupLine;
+		data.Files.ProcSelfCgroup.Should().NotBeNull();
+		var line = data.Files.ProcSelfCgroup;
 		var containerId = data.ContainerId;
 		var podId = data.PodId;
 
 		var system = new Api.System();
-		_systemInfoHelper.ParseContainerId(system, "hostname", line);
+		if (line == "0::/")
+		{
+			line = data.Files.MountInfo.FirstOrDefault(l => l.Contains("/etc/hostname"));
+			_systemInfoHelper.ParseMountInfo(system, "hostname", line);
+		}
+		else
+			_systemInfoHelper.ParseContainerId(system, "hostname", line);
 
 		if (containerId is null)
 			system.Container.Should().BeNull();
 		else
+		{
+			system.Container.Should().NotBeNull("{0}", line);
 			system.Container.Id.Should().Be(containerId);
+		}
 
 		if (podId is null)
 			system.Kubernetes.Should().BeNull();

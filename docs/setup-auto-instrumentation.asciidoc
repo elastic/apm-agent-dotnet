@@ -16,7 +16,7 @@ This approach works with the following
 
 |===
 | 2.+^|**Operating system**
-|**Architecture** |**Windows** |**Linux**
+|**Architecture** |**Windows** |**Linux** **
 
 |x64 
 
@@ -33,7 +33,11 @@ This approach works with the following
 
 _* Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility._
 
-NOTE: The Profiler based agent only supports 64-bit applications. 32-bit applications aren't supported.
+_** Minimum GLIBC version 2.14._
+
+NOTE: The profiler-based agent only supports 64-bit applications. 32-bit applications aren't supported.
+
+NOTE: The profiler-based agent does not currently support ARM.
 
 It instruments the following assemblies:
 
