@@ -28,9 +28,9 @@ namespace Elastic.Apm.Tests.Config
 
 		//
 		[Theory]
-		[InlineData(OTEL_LOG_LEVEL, "Info")]
+		[InlineData(OTEL_LOG_LEVEL, "Debug")]
+		[InlineData(ELASTIC_APM_LOG_LEVEL, "Debug")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG, "Info")]
-
 		[InlineData(OTEL_DOTNET_AUTO_LOG_DIRECTORY, "1")]
 		[InlineData(ELASTIC_APM_LOG_DIRECTORY, "1")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG_DIR, "1")]
@@ -48,6 +48,8 @@ namespace Elastic.Apm.Tests.Config
 		//
 		[Theory]
 		[InlineData(OTEL_LOG_LEVEL, "none")]
+		[InlineData(OTEL_LOG_LEVEL, "Info")]
+		[InlineData(ELASTIC_APM_LOG_LEVEL, "Info")]
 		[InlineData(ELASTIC_APM_PROFILER_LOG, "None")]
 		//only if explicitly specified to 'none' should we not default to file logging.
 		[InlineData(ELASTIC_OTEL_LOG_TARGETS, "none")]

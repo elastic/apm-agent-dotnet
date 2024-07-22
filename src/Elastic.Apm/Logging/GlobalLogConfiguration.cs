@@ -159,14 +159,23 @@ internal readonly struct GlobalLogConfiguration
 	internal static GlobalLogConfiguration FromEnvironment(IDictionary environmentVariables = null)
 	{
 		var config = new EnvironmentLoggingConfiguration(environmentVariables);
-		var logLevel = config.GetLogLevel(OTEL_LOG_LEVEL, ELASTIC_APM_PROFILER_LOG, ELASTIC_APM_LOG_LEVEL);
+		var otelLogLevel = config.GetLogLevel(OTEL_LOG_LEVEL);
+		var profilerLogLevel = config.GetLogLevel(ELASTIC_APM_PROFILER_LOG);
+		var apmLogLevel = config.GetLogLevel(ELASTIC_APM_LOG_LEVEL);
+
+		var logLevel = otelLogLevel ?? profilerLogLevel ?? apmLogLevel;
+
 		var logFileDirectory = config.GetLogDirectory(OTEL_DOTNET_AUTO_LOG_DIRECTORY, ELASTIC_APM_PROFILER_LOG_DIR, ELASTIC_APM_LOG_DIRECTORY);
 		var logFilePrefix = GetLogFilePrefix();
 		var logTarget = config.ParseLogTargets(ELASTIC_OTEL_LOG_TARGETS, ELASTIC_APM_PROFILER_LOG_TARGETS);
 
 		//The presence of some variables enable file logging for historical purposes
 		var isActive = config.AnyConfigured(ELASTIC_APM_STARTUP_HOOKS_LOGGING);
-		if (logLevel.HasValue || !string.IsNullOrWhiteSpace(logFileDirectory) || logTarget.HasValue)
+		var activeFromLogging =
+			otelLogLevel is <= LogLevel.Debug
+			|| apmLogLevel is <= LogLevel.Debug
+			|| profilerLogLevel.HasValue;
+		if (activeFromLogging || !string.IsNullOrWhiteSpace(logFileDirectory) || logTarget.HasValue)
 		{
 			isActive = true;
 			if (logLevel is LogLevel.None)
@@ -180,7 +189,6 @@ internal readonly struct GlobalLogConfiguration
 		var level = logLevel ?? LogLevel.Warning;
 
 		var target = logTarget ?? (isActive ? GlobalLogTarget.File : GlobalLogTarget.None);
-
 		return new(isActive, level, target, logFileDirectory, logFilePrefix);
 	}
 
