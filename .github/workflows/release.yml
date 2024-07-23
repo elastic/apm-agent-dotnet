@@ -60,7 +60,7 @@ jobs:
           latest=auto
         tags: |
           # "1.2.3" and "latest" Docker tags on push of git tag "v1.2.3"
-          type=raw,value=${{ steps.bootstrap.outputs.agent-version }}
+          type=semver,pattern={{version}},value=${{ steps.bootstrap.outputs.agent-version }}
           # "edge" Docker tag on git push to default branch
           type=edge
 
@@ -72,6 +72,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         context: .
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.docker-meta.outputs.tags }}
         labels: ${{ steps.docker-meta.outputs.labels }}

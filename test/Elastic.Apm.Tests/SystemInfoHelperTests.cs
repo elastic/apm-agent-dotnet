@@ -27,7 +27,7 @@ public class SystemInfoHelperTests : IDisposable
 	public void ParseSystemInfo_Should_Use_HostName_For_ConfiguredHostName()
 	{
 		var hostName = "This_is_my_host";
-		var system = _systemInfoHelper.GetSystemInfo(hostName);
+		var system = _systemInfoHelper.GetSystemInfo(hostName, new TestHostNameDetector("detected_host_name"));
 
 #pragma warning disable 618
 		system.HostName.Should().Be(hostName);
@@ -43,7 +43,7 @@ public class SystemInfoHelperTests : IDisposable
 		var logger = new TestLogger(LogLevel.Trace);
 		using (new AgentFeaturesProviderScope(new AzureFunctionsAgentFeatures(logger)))
 		{
-			new SystemInfoHelper(logger).GetSystemInfo("bert");
+			new SystemInfoHelper(logger).GetSystemInfo("bert", new TestHostNameDetector("detected_host_name"));
 			//
 			// The actual parsing (not happening) is hard to test currently.
 			// Let's assert the log output that tells us that this part gets skipped.
