@@ -37,19 +37,15 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 		[JsonProperty("clientId")]
 		public string ClientId { get; private set; }
 
-		[JsonProperty("clientSecret")]
-		public string ClientSecret { get; private set; }
-
 		[JsonProperty("tenantId")]
 		public string TenantId { get; private set; }
 
 		[JsonProperty("subscriptionId")]
 		public string SubscriptionId { get; private set; }
 
-		public ServicePrincipal(string clientId, string clientSecret, string tenantId, string subscriptionId)
+		public ServicePrincipal(string clientId, string tenantId, string subscriptionId)
 		{
 			ClientId = clientId;
-			ClientSecret = clientSecret;
 			TenantId = tenantId;
 			SubscriptionId = subscriptionId;
 		}
@@ -57,7 +53,6 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 		{
 			startArguments.Environment ??= new Dictionary<string, string>();
 			startArguments.Environment[ARM_CLIENT_ID] = ClientId;
-			startArguments.Environment[ARM_CLIENT_SECRET] = ClientSecret;
 			startArguments.Environment[ARM_SUBSCRIPTION_ID] = SubscriptionId;
 			startArguments.Environment[ARM_TENANT_ID] = TenantId;
 		}
@@ -67,7 +62,6 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 	{
 		// ReSharper disable InconsistentNaming
 		protected const string ARM_CLIENT_ID = nameof(ARM_CLIENT_ID);
-		protected const string ARM_CLIENT_SECRET = nameof(ARM_CLIENT_SECRET);
 		protected const string ARM_TENANT_ID = nameof(ARM_TENANT_ID);
 		protected const string ARM_SUBSCRIPTION_ID = nameof(ARM_SUBSCRIPTION_ID);
 		// ReSharper restore InconsistentNaming
