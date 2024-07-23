@@ -4,10 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using ProcNet;
 
 namespace Elastic.Apm.Tests.Utilities.Azure
@@ -15,58 +12,16 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 	/// <summary>
 	/// Unauthenticated Azure credentials
 	/// </summary>
-	public class Unauthenticated : AzureCredentials
-	{
-	}
+	public class Unauthenticated : AzureCredentials;
 
 	/// <summary>
 	/// Azure credentials authentication with a User account.
 	/// </summary>
-	public class AzureUserAccount : AzureCredentials
-	{
-	}
-
-	/// <summary>
-	/// Azure credentials authenticated with a Service Principal
-	/// </summary>
-	public class ServicePrincipal : AzureCredentials
-	{
-		[JsonConstructor]
-		private ServicePrincipal() { }
-
-		[JsonProperty("clientId")]
-		public string ClientId { get; private set; }
-
-		[JsonProperty("tenantId")]
-		public string TenantId { get; private set; }
-
-		[JsonProperty("subscriptionId")]
-		public string SubscriptionId { get; private set; }
-
-		public ServicePrincipal(string clientId, string tenantId, string subscriptionId)
-		{
-			ClientId = clientId;
-			TenantId = tenantId;
-			SubscriptionId = subscriptionId;
-		}
-		public override void AddToArguments(StartArguments startArguments)
-		{
-			startArguments.Environment ??= new Dictionary<string, string>();
-			startArguments.Environment[ARM_CLIENT_ID] = ClientId;
-			startArguments.Environment[ARM_SUBSCRIPTION_ID] = SubscriptionId;
-			startArguments.Environment[ARM_TENANT_ID] = TenantId;
-		}
-	}
+	public class AzureUserAccount : AzureCredentials;
 
 	public abstract class AzureCredentials
 	{
-		// ReSharper disable InconsistentNaming
-		protected const string ARM_CLIENT_ID = nameof(ARM_CLIENT_ID);
-		protected const string ARM_TENANT_ID = nameof(ARM_TENANT_ID);
-		protected const string ARM_SUBSCRIPTION_ID = nameof(ARM_SUBSCRIPTION_ID);
-		// ReSharper restore InconsistentNaming
-
-		private static readonly Lazy<AzureCredentials> _lazyCredentials =
+		private static readonly Lazy<AzureCredentials> LazyCredentials =
 			new(LoadCredentials, LazyThreadSafetyMode.ExecutionAndPublication);
 
 		private static AzureCredentials LoadCredentials() =>
@@ -105,7 +60,7 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 		/// A set of Azure credentials obtained from environment variables or account authenticated with Azure CLI 2.0.
 		/// If no credentials are found, an unauthenticated credential is returned.
 		/// </summary>
-		public static AzureCredentials Instance => _lazyCredentials.Value;
+		public static AzureCredentials Instance => LazyCredentials.Value;
 
 		public virtual void AddToArguments(StartArguments startArguments) { }
 	}
