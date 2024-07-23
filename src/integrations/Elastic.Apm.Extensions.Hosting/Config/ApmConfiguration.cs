@@ -33,7 +33,7 @@ namespace Elastic.Apm.Extensions.Hosting.Config
 	{
 		private const string ThisClassName = nameof(ApmConfiguration);
 
-		public ApmConfiguration(IConfiguration configuration, IApmLogger logger, string defaultEnvironmentName)
+		public ApmConfiguration(IConfiguration configuration, Apm.Logging.IApmLogger logger, string defaultEnvironmentName)
 			: base(logger,
 				new ConfigurationDefaults { EnvironmentName = defaultEnvironmentName, DebugName = ThisClassName },
 				new ConfigurationKeyValueProvider(configuration)) =>

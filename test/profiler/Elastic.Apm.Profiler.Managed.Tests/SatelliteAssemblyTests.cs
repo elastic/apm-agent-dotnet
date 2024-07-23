@@ -12,6 +12,7 @@ using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Logging.LogEnvironmentVariables;
 
 namespace Elastic.Apm.Profiler.Managed.Tests;
 
@@ -36,7 +37,7 @@ public class SatelliteAssemblyTests
 			{
 				["ELASTIC_APM_SERVER_URL"] = $"http://localhost:{port}",
 				["ELASTIC_APM_DISABLE_METRICS"] = "*",
-				["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout",
+				[ELASTIC_OTEL_LOG_TARGETS] = "file;stdout",
 				["ELASTIC_APM_PROFILER_LOG"] = "debug",
 			};
 
