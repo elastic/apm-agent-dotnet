@@ -26,22 +26,22 @@ namespace Elastic.Apm.Tests
 		{
 			var fallbackLogger = new NoopLogger();
 
-			var logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Trace, new Hashtable());
+			var logger = AgentComponents.GetGlobalLogger(fallbackLogger, LogLevel.Trace, new Hashtable());
 			logger.Should().NotBeNull();
 			logger.Should().Be(fallbackLogger);
 			logger.IsEnabled(LogLevel.Trace).Should().BeFalse();
 
-			logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Trace, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "trace" } });
+			logger = AgentComponents.GetGlobalLogger(fallbackLogger, LogLevel.Trace, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "trace" } });
 			logger.Should().NotBeNull();
 			logger.Should().NotBe(fallbackLogger);
 			logger.IsEnabled(LogLevel.Trace).Should().BeTrue();
 
-			logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Error, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "trace" } });
+			logger = AgentComponents.GetGlobalLogger(fallbackLogger, LogLevel.Error, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "trace" } });
 			logger.Should().NotBeNull();
 			logger.Should().NotBe(fallbackLogger);
 			logger.IsEnabled(LogLevel.Trace).Should().BeTrue();
 
-			logger = AgentComponents.CheckForProfilerLogger(fallbackLogger, LogLevel.Error, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "warn" } });
+			logger = AgentComponents.GetGlobalLogger(fallbackLogger, LogLevel.Error, new Hashtable { { "ELASTIC_APM_PROFILER_LOG", "warn" } });
 			logger.Should().NotBeNull();
 			logger.Should().NotBe(fallbackLogger);
 			logger.IsEnabled(LogLevel.Trace).Should().BeFalse();

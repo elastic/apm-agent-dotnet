@@ -5,11 +5,16 @@
       <TargetFrameworks>net462;netcoreapp2.0</TargetFrameworks>
       <CheckEolTargetFramework>false</CheckEolTargetFramework>
       <IsPackable>false</IsPackable>
+      <DefineConstants>$(DefineConstants);PROFILER_MANAGED_LOADER</DefineConstants>
     </PropertyGroup>
   
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <DebugType>portable</DebugType>
     </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(SolutionRoot)src/Elastic.Apm/Logging/GlobalLogConfiguration.cs" />
+    <Compile Include="$(SolutionRoot)src/Elastic.Apm/Logging/LogLevel.cs" />
+  </ItemGroup>
 
     <!-- delete everything but the dlls and pdbs when building in release configuration. The bin directory contents
          are embedded in the profiler binary, so don't embed unneccessary files -->

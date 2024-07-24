@@ -13,7 +13,8 @@ using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.GrpcClient;
 using Elastic.Apm.Instrumentations.SqlClient;
-using ElasticApmStartupHook;
+using Elastic.Apm.Logging;
+using IApmLogger = Elastic.Apm.Logging.IApmLogger;
 
 namespace Elastic.Apm.StartupHook.Loader
 {
@@ -23,25 +24,14 @@ namespace Elastic.Apm.StartupHook.Loader
 	internal class Loader
 	{
 		/// <summary>
-		/// The directory in which the executing assembly is located
-		/// </summary>
-		private static string AssemblyDirectory
-		{
-			get
-			{
-				var location = Assembly.GetExecutingAssembly().Location;
-				return Path.GetDirectoryName(location);
-			}
-		}
-
-		/// <summary>
 		/// Initializes and starts the agent
 		/// </summary>
 		public static void Initialize()
 		{
-			Agent.Setup(new AgentComponents());
+			var agentComponents = new AgentComponents();
+			Agent.Setup(agentComponents);
 
-			var logger = StartupHookLogger.Create();
+			var logger = agentComponents.Logger;
 			LoadDiagnosticSubscriber(new HttpDiagnosticsSubscriber(), logger);
 			LoadDiagnosticSubscriber(new AspNetCoreDiagnosticSubscriber(), logger);
 			LoadDiagnosticSubscriber(new EfCoreDiagnosticsSubscriber(), logger);
@@ -51,7 +41,7 @@ namespace Elastic.Apm.StartupHook.Loader
 
 			HostBuilderExtensions.UpdateServiceInformation(Agent.Instance.Service);
 
-			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber, StartupHookLogger logger)
+			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber, IApmLogger logger)
 			{
 				try
 				{
@@ -59,8 +49,7 @@ namespace Elastic.Apm.StartupHook.Loader
 				}
 				catch (Exception e)
 				{
-					logger.WriteLine($"Failed subscribing to {diagnosticsSubscriber.GetType().Name}, " +
-						$"Exception type: {e.GetType().Name}, message: {e.Message}");
+					logger.Error()?.LogException(e, $"Failed subscribing to {diagnosticsSubscriber.GetType().Name}");
 				}
 			}
 		}

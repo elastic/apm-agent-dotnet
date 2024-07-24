@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
 using Xunit.Abstractions;
+using IApmLogger = Elastic.Apm.Logging.IApmLogger;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {

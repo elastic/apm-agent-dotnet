@@ -11,13 +11,13 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="Elastic.Apm.Extensions.Hosting.NetCoreLogger" /> type.
+	/// Tests the <see cref="ApmExtensionsLogger" /> type.
 	/// </summary>
 	public class AspNetCoreLoggerTests
 	{
 		[Fact]
 		public void AspNetCoreLoggerShouldThrowExceptionWhenLoggerFactoryIsNull()
-			=> Assert.Throws<ArgumentNullException>(() => new NetCoreLogger(null));
+			=> Assert.Throws<ArgumentNullException>(() => new ApmExtensionsLogger(null));
 
 		[Fact]
 		public void AspNetCoreLoggerShouldGetLoggerFromFactoryWithProperCategoryName()
@@ -27,7 +27,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Returns(() => Mock.Of<ILogger>());
 
 			// ReSharper disable UnusedVariable
-			var logger = new NetCoreLogger(loggerFactoryMock.Object);
+			var logger = new ApmExtensionsLogger(loggerFactoryMock.Object);
 			// ReSharper restore UnusedVariable
 
 			loggerFactoryMock.Verify(x => x.CreateLogger(It.Is<string>(s => s.Equals("Elastic.Apm"))), Times.Once);

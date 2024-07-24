@@ -32,14 +32,14 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 
 			if (exception is DuckTypeException)
 			{
-				Logger.Log(LogLevel.Warn, "DuckTypeException has been detected, the integration <{0}, {1}> will be disabled.",
+				Logger.Warn("DuckTypeException has been detected, the integration <{0}, {1}> will be disabled.",
 					typeof(TIntegration).FullName,
 					typeof(TTarget).FullName);
 				_disableIntegration = true;
 			}
 			else if (exception is CallTargetInvokerException)
 			{
-				Logger.Log(LogLevel.Warn, "CallTargetInvokerException has been detected, the integration <{0}, {1}> will be disabled.",
+				Logger.Warn("CallTargetInvokerException has been detected, the integration <{0}, {1}> will be disabled.",
 					typeof(TIntegration).FullName,
 					typeof(TTarget).FullName);
 				_disableIntegration = true;

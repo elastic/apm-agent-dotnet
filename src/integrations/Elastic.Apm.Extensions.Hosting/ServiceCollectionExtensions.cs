@@ -12,10 +12,8 @@ using Elastic.Apm.Extensions.Logging;
 using Elastic.Apm.Logging;
 using Elastic.Apm.NetCoreAll;
 using Elastic.Apm.Report;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using static Microsoft.Extensions.DependencyInjection.ServiceDescriptor;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -49,28 +47,25 @@ public static class ServiceCollectionExtensions
 			if (agentConfigured)
 				return Agent.Instance;
 
-			var logger = NetCoreLogger.GetApmLogger(sp);
-			var environmentName = GetEnvironmentName(sp);
-
-			if (environmentName is null)
-			{
-				logger?.Warning()?.Log("Failed to retrieve hosting environment name");
-				environmentName = "Undetermined";
-			}
-
+			var netCoreLogger = ApmExtensionsLogger.GetApmLogger(sp);
 			var configuration = sp.GetService<Configuration.IConfiguration>();
+			var environmentName = GetDefaultEnvironmentName(sp);
 
 			IConfigurationReader configurationReader = configuration is null
-				? new EnvironmentConfiguration(logger)
-				: new ApmConfiguration(configuration, logger, environmentName);
+				? new EnvironmentConfiguration(netCoreLogger)
+				: new ApmConfiguration(configuration, netCoreLogger, environmentName ?? "Undetermined");
+
+			var globalLogger = AgentComponents.GetGlobalLogger(netCoreLogger, configurationReader.LogLevel);
+
+			var logger = globalLogger is TraceLogger g ? new CompositeLogger(g, netCoreLogger) : netCoreLogger;
+
+			if (environmentName is null)
+				logger?.Warning()?.Log("Failed to retrieve default hosting environment name");
 
 			// This may be null, which is fine
 			var payloadSender = sp.GetService<IPayloadSender>();
 
-			var components = agentConfigured
-				? Agent.Components
-				: new AgentComponents(logger, configurationReader, payloadSender);
-
+			var components = new AgentComponents(logger, configurationReader, payloadSender);
 			HostBuilderExtensions.UpdateServiceInformation(components.Service);
 
 			Agent.Setup(components);
@@ -110,7 +105,7 @@ public static class ServiceCollectionExtensions
 		return services;
 	}
 
-	private static string GetEnvironmentName(IServiceProvider serviceProvider) =>
+	private static string GetDefaultEnvironmentName(IServiceProvider serviceProvider) =>
 #if NET6_0_OR_GREATER
 		(serviceProvider.GetService(typeof(IHostEnvironment)) as IHostEnvironment)?.EnvironmentName; // This is preferred since 3.0
 #else

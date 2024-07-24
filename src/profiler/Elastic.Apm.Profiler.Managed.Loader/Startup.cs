@@ -16,7 +16,7 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 	{
 		static Startup()
 		{
-			Logger.Log(LogLevel.Info, "Elastic.Apm.Profiler.Managed.Loader.Startup: Invoked ");
+			Logger.Log(LogLevel.Information, "Elastic.Apm.Profiler.Managed.Loader.Startup: Invoked ");
 			Directory = ResolveDirectory();
 
 			try

@@ -9,11 +9,11 @@ using LogLevel = Elastic.Apm.Logging.LogLevel;
 
 namespace Elastic.Apm.Extensions.Hosting;
 
-internal sealed class NetCoreLogger : IApmLogger
+internal sealed class ApmExtensionsLogger : IApmLogger
 {
 	private readonly ILogger _logger;
 
-	public NetCoreLogger(ILoggerFactory loggerFactory) => _logger = loggerFactory?.CreateLogger("Elastic.Apm") ?? throw new ArgumentNullException(nameof(loggerFactory));
+	public ApmExtensionsLogger(ILoggerFactory loggerFactory) => _logger = loggerFactory?.CreateLogger("Elastic.Apm") ?? throw new ArgumentNullException(nameof(loggerFactory));
 
 	public bool IsEnabled(LogLevel level) => _logger.IsEnabled(Convert(level));
 
@@ -34,6 +34,6 @@ internal sealed class NetCoreLogger : IApmLogger
 
 	internal static IApmLogger GetApmLogger(IServiceProvider serviceProvider) =>
 		serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
-			? new NetCoreLogger(loggerFactory)
+			? new ApmExtensionsLogger(loggerFactory)
 			: ConsoleLogger.Instance;
 }
