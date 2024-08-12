@@ -23,6 +23,17 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.28.1]]
+==== 1.28.1 - 2024/08/12
+
+===== Bug fixes
+
+{pull}2411[#2389] Skip instrumentation of System.Web to prevent rare double configuration initialization issue
+
+===== Features
+
+{pull}2371[#2371] Global file logging, making it easier to diagnose the agent no matter the deployment type.
+
 [[release-notes-1.28.0]]
 ==== 1.28.0 - 2024/07/03
 
