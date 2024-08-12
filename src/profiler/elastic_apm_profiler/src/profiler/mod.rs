@@ -58,7 +58,7 @@ pub mod sig;
 mod startup_hook;
 pub mod types;
 
-const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
+const SKIP_ASSEMBLY_PREFIXES: [&str; 23] = [
     "Elastic.Apm",
     "MessagePack",
     "Microsoft.AI",
@@ -80,6 +80,7 @@ const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
     "System.Text",
     "System.Threading",
     "System.Xml",
+    "System.Web",
     "Newtonsoft",
 ];
 const SKIP_ASSEMBLIES: [&str; 7] = [
@@ -89,7 +90,7 @@ const SKIP_ASSEMBLIES: [&str; 7] = [
     "Microsoft.AspNetCore.Razor.Language",
     "Microsoft.AspNetCore.Mvc.RazorPages",
     "Anonymously Hosted DynamicMethods Assembly",
-    "ISymWrapper",
+    "ISymWrapper"
 ];
 
 /// The git hash defined on build
