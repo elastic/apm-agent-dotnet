@@ -165,7 +165,6 @@ jobs:
             --verbosity normal ^
             --results-directory build/output ^
             --diag build/output/diag-iis.log ^
-            --filter "FullyQualifiedName=Elastic.Apm.AspNetFullFramework.Tests.CustomServiceNodeNameSetViaSettings.Test" ^
             --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
       - name: Store test results
