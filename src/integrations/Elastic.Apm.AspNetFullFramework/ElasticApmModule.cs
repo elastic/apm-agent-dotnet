@@ -631,7 +631,9 @@ namespace Elastic.Apm.AspNetFullFramework
 				return;
 
 			var user = new User { UserName = userIdentity.Name };
-			var sqlRoleProvider = System.Web.Security.Roles.Providers.Cast<object>().Any(provider => provider.GetType().Name == "SqlRoleProvider");
+
+			var sqlRoleProvider =
+				System.Web.Security.Roles.Enabled && System.Web.Security.Roles.Providers.Cast<object>().Any(provider => provider.GetType().Name == "SqlRoleProvider");
 			if (!sqlRoleProvider && context.User is ClaimsPrincipal claimsPrincipal)
 			{
 				try
