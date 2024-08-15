@@ -74,7 +74,8 @@ namespace Elastic.Apm
 				agent.Logger?.Trace()
 					?.Log("Initialization - Agent instance initialized. Callstack: {callstack}", new StackTrace().ToString());
 
-				if (agent.Components.PayloadSender is not IPayloadSenderWithFilters sender) return agent;
+				if (agent.Components.PayloadSender is not IPayloadSenderWithFilters sender)
+					return agent;
 
 				ErrorFilters.ForEach(f => sender.AddFilter(f));
 				TransactionFilters.ForEach(f => sender.AddFilter(f));

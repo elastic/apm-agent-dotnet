@@ -251,7 +251,7 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			lock (_transactionLock)
 			{
-				transaction =  _transactionFilters
+				transaction = _transactionFilters
 					.Aggregate(transaction, (current, filter) => filter(current));
 				_transactions.Add(transaction);
 				_transactionWaitHandle.Set();

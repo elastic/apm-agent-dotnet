@@ -503,7 +503,8 @@ namespace Elastic.Apm.Report
 
 		public bool AddFilter(Func<ITransaction, ITransaction> transactionFilter)
 		{
-			if (!_allowFilterAdd) return false;
+			if (!_allowFilterAdd)
+				return false;
 
 			TransactionFilters.Add(transactionFilter);
 			return true;
@@ -511,7 +512,8 @@ namespace Elastic.Apm.Report
 
 		public bool AddFilter(Func<ISpan, ISpan> spanFilter)
 		{
-			if (!_allowFilterAdd) return false;
+			if (!_allowFilterAdd)
+				return false;
 
 			SpanFilters.Add(spanFilter);
 			return true;
@@ -519,7 +521,8 @@ namespace Elastic.Apm.Report
 
 		public bool AddFilter(Func<IError, IError> errorFilter)
 		{
-			if (!_allowFilterAdd) return false;
+			if (!_allowFilterAdd)
+				return false;
 
 			ErrorFilters.Add(errorFilter);
 			return true;
