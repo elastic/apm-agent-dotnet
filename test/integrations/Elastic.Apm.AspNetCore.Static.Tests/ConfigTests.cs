@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Tests;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Extensions.Hosting.Config;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
@@ -61,8 +62,10 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 
 			var capturedPayload = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(
-				new NoopLogger(),
+				new XUnitLogger(LogLevel.Trace, TestOutputHelper),
 				new RuntimeConfigurationSnapshot(configReader)));
+
+			agent.Configuration.Enabled.Should().BeFalse();
 
 			var client = Helper.ConfigureHttpClient(true, agent, _factory);
 			Agent.Setup(agent);
@@ -72,13 +75,14 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 
 			var isParsed = bool.TryParse(await response.Content.ReadAsStringAsync(), out var boolVal);
 
+			// Make the test fail if there was a connection to the server URL made with the sample app's url
+			defaultServerUrlConnectionMade.Should().BeFalse();
+
 			isParsed.Should().BeTrue();
 			boolVal.Should().BeFalse();
 			capturedPayload.Transactions.Should().BeNullOrEmpty();
 			capturedPayload.Spans.Should().BeNullOrEmpty();
 			capturedPayload.Errors.Should().BeNullOrEmpty();
-			// Make the test fail if there was a connection to the server URL made with the sample app's url
-			defaultServerUrlConnectionMade.Should().BeFalse();
 		}
 	}
 }

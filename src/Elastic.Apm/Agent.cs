@@ -239,6 +239,8 @@ namespace Elastic.Apm
 					return;
 				}
 
+				Components ??= agentComponents;
+
 				agentComponents?.Logger?.Trace()
 					?.Log("Initialization - Agent.Setup called");
 
