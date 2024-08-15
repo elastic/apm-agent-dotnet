@@ -23,6 +23,14 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.28.3]]
+==== 1.28.3 - 2024/08/15
+
+===== Bug fixes
+
+{pull}2419[#2419] Update to latest `MongoDB.Driver.Core` to address a breaking change.
+{pull}2418[#2418] Adding filters should not force initialization of Agent.
+
 [[release-notes-1.28.2]]
 ==== 1.28.2 - 2024/08/14
 
