@@ -19,7 +19,7 @@ using FluentAssertions;
 
 namespace Elastic.Apm.Tests.Utilities
 {
-	internal class MockPayloadSender : IPayloadSender
+	internal class MockPayloadSender : IPayloadSender, IPayloadSenderWithFilters
 	{
 		private static readonly JObject JsonSpanTypesData =
 			JObject.Parse(File.ReadAllText(Path.Combine(SolutionPaths.Root, "test/Elastic.Apm.Tests.Utilities/TestResources/json-specs/span_types.json")));
@@ -211,7 +211,7 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				lock (_metricsLock)
-					return CreateImmutableSnapshot<IMetricSet>(_metrics);
+					return CreateImmutableSnapshot(_metrics);
 			}
 		}
 
@@ -220,7 +220,7 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				lock (_spanLock)
-					return CreateImmutableSnapshot<ISpan>(_spans);
+					return CreateImmutableSnapshot(_spans);
 			}
 		}
 
@@ -229,7 +229,7 @@ namespace Elastic.Apm.Tests.Utilities
 			get
 			{
 				lock (_transactionLock)
-					return CreateImmutableSnapshot<ITransaction>(_transactions);
+					return CreateImmutableSnapshot(_transactions);
 			}
 		}
 
@@ -240,8 +240,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			lock (_errorLock)
 			{
-				error = _errorFilters.Aggregate(error,
-					(current, filter) => filter(current));
+				error = _errorFilters
+					.Aggregate(error, (current, filter) => filter(current));
 				_errors.Add(error);
 				_errorWaitHandle.Set();
 			}
@@ -251,8 +251,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			lock (_transactionLock)
 			{
-				transaction = _transactionFilters.Aggregate(transaction,
-					(current, filter) => filter(current));
+				transaction =  _transactionFilters
+					.Aggregate(transaction, (current, filter) => filter(current));
 				_transactions.Add(transaction);
 				_transactionWaitHandle.Set();
 			}
@@ -263,7 +263,8 @@ namespace Elastic.Apm.Tests.Utilities
 			VerifySpan(span);
 			lock (_spanLock)
 			{
-				span = _spanFilters.Aggregate(span, (current, filter) => filter(current));
+				span = _spanFilters
+					.Aggregate(span, (current, filter) => filter(current));
 				_spans.Add(span);
 				_spanWaitHandle.Set();
 			}
@@ -303,6 +304,24 @@ namespace Elastic.Apm.Tests.Utilities
 					}
 				}
 			}
+		}
+
+		public bool AddFilter(Func<ITransaction, ITransaction> transactionFilter)
+		{
+			_transactionFilters.Add(transactionFilter);
+			return true;
+		}
+
+		public bool AddFilter(Func<ISpan, ISpan> spanFilter)
+		{
+			_spanFilters.Add(spanFilter);
+			return true;
+		}
+
+		public bool AddFilter(Func<IError, IError> errorFilter)
+		{
+			_errorFilters.Add(errorFilter);
+			return true;
 		}
 
 		public void QueueMetrics(IMetricSet metricSet)

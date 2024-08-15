@@ -29,12 +29,12 @@ namespace Elastic.Apm.Report
 	/// Responsible for sending the data to APM server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
-	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender
+	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender, IPayloadSenderWithFilters
 	{
 		private const string ThisClassName = nameof(PayloadSenderV2);
-		internal readonly List<Func<IError, IError>> ErrorFilters = new List<Func<IError, IError>>();
-		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
-		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
+		internal readonly List<Func<IError, IError>> ErrorFilters = new();
+		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new();
+		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new();
 
 		private readonly IApmServerInfo _apmServerInfo;
 
@@ -148,6 +148,7 @@ namespace Elastic.Apm.Report
 
 		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
+		private bool _allowFilterAdd;
 		private static readonly UTF8Encoding Utf8Encoding;
 		private static readonly MediaTypeHeaderValue MediaTypeHeaderValue;
 
@@ -244,6 +245,8 @@ namespace Elastic.Apm.Report
 			}
 
 			var batch = ReceiveBatch();
+			if (_allowFilterAdd && batch is { Length: > 0 })
+				_allowFilterAdd = false;
 			if (batch != null)
 				ProcessQueueItems(batch);
 		}
@@ -496,6 +499,30 @@ namespace Elastic.Apm.Report
 			}
 
 			return item;
+		}
+
+		public bool AddFilter(Func<ITransaction, ITransaction> transactionFilter)
+		{
+			if (!_allowFilterAdd) return false;
+
+			TransactionFilters.Add(transactionFilter);
+			return true;
+		}
+
+		public bool AddFilter(Func<ISpan, ISpan> spanFilter)
+		{
+			if (!_allowFilterAdd) return false;
+
+			SpanFilters.Add(spanFilter);
+			return true;
+		}
+
+		public bool AddFilter(Func<IError, IError> errorFilter)
+		{
+			if (!_allowFilterAdd) return false;
+
+			ErrorFilters.Add(errorFilter);
+			return true;
 		}
 	}
 }

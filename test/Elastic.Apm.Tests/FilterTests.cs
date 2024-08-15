@@ -44,13 +44,13 @@ public class FilterTests
 		await RegisterFilterRunCodeAndAssert(
 			payloadSender =>
 			{
-				payloadSender.TransactionFilters.Add(t =>
+				payloadSender.AddFilter((ITransaction t) =>
 				{
 					t.Name = "NewTransactionName";
 					return t;
 				});
 
-				payloadSender.TransactionFilters.Add(t =>
+				payloadSender.AddFilter((ITransaction t) =>
 				{
 					t.Type = "NewTransactionType";
 					return t;
@@ -78,17 +78,17 @@ public class FilterTests
 			payloadSender =>
 			{
 				// Rename transaction name
-				payloadSender.TransactionFilters.Add(t =>
+				payloadSender.AddFilter((ITransaction t) =>
 				{
 					t.Name = "NewTransactionName";
 					return t;
 				});
 
 				// Throw an exception
-				payloadSender.TransactionFilters.Add(_ => throw new Exception("This is a test exception"));
+				payloadSender.AddFilter((ITransaction _) => throw new Exception("This is a test exception"));
 
 				// Rename transaction type
-				payloadSender.TransactionFilters.Add(t =>
+				payloadSender.AddFilter((ITransaction t) =>
 				{
 					t.Type = "NewTransactionType";
 					return t;
@@ -115,17 +115,17 @@ public class FilterTests
 				payloadSender =>
 				{
 					// Rename span name
-					payloadSender.SpanFilters.Add(span =>
+					payloadSender.AddFilter((ISpan span) =>
 					{
 						span.Name = "NewSpanName";
 						return span;
 					});
 
 					// Throw an exception
-					payloadSender.SpanFilters.Add(_ => throw new Exception("This is a test exception"));
+					payloadSender.AddFilter((ISpan _) => throw new Exception("This is a test exception"));
 
 					// Rename span type
-					payloadSender.SpanFilters.Add(span =>
+					payloadSender.AddFilter((ISpan span) =>
 					{
 						span.Type = "NewSpanType";
 						return span;
@@ -156,7 +156,7 @@ public class FilterTests
 			payloadSender =>
 			{
 				// Rename span name
-				payloadSender.SpanFilters.Add(span =>
+				payloadSender.AddFilter((ISpan span) =>
 				{
 					if (span.Name == "SpanToDrop")
 						return null;
@@ -175,7 +175,28 @@ public class FilterTests
 				return true;
 			});
 
-	private async Task RegisterFilterRunCodeAndAssert(Action<PayloadSenderV2> registerFilters, Action<ApmAgent> executeCodeThatGeneratesData,
+	/// <summary>
+	/// Registers a span-filter that returns false for specific span names and sends a span with that specific name.
+	/// Makes sure the span is not sent and serialized.
+	/// </summary>
+	[Fact]
+	public async Task FilterDoesNotBReak()
+		=> await RegisterFilterRunCodeAndAssert(
+			payloadSender =>
+			{
+				payloadSender.AddFilter((ISpan span) => span);
+			},
+			agent =>
+			{
+				agent.Tracer.CaptureTransaction("Test123", "TestTransaction",
+					t => { t.CaptureSpan("SpanToDrop", "TestSpan", () => Thread.Sleep(10)); });
+			},
+			(_, spans, _) =>
+			{
+				return true;
+			});
+
+	private async Task RegisterFilterRunCodeAndAssert(Action<IPayloadSenderWithFilters> registerFilters, Action<ApmAgent> executeCodeThatGeneratesData,
 		Func<List<Transaction>, List<Span>, List<Error>, bool> assert
 	)
 	{
