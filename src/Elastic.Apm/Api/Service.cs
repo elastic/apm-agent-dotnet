@@ -84,8 +84,9 @@ namespace Elastic.Apm.Api
 		{
 			static bool CheckForLoadedAssembly(string name)
 			{
-				return AppDomain.CurrentDomain.GetAssemblies().Any(n =>
-					n.GetName().Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+				// Avoid using Assembly.GetName() which can't be used with globalization-invariant mode enabled
+				return AppDomain.CurrentDomain.GetAssemblies()
+					.Any(n => n.FullName.Split(',')[0].Equals(name, StringComparison.OrdinalIgnoreCase));
 			}
 
 			// Assume NuGet as the default.
