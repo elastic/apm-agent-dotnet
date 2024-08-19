@@ -23,6 +23,16 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.28.4]]
+==== 1.28.4 - 2024/08/19
+
+===== Bug fixes
+
+{pull}2427[#2427] Ensure we capture baggage when capturing Errors during unsampled transactions 
+{pull}2425[#2425] Ensure safer access to System.Web.Security.Roles 
+{pull}2426[#2426] Fix a bug that prevented the addition of filters to payloadsenders 
+{pull}2423[#2423] SetAgentActivationMethod throws CultureNotFoundException in global-invariant mode 
+
 [[release-notes-1.28.3]]
 ==== 1.28.3 - 2024/08/15
 
