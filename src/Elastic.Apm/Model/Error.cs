@@ -44,7 +44,7 @@ namespace Elastic.Apm.Model
 
 			ParentId = parentId;
 
-			if (transaction != null && transaction.IsSampled)
+			if (transaction is { IsSampled: true })
 			{
 				Context = transaction.Context.DeepCopy();
 
@@ -55,7 +55,7 @@ namespace Elastic.Apm.Model
 				}
 			}
 
-			CheckAndCaptureBaggage();
+			CheckAndCaptureBaggage(transaction);
 
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
 			logger.Trace()
@@ -63,10 +63,14 @@ namespace Elastic.Apm.Model
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
-		private void CheckAndCaptureBaggage()
+		private void CheckAndCaptureBaggage(Transaction transaction)
 		{
 			if (Activity.Current == null || !Activity.Current.Baggage.Any())
 				return;
+
+			//if context was not set prior we set it now to ensure we capture baggage for errors
+			//occuring during unsampled transactions
+			Context ??= transaction.Context.DeepCopy();
 
 			foreach (var baggage in Activity.Current.Baggage)
 			{
