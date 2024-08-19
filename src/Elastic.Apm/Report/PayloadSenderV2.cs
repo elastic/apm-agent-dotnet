@@ -32,9 +32,9 @@ namespace Elastic.Apm.Report
 	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender, IPayloadSenderWithFilters
 	{
 		private const string ThisClassName = nameof(PayloadSenderV2);
-		internal readonly List<Func<IError, IError>> ErrorFilters = new();
-		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new();
-		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new();
+		private readonly List<Func<IError, IError>> ErrorFilters = new();
+		private readonly List<Func<ISpan, ISpan>> SpanFilters = new();
+		private readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new();
 
 		private readonly IApmServerInfo _apmServerInfo;
 
@@ -148,7 +148,7 @@ namespace Elastic.Apm.Report
 
 		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
-		private bool _allowFilterAdd;
+		private bool _allowFilterAdd = true;
 		private static readonly UTF8Encoding Utf8Encoding;
 		private static readonly MediaTypeHeaderValue MediaTypeHeaderValue;
 
