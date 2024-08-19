@@ -632,10 +632,23 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			var user = new User { UserName = userIdentity.Name };
 
-			var sqlRoleProvider =
-				System.Web.Security.Roles.Enabled && System.Web.Security.Roles.Providers.Cast<object>().Any(provider => provider.GetType().Name == "SqlRoleProvider");
-			if (!sqlRoleProvider && context.User is ClaimsPrincipal claimsPrincipal)
+			FillUserIdentity(context, user);
+
+			transaction.Context.User = user;
+
+			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+		}
+
+		private void FillUserIdentity(HttpContext context, User user)
+		{
+			try
 			{
+				var sqlRoleProvider =
+					System.Web.Security.Roles.Enabled && System.Web.Security.Roles.Providers.Cast<object>().Any(provider => provider.GetType().Name == "SqlRoleProvider");
+
+				if (sqlRoleProvider || context.User is not ClaimsPrincipal claimsPrincipal)
+					return;
+
 				try
 				{
 					static string GetClaimWithFallbackValue(ClaimsPrincipal principal, string claimType, string fallbackClaimType)
@@ -652,10 +665,10 @@ namespace Elastic.Apm.AspNetFullFramework
 					_logger.Error()?.Log("Unable to access user claims due to SqlException with message: {message}", ex.Message);
 				}
 			}
-
-			transaction.Context.User = user;
-
-			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+			catch (Exception ex)
+			{
+				_logger.Trace()?.Log("Error accessing System.Web.Security.Roles: {message}", ex.Message);
+			}
 		}
 
 		/// <summary>
