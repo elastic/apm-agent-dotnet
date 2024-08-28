@@ -18,7 +18,7 @@ namespace Elastic.Apm.Helpers
 	{
 		private readonly Regex _containerUidRegex = new Regex("^[0-9a-fA-F]{64}$");
 		private readonly Regex _shortenedUuidRegex = new Regex("^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4,}");
-		private readonly Regex _ecsContainerIdRegex = new Regex("^[a-z0-9]{32}-[0-9]{10}$");
+		private readonly Regex _ecsContainerIdRegex = new Regex("^[a-z0-9]{32}-[0-9]{1,10}$");
 		private readonly Regex _podRegex = new Regex(
 			@"(?:^/kubepods[\S]*/pod([^/]+)$)|(?:^/kubepods\.slice/(kubepods-[^/]+\.slice/)?kubepods[^/]*-pod([^/]+)\.slice$)");
 

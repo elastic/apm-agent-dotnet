@@ -23,6 +23,13 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.28.5]]
+==== 1.28.5 - 2024/08/28
+
+===== Bug fixes
+
+{pull}2430[#2430] Relax ECS container ID regex.
+
 [[release-notes-1.28.4]]
 ==== 1.28.4 - 2024/08/19
 
