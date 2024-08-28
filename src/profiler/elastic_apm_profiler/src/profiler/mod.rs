@@ -522,7 +522,7 @@ impl Profiler {
 
         if let Some(exclude_process_names) = env::get_exclude_processes() {
             for exclude_process_name in exclude_process_names {
-                if process_file_name == exclude_process_name {
+                if process_file_name.to_lowercase() == exclude_process_name.to_lowercase() {
                     log::info!(
                         "Initialize: process name {} matches excluded name {}. Profiler disabled",
                         &process_file_name,
@@ -536,7 +536,7 @@ impl Profiler {
         if let Some(exclude_service_names) = env::get_exclude_service_names() {
             if let Some(service_name) = env::get_service_name() {
                 for exclude_service_name in exclude_service_names {
-                    if service_name == exclude_service_name {
+                    if service_name.to_lowercase() == exclude_service_name.to_lowercase() {
                         log::info!(
                             "Initialize: service name {} matches excluded name {}. Profiler disabled",
                             &service_name,

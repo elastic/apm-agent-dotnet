@@ -53,6 +53,22 @@ const ELASTIC_APM_LOG_DIRECTORY_ENV_VAR: &str = "ELASTIC_APM_LOG_DIRECTORY";
 
 const ELASTIC_APM_SERVICE_NAME_ENV_VAR: &str = "ELASTIC_APM_SERVICE_NAME";
 
+// These are opinionated defaults for processes that should be excluded from profiling.
+const DEFAULT_EXCLUDED_PROCESSES: &[&str] = &[
+    "powershell.exe",
+    "ServerManager.exe",
+    "ReportingServicesService.exe",
+    "RSHostingService.exe",
+    "RSMananagement.exe",
+    "RSPortal.exe",
+    "RSConfigTool.exe"
+];
+
+// These are opinionated defaults for services that should be excluded from profiling.
+const DEFAULT_EXCLUDED_SERVICE_NAMES: &[&str] = &[
+    "SQLServerReportingServices" // We have reports that this "breaks" when running in IIS with global profiling enabled
+];
+
 pub static ELASTIC_APM_PROFILER_LOG_IL: Lazy<bool> =
     Lazy::new(|| read_bool_env_var(ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR, false));
 
@@ -134,11 +150,17 @@ fn read_semicolon_separated_env_var(key: &str) -> Option<Vec<String>> {
 }
 
 pub fn get_exclude_processes() -> Option<Vec<String>> {
-    read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR)
+    let mut processes = read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR)
+        .unwrap_or_else(Vec::new);
+    processes.extend(DEFAULT_EXCLUDED_PROCESSES.iter().map(|s| s.to_string()));
+    Some(processes)
 }
 
 pub fn get_exclude_service_names() -> Option<Vec<String>> {
-    read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR)
+    let mut services = read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR)
+        .unwrap_or_else(Vec::new);
+    services.extend(DEFAULT_EXCLUDED_SERVICE_NAMES.iter().map(|s| s.to_string()));
+    Some(services)
 }
 
 pub fn get_service_name() -> Option<String> {
