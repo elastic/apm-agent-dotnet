@@ -392,11 +392,25 @@ For example, `dotnet.exe;powershell.exe`. Can be used in scenarios where profile
 environment variables have a global scope that would end up auto-instrumenting
 applications that should not be.
 
+The following processes are _*always*_ excluded from profiling by default.
+
+* powershell.exe
+* ServerManager.exe
+* ReportingServicesService.exe
+* RSHostingService.exe
+* RSMananagement.exe
+* RSPortal.exe
+* RSConfigTool.exe
+
 `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` _(optional)_::
 
 A semi-colon separated list of APM service names to exclude from auto-instrumentation.
 Values defined are checked against the value of <<config-service-name,`ELASTIC_APM_SERVICE_NAME`>>
 environment variable.
+
+The following service names are _*always*_ excluded from profiling by default.
+
+* SQLServerReportingServices
 
 `ELASTIC_OTEL_LOG_LEVEL` _(optional)_::
 
