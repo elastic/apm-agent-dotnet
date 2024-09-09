@@ -228,7 +228,8 @@ namespace Elastic.Apm.Report
 
 		internal void EnqueueEvent(object eventObj, string dbgEventKind)
 		{
-			if (!_isEnabled) return;
+			if (!_isEnabled)
+				return;
 			Task.Run(async () => await EnqueueEventInternal(eventObj, dbgEventKind));
 		}
 
