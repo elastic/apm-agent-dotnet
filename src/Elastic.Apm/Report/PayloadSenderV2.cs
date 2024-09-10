@@ -96,7 +96,7 @@ namespace Elastic.Apm.Report
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
 
-			if (isEnabled)
+			if (_isEnabled)
 				ResetActivationMethodIfKnownBrokenApmServer();
 
 			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
@@ -128,7 +128,7 @@ namespace Elastic.Apm.Report
 
 			SetUpFilters(TransactionFilters, SpanFilters, ErrorFilters, apmServerInfo, logger);
 
-			if (isEnabled)
+			if (_isEnabled)
 				StartWorkLoop();
 		}
 
