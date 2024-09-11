@@ -1,0 +1,22 @@
+on:
+  workflow_run:
+    workflows:
+      - jan-junit-test
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: elastic/oblt-actions/test-report@v1
+        with:
+          artifact: /test-results(.*)/
+          name: 'Test Repot $1'
+          path: "**/*.xml"
+          reporter: java-junit
