@@ -23,6 +23,14 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.28.6]]
+==== 1.28.6 - 2024/09/11
+
+===== Bug fixes
+
+{pull}2431[#2431] Hard exclude several system processes from being auto instrumented.
+{pull}2436[#2436] Disabling the agent should not try to enqueue events, now a NOOP. 
+
 [[release-notes-1.28.5]]
 ==== 1.28.5 - 2024/08/28
 
