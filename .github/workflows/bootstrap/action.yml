@@ -60,7 +60,7 @@ runs:
         echo "major-version=$(echo ${AGENT_VERSION} | cut -d"." -f1)" >> $GITHUB_OUTPUT
 
     # Setup git config
-    - uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
+    - uses: elastic/oblt-actions/git/setup@v1
         
     # install common dependencies
     - name: Install common dependencies

@@ -174,7 +174,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup git config
-        uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
+        uses: elastic/oblt-actions/git/setup@v1
 
       - name: Create GitHub Pull Request if minor release.
         run: |
