@@ -1,7 +1,7 @@
 on:
   workflow_run:
     workflows:
-      - jan-junit-test
+      - test-windows
     types:
       - completed
 
