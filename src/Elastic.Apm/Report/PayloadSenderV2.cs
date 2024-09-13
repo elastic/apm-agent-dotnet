@@ -141,14 +141,14 @@ namespace Elastic.Apm.Report
 		)
 		{
 			transactionFilters.Add(TransactionIgnoreUrlsFilter.Filter);
-			transactionFilters.Add(RequestCookieExtractionFilter.Filter);
+			transactionFilters.Add(CookieHeaderRedactionFilter.Filter);
 			transactionFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
 
 			errorFilters.Add(ErrorContextSanitizerFilter.Filter);
-			errorFilters.Add(RequestCookieExtractionFilter.Filter);
+			errorFilters.Add(CookieHeaderRedactionFilter.Filter);
 			errorFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 		}
 

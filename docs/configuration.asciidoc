@@ -469,8 +469,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 *`Cookie` header sanitization:*
 
 The `Cookie` header is automatically redacted for incoming HTTP request transactions. Each name-value pair from the 
-Cookie header is parsed by the agent and sent to the APM Server. Before the name-value pairs are recorded, they are 
-sanitized based on the `SanitizeFieldNames` configuration. Cookies with sensitive data in 
+cookie list is parsed by the agent and sanitized based on the `SanitizeFieldNames` configuration. Cookies with sensitive data in 
 their value can be redacted by adding the cookie's name to the comma-separated list.
 
 [options="header"]

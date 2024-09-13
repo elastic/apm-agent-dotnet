@@ -18,9 +18,6 @@ namespace Elastic.Apm.Filters
 			if (context?.Request?.Headers is not null)
 				RedactMatches(context?.Request?.Headers, configuration);
 
-			if (context?.Request?.Cookies is not null)
-				RedactMatches(context?.Request?.Cookies, configuration);
-
 			if (context?.Response?.Headers is not null)
 				RedactMatches(context?.Response?.Headers, configuration);
 
