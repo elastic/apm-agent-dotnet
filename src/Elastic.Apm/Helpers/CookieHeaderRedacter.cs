@@ -2,13 +2,13 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-#if !NETFRAMEWORK
+using System.Collections.Generic;
+#if NETFRAMEWORK
+using System.Text;
+#else
 using System;
 using System.Buffers;
 #endif
-using System.Collections.Generic;
-using System.Configuration;
-using System.Text;
 
 namespace Elastic.Apm.Helpers;
 
@@ -16,31 +16,22 @@ internal static class CookieHeaderRedacter
 {
 #if !NETFRAMEWORK
 	private static ReadOnlySpan<char> Redacted => Consts.Redacted.AsSpan();
-	private static ReadOnlySpan<char> SemiColon => ";".AsSpan();
-	private static ReadOnlySpan<char> Comma => ",".AsSpan();
+	private static ReadOnlySpan<char> SemiColon => [';'];
+	private static ReadOnlySpan<char> Comma => [','];
 #endif
 
-	public static string Redact(string cookieHeaderValue, IReadOnlyList<WildcardMatcher> namesToSanitize)
-	{
-		// Implementation notes:
-		// This method handles a cookie header value for both ASP.NET (classic) and
-		// ASP.NET Core. As a result it must handle two possible formats. In ASP.NET
-		// (classic) the string is the actual Cookie value as sent over the wire, conforming
-		// to the HTTP standards. This uses the semicolon separator and a space between
-		// entries. For ASP.NET Core, when we parse the headers, we convert from the
-		// StringValues by calling ToString. This results in each entry being separated
-		// by a regular colon and no space.
-
-		// When the headers are stored into the `Request.Headers` on our APM data model,
-		// multiple headers of the same name, are concatenated into a comma-separated list.
-		// When redacting, we preserve this separation.
-
-		if (string.IsNullOrEmpty(cookieHeaderValue))
-			return null;
-
-		var redactedCookieHeader = string.Empty;
+	// Implementation notes:
+	// This method handles a cookie header value for both ASP.NET (classic) and
+	// ASP.NET Core. As a result it must handle two possible formats. In ASP.NET
+	// (classic) the string is the actual Cookie value as sent over the wire, conforming
+	// to the HTTP standards. This uses the semicolon separator and a space between
+	// entries. For ASP.NET Core, when the headers are stored into the `Request.Headers`
+	// on our APM data model, multiple headers of the same name, are concatenated into a
+	// comma-separated list. When redacting, we preserve this separation.
 
 #if NETFRAMEWORK
+	public static string Redact(string cookieHeaderValue, IReadOnlyList<WildcardMatcher> namesToSanitize)
+	{
 		// The use of `Span<T>` in NETFX can cause runtime assembly loading issues due to our friend,
 		// binding redirects. For now, we take a slightly less allocation efficient route here, rather
 		// than risk introducing runtime issues for consumers. Technically, this should be "fixed" in
@@ -49,6 +40,9 @@ internal static class CookieHeaderRedacter
 		// which is where the exception occurs. 5.0.0 is marked as deprecated so we could look to prefer
 		// a new version but we have special handling for the ElasticApmAgentStartupHook
 		// zip file version. For now, we decided not to mess with this as it's hard to test all scenarios.
+
+		if (string.IsNullOrEmpty(cookieHeaderValue))
+			return string.Empty;
 
 		var sb = new StringBuilder(cookieHeaderValue.Length);
 		var cookieHeaderEntries = cookieHeaderValue.Split(',');
@@ -93,9 +87,15 @@ internal static class CookieHeaderRedacter
 			requiresComma = true;
 		}
 
-		redactedCookieHeader = sb.ToString();
-		return redactedCookieHeader;
+		return sb.ToString();
+	}
 #else
+	public static string Redact(string cookieHeaderValue, IReadOnlyList<WildcardMatcher> namesToSanitize)
+	{
+		if (string.IsNullOrEmpty(cookieHeaderValue))
+			return null;
+
+		var redactedCookieHeader = string.Empty;
 		var cookieHeaderValueSpan = cookieHeaderValue.AsSpan();
 
 		var written = 0;
@@ -108,7 +108,7 @@ internal static class CookieHeaderRedacter
 			// We first split on commas, to handle cases where we've combined,
 			// multiple headers of the same key into a concatened string.
 			var foundComma = true;
-			var commaIndex = cookieHeaderValueSpan.IndexOf(',');
+			var commaIndex = cookieHeaderValueSpan.IndexOf(Comma);
 
 			if (commaIndex == -1) // If there are no more separators,
 			{
@@ -129,7 +129,7 @@ internal static class CookieHeaderRedacter
 			while (cookieHeaderEntrySpan.Length > 0)
 			{
 				var foundSemiColon = true;
-				var semiColonIndex = cookieHeaderEntrySpan.IndexOf(';');
+				var semiColonIndex = cookieHeaderEntrySpan.IndexOf(SemiColon);
 
 				if (semiColonIndex == -1) // If there are no more separators,
 				{
@@ -200,7 +200,6 @@ internal static class CookieHeaderRedacter
 		redactedCookieHeader = redactedBuffer.Slice(0, written).ToString();
 		ArrayPool<char>.Shared.Return(redactedBufferArray);
 		return redactedCookieHeader;
-#endif
 	}
+#endif
 }
-
