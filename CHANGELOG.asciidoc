@@ -23,6 +23,29 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.29.0]]
+==== 1.29.0 - 2024/09/18
+
+This release includes a breaking change in how we parse and send transaction cookies. In 1.26.0, we
+introduced improved cookie redaction based on the `SanitizeFieldNames` configuration. To implement this,
+we extracted each cookie from the `Cookie` header, storing them in a cookie dictionary on the transaction request data. 
+We have identified a problem with the storage of cookies that include period characters due to the mapping of such data 
+when stored in the APM data stream. This behaviour can lead to lost transactions on requests which include such cookies. 
+This is common in ASP.NET Core due to the default cookie names used for sessions, authentication, etc.
+
+In this release, we no longer parse out individual cookies, and the cookie `Dictionary` has been removed from the
+data model. This means that cookies will no longer be indexed individually. However, we have ensured that we
+retain the primary reason for the earlier change, which was to redact the values of sensitive cookies. Any cookies with
+a name matching the `SanitizeFieldNames` patterns will be redacted in the value of the `Cookie` header 
+we store.
+
+For most consumers, we expect the impact to be minimal. However, if you were relying on the parsed cookie
+fields, adjustments will be necessary to work with the `Cookie` header value instead.
+
+===== Breaking changes
+
+{pull}2444[#2444] No longer parse request cookies, but ensure they are still redacted in the `Cookie` header string
+
 [[release-notes-1.28.6]]
 ==== 1.28.6 - 2024/09/11
 
