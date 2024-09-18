@@ -58,6 +58,7 @@ namespace Elastic.Apm.Report
 
 		private readonly ElasticVersion _brokenActivationMethodVersion;
 		private readonly string _cachedActivationMethod;
+		private readonly bool _isEnabled;
 
 		public PayloadSenderV2(
 			IApmLogger logger,
@@ -73,14 +74,14 @@ namespace Elastic.Apm.Report
 		)
 			: base(isEnabled, logger, ThisClassName, service, configuration, httpMessageHandler)
 		{
-			if (!isEnabled)
-				return;
-
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
+			_isEnabled = isEnabled;
+			if (!_isEnabled)
+				_logger?.Debug()?.Log($"{nameof(PayloadSenderV2)} is not enabled, work loop won't be started.");
+
 			_payloadItemSerializer = new PayloadItemSerializer();
 			_configuration = configuration;
 			_brokenActivationMethodVersion = new ElasticVersion(8, 7, 0);
-
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(configuration.ServerUrl);
 
 			System = system;
@@ -88,12 +89,15 @@ namespace Elastic.Apm.Report
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(configuration.CloudProvider, _logger, environmentVariables);
 			_apmServerInfo = apmServerInfo ?? new ApmServerInfo();
 			_serverInfoCallback = serverInfoCallback;
+
 			var process = ProcessInformation.Create();
 			_metadata = new Metadata { Service = service, System = System, Process = process };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
-			ResetActivationMethodIfKnownBrokenApmServer();
+
+			if (_isEnabled)
+				ResetActivationMethodIfKnownBrokenApmServer();
 
 			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
 			{
@@ -123,7 +127,9 @@ namespace Elastic.Apm.Report
 			_eventQueue = new BatchBlock<object>(configuration.MaxBatchEventCount);
 
 			SetUpFilters(TransactionFilters, SpanFilters, ErrorFilters, apmServerInfo, logger);
-			StartWorkLoop();
+
+			if (_isEnabled)
+				StartWorkLoop();
 		}
 
 		internal static void SetUpFilters(
@@ -135,14 +141,14 @@ namespace Elastic.Apm.Report
 		)
 		{
 			transactionFilters.Add(TransactionIgnoreUrlsFilter.Filter);
-			transactionFilters.Add(RequestCookieExtractionFilter.Filter);
+			transactionFilters.Add(CookieHeaderRedactionFilter.Filter);
 			transactionFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
 
 			errorFilters.Add(ErrorContextSanitizerFilter.Filter);
-			errorFilters.Add(RequestCookieExtractionFilter.Filter);
+			errorFilters.Add(CookieHeaderRedactionFilter.Filter);
 			errorFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 		}
 
@@ -175,6 +181,9 @@ namespace Elastic.Apm.Report
 
 		internal async Task<bool> EnqueueEventInternal(object eventObj, string dbgEventKind)
 		{
+			if (!_isEnabled)
+				return true;
+
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
 			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
 			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
@@ -217,8 +226,12 @@ namespace Elastic.Apm.Report
 			return true;
 		}
 
-		internal void EnqueueEvent(object eventObj, string dbgEventKind) =>
+		internal void EnqueueEvent(object eventObj, string dbgEventKind)
+		{
+			if (!_isEnabled)
+				return;
 			Task.Run(async () => await EnqueueEventInternal(eventObj, dbgEventKind));
+		}
 
 		/// <summary>
 		/// Runs on the background thread dedicated to sending data to APM Server. It's ok to block this thread.

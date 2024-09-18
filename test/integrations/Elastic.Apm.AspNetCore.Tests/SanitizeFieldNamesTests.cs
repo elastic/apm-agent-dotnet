@@ -460,7 +460,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		[Fact]
-		public async Task SanitizesCookieHeaders()
+		public async Task RedactCookieHeaders()
 		{
 			CreateAgent("set-cookie, mysecurecookie");
 
@@ -483,12 +483,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
-			_capturedPayload.FirstTransaction.Context.Request.Cookies.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Response.Should().NotBeNull();
 
-			_capturedPayload.FirstTransaction.Context.Request.Headers["Cookie"].Should().Be(Apm.Consts.Redacted);
-			_capturedPayload.FirstTransaction.Context.Request.Cookies["MySecureCookie"].Should().Be(Apm.Consts.Redacted);
-			_capturedPayload.FirstTransaction.Context.Request.Cookies["SafeCookie"].Should().Be("123");
+			_capturedPayload.FirstTransaction.Context.Request.Headers["Cookie"].Should().Be($"MySecureCookie={Apm.Consts.Redacted}; SafeCookie=123");
 		}
 	}
 }
