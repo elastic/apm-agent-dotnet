@@ -126,10 +126,9 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 			_onMessageCurrent = currentSegment switch
 			{
-				Span span => span.StartSpanInternal(name, ApiConstants.TypeMessaging, ServiceBus.SubType, action.ToLowerInvariant(),
-					id: activity.SpanId.ToString()),
+				Span span => span.StartSpanInternal(name, ApiConstants.TypeMessaging, ServiceBus.SubType, action.ToLowerInvariant()),
 				Transaction transaction => transaction.StartSpanInternal(name, ApiConstants.TypeMessaging, ServiceBus.SubType,
-					action.ToLowerInvariant(), id: activity.SpanId.ToString()),
+					action.ToLowerInvariant()),
 				_ => _onMessageCurrent
 			};
 		}

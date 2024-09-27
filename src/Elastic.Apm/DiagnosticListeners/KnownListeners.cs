@@ -9,18 +9,18 @@ namespace Elastic.Apm.DiagnosticListeners
 {
 	internal static class KnownListeners
 	{
+		// Known activity names
 		public const string MicrosoftAspNetCoreHostingHttpRequestIn = "Microsoft.AspNetCore.Hosting.HttpRequestIn";
 		public const string SystemNetHttpHttpRequestOut = "System.Net.Http.HttpRequestOut";
 		public const string SystemNetHttpDesktopHttpRequestOut = "System.Net.Http.Desktop.HttpRequestOut";
 		public const string ApmTransactionActivityName = "ElasticApm.Transaction";
 
-
-		public static HashSet<string> KnownListenersList => new()
-		{
+		public static HashSet<string> SkippedActivityNamesSet =>
+		[
 			MicrosoftAspNetCoreHostingHttpRequestIn,
 			SystemNetHttpHttpRequestOut,
 			SystemNetHttpDesktopHttpRequestOut,
 			ApmTransactionActivityName
-		};
+		];
 	}
 }

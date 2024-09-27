@@ -27,6 +27,10 @@ internal class Transaction : ITransaction
 {
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
+#if NET
+	private static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
+#endif
+
 	internal readonly TraceState _traceState;
 
 	internal readonly ConcurrentDictionary<SpanTimerKey, SpanTimer> SpanTimings = new();
@@ -154,7 +158,7 @@ internal class Transaction : ITransaction
 		if (current != null)
 			_activity = current;
 
-		// Otherwise we will start an activity explicitly and ensure it trace_id and trace_state respect our bookkeeping.
+		// Otherwise we will start an activity explicitly and ensure its trace_id and trace_state respect our bookkeeping.
 		// Unless explicitly asked not to through `ignoreActivity`: (https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
 		else if (!ignoreActivity)
 			_activity = StartActivity(shouldRestartTrace);
@@ -539,9 +543,13 @@ internal class Transaction : ITransaction
 			_outcome = outcome;
 	}
 
-	private Activity StartActivity(bool shouldRestartTrace)
+	private static Activity StartActivity(bool shouldRestartTrace)
 	{
+#if NET
+		var activity = ElasticApmActivitySource.CreateActivity(KnownListeners.ApmTransactionActivityName, ActivityKind.Internal);
+#else
 		var activity = new Activity(KnownListeners.ApmTransactionActivityName);
+#endif
 		if (shouldRestartTrace)
 		{
 			activity.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
