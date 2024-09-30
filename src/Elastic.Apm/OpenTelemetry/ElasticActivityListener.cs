@@ -42,6 +42,10 @@ namespace Elastic.Apm.OpenTelemetry
 			AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly =>
 				assembly.GetName().Name == "Elastic.Apm.Azure.ServiceBus") != null;
 
+		private static readonly bool HasStorageInstrumentation =
+			AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly =>
+				assembly.GetName().Name == "Elastic.Apm.Azure.Storage") != null;
+
 		private readonly IApmLogger _logger;
 		private Tracer _tracer;
 		private readonly HttpTraceConfiguration _httpTraceConfiguration;
@@ -80,8 +84,22 @@ namespace Elastic.Apm.OpenTelemetry
 					return;
 				}
 
-				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
+				if (HasStorageInstrumentation && activity.Tags.Any(kvp =>
+					kvp.Key.Equals("az.namespace", StringComparison.Ordinal) && kvp.Value.Equals("Microsoft.Storage", StringComparison.Ordinal)))
+				{
+					_logger.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.Storage' " +
+						"activity because 'Elastic.Apm.Azure.Storage' is present in the application.",
+						activity.DisplayName, activity.Id, activity.TraceId);
+
 					return;
+				}
+
+				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
+				{
+					_logger.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
+						"a skipped activity name defined in KnownListeners.");
+					return;
+				}
 
 				_logger.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
