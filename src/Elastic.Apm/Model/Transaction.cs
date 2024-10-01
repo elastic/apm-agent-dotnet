@@ -28,7 +28,7 @@ internal class Transaction : ITransaction
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
 #if NET
-	private static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
+	internal static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
 #endif
 
 	internal readonly TraceState _traceState;
@@ -147,7 +147,6 @@ internal class Transaction : ITransaction
 		var shouldRestartTrace = configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.Restart ||
 			(configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
 				&& (distributedTracingData?.TraceState == null || distributedTracingData is { TraceState: { SampleRate: null } }));
-
 
 		// For each new transaction, start an Activity if we're not ignoring them.
 		// If Activity.Current is not null, the started activity will be a child activity,
@@ -552,11 +551,11 @@ internal class Transaction : ITransaction
 #endif
 		if (shouldRestartTrace)
 		{
-			activity.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
+			activity?.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
 				Activity.Current != null ? Activity.Current.ActivityTraceFlags : ActivityTraceFlags.None);
 		}
-		activity.SetIdFormat(ActivityIdFormat.W3C);
-		activity.Start();
+		activity?.SetIdFormat(ActivityIdFormat.W3C);
+		activity?.Start();
 		return activity;
 	}
 
