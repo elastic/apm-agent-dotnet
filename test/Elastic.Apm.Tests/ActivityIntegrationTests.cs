@@ -27,7 +27,7 @@ namespace Elastic.Apm.Tests
 #if NET
 			var listener = new ActivityListener
 			{
-				ShouldListenTo = _ => true,
+				ShouldListenTo = a => a.Name == "Elastic.Apm",
 				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
 				ActivityStarted = activity => { },
 				ActivityStopped = activity => { }

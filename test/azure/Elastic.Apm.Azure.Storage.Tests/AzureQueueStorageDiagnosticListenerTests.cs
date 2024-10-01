@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
 using Elastic.Apm.Api;
@@ -20,6 +21,21 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		private readonly ApmAgent _agent;
 		private readonly IDisposable _subscription;
 		private readonly ITestOutputHelper _output;
+
+#if NET
+		static AzureQueueStorageDiagnosticListenerTests()
+		{
+			var listener = new ActivityListener
+			{
+				ShouldListenTo = a => a.Name == "Elastic.Apm",
+				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+				ActivityStarted = activity => { },
+				ActivityStopped = activity => { }
+			};
+
+			ActivitySource.AddActivityListener(listener);
+		}
+#endif
 
 		public AzureQueueStorageDiagnosticListenerTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
 		{
