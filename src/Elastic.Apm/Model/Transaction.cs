@@ -1,5 +1,4 @@
-// Licensed to Elasticsearch B.V under
-// one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -29,6 +28,13 @@ internal class Transaction : ITransaction
 
 #if NET
 	internal static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
+
+	// This simply ensures our transaction activity is always created.
+	internal static readonly ActivityListener Listener = new()
+	{
+		ShouldListenTo = s => s.Name == ElasticApmActivitySource.Name,
+		Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+	};
 #endif
 
 	internal readonly TraceState _traceState;
