@@ -2,7 +2,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -11,7 +10,6 @@ using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
@@ -26,21 +24,42 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void ElasticTransactionReusesTraceIdFromCurrentActivity()
 		{
-			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+#if NET
+			var listener = new ActivityListener
+			{
+				ShouldListenTo = a => a.Name == "Elastic.Apm",
+				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+				ActivityStarted = activity => { },
+				ActivityStopped = activity => { }
+			};
 
-			var activity = new Activity("UnitTestActivity");
-			activity.Start();
+			ActivitySource.AddActivityListener(listener);
+#endif
 
-			Activity.Current.TraceId.Should().Be(activity.TraceId);
+			try
+			{
+				Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
-			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
-				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => Thread.Sleep(10));
+				var activity = new Activity("UnitTestActivity");
+				activity.Start();
 
-			payloadSender.FirstTransaction.TraceId.Should().Be(activity.TraceId.ToString());
-			payloadSender.FirstTransaction.ParentId.Should().BeNullOrEmpty();
+				Activity.Current.TraceId.Should().Be(activity.TraceId);
 
-			activity.Stop();
+				var payloadSender = new MockPayloadSender();
+				using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => Thread.Sleep(10));
+
+				payloadSender.FirstTransaction.TraceId.Should().Be(activity.TraceId.ToString());
+				payloadSender.FirstTransaction.ParentId.Should().BeNullOrEmpty();
+
+				activity.Stop();
+			}
+			catch
+			{
+#if NET
+				listener.Dispose();
+#endif
+			}
 		}
 
 		/// <summary>
@@ -147,7 +166,8 @@ namespace Elastic.Apm.Tests
 			payloadSender.Transactions[0].Id.Should().NotBe(payloadSender.Transactions[1].Id);
 			activity.Stop();
 		}
-#if NET5_0_OR_GREATER
+
+#if NET
 		/// <summary>
 		/// Makes sure that transactions on the same Activity are part of the same trace.
 		/// </summary>
@@ -188,8 +208,6 @@ namespace Elastic.Apm.Tests
 
 			var sampledSpans = payloadSender.Spans.Where(t => t.IsSampled).ToArray();
 			sampledSpans.Length.Should().Be(sampled.Length);
-
-
 		}
 #endif
 	}

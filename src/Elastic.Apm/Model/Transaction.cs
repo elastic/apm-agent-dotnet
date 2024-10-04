@@ -1,5 +1,4 @@
-// Licensed to Elasticsearch B.V under
-// one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -26,6 +25,17 @@ namespace Elastic.Apm.Model;
 internal class Transaction : ITransaction
 {
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
+
+#if NET
+	internal static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
+
+	// This simply ensures our transaction activity is always created.
+	internal static readonly ActivityListener Listener = new()
+	{
+		ShouldListenTo = s => s.Name == ElasticApmActivitySource.Name,
+		Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+	};
+#endif
 
 	internal readonly TraceState _traceState;
 
@@ -144,7 +154,6 @@ internal class Transaction : ITransaction
 			(configuration.TraceContinuationStrategy == ConfigConsts.SupportedValues.RestartExternal
 				&& (distributedTracingData?.TraceState == null || distributedTracingData is { TraceState: { SampleRate: null } }));
 
-
 		// For each new transaction, start an Activity if we're not ignoring them.
 		// If Activity.Current is not null, the started activity will be a child activity,
 		// so the traceid and tracestate of the parent will flow to it.
@@ -154,7 +163,7 @@ internal class Transaction : ITransaction
 		if (current != null)
 			_activity = current;
 
-		// Otherwise we will start an activity explicitly and ensure it trace_id and trace_state respect our bookkeeping.
+		// Otherwise we will start an activity explicitly and ensure its trace_id and trace_state respect our bookkeeping.
 		// Unless explicitly asked not to through `ignoreActivity`: (https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
 		else if (!ignoreActivity)
 			_activity = StartActivity(shouldRestartTrace);
@@ -539,16 +548,20 @@ internal class Transaction : ITransaction
 			_outcome = outcome;
 	}
 
-	private Activity StartActivity(bool shouldRestartTrace)
+	private static Activity StartActivity(bool shouldRestartTrace)
 	{
+#if NET
+		var activity = ElasticApmActivitySource.CreateActivity(KnownListeners.ApmTransactionActivityName, ActivityKind.Internal);
+#else
 		var activity = new Activity(KnownListeners.ApmTransactionActivityName);
+#endif
 		if (shouldRestartTrace)
 		{
-			activity.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
+			activity?.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
 				Activity.Current != null ? Activity.Current.ActivityTraceFlags : ActivityTraceFlags.None);
 		}
-		activity.SetIdFormat(ActivityIdFormat.W3C);
-		activity.Start();
+		activity?.SetIdFormat(ActivityIdFormat.W3C);
+		activity?.Start();
 		return activity;
 	}
 
