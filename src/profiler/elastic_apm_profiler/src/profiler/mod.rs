@@ -58,7 +58,7 @@ pub mod sig;
 mod startup_hook;
 pub mod types;
 
-const SKIP_ASSEMBLY_PREFIXES: [&str; 23] = [
+const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
     "Elastic.Apm",
     "MessagePack",
     "Microsoft.AI",
@@ -80,8 +80,7 @@ const SKIP_ASSEMBLY_PREFIXES: [&str; 23] = [
     "System.Text",
     "System.Threading",
     "System.Xml",
-    "System.Web",
-    "Newtonsoft",
+    "Newtonsoft"
 ];
 const SKIP_ASSEMBLIES: [&str; 7] = [
     "mscorlib",
@@ -1061,7 +1060,7 @@ impl Profiler {
             );
 
             log::trace!("ModuleLoadFinished: tracking {} module(s)", modules.len());
-
+            
             if call_target_enabled {
                 let rejit_count =
                     self.calltarget_request_rejit_for_module(module_id, module_metadata)?;
