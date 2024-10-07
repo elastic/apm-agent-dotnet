@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -420,14 +421,26 @@ namespace Elastic.Apm.Report
 					// ReSharper disable ConditionIsAlwaysTrueOrFalse
 					if (response is null || !response.IsSuccessStatusCode)
 					{
+						var message = "Unknown 400 Bad Request";
+						if (response?.Content != null)
+						{
+							#if NET6_0_OR_GREATER
+							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStream());
+#else
+							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
+#endif
+							if (intakeResponse.Errors.Count > 0)
+								message = string.Join(", ", intakeResponse.Errors.Select(e => e.Message).Distinct());
+						}
 						_logger?.Error()
 							?.Log("Failed sending event."
 								+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
 								+ " APM Server response: status code: {ApmServerResponseStatusCode}"
-								+ ", content: \n{ApmServerResponseContent}"
+								+ ", reasons: {ApmServerResponseContent}"
 								, _intakeV2EventsAbsoluteUrl.Sanitize()
 								, response?.StatusCode,
-								response?.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+								message
+								);
 					}
 					// ReSharper enable ConditionIsAlwaysTrueOrFalse
 					else

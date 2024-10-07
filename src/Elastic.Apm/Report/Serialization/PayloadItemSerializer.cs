@@ -42,6 +42,14 @@ namespace Elastic.Apm.Report.Serialization
 			return val ?? default;
 		}
 
+		internal T Deserialize<T>(Stream stream)
+		{
+			using var sr = new StreamReader(stream);
+			using var jsonTextReader = new JsonTextReader(sr);
+			var val = _serializer.Deserialize<T>(jsonTextReader);
+			return val;
+		}
+
 		/// <summary>
 		/// Serializes the item to JSON
 		/// </summary>
