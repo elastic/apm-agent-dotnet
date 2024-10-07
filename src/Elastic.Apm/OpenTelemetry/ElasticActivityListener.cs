@@ -228,9 +228,20 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			if (!activity.TagObjects.Any()) return;
 
+			// https://opentelemetry.io/docs/specs/otel/common/#attribute-limits
+			// copy max 128 keys and truncate values to 10k chars (the current maximum for e.g. statement.db).
+			var i = 0;
 			otel.Attributes ??= new Dictionary<string, object>();
 			foreach (var (key, value) in activity.TagObjects)
-				otel.Attributes[key] = value;
+			{
+				if (i >= 128) break;
+
+				if (value is string s)
+					otel.Attributes[key] = s.Truncate(10_000);
+				else
+					otel.Attributes[key] = value;
+				i++;
+			}
 		}
 
 		private static void UpdateSpan(Activity activity, Span span)
