@@ -23,6 +23,16 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.30.0]]
+==== 1.30.0 - 2024/10/11
+
+===== Bug fixes
+
+{pull}2455[#2455] Improve OTel bridge compatibility with existing Azure instrumentation
+{pull}2457[#2457] Revert skipping of System.Web to fix profiler-based installation
+{pull}2461[#2461] Limit attribute count and truncate values in ElasticActivityListener
+{pull}2460[#2460] Add IntakeResponse deserialization for detailed error logging
+
 [[release-notes-1.29.0]]
 ==== 1.29.0 - 2024/09/18
 
