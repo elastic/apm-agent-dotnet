@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Messaging.ServiceBus"/>
     <PackageReference Include="Microsoft.Azure.ServiceBus"/>
+    <PackageReference Include="Newtonsoft.Json"/>
   </ItemGroup>
   
   <ItemGroup>

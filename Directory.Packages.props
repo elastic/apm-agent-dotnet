@@ -5,7 +5,7 @@
   
   <ItemGroup>
     <GlobalPackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
-    <GlobalPackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all"/>
+    <GlobalPackageReference Condition="'$(TargetFramework)' == 'net462'" Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all"/>
   </ItemGroup>
   <!-- Community Packages -->
   <ItemGroup>
@@ -86,16 +86,17 @@
   
   <!-- Microsoft/System packages -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.1.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.1.22" />
-    <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Http.Extensions" Version="2.1.21" />
+    <PackageVersion Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.2.0" />
+    
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.1.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.1.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection " Version="6.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
@@ -110,7 +111,7 @@
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
     
     <PackageVersion Include="Microsoft.AspNet.Identity.EntityFramework" Version="2.2.3" />
-    <PackageVersion Include="Microsoft.AspNet.Identity.Owin" Version="2.2.3" />
+    <PackageVersion Include="Microsoft.AspNet.Identity.Owin" Version="2.2.4" />
     <PackageVersion Include="Microsoft.AspNet.Mvc" Version="5.2.4" />
     <PackageVersion Include="Microsoft.AspNet.TelemetryCorrelation" Version="1.0.7" />
     <PackageVersion Include="Microsoft.AspNet.Web.Optimization" Version="1.1.3" />
