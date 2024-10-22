@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Azure.ServiceBus" Version="3.0.0" />
+    <PackageReference Include="Azure.Messaging.ServiceBus"/>
+    <PackageReference Include="Microsoft.Azure.ServiceBus"/>
   </ItemGroup>
   
   <ItemGroup>

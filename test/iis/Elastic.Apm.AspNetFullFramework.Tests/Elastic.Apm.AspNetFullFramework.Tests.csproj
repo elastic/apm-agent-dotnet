@@ -7,11 +7,11 @@
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.14.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.2" />
-    <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
-    <PackageReference Include="Polly" Version="7.2.1" />
-    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.7.0" />
+    <PackageReference Include="AngleSharp" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Web.Administration" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="System.IO.FileSystem.AccessControl" />
     
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <SetTargetFramework>TargetFramework=net462</SetTargetFramework>

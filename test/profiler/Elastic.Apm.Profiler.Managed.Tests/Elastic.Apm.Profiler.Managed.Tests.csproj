@@ -14,15 +14,15 @@
     <ProjectReference Include="..\..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.90"/>
-    <PackageReference Include="Proc" Version="0.6.2"/>
-    <PackageReference Include="Testcontainers.Kafka" Version="3.7.0" />
-    <PackageReference Include="Testcontainers.MsSql" Version="3.7.0" />
-    <PackageReference Include="Testcontainers.MySql" Version="3.7.0" />
-    <PackageReference Include="Testcontainers.Oracle" Version="3.7.0" />
-    <PackageReference Include="Testcontainers.PostgreSql" Version="3.7.0" />
-    <PackageReference Include="Testcontainers.RabbitMq" Version="3.7.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.6"/>
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" />
+    <PackageReference Include="Proc" />
+    <PackageReference Include="Testcontainers.Kafka" />
+    <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="Testcontainers.MySql" />
+    <PackageReference Include="Testcontainers.Oracle" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Testcontainers.RabbitMq" />
+    <PackageReference Include="System.Data.SqlClient" />
   </ItemGroup>
 
   <ItemGroup>

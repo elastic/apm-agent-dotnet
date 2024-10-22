@@ -3,9 +3,9 @@
       <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.20.70" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0"/>
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj"/>

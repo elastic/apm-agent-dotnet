@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Npgsql" Version="$(NpgsqlVersion)" />
+      <PackageReference Include="Npgsql" VersionOverride="$(NpgsqlVersion)" />
     </ItemGroup>
 
     <ItemGroup>

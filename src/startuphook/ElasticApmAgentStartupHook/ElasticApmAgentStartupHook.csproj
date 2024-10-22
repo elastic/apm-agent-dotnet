@@ -11,6 +11,6 @@
     <Compile Include="$(SolutionRoot)src/Elastic.Apm/Logging/LogLevel.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Loader"/>
   </ItemGroup>
 </Project>

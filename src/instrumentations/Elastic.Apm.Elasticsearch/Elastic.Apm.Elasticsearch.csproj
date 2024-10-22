@@ -10,7 +10,7 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Elasticsearch.Net" Version="7.6.0" />
+    <PackageReference Include="Elasticsearch.Net"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />

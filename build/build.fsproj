@@ -24,21 +24,23 @@
 
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Buildalyzer" Version="3.2.0" />
-    <PackageReference Include="Bullseye" Version="3.5.0" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20427.1" />
+    <PackageReference Include="Buildalyzer"/>
+    <PackageReference Include="Bullseye" />
+    <PackageReference Include="System.CommandLine" />
 
-    <PackageReference Include="Fake.Core.Environment" Version="6.0.0" />
-    <PackageReference Include="Fake.Core.SemVer" Version="6.0.0" />
-    <PackageReference Include="Fake.DotNet.MsBuild" Version="6.0.0" />
-    <PackageReference Include="Fake.IO.FileSystem" Version="6.0.0" />
-    <PackageReference Include="Fake.IO.Zip" Version="6.0.0" />
-    <PackageReference Include="Fake.Tools.Git" Version="6.0.0" />
+    <PackageReference Include="Fake.Core.Environment" />
+    <PackageReference Include="Fake.Core.SemVer" />
+    <PackageReference Include="Fake.DotNet.MsBuild" />
+    <PackageReference Include="Fake.IO.FileSystem" />
+    <PackageReference Include="Fake.IO.Zip" />
+    <PackageReference Include="Fake.Tools.Git" />
 
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" />
 
-    <PackageReference Include="Octokit" Version="0.32.0" />
-    <PackageReference Include="Proc" Version="0.6.2" />
+    <PackageReference Include="Octokit" />
+    <PackageReference Include="Proc" />
+    
+    
   </ItemGroup>
 
 </Project>

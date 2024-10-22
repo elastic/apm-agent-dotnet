@@ -6,8 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="NJsonSchema" Version="10.2.2" />
-      <PackageReference Include="SharpZipLib" Version="1.3.3" />
+      <PackageReference Include="NJsonSchema"/>
+      <PackageReference Include="SharpZipLib"/>
     </ItemGroup>
 
     <ItemGroup>

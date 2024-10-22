@@ -84,19 +84,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Antlr3.Runtime" Version="3.5.1" />
-    <PackageReference Include="EntityFramework" Version="6.3.0" />
-    <PackageReference Include="Microsoft.AspNet.Identity.EntityFramework" Version="2.2.3" />
-    <PackageReference Include="Microsoft.AspNet.Identity.Owin" Version="2.2.3" />
-    <PackageReference Include="Microsoft.AspNet.Mvc" Version="5.2.4" />
-    <PackageReference Include="Microsoft.AspNet.TelemetryCorrelation" Version="1.0.7" />
-    <PackageReference Include="Microsoft.AspNet.WebApi" Version="5.2.4" />
-    <PackageReference Include="Microsoft.AspNet.Web.Optimization" Version="1.1.3" />
-    <PackageReference Include="Microsoft.Owin.Host.SystemWeb" Version="4.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="NLog" Version="4.6.8" />
-    <PackageReference Include="SQLite.CodeFirst" Version="1.5.3.29" />
-    <PackageReference Include="System.Data.SQLite" Version="1.0.112" />
+    <PackageReference Include="Antlr3.Runtime" />
+    <PackageReference Include="EntityFramework" />
+    <PackageReference Include="Microsoft.AspNet.Identity.EntityFramework" />
+    <PackageReference Include="Microsoft.AspNet.Identity.Owin" />
+    <PackageReference Include="Microsoft.AspNet.Mvc" />
+    <PackageReference Include="Microsoft.AspNet.TelemetryCorrelation" />
+    <PackageReference Include="Microsoft.AspNet.WebApi" />
+    <PackageReference Include="Microsoft.AspNet.Web.Optimization" />
+    <PackageReference Include="Microsoft.Owin.Host.SystemWeb" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NLog" />
+    <PackageReference Include="SQLite.CodeFirst" />
+    <PackageReference Include="System.Data.SQLite" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
