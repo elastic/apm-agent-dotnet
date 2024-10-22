@@ -127,6 +127,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				"new", template,
 				"--name", name,
 				"--output", $"\"{directory}\"",
+				"--no-update-check",
 				"--framework", framework
 			}.Concat(arguments);
 
