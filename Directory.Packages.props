@@ -16,7 +16,6 @@
     <PackageVersion Include="Azure.Storage.Files.Shares" Version="12.7.0" />
     <PackageVersion Include="Azure.Storage.Queues" Version="12.11.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.13.5" />
-    <PackageVersion Include="Buildalyzer" Version="3.2.0" />
     <PackageVersion Include="Bullseye" Version="3.5.0" />
     <PackageVersion Include="CommandLineParser" Version="2.6.0" />
     <PackageVersion Include="Confluent.Kafka" Version="1.9.3" />

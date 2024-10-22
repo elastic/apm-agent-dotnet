@@ -24,7 +24,6 @@
 
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Buildalyzer"/>
     <PackageReference Include="Bullseye" />
     <PackageReference Include="System.CommandLine" />
 
