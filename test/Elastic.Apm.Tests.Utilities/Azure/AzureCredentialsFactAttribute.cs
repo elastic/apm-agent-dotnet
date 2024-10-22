@@ -18,4 +18,15 @@ namespace Elastic.Apm.Tests.Utilities.Azure
 				Skip = "Azure credentials not available. If running locally, run `az login` to login";
 		}
 	}
+
+	public class CosmosDbFactAttribute : FactAttribute
+	{
+		public CosmosDbFactAttribute()
+		{
+			if (AzureCredentials.Instance is Unauthenticated)
+				Skip = "Azure credentials not available. If running locally, run `az login` to login";
+			if (TestEnvironment.IsCi)
+				Skip = "CosmosDb tests are temporarily disabled on CI environments";
+		}
+	}
 }

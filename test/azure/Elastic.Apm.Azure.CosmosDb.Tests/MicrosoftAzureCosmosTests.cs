@@ -34,7 +34,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			});
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Create_Database()
 		{
 			await _agent.Tracer.CaptureTransaction("Create CosmosDb Database", ApiConstants.TypeDb, async () =>
@@ -45,7 +45,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan("Create database");
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Delete_Database()
 		{
 			var db = await CreateDatabaseAsync();
@@ -57,7 +57,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan($"Delete database {db.Id}", db.Id);
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Get_Database()
 		{
 			var db = await CreateDatabaseAsync();
@@ -69,7 +69,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan($"Get database {db.Id}", db.Id);
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_List_Databases()
 		{
 			await _agent.Tracer.CaptureTransaction("List CosmosDb Databases", ApiConstants.TypeDb, async () =>
@@ -83,7 +83,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan("List databases");
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Create_Collection()
 		{
 			var db = await CreateDatabaseAsync();
@@ -95,7 +95,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan($"Create collection {db.Id}", db.Id);
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Delete_Collection()
 		{
 			var db = await CreateDatabaseAsync();
@@ -111,7 +111,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 
 		private string RandomName() => Guid.NewGuid().ToString("N");
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_List_Collections()
 		{
 			var db = await CreateDatabaseAsync();
@@ -131,7 +131,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan($"List collections {db.Id}", db.Id);
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Create_Document()
 		{
 			var db = await CreateDatabaseAsync();
@@ -147,7 +147,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan($"Create/query document {db.Id} {container.Id}", db.Id, 2);
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Upsert_Document()
 		{
 			var db = await CreateDatabaseAsync();
@@ -163,7 +163,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan($"Create/query document {db.Id} {container.Id}", db.Id, 2);
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Delete_Document()
 		{
 			var db = await CreateDatabaseAsync();
@@ -181,7 +181,7 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			AssertSpan($"Delete document {db.Id} {container.Id}", db.Id);
 		}
 
-		[AzureCredentialsFact]
+		[CosmosDbFact]
 		public async Task Capture_Span_When_Replace_Document()
 		{
 			var db = await CreateDatabaseAsync();
