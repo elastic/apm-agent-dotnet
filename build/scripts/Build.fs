@@ -94,8 +94,8 @@ module Build =
             let manager = AnalyzerManager();
             let analyzer = manager.GetProject(Paths.SrcProjFile "Elastic.Apm")          
             let analyzeResult = analyzer.Build("netstandard2.0").First()        
-            let values = analyzeResult.PackageReferences.["System.Diagnostics.DiagnosticSource"]
-            let version = SemVer.parse values.["Version"]
+            let values = analyzeResult.PackageReferences["System.Diagnostics.DiagnosticSource"]
+            let version = SemVer.parse values["VersionOverride"]
             currentDiagnosticSourceVersion <- Some(version)
             version
                               
