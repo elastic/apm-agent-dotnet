@@ -5,6 +5,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
@@ -21,8 +22,11 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 		[DockerFact]
 		public async Task Capture_Redis_Commands_On_Transaction()
 		{
+			var cts = new CancellationTokenSource();
+			cts.CancelAfter(TimeSpan.FromMinutes(2));
+
 			await using var container = new RedisBuilder().Build();
-			await container.StartAsync();
+			await container.StartAsync(cts.Token);
 
 			var connection = await ConnectionMultiplexer.ConnectAsync(container.GetConnectionString());
 			var count = 0;
@@ -32,7 +36,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 				if (count < 5)
 				{
 					count++;
-					await Task.Delay(500);
+					await Task.Delay(500, cts.Token);
 				}
 				else
 					throw new Exception("Could not connect to redis for integration test");
@@ -73,14 +77,17 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 			foreach (var span in payloadSender.Spans)
 				AssertSpan(span);
 
-			await container.StopAsync();
+			await container.StopAsync(cts.Token);
 		}
 
 		[DockerFact]
 		public async Task Capture_Redis_Commands_On_Span()
 		{
+			var cts = new CancellationTokenSource();
+			cts.CancelAfter(TimeSpan.FromMinutes(2));
+
 			await using var container = new RedisBuilder().Build();
-			await container.StartAsync();
+			await container.StartAsync(cts.Token);
 
 			var connection = await ConnectionMultiplexer.ConnectAsync(container.GetConnectionString());
 			var count = 0;
@@ -90,7 +97,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 				if (count < 5)
 				{
 					count++;
-					await Task.Delay(500);
+					await Task.Delay(500, cts.Token);
 				}
 				else
 					throw new Exception("Could not connect to redis for integration test");
@@ -155,7 +162,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 					AssertSpan(span);
 			}
 
-			await container.StopAsync();
+			await container.StopAsync(cts.Token);
 		}
 
 		private static void AssertSpan(ISpan span)

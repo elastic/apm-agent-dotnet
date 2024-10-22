@@ -44,5 +44,5 @@ for (var i = 0; i < 1_000_000; i++)
 	await Task.Delay(TimeSpan.FromMilliseconds(100));
 }
 Console.WriteLine("Stopping Redis Container...");
-await container.StopAsync();
+await container.StopAsync(ctx.Token);
 Console.WriteLine("Exiting");

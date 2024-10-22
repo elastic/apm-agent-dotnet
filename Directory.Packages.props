@@ -65,14 +65,14 @@
     <PackageVersion Include="StackExchange.Redis" Version="2.7.20" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageVersion Include="Testcontainers.Elasticsearch" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.Kafka" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.MongoDb" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.MsSql" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.MySql" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.Oracle" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.RabbitMq" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.Redis" Version="3.7.0" />
+    <PackageVersion Include="Testcontainers.Kafka" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.MongoDb" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.MySql" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.Oracle" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.Redis" Version="3.10.0" />
     <PackageVersion Include="YamlDotNet" Version="11.2.1" />
     <PackageVersion Include="xunit" Version="2.7.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
