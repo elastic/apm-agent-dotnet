@@ -110,15 +110,16 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.0" PrivateAssets="All"/>
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.2" />
+    
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection " Version="6.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" />
+    
     <PackageVersion Include="Microsoft.NET.Sdk.Functions" Version="4.1.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageVersion Include="Microsoft.Owin.Host.SystemWeb" Version="4.1.1" />
