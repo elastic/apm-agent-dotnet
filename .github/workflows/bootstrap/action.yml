@@ -36,7 +36,7 @@ runs:
     - uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}-${{ hashFiles('**/*.*.props') }}
         restore-keys: |
           ${{ runner.os }}-nuget
           

@@ -25,7 +25,7 @@ namespace SampleConsoleNetCoreApp
 				.ConfigureLogging((_, logging) =>
 				{
 					logging.ClearProviders();
-					logging.AddConsole(options => options.IncludeScopes = true);
+					logging.AddSimpleConsole(options => options.IncludeScopes = true);
 				});
 	}
 }

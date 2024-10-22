@@ -61,9 +61,6 @@ jobs:
       - name: 'Tests: Unit'
         run: ./build.bat test --test-suite unit
         
-      - name: 'Tests: Integrations'
-        run: ./build.bat test --test-suite integrations
-    
   integrations-tests:
     runs-on: windows-2022
     needs: [ 'format', 'tests' ]

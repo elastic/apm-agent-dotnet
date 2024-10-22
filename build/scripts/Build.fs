@@ -8,16 +8,14 @@ open System
 open System.Collections.Generic
 open System.IO
 open System.IO.Compression
-open System.Linq
 open System.Runtime.InteropServices
 open System.Xml.Linq
-open Buildalyzer
+open System.Xml.XPath
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
 open Scripts.TestEnvironment
-open TestEnvironment
 open Tooling
 
 module Build =
@@ -87,15 +85,14 @@ module Build =
                 }) projectOrSln
             
     /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
-    let private getCurrentApmDiagnosticSourceVersion =
+    let getCurrentApmDiagnosticSourceVersion =
         match currentDiagnosticSourceVersion with
         | Some v -> v
-        | None ->        
-            let manager = AnalyzerManager();
-            let analyzer = manager.GetProject(Paths.SrcProjFile "Elastic.Apm")          
-            let analyzeResult = analyzer.Build("netstandard2.0").First()        
-            let values = analyzeResult.PackageReferences.["System.Diagnostics.DiagnosticSource"]
-            let version = SemVer.parse values.["Version"]
+        | None ->
+            let xml = XDocument.Load("Directory.Packages.props")
+            let package = xml.XPathSelectElement("//PackageVersion[@Include='System.Diagnostics.DiagnosticSource']")
+            let version = package.Attribute("Version").Value
+            let version = SemVer.parse version
             currentDiagnosticSourceVersion <- Some(version)
             version
                               

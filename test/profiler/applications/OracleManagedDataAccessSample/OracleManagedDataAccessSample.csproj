@@ -1,13 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OracleManagedDataAccessVersion Condition="'$(OracleManagedDataAccessVersion)'==''">21.13.0</OracleManagedDataAccessVersion>
     <OutputType>Exe</OutputType>
     <TargetFramework>net462</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Oracle.ManagedDataAccess" Version="$(OracleManagedDataAccessVersion)" />
+    <PackageReference Include="Oracle.ManagedDataAccess" />
   </ItemGroup>
 
   <ItemGroup>

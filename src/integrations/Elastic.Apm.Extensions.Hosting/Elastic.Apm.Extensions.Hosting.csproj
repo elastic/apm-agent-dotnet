@@ -23,21 +23,17 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection " Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.1.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" VersionOverride="2.2.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection " Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection " VersionOverride="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" VersionOverride="6.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

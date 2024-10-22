@@ -75,36 +75,36 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and ('$(TargetFramework)'=='net472' or '$(TargetFramework)'=='net462' or '$(TargetFramework)' == 'netstandard2.0')">
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" />
   </ItemGroup>
   <!-- DiagnosticSourceVersion MsBuild property can be used to compile the agent against a specific version of
        System.Diagnostics.DiagnosticSource. Used when creating the ElasticApmAgentStartupHook zip file to
        compile multiple versions of the agent.
    -->
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' != ''">
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="$(DiagnosticSourceVersion)" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" VersionOverride="$(DiagnosticSourceVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net472' or '$(TargetFramework)'=='net462'">
     <!-- Used by Ben.Demystifier -->
-    <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageReference Include="System.Reflection.Metadata" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" />
 
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="6.0.1" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" VersionOverride="4.5.0" />
     <!-- Used by Ben.Demystifier -->
-    <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageReference Include="System.Reflection.Metadata" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" />
 
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="6.0.1" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" />
   </ItemGroup>
 
   <!-- Newtonsoft.Json constants -->

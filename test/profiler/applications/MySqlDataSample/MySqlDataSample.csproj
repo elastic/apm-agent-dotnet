@@ -1,13 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <MySqlDataVersion Condition="'$(MySqlDataVersion)'==''">8.0.32.1</MySqlDataVersion>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySql.Data" Version="$(MySqlDataVersion)" />
+    <PackageReference Include="MySql.Data" />
   </ItemGroup>
 
   <ItemGroup>

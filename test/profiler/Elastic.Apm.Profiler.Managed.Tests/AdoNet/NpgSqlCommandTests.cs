@@ -32,8 +32,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 		{
 			get
 			{
+				//TODO test version 8.x
+
 				// use the version defined in NpgsqlSample
-				var npgSqlVersion = "5.0.7";
+				var npgSqlVersion = "5.0.18";
 
 				// TODO: Add x64/x86 options. macOS and Linux do not support x86
 				yield return new object[] { "net8.0", npgSqlVersion };
@@ -41,10 +43,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 				if (TestEnvironment.IsWindows)
 					yield return new object[] { "net462", npgSqlVersion };
 
-				npgSqlVersion = "6.0.2";
+				npgSqlVersion = "6.0.12";
 				yield return new object[] { "net8.0", npgSqlVersion };
 
-				npgSqlVersion = "7.0.2";
+				npgSqlVersion = "7.0.8";
 				yield return new object[] { "net8.0", npgSqlVersion };
 			}
 		}

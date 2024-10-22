@@ -33,6 +33,6 @@
       <PackagePath>.</PackagePath>
     </None>
     <!-- Configure SourceLink for packages -->
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 </Project>

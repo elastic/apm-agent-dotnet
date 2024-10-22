@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="RichardSzalay.MockHttp" Version="6.0.0"/>
-    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.5.5"/>
-    <PackageReference Include="SpecFlow.xUnit" Version="3.5.5"/>
+    <PackageReference Include="RichardSzalay.MockHttp" />
+    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" />
+    <PackageReference Include="SpecFlow.xUnit" />
   </ItemGroup>
 
   <ItemGroup>
