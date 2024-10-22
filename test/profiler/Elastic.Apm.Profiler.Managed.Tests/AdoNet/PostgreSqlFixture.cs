@@ -20,35 +20,35 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 	{
 		private readonly PostgreSqlContainer _container = new PostgreSqlBuilder().Build();
 
-		public string ConnectionString => _container.GetConnectionString();
+	public string ConnectionString => _container.GetConnectionString();
 
-		public async Task InitializeAsync()
-		{
-			await _container.StartAsync();
+	public async Task InitializeAsync()
+	{
+		await _container.StartAsync();
 
-			var (stdOut, stdErr) = await _container.GetLogsAsync();
+		var (stdOut, stdErr) = await _container.GetLogsAsync();
 
-			sink.OnMessage(new DiagnosticMessage(stdOut));
-			sink.OnMessage(new DiagnosticMessage(stdErr));
-		}
-
-		public async Task DisposeAsync()
-		{
-			var cts = new CancellationTokenSource();
-			cts.CancelAfter(TimeSpan.FromMinutes(2));
-
-			try
-			{
-				sink.OnMessage(new DiagnosticMessage($"Stopping {nameof(PostgreSqlFixture)}"));
-				await _container.StopAsync(cts.Token);
-			}
-			catch (Exception e)
-			{
-				sink.OnMessage(new DiagnosticMessage(e.Message));
-			}
-
-			sink.OnMessage(new DiagnosticMessage($"Disposing {nameof(PostgreSqlFixture)}"));
-			await _container.DisposeAsync();
-		}
+		sink.OnMessage(new DiagnosticMessage(stdOut));
+		sink.OnMessage(new DiagnosticMessage(stdErr));
 	}
+
+	public async Task DisposeAsync()
+	{
+		var cts = new CancellationTokenSource();
+		cts.CancelAfter(TimeSpan.FromMinutes(2));
+
+		try
+		{
+			sink.OnMessage(new DiagnosticMessage($"Stopping {nameof(PostgreSqlFixture)}"));
+			await _container.StopAsync(cts.Token);
+		}
+		catch (Exception e)
+		{
+			sink.OnMessage(new DiagnosticMessage(e.Message));
+		}
+
+		sink.OnMessage(new DiagnosticMessage($"Disposing {nameof(PostgreSqlFixture)}"));
+		await _container.DisposeAsync();
+	}
+}
 }
