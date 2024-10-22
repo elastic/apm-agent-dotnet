@@ -4,11 +4,12 @@
       <TargetFramework>net8.0</TargetFramework>
       <IsPackable>false</IsPackable>
       <RootNamespace>Elastic.Apm.Azure.CosmosDb.Tests</RootNamespace>
-      <!-- Microsoft.Azure.DocumentDB.Core breaks: https://learn.microsoft.com/en-us/dotnet/core/tools/sdk-errors/netsdk1206 -->
-      <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
     </PropertyGroup>
 
     <ItemGroup>
+      <!-- Microsoft.Azure.DocumentDB.Core breaks: https://learn.microsoft.com/en-us/dotnet/core/tools/sdk-errors/netsdk1206 -->
+      <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
+      
       <PackageReference Include="Microsoft.Azure.Cosmos" />
       <PackageReference Include="Microsoft.Azure.DocumentDB.Core" />
       <PackageReference Include="Proc" />
