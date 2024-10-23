@@ -143,12 +143,12 @@ csharp_style_var_for_built_in_types = true:error
 csharp_style_var_when_type_is_apparent = true:error
 csharp_style_var_elsewhere = true:error
 
-csharp_style_expression_bodied_methods = true:error
-csharp_style_expression_bodied_constructors = true:error
-csharp_style_expression_bodied_operators = true:error
-csharp_style_expression_bodied_properties = true:error
-csharp_style_expression_bodied_indexers = true:error
-csharp_style_expression_bodied_accessors = true:error
+csharp_style_expression_bodied_methods = true:warning
+csharp_style_expression_bodied_constructors = true:warning
+csharp_style_expression_bodied_operators = true:warning
+csharp_style_expression_bodied_properties = true:warning
+csharp_style_expression_bodied_indexers = true:warning
+csharp_style_expression_bodied_accessors = true:warning
 
 # Suggest more modern language features when available
 csharp_style_pattern_matching_over_is_with_cast_check = true:error

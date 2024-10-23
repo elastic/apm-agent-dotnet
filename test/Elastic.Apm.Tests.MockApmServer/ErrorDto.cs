@@ -2,9 +2,10 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
 using FluentAssertions;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -23,17 +24,17 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public string Id { get; set; }
 
-		[JsonProperty("parent_id")]
+		[JsonPropertyName("parent_id")]
 		public string ParentId { get; set; }
 
 		public long Timestamp { get; set; }
 
-		[JsonProperty("trace_id")]
+		[JsonPropertyName("trace_id")]
 		public string TraceId { get; set; }
 
 		public TransactionDataDto Transaction { get; set; }
 
-		[JsonProperty("transaction_id")]
+		[JsonPropertyName("transaction_id")]
 		public string TransactionId { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(ErrorDto))
@@ -68,7 +69,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public class TransactionDataDto : IDto
 		{
-			[JsonProperty("sampled")]
+			[JsonPropertyName("sampled")]
 			public bool IsSampled { get; set; }
 
 			public string Type { get; set; }

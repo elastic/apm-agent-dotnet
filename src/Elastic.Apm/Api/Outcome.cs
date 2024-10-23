@@ -3,12 +3,11 @@
 // See the LICENSE file in the project root for more information
 
 using System.Runtime.Serialization;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
 
 namespace Elastic.Apm.Api
 {
-	[JsonConverter(typeof(StringEnumConverter))]
+	[JsonConverter(typeof(JsonStringEnumConverter))]
 	public enum Outcome
 	{
 		[EnumMember(Value = "unknown")]

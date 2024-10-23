@@ -8,11 +8,11 @@ using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.Cloud
 {
@@ -46,42 +46,41 @@ namespace Elastic.Apm.Cloud
 			var client = new HttpClient(_handler, false) { Timeout = TimeSpan.FromSeconds(3) };
 			try
 			{
-				JObject metadata;
+				JsonObject metadata;
 				using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, MetadataUri))
 				{
 					requestMessage.Headers.Add("Metadata-Flavor", "Google");
 					var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);
 
 					using var stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-					using var streamReader = new StreamReader(stream, Encoding.UTF8);
-					using var jsonReader = new JsonTextReader(streamReader);
-
-					var serializer = new JsonSerializer();
-					metadata = serializer.Deserialize<JObject>(jsonReader);
+					metadata = PayloadItemSerializer.Default.Deserialize<JsonObject>(stream);
 				}
 
-				var zoneParts = metadata["instance"]["zone"].Value<string>().Split('/');
-				var availabilityZone = zoneParts[zoneParts.Length - 1];
+				var zoneParts = metadata["instance"]?["zone"]?.GetValue<string>()?.Split('/');
+				var availabilityZone = zoneParts is { Length: > 0 } ? zoneParts[zoneParts.Length - 1] : null;
 
-				var lastHyphen = availabilityZone.LastIndexOf('-');
-				var region = lastHyphen > -1
+				var lastHyphen = availabilityZone?.LastIndexOf('-') ?? -1;
+				var region = availabilityZone != null && lastHyphen > -1
 					? availabilityZone.Substring(0, lastHyphen)
 					: availabilityZone;
 
-				var machineTypeParts = metadata["instance"]["machineType"].Value<string>().Split('/');
-				var machineType = machineTypeParts[machineTypeParts.Length - 1];
+				var machineTypeParts = metadata["instance"]?["machineType"]?.GetValue<string>()?.Split('/');
+				var machineType = machineTypeParts is { Length: > 0 } ? machineTypeParts[machineTypeParts.Length - 1] : null;
+				var instanceId = metadata["instance"]?["id"]?.GetValue<long>().ToString(CultureInfo.InvariantCulture);
+				var instanceName = metadata["instance"]?["name"]?.GetValue<string>();
+				var projectId = metadata["project"]?["projectId"]?.GetValue<string>();
 
 				return new Api.Cloud
 				{
 					Instance =
 						new CloudInstance
 						{
-							Id = metadata["instance"]["id"].Value<long>().ToString(CultureInfo.InvariantCulture),
-							Name = metadata["instance"]["name"].Value<string>()
+							Id = instanceId,
+							Name = instanceName
 						},
 					Project = new CloudProject
 					{
-						Id = metadata["project"]["projectId"].Value<string>()
+						Id = projectId
 					},
 					AvailabilityZone = availabilityZone,
 					Machine = new CloudMachine { Type = machineType },

@@ -18,10 +18,7 @@ namespace Elastic.Apm.Tests
 {
 	public class LabelTests
 	{
-		private readonly PayloadItemSerializer _payloadItemSerializer;
-
-		public LabelTests() =>
-			_payloadItemSerializer = new PayloadItemSerializer();
+		private readonly PayloadItemSerializer _payloadItemSerializer = PayloadItemSerializer.Default;
 
 		[InlineData("StrValue")]
 		[InlineData(123)]
@@ -40,7 +37,7 @@ namespace Elastic.Apm.Tests
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
 				SetLabel(t, labelValue, labelName);
-				t.Context.InternalLabels.Value.InnerDictionary[labelName].Value.Should().Be(labelValue);
+				t.Context.InternalLabels.InnerDictionary[labelName].Value.Should().Be(labelValue);
 				transaction = t;
 			});
 
@@ -68,7 +65,7 @@ namespace Elastic.Apm.Tests
 				{
 					span = s;
 					SetLabel(s, labelValue, labelName);
-					s.Context.InternalLabels.Value.InnerDictionary[labelName].Value.Should().Be(labelValue);
+					s.Context.InternalLabels.InnerDictionary[labelName].Value.Should().Be(labelValue);
 				});
 			});
 
@@ -110,18 +107,18 @@ namespace Elastic.Apm.Tests
 					SetLabel(s, "abc", "stringLabel");
 					SetLabel(s, true, "boolLabel");
 
-					s.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(1);
-					s.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("abc");
-					s.Context.InternalLabels.Value.InnerDictionary["boolLabel"].Value.Should().Be(true);
+					s.Context.InternalLabels.InnerDictionary["intLabel"].Value.Should().Be(1);
+					s.Context.InternalLabels.InnerDictionary["stringLabel"].Value.Should().Be("abc");
+					s.Context.InternalLabels.InnerDictionary["boolLabel"].Value.Should().Be(true);
 				});
 
 				SetLabel(t, 1, "intLabel");
 				SetLabel(t, "abc", "stringLabel");
 				SetLabel(t, true, "boolLabel");
 
-				t.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(1);
-				t.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("abc");
-				t.Context.InternalLabels.Value.InnerDictionary["boolLabel"].Value.Should().Be(true);
+				t.Context.InternalLabels.InnerDictionary["intLabel"].Value.Should().Be(1);
+				t.Context.InternalLabels.InnerDictionary["stringLabel"].Value.Should().Be("abc");
+				t.Context.InternalLabels.InnerDictionary["boolLabel"].Value.Should().Be(true);
 			});
 
 			var transactionJsonString = _payloadItemSerializer.Serialize(transaction);
@@ -146,9 +143,9 @@ namespace Elastic.Apm.Tests
 				// add label to transaction after the error - error does not contain this
 				t.SetLabel("boolLabel", true);
 
-				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(5);
-				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("test");
-				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary.Should().NotContainKey("boolLabel");
+				mockPayloadSender.FirstError.Context.InternalLabels.InnerDictionary["intLabel"].Value.Should().Be(5);
+				mockPayloadSender.FirstError.Context.InternalLabels.InnerDictionary["stringLabel"].Value.Should().Be("test");
+				mockPayloadSender.FirstError.Context.InternalLabels.InnerDictionary.Should().NotContainKey("boolLabel");
 			});
 		}
 
@@ -164,7 +161,7 @@ namespace Elastic.Apm.Tests
 				t.SetLabel("intLabel", 6);
 			});
 
-			mockPayloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(6);
+			mockPayloadSender.FirstTransaction.Context.InternalLabels.InnerDictionary["intLabel"].Value.Should().Be(6);
 		}
 #pragma warning disable CS0618 // Type or member is obsolete
 		//For testing backwards compatibility we also test the obsolete Dictionary<string,string> Labels property here.
@@ -181,13 +178,13 @@ namespace Elastic.Apm.Tests
 			{
 				transaction = t;
 				t.Labels["foo1"] = "bar1";
-				t.Context.InternalLabels.Value.MergedDictionary["foo1"].Value.Should().Be("bar1");
+				t.Context.InternalLabels.MergedDictionary["foo1"].Value.Should().Be("bar1");
 
 				t.CaptureSpan("testSpan", "test", s =>
 				{
 					span = s;
 					s.Labels["foo2"] = "bar2";
-					s.Context.InternalLabels.Value.MergedDictionary["foo2"].Value.Should().Be("bar2");
+					s.Context.InternalLabels.MergedDictionary["foo2"].Value.Should().Be("bar2");
 				});
 			});
 
@@ -212,13 +209,13 @@ namespace Elastic.Apm.Tests
 			transaction.Labels.Keys.Should().HaveCount(1);
 
 			transaction.Labels.Keys.First().Should().Be("foo");
-			transaction.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
+			transaction.Context.InternalLabels.MergedDictionary["foo"].Value.Should().Be("bar");
 
 			transaction.SetLabel("item2", 123);
 
 			//assert that the string API still only contains 1 item:
 			transaction.Labels.Should().HaveCount(1);
-			transaction.Context.InternalLabels.Value.MergedDictionary.Keys.Should().HaveCount(2);
+			transaction.Context.InternalLabels.MergedDictionary.Keys.Should().HaveCount(2);
 
 			foreach (var item in transaction.Labels)
 			{
@@ -381,8 +378,8 @@ namespace Elastic.Apm.Tests
 				serializedStrPattern += boolVal.ToString().ToLower();
 			else if (labelValue is double doubleValToStr)
 				serializedStrPattern += string.Format(CultureInfo.InvariantCulture, "{0:N1}", doubleValToStr);
-			else if (labelValue is decimal dedimalValToStr)
-				serializedStrPattern += string.Format(CultureInfo.InvariantCulture, "{0:N1}", dedimalValToStr);
+			else if (labelValue is decimal decimalVal)
+				serializedStrPattern += string.Format(CultureInfo.InvariantCulture, "{0:N1}", decimalVal);
 			else
 				serializedStrPattern += labelValue;
 

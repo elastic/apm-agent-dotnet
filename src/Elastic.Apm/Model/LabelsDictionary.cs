@@ -4,8 +4,10 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.Model
@@ -17,10 +19,9 @@ namespace Elastic.Apm.Model
 	/// The reason for this is backwards compatibility - this type makes sure that we don't break user that rely on the old
 	/// interface.
 	/// </summary>
-	[JsonConverter(typeof(LabelsJsonConverter))]
-	internal class LabelsDictionary : Dictionary<string, string>
+	public class LabelsDictionary : Dictionary<string, string>
 	{
-		internal Dictionary<string, Label> InnerDictionary { get; } = new Dictionary<string, Label>();
+		internal Dictionary<string, Label> InnerDictionary { get; } = new();
 
 		/// <summary>
 		/// Merges the string dictionary with the InnerDictionary
@@ -35,5 +36,15 @@ namespace Elastic.Apm.Model
 				return InnerDictionary;
 			}
 		}
+
+		internal Dictionary<string, string> ExposeDictionary() =>
+			MergedDictionary.ToDictionary(
+				k => k.Key
+					.Truncate()
+					.Replace('.', '_')
+					.Replace('*', '_')
+					.Replace('"', '_'),
+				v=>v.Value.ToString()
+			);
 	}
 }

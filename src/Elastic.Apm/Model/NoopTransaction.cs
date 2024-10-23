@@ -6,11 +6,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -65,17 +65,17 @@ namespace Elastic.Apm.Model
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData { get; }
 
-		[JsonProperty("parent_id")]
+		[JsonPropertyName("parent_id")]
 		[MaxLength]
 		public string ParentId { get; }
 
 		[MaxLength]
 		public string Result { get; set; }
 
-		[JsonProperty("span_count")]
+		[JsonPropertyName("span_count")]
 		public SpanCount SpanCount { get; }
 
-		[JsonProperty("trace_id")]
+		[JsonPropertyName("trace_id")]
 		[MaxLength]
 		public string TraceId { get; }
 

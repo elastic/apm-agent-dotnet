@@ -13,7 +13,6 @@
       <PackageReference Include="Microsoft.Azure.Cosmos" />
       <PackageReference Include="Microsoft.Azure.DocumentDB.Core" />
       <PackageReference Include="Proc" />
-      <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
 
     <ItemGroup>

@@ -9,9 +9,10 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using BenchmarkDotNet.Attributes;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+
 using Elastic.Apm.Model;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.Benchmarks
 {

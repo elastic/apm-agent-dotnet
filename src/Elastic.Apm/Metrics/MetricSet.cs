@@ -4,9 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.Metrics

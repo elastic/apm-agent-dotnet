@@ -12,7 +12,6 @@
     <PackageReference Include="Microsoft.Azure.Storage.Blob" />
     <PackageReference Include="Azure.Storage.Files.Shares" />
     <PackageReference Include="Proc" />
-    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   
   <ItemGroup>

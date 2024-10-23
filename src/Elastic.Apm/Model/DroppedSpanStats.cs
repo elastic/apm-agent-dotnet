@@ -4,8 +4,8 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -30,19 +30,19 @@ namespace Elastic.Apm.Model
 		/// DestinationServiceResource identifies the destination service resource being operated on. e.g. 'http://elastic.co:80',
 		/// 'elasticsearch', 'rabbitmq/queue_name'.
 		/// </summary>
-		[JsonProperty("destination_service_resource")]
+		[JsonPropertyName("destination_service_resource")]
 		public string DestinationServiceResource { get; }
 
 		/// <summary>
 		/// ServiceTargetType identifies the type of the target service being operated on e.g. 'oracle', 'rabbitmq'
 		/// </summary>
-		[JsonProperty("service_target_type")]
+		[JsonPropertyName("service_target_type")]
 		public string ServiceTargetType { get; }
 
 		/// <summary>
 		/// ServiceTargetName identifies the instance name of the target service being operated on
 		/// </summary>
-		[JsonProperty("service_target_name")]
+		[JsonPropertyName("service_target_name")]
 		public string ServiceTargetName { get; }
 
 		/// <summary>

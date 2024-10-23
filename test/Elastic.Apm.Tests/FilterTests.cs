@@ -8,11 +8,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
@@ -262,21 +264,21 @@ public class FilterTests
 
 			foreach (var receivedEvent in payloadStrings)
 			{
-				var jObject = JObject.Parse(receivedEvent);
-				var property = jObject.Properties().First();
+				var jObject = JsonDocument.Parse(receivedEvent);
+				var property = jObject.RootElement.EnumerateObject().First();
 
 				switch (property.Name)
 				{
 					case "transaction":
-						var transaction = serializer.Deserialize<Transaction>(property.Value.ToString(Formatting.None));
+						var transaction = serializer.Deserialize<Transaction>(property.Value.ToString());
 						transactions.Add(transaction);
 						break;
 					case "span":
-						var span = serializer.Deserialize<Span>(property.Value.ToString(Formatting.None));
+						var span = serializer.Deserialize<Span>(property.Value.ToString());
 						spans.Add(span);
 						break;
 					case "error":
-						var error = serializer.Deserialize<Error>(property.Value.ToString(Formatting.None));
+						var error = serializer.Deserialize<Error>(property.Value.ToString());
 						errors.Add(error);
 						break;
 				}

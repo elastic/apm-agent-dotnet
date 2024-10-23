@@ -7,13 +7,14 @@
 // Licensed under Apache 2.0
 
 using System;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Elastic.Apm;
 using Elastic.Apm.Api;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace KafkaSample
 {
@@ -97,7 +98,8 @@ namespace KafkaSample
 		private static string GetMessage(int iteration, bool isProducedAsync)
 		{
 			var message = new SampleMessage("fruit", iteration, isProducedAsync);
-			return JObject.FromObject(message).ToString(Formatting.None);
+			var json = JsonSerializer.SerializeToUtf8Bytes(message, new JsonSerializerOptions { WriteIndented = false});
+			return Encoding.UTF8.GetString(json);
 		}
 	}
 }

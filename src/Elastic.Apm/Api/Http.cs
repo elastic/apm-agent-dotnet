@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		internal Uri OriginalUrl => _originalUrl;
 
-		[JsonProperty("status_code")]
+		[JsonPropertyName("status_code")]
 		public int StatusCode { get; set; }
 
 		/// <summary>

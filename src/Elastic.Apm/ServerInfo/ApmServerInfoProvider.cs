@@ -4,15 +4,13 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.ServerInfo
 {
@@ -33,13 +31,10 @@ namespace Elastic.Apm.ServerInfo
 				if (responseMessage.IsSuccessStatusCode)
 				{
 					using var stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-					using var streamReader = new StreamReader(stream, Encoding.UTF8);
-					using var jsonReader = new JsonTextReader(streamReader);
 
-					var serializer = new JsonSerializer();
-					var metadata = serializer.Deserialize<JObject>(jsonReader);
+					var metadata = PayloadItemSerializer.Default.Deserialize<JsonObject>(stream);
 					var version = metadata?["version"];
-					var strVersion = version?.Value<string>();
+					var strVersion = version?.GetValue<string>();
 					if (strVersion != null)
 					{
 						try

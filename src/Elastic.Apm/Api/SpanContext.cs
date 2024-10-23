@@ -4,15 +4,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Model;
+using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.Api
 {
 	public class SpanContext
 	{
-		internal readonly Lazy<LabelsDictionary> InternalLabels = new Lazy<LabelsDictionary>();
+		[JsonPropertyName("tags"), JsonInclude]
+		[JsonConverter(typeof(LabelsJsonConverter))]
+		internal LabelsDictionary InternalLabels { get; set; } = new();
 
 		public Database Db { get; set; }
 		public Destination Destination { get; set; }
@@ -22,17 +25,17 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// <seealso cref="ShouldSerializeLabels" />
 		/// </summary>
-		[JsonProperty("tags")]
 		[Obsolete(
 			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
-		public Dictionary<string, string> Labels => InternalLabels.Value;
+		[JsonIgnore]
+		public Dictionary<string, string> Labels => InternalLabels;
 
 		/// <summary>
 		/// Method to conditionally serialize <see cref="InternalLabels" /> - serialize only when there is at least one label.
 		/// See
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
-		public bool ShouldSerializeLabels() => InternalLabels.IsValueCreated && InternalLabels.Value.MergedDictionary.Count > 0;
+		public bool ShouldSerializeLabels() => InternalLabels.MergedDictionary.Count > 0;
 
 		public SpanService Service { get; set; }
 
