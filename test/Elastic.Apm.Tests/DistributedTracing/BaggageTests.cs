@@ -50,7 +50,7 @@ public class BaggageTests
 
 		payloadSender.FirstError.Should().NotBeNull();
 		payloadSender.FirstError.Context.InternalLabels.Should().NotBeNull();
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().Contain(new KeyValuePair<string, string>("baggage.foo", "bar"));
+		payloadSender.FirstError.Context.InternalLabels.Should().Contain(new KeyValuePair<string, string>("baggage.foo", "bar"));
 	}
 
 	/// <summary>
@@ -79,10 +79,10 @@ public class BaggageTests
 
 		payloadSender.FirstError.Should().NotBeNull();
 		payloadSender.FirstError.Context.InternalLabels.Should().NotBeNull();
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().Contain(new KeyValuePair<string, string>("baggage.foo", "bar"));
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().NotContainKey("key1");
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().NotContainKey("foo");
-		payloadSender.FirstError.Context.InternalLabels.Value.Should().NotContainKey("baggage.key1");
+		payloadSender.FirstError.Context.InternalLabels.Should().Contain(new KeyValuePair<string, string>("baggage.foo", "bar"));
+		payloadSender.FirstError.Context.InternalLabels.Should().NotContainKey("key1");
+		payloadSender.FirstError.Context.InternalLabels.Should().NotContainKey("foo");
+		payloadSender.FirstError.Context.InternalLabels.Should().NotContainKey("baggage.key1");
 	}
 
 	private void RunSample(ApmAgent agent)

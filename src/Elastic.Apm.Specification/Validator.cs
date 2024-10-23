@@ -11,13 +11,13 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Report.Serialization;
 using ICSharpCode.SharpZipLib.Tar;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using NJsonSchema;
 
 namespace Elastic.Apm.Specification
@@ -261,30 +261,16 @@ namespace Elastic.Apm.Specification
 		/// <returns></returns>
 		private static ImplementationProperty[] GetProperties(Type specType)
 		{
-			var resolver = new ElasticApmContractResolver();
-			JsonObjectContract contract;
-
-			try
-			{
-				// the json schema may indicate a type is an "object", but the agent may model it in some other way
-				// e.g. samples on metricset is modelled as a collection. In these scenarios, we won't be dealing with
-				// an object contract and won't be able to statically determine validity of the type to the schema through reflection.
-				// The only way to validate these against the schema is to serialize the types.
-				contract = (JsonObjectContract)resolver.ResolveContract(specType);
-			}
-			catch (InvalidCastException e)
-			{
-				throw new ContractResolveException(e.Message);
-			}
+			var contract = PayloadItemSerializer.Default.GetTypeInfo(specType);
 
 			var specProperties = new List<ImplementationProperty>(contract.Properties.Count);
 			foreach (var jsonProperty in contract.Properties)
 			{
-				if (jsonProperty.Ignored)
+				if (jsonProperty.AttributeProvider!.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Any())
 					continue;
 
-				var implementationProperty = new ImplementationProperty(jsonProperty.PropertyName, jsonProperty.PropertyType, specType);
-				var maxLength = (MaxLengthAttribute)jsonProperty.AttributeProvider?.GetAttributes(typeof(MaxLengthAttribute), true).FirstOrDefault();
+				var implementationProperty = new ImplementationProperty(jsonProperty.Name, jsonProperty.PropertyType, specType);
+				var maxLength = (MaxLengthAttribute)jsonProperty.AttributeProvider?.GetCustomAttributes(typeof(MaxLengthAttribute), true).FirstOrDefault();
 
 				if (maxLength != null)
 					implementationProperty.MaxLength = maxLength.Length;

@@ -10,6 +10,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm;
@@ -18,9 +20,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using OpenTelemetry;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
 using SampleAspNetCoreApp.Utils;
@@ -66,7 +65,7 @@ namespace SampleAspNetCoreApp.Controllers
 						httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
 						var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
 						var responseStr = await responseMsg.Content.ReadAsStringAsync();
-						ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
+						ViewData["stargazers_count"] = JsonNode.Parse(responseStr)!["stargazers_count"];
 					}
 					catch
 					{
@@ -137,7 +136,7 @@ namespace SampleAspNetCoreApp.Controllers
 				var retVal = await httpClient.GetAsync("http://localhost:5050/api/values");
 
 				var resultInStr = await retVal.Content.ReadAsStringAsync();
-				var list = JsonConvert.DeserializeObject<List<string>>(resultInStr);
+				var list = JsonSerializer.Deserialize<List<string>>(resultInStr);
 				return View(list);
 			}
 			catch (Exception e)

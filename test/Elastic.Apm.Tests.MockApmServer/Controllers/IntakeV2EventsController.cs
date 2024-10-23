@@ -8,10 +8,12 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+
 using Elastic.Apm.Logging;
 using Elastic.Apm.Specification;
 using Elastic.Apm.Tests.Utilities;
@@ -19,6 +21,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using NJsonSchema;
 using Xunit.Sdk;
+using JsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 
@@ -97,18 +100,15 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task ParsePayloadLineAndAddToReceivedData(string line)
 		{
 			var foundDto = false;
-			var payload = JsonConvert.DeserializeObject<PayloadLineDto>(
+			var payload = JsonSerializer.Deserialize<PayloadLineDto>(
 				line,
-				new JsonSerializerSettings
+				new JsonSerializerOptions
 				{
-					MissingMemberHandling = MissingMemberHandling.Error,
-					Error = (_, errorEventArgs) =>
-					{
-						_logger.Error()
-							?.Log("Failed to parse payload line as JSON. Error: {PayloadParsingErrorMessage}, line: `{PayloadLine}'",
-								errorEventArgs.ErrorContext.Error.Message, line);
-					}
-				}) ?? throw new ArgumentException("Deserialization failed");
+					UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+				});
+
+			if (payload is null)
+				throw new ArgumentException("Deserialization failed");
 
 			await HandleParsed(nameof(payload.Error), payload.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);
 			await HandleParsed(nameof(payload.Metadata), payload.Metadata, _mockApmServer.ReceivedData.Metadata, _mockApmServer.AddMetadata);
@@ -139,10 +139,10 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						}, _validator)
 						.Value;
 
-					var jObject = JObject.Parse(line);
-					var value = jObject.GetValue(dtoType, StringComparison.OrdinalIgnoreCase);
+					var jObject = JsonNode.Parse(line) as JsonObject;
+					var value = jObject!.TryGetPropertyValue(dtoType, out var dtoValue) ? dtoValue.GetValue<string>() : null;
 
-					var validationErrors = schema.Validate(value.ToString());
+					var validationErrors = schema.Validate(value);
 
 					validationErrors.Should().BeEmpty();
 				}
@@ -189,7 +189,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 
 			public MetadataDto Metadata { get; set; }
 
-			[JsonProperty("metricset")]
+			[JsonPropertyName("metricset")]
 			public MetricSetDto MetricSet { get; set; }
 
 			public SpanDto Span { get; set; }

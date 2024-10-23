@@ -50,7 +50,7 @@ namespace Elastic.Apm.Tests
 				t.Context.Request.Url.Search = "cde";
 				t.Context.Response.StatusCode = 500;
 				t.Context.Response.Finished = true;
-				t.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
+				t.Context.InternalLabels.InnerDictionary["foo"].Value.Should().Be("bar");
 
 				// Asserts on the captured error
 				mockPayloadSender.WaitForErrors();
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Tests
 				mockPayloadSender.FirstError.Context.Request.Url.Search.Should().Be("abc");
 				mockPayloadSender.FirstError.Context.Response.StatusCode.Should().Be(404);
 				mockPayloadSender.FirstError.Context.Response.Finished.Should().BeFalse();
-				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
+				mockPayloadSender.FirstError.Context.InternalLabels.InnerDictionary["foo"].Value.Should().Be("bar");
 				mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
 			});
 
@@ -81,7 +81,7 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.FirstTransaction.Context.Request.Url.Search.Should().Be("cde");
 			mockPayloadSender.FirstTransaction.Context.Response.StatusCode.Should().Be(500);
 			mockPayloadSender.FirstTransaction.Context.Response.Finished.Should().BeTrue();
-			mockPayloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
+			mockPayloadSender.FirstTransaction.Context.InternalLabels.InnerDictionary["foo"].Value.Should().Be("bar");
 			mockPayloadSender.FirstTransaction.Context.Response.Headers.Should().BeNull();
 		}
 
@@ -131,7 +131,7 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.FirstError.Context.Request.Headers.Should().BeNull();
 			mockPayloadSender.FirstError.Context.Response.Should().NotBeNull();
 			mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
-			mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary.Should().BeEmpty();
+			mockPayloadSender.FirstError.Context.InternalLabels.InnerDictionary.Should().BeEmpty();
 		}
 
 		[Fact]

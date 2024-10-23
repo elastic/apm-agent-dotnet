@@ -3,10 +3,10 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -21,7 +21,7 @@ namespace Elastic.Apm.Api
 		/// It will be used as the event's hostname if <see cref="ConfiguredHostName"/> is not present.
 		/// </summary>
 		[MaxLength]
-		[JsonProperty("detected_hostname")]
+		[JsonPropertyName("detected_hostname")]
 		public string DetectedHostName { get; set; }
 
 		/// <summary>
@@ -29,14 +29,14 @@ namespace Elastic.Apm.Api
 		/// If given, it is used as the event's hostname.
 		/// </summary>
 		[MaxLength]
-		[JsonProperty("configured_hostname")]
+		[JsonPropertyName("configured_hostname")]
 		public string ConfiguredHostName { get; set; }
 
 		/// <summary>
 		/// The hostname configured by the user, if configured, otherwise the detected hostname.
 		/// </summary>
 		[MaxLength]
-		[JsonProperty("hostname")]
+		[JsonPropertyName("hostname")]
 		[Obsolete("Deprecated. Use " + nameof(ConfiguredHostName))]
 		public string HostName
 		{

@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Elastic.Apm.Report.Serialization;
 using Xunit.Sdk;
 
 namespace Elastic.Apm.Tests.Utilities;
@@ -19,7 +21,7 @@ public class JsonFileDataAttribute : DataAttribute
 	public JsonFileDataAttribute(string fileName, Type inputDataType = null)
 	{
 		_fileName = fileName;
-		_inputDataType = inputDataType ?? typeof(JToken);
+		_inputDataType = inputDataType ?? typeof(JsonObject);
 	}
 
 	public override IEnumerable<object[]> GetData(MethodInfo testMethod)
@@ -27,19 +29,19 @@ public class JsonFileDataAttribute : DataAttribute
 		if (!File.Exists(_fileName))
 			throw new ArgumentException($"JSON input file {_fileName} does not exist");
 
-		var jToken = JToken.Parse(File.ReadAllText(_fileName), new JsonLoadSettings
+		var jToken = JsonNode.Parse(File.ReadAllText(_fileName), new JsonNodeOptions(), new JsonDocumentOptions
 		{
-			CommentHandling = CommentHandling.Ignore
+			CommentHandling = JsonCommentHandling.Skip
 		});
-		switch (jToken.Type)
+		switch (jToken)
 		{
-			case JTokenType.Array:
-				foreach (var t in jToken)
-					yield return new[] { t.ToObject(_inputDataType) };
+			case JsonArray jsonArray:
+				foreach (var t in jsonArray)
+					yield return [t.Deserialize(_inputDataType, PayloadItemSerializer.Default.Settings)];
 				break;
-			case JTokenType.Object:
-				foreach (var kvp in (JObject)jToken)
-					yield return new[] { kvp.Key, kvp.Value.ToObject(_inputDataType) };
+			case JsonObject jsonObject:
+				foreach (var kvp in jsonObject)
+					yield return [kvp.Key, kvp.Value.Deserialize(_inputDataType, PayloadItemSerializer.Default.Settings)];
 				break;
 			default:
 				throw new Exception($"Unexpected JSON input: '{jToken}'");

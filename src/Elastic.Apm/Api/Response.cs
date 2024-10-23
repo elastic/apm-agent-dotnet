@@ -4,7 +4,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Elastic.Apm.Api
 {
@@ -22,7 +22,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The HTTP status code of the response.
 		/// </summary>
-		[JsonProperty("status_code")]
+		[JsonPropertyName("status_code")]
 		public int StatusCode { get; set; }
 
 		internal Response DeepCopy()

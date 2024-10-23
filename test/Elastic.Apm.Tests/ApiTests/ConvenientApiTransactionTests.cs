@@ -435,7 +435,7 @@ public class ConvenientApiTransactionTests
 			});
 
 		//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
-		payloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
+		payloadSender.FirstTransaction.Context.InternalLabels.InnerDictionary["foo"].Value.Should().Be("bar");
 	}
 
 	/// <summary>
@@ -456,7 +456,7 @@ public class ConvenientApiTransactionTests
 			});
 
 		//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
-		payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
+		payloadSender.FirstTransaction.Context.InternalLabels.MergedDictionary["foo"].Value.Should().Be("bar");
 	}
 
 	/// <summary>
@@ -484,7 +484,7 @@ public class ConvenientApiTransactionTests
 			});
 
 		//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
-		payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
+		payloadSender.FirstTransaction.Context.InternalLabels.MergedDictionary["foo"].Value.Should().Be("bar");
 	}
 
 	/// <summary>

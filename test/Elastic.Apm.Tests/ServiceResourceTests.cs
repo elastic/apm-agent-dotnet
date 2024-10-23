@@ -4,8 +4,9 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using TestData;
@@ -92,13 +93,17 @@ namespace TestData
 {
 	public class Input
 	{
+		[JsonPropertyName("span")]
 		public Span Span { get; set; }
-		[JsonProperty("expected_resource")] public string ExpectedResource { get; set; }
 
-		[JsonProperty("expected_service_target")]
+		[JsonPropertyName("expected_resource")]
+		public string ExpectedResource { get; set; }
+
+		[JsonPropertyName("expected_service_target")]
 		public ExpectedServiceTarget ExpectedServiceTarget { get; set; }
 
-		[JsonProperty("failure_message")] public string FailureMessage { get; set; }
+		[JsonPropertyName("failure_message")]
+		public string FailureMessage { get; set; }
 	}
 
 	public class Context
@@ -144,8 +149,10 @@ namespace TestData
 
 	public class Span
 	{
+		[JsonConverter(typeof(BooleanConverter))]
 		public bool Exit { get; set; }
 		public string Type { get; set; }
+		[JsonPropertyName("subtype")]
 		public string SubType { get; set; }
 		public Context Context { get; set; }
 	}

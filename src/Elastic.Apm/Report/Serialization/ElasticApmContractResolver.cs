@@ -5,35 +5,22 @@
 
 using System.Reflection;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	internal class ElasticApmContractResolver : DefaultContractResolver
+	internal class ElasticApmContractResolver
 	{
-		private readonly TruncateJsonConverter _defaultTruncateJsonConverter =
-			new TruncateJsonConverter(Consts.PropertyMaxLength);
+		private readonly TruncateJsonConverter _defaultTruncateJsonConverter = new TruncateJsonConverter(Consts.PropertyMaxLength);
 
-		public ElasticApmContractResolver() =>
-			NamingStrategy = new CamelCaseNamingStrategy { OverrideSpecifiedNames = true };
-
-		protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+		protected void CreateProperty(MemberInfo member)
 		{
-			var property = base.CreateProperty(member, memberSerialization);
-
-			if (property.PropertyType == typeof(string))
+			var maxLengthAttribute = member.GetCustomAttribute<MaxLengthAttribute>();
+			if (maxLengthAttribute != null)
 			{
-				var maxLengthAttribute = member.GetCustomAttribute<MaxLengthAttribute>();
-				if (maxLengthAttribute != null)
-				{
-					property.Converter = maxLengthAttribute.Length == Consts.PropertyMaxLength
-						? _defaultTruncateJsonConverter
-						: new TruncateJsonConverter(maxLengthAttribute.Length);
-				}
+				var c = maxLengthAttribute.Length == Consts.PropertyMaxLength
+					? _defaultTruncateJsonConverter
+					: new TruncateJsonConverter(maxLengthAttribute.Length);
 			}
-
-			return property;
 		}
 	}
 }

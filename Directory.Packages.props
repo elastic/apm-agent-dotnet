@@ -63,6 +63,7 @@
     <PackageVersion Include="SpecFlow.xUnit" Version="3.5.5" />
     <PackageVersion Include="StackExchange.Redis" Version="2.7.20" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageVersion Include="System.Text.Json" Version="8.0.5" />
     <PackageVersion Include="Testcontainers.Elasticsearch" Version="4.0.0" />
     <PackageVersion Include="Testcontainers.Kafka" Version="4.0.0" />
     <PackageVersion Include="Testcontainers.MongoDb" Version="4.0.0" />

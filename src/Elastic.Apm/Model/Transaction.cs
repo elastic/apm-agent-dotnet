@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
@@ -14,7 +15,6 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
@@ -406,7 +406,7 @@ internal class Transaction : ITransaction
 	[JsonIgnore]
 	public Dictionary<string, string> Custom => Context.Custom;
 
-	[JsonProperty("dropped_spans_stats")]
+	[JsonPropertyName("dropped_spans_stats")]
 	public IEnumerable<DroppedSpanStats> DroppedSpanStats => _droppedSpanStatsMap?.Values.ToList();
 
 	/// <inheritdoc />
@@ -431,7 +431,7 @@ internal class Transaction : ITransaction
 	[JsonIgnore]
 	internal bool IsContextCreated => _context.IsValueCreated;
 
-	[JsonProperty("sampled")]
+	[JsonPropertyName("sampled")]
 	public bool IsSampled { get; }
 
 	[JsonIgnore]
@@ -495,7 +495,7 @@ internal class Transaction : ITransaction
 	public DistributedTracingData OutgoingDistributedTracingData => new(TraceId, Id, IsSampled, _traceState);
 
 	[MaxLength]
-	[JsonProperty("parent_id")]
+	[JsonPropertyName("parent_id")]
 	public string ParentId { get; set; }
 
 	/// <inheritdoc />
@@ -510,15 +510,12 @@ internal class Transaction : ITransaction
 	/// <summary>
 	/// Captures the sample rate of the agent when this transaction was created.
 	/// </summary>
-	[JsonProperty("sample_rate")]
+	[JsonPropertyName("sample_rate")]
 	internal double? SampleRate { get; }
 
 	internal double SelfDuration => Duration.HasValue ? Duration.Value - ChildDurationTimer.Duration : 0;
 
-	internal Service Service;
-
-
-	[JsonProperty("span_count")]
+	[JsonPropertyName("span_count")]
 	public SpanCount SpanCount { get; set; }
 
 	/// <summary>
@@ -527,7 +524,7 @@ internal class Transaction : ITransaction
 	public long Timestamp { get; }
 
 	[MaxLength]
-	[JsonProperty("trace_id")]
+	[JsonPropertyName("trace_id")]
 	public string TraceId { get; }
 
 	[MaxLength]
@@ -745,7 +742,7 @@ internal class Transaction : ITransaction
 
 	public bool TryGetLabel<T>(string key, out T value)
 	{
-		if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+		if (Context.InternalLabels.InnerDictionary.TryGetValue(key, out var label))
 		{
 			if (label?.Value is T t)
 			{
@@ -945,22 +942,22 @@ internal class Transaction : ITransaction
 		);
 
 	public void SetLabel(string key, string value)
-		=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+		=> _context.Value.InternalLabels.InnerDictionary[key] = value;
 
 	public void SetLabel(string key, bool value)
-		=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+		=> _context.Value.InternalLabels.InnerDictionary[key] = value;
 
 	public void SetLabel(string key, double value)
-		=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+		=> _context.Value.InternalLabels.InnerDictionary[key] = value;
 
 	public void SetLabel(string key, int value)
-		=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+		=> _context.Value.InternalLabels.InnerDictionary[key] = value;
 
 	public void SetLabel(string key, long value)
-		=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+		=> _context.Value.InternalLabels.InnerDictionary[key] = value;
 
 	public void SetLabel(string key, decimal value)
-		=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+		=> _context.Value.InternalLabels.InnerDictionary[key] = value;
 
 	private readonly struct DroppedSpanStatsKey : IEquatable<DroppedSpanStatsKey>
 	{

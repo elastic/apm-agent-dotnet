@@ -4,15 +4,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
 using Elastic.Apm.Metrics;
 
 namespace Elastic.Apm.Report.Serialization
 {
 	internal class MetricSetConverter : JsonConverter<MetricSet>
 	{
-		public override void WriteJson(JsonWriter writer, MetricSet value, JsonSerializer serializer)
+		public override void Write(Utf8JsonWriter writer, MetricSet value, JsonSerializerOptions options)
 		{
 			writer.WriteStartObject();
 			if (value.Transaction != null)
@@ -23,10 +25,10 @@ namespace Elastic.Apm.Report.Serialization
 				writer.WriteStartObject();
 
 				writer.WritePropertyName("name");
-				writer.WriteValue(value.Transaction.Name);
+				writer.WriteStringValue(value.Transaction.Name);
 
 				writer.WritePropertyName("type");
-				writer.WriteValue(value.Transaction.Type);
+				writer.WriteStringValue(value.Transaction.Type);
 
 				writer.WriteEndObject();
 			}
@@ -39,10 +41,10 @@ namespace Elastic.Apm.Report.Serialization
 				writer.WriteStartObject();
 
 				writer.WritePropertyName("type");
-				writer.WriteValue(value.Span.Type);
+				writer.WriteStringValue(value.Span.Type);
 
 				writer.WritePropertyName("subtype");
-				writer.WriteValue(value.Span.SubType);
+				writer.WriteStringValue(value.Span.SubType);
 
 				writer.WriteEndObject();
 			}
@@ -61,58 +63,56 @@ namespace Elastic.Apm.Report.Serialization
 						.Replace('"', '_'));
 					writer.WriteStartObject();
 					writer.WritePropertyName("value");
-					writer.WriteValue(item.KeyValue.Value);
+					writer.WriteNumberValue(item.KeyValue.Value);
 					writer.WriteEndObject();
 				}
 			}
 
 			writer.WriteEndObject();
 			writer.WritePropertyName("timestamp");
-			writer.WriteValue(value.Timestamp);
+			writer.WriteNumberValue(value.Timestamp);
 			writer.WriteEndObject();
 		}
 
-		public override MetricSet ReadJson(JsonReader reader, Type objectType, MetricSet existingValue, bool hasExistingValue,
-			JsonSerializer serializer
-		)
+		public override MetricSet Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			if (reader.TokenType == JsonToken.Null)
+			if (reader.TokenType == JsonTokenType.Null)
 				return null;
 
-			if (reader.TokenType != JsonToken.StartObject)
-				throw new JsonReaderException($"Expected {JsonToken.StartObject} but found {reader.TokenType}");
+			if (reader.TokenType != JsonTokenType.StartObject)
+				throw new JsonException($"Expected {JsonTokenType.StartObject} but found {reader.TokenType}");
 
 			long timestamp = 0;
 			var samples = new List<MetricSample>();
 
 			while (reader.Read())
 			{
-				if (reader.TokenType == JsonToken.EndObject)
+				if (reader.TokenType == JsonTokenType.EndObject)
 					break;
 
-				var property = (string)reader.Value;
+				var property = reader.GetString();
 				switch (property)
 				{
 					case "samples":
 						reader.Read(); // {
 						while (reader.Read())
 						{
-							if (reader.TokenType == JsonToken.EndObject)
+							if (reader.TokenType == JsonTokenType.EndObject)
 								break;
 
-							var key = (string)reader.Value;
+							var key = reader.GetString();
 							double value = 0;
 							reader.Read(); // {
 							while (reader.Read())
 							{
-								if (reader.TokenType == JsonToken.EndObject)
+								if (reader.TokenType == JsonTokenType.EndObject)
 									break;
 
-								var sampleValueProperty = (string)reader.Value;
+								var sampleValueProperty = reader.GetString();
 								if (sampleValueProperty == "value")
 								{
 									reader.Read();
-									value = (double)reader.Value;
+									value = reader.GetDouble();
 								}
 							}
 
@@ -121,12 +121,13 @@ namespace Elastic.Apm.Report.Serialization
 						break;
 					case "timestamp":
 						reader.Read();
-						timestamp = (long)reader.Value;
+						timestamp = reader.GetInt64();
 						break;
 				}
 			}
 
 			return new MetricSet(timestamp, samples);
 		}
+
 	}
 }

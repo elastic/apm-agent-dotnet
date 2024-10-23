@@ -7,12 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
@@ -291,7 +291,7 @@ namespace Elastic.Apm.Model
 		}
 
 		[MaxLength]
-		[JsonProperty("parent_id")]
+		[JsonPropertyName("parent_id")]
 		public string ParentId { get; set; }
 
 		/// <summary>
@@ -311,7 +311,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Captures the sample rate of the agent when this span was created.
 		/// </summary>
-		[JsonProperty("sample_rate")]
+		[JsonPropertyName("sample_rate")]
 		internal double? SampleRate { get; }
 
 		private double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
@@ -319,7 +319,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
 
-		[JsonProperty("stacktrace")]
+		[JsonPropertyName("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		[MaxLength]
@@ -331,11 +331,11 @@ namespace Elastic.Apm.Model
 		public long Timestamp { get; internal set; }
 
 		[MaxLength]
-		[JsonProperty("trace_id")]
+		[JsonPropertyName("trace_id")]
 		public string TraceId { get; set; }
 
 		[MaxLength]
-		[JsonProperty("transaction_id")]
+		[JsonPropertyName("transaction_id")]
 		public string TransactionId => _enclosingTransaction.Id;
 
 		[MaxLength]
@@ -363,7 +363,7 @@ namespace Elastic.Apm.Model
 
 		public bool TryGetLabel<T>(string key, out T value)
 		{
-			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+			if (Context.InternalLabels.InnerDictionary.TryGetValue(key, out var label))
 			{
 				if (label?.Value is T t)
 				{
@@ -879,22 +879,22 @@ namespace Elastic.Apm.Model
 		}
 
 		public void SetLabel(string key, string value)
-			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+			=> Context.InternalLabels.InnerDictionary[key] = value;
 
 		public void SetLabel(string key, bool value)
-			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+			=> Context.InternalLabels.InnerDictionary[key] = value;
 
 		public void SetLabel(string key, double value)
-			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+			=> Context.InternalLabels.InnerDictionary[key] = value;
 
 		public void SetLabel(string key, int value)
-			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+			=> Context.InternalLabels.InnerDictionary[key] = value;
 
 		public void SetLabel(string key, long value)
-			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+			=> Context.InternalLabels.InnerDictionary[key] = value;
 
 		public void SetLabel(string key, decimal value)
-			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+			=> Context.InternalLabels.InnerDictionary[key] = value;
 
 		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureErrorLog(
@@ -947,7 +947,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// A string value indicating which compression strategy was used. The valid values are `exact_match` and `same_kind`
 		/// </summary>
-		[JsonProperty("compression_strategy")]
+		[JsonPropertyName("compression_strategy")]
 		public string CompressionStrategy { get; set; }
 
 		/// <summary>

@@ -3,9 +3,10 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
 using FluentAssertions;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -20,33 +21,33 @@ namespace Elastic.Apm.Tests.MockApmServer
 		public double Duration { get; set; }
 		public string Id { get; set; }
 
-		[JsonProperty("sampled")]
+		[JsonPropertyName("sampled")]
 		public bool IsSampled { get; set; }
 
 		public string Name { get; set; }
 
 		public Outcome Outcome { get; set; }
 
-		[JsonProperty("parent_id")]
+		[JsonPropertyName("parent_id")]
 		public string ParentId { get; set; }
 
 		public string Result { get; set; }
 
-		[JsonProperty("sample_rate")]
+		[JsonPropertyName("sample_rate")]
 		public string SampleRate { get; set; }
 
-		[JsonProperty("span_count")]
+		[JsonPropertyName("span_count")]
 		public SpanCountDto SpanCount { get; set; }
 
 		public long Timestamp { get; set; }
 
-		[JsonProperty("trace_id")]
+		[JsonPropertyName("trace_id")]
 		public string TraceId { get; set; }
 
 		public string Type { get; set; }
 
 
-		[JsonProperty("dropped_spans_stats")]
+		[JsonPropertyName("dropped_spans_stats")]
 		public List<DroppedSpanStatsDto> DroppedSpanStats { get; set; }
 
 		public FaasDto FaaS { get; set; }
