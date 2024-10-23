@@ -67,7 +67,7 @@ pub extern "C" fn GetAssemblyAndSymbolsBytes(
     let tfm = if IS_DESKTOP_CLR.load(Ordering::SeqCst) {
         "net462"
     } else {
-        "netcoreapp2.0"
+        "netstandard2.0"
     };
     let a =
         ManagedLoader::get(&format!("{}/{}.dll", tfm, MANAGED_PROFILER_ASSEMBLY_LOADER)).unwrap();
