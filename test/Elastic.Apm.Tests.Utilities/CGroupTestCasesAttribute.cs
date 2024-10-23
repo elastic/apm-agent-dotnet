@@ -72,7 +72,7 @@ public class CGroupTestCasesAttribute : DataAttribute
 					var cgroupA = o.TryGetPropertyValue("/proc/self/cgroup", out var cgroup) ? cgroup as JsonArray : null;
 					testData.Files.ProcSelfCgroup = cgroupA?.GetValues<string>().FirstOrDefault();
 
-					var mountInfoA  = o.TryGetPropertyValue("/proc/self/mountinfo", out var mountinfo) ? mountinfo as JsonArray : null;
+					var mountInfoA = o.TryGetPropertyValue("/proc/self/mountinfo", out var mountinfo) ? mountinfo as JsonArray : null;
 					testData.Files.MountInfo = mountInfoA?.GetValues<string>().ToArray();
 					break;
 			}
