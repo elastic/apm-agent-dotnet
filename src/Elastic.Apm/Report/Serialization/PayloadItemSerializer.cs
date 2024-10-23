@@ -114,7 +114,7 @@ internal sealed class PayloadItemSerializer
 	/// <returns></returns>
 	internal string Serialize(object item)
 	{
-		var bytes= JsonSerializer.SerializeToUtf8Bytes(item, item.GetType(), Settings);
+		var bytes = JsonSerializer.SerializeToUtf8Bytes(item, item.GetType(), Settings);
 		return Encoding.UTF8.GetString(bytes);
 	}
 }

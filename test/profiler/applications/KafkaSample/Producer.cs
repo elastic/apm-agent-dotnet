@@ -98,7 +98,7 @@ namespace KafkaSample
 		private static string GetMessage(int iteration, bool isProducedAsync)
 		{
 			var message = new SampleMessage("fruit", iteration, isProducedAsync);
-			var json = JsonSerializer.SerializeToUtf8Bytes(message, new JsonSerializerOptions { WriteIndented = false});
+			var json = JsonSerializer.SerializeToUtf8Bytes(message, new JsonSerializerOptions { WriteIndented = false });
 			return Encoding.UTF8.GetString(json);
 		}
 	}

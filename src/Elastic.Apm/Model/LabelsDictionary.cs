@@ -44,7 +44,7 @@ namespace Elastic.Apm.Model
 					.Replace('.', '_')
 					.Replace('*', '_')
 					.Replace('"', '_'),
-				v=>v.Value.ToString()
+				v => v.Value.ToString()
 			);
 	}
 }

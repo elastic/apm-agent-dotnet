@@ -26,7 +26,7 @@ namespace Elastic.Apm.Report.Serialization
 		public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options) =>
 			writer.WriteStringValue(value.Truncate(MaxLength));
 
-		public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)  =>
+		public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
 			reader.GetString();
 
 
