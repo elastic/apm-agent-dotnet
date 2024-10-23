@@ -478,7 +478,7 @@ namespace Elastic.Apm.Report
 			}
 		}
 
-		private void Serialize(object item, string eventType, TextWriter writer)
+		private void Serialize(object item, string eventType, StreamWriter writer)
 		{
 			writer.Write("{\"");
 			writer.Write(eventType);

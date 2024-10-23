@@ -2,9 +2,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -17,7 +17,7 @@ namespace Elastic.Apm.Api
 		public string Id { get; set; }
 
 		[MaxLength]
-		[JsonProperty("username")]
+		[JsonPropertyName("username")]
 		public string UserName { get; set; }
 
 		public override string ToString() =>

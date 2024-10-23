@@ -8,12 +8,12 @@
 
 using System;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Elastic.Apm;
 using Elastic.Apm.Api;
-using Newtonsoft.Json;
 
 namespace KafkaSample
 {
@@ -174,7 +174,7 @@ namespace KafkaSample
 			}
 			else
 			{
-				var sampleMessage = JsonConvert.DeserializeObject<SampleMessage>(kafkaMessage.Value);
+				var sampleMessage = JsonSerializer.Deserialize<SampleMessage>(kafkaMessage.Value);
 				Console.WriteLine($"Received {(sampleMessage.IsProducedAsync ? "async" : "sync")}message for {kafkaMessage.Key}");
 				if (sampleMessage.IsProducedAsync)
 					Interlocked.Increment(ref TotalAsyncMessages);

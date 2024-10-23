@@ -3,8 +3,8 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -19,7 +19,7 @@ namespace Elastic.Apm.Api
 		public CloudInstance Instance { get; set; }
 
 		[MaxLength]
-		[JsonProperty("availability_zone")]
+		[JsonPropertyName("availability_zone")]
 		public string AvailabilityZone { get; set; }
 
 		public CloudMachine Machine { get; set; }

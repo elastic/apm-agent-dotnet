@@ -639,7 +639,7 @@ public class ConvenientApiSpanTests
 			});
 
 		//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
-		payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
+		payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.InnerDictionary["foo"].Value.Should().Be("bar");
 	}
 
 	/// <summary>
@@ -660,7 +660,7 @@ public class ConvenientApiSpanTests
 			});
 
 		//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
-		payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
+		payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.MergedDictionary["foo"].Value.Should().Be("bar");
 	}
 
 	/// <summary>
@@ -687,7 +687,7 @@ public class ConvenientApiSpanTests
 		});
 
 		//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
-		payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
+		payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.MergedDictionary["foo"].Value.Should().Be("bar");
 	}
 
 	/// <summary>

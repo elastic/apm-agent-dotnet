@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -40,7 +40,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// Stacktrace information of the captured exception.
 		/// </summary>
-		[JsonProperty("stacktrace")]
+		[JsonPropertyName("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		/// <summary>

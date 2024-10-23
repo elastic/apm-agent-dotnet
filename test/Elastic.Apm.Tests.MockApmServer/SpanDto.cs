@@ -3,9 +3,10 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
 using Elastic.Apm.Model;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -25,13 +26,13 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public Outcome Outcome { get; set; }
 
-		[JsonProperty("parent_id")]
+		[JsonPropertyName("parent_id")]
 		public string ParentId { get; set; }
 
-		[JsonProperty("sample_rate")]
+		[JsonPropertyName("sample_rate")]
 		public string SampleRate { get; set; }
 
-		[JsonProperty("stacktrace")]
+		[JsonPropertyName("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		public List<SpanLinkDto> Links { get; set; }
@@ -42,10 +43,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public long Timestamp { get; set; }
 
-		[JsonProperty("trace_id")]
+		[JsonPropertyName("trace_id")]
 		public string TraceId { get; set; }
 
-		[JsonProperty("transaction_id")]
+		[JsonPropertyName("transaction_id")]
 		public string TransactionId { get; set; }
 
 		public string Type { get; set; }

@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
@@ -21,8 +21,9 @@ namespace Elastic.Apm.Tests.Utilities
 {
 	internal class MockPayloadSender : IPayloadSender, IPayloadSenderWithFilters
 	{
-		private static readonly JObject JsonSpanTypesData =
-			JObject.Parse(File.ReadAllText(Path.Combine(SolutionPaths.Root, "test/Elastic.Apm.Tests.Utilities/TestResources/json-specs/span_types.json")));
+		private static readonly JsonObject JsonSpanTypesData =
+			JsonNode.Parse(File.ReadAllText(Path.Combine(SolutionPaths.Root, "test/Elastic.Apm.Tests.Utilities/TestResources/json-specs/span_types.json")))
+				as JsonObject;
 
 		private readonly List<IError> _errors = [];
 		private readonly List<Func<IError, IError>> _errorFilters = [];
@@ -277,12 +278,12 @@ namespace Elastic.Apm.Tests.Utilities
 
 			if (IsStrictSpanCheckEnabled)
 			{
-				var spanTypeInfo = JsonSpanTypesData[type] as JObject;
+				var spanTypeInfo = JsonSpanTypesData[type] as JsonObject;
 				spanTypeInfo.Should().NotBeNull($"span type '{type}' is not allowed by the spec");
 
-				var allowNullSubtype = spanTypeInfo["allow_null_subtype"]?.Value<bool>();
-				var allowUnlistedSubtype = spanTypeInfo["allow_unlisted_subtype"]?.Value<bool>();
-				var subTypes = spanTypeInfo["subtypes"];
+				var allowNullSubtype = spanTypeInfo["allow_null_subtype"]?.GetValue<bool>();
+				var allowUnlistedSubtype = spanTypeInfo["allow_unlisted_subtype"]?.GetValue<bool>();
+				var subTypes = spanTypeInfo["subtypes"] as JsonObject;
 				var hasSubtypes = subTypes != null && subTypes.Any();
 
 				var subType = span.Subtype;

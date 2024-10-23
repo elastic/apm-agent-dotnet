@@ -509,12 +509,12 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction1"].Value.Should().Be("barTransaction1");
-			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction2"].Value.Should().Be("barTransaction2");
+			payloadSender.FirstTransaction.Context.InternalLabels.MergedDictionary["fooTransaction1"].Value.Should().Be("barTransaction1");
+			payloadSender.FirstTransaction.Context.InternalLabels.MergedDictionary["fooTransaction2"].Value.Should().Be("barTransaction2");
 
 			payloadSender.WaitForSpans();
-			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan1"].Value.Should().Be("barSpan1");
-			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan2"].Value.Should().Be("barSpan2");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.MergedDictionary["fooSpan1"].Value.Should().Be("barSpan1");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.MergedDictionary["fooSpan2"].Value.Should().Be("barSpan2");
 		}
 
 		/// <summary>
@@ -599,9 +599,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.SetLabel("foo", 42); });
 
-			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary.Should().NotBeEmpty();
-			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary.Should().ContainKey("foo");
-			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be(42);
+			payloadSender.FirstSpan.Context.InternalLabels.MergedDictionary.Should().NotBeEmpty();
+			payloadSender.FirstSpan.Context.InternalLabels.MergedDictionary.Should().ContainKey("foo");
+			payloadSender.FirstSpan.Context.InternalLabels.MergedDictionary["foo"].Value.Should().Be(42);
 		}
 
 		/// <summary>
@@ -712,9 +712,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 			var expectedErrorContext = new Context();
-			expectedErrorContext.InternalLabels.Value.InnerDictionary["one"] = 1;
-			expectedErrorContext.InternalLabels.Value.InnerDictionary["twenty two"] = "22";
-			expectedErrorContext.InternalLabels.Value.InnerDictionary["true"] = true;
+			expectedErrorContext.InternalLabels.InnerDictionary["one"] = 1;
+			expectedErrorContext.InternalLabels.InnerDictionary["twenty two"] = "22";
+			expectedErrorContext.InternalLabels.InnerDictionary["true"] = true;
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
@@ -724,8 +724,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
-					foreach (var item in expectedErrorContext.InternalLabels.Value.MergedDictionary)
-						transaction.Context.InternalLabels.Value.MergedDictionary[item.Key] = item.Value;
+					foreach (var item in expectedErrorContext.InternalLabels.MergedDictionary)
+						transaction.Context.InternalLabels.MergedDictionary[item.Key] = item.Value;
 					ISpan span = null;
 					if (captureOnSpan)
 					{

@@ -5,8 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Elastic.Apm.DistributedTracing;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -18,8 +19,12 @@ namespace Elastic.Apm.Tests.DistributedTracing
 		public class TraceStateTestData
 		{
 			public List<string[]> Headers { get; set; }
-			[JsonProperty("is_traceparent_valid")] public bool IsTraceParentValid { get; set; }
-			[JsonProperty("is_tracestate_valid")] public bool? IsTraceStateValid { get; set; }
+
+			[JsonPropertyName("is_traceparent_valid")]
+			public bool IsTraceParentValid { get; set; }
+
+			[JsonPropertyName("is_tracestate_valid")]
+			public bool? IsTraceStateValid { get; set; }
 		}
 
 		[Theory]

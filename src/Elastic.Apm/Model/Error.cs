@@ -6,11 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Model
@@ -51,7 +51,7 @@ namespace Elastic.Apm.Model
 				if (labels != null)
 				{
 					foreach (var item in labels)
-						Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+						Context.InternalLabels.InnerDictionary[item.Key] = item.Value;
 				}
 			}
 
@@ -78,7 +78,7 @@ namespace Elastic.Apm.Model
 					continue;
 
 				var newKey = $"baggage.{baggage.Key}";
-				var labels = Context.InternalLabels.Value;
+				var labels = Context.InternalLabels;
 				labels[newKey] = baggage.Value;
 			}
 		}
@@ -115,7 +115,7 @@ namespace Elastic.Apm.Model
 		public ErrorLog Log { get; set; }
 
 		[MaxLength]
-		[JsonProperty("parent_id")]
+		[JsonPropertyName("parent_id")]
 		public string ParentId { get; set; }
 
 		/// <summary>
@@ -124,13 +124,13 @@ namespace Elastic.Apm.Model
 		public long Timestamp { get; }
 
 		[MaxLength]
-		[JsonProperty("trace_id")]
+		[JsonPropertyName("trace_id")]
 		public string TraceId { get; set; }
 
 		public TransactionData Transaction { get; }
 
 		[MaxLength]
-		[JsonProperty("transaction_id")]
+		[JsonPropertyName("transaction_id")]
 		public string TransactionId { get; set; }
 
 		/// <summary>
@@ -139,7 +139,7 @@ namespace Elastic.Apm.Model
 		/// See
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
-		public bool ShouldSerializeContext() => Transaction != null && Transaction.IsSampled;
+		public bool ShouldSerializeContext() => Transaction is { IsSampled: true };
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{
@@ -159,7 +159,7 @@ namespace Elastic.Apm.Model
 			/// <summary>
 			/// IsSampled indicates whether or not the full information for a transaction is captured. If a transaction is unsampled no spans and less context information will be reported.
 			/// </summary>
-			[JsonProperty("sampled")]
+			[JsonPropertyName("sampled")]
 			public bool IsSampled { get; }
 
 			/// <summary>

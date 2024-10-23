@@ -8,9 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
@@ -42,7 +43,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				if (httpResponse?.Headers?.ETag == null)
 					throw new CentralConfigurationFetcher.FailedToFetchConfigException("Response from APM Server doesn't have ETag header", waitInfo);
 
-				var keyValues = JsonConvert.DeserializeObject<IDictionary<string, string>>(httpResponseBody);
+				var keyValues = PayloadItemSerializer.Default.Deserialize<IDictionary<string, string>>(httpResponseBody);
 				var centralConfigReader = ParseConfigPayload(httpResponse, new CentralConfigPayload(keyValues));
 
 				return (centralConfigReader, waitInfo);
