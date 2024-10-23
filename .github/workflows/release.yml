@@ -7,7 +7,6 @@ on:
 permissions:
   contents: write
   issues: write
-  pull-requests: write
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
@@ -173,10 +172,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get token
+        id: get_token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.OBS_AUTOMATION_APP_ID }}
+          private_key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
+          permissions: >-
+            {
+              "contents": "write",
+              "pull_requests": "write"
+            }
+          repositories: >-
+            ["apm-agent-dotnet"]
+
       - name: Setup git config
         uses: elastic/oblt-actions/git/setup@v1
+        with:
+          github-token: ${{ steps.get_token.outputs.token }}
 
       - name: Create GitHub Pull Request if minor release.
+        env:
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
         run: |
           echo "as long as there is a major.x branch"
           existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})
