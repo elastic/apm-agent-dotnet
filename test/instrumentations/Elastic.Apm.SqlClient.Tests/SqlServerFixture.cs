@@ -3,7 +3,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Testcontainers.MsSql;
 using Xunit;
@@ -47,6 +49,23 @@ namespace Elastic.Apm.SqlClient.Tests
 			_sink.OnMessage(new DiagnosticMessage(stdErr));
 		}
 
-		public async Task DisposeAsync() => await _container.DisposeAsync();
+		public async Task DisposeAsync()
+		{
+			var cts = new CancellationTokenSource();
+			cts.CancelAfter(TimeSpan.FromMinutes(2));
+
+			try
+			{
+				_sink.OnMessage(new DiagnosticMessage($"Stopping {nameof(SqlServerFixture)}"));
+				await _container.StopAsync(cts.Token);
+			}
+			catch (Exception e)
+			{
+				_sink.OnMessage(new DiagnosticMessage(e.Message));
+			}
+
+			_sink.OnMessage(new DiagnosticMessage($"Disposing {nameof(SqlServerFixture)}"));
+			await _container.DisposeAsync();
+		}
 	}
 }

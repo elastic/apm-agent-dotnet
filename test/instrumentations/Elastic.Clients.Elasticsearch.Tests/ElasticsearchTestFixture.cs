@@ -58,10 +58,19 @@ public async Task InitializeAsync()
 
 async Task IAsyncLifetime.DisposeAsync()
 {
-	if (Container.State == TestcontainersStates.Running)
+	var cts = new CancellationTokenSource();
+	cts.CancelAfter(TimeSpan.FromMinutes(2));
+
+	try
 	{
-		await Container.StopAsync();
-		await Container.DisposeAsync();
+		_sink.OnMessage(new DiagnosticMessage($"Stopping {nameof(ElasticsearchTestFixture)}"));
+		await Container.StopAsync(cts.Token);
 	}
+	catch (Exception e)
+	{
+		_sink.OnMessage(new DiagnosticMessage(e.Message));
+	}
+	_sink.OnMessage(new DiagnosticMessage($"Disposing {nameof(ElasticsearchTestFixture)}"));
+	await Container.DisposeAsync();
 }
 }

@@ -43,6 +43,10 @@ namespace Elastic.Apm.Azure.CosmosDb.Tests
 			if (credentials is Unauthenticated)
 				return;
 
+			// TODO remove this and move our cosmosdb tests over to a always ready serverless
+			if (TestEnvironment.IsCi)
+				return;
+
 			_terraform = new TerraformResources(terraformResourceDirectory, credentials, messageSink);
 
 			var resourceGroupName = AzureResources.CreateResourceGroupName("cosmosdb-test");
