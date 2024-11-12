@@ -284,3 +284,14 @@ Should be changed to:
 image::./images/integrated-pipeline.png[Integrated Managed Pipeline Mode in Properties]
 
 You may need to restart Visual Studio for these changes to fully apply.
+
+[float]
+[[azure-app-services-traceparent]]
+=== Azure App Services / ASE and sampling
+
+Azure/ASE adds trace headers set to unsampled for incoming requests to the cluster.
+
+Elastic APM .NET Agent (and likely also other agents which correctly handle the W3C Trace Parent header sampling) will obey to the traceparent header sampling of the incoming request.
+As a consequence, the traces/spans will not be sent to APM Server/Integration and therefore APM UI will not show anything.
+
+We recommend using `trace_continuation_strategy` set to `restart` or `restart_external`, so that the APM .NET Agent will ignore the incoming traceparent header sampling flag.
