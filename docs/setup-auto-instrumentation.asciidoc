@@ -464,3 +464,21 @@ The default value is `file`, which logs to the directory specified by
 `ELASTIC_APM_PROFILER_LOG_DIR` environment variable.
 
 This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_TARGETS`
+
+[float]
+==== Troubleshooting
+
+[float]
+[[windows-blocked-dlls]]
+===== DLLs are blocked on Windows
+
+Windows may automatically block downloaded DLL files if it considers them suspicious.
+
+To unblock a DLL file on Windows, you can do the following:
+
+- Right-click the DLL file in File Explorer
+- Select Properties
+- In the General tab, look for the Security section at the bottom
+- Select the Unblock check box and click OK
+
+image::./images/unblock-profiler-dll.png[Unblock DLL in Windows file properties]
