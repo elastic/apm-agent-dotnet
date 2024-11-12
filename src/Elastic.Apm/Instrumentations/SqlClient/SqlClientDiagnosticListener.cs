@@ -17,7 +17,7 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 {
 	internal class SqlClientDiagnosticListener : DiagnosticListenerBase
 	{
-		private ApmAgent _agent;
+		private readonly ApmAgent _agent;
 		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new();
 
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new();

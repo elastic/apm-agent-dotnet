@@ -54,8 +54,7 @@ namespace Elastic.Apm.Model
 					if (cachedSignature != null)
 					{
 						signature.Append(cachedSignature[0]);
-						if (dbLink != null)
-							dbLink.Append(cachedSignature[1]);
+						dbLink?.Append(cachedSignature[1]);
 						return;
 					}
 				}

@@ -12,14 +12,13 @@ namespace Elastic.Apm.StartupHook.Sample
 		public IConfiguration Configuration { get; }
 
 		// This method gets called by the runtime. Use this method to add services to the container.
-		public void ConfigureServices(IServiceCollection services)
-		{
+		public void ConfigureServices(IServiceCollection services) =>
 #if NET5_0_OR_GREATER
 			services.AddControllersWithViews();
 #else
 			services.AddMvc();
 #endif
-		}
+
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

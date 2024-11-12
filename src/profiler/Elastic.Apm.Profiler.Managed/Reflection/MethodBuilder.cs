@@ -526,10 +526,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 			if (methods.Length > 1)
 				throw new ArgumentException($"Unable to safely resolve method, found {methods.Length} matches ({logDetail})");
 
-			var methodInfo = methods.SingleOrDefault();
-
-			if (methodInfo == null)
-				throw new ArgumentException($"Unable to resolve method, started with {matchesOnNameAndReturn} by name match ({logDetail})");
+			var methodInfo = methods.SingleOrDefault() ?? throw new ArgumentException($"Unable to resolve method, started with {matchesOnNameAndReturn} by name match ({logDetail})");
 
 			return methodInfo;
 		}

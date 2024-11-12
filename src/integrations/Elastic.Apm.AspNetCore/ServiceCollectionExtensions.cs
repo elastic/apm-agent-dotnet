@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
 		{
 			var subs = subscribers.ToList();
 			subs.Add(new AspNetCoreDiagnosticSubscriber());
-			services.AddElasticApm([..subs]);
+			services.AddElasticApm([.. subs]);
 		}
 
 		return services;
