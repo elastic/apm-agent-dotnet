@@ -19,7 +19,7 @@ open Scripts.TestEnvironment
 open Tooling
 
 module Build =
-    
+
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
     let private diagnosticSourceVersion6 = SemVer.parse "6.0.0"
     
@@ -238,9 +238,7 @@ module Build =
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
         
     let Format () =
-        ToolRestore()
-        //dotnet dotnet-format --exclude src/Elastic.Apm/Libraries/
-        DotNet.Exec ["dotnet-format"; "--check"; "--exclude"; "src/Elastic.Apm/Libraries/"]
+        DotNet.Exec ["dotnet"; "format"; "--verbosity"; "quiet"; "--exclude"; "src/Elastic.Apm/Libraries/"]
             
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =
         source.GetFiles()
