@@ -176,7 +176,7 @@ namespace Elastic.Apm
 			}
 #endif
 		}
-
+#pragma warning disable IDE0022
 		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
 		{
 #if NETFRAMEWORK
@@ -198,6 +198,7 @@ namespace Elastic.Apm
 			return configurationReader ?? new EnvironmentConfiguration(configurationLogger);
 #endif
 		}
+#pragma warning restore IDE0022
 
 		/// <summary>
 		/// This ensures agents will respect externally provided loggers.

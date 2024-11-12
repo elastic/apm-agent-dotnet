@@ -118,7 +118,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 			// Ref object parameter
 			object objValue = 4;
 			// ReSharper disable once SuggestVarOrType_BuiltInTypes
-			object objValue2 = objValue;
+			var objValue2 = objValue;
 			duckInterface.GetReferenceObject(ref objValue);
 			duckAbstract.GetReferenceObject(ref objValue);
 			duckVirtual.GetReferenceObject(ref objValue);
@@ -172,8 +172,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 			var duckVirtual = obscureObject.DuckCast<ObscureDuckTypeVirtualClass>();
 
 			// Out parameter
-			int outValue;
-			duckInterface.GetOutput(out outValue);
+			duckInterface.GetOutput(out var outValue);
 			Assert.Equal(42, outValue);
 			duckAbstract.GetOutput(out outValue);
 			Assert.Equal(42, outValue);
@@ -181,8 +180,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 			Assert.Equal(42, outValue);
 
 			// Out object parameter
-			object outObjectValue;
-			duckInterface.GetOutputObject(out outObjectValue);
+			duckInterface.GetOutputObject(out var outObjectValue);
 			Assert.Equal(42, (int)outObjectValue);
 			duckAbstract.GetOutputObject(out outObjectValue);
 			Assert.Equal(42, (int)outObjectValue);
@@ -190,8 +188,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 			Assert.Equal(42, (int)outObjectValue);
 
 			// Duck type output
-			IDummyFieldObject outDuckType;
-			Assert.True(duckInterface.TryGetObscure(out outDuckType));
+			Assert.True(duckInterface.TryGetObscure(out var outDuckType));
 			Assert.NotNull(outDuckType);
 			Assert.Equal(99, outDuckType.MagicNumber);
 
@@ -204,8 +201,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods
 			Assert.Equal(99, outDuckType.MagicNumber);
 
 			// Object output
-			object outObject;
-			Assert.True(duckInterface.TryGetObscureObject(out outObject));
+			Assert.True(duckInterface.TryGetObscureObject(out var outObject));
 			Assert.NotNull(outObject);
 			Assert.Equal(99, outObject.DuckCast<IDummyFieldObject>().MagicNumber);
 

@@ -41,13 +41,8 @@ namespace Elastic.Apm.StartupHook.Tests
 			}
 
 			var agentZip = Directory.EnumerateFiles(buildOutputDir, "ElasticApmAgent_*.zip", SearchOption.TopDirectoryOnly)
-				.FirstOrDefault();
-
-			if (agentZip is null)
-			{
-				throw new FileNotFoundException($"ElasticApmAgent_*.zip file not found in {buildOutputDir}. "
+				.FirstOrDefault() ?? throw new FileNotFoundException($"ElasticApmAgent_*.zip file not found in {buildOutputDir}. "
 					+ $"Run the build script in the solution root with agent-zip target to build");
-			}
 
 			return agentZip;
 		}

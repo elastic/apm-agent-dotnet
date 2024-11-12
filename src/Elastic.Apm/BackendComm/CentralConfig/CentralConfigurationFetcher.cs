@@ -184,14 +184,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest.RequestUri.Sanitize());
 
 			var httpResponse = await HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, CancellationTokenSource.Token)
-				.ConfigureAwait(false);
-			// ReSharper disable once InvertIf
-			if (httpResponse == null)
-			{
-				throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
+				.ConfigureAwait(false) ?? throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
 					+ $" Request:{Environment.NewLine}{httpRequest.Sanitize(_configurationStore.CurrentSnapshot.SanitizeFieldNames).ToString().Indent()}",
 					new WaitInfoS(WaitTimeIfAnyError, "HttpResponseMessage from APM Server is null"));
-			}
 
 			_logger.Trace()?.Log("Reading HTTP response body... Response: {HttpResponse}.", httpResponse);
 			var httpResponseBody = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);

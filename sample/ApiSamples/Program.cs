@@ -273,6 +273,7 @@ namespace ApiSamples
 			});
 		}
 
+#pragma warning disable IDE0022
 		// ReSharper disable ArrangeMethodOrOperatorBody
 		public static void SampleSpanWithCustomContext()
 		{
@@ -291,7 +292,9 @@ namespace ApiSamples
 				transaction.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
 				{
 					// ReSharper disable once UseObjectOrCollectionInitializer
+#pragma warning disable IDE0017
 					span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET" };
+#pragma warning restore IDE0017
 					// send request, get response with status code
 					span.Context.Http.StatusCode = 200;
 				});
@@ -309,6 +312,7 @@ namespace ApiSamples
 			});
 		}
 		// ReSharper restore ArrangeMethodOrOperatorBody
+#pragma warning restore IDE0022
 
 #if NET6_0_OR_GREATER
 		/// <summary>

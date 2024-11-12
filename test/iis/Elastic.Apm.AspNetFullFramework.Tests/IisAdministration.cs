@@ -424,9 +424,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var config = serverManager.GetApplicationHostConfiguration();
 			var appPoolsSection = config.GetSection("system.applicationHost/applicationPools");
 			var appPoolsCollection = appPoolsSection.GetCollection();
-			var sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", SampleApp.AppPoolName);
-			if (sampleAppPoolAddElement == null)
-				throw new InvalidOperationException($"Element <add> for application pool {SampleApp.AppPoolName} not found");
+			var sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", SampleApp.AppPoolName) ?? throw new InvalidOperationException($"Element <add> for application pool {SampleApp.AppPoolName} not found");
 
 			return sampleAppPoolAddElement.GetCollection("environmentVariables");
 		}

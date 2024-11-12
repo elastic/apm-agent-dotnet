@@ -17,8 +17,8 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 {
 	internal class LazyILGenerator
 	{
-		private ILGenerator _generator;
-		private List<Action<ILGenerator>> _instructions;
+		private readonly ILGenerator _generator;
+		private readonly List<Action<ILGenerator>> _instructions;
 		private int _offset;
 
 		public LazyILGenerator(ILGenerator generator)

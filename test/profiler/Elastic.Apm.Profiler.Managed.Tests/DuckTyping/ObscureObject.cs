@@ -22,6 +22,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 {
 	public class ObscureObject
 	{
+#pragma warning disable IDE0044
 		private static FieldPublicObject fieldPublicObject = new FieldPublicObject();
 		private static FieldInternalObject fieldInternalObject = new FieldInternalObject();
 		private static FieldPrivateObject fieldPrivateObject = new FieldPrivateObject();
@@ -947,3 +948,4 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 		}
 	}
 }
+#pragma warning restore IDE0044

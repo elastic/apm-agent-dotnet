@@ -23,8 +23,8 @@ namespace Elastic.Apm.Reflection
 		}
 
 		/// <summary>
-		/// Builds a delegate to get a property from an object. <paramref name="type"/> is cast to <see cref="Object"/>,
-		/// with the returned property cast to <see cref="Object"/>.
+		/// Builds a delegate to get a property from an object. <paramref name="type"/> is cast to <see cref="object"/>,
+		/// with the returned property cast to <see cref="object"/>.
 		/// </summary>
 		public static Func<object, object> BuildPropertyGetter(Type type, PropertyInfo propertyInfo)
 		{
@@ -36,8 +36,8 @@ namespace Elastic.Apm.Reflection
 		}
 
 		/// <summary>
-		/// Builds a delegate to get a property from an object. <paramref name="type"/> is cast to <see cref="Object"/>,
-		/// with the returned property cast to <see cref="Object"/>.
+		/// Builds a delegate to get a property from an object. <paramref name="type"/> is cast to <see cref="object"/>,
+		/// with the returned property cast to <see cref="object"/>.
 		/// </summary>
 		public static Func<object, object> BuildFieldGetter(Type type, FieldInfo fieldInfo)
 		{
@@ -49,8 +49,8 @@ namespace Elastic.Apm.Reflection
 		}
 
 		/// <summary>
-		/// Builds a delegate to get a property from an object. <paramref name="type"/> is cast to <see cref="Object"/>,
-		/// with the returned property cast to <see cref="Object"/>.
+		/// Builds a delegate to get a property from an object. <paramref name="type"/> is cast to <see cref="object"/>,
+		/// with the returned property cast to <see cref="object"/>.
 		/// </summary>
 		public static Func<object, object> BuildPropertyGetter(Type type, string propertyName)
 		{

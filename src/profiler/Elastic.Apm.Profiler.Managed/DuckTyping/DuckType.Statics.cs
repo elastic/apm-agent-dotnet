@@ -57,15 +57,16 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private static long _typeCount;
-
+#pragma warning disable IDE0044, IDE1006
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private static ConstructorInfo _ignoresAccessChecksToAttributeCtor =
-			typeof(IgnoresAccessChecksToAttribute).GetConstructor(new Type[] { typeof(string) });
+			typeof(IgnoresAccessChecksToAttribute).GetConstructor([typeof(string)]);
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private static Dictionary<ModuleBuilder, HashSet<string>> _ignoresAccessChecksToAssembliesSetDictionary =
 			new Dictionary<ModuleBuilder, HashSet<string>>();
-
+#pragma warning restore IDE0044, IDE1006
+		
 		internal static long AssemblyCount => _assemblyCount;
 
 		internal static long TypeCount => _typeCount;
@@ -105,8 +106,10 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 
 			static ModuleBuilder CreateModuleBuilder(string name, Assembly targetAssembly)
 			{
-				var assemblyName = new AssemblyName(name + $"_{++_assemblyCount}");
-				assemblyName.Version = targetAssembly.GetName().Version;
+				var assemblyName = new AssemblyName(name + $"_{++_assemblyCount}")
+				{
+					Version = targetAssembly.GetName().Version
+				};
 				var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
 				return assemblyBuilder.DefineDynamicModule("MainModule");
 			}

@@ -26,9 +26,7 @@ namespace Elastic.Apm.Reflection
 			if (_innerFetcher == null)
 			{
 				var type = obj.GetType().GetTypeInfo();
-				var property = type.DeclaredProperties.FirstOrDefault(p => string.Equals(p.Name, PropertyName, StringComparison.OrdinalIgnoreCase));
-				if (property == null)
-					property = type.GetProperty(PropertyName);
+				var property = type.DeclaredProperties.FirstOrDefault(p => string.Equals(p.Name, PropertyName, StringComparison.OrdinalIgnoreCase)) ?? type.GetProperty(PropertyName);
 
 				_innerFetcher = PropertyFetch.FetcherForProperty(property);
 			}

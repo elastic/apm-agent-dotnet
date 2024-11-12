@@ -20,35 +20,35 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AdoNet
 	{
 		private readonly MySqlContainer _container = new MySqlBuilder().WithImage("mysql:8.0.32").Build();
 
-	public string ConnectionString => _container.GetConnectionString();
+		public string ConnectionString => _container.GetConnectionString();
 
-	public async Task InitializeAsync()
-	{
-		await _container.StartAsync();
-
-		var (stdOut, stdErr) = await _container.GetLogsAsync();
-
-		sink.OnMessage(new DiagnosticMessage(stdOut));
-		sink.OnMessage(new DiagnosticMessage(stdErr));
-	}
-
-	public async Task DisposeAsync()
-	{
-		var cts = new CancellationTokenSource();
-		cts.CancelAfter(TimeSpan.FromMinutes(2));
-
-		try
+		public async Task InitializeAsync()
 		{
-			sink.OnMessage(new DiagnosticMessage($"Stopping {nameof(MySqlFixture)}"));
-			await _container.StopAsync(cts.Token);
-		}
-		catch (Exception e)
-		{
-			sink.OnMessage(new DiagnosticMessage(e.Message));
+			await _container.StartAsync();
+
+			var (stdOut, stdErr) = await _container.GetLogsAsync();
+
+			sink.OnMessage(new DiagnosticMessage(stdOut));
+			sink.OnMessage(new DiagnosticMessage(stdErr));
 		}
 
-		sink.OnMessage(new DiagnosticMessage($"Disposing {nameof(MySqlFixture)}"));
-		await _container.DisposeAsync();
+		public async Task DisposeAsync()
+		{
+			var cts = new CancellationTokenSource();
+			cts.CancelAfter(TimeSpan.FromMinutes(2));
+
+			try
+			{
+				sink.OnMessage(new DiagnosticMessage($"Stopping {nameof(MySqlFixture)}"));
+				await _container.StopAsync(cts.Token);
+			}
+			catch (Exception e)
+			{
+				sink.OnMessage(new DiagnosticMessage(e.Message));
+			}
+
+			sink.OnMessage(new DiagnosticMessage($"Disposing {nameof(MySqlFixture)}"));
+			await _container.DisposeAsync();
+		}
 	}
-}
 }
