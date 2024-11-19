@@ -23,6 +23,14 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.30.1]]
+==== 1.30.1 - 2024/11/19
+
+===== Bug fixes
+{pull}2471[#2471] Remove netcoreapp2.0 from Elastic.Apm.Profiler.Managed.Loader
+{pull}2474[#2474] Fix span linking for Azure ServiceBus
+{pull}2482[#2482] Support K8S_ATTACH environment variable for activation
+
 [[release-notes-1.30.0]]
 ==== 1.30.0 - 2024/10/11
 
