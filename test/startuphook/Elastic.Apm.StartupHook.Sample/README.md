@@ -3,7 +3,6 @@
 This sample application is a default ASP.NET (Core) application
 configured to run with 
 
-- `net6.0`
 - `net8.0`
 
 target frameworks that can be used to try out the [Elastic APM

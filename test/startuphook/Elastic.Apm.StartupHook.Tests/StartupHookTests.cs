@@ -27,7 +27,6 @@ namespace Elastic.Apm.StartupHook.Tests
 		// NOTE: We test the two latest supported LTS releases.
 		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
 		{
-			yield return ("net6.0", ".NET 6", "6.0.0.0", "60");
 			yield return ("net8.0", ".NET 8", "8.0.0.0", "80");
 		}
 
