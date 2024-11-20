@@ -22,8 +22,7 @@ outputs:
   major-version:
     description: "The current major version number, semver"
     value: ${{ steps.dotnet.outputs.major-version }}
-  
-    
+
 runs:
   using: "composite"
   steps:
@@ -45,8 +44,8 @@ runs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
-          6.0.x
           8.0.x
+          9.0.x
 
     - id: dotnet
       shell: bash
