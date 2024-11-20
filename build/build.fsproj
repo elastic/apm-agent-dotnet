@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>$(LatestNetVersion)</TargetFramework>
     <OutputType>Exe</OutputType>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
     <IsPackable>false</IsPackable>
@@ -25,21 +25,16 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Bullseye" />
-    <PackageReference Include="System.CommandLine" />
-
     <PackageReference Include="Fake.Core.Environment" />
     <PackageReference Include="Fake.Core.SemVer" />
     <PackageReference Include="Fake.DotNet.MsBuild" />
     <PackageReference Include="Fake.IO.FileSystem" />
     <PackageReference Include="Fake.IO.Zip" />
     <PackageReference Include="Fake.Tools.Git" />
-
     <PackageReference Include="Newtonsoft.Json" />
-
     <PackageReference Include="Octokit" />
     <PackageReference Include="Proc" />
-    
-    
+    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
 </Project>

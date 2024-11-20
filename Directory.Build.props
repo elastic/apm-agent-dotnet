@@ -1,6 +1,6 @@
 <Project>
-  <!-- Root Directory Build Properties -->
-  <PropertyGroup>
+
+  <PropertyGroup Label="Root Directory Build Properties">
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>NU1701,NU1503,NU1608,CS8002,</NoWarn>
@@ -23,11 +23,16 @@
     <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <LatestNetVersion>net9.0</LatestNetVersion>
+    <NetMinimumSupportedVersion>net8.0</NetMinimumSupportedVersion>
+    <NetFrameworkMinimumSupportedVersion>net462</NetFrameworkMinimumSupportedVersion>
+    <NetStandardMinimumSupportedVersion>netstandard2.0</NetStandardMinimumSupportedVersion>
   </PropertyGroup>
-  <!-- MinVer Configuration -->
-  <PropertyGroup>
+
+  <PropertyGroup Label="MinVer Configuration">
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <MinVerDefaultPreReleaseIdentifiers>canary.0</MinVerDefaultPreReleaseIdentifiers>
     <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
   </PropertyGroup>
+
 </Project>

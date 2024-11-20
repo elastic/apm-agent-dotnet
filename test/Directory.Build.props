@@ -4,11 +4,11 @@
   <PropertyGroup>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
-    
+
     <!-- Elastic.Apm.AspNetFullFramework is completely self managed since it needs a lot of special care (for now) -->
     <IsRegularTestProject Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$'))">true</IsRegularTestProject>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <!-- use xunit config for all test files. Allow assemblies to run in parallel -->
     <Content Include="$(SolutionRoot)\xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(IsRegularTestProject)' == 'true'" />
@@ -20,11 +20,9 @@
 
   <ItemGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(ProjectName), '^(.*)Tests$'))">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    
     <PackageReference Include="JunitXml.TestLogger" PrivateAssets="All" />
     <PackageReference Include="GitHubActionsTestLogger" PrivateAssets="All" />
     <PackageReference Include="Nullean.VsTest.Pretty.TestLogger" PrivateAssets="All" />
-
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="FluentAssertions.Analyzers"  />
     <PackageReference Include="xunit" />

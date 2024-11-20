@@ -143,8 +143,6 @@ module Build =
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
         
-    /// Runs dotnet build on all .NET core projects in the solution.
-    /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
     let Test (suite: TestSuite) =
         let sln = 
             match suite with
@@ -182,7 +180,7 @@ module Build =
             @ (match logger with None -> [] | Some l -> [l])
             @ ["--"; "RunConfiguration.CollectSourceInformation=true"]
             
-        DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
+        DotNet.ExecWithTimeout command (TimeSpan.FromMinutes (30 : int64))
 
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
@@ -221,11 +219,11 @@ module Build =
           
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder
-        dotnet "clean" Paths.Solution       
+        dotnet "clean" Paths.Solution
         if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
         
     let CleanProfiler () =
-        Cargo.ExecWithTimeout ["make"; "clean"; "--disable-check-for-update"] (TimeSpan.FromMinutes 10)
+        Cargo.ExecWithTimeout ["make"; "clean"; "--disable-check-for-update"] (TimeSpan.FromMinutes (10 : int64))
 
     /// Restores all packages for the solution
     let ToolRestore () =

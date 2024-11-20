@@ -59,7 +59,7 @@
         if: "${{ inputs.azure == 'true' && runner.os == 'Linux' }}"
         shell: bash
         run: |
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          wget -q https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb
           sudo dpkg -i packages-microsoft-prod.deb
           sudo apt-get update
           sudo apt-get install azure-functions-core-tools-4
@@ -67,7 +67,7 @@
       - name: 'Windows: Azure functions core tools'
         if: "${{ inputs.azure == 'true' && runner.os == 'Windows' }}"
         shell: cmd
-        run: choco install azure-functions-core-tools -y --no-progress -r --version 4.0.4829
+        run: choco install azure-functions-core-tools -y --no-progress -r --version 4.0.6610
           
       # TEST CONTAINERS CLOUD
       # If no PR event or if a PR event that's caused by a non-fork and non dependabot actor
