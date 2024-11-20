@@ -99,10 +99,10 @@
     <PackageVersion Include="Microsoft.Azure.Cosmos" Version="3.0.0" />
     <PackageVersion Include="Microsoft.Azure.DocumentDB.Core" Version="2.22.0" />
     <PackageVersion Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="1.20.0"/>
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Core" Version="1.6.0" />
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.1.0"/>
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.16.1"/>
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.0.0"/>
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Core" Version="2.0.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.2.0"/>
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.0"/>
     <PackageVersion Include="Microsoft.Azure.ServiceBus" Version="3.0.0" />
     <PackageVersion Include="Microsoft.Azure.Storage.Blob" Version="11.2.2" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.1.5" />
@@ -120,7 +120,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" />
     
-    <PackageVersion Include="Microsoft.NET.Sdk.Functions" Version="4.1.1" />
+    <PackageVersion Include="Microsoft.NET.Sdk.Functions" Version="4.6.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageVersion Include="Microsoft.Owin.Host.SystemWeb" Version="4.1.1" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
