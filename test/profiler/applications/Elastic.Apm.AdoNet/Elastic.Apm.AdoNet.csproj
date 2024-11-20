@@ -1,14 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-      <TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
+      <TargetFrameworks>net462;net8.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="$(SolutionRoot)\src\Elastic.Apm\Elastic.Apm.csproj" />
       <ProjectReference Include="..\Elastic.Apm.AdoNet.NetStandard\Elastic.Apm.AdoNet.NetStandard.csproj" />
     </ItemGroup>
-  
-  
 
 </Project>
