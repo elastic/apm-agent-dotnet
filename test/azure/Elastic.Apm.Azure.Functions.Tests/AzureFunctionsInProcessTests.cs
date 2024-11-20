@@ -17,7 +17,6 @@ public class AzureFunctionsInProcessTests : AzureFunctionsTestBase, IClassFixtur
 	public AzureFunctionsInProcessTests(ITestOutputHelper output, InProcessContext context)
 		: base(output, context) { }
 
-
 	[Fact]
 	public async Task Invoke_Http_Ok()
 	{
