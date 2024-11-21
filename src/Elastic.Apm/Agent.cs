@@ -48,7 +48,6 @@ namespace Elastic.Apm
 		public IConfigurationReader Configuration => ConfigurationStore.CurrentSnapshot;
 		[Obsolete("Please use Configuration property instead")]
 		public IConfigurationReader ConfigurationReader => Configuration;
-
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public Service Service => Components.Service;
