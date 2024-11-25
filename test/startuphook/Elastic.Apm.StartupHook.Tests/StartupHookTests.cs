@@ -210,7 +210,6 @@ namespace Elastic.Apm.StartupHook.Tests
 					metadataWaitHandle.Set();
 			};
 
-
 			using var project = DotnetProject.Create(name, template, targetFramework, "--no-https");
 			var environmentVariables = new Dictionary<string, string>
 			{
