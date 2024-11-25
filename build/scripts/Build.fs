@@ -173,13 +173,19 @@ module Build =
                 let testElseWhere = ["Tests"; "OpenTelemetry.Tests"; "StartupHook.Tests"; "Profiler.Managed.Tests"; "Azure"]
                 let filter = testElseWhere |> List.map (fun s -> $"FullyQualifiedName!~Elastic.Apm.%s{s}") |> String.concat "&"
                 Some filter
-            | _ -> None 
+            | _ -> None
+
+        let blame =
+            match suite with
+            | TestSuite.Integrations -> Some ["--blame-hang", "--blame-hang-timeout", "5m", "--blame-crash-collect-always", "--blame-crash-dump-type", "mini"]
+            | _ -> None
         
         let command =
             ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; "minimal"; "-s"; "test/.runsettings"]
             @ (match filter with None -> [] | Some f -> ["--filter"; f])
             @ (match framework with None -> [] | Some f -> ["-f"; f])
             @ (match logger with None -> [] | Some l -> [l])
+            @ (match blame with None -> [] | Some l -> l)
             @ ["--"; "RunConfiguration.CollectSourceInformation=true"]
             
         DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
