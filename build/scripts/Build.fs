@@ -177,7 +177,7 @@ module Build =
 
         let blame =
             match suite with
-            | TestSuite.Integrations -> Some ["--blame-hang", "--blame-hang-timeout", "5m", "--blame-crash-collect-always", "--blame-crash-dump-type", "mini"]
+            | TestSuite.Integrations -> Some ["--blame-hang"; "--blame-hang-timeout"; "5m"; "--blame-crash-collect-always"; "--blame-crash-dump-type"; "mini"]
             | _ -> None
         
         let command =
