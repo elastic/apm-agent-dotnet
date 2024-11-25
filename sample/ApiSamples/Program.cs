@@ -314,7 +314,7 @@ namespace ApiSamples
 		// ReSharper restore ArrangeMethodOrOperatorBody
 #pragma warning restore IDE0022
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Test for https://github.com/elastic/apm-agent-dotnet/issues/884
 		/// </summary>

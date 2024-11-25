@@ -8,7 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Logging;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using System.Buffers;
 using System.Buffers.Text;
 #endif
@@ -19,7 +19,7 @@ namespace Elastic.Apm.Metrics.Linux
 	{
 		public const string ProcMemInfo = "/proc/meminfo";
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		private static readonly FileStreamOptions Options = new() { BufferSize = 0, Mode = FileMode.Open, Access = FileAccess.Read };
 		private static readonly byte Space = (byte)' ';
 
@@ -57,7 +57,7 @@ namespace Elastic.Apm.Metrics.Linux
 			}
 			try
 			{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				using var fs = new FileStream(memInfoPath, Options);
 				var buffer = ArrayPool<byte>.Shared.Rent(8192); // Should easily be large enough for max meminfo file.
 

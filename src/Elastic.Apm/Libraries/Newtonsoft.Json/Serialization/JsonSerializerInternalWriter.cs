@@ -761,10 +761,12 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 
             WriteObjectStart(writer, value, contract, member, collectionContract, containerProperty);
 
-            SerializationInfo serializationInfo = new SerializationInfo(contract.UnderlyingType, new FormatterConverter());
+#pragma warning disable SYSLIB0050
+			SerializationInfo serializationInfo = new SerializationInfo(contract.UnderlyingType, new FormatterConverter());
             value.GetObjectData(serializationInfo, Serializer._context);
+#pragma warning restore SYSLIB0050
 
-            foreach (SerializationEntry serializationEntry in serializationInfo)
+			foreach (SerializationEntry serializationEntry in serializationInfo)
             {
                 JsonContract? valueContract = GetContractSafe(serializationEntry.Value);
 

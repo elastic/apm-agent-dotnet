@@ -30,6 +30,4 @@ internal sealed class CompositeLogger(TraceLogger traceLogger, IApmLogger logger
 	}
 
 	public bool IsEnabled(LogLevel logLevel) => ApmLogger.IsEnabled(logLevel) || TraceLogger.IsEnabled(logLevel);
-
-
 }

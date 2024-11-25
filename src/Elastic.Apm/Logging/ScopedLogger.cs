@@ -30,7 +30,7 @@ internal class ScopedLogger : IApmLogger
 			return formatter;
 
 		formatter = new LogValuesFormatter($"{{{{{{Scope}}}}}} {message}", args, Scope);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		Formatters.AddOrUpdate(message, formatter);
 		return formatter;
 #else

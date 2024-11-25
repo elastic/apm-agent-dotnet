@@ -89,9 +89,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
 			agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
-#if NET6_0
-			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
-#elif NET8_0
+#if NET8_0
 			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 8");
 #else
 			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);

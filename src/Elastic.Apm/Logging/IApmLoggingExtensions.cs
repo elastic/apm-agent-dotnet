@@ -72,7 +72,7 @@ internal static class LoggingExtensions
 			return formatter;
 
 		formatter = new LogValuesFormatter(message, args);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		Formatters.AddOrUpdate(message, formatter);
 		return formatter;
 #else

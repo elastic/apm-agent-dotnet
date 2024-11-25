@@ -96,8 +96,8 @@ namespace Elastic.Apm.Api
 				// Legacy mechanism: if the profiler is loaded add a `p` suffix to Agent.Version
 				service.Agent.Version += "-p";
 				// Check if profiler was injected via K8S hook.
-				var envvars =new EnvironmentVariables(logger);
-				if (envvars.SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S") 
+				var envvars = new EnvironmentVariables(logger);
+				if (envvars.SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S")
 					|| envvars.SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S_ATTACH"))
 					activationMethod = Consts.ActivationK8SAttach;
 				else
