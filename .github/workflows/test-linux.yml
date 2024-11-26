@@ -124,7 +124,9 @@ jobs:
       - name: 'Tests: Integrations'
         run: ./build.sh test --test-suite integrations
 
-      - uses: actions/upload-artifact@v3
+      - name: Store crash dumps
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
         with:
           name: results
           retention-days: 1
@@ -140,7 +142,7 @@ jobs:
     
     - name: 'Tests: StartupHooks'
       run: ./build.sh test --test-suite startuphooks
-    
+
   profiler-tests:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]

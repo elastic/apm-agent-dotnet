@@ -175,13 +175,21 @@ module Build =
                 Some filter
             | _ -> None
 
+        let verbosity =
+            match suite with
+                | TestSuite.Integrations -> "detailed"
+                | _ -> "minimal"
+
         let blame =
             match suite with
-            | TestSuite.Integrations -> Some ["--blame-hang"; "--blame-hang-timeout"; "5m"; "--blame-crash-collect-always"; "--blame-crash-dump-type"; "mini"]
+            | TestSuite.Integrations -> Some [
+                "--blame-hang-timeout"; "15m";
+                "--blame-crash-dump-type"; "mini";
+                "--results-directory"; "build/output"]
             | _ -> None
         
         let command =
-            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; "minimal"; "-s"; "test/.runsettings"]
+            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; verbosity; "-s"; "test/.runsettings"]
             @ (match filter with None -> [] | Some f -> ["--filter"; f])
             @ (match framework with None -> [] | Some f -> ["-f"; f])
             @ (match logger with None -> [] | Some l -> [l])

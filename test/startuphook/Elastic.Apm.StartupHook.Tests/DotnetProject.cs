@@ -164,9 +164,12 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			var globalJsonCreationResult = Proc.Start(new StartArguments("dotnet",
 			[
-				"new", "globaljson",
-				"--sdk-version", "8.0.404", // Fixing this specific version, for now
-				"--roll-forward", "disable"
+				"new",
+				"globaljson",
+				"--sdk-version",
+				"8.0.404", // Fixing this specific version, for now
+				"--roll-forward",
+				"disable"
 			])
 			{
 				WorkingDirectory = directory
