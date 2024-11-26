@@ -73,12 +73,12 @@ jobs:
         run: ./build.bat test --test-suite integrations
 
       - name: Store crash dumps
-          uses: actions/upload-artifact@v4
-          if: success() || failure()
-          with:
-            name: results
-            retention-days: 1
-            path: build/output/**/*.dmp
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: results
+          retention-days: 1
+          path: build/output/**/*.dmp
   
   startup-hook-tests:
     runs-on: windows-2022
