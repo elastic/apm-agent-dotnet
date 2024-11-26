@@ -9,7 +9,10 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Xml.Linq;
 using ProcNet;
+using ProcNet.Std;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.StartupHook.Tests
 {
@@ -19,14 +22,16 @@ namespace Elastic.Apm.StartupHook.Tests
 	public class DotnetProject : IDisposable
 	{
 		private readonly string _publishDirectory = Path.Combine("bin", "Publish");
+		private readonly ITestOutputHelper _output;
 		private ObservableProcess _process;
 
-		private DotnetProject(string name, string template, string framework, string directory)
+		private DotnetProject(string name, string template, string framework, string directory, ITestOutputHelper output)
 		{
 			Name = name;
 			Template = template;
 			Framework = framework;
 			Directory = directory;
+			_output = output;
 		}
 
 		/// <summary>
@@ -49,24 +54,42 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// </summary>
 		public string Name { get; }
 
-		private void Publish()
+		private bool TryPublish()
 		{
+			var workingDirectory = Path.Combine(Directory, Name);
+
 			try
 			{
-				var processInfo = new ProcessStartInfo
+				_output.WriteLine("Publishing {0} to {1}.", Name, _publishDirectory);
+
+				var args = new[]
 				{
-					FileName = "dotnet",
-					Arguments = $"publish -c Release --property:PublishDir={_publishDirectory}",
-					WorkingDirectory = Directory
+					"publish",
+					"-c", "Release",
+					"--output", _publishDirectory
 				};
 
-				using var process = new Process { StartInfo = processInfo };
-				process.Start();
-				process.WaitForExit();
+				_output.WriteLine("Running 'dotnet {0}' in {1}", string.Join(' ', args), workingDirectory);
+
+				var startArgs = new StartArguments("dotnet", args)
+				{
+					WorkingDirectory = workingDirectory
+				};
+
+				var publishResult = Proc.Start(startArgs, TimeSpan.FromSeconds(30));
+
+				foreach (var line in publishResult.ConsoleOut)
+				{
+					_output.WriteLine(line.Line);
+				}
+
+				_output.WriteLine("Publish exited with exit code: {0}", publishResult.ExitCode ?? -1);
+
+				return publishResult.ExitCode.HasValue && publishResult.ExitCode.Value == 0;
 			}
 			catch (Exception e)
 			{
-				throw new Exception($"Problem running dotnet publish in {Directory} to output to {_publishDirectory}", e);
+				throw new Exception($"Problem running dotnet publish in {workingDirectory} to output to {_publishDirectory}.", e);
 			}
 		}
 
@@ -78,19 +101,32 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <returns></returns>
 		public ObservableProcess CreateProcess(string startupHookZipPath, IDictionary<string, string> environmentVariables = null)
 		{
-			Publish();
+			if (!TryPublish())
+				throw new Exception("Unable to publish sample application.");
 
 			var startupHookAssembly = UnzipStartupHook(startupHookZipPath);
+
+			_output.WriteLine("Unzipped startup hooks to {0}.", startupHookAssembly);
+
 			environmentVariables ??= new Dictionary<string, string>();
 			environmentVariables["DOTNET_STARTUP_HOOKS"] = startupHookAssembly;
+
+			var workingDir = Path.Combine(Directory, Name, _publishDirectory);
+
+			_output.WriteLine("Launching process 'dotnet {0}.dll' from {1}", Name, workingDir);
+
 			var arguments = new StartArguments("dotnet", $"{Name}.dll")
 			{
-				WorkingDirectory = Path.Combine(Directory, _publishDirectory),
+				WorkingDirectory = workingDir,
 				SendControlCFirst = true,
 				Environment = environmentVariables
 			};
 
 			_process = new ObservableProcess(arguments);
+
+			if (_process.ExitCode.HasValue)
+				_output.WriteLine("Launching process 'dotnet {0}.dll' failed with exit code {1}", Name, _process.ExitCode.Value);
+
 			return _process;
 		}
 
@@ -118,20 +154,44 @@ namespace Elastic.Apm.StartupHook.Tests
 
 		public void Dispose() => _process?.Dispose();
 
-		public static DotnetProject Create(string name, string template, string framework, params string[] arguments)
+		public static DotnetProject Create(ITestOutputHelper output, string name, string template, string framework, params string[] arguments)
 		{
 			var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+			System.IO.Directory.CreateDirectory(directory);
+
+			output.WriteLine("Using temp directory '{0}'", directory);
+
+			var globalJsonCreationResult = Proc.Start(new StartArguments("dotnet",
+			[
+				"new", "globaljson",
+				"--sdk-version", "8.0.404", // Fixing this specific version, for now
+				"--roll-forward", "disable"
+			])
+			{
+				WorkingDirectory = directory
+			});
+
+			foreach (var line in globalJsonCreationResult.ConsoleOut)
+			{
+				output.WriteLine(line.Line);
+			}
 
 			var args = new[]
 			{
 				"new", template,
 				"--name", name,
-				"--output", $"\"{directory}\"",
 				"--no-update-check",
 				"--framework", framework
 			}.Concat(arguments);
 
-			var result = Proc.Start(new StartArguments("dotnet", args));
+			var argsString = string.Join(' ', args);
+			output.WriteLine("Running dotnet {0}", argsString);
+
+			var result = Proc.Start(new StartArguments("dotnet", args)
+			{
+				WorkingDirectory = directory
+			}, TimeSpan.FromSeconds(30));
 
 			if (result.Completed)
 			{
@@ -149,7 +209,14 @@ namespace Elastic.Apm.StartupHook.Tests
 					+ $"output: {string.Join(Environment.NewLine, result.ConsoleOut.Select(c => c.Line))}");
 			}
 
-			return new DotnetProject(name, template, framework, directory);
+			output.WriteLine("Created new {0} project for {1} in {2}.", template, framework, directory);
+
+			foreach (var line in result.ConsoleOut)
+			{
+				output.WriteLine(line.Line);
+			}
+
+			return new DotnetProject(name, template, framework, directory, output);
 		}
 	}
 }
