@@ -25,7 +25,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			Assert.Equal(ValuesDuckType.Third.ToString(), ((IGetValue)copy).GetValueProp);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Fact]
 		public void NonPublicStructInterfaceProxyTest()
 		{

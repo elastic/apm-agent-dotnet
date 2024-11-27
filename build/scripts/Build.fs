@@ -173,13 +173,27 @@ module Build =
                 let testElseWhere = ["Tests"; "OpenTelemetry.Tests"; "StartupHook.Tests"; "Profiler.Managed.Tests"; "Azure"]
                 let filter = testElseWhere |> List.map (fun s -> $"FullyQualifiedName!~Elastic.Apm.%s{s}") |> String.concat "&"
                 Some filter
-            | _ -> None 
+            | _ -> None
+
+        let verbosity =
+            match suite with
+                | TestSuite.Integrations -> "detailed"
+                | _ -> "minimal"
+
+        let blame =
+            match suite with
+            | TestSuite.Integrations -> Some [
+                "--blame-hang-timeout"; "15m";
+                "--blame-crash-dump-type"; "mini";
+                "--results-directory"; "build/output"]
+            | _ -> None
         
         let command =
-            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; "minimal"; "-s"; "test/.runsettings"]
+            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; verbosity; "-s"; "test/.runsettings"]
             @ (match filter with None -> [] | Some f -> ["--filter"; f])
             @ (match framework with None -> [] | Some f -> ["-f"; f])
             @ (match logger with None -> [] | Some l -> [l])
+            @ (match blame with None -> [] | Some l -> l)
             @ ["--"; "RunConfiguration.CollectSourceInformation=true"]
             
         DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
@@ -236,16 +250,14 @@ module Build =
         ToolRestore()
         DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
-        
     let Format () =
-        DotNet.Exec ["dotnet"; "format"; "--verbosity"; "quiet"; "--exclude"; "src/Elastic.Apm/Libraries/"]
-            
+        DotNet.Exec ["format"; "--verbosity"; "quiet"; "--verify-no-changes"; "--exclude"; "src/Elastic.Apm/Libraries/"]
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =
         source.GetFiles()
         |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
         |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
         
-    /// Creates versioned ElasticApmAgent.zip file    
+    /// Creates versioned ElasticApmAgent.zip file
     let AgentZip () =        
         let name = "ElasticApmAgent"      
         let currentAssemblyVersion = Versioning.CurrentVersion.FileVersion
@@ -277,7 +289,7 @@ module Build =
         
         // assemblies compiled against 6.0 version of System.Diagnostics.DiagnosticSource
         !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major)) 
-        ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/net6.0" diagnosticSourceVersion6.Major))
+        ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/net8.0" diagnosticSourceVersion6.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" diagnosticSourceVersion6.Major)))

@@ -5,7 +5,7 @@
     <PackageId>Elastic.Apm.AspNetCore</PackageId>
     <Description>Elastic APM for ASP.NET Core. This package contains auto instrumentation for ASP.NET Core. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore</PackageTags>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
@@ -23,7 +23,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="2.2.0" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>

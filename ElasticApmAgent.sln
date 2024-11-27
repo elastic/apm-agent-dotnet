@@ -18,9 +18,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "test
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{267A241E-571F-458F-B04C-B6C4DE79E735}"
 	ProjectSection(SolutionItems) = preProject
+		test\.runsettings = test\.runsettings
 		test\Directory.Build.props = test\Directory.Build.props
 		test\xunit.runner.json = test\xunit.runner.json
-		test\.runsettings = test\.runsettings
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm", "src\Elastic.Apm\Elastic.Apm.csproj", "{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}"
@@ -239,6 +239,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HostingTestApp", "test\integrations\applications\HostingTestApp\HostingTestApp.csproj", "{61F5A733-DC79-44FC-B9CB-4EF34FC9D96B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Tests.Shared", "test\integrations\Elastic.Apm.Extensions.Tests.Shared\Elastic.Apm.Extensions.Tests.Shared.csproj", "{7482D2D9-BBF7-4C8B-B26C-BEA9BCF345B0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7A07D777-DEC2-4BB7-B4A1-028BA658762A}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -200,7 +200,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 					// By default we set unknown outcome
 					transaction.Outcome = Outcome.Unknown;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					switch (activity.Status)
 					{
 						case ActivityStatusCode.Unset:
@@ -254,7 +254,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 			// By default we set unknown outcome
 			span.Outcome = Outcome.Unknown;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			switch (activity.Status)
 			{
 				case ActivityStatusCode.Unset:

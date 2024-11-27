@@ -93,7 +93,7 @@ namespace Elastic.Apm.AspNetCore
 		}
 
 		private static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			(serviceProvider.GetService(typeof(IWebHostEnvironment)) as IWebHostEnvironment)?.EnvironmentName;
 #else
 #pragma warning disable CS0246

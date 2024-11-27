@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <RootNamespace>Elastic.Apm.Extensions.Logging</RootNamespace>
     <AssemblyName>Elastic.Apm.Extensions.Logging</AssemblyName>
     <PackageId>Elastic.Apm.Extensions.Logging</PackageId>
@@ -19,8 +19,8 @@
     <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting" Key="$(ExposedPublicKey)" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" VersionOverride="6.0.0" PrivateAssets="All" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" VersionOverride="8.0.1" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

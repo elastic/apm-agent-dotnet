@@ -1552,9 +1552,11 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Deserializing {0} using ISerializable constructor.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
             }
 
-            SerializationInfo serializationInfo = new SerializationInfo(contract.UnderlyingType, new JsonFormatterConverter(this, contract, member));
+#pragma warning disable SYSLIB0050
+			SerializationInfo serializationInfo = new SerializationInfo(contract.UnderlyingType, new JsonFormatterConverter(this, contract, member));
+#pragma warning restore SYSLIB0050
 
-            bool finished = false;
+			bool finished = false;
             do
             {
                 switch (reader.TokenType)

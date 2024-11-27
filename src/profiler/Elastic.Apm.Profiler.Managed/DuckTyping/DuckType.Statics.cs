@@ -66,7 +66,7 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 		private static Dictionary<ModuleBuilder, HashSet<string>> _ignoresAccessChecksToAssembliesSetDictionary =
 			new Dictionary<ModuleBuilder, HashSet<string>>();
 #pragma warning restore IDE0044, IDE1006
-		
+
 		internal static long AssemblyCount => _assemblyCount;
 
 		internal static long TypeCount => _typeCount;

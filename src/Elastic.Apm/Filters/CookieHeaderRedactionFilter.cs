@@ -9,7 +9,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using System.Buffers;
 #endif
 
@@ -45,7 +45,7 @@ namespace Elastic.Apm.Filters
 				// e.g. Cookies | cookies | COOKIES
 				const int maxKeys = 4;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				var matchedKeys = ArrayPool<string>.Shared.Rent(maxKeys);
 				var matchedValues = ArrayPool<string>.Shared.Rent(maxKeys);
 #else
@@ -81,7 +81,7 @@ namespace Elastic.Apm.Filters
 					}
 				}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				ArrayPool<string>.Shared.Return(matchedKeys);
 				ArrayPool<string>.Shared.Return(matchedValues);
 #endif
