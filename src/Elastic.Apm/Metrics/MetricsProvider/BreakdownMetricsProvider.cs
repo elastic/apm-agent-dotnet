@@ -17,7 +17,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// <summary>
 		/// Encapsulates types which are used as key to group MetricSets.
 		/// </summary>
-		private struct GroupKey
+		private readonly record struct GroupKey
 		{
 			public TransactionInfo Transaction { get; }
 			public SpanInfo Span { get; }
