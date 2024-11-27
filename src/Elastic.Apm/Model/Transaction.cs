@@ -24,6 +24,8 @@ namespace Elastic.Apm.Model;
 
 internal class Transaction : ITransaction
 {
+	private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(Transaction);
+
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
 #if NET
@@ -133,7 +135,7 @@ internal class Transaction : ITransaction
 		Configuration = configuration;
 		Timestamp = timestamp ?? TimeUtils.TimestampNow();
 
-		_logger = logger?.Scoped(nameof(Transaction));
+		_logger = logger;
 		_apmServerInfo = apmServerInfo;
 		_sender = sender;
 		_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
@@ -280,7 +282,7 @@ internal class Transaction : ITransaction
 				}
 				catch (Exception e)
 				{
-					_logger.Error()?.LogException(e, "Error setting trace context on created activity");
+					_logger.LogScopedErrorWithException(LoggingScopeName, e, "Error setting trace context on created activity");
 				}
 			}
 			else
@@ -329,8 +331,7 @@ internal class Transaction : ITransaction
 
 		if (isSamplingFromDistributedTracingData)
 		{
-			_logger.Trace()
-				?.Log("New Transaction instance created: {Transaction}. " +
+			_logger.LogScopedTrace(LoggingScopeName, "New Transaction instance created: {Transaction}. " +
 					"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})."
 					+
 					" Start time: {Time} (as timestamp: {Timestamp})",
@@ -338,8 +339,7 @@ internal class Transaction : ITransaction
 		}
 		else
 		{
-			_logger.Trace()
-				?.Log("New Transaction instance created: {Transaction}. " +
+			_logger.LogScopedTrace(LoggingScopeName, "New Transaction instance created: {Transaction}. " +
 					"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
 					" Start time: {Time} (as timestamp: {Timestamp})",
 					this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
@@ -616,7 +616,7 @@ internal class Transaction : ITransaction
 
 		var idBytes = new byte[8];
 		ParentId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-		_logger?.Debug()?.Log("Setting ParentId to transaction, {transaction}", this);
+		_logger.LogScopedDebug(LoggingScopeName, "Setting ParentId to transaction, {transaction}", this);
 		return ParentId;
 	}
 
@@ -652,8 +652,7 @@ internal class Transaction : ITransaction
 
 		if (Duration.HasValue)
 		{
-			_logger.Trace()
-				?.Log("Ended {Transaction} (with Duration already set)." +
+			_logger.LogScopedTrace(LoggingScopeName, "Ended {Transaction} (with Duration already set)." +
 					" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 
@@ -670,8 +669,7 @@ internal class Transaction : ITransaction
 			var endTimestamp = TimeUtils.TimestampNow();
 			ChildDurationTimer.OnSpanEnd(endTimestamp);
 			Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-			_logger.Trace()
-				?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
+			_logger.LogScopedTrace(LoggingScopeName, "Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
 					" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
 					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
@@ -699,8 +697,7 @@ internal class Transaction : ITransaction
 		{
 			if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 			{
-				_logger?.Debug()
-					?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
+				_logger.LogScopedDebug(LoggingScopeName, "Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
 						CompressionBuffer.Id);
 			}
 			else
@@ -721,7 +718,7 @@ internal class Transaction : ITransaction
 
 					if (!string.IsNullOrEmpty(matchedTransactionNameGroup))
 					{
-						_logger?.Trace()?.Log("Transaction name '{TransactionName}' matched transaction " +
+						_logger.LogScopedTrace(LoggingScopeName, "Transaction name '{TransactionName}' matched transaction " +
 							"name group '{TransactionNameGroup}' from configuration",
 								Name, matchedTransactionNameGroup);
 
@@ -734,8 +731,7 @@ internal class Transaction : ITransaction
 		}
 		else
 		{
-			_logger?.Debug()
-				?.Log("Dropping unsampled transaction - unsampled transactions won't be sent on APM Server v8+. TransactionId: {id}", Id);
+			_logger.LogScopedDebug(LoggingScopeName, "Dropping unsampled transaction - unsampled transactions won't be sent on APM Server v8+. TransactionId: {id}", Id);
 		}
 
 		_currentExecutionSegmentsContainer.CurrentTransaction = null;
@@ -773,7 +769,7 @@ internal class Transaction : ITransaction
 	{
 		var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 			instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp,
-			isExitSpan: isExitSpan, id: id, links: links, current: current);
+			isExitSpan: isExitSpan, id: id, links: links);
 
 		ChildDurationTimer.OnChildStart(retVal.Timestamp);
 		if (!string.IsNullOrEmpty(subType))
@@ -782,7 +778,7 @@ internal class Transaction : ITransaction
 		if (!string.IsNullOrEmpty(action))
 			retVal.Action = action;
 
-		_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
+		_logger.LogScopedTrace(LoggingScopeName, "Starting {SpanDetails}", retVal.ToString());
 		return retVal;
 	}
 

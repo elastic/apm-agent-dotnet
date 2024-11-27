@@ -17,19 +17,19 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
+		private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(Error);
+
 		[JsonIgnore]
 		internal IConfiguration Configuration { get; }
 
-		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null
-		)
-			: this(transaction, parentId, loggerArg, labels) => Exception = capturedException;
+		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null) :
+			this(transaction, parentId, loggerArg, labels) => Exception = capturedException;
 
 		public Error(ErrorLog errorLog, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null) :
 			this(transaction, parentId, loggerArg, labels)
-			=> Log = errorLog;
+				=> Log = errorLog;
 
-
-		private Error(Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
+		private Error(Transaction transaction, string parentId, IApmLogger logger, Dictionary<string, Label> labels = null)
 		{
 			Timestamp = TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
@@ -57,9 +57,7 @@ namespace Elastic.Apm.Model
 
 			CheckAndCaptureBaggage(transaction);
 
-			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
-			logger.Trace()
-				?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
+			logger.LogScopedTrace(LoggingScopeName, "New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 

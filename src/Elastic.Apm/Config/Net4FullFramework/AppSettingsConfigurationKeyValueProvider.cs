@@ -3,8 +3,8 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-#if NETFRAMEWORK
 #nullable enable
+#if NETFRAMEWORK
 using System.Configuration;
 using Elastic.Apm.Logging;
 
@@ -12,10 +12,11 @@ namespace Elastic.Apm.Config.Net4FullFramework;
 
 internal class AppSettingsConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 {
+	private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(AppSettingsConfigurationKeyValueProvider);
+
 	private readonly IApmLogger? _logger;
 
-	public AppSettingsConfigurationKeyValueProvider(IApmLogger? logger) =>
-		_logger = logger?.Scoped(nameof(AppSettingsConfigurationKeyValueProvider));
+	public AppSettingsConfigurationKeyValueProvider(IApmLogger? logger) => _logger = logger;
 
 	public string Description => nameof(AppSettingsConfigurationKeyValueProvider);
 
@@ -29,9 +30,10 @@ internal class AppSettingsConfigurationKeyValueProvider : IConfigurationKeyValue
 		}
 		catch (ConfigurationErrorsException ex)
 		{
-			_logger.Error()?.LogException(ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
+			_logger.LogScopedErrorWithException(LoggingScopeName, ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
 		}
 		return null;
 	}
 }
 #endif
+#nullable restore

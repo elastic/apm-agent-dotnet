@@ -16,7 +16,7 @@ internal class ScopedLogger : IApmLogger
 
 	public IApmLogger Logger { get; }
 
-#if !NET6_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 	private readonly object _lock = new();
 #endif
 
