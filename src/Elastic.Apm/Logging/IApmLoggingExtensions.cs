@@ -17,8 +17,10 @@ namespace Elastic.Apm.Logging;
 internal static class LoggingExtensions
 {
 	// Using a ConcurrentDictionary rather than ConditionalWeakTable as we expect few distinct scopes
-	// and we want to retain them for reuse across the application lifetime.
-	private static readonly ConcurrentDictionary<string, ScopedLogger> ScopedLoggers = new();
+	// and we want to retain them for reuse across the application lifetime. We use the scope name and the
+	// instance of the base logger for the key, for rare scenarios when different base loggers might be
+	// used. In reality, this only seems to affect testing scenarios.
+	private static readonly ConcurrentDictionary<(string, IApmLogger), ScopedLogger> ScopedLoggers = new();
 
 	private static readonly ConditionalWeakTable<string, LogValuesFormatter> Formatters = new();
 
@@ -37,18 +39,20 @@ internal static class LoggingExtensions
 		if (logger is null)
 			return null;
 
-		if (!ScopedLoggers.TryGetValue(scope, out var scopedLogger))
+		var baseLogger = logger is ScopedLogger s ? s.Logger : logger;
+
+		if (!ScopedLoggers.TryGetValue((scope, baseLogger), out var scopedLogger))
 		{
 			// Ensure we don't allow creations of scoped loggers 'wrapping' other scoped loggers
-			var potentialScopedLogger = new ScopedLogger(logger is ScopedLogger s ? s.Logger : logger, scope);
+			var potentialScopedLogger = new ScopedLogger(baseLogger, scope);
 
-			if (ScopedLoggers.TryAdd(scope, potentialScopedLogger))
+			if (ScopedLoggers.TryAdd((scope, baseLogger), potentialScopedLogger))
 			{
 				scopedLogger = potentialScopedLogger;
 			}
 			else
 			{
-				scopedLogger = ScopedLoggers[scope];
+				scopedLogger = ScopedLoggers[(scope, baseLogger)];
 			}
 		}
 
