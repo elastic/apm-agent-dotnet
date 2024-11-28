@@ -36,7 +36,7 @@ namespace Elastic.Apm.Api
 			BreakdownMetricsProvider breakdownMetricsProvider
 		)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
 			_configurationProvider = configurationProvider.ThrowIfArgumentNull(nameof(configurationProvider));

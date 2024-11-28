@@ -12,11 +12,9 @@ namespace Elastic.Apm.Config.Net4FullFramework;
 
 internal class AppSettingsConfigurationKeyValueProvider : IConfigurationKeyValueProvider
 {
-	private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(AppSettingsConfigurationKeyValueProvider);
-
 	private readonly IApmLogger? _logger;
 
-	public AppSettingsConfigurationKeyValueProvider(IApmLogger? logger) => _logger = logger;
+	public AppSettingsConfigurationKeyValueProvider(IApmLogger? logger) => _logger = logger?.Scoped(nameof(AppSettingsConfigurationKeyValueProvider));
 
 	public string Description => nameof(AppSettingsConfigurationKeyValueProvider);
 
@@ -30,7 +28,7 @@ internal class AppSettingsConfigurationKeyValueProvider : IConfigurationKeyValue
 		}
 		catch (ConfigurationErrorsException ex)
 		{
-			_logger.LogScopedErrorWithException(LoggingScopeName, ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
+			_logger?.Error()?.LogException(ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
 		}
 		return null;
 	}

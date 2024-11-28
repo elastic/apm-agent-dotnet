@@ -23,10 +23,8 @@ internal static class LoggingExtensions
 	private static readonly ConditionalWeakTable<string, LogValuesFormatter> Formatters = new();
 
 	/// <summary>
-	/// Returns a new ScopedLogger.
+	/// Returns a ScopedLogger, potentially from the cache.
 	/// </summary>
-	/// <remarks>This does not use the cashe of scoped loggers. Therefore it is strongly recommended
-	/// to use the scope based logging externsions such as <see cref="LogScopedError(IApmLogger?, ScopeName, string, object[])"/> instead.</remarks>
 	/// <param name="logger">An existing <see cref="IApmLogger"/>.</param>
 	/// <param name="scope">The name of the scope.</param>
 	/// <returns>A new scoped logger or <c>null</c> of the <see cref="IApmLogger"/> is <c>null</c>.</returns>
@@ -39,44 +37,9 @@ internal static class LoggingExtensions
 		if (logger is null)
 			return null;
 
-		// Ensure we don't allow creations of scoped loggers 'wrapping' other scoped loggers
-		return new(logger is ScopedLogger s ? s.Logger : logger, scope);
-	}
-
-	internal static void LogScopedDebug(this IApmLogger? logger, ScopeName scope, string message, params object?[]? args) =>
-		LogScoped(logger, scope, LogLevel.Debug, message, null, args);
-
-	internal static void LogScopedTrace(this IApmLogger? logger, ScopeName scope, string message, params object?[]? args) =>
-		LogScoped(logger, scope, LogLevel.Trace, message, null, args);
-
-	internal static void LogScopedTraceWithException(this IApmLogger? logger, ScopeName scope, Exception exception, string message, params object?[]? args) =>
-		LogScoped(logger, scope, LogLevel.Trace, message, exception, args);
-
-	internal static void LogScopedWarning(this IApmLogger? logger, ScopeName scope, string message, params object?[]? args) =>
-		LogScoped(logger, scope, LogLevel.Warning, message, null, args);
-
-	internal static void LogScopedWarningWithException(this IApmLogger? logger, ScopeName scope, Exception exception, string message, params object?[]? args) =>
-		LogScoped(logger, scope, LogLevel.Warning, message, exception, args);
-
-	internal static void LogScopedError(this IApmLogger? logger, ScopeName scope, string message, params object?[]? args) =>
-		LogScoped(logger, scope, LogLevel.Error, message, null, args);
-
-	internal static void LogScopedErrorWithException(this IApmLogger? logger, ScopeName scope, Exception exception, string message, params object?[]? args) =>
-		LogScoped(logger, scope, LogLevel.Error, message, exception, args);
-
-	private static void LogScoped(this IApmLogger? logger, ScopeName scope, LogLevel logLevel, string message, Exception? exception, params object?[]? args)
-	{
-		if (scope.IsEmpty)
-			throw new ArgumentException("Scope is required to be non-empty.", nameof(scope));
-
-		if (string.IsNullOrEmpty(message))
-			throw new ArgumentException("Scope is required to be non-null and non-empty.", nameof(scope));
-
-		if (logger is null || !logger.IsEnabled(logLevel))
-			return;
-
 		if (!ScopedLoggers.TryGetValue(scope, out var scopedLogger))
 		{
+			// Ensure we don't allow creations of scoped loggers 'wrapping' other scoped loggers
 			var potentialScopedLogger = new ScopedLogger(logger is ScopedLogger s ? s.Logger : logger, scope);
 
 			if (ScopedLoggers.TryAdd(scope, potentialScopedLogger))
@@ -88,9 +51,8 @@ internal static class LoggingExtensions
 				scopedLogger = ScopedLoggers[scope];
 			}
 		}
-
-		// We've already checked above that the level is enabled, so we ca safely log this directly
-		scopedLogger.DoLog(logLevel, message, exception, args);
+		
+		return scopedLogger;
 	}
 
 	private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception? exception, params object?[]? args)

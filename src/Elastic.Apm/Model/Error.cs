@@ -17,8 +17,6 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
-		private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(Error);
-
 		[JsonIgnore]
 		internal IConfiguration Configuration { get; }
 
@@ -57,7 +55,7 @@ namespace Elastic.Apm.Model
 
 			CheckAndCaptureBaggage(transaction);
 
-			logger.LogScopedTrace(LoggingScopeName, "New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
+			logger?.Scoped(nameof(Error))?.Trace()?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
