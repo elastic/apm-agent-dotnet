@@ -59,10 +59,45 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 		}, data.TracingData);
 	}
 
+	private const string TraceParentHeader = "\"traceparent\":";
+	private const string TraceStateHeader = "\"tracestate\":";
+
 	private static TriggerSpecificData GetTriggerSpecificData(FunctionContext context)
 	{
 		try
 		{
+			string? traceparent = null;
+			string? tracestate = null;
+
+			// NOTE: We parse the original headers from BindingData as internally the Host sends the GrpcWorker a request. When no traceparent
+			// is present on the original request to the Functions host, one is added, with the sampled flag set as false. This is then present
+			// if we try to read it from DefaultHttpContext which means we don't record transactions. Currently this works around that issue to
+			// ensure we capture the trace based on the original request to the Functions host.
+			if (context.BindingContext.BindingData.TryGetValue("Headers", out var headers) && headers is string headersAsString)
+			{
+				var span = headersAsString.AsSpan();
+				var indexOfTraceparent = span.IndexOf(TraceParentHeader.AsSpan(), StringComparison.OrdinalIgnoreCase);
+
+				if (indexOfTraceparent > -1)
+				{
+					var traceparentSpan = span.Slice(indexOfTraceparent + TraceParentHeader.Length + 1);
+					var endOfTraceparentSpan = traceparentSpan.IndexOf('"');
+					traceparentSpan = traceparentSpan.Slice(0, endOfTraceparentSpan);
+
+					if (traceparentSpan.Length == 55)
+						traceparent = traceparentSpan.ToString();
+				}
+
+				var indexOfTracestate = span.IndexOf(TraceStateHeader.AsSpan(), StringComparison.OrdinalIgnoreCase);
+
+				if (indexOfTracestate > -1)
+				{
+					var tracestateSpan = span.Slice(indexOfTracestate + TraceStateHeader.Length + 1);
+					var endOfTracestateSpan = tracestateSpan.IndexOf('"');
+					tracestate = tracestateSpan.Slice(0, endOfTracestateSpan).ToString();
+				}
+			}
+
 			var httpRequestContext = context.Items
 				.Where(i => i.Key is string s && s.Equals("HttpRequestContext", StringComparison.Ordinal))
 				.Select(i => i.Value)
@@ -73,13 +108,11 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 				Context.Logger.Trace()?.Log("HTTP Trigger type detected.");
 
 				var httpRequest = requestContext.Request;
-				var traceparent = httpRequest.Headers["traceparent"];
-				var tracestate = httpRequest.Headers["tracestate"];
 
 				if (Uri.TryCreate(httpRequest.GetDisplayUrl(), UriKind.Absolute, out var uri))
 				{
 					return new($"{httpRequest.Method} {uri.AbsolutePath}", Trigger.TypeHttp,
-						TraceContext.TryExtractTracingData(traceparent.FirstOrDefault(), tracestate.FirstOrDefault()))
+						TraceContext.TryExtractTracingData(traceparent, tracestate))
 						{
 							Request = new Request(httpRequest.Method, Url.FromUri(uri))
 							{
@@ -89,16 +122,14 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 				}
 			}
 
+			// This is the original code, left as a fallback for older versions of the Functions library
 			var httpRequestData = GetHttpRequestData(context);
 			if (httpRequestData != null) // HTTP Trigger
 			{
 				Context.Logger.Trace()?.Log("HTTP Trigger type detected.");
 
-				httpRequestData.Headers.TryGetValues("traceparent", out var traceparent);
-				httpRequestData.Headers.TryGetValues("tracestate", out var tracestate);
-
 				return new($"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}", Trigger.TypeHttp,
-					TraceContext.TryExtractTracingData(traceparent?.FirstOrDefault(), tracestate?.FirstOrDefault()))
+					TraceContext.TryExtractTracingData(traceparent, tracestate))
 					{
 						Request = new Request(httpRequestData.Method, Url.FromUri(httpRequestData.Url))
 						{
