@@ -21,7 +21,7 @@ namespace Elastic.Apm.Api
 	{
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly IConfigurationSnapshotProvider _configurationProvider;
-		private readonly ScopedLogger _logger;
+		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
 		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
@@ -83,7 +83,7 @@ namespace Elastic.Apm.Api
 				traceId: traceId, links: links, current: current)
 			{ Service = _service };
 
-			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
+			_logger?.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
 		}
 

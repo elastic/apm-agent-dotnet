@@ -16,7 +16,7 @@ internal class AzureFunctionsContext
 
 	internal AzureFunctionsContext(string loggerScopeName)
 	{
-		Logger = Agent.Instance.Logger.Scoped(loggerScopeName);
+		Logger = Agent.Instance.Logger.Scoped(loggerScopeName) ?? Agent.Instance.Logger;
 		MetaData = AzureFunctionsMetadataProvider.GetAzureFunctionsMetaData(Logger);
 		UpdateServiceInformation(Agent.Instance.Service);
 		FaasIdPrefix =

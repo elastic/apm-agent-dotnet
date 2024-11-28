@@ -3,10 +3,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -22,15 +21,15 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener : IDisposable
 	{
-		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
+		private static readonly string[] ServerPortAttributeKeys = [SemanticConventions.ServerPort, SemanticConventions.NetPeerPort];
 
 		private static readonly string[] ServerAddressAttributeKeys =
-			new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+			[SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp];
 
 		private static readonly string[] HttpAttributeKeys =
-			new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl, SemanticConventions.HttpScheme };
+			[SemanticConventions.UrlFull, SemanticConventions.HttpUrl, SemanticConventions.HttpScheme];
 
-		private static readonly string[] HttpUrlAttributeKeys = new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl };
+		private static readonly string[] HttpUrlAttributeKeys = [SemanticConventions.UrlFull, SemanticConventions.HttpUrl];
 
 		private readonly ConditionalWeakTable<Activity, Span> _activeSpans = new();
 		private readonly ConditionalWeakTable<Activity, Transaction> _activeTransactions = new();
@@ -77,7 +76,7 @@ namespace Elastic.Apm.OpenTelemetry
 				if (HasServiceBusInstrumentation && activity.Tags.Any(kvp =>
 					kvp.Key.Equals("az.namespace", StringComparison.Ordinal) && kvp.Value.Equals("Microsoft.ServiceBus", StringComparison.Ordinal)))
 				{
-					_logger.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.ServiceBus' " +
+					_logger?.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.ServiceBus' " +
 						"activity because 'Elastic.Apm.Azure.ServiceBus' is present in the application.",
 						activity.DisplayName, activity.Id, activity.TraceId);
 
@@ -87,7 +86,7 @@ namespace Elastic.Apm.OpenTelemetry
 				if (HasStorageInstrumentation && activity.Tags.Any(kvp =>
 					kvp.Key.Equals("az.namespace", StringComparison.Ordinal) && kvp.Value.Equals("Microsoft.Storage", StringComparison.Ordinal)))
 				{
-					_logger.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.Storage' " +
+					_logger?.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.Storage' " +
 						"activity because 'Elastic.Apm.Azure.Storage' is present in the application.",
 						activity.DisplayName, activity.Id, activity.TraceId);
 
@@ -96,12 +95,12 @@ namespace Elastic.Apm.OpenTelemetry
 
 				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
 				{
-					_logger.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
-						"a skipped activity name defined in KnownListeners.");
+					_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
+						"a skipped activity name defined in KnownListeners.", activity.DisplayName, activity.Id, activity.TraceId);
 					return;
 				}
 
-				_logger.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+				_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
 
 				var spanLinks = new List<SpanLink>(activity.Links.Count());
@@ -176,12 +175,12 @@ namespace Elastic.Apm.OpenTelemetry
 			{
 				if (activity == null)
 				{
-					_logger.Trace()?.Log("ActivityStopped called with `null` activity. Ignoring `null` activity.");
+					_logger?.Trace()?.Log("ActivityStopped called with `null` activity. Ignoring `null` activity.");
 					return;
 				}
 				activity.Stop();
 
-				_logger.Trace()?.Log("ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+				_logger?.Trace()?.Log("ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
 
 				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
