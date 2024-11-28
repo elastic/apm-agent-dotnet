@@ -10,9 +10,12 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Extensions;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
+using Microsoft.Extensions.Primitives;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 
 namespace Elastic.Apm.Azure.Functions;
@@ -58,22 +61,55 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 
 	private static TriggerSpecificData GetTriggerSpecificData(FunctionContext context)
 	{
-		var httpRequestData = GetHttpRequestData(context);
-		if (httpRequestData != null) // HTTP Trigger
+		try
 		{
-			Context.Logger.Trace()?.Log("HTTP Trigger type detected.");
+			var httpRequestContext = context.Items
+				.Where(i => i.Key is string s && s.Equals("HttpRequestContext", StringComparison.Ordinal))
+				.Select(i => i.Value)
+				.SingleOrDefault();
 
-			httpRequestData.Headers.TryGetValues("traceparent", out var traceparent);
-			httpRequestData.Headers.TryGetValues("tracestate", out var tracestate);
-
-			return new($"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}", Trigger.TypeHttp,
-				TraceContext.TryExtractTracingData(traceparent?.FirstOrDefault(), tracestate?.FirstOrDefault()))
+			if (httpRequestContext is DefaultHttpContext requestContext)
 			{
-				Request = new Request(httpRequestData.Method, Url.FromUri(httpRequestData.Url))
+				Context.Logger.Trace()?.Log("HTTP Trigger type detected.");
+
+				var httpRequest = requestContext.Request;
+				var traceparent = httpRequest.Headers["traceparent"];
+				var tracestate = httpRequest.Headers["tracestate"];
+
+				if (Uri.TryCreate(httpRequest.GetDisplayUrl(), UriKind.Absolute, out var uri))
 				{
-					Headers = CreateHeadersDictionary(httpRequestData.Headers),
+					return new($"{httpRequest.Method} {uri.AbsolutePath}", Trigger.TypeHttp,
+						TraceContext.TryExtractTracingData(traceparent.FirstOrDefault(), tracestate.FirstOrDefault()))
+						{
+							Request = new Request(httpRequest.Method, Url.FromUri(uri))
+							{
+								Headers = CreateHeadersDictionary(httpRequest.Headers),
+							}
+						};
 				}
-			};
+			}
+
+			var httpRequestData = GetHttpRequestData(context);
+			if (httpRequestData != null) // HTTP Trigger
+			{
+				Context.Logger.Trace()?.Log("HTTP Trigger type detected.");
+
+				httpRequestData.Headers.TryGetValues("traceparent", out var traceparent);
+				httpRequestData.Headers.TryGetValues("tracestate", out var tracestate);
+
+				return new($"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}", Trigger.TypeHttp,
+					TraceContext.TryExtractTracingData(traceparent?.FirstOrDefault(), tracestate?.FirstOrDefault()))
+					{
+						Request = new Request(httpRequestData.Method, Url.FromUri(httpRequestData.Url))
+						{
+							Headers = CreateHeadersDictionary(httpRequestData.Headers),
+						}
+					};
+			}
+		}
+		catch
+		{
+			// ignored
 		}
 
 		// Generic
@@ -113,6 +149,9 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 
 	private static Dictionary<string, string> CreateHeadersDictionary(HttpHeadersCollection httpHeadersCollection) =>
 		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(",", h.Value));
+
+	private static Dictionary<string, string> CreateHeadersDictionary(IHeaderDictionary headerDictionary) =>
+		headerDictionary.ToDictionary(h => h.Key, h => string.Join(",", h.Value));
 
 	private static HttpRequestData? GetHttpRequestData(FunctionContext functionContext)
 	{
