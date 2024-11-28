@@ -36,7 +36,7 @@ namespace Elastic.Apm.Api
 			BreakdownMetricsProvider breakdownMetricsProvider
 		)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
 			_configurationProvider = configurationProvider.ThrowIfArgumentNull(nameof(configurationProvider));
@@ -83,7 +83,7 @@ namespace Elastic.Apm.Api
 				traceId: traceId, links: links, current: current)
 			{ Service = _service };
 
-			_logger?.Debug()?.Log("{Scope} Starting {TransactionValue}", nameof(Tracer), retVal);
+			_logger?.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
 		}
 

@@ -24,8 +24,6 @@ namespace Elastic.Apm.Model;
 
 internal class Transaction : ITransaction
 {
-	private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(Transaction);
-
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
 #if NET
@@ -135,7 +133,7 @@ internal class Transaction : ITransaction
 		Configuration = configuration;
 		Timestamp = timestamp ?? TimeUtils.TimestampNow();
 
-		_logger = logger;
+		_logger = logger?.Scoped(nameof(Transaction));
 		_apmServerInfo = apmServerInfo;
 		_sender = sender;
 		_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
@@ -282,7 +280,7 @@ internal class Transaction : ITransaction
 				}
 				catch (Exception e)
 				{
-					_logger.LogScopedErrorWithException(LoggingScopeName, e, "Error setting trace context on created activity");
+					_logger?.Error()?.LogException(e, "Error setting trace context on created activity");
 				}
 			}
 			else
@@ -329,20 +327,22 @@ internal class Transaction : ITransaction
 		SpanCount = new SpanCount();
 		_currentExecutionSegmentsContainer.CurrentTransaction = this;
 
+		var formattedTimestamp = _logger.IsEnabled(LogLevel.Trace) ? TimeUtils.FormatTimestampForLog(Timestamp) : string.Empty;
+
 		if (isSamplingFromDistributedTracingData)
 		{
-			_logger.LogScopedTrace(LoggingScopeName, "New Transaction instance created: {Transaction}. " +
+			_logger?.Trace()?.Log("New Transaction instance created: {Transaction}. " +
 					"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})."
 					+
 					" Start time: {Time} (as timestamp: {Timestamp})",
-					this, IsSampled, SampleRate, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+					this, IsSampled, SampleRate, distributedTracingData, formattedTimestamp, Timestamp);
 		}
 		else
 		{
-			_logger.LogScopedTrace(LoggingScopeName, "New Transaction instance created: {Transaction}. " +
+			_logger?.Trace()?.Log("New Transaction instance created: {Transaction}. " +
 					"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
 					" Start time: {Time} (as timestamp: {Timestamp})",
-					this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+					this, IsSampled, sampler, formattedTimestamp, Timestamp);
 		}
 	}
 
@@ -616,7 +616,7 @@ internal class Transaction : ITransaction
 
 		var idBytes = new byte[8];
 		ParentId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-		_logger.LogScopedDebug(LoggingScopeName, "Setting ParentId to transaction, {transaction}", this);
+		_logger?.Debug()?.Log("Setting ParentId to transaction, {transaction}", this);
 		return ParentId;
 	}
 
@@ -646,32 +646,38 @@ internal class Transaction : ITransaction
 
 	public void End()
 	{
+		var endTimestamp = TimeUtils.TimestampNow();
+
 		// If the outcome is still unknown and it was not specifically set to unknown, then it's success
 		if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
 			Outcome = Outcome.Success;
 
+		var formattedTimestamp = _logger.IsEnabled(LogLevel.Trace) ? TimeUtils.FormatTimestampForLog(Timestamp) : string.Empty;
+
 		if (Duration.HasValue)
 		{
-			_logger.LogScopedTrace(LoggingScopeName, "Ended {Transaction} (with Duration already set)." +
+			_logger?.Trace()?.Log("Ended {Transaction} (with Duration already set)." +
 					" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+					this, formattedTimestamp, Timestamp, Duration);
 
 			ChildDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
 		}
 		else
 		{
-			Assertion.IfEnabled?.That(!_isEnded,
-				$"Transaction's Duration doesn't have value even though {nameof(End)} method was already called." +
-				$" It contradicts the invariant enforced by {nameof(End)} method - Duration should have value when {nameof(End)} method exits" +
-				$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
-				$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
+			if (Assertion.IsEnabled && _isEnded)
+			{
+				throw new AssertionFailedException($"Transaction's Duration doesn't have value even though {nameof(End)} method was already called." +
+					$" It contradicts the invariant enforced by {nameof(End)} method - Duration should have value when {nameof(End)} method exits" +
+					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
+					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
+			}
 
-			var endTimestamp = TimeUtils.TimestampNow();
 			ChildDurationTimer.OnSpanEnd(endTimestamp);
 			Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-			_logger.LogScopedTrace(LoggingScopeName, "Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
+
+			_logger?.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
 					" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+					this, formattedTimestamp, Timestamp,
 					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 		}
 
@@ -697,7 +703,7 @@ internal class Transaction : ITransaction
 		{
 			if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 			{
-				_logger.LogScopedDebug(LoggingScopeName, "Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
+				_logger?.Debug()?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
 						CompressionBuffer.Id);
 			}
 			else
@@ -718,7 +724,7 @@ internal class Transaction : ITransaction
 
 					if (!string.IsNullOrEmpty(matchedTransactionNameGroup))
 					{
-						_logger.LogScopedTrace(LoggingScopeName, "Transaction name '{TransactionName}' matched transaction " +
+						_logger?.Trace()?.Log("Transaction name '{TransactionName}' matched transaction " +
 							"name group '{TransactionNameGroup}' from configuration",
 								Name, matchedTransactionNameGroup);
 
@@ -731,7 +737,7 @@ internal class Transaction : ITransaction
 		}
 		else
 		{
-			_logger.LogScopedDebug(LoggingScopeName, "Dropping unsampled transaction - unsampled transactions won't be sent on APM Server v8+. TransactionId: {id}", Id);
+			_logger?.Debug()?.Log("Dropping unsampled transaction - unsampled transactions won't be sent on APM Server v8+. TransactionId: {id}", Id);
 		}
 
 		_currentExecutionSegmentsContainer.CurrentTransaction = null;
@@ -778,7 +784,7 @@ internal class Transaction : ITransaction
 		if (!string.IsNullOrEmpty(action))
 			retVal.Action = action;
 
-		_logger.LogScopedTrace(LoggingScopeName, "Starting {SpanDetails}", retVal.ToString());
+		_logger?.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
 		return retVal;
 	}
 

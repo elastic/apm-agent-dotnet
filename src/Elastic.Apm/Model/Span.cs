@@ -22,8 +22,6 @@ namespace Elastic.Apm.Model
 	/// <inheritdoc />
 	internal class Span : ISpan
 	{
-		private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(Span);
-
 		private readonly IApmServerInfo _apmServerInfo;
 
 		private readonly ChildDurationTimer _childDurationTimer = new();
@@ -74,7 +72,7 @@ namespace Elastic.Apm.Model
 			Activity current = null
 		)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Span));
 			_payloadSender = payloadSender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_parentSpan = parentSpan;
@@ -125,8 +123,10 @@ namespace Elastic.Apm.Model
 
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 
-			_logger.LogScopedTrace(LoggingScopeName, "New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
-				this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
+			var formattedTimestamp = _logger.IsEnabled(LogLevel.Trace) ? TimeUtils.FormatTimestampForLog(Timestamp) : string.Empty;
+
+			_logger?.Trace()?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
+				this, formattedTimestamp, Timestamp, _parentSpan);
 		}
 
 		private void CheckAndCaptureBaggage()
@@ -402,7 +402,7 @@ namespace Elastic.Apm.Model
 			if (!string.IsNullOrEmpty(action))
 				span.Action = action;
 
-			_logger.LogScopedTrace(LoggingScopeName, "Starting {SpanDetails}", span.ToString());
+			_logger?.Trace()?.Log("Starting {SpanDetails}", span.ToString());
 
 			return span;
 		}
@@ -418,11 +418,13 @@ namespace Elastic.Apm.Model
 			if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
 				Outcome = Outcome.Success;
 
+			var formattedTimestamp = _logger.IsEnabled(LogLevel.Trace) ? TimeUtils.FormatTimestampForLog(Timestamp) : string.Empty;
+
 			if (Duration.HasValue)
 			{
-				_logger.LogScopedTrace(LoggingScopeName, "Ended {Span} (with Duration already set)." +
+				_logger?.Trace()?.Log("Ended {Span} (with Duration already set)." +
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+						this, formattedTimestamp, Timestamp, Duration);
 
 				if (_parentSpan != null)
 					_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
@@ -449,9 +451,9 @@ namespace Elastic.Apm.Model
 
 				_childDurationTimer.OnSpanEnd(endTimestamp);
 
-				_logger.LogScopedTrace(LoggingScopeName, "Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
+				_logger?.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						this, formattedTimestamp, Timestamp,
 						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
@@ -473,7 +475,7 @@ namespace Elastic.Apm.Model
 			}
 			catch (Exception e)
 			{
-				_logger.LogScopedWarningWithException(LoggingScopeName, e, "Failed deducing destination fields for span.");
+				_logger?.Warning()?.LogException(e, "Failed deducing destination fields for span.");
 			}
 
 			if (_isDropped && _context.IsValueCreated)
@@ -570,7 +572,7 @@ namespace Elastic.Apm.Model
 									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
 								break;
 						}
-						_logger.LogScopedTrace(LoggingScopeName, "Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
+						_logger?.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
 						return;
 					}
 					if (span.Duration < span.Configuration.ExitSpanMinDuration)
@@ -587,7 +589,7 @@ namespace Elastic.Apm.Model
 									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
 								break;
 						}
-						_logger.LogScopedTrace(LoggingScopeName, "Dropping fast exit span. Duration: {duration}", Duration);
+						_logger?.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
 						return;
 					}
 				}
@@ -869,7 +871,7 @@ namespace Elastic.Apm.Model
 			}
 			catch (Exception ex)
 			{
-				_logger.LogScopedTraceWithException(LoggingScopeName, ex, "Failed to deduce destination info from Context.Http."
+				_logger?.Trace()?.LogException(ex, "Failed to deduce destination info from Context.Http."
 						+ " Original URL: {OriginalUrl}. Context.Http.Url: {Context.Http.Url}."
 						, Context.Http.OriginalUrl, Context.Http.Url);
 				return null;

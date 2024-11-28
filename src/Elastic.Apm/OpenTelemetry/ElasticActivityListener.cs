@@ -21,8 +21,6 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener : IDisposable
 	{
-		private static readonly ScopeName LoggingScopeName = (ScopeName)nameof(ElasticActivityListener);
-
 		private static readonly string[] ServerPortAttributeKeys = [SemanticConventions.ServerPort, SemanticConventions.NetPeerPort];
 
 		private static readonly string[] ServerAddressAttributeKeys =
@@ -37,7 +35,7 @@ namespace Elastic.Apm.OpenTelemetry
 		private readonly ConditionalWeakTable<Activity, Transaction> _activeTransactions = new();
 
 		internal ElasticActivityListener(IApmAgent agent, HttpTraceConfiguration httpTraceConfiguration) => (_logger, _httpTraceConfiguration) =
-			(agent.Logger, httpTraceConfiguration);
+			(agent.Logger?.Scoped(nameof(ElasticActivityListener)), httpTraceConfiguration);
 
 		private static readonly bool HasServiceBusInstrumentation =
 			AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly =>
@@ -78,7 +76,7 @@ namespace Elastic.Apm.OpenTelemetry
 				if (HasServiceBusInstrumentation && activity.Tags.Any(kvp =>
 					kvp.Key.Equals("az.namespace", StringComparison.Ordinal) && kvp.Value.Equals("Microsoft.ServiceBus", StringComparison.Ordinal)))
 				{
-					_logger.LogScopedDebug(LoggingScopeName, "ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.ServiceBus' " +
+					_logger?.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.ServiceBus' " +
 						"activity because 'Elastic.Apm.Azure.ServiceBus' is present in the application.",
 						activity.DisplayName, activity.Id, activity.TraceId);
 
@@ -88,7 +86,7 @@ namespace Elastic.Apm.OpenTelemetry
 				if (HasStorageInstrumentation && activity.Tags.Any(kvp =>
 					kvp.Key.Equals("az.namespace", StringComparison.Ordinal) && kvp.Value.Equals("Microsoft.Storage", StringComparison.Ordinal)))
 				{
-					_logger.LogScopedDebug(LoggingScopeName, "ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.Storage' " +
+					_logger?.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.Storage' " +
 						"activity because 'Elastic.Apm.Azure.Storage' is present in the application.",
 						activity.DisplayName, activity.Id, activity.TraceId);
 
@@ -97,12 +95,12 @@ namespace Elastic.Apm.OpenTelemetry
 
 				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
 				{
-					_logger.LogScopedTrace(LoggingScopeName, "ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
+					_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
 						"a skipped activity name defined in KnownListeners.", activity.DisplayName, activity.Id, activity.TraceId);
 					return;
 				}
 
-				_logger.LogScopedTrace(LoggingScopeName, "ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+				_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
 
 				var spanLinks = new List<SpanLink>(activity.Links.Count());
@@ -177,12 +175,12 @@ namespace Elastic.Apm.OpenTelemetry
 			{
 				if (activity == null)
 				{
-					_logger.LogScopedTrace(LoggingScopeName, "ActivityStopped called with `null` activity. Ignoring `null` activity.");
+					_logger?.Trace()?.Log("ActivityStopped called with `null` activity. Ignoring `null` activity.");
 					return;
 				}
 				activity.Stop();
 
-				_logger.LogScopedTrace(LoggingScopeName, "ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+				_logger?.Trace()?.Log("ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
 
 				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
