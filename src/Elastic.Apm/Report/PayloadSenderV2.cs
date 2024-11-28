@@ -398,7 +398,7 @@ namespace Elastic.Apm.Report
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					HttpResponseMessage response;
 					try
 					{
