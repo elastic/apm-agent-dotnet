@@ -25,17 +25,17 @@ namespace Elastic.Apm.Tests.HelpersTests
 			switch (RuntimeInformation.FrameworkDescription)
 			{
 				case { } str when str.StartsWith(Runtime.MonoName, StringComparison.OrdinalIgnoreCase):
-                    agent.Service.Runtime.Name.Should().Be(Runtime.MonoName);
+					agent.Service.Runtime.Name.Should().Be(Runtime.MonoName);
 					break;
 				case { } str when str.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase):
-                    agent.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
+					agent.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
 					break;
 				case { } str when str.StartsWith(Runtime.DotNetCoreName, StringComparison.OrdinalIgnoreCase):
-                    agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+					agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 					break;
 				case { } str when str.StartsWith(Runtime.DotNetName, StringComparison.OrdinalIgnoreCase)
 					&& !str.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase):
-                    agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}");
+					agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}");
 					break;
 			}
 		}
