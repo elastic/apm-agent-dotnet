@@ -45,8 +45,7 @@ internal sealed class PayloadItemSerializer
 					{
 						foreach (var prop in j.Properties)
 						{
-							var maxLengthAttribute = prop.AttributeProvider.GetCustomAttributes(typeof(MaxLengthAttribute), false).FirstOrDefault() as MaxLengthAttribute;
-							if (maxLengthAttribute != null)
+							if (prop.AttributeProvider.GetCustomAttributes(typeof(MaxLengthAttribute), false).FirstOrDefault() is MaxLengthAttribute maxLengthAttribute)
 								prop.CustomConverter = new TruncateJsonConverter(maxLengthAttribute.Length);
 
 							if (prop.PropertyType == typeof(Lazy<Context>))
