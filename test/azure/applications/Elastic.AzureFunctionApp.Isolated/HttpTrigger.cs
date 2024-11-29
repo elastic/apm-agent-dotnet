@@ -14,7 +14,7 @@ namespace Elastic.AzureFunctionApp.Isolated;
 public static class HttpTriggers
 {
 	[Function(FunctionName.SampleHttpTrigger)]
-	public static HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req,
+	public static async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req,
 		FunctionContext executionContext)
 	{
 		var logger = executionContext.GetLogger("SampleHttpTrigger");
@@ -23,11 +23,11 @@ public static class HttpTriggers
 		var response = req.CreateResponse(HttpStatusCode.OK);
 		response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
 
-		response.WriteString("Hello Azure Functions!\n");
-		response.WriteString("======================\n");
+		await response.WriteStringAsync("Hello Azure Functions!\n");
+		await response.WriteStringAsync("======================\n");
 		foreach (DictionaryEntry e in Environment.GetEnvironmentVariables())
-			response.WriteString($"{e.Key} = {e.Value}\n");
-		response.WriteString("======================\n");
+			await response.WriteStringAsync($"{e.Key} = {e.Value}\n");
+		await response.WriteStringAsync("======================\n");
 
 		return response;
 	}

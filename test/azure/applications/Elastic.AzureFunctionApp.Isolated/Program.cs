@@ -6,7 +6,7 @@ using Elastic.Apm.Azure.Functions;
 using Microsoft.Extensions.Hosting;
 
 var host = new HostBuilder()
-	.ConfigureFunctionsWorkerDefaults(builder =>
+	.ConfigureFunctionsWebApplication(builder =>
 	{
 		builder.UseMiddleware<ApmMiddleware>();
 	})
