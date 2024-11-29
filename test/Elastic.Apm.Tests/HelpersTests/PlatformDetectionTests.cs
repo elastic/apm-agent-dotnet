@@ -19,24 +19,23 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[Fact]
 		public void RuntimeName()
 		{
-			var mockPayloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender)))
-				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { });
+			var mockPayloadSender = new NoopPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			switch (RuntimeInformation.FrameworkDescription)
 			{
 				case { } str when str.StartsWith(Runtime.MonoName, StringComparison.OrdinalIgnoreCase):
-					mockPayloadSender.FirstTransaction.Context.Service.Runtime.Name.Should().Be(Runtime.MonoName);
+                    agent.Service.Runtime.Name.Should().Be(Runtime.MonoName);
 					break;
 				case { } str when str.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase):
-					mockPayloadSender.FirstTransaction.Context.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
+                    agent.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
 					break;
 				case { } str when str.StartsWith(Runtime.DotNetCoreName, StringComparison.OrdinalIgnoreCase):
-					mockPayloadSender.FirstTransaction.Context.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+                    agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 					break;
 				case { } str when str.StartsWith(Runtime.DotNetName, StringComparison.OrdinalIgnoreCase)
 					&& !str.StartsWith(Runtime.DotNetFullFrameworkName, StringComparison.OrdinalIgnoreCase):
-					mockPayloadSender.FirstTransaction.Context.Service.Runtime.Name.Should().Be(Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}");
+                    agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + $" {RuntimeInformation.FrameworkDescription.Substring(5).Split('.')[0]}");
 					break;
 			}
 		}

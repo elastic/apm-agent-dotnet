@@ -23,7 +23,7 @@ namespace Elastic.Apm.Api
 		private readonly IConfigurationSnapshotProvider _configurationProvider;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly Service _service;
+
 		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 
 		public Tracer(
@@ -37,13 +37,14 @@ namespace Elastic.Apm.Api
 		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
-			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
 			_configurationProvider = configurationProvider.ThrowIfArgumentNull(nameof(configurationProvider));
-			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
-			DbSpanCommon = new DbSpanCommon(logger);
 			_apmServerInfo = apmServerInfo;
 			_breakdownMetricsProvider = breakdownMetricsProvider;
+
+			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
+			DbSpanCommon = new DbSpanCommon(logger);
+			Service = service;
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
@@ -53,6 +54,7 @@ namespace Elastic.Apm.Api
 		public ITransaction CurrentTransaction => CurrentExecutionSegmentsContainer.CurrentTransaction;
 
 		public DbSpanCommon DbSpanCommon { get; }
+		internal Service Service { get; }
 
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null,
 			bool ignoreActivity = false, IEnumerable<SpanLink> links = null
