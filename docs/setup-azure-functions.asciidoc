@@ -46,11 +46,11 @@ using Elastic.Apm.Azure.Functions;
 using Microsoft.Extensions.Hosting;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication(builder =>
-    {
-        builder.UseMiddleware<ApmMiddleware>();
-    })
-    .Build();
+  .ConfigureFunctionsWebApplication(builder =>
+  {
+    builder.UseMiddleware<ApmMiddleware>();
+  })
+  .Build();
 
 host.Run();
 ----
@@ -64,11 +64,16 @@ The APM agent can be configured with environment variables.
 ----
 ELASTIC_APM_SERVER_URL: <your APM server URL from the prerequisites step>
 ELASTIC_APM_SECRET_TOKEN: <your APM secret token from the prerequisites step>
-ELASTIC_APM_ENVIRONMENT: "<your environment>"
-ELASTIC_APM_SERVICE_NAME: "<your service name>" (optional)
+ELASTIC_APM_ENVIRONMENT: <your environment>
+ELASTIC_APM_SERVICE_NAME: <your service name> (optional)
 ----
 
-*Local development*
+If `ELASTIC_APM_SERVICE_NAME` is not configured, the agent will use a fallback value.
+
+- *Local development* - The discovered service name (the entry Assembly name) will be used.
+- *Azure* - The Function App name (retrieved from the `WEBSITE_SITE_NAME` environment variable) will be used.
+
+*Configuring in Local development*
 
 While developing your Function locally, you can configure the agent by providing the environment variables
 via the `local.settings.json` file.
@@ -90,7 +95,7 @@ For example:
 }
 ----
 
-*Azure*
+*Configuring in Azure*
 
 Using environment variables allows you to use 
 https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#settings[application settings in the Azure Portal], 
