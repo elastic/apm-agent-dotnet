@@ -37,7 +37,7 @@ jobs:
       run: ./build.sh pack
 
     - name: Release to Nuget
-      run: .ci/linux/deploy.sh ${{ secrets.NUGET_API_KEY }} ${{ secrets.NUGET_API_URL }}
+      run: .ci/deploy.sh ${{ secrets.NUGET_API_KEY }} ${{ secrets.NUGET_API_URL }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1

@@ -45,8 +45,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFrame
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.MockApmServer", "test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj", "{AFFB238B-10C0-4229-9527-184EFCF0F5AC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ci", ".ci\ci.csproj", "{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.EntityFrameworkCore.Tests", "test\instrumentations\Elastic.Apm.EntityFrameworkCore.Tests\Elastic.Apm.EntityFrameworkCore.Tests.csproj", "{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.SqlClient.Tests", "test\instrumentations\Elastic.Apm.SqlClient.Tests\Elastic.Apm.SqlClient.Tests.csproj", "{968E1E85-E996-42DE-9845-D20DAE16165A}"
@@ -300,8 +298,6 @@ Global
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Release|Any CPU.ActiveCfg = Release|Any CPU
