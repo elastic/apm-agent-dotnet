@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
-using Microsoft.Extensions.Primitives;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 
 namespace Elastic.Apm.Azure.Functions;
@@ -182,7 +181,7 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 		httpHeadersCollection.ToDictionary(h => h.Key, h => string.Join(",", h.Value));
 
 	private static Dictionary<string, string> CreateHeadersDictionary(IHeaderDictionary headerDictionary) =>
-		headerDictionary.ToDictionary(h => h.Key, h => string.Join(",", h.Value));
+		headerDictionary.ToDictionary(h => h.Key, h => string.Join(",", h.Value.AsEnumerable()));
 
 	private static HttpRequestData? GetHttpRequestData(FunctionContext functionContext)
 	{
