@@ -126,13 +126,14 @@ jobs:
 
       - name: Store crash dumps
         uses: actions/upload-artifact@v4
-        if: success() || failure()
+        if: failure()
         with:
           name: hang-dumps
           retention-days: 3
           path: |
             build/output/**/*.dmp
             build/output/**/*.xml
+            build/output/**/*.pdb
     
   startup-hook-tests:
     runs-on: ubuntu-latest
