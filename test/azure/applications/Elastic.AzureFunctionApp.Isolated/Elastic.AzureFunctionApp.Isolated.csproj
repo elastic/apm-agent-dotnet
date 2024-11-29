@@ -8,10 +8,6 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <!-- 
-    The versions below are NOT the latest but anything newer breaks when attempting to run func
-    See: https://github.com/Azure/azure-functions-core-tools/issues/3594
-    -->
     <PackageReference Include="Microsoft.Azure.Functions.Worker"/>
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk"/>
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http"/>
