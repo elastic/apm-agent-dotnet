@@ -112,12 +112,12 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 				{
 					return new($"{httpRequest.Method} {uri.AbsolutePath}", Trigger.TypeHttp,
 						TraceContext.TryExtractTracingData(traceparent, tracestate))
+					{
+						Request = new Request(httpRequest.Method, Url.FromUri(uri))
 						{
-							Request = new Request(httpRequest.Method, Url.FromUri(uri))
-							{
-								Headers = CreateHeadersDictionary(httpRequest.Headers),
-							}
-						};
+							Headers = CreateHeadersDictionary(httpRequest.Headers),
+						}
+					};
 				}
 			}
 
@@ -129,12 +129,12 @@ public class ApmMiddleware : IFunctionsWorkerMiddleware
 
 				return new($"{httpRequestData.Method} {httpRequestData.Url.AbsolutePath}", Trigger.TypeHttp,
 					TraceContext.TryExtractTracingData(traceparent, tracestate))
+				{
+					Request = new Request(httpRequestData.Method, Url.FromUri(httpRequestData.Url))
 					{
-						Request = new Request(httpRequestData.Method, Url.FromUri(httpRequestData.Url))
-						{
-							Headers = CreateHeadersDictionary(httpRequestData.Headers),
-						}
-					};
+						Headers = CreateHeadersDictionary(httpRequestData.Headers),
+					}
+				};
 			}
 		}
 		catch
