@@ -21,10 +21,10 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" VersionOverride="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" VersionOverride="2.1.1" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

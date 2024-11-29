@@ -71,6 +71,17 @@ namespace Elastic.Apm.OpenTelemetry
 		private Action<Activity> ActivityStarted =>
 			activity =>
 			{
+				// Prevent recording of Azure Functions activities which are quite broken at the moment
+				// See https://github.com/Azure/azure-functions-dotnet-worker/issues/2733
+				// See https://github.com/Azure/azure-functions-dotnet-worker/issues/2875
+				// See https://github.com/Azure/azure-functions-host/issues/10641
+				// See https://github.com/Azure/azure-functions-dotnet-worker/issues/2810
+				if ((activity.Source.Name == "" && activity.DisplayName == "InvokeFunctionAsync")
+					|| (activity.Source.Name == "Microsoft.Azure.Functions.Worker"))
+				{
+					return;
+				}
+
 				// If the Elastic instrumentation for ServiceBus is present, we skip duplicating the instrumentation through the OTel bridge.
 				// Without this, we end up with some redundant spans in the trace with subtle differences.
 				if (HasServiceBusInstrumentation && activity.Tags.Any(kvp =>

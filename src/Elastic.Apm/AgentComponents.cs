@@ -17,7 +17,7 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
 #endif
 
@@ -60,7 +60,7 @@ namespace Elastic.Apm
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				// Initialize early because ServerInfoCallback requires it and might execute
 				// before EnsureElasticActivityStarted runs
 				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
@@ -81,7 +81,7 @@ namespace Elastic.Apm
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo,
 					breakdownMetricsProvider);
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				EnsureElasticActivityStarted();
 #endif
 
@@ -118,7 +118,7 @@ namespace Elastic.Apm
 
 		private void EnsureElasticActivityStarted()
 		{
-#if !NET5_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 			return;
 #else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
@@ -145,7 +145,7 @@ namespace Elastic.Apm
 
 		private void ServerInfoCallback(bool success, IApmServerInfo serverInfo)
 		{
-#if !NET5_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 			return;
 #else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
@@ -237,7 +237,7 @@ namespace Elastic.Apm
 			return fallbackLogger;
 		}
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		private ElasticActivityListener ElasticActivityListener { get; }
 #endif
 
@@ -281,7 +281,7 @@ namespace Elastic.Apm
 			if (PayloadSender is IDisposable disposablePayloadSender)
 				disposablePayloadSender.Dispose();
 			CentralConfigurationFetcher?.Dispose();
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			ElasticActivityListener?.Dispose();
 #endif
 		}
