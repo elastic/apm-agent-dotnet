@@ -2,7 +2,8 @@
 [[setup-azure-functions]]
 === Azure Functions
 
-The .NET APM Agent can trace function invocations in an https://learn.microsoft.com/en-us/azure/azure-functions[Azure Functions] app.
+The .NET APM Agent can trace HTTP triggered function invocations in an
+https://learn.microsoft.com/en-us/azure/azure-functions[Azure Functions] app.
 
 [float]
 ==== Prerequisites
@@ -17,18 +18,14 @@ existing one, you can follow https://learn.microsoft.com/en-us/azure/azure-funct
 to create one.
 
 You can also take a look at and use this
-https://github.com/elastic/apm-agent-dotnet/tree/main/sample/Elastic.AzureFunctionApp.Isolated[Azure Functions example app with Elastic APM already integrated].
+https://github.com/elastic/apm-agent-dotnet/tree/main/test/azure/applications/Elastic.AzureFunctionApp.Isolated[Azure Functions example app with Elastic APM already integrated].
 
-[IMPORTANT]
-====
-Currently, only .NET Azure Functions in an
-https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide[isolated worker process]
-can be traced.
-====
+[float]
+==== Azure Functions isolated worker model
 
 [float]
 [[azure-functions-setup]]
-==== Step 1: Add the NuGet package
+===== Step 1: Add the NuGet package
 
 Add the `Elastic.Apm.Azure.Functions` NuGet package to your Azure Functions project:
 
@@ -38,7 +35,7 @@ dotnet add package Elastic.Apm.Azure.Functions
 ----
 
 [float]
-==== Step 2: Add the tracing Middleware
+===== Step 2: Add the tracing Middleware
 
 For the APM agent to trace Azure Functions invocations, the `Elastic.Apm.Azure.Functions.ApmMiddleware`
 must be used in your Azure Functions app.
@@ -49,30 +46,59 @@ using Elastic.Apm.Azure.Functions;
 using Microsoft.Extensions.Hosting;
 
 var host = new HostBuilder()
-	.ConfigureFunctionsWorkerDefaults(builder =>
-	{
-		builder.UseMiddleware<ApmMiddleware>();
-	})
-	.Build();
+    .ConfigureFunctionsWebApplication(builder =>
+    {
+        builder.UseMiddleware<ApmMiddleware>();
+    })
+    .Build();
 
 host.Run();
 ----
 
 [float]
-==== Step 3: Configure the APM agent
+===== Step 3: Configure the APM agent
 
-The APM agent can be configured with environment variables. Using environment variables
-allows you to use https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#settings[application settings in the Azure Portal], enabling you to hide values and update settings
-without needing to re-deploy code.
-
-Open _Configuration > Application settings_ for your Function App in the Azure Portal
-and set:
+The APM agent can be configured with environment variables.
 
 [source,yaml]
 ----
 ELASTIC_APM_SERVER_URL: <your APM server URL from the prerequisites step>
 ELASTIC_APM_SECRET_TOKEN: <your APM secret token from the prerequisites step>
+ELASTIC_APM_ENVIRONMENT: "<your environment>"
+ELASTIC_APM_SERVICE_NAME: "<your service name>" (optional)
 ----
+
+*Local development*
+
+While developing your Function locally, you can configure the agent by providing the environment variables
+via the `local.settings.json` file.
+
+For example:
+
+[source,json]
+----
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ELASTIC_APM_ENVIRONMENT": "Development",
+    "ELASTIC_APM_SERVICE_NAME": "MyServiceName",
+    "ELASTIC_APM_SERVER_URL": "https://my-serverless-project.apm.eu-west-1.aws.elastic.cloud:443",
+    "ELASTIC_APM_API_KEY": "MySecureApiKeyFromApmServer=="
+  }
+}
+----
+
+*Azure*
+
+Using environment variables allows you to use 
+https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#settings[application settings in the Azure Portal], 
+enabling you to update settings
+without needing to re-deploy code.
+
+Open _Settings > Environment variables_ for your Function App in the Azure Portal
+and configure the ELASTIC_APM_* variables as required.
 
 For example:
 
