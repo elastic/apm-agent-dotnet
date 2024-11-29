@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit.Abstractions;
@@ -57,6 +58,11 @@ public class ExtensionsTestHelper
 
 		if (disabledViaEnvVar)
 			startInfo.Environment["ELASTIC_APM_ENABLED"] = "false";
+
+		// Adding this as the hang dumps for integration tests on Linux seem to suggest that the GcMetricsProvider is causing the hang.
+		// This is a temporary workaround until we can figure out the root cause.
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			startInfo.Environment["ELASTIC_APM_METRICS_INTERVAL"] = "0";
 
 		startInfo.ArgumentList.Add("run");
 		startInfo.ArgumentList.Add("-c");
