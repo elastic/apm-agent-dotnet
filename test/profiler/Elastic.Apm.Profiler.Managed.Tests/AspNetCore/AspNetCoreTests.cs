@@ -26,7 +26,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 		/// <param name="framework"></param>
 		[Theory]
 		[InlineData("net8.0")]
-		public async void AspNetCoreTest(string framework)
+		public async System.Threading.Tasks.Task AspNetCoreTest(string framework)
 		{
 			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(AspNetCoreTests));

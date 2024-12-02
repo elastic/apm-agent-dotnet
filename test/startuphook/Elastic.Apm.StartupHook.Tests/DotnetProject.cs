@@ -73,10 +73,11 @@ namespace Elastic.Apm.StartupHook.Tests
 
 				var startArgs = new StartArguments("dotnet", args)
 				{
-					WorkingDirectory = workingDirectory
+					WorkingDirectory = workingDirectory,
+					Timeout = TimeSpan.FromSeconds(30)
 				};
 
-				var publishResult = Proc.Start(startArgs, TimeSpan.FromSeconds(30));
+				var publishResult = Proc.Start(startArgs);
 
 				foreach (var line in publishResult.ConsoleOut)
 				{
@@ -193,8 +194,9 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			var result = Proc.Start(new StartArguments("dotnet", args)
 			{
-				WorkingDirectory = directory
-			}, TimeSpan.FromSeconds(30));
+				WorkingDirectory = directory,
+				Timeout = TimeSpan.FromSeconds(30)
+			});
 
 			if (result.Completed)
 			{

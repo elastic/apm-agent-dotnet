@@ -305,7 +305,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 						{
 							cfg.LogLevel.Should()
 								.NotBeNull()
-								.And.Be(value);
+								.And.Be((LogLevel)value);
 						})
 					};
 				}

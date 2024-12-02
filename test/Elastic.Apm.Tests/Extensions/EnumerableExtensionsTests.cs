@@ -14,7 +14,7 @@ namespace Elastic.Apm.Tests.Extensions
 {
 	public class EnumerableExtensionsTests
 	{
-		public static TheoryData EnumerablesToTest => new TheoryData<IEnumerable<object>, object[]>
+		public static TheoryData<IEnumerable<object>, object[]> EnumerablesToTest => new TheoryData<IEnumerable<object>, object[]>
 		{
 			{ Array.Empty<object>(), Array.Empty<object>() },
 			{ Enumerable.Range(0, 0).Select(i => (object)i), Array.Empty<object>() },

@@ -320,7 +320,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 		[Theory]
 		[MemberData(nameof(FlushInterval_test_variants))]
-		internal async void FlushInterval_test(TestArgs args, int numberOfEventsToSend)
+		internal async Task FlushInterval_test(TestArgs args, int numberOfEventsToSend)
 		{
 			var batchSentBarrier = new Barrier(2);
 			var barrierTimeout = 30.Seconds();
