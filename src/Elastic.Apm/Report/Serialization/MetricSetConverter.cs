@@ -63,7 +63,7 @@ namespace Elastic.Apm.Report.Serialization
 						.Replace('"', '_'));
 					writer.WriteStartObject();
 					writer.WritePropertyName("value");
-					writer.WriteNumberValue(item.KeyValue.Value);
+					writer.WriteNumberValue((decimal)item.KeyValue.Value);
 					writer.WriteEndObject();
 				}
 			}

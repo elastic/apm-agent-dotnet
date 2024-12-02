@@ -4,8 +4,6 @@
 
 using System;
 using System.Collections;
-using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -111,9 +109,5 @@ internal sealed class PayloadItemSerializer
 	/// </summary>
 	/// <param name="item"></param>
 	/// <returns></returns>
-	internal string Serialize(object item)
-	{
-		var bytes = JsonSerializer.SerializeToUtf8Bytes(item, item.GetType(), Settings);
-		return Encoding.UTF8.GetString(bytes);
-	}
+	internal string Serialize(object item) => JsonSerializer.Serialize(item, item.GetType(), Settings);
 }
