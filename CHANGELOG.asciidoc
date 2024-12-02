@@ -23,6 +23,29 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.31.0]]
+==== 1.31.0 - 2024/12/02
+
+[float]
+===== Breaking changes
+
+{pull}2498[#2498] Remove net 6.0 targets
+
+We no longer ship `net6.0` targets as .NET 6 is now out of support. Applications
+targetting `net6.0` will continue to work, but fall down to the `netstandard2.0`
+target which may not be as optimised. We therefore recommend updating your application
+to `net8.0` or `net9.0` prior to installing 1.31.0 of the Elastic.Apm.* packages.
+
+===== Bug fixes
+
+{pull}2505[#2505] Fixes and enhancements for Azure Functions
+{pull}2508[#2508] Azure Function service name logic
+
+[float]
+===== Features
+
+{pull}2503[#2503] Phase one logger optimisations
+
 [[release-notes-1.30.1]]
 ==== 1.30.1 - 2024/11/19
 
