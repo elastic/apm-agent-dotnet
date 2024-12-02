@@ -79,7 +79,7 @@ jobs:
     needs: [ 'format', 'tests' ]
     if: |
       github.event_name != 'pull_request'
-      || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+      || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]'
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
