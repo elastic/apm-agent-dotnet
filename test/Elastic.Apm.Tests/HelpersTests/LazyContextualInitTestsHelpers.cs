@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Elastic.Apm.Helpers;
 using Xunit;
 // Licensed to Elasticsearch B.V under one or more agreements.

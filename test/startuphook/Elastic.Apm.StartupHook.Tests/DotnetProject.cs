@@ -74,7 +74,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				var startArgs = new StartArguments("dotnet", args)
 				{
 					WorkingDirectory = workingDirectory,
-					Timeout= TimeSpan.FromSeconds(30)
+					Timeout = TimeSpan.FromSeconds(30)
 				};
 
 				var publishResult = Proc.Start(startArgs);
