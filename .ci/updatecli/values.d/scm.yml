@@ -2,7 +2,6 @@ scm:
   enabled: true
   owner: elastic
   repository: apm-agent-dotnet
-  apm_repository: apm
   branch: main
   commitusingapi: true
   # begin update-compose policy values
