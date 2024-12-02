@@ -411,7 +411,7 @@ namespace Elastic.Apm.Tests
 		{
 			var samples = new List<MetricSample>
 			{
-				new MetricSample("sample_1", 1), new MetricSample("sample*\"2", 2.1), new MetricSample("sample_1", 3)
+				new("sample_1", 1), new("sample*\"2", 2.1), new("sample_1", 3)
 			};
 
 			var metricSet = new Elastic.Apm.Metrics.MetricSet(1603343944891, samples);

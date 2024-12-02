@@ -38,7 +38,7 @@ internal sealed class PayloadItemSerializer
 			PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
 			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 			WriteIndented = false,
-			Converters = { new JsonConverterDouble(), new JsonConverterDecimal() },
+			Converters = { new JsonConverterDouble(), new JsonConverterDecimal(), new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
 			TypeInfoResolver = JsonTypeInfoResolver.Combine(SourceGenerationContext.Default, new DefaultJsonTypeInfoResolver
 			{
 				Modifiers = { j =>

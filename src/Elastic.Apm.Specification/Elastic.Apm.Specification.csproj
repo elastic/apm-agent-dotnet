@@ -8,7 +8,6 @@
     <ItemGroup>
       <PackageReference Include="NJsonSchema"/>
       <PackageReference Include="SharpZipLib"/>
-      <PackageReference Include="Newtonsoft.Json"/>
     </ItemGroup>
 
     <ItemGroup>

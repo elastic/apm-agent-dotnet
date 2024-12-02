@@ -17,6 +17,7 @@ namespace Elastic.Apm.Api
 	{
 		private Service() { }
 
+		[JsonConstructor]
 		internal Service(string name, string version) => (Name, Version) = (name, version);
 
 		public AgentC Agent { get; set; }

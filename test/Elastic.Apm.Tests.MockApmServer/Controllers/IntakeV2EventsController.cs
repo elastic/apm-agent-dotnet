@@ -18,7 +18,9 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Specification;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Namotion.Reflection;
 using NJsonSchema;
 using Xunit.Sdk;
 using JsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
@@ -31,8 +33,13 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 	[ApiController]
 	public class IntakeV2EventsController : ControllerBase
 	{
-		private static readonly ConcurrentDictionary<Type, Lazy<Task<JsonSchema>>> Schemata =
-			new ConcurrentDictionary<Type, Lazy<Task<JsonSchema>>>();
+		private static readonly ConcurrentDictionary<Type, Lazy<Task<JsonSchema>>> Schemata = new();
+
+		private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+		{
+			UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+		};
 
 		private const string ExpectedContentType = "application/x-ndjson; charset=utf-8";
 		private const string ThisClassName = nameof(IntakeV2EventsController);
@@ -100,12 +107,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task ParsePayloadLineAndAddToReceivedData(string line)
 		{
 			var foundDto = false;
-			var payload = JsonSerializer.Deserialize<PayloadLineDto>(
-				line,
-				new JsonSerializerOptions
-				{
-					UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-				}) ?? throw new ArgumentException("Deserialization failed");
+			var payload = JsonSerializer
+				.Deserialize<PayloadLineDto>(line, JsonSerializerOptions) ?? throw new ArgumentException("Deserialization failed");
 
 			await HandleParsed(nameof(payload.Error), payload.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);
 			await HandleParsed(nameof(payload.Metadata), payload.Metadata, _mockApmServer.ReceivedData.Metadata, _mockApmServer.AddMetadata);
@@ -136,11 +139,12 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						}, _validator)
 						.Value;
 
-					var jObject = JsonNode.Parse(line) as JsonObject;
-					var value = jObject!.TryGetPropertyValue(dtoType, out var dtoValue) ? dtoValue.GetValue<string>() : null;
+					using var jsonDocument = JsonDocument.Parse(line);
 
-					var validationErrors = schema.Validate(value);
+					var root = jsonDocument.RootElement;
+					var property = root.GetProperty(dtoType.ToLower());
 
+					var validationErrors = schema.Validate(property.ToString());
 					validationErrors.Should().BeEmpty();
 				}
 				catch (Exception ex)
