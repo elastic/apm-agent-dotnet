@@ -83,8 +83,11 @@ internal sealed class PayloadItemSerializer
 
 	public JsonTypeInfo GetTypeInfo(Type type) => Settings.TypeInfoResolver!.GetTypeInfo(type, Settings);
 
-	public void Serialize(object item, StreamWriter writer) =>
+	public void Serialize(object item, StreamWriter writer)
+	{
+		writer.Flush(); // ensure the base stream is "up-to-date" before we attempt to serialize into it
 		JsonSerializer.Serialize(writer.BaseStream, item, item.GetType(), Settings);
+	}
 
 	/// <summary>
 	/// Deserializes an instance of <typeparamref name="T"/> from JSON
