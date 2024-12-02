@@ -67,7 +67,7 @@ internal static class DockerUtils
 	{
 		try
 		{
-			var result = Proc.Start(new StartArguments("docker", "--version"), TimeSpan.FromSeconds(30));
+			var result = Proc.Start(new StartArguments("docker", "--version") { Timeout = TimeSpan.FromSeconds(30)});
 			HasDockerInstalled = result.ExitCode == 0;
 		}
 		catch (Exception)

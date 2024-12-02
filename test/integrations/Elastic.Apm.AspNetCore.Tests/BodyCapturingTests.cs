@@ -95,7 +95,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var result = await sutEnv.HttpClient.PostAsync("api/Home/Send", new StringContent(body, Encoding.UTF8, "application/json"));
 
 			// make sure the sample app received the data
-			result.StatusCode.Should().Be(200);
+			result.StatusCode.Should().Be((HttpStatusCode)200);
 
 			// and make sure the data is captured by the agent
 			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();

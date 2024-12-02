@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <GlobalPackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
+    <GlobalPackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
     <GlobalPackageReference Condition="'$(TargetFramework)' == 'net462'" Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
   <!-- Community Packages -->
@@ -29,18 +29,18 @@
     <PackageVersion Include="Fake.IO.FileSystem" Version="6.0.0" />
     <PackageVersion Include="Fake.IO.Zip" Version="6.0.0" />
     <PackageVersion Include="Fake.Tools.Git" Version="6.0.0" />
-    <PackageVersion Include="FluentAssertions" Version="5.6.0" />
-    <PackageVersion Include="FluentAssertions.Analyzers" Version="0.11.4" />
+    <PackageVersion Include="FluentAssertions" Version="7.0.0" />
+    <PackageVersion Include="FluentAssertions.Analyzers" Version="0.34.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" PrivateAssets="All" />
     <PackageVersion Include="Google.Protobuf" Version="3.25.3" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.61.0" />
     <PackageVersion Include="Grpc.Net.ClientFactory" Version="2.61.0" />
     <PackageVersion Include="Grpc.Tools" Version="2.62.0" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
     <PackageVersion Include="JetBrains.Profiler.Api" Version="1.4.0" />
-    <PackageVersion Include="JunitXml.TestLogger" Version="3.1.12" PrivateAssets="All" />
+    <PackageVersion Include="JunitXml.TestLogger" Version="4.1.0" PrivateAssets="All" />
     <PackageVersion Include="MongoDB.Driver" Version="2.28.0" />
     <PackageVersion Include="MongoDB.Driver.Core" Version="2.28.0" />
-    <PackageVersion Include="Moq" Version="4.20.70" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="MySql.Data" Version="8.0.32.1" />
     <PackageVersion Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
     <PackageVersion Include="NEST" Version="7.17.5" />
@@ -54,7 +54,7 @@
     <PackageVersion Include="Oracle.ManagedDataAccess" Version="21.13.0" />
     <PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="3.21.90" />
     <PackageVersion Include="Polly" Version="7.2.1" />
-    <PackageVersion Include="Proc" Version="0.8.2" />
+    <PackageVersion Include="Proc" Version="0.9.0" />
     <PackageVersion Include="RabbitMQ.Client" Version="6.8.1" />
     <PackageVersion Include="RichardSzalay.MockHttp" Version="6.0.0" />
     <PackageVersion Include="SQLite.CodeFirst" Version="1.5.3.29" />
@@ -63,18 +63,18 @@
     <PackageVersion Include="SpecFlow.xUnit" Version="3.5.5" />
     <PackageVersion Include="StackExchange.Redis" Version="2.7.20" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <PackageVersion Include="Testcontainers.Elasticsearch" Version="3.7.0" />
-    <PackageVersion Include="Testcontainers.Kafka" Version="3.10.0" />
-    <PackageVersion Include="Testcontainers.MongoDb" Version="3.10.0" />
-    <PackageVersion Include="Testcontainers.MsSql" Version="3.10.0" />
-    <PackageVersion Include="Testcontainers.MySql" Version="3.10.0" />
-    <PackageVersion Include="Testcontainers.Oracle" Version="3.10.0" />
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="3.10.0" />
-    <PackageVersion Include="Testcontainers.RabbitMq" Version="3.10.0" />
-    <PackageVersion Include="Testcontainers.Redis" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.Elasticsearch" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.Kafka" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.MongoDb" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.MySql" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.Oracle" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.Redis" Version="4.0.0" />
     <PackageVersion Include="YamlDotNet" Version="11.2.1" />
-    <PackageVersion Include="xunit" Version="2.7.0" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
   </ItemGroup>
   <!-- Microsoft/System packages -->
   <ItemGroup>
@@ -117,7 +117,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.1" />
     <PackageVersion Include="Microsoft.NET.Sdk.Functions" Version="4.6.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="Microsoft.Owin.Host.SystemWeb" Version="4.1.1" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageVersion Include="Microsoft.Web.Administration" Version="11.1.0" />

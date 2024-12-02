@@ -322,7 +322,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					(int)response.StatusCode, response.StatusCode);
 			try
 			{
-				response.StatusCode.Should().Be(expectedStatusCode);
+				response.StatusCode.Should().Be((HttpStatusCode)expectedStatusCode);
 			}
 			catch (XunitException ex)
 			{

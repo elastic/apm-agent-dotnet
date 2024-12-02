@@ -14,7 +14,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 {
 	public class ExceptionUtilsTests
 	{
-		public static TheoryData DoSwallowingExceptionsVariantsToTest => new TheoryData<string, Action>
+		public static TheoryData<string, Action> DoSwallowingExceptionsVariantsToTest => new TheoryData<string, Action>
 		{
 			{ ExceptionUtils.MethodExitingNormallyMsgFmt, () => { } },
 			{ ExceptionUtils.MethodExitingCancelledMsgFmt, () => new CancellationToken(true).ThrowIfCancellationRequested() },

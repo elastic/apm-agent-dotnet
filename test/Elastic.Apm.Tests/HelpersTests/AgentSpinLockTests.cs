@@ -29,7 +29,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		public AgentSpinLockTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
-		internal interface ISpinLockForTest
+		public interface ISpinLockForTest
 		{
 			void Release();
 
@@ -45,7 +45,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 				new NoopSpinLockForTest()
 			};
 
-		public static TheoryData ThreadSafeSpinLockImpls => new TheoryData<ISpinLockForTest> { new AgentSpinLockForTest() };
+		public static TheoryData<ISpinLockForTest> ThreadSafeSpinLockImpls => [new AgentSpinLockForTest()];
 
 		[Fact]
 		public void default_value_is_false()

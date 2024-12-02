@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -30,7 +31,7 @@ namespace Elastic.Apm.Tests.Config
 	[Collection("UsesEnvironmentVariables")]
 	public class ConfigTests : IDisposable
 	{
-		public static TheoryData GlobalLabelsValidVariantsToTest => new TheoryData<string, IReadOnlyDictionary<string, string>>
+		public static TheoryData<string, IReadOnlyDictionary<string, string>> GlobalLabelsValidVariantsToTest => new TheoryData<string, IReadOnlyDictionary<string, string>>
 		{
 			// empty string - zero key value pairs
 			{ "", new Dictionary<string, string>() },

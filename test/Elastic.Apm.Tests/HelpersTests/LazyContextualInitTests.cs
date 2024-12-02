@@ -14,7 +14,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 {
 	public class LazyContextualInitTests
 	{
-		public static TheoryData WaysToCallInit = new TheoryData<string, Func<LazyContextualInit, Action, bool>>
+		public static readonly TheoryData WaysToCallInit = new TheoryData<string, Func<LazyContextualInit, Action, bool>>()
 		{
 			{ "IfNotInited?.Init ?? false", (lazyCtxInit, initAction) => lazyCtxInit.IfNotInited?.Init(initAction) ?? false },
 			{ "Init", (lazyCtxInit, initAction) => lazyCtxInit.Init(initAction) }
@@ -22,8 +22,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		[Theory]
 		[MemberData(nameof(WaysToCallInitOrGetString))]
-		internal void with_result_initialized_only_once_on_first_call(string dbgWayToCallDesc
-			, Func<LazyContextualInit<string>, Func<string>, string> wayToCall
+		internal void with_result_initialized_only_once_on_first_call(string dbgWayToCallDesc,
+			Func<LazyContextualInit<string>, Func<string>, string> wayToCall
 		)
 		{
 			var counter = new ThreadSafeIntCounter();
@@ -58,7 +58,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 		}
 
 		[Theory]
+#pragma warning disable xUnit1037 // There are fewer theory data type arguments than required by the parameters of the test method
 		[MemberData(nameof(WaysToCallInit))]
+#pragma warning restore xUnit1037 // There are fewer theory data type arguments than required by the parameters of the test method
 		internal void no_result_initialized_only_once_on_first_call(string dbgWayToCallDesc, Func<LazyContextualInit, Action, bool> wayToCall)
 		{
 			var counter = new ThreadSafeIntCounter();
@@ -81,7 +83,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 		}
 
 		[Theory]
+#pragma warning disable xUnit1037 // There are fewer theory data type arguments than required by the parameters of the test method
 		[MemberData(nameof(WaysToCallInit))]
+#pragma warning restore xUnit1037 // There are fewer theory data type arguments than required by the parameters of the test method
 		internal void no_result_multiple_threads(string dbgWayToCallDesc, Func<LazyContextualInit, Action, bool> wayToCall)
 		{
 			var counter = new ThreadSafeIntCounter();

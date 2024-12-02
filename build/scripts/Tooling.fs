@@ -20,33 +20,30 @@ module Tooling =
     
     let private defaultConsoleWriter = Some(ConsoleOutColorWriter() :> IConsoleOutWriter)
     
-    let private readInWithTimeout timeout workingDir bin (writer: IConsoleOutWriter option) args = 
+    let private readInWithTimeout (timeout :TimeSpan) workingDir bin (writer: IConsoleOutWriter option) args = 
         let startArgs = StartArguments(bin, args |> List.toArray)
+        startArgs.Timeout <- timeout
+        startArgs.ConsoleOutWriter <- Option.defaultValue<IConsoleOutWriter> (NoopWriter())  writer
         if (Option.isSome workingDir) then
             startArgs.WorkingDirectory <- Option.defaultValue "" workingDir
-        let result = Proc.Start(startArgs, timeout, Option.defaultValue<IConsoleOutWriter> (NoopWriter())  writer)
+        let result = Proc.Start(startArgs)
         
         if not result.Completed then failwithf "process failed to complete within %O: %s" timeout bin
         if not result.ExitCode.HasValue then failwithf "process yielded no exit code: %s" bin
         { ExitCode = result.ExitCode.Value; Output = seq result.ConsoleOut}
-        
-    let private read bin args = readInWithTimeout defaultTimeout None bin defaultConsoleWriter args 
-    let private readQuiet bin args = readInWithTimeout defaultTimeout None bin None args
-    
-    let private execInWithTimeout timeout workingDir bin args = 
+
+    let private execInWithTimeout (timeout :TimeSpan) workingDir bin args = 
         let startArgs = ExecArguments(bin, args |> List.toArray)
+        startArgs.Timeout <- timeout
         if (Option.isSome workingDir) then
             startArgs.WorkingDirectory <- Option.defaultValue "" workingDir
-        let result = Proc.Exec(startArgs, timeout)
+        let result = Proc.Exec(startArgs)
         try
-            if not result.HasValue || result.Value > 0 then
-                failwithf "process returned %i: %s" result.Value bin
+            if result > 0 then
+                failwithf "process returned %i: %s" result bin
         with
         | :? ProcExecException as ex -> failwithf "%s" ex.Message
 
-    let private execIn workingDir bin args = execInWithTimeout defaultTimeout workingDir bin args  
-    let private exec bin args = execIn None bin args
-    
     type BuildTooling(timeout, path) =
         let timeout = match timeout with | Some t -> t | None -> defaultTimeout
         member this.Path = path
