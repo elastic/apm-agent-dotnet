@@ -19,7 +19,6 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteStartObject();
 			if (value.Transaction != null)
 			{
-
 				writer.WritePropertyName("transaction");
 
 				writer.WriteStartObject();
@@ -35,7 +34,6 @@ namespace Elastic.Apm.Report.Serialization
 
 			if (value.Span != null)
 			{
-
 				writer.WritePropertyName("span");
 
 				writer.WriteStartObject();
@@ -43,12 +41,14 @@ namespace Elastic.Apm.Report.Serialization
 				writer.WritePropertyName("type");
 				writer.WriteStringValue(value.Span.Type);
 
-				writer.WritePropertyName("subtype");
-				writer.WriteStringValue(value.Span.SubType);
+				if (value.Span.SubType is not null)
+				{
+					writer.WritePropertyName("subtype");
+					writer.WriteStringValue(value.Span.SubType);
+				}
 
 				writer.WriteEndObject();
 			}
-
 
 			writer.WritePropertyName("samples");
 			writer.WriteStartObject();
@@ -128,6 +128,5 @@ namespace Elastic.Apm.Report.Serialization
 
 			return new MetricSet(timestamp, samples);
 		}
-
 	}
 }

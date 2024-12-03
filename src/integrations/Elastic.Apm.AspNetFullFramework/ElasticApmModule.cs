@@ -212,14 +212,14 @@ namespace Elastic.Apm.AspNetFullFramework
 			if (Agent.Instance == null)
 			{
 				_logger.Trace()?
-					.Log("Agent.Instance is null during {RequestNotification}. url: {{UrlPath}}",
+					.Log("Agent.Instance is null during {RequestNotification}. url: {UrlPath}",
 						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath);
 				return;
 			}
 			if (Agent.Instance.Tracer == null)
 			{
 				_logger.Trace()?
-					.Log("Agent.Instance.Tracer is null during {RequestNotification}. url: {{UrlPath}}",
+					.Log("Agent.Instance.Tracer is null during {RequestNotification}. url: {UrlPath}",
 						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath);
 				return;
 			}
@@ -235,10 +235,10 @@ namespace Elastic.Apm.AspNetFullFramework
 			var spanInApplicationInstance = context.Items[HttpContextCurrentExecutionSegmentsContainer.CurrentSpanKey] is not null;
 
 			_logger.Trace()?
-				.Log($"{nameof(ITracer.CurrentTransaction)} is null during {{RequestNotification}}. url: {{UrlPath}}"
+				.Log("{nameof(ITracer.CurrentTransaction)} is null during {RequestNotification}. url: {UrlPath}"
 					+ "(HttpContext.Current Span: {HttpContextCurrentHasSpan}, Transaction: {HttpContextCurrenHasTransaction})"
 					+ "(ApplicationContext Span: {ApplicationContextHasSpan}, Transaction: {ApplicationContextHasTransaction})",
-						$"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath, spanInCurrent, transactionInCurrent, spanInApplicationInstance, transactionInApplicationInstance
+						nameof(ITracer.CurrentTransaction), $"{nameof(OnExecuteRequestStep)}:{EventName()}", urlPath, spanInCurrent, transactionInCurrent, spanInApplicationInstance, transactionInApplicationInstance
 				);
 
 			if (HttpContext.Current == null)

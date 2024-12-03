@@ -15,6 +15,7 @@
     <MSBuildWarningsAsMessages>MSB4011</MSBuildWarningsAsMessages>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
   <!-- prevents NU1503 -->
@@ -40,8 +41,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>AspNetFullFrameworkSampleApp</RootNamespace>
     <AssemblyName>AspNetFullFrameworkSampleApp</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <TargetFramework>net481</TargetFramework>
     <RuntimeIdentifier>win</RuntimeIdentifier>
   </PropertyGroup>
   <PropertyGroup Condition="'$(BuildFullFrameworkAsp)' == 'true'">
@@ -92,11 +93,16 @@
     <PackageReference Include="Microsoft.AspNet.TelemetryCorrelation" />
     <PackageReference Include="Microsoft.AspNet.WebApi" />
     <PackageReference Include="Microsoft.AspNet.Web.Optimization" />
+    <PackageReference Include="Microsoft.Owin" />
     <PackageReference Include="Microsoft.Owin.Host.SystemWeb" />
+    <PackageReference Include="Microsoft.Owin.Security.Cookies" />
+    <PackageReference Include="Microsoft.Web.Infrastructure" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NLog" />
     <PackageReference Include="SQLite.CodeFirst" />
     <PackageReference Include="System.Data.SQLite" />
+    <PackageReference Include="System.Memory" />
+    <PackageReference Include="WebGrease" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

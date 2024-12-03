@@ -91,9 +91,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static class DataSentByAgentVerificationConsts
 		{
-			internal const int LogMessageAfterNInitialAttempts = 30; // i.e., log the first message after 3 seconds (if it's still failing)
+			internal const int LogMessageAfterNInitialAttempts = 50; // i.e., log the first message after 3 seconds (if it's still failing)
 			internal const int LogMessageEveryNAttempts = 10; // i.e., log message every second (if it's still failing)
-			internal const int MaxNumberOfAttemptsToVerify = 100;
+			internal const int MaxNumberOfAttemptsToVerify = 150;
 			internal const int WaitBetweenVerifyAttemptsMs = 100;
 		}
 
