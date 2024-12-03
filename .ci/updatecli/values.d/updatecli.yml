@@ -1,0 +1,10 @@
+scm:
+  enabled: true
+  owner: elastic
+  repository: apm-agent-dotnet
+  branch: test/updatecli-version-1
+  commitusingapi: true
+  # begin update-compose policy values
+  user: obltmachine
+  email: obltmachine@users.noreply.github.com
+  # end update-compose policy values
