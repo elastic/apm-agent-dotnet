@@ -126,14 +126,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData PageThatDoesNotExist =
 				new SampleAppUrlPathData("dummy_URL_path_to_page_that_does_not_exist", 404, errorsCount: 1);
 
-			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>
-			{
-				new SampleAppUrlPathData("", 200),
+			internal static readonly List<SampleAppUrlPathData> AllPaths =
+			[
+				new("", 200),
 				HomePage,
 				ContactPage,
 				CustomSpanThrowsExceptionPage,
 				PageThatDoesNotExist
-			};
+			];
 
 			/// <summary>
 			/// `CallReturnBadRequest' page processing does HTTP Get for `ReturnBadRequest' page (additional transaction) - so 1 span

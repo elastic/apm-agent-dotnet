@@ -8,7 +8,6 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-
 namespace Elastic.Apm.Report.Serialization;
 
 internal class CustomJsonConverter : JsonConverter<Dictionary<string, string>>
@@ -64,13 +63,13 @@ public class BooleanConverter : JsonConverter<bool>
 public class JsonConverterDouble : JsonConverter<double>
 {
 	public override double Read(ref Utf8JsonReader reader,
-		Type typeToConvert, JsonSerializerOptions options) =>
-		reader.GetDouble();
+		Type typeToConvert, JsonSerializerOptions options) => reader.GetDouble();
 
 	public override void Write(Utf8JsonWriter writer, double value,
 		JsonSerializerOptions options) =>
-		writer.WriteRawValue(value.ToString("N1", CultureInfo.InvariantCulture));
+			writer.WriteRawValue(value.ToString("0.000", CultureInfo.InvariantCulture));
 }
+
 public class JsonConverterDecimal : JsonConverter<decimal>
 {
 	public override decimal Read(ref Utf8JsonReader reader,
