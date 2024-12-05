@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
 
 namespace Elastic.Apm.Api
@@ -32,6 +33,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// optional routing key of the received message as set on the queuing system, such as in RabbitMQ.
 		/// </summary>
+		[JsonPropertyName("routing_key")]
 		public string RoutingKey { get; set; }
 	}
 
