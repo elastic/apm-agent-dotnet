@@ -107,8 +107,18 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task ParsePayloadLineAndAddToReceivedData(string line)
 		{
 			var foundDto = false;
-			var payload = JsonSerializer
-				.Deserialize<PayloadLineDto>(line, JsonSerializerOptions) ?? throw new ArgumentException("Deserialization failed");
+
+			PayloadLineDto payload;
+			try
+			{
+				payload = JsonSerializer.Deserialize<PayloadLineDto>(line, JsonSerializerOptions)
+					?? throw new ArgumentException("Deserialization failed");
+			}
+			catch (JsonException ex)
+			{
+				_logger?.Error()?.LogException(ex, "Failed to deserialize '{Line}'", line);
+				throw;
+			}
 
 			await HandleParsed(nameof(payload.Error), payload.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);
 			await HandleParsed(nameof(payload.Metadata), payload.Metadata, _mockApmServer.ReceivedData.Metadata, _mockApmServer.AddMetadata);
