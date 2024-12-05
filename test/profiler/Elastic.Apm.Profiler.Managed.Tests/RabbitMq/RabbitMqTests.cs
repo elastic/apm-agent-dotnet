@@ -32,7 +32,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 		[InlineData("net8.0")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
-			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Warning);
+			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);

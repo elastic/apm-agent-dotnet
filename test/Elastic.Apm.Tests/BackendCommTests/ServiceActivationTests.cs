@@ -31,13 +31,11 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		public ServiceActivationTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */) =>
 			_logger = LoggerBase.Scoped(ThisClassName);
 
-
 		[Fact]
 		public void ShouldNotSendActivationMethodOnceBadVersionIsDiscovered()
 		{
 			var requests = FakeServerInformationCallAndEnqueue("8.7.0");
-			requests.Count.Should().Be(3);
-
+			requests.Should().HaveCount(3);
 			requests.Last().Should().NotContain("activation_method");
 		}
 
@@ -45,8 +43,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		public void ShouldSendActivationMethodOtherVersions()
 		{
 			var requests = FakeServerInformationCallAndEnqueue("8.7.1");
-			requests.Count.Should().Be(3);
-
+			requests.Should().HaveCount(3);
 			requests.Last().Should().Contain("activation_method");
 		}
 
@@ -108,6 +105,10 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 
 			waitHandle.WaitHandle.WaitOne(TimeSpan.FromSeconds(5));
+
+			foreach (var request in requests)
+				LoggerBase?.Info()?.Log("Request: {Request}", request);
+
 			return requests;
 		}
 	}

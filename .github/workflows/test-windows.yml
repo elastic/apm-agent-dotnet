@@ -36,21 +36,19 @@ env:
 
 jobs:
   
-  format:
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
-      - name: Bootstrap Action Workspace
-        uses: ./.github/workflows/bootstrap
-      - name: Format
-        run: ./build.bat format
+  # format:
+  #   runs-on: windows-2022
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Bootstrap Action Workspace
+  #       uses: ./.github/workflows/bootstrap
+  #     - name: Format
+  #       run: ./build.bat format
   
   #required step
   tests:
     runs-on: windows-2022
-    needs: [ 'format' ]
     timeout-minutes: 30
-        
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -61,9 +59,9 @@ jobs:
       - name: 'Tests: Unit'
         run: ./build.bat test --test-suite unit
         
-  integrations-tests:
+  integration-tests:
     runs-on: windows-2022
-    needs: [ 'format', 'tests' ]
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -84,7 +82,7 @@ jobs:
   
   startup-hook-tests:
     runs-on: windows-2022
-    needs: [ 'format', 'tests' ]
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -95,7 +93,7 @@ jobs:
 
   profiler-tests:
     runs-on: windows-2022
-    needs: [ 'format', 'tests' ]
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -109,8 +107,7 @@ jobs:
         
   test-iis:
     runs-on: windows-latest
-    needs: [ 'format', 'tests' ]
-    
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace

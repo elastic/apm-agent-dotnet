@@ -393,9 +393,6 @@ namespace Elastic.Apm.Report
 					}
 				}
 
-				if (_logger.IsEnabled(LogLevel.Trace))
-
-
 				stream.Position = 0;
 				using (var content = new StreamContent(stream))
 				{
