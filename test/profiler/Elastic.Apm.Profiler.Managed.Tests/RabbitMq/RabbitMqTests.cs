@@ -32,7 +32,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 		[InlineData("net8.0")]
 		public async Task CaptureAutoInstrumentedSpans(string targetFramework)
 		{
-			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Error);
+			var apmLogger = new InMemoryBlockingLogger(Logging.LogLevel.Warning);
 			var apmServer = new MockApmServer(apmLogger, nameof(CaptureAutoInstrumentedSpans));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
@@ -55,6 +55,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 					line => _output.WriteLine(line.Line),
 					exception => _output.WriteLine($"{exception}"));
 			}
+
+			foreach (var line in apmLogger.Lines)
+				_output.WriteLine(line);
 
 			var transactions = apmServer.ReceivedData.Transactions;
 			var spans = apmServer.ReceivedData.Spans;

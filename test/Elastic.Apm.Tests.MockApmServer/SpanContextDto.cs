@@ -7,6 +7,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 
 using Elastic.Apm.Model;
+using Elastic.Apm.Report.Serialization;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -24,6 +25,7 @@ internal class SpanContextDto : IDto
 	public Http Http { get; set; }
 
 	[JsonPropertyName("tags")]
+	[JsonConverter(typeof(LabelsJsonConverter))]
 	public LabelsDictionary Labels { get; set; }
 
 	public Message Message { get; set; }
