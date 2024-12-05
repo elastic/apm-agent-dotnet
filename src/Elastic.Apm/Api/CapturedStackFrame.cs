@@ -2,7 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Elastic.Apm.Api
 {
@@ -11,13 +11,13 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The absolute path of the file involved in the stack frame.
 		/// </summary>
-		[JsonProperty("abs_path")]
+		[JsonPropertyName("abs_path")]
 		public string AbsPath { get; set; }
 
-		[JsonProperty("classname")]
+		[JsonPropertyName("classname")]
 		public string ClassName { get; set; }
 
-		[JsonProperty("filename")]
+		[JsonPropertyName("filename")]
 		public string FileName { get; set; }
 
 		public string Function { get; set; }
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Api
 		/// The line number of code part of the stack frame.
 		/// Zero value means the actual line number could not have been obtained.
 		/// </summary>
-		[JsonProperty("lineno")]
+		[JsonPropertyName("lineno")]
 		public int LineNo { get; set; }
 
 		public string Module { get; set; }

@@ -16,8 +16,8 @@ public class DbSpanNameTests
 {
 	public struct SqlSignatureTestData
 	{
-		public string Input;
-		public string Output;
+		public string Input { get; set; }
+		public string Output { get; set; }
 	}
 
 	[Theory]
@@ -33,16 +33,17 @@ public class DbSpanNameTests
 
 	public class SqlTokenTestData
 	{
-		public string Name;
-		public string Comment;
-		public string Input;
-		public List<SqlToken> Tokens = new();
+		public string Name { get; set; }
+		public string Comment { get; set; }
+		public string Input { get; set; }
+		public List<SqlToken> Tokens { get; set; } = new();
+
 	}
 
 	public struct SqlToken
 	{
-		public string Kind;
-		public string Text;
+		public string Kind { get; set; }
+		public string Text { get; set; }
 	}
 
 	[Theory]

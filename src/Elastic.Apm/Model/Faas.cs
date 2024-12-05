@@ -3,7 +3,8 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
+using System.Text.Json.Serialization;
 
 namespace Elastic.Apm.Model
 {
@@ -56,7 +57,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// The id of the origin trigger request.
 		/// </summary>
-		[JsonProperty("request_id")]
+		[JsonPropertyName("request_id")]
 		public string RequestId { get; set; }
 
 		/// <summary>

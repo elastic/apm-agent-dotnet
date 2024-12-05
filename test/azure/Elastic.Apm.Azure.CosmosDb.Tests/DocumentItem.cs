@@ -3,13 +3,13 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Elastic.Apm.Azure.CosmosDb.Tests
 {
 	public class DocumentItem
 	{
-		[JsonProperty("id")]
+		[JsonPropertyName("id")]
 		public string Id { get; set; }
 
 		public string FirstName { get; set; }

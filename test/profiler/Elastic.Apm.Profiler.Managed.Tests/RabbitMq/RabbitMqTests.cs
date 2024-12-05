@@ -56,6 +56,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.RabbitMq
 					exception => _output.WriteLine($"{exception}"));
 			}
 
+			foreach (var line in apmLogger.Lines)
+				_output.WriteLine(line);
+
 			var transactions = apmServer.ReceivedData.Transactions;
 			var spans = apmServer.ReceivedData.Spans;
 

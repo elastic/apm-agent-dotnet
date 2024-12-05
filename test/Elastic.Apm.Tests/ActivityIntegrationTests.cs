@@ -168,9 +168,6 @@ namespace Elastic.Apm.Tests
 		}
 
 #if NET
-		/// <summary>
-		/// Makes sure that transactions on the same Activity are part of the same trace.
-		/// </summary>
 		[Fact]
 		public async Task ActivityRespectsSampling()
 		{
@@ -179,19 +176,20 @@ namespace Elastic.Apm.Tests
 
 			Activity.Current = null;
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
-			var source = new ActivitySource(GetType().FullName, "1.0.0");
+			
+			using var source = new ActivitySource(GetType().FullName, "1.0.0");
 
 			var payloadSender = new MockPayloadSender();
 			var config = new MockConfiguration(
 				transactionSampleRate: rate.ToString("N2")
-
 			);
+
 			using var components = new TestAgentComponents(
 				apmServerInfo: MockApmServerInfo.Version716,
 				configuration: config,
 				payloadSender: payloadSender
-
 			);
+
 			using var agent = new ApmAgent(components);
 			for (var i = 0; i < count; i++)
 			{
@@ -199,7 +197,7 @@ namespace Elastic.Apm.Tests
 				using var span = new Activity("UnitTestActivity").Start();
 				await Task.Delay(1);
 			}
-			//Activity.Current.Should().BeNull();
+
 			payloadSender.WaitForTransactions(count: count);
 
 			var sampled = payloadSender.Transactions.Where(t => t.IsSampled).ToArray();

@@ -6,8 +6,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json.Nodes;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -22,14 +22,15 @@ namespace Elastic.Apm.Tests
 		[JsonFileData("./TestResources/json-specs/wildcard_matcher_tests.json")]
 		public void TestCasesFromJsonSpec(string testCaseName, dynamic data)
 		{
-			var testData = (JObject)data;
-			var key = testData.Properties().First();
-			var value = (JObject)key.Last;
-			var matcher = WildcardMatcher.ValueOf(key.Name);
+			var testData = (JsonObject)data;
+			var prop = testData.ToArray().First();
+			var key = prop.Key;
+			var value = (JsonObject)prop.Value;
+			var matcher = WildcardMatcher.ValueOf(key);
 			foreach (var kvp in value)
 			{
 				var input = kvp.Key;
-				var expected = kvp.Value.Value<bool>();
+				var expected = kvp.Value.GetValue<bool>();
 				matcher.Matches(input).Should().Be(expected);
 			}
 		}

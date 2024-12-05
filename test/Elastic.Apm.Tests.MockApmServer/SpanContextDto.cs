@@ -2,10 +2,12 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
 using Elastic.Apm.Model;
+using Elastic.Apm.Report.Serialization;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -22,7 +24,8 @@ internal class SpanContextDto : IDto
 
 	public Http Http { get; set; }
 
-	[JsonProperty("tags")]
+	[JsonPropertyName("tags")]
+	[JsonConverter(typeof(LabelsJsonConverter))]
 	public LabelsDictionary Labels { get; set; }
 
 	public Message Message { get; set; }

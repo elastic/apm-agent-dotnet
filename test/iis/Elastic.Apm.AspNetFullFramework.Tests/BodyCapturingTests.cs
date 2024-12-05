@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Utilities;
@@ -44,9 +45,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			await SendRequestToSampleAppAndVerifyResponse(new HttpMethod(httpMethod), pathData.Uri, pathData.StatusCode, httpContent: content);
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				receivedData.Transactions.Count.Should().Be(1);
+				receivedData.Transactions.Should().ContainSingle();
 				var transaction = receivedData.Transactions.Single();
-				transaction.Context.Request.Body.Should().Be(textBody);
+				transaction.Context.Request.Body.Should().BeOfType<JsonElement>().Subject.ValueKind.Should().Be(JsonValueKind.String);
+				if (transaction.Context.Request.Body is JsonElement element)
+				{
+					element.GetString().Should().Be(textBody);
+				}
 			});
 		}
 
@@ -63,11 +68,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode, httpContent: content);
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				receivedData.Transactions.Count.Should().Be(1);
+				receivedData.Transactions.Should().ContainSingle();
 				var transaction = receivedData.Transactions.Single();
-				var body = transaction.Context.Request.Body.ToString();
-				body.Should().Contain(textFragment);
-				body.Length.Should().Be(RequestBodyStreamHelper.RequestBodyMaxLength);
+				transaction.Context.Request.Body.Should().BeOfType<JsonElement>().Subject.ValueKind.Should().Be(JsonValueKind.String);
+				if (transaction.Context.Request.Body is JsonElement element)
+				{
+					var body = element.GetString();
+					body.Should().Contain(textFragment);
+					body.Should().HaveLength(RequestBodyStreamHelper.RequestBodyMaxLength);
+				}
 			});
 		}
 
@@ -91,9 +100,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			await SendRequestToSampleAppAndVerifyResponse(new HttpMethod(httpMethod), pathData.Uri, pathData.StatusCode, httpContent: content);
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				receivedData.Transactions.Count.Should().Be(1);
+				receivedData.Transactions.Should().ContainSingle();
 				var transaction = receivedData.Transactions.Single();
-				transaction.Context.Request.Body.Should().Be(jsonBody);
+				transaction.Context.Request.Body.Should().BeOfType<JsonElement>().Subject.ValueKind.Should().Be(JsonValueKind.String);
+				if (transaction.Context.Request.Body is JsonElement element)
+				{
+					element.GetString().Should().Be(jsonBody);
+				}
 			});
 		}
 
@@ -120,9 +133,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			await SendRequestToSampleAppAndVerifyResponse(new HttpMethod(httpMethod), pathData.Uri, pathData.StatusCode, httpContent: content);
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				receivedData.Transactions.Count.Should().Be(1);
+				receivedData.Transactions.Should().ContainSingle();
 				var transaction = receivedData.Transactions.Single();
-				transaction.Context.Request.Body.Should().Be("foo=bar&number=23");
+				transaction.Context.Request.Body.Should().BeOfType<JsonElement>().Subject.ValueKind.Should().Be(JsonValueKind.String);
+				if (transaction.Context.Request.Body is JsonElement element)
+				{
+					element.GetString().Should().Be("foo=bar&number=23");
+				}
 			});
 		}
 
@@ -140,9 +157,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode, httpContent: content);
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				receivedData.Transactions.Count.Should().Be(1);
+				receivedData.Transactions.Should().ContainSingle();
 				var transaction = receivedData.Transactions.Single();
-				transaction.Context.Request.Body.Should().Be("foo=bar&password=[REDACTED]&number=23");
+				transaction.Context.Request.Body.Should().BeOfType<JsonElement>().Subject.ValueKind.Should().Be(JsonValueKind.String);
+				if (transaction.Context.Request.Body is JsonElement element)
+				{
+					element.GetString().Should().Be("foo=bar&password=[REDACTED]&number=23");
+				}
 			});
 		}
 
@@ -151,26 +172,31 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[InlineData("POST")]
 		public async Task MultipartFormData_RequestBody_IsCaptured(string httpMethod)
 		{
-			using (var tempFile = new TempFile())
-			{
-				var pathData = SampleAppUrlPaths.HomePage;
+			using var tempFile = new TempFile();
+			var pathData = SampleAppUrlPaths.HomePage;
 
-				var data = $"just some test data in the file";
-				var bytes = Encoding.UTF8.GetBytes(data);
-				using (var stream = new FileStream(tempFile.Path, FileMode.OpenOrCreate, FileAccess.Write))
-					stream.Write(bytes);
-				var content = new MultipartFormDataContent
+			var data = "just some test data in the file";
+			var bytes = Encoding.UTF8.GetBytes(data);
+
+			using (var stream = new FileStream(tempFile.Path, FileMode.OpenOrCreate, FileAccess.Write))
+				stream.Write(bytes);
+
+			using var content = new MultipartFormDataContent
+			{
+				{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }
+			};
+
+			await SendRequestToSampleAppAndVerifyResponse(new HttpMethod(httpMethod), pathData.Uri, pathData.StatusCode, httpContent: content);
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Should().ContainSingle();
+				var transaction = receivedData.Transactions.Single();
+				transaction.Context.Request.Body.Should().BeOfType<JsonElement>().Subject.ValueKind.Should().Be(JsonValueKind.String);
+				if (transaction.Context.Request.Body is JsonElement element)
 				{
-					{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }
-				};
-				await SendRequestToSampleAppAndVerifyResponse(new HttpMethod(httpMethod), pathData.Uri, pathData.StatusCode, httpContent: content);
-				await WaitAndCustomVerifyReceivedData(receivedData =>
-				{
-					receivedData.Transactions.Count.Should().Be(1);
-					var transaction = receivedData.Transactions.Single();
-					transaction.Context.Request.Body.ToString().Should().Contain(data);
-				});
-			}
+					element.GetString().Should().Contain(data);
+				}
+			});
 		}
 	}
 }

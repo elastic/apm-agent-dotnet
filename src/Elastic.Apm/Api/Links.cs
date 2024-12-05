@@ -3,8 +3,8 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -20,11 +20,11 @@ namespace Elastic.Apm.Api
 			TraceId = traceId;
 		}
 
-		[JsonProperty("span_id")]
+		[JsonPropertyName("span_id")]
 		[MaxLength]
 		public string SpanId { get; }
 
-		[JsonProperty("trace_id")]
+		[JsonPropertyName("trace_id")]
 		[MaxLength]
 		public string TraceId { get; }
 	}

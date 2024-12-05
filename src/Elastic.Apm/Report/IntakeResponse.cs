@@ -4,22 +4,21 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Elastic.Apm.Report;
 
 internal class IntakeResponse
 {
-	[JsonProperty("accepted")]
+	[JsonPropertyName("accepted")]
 	public int Accepted { get; set; }
 
-	[JsonProperty("errors")]
+	[JsonPropertyName("errors")]
 	public IReadOnlyCollection<IntakeError> Errors { get; set; }
 }
 
 internal class IntakeError
 {
-
-	[JsonProperty("message")]
+	[JsonPropertyName("message")]
 	public string Message { get; set; }
 }

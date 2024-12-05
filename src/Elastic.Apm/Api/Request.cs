@@ -5,9 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -27,7 +27,7 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		public Dictionary<string, string> Headers { get; set; }
 
-		[JsonProperty("http_version")]
+		[JsonPropertyName("http_version")]
 		[MaxLength]
 		public string HttpVersion { get; set; }
 
@@ -55,7 +55,7 @@ namespace Elastic.Apm.Api
 
 	public class Socket
 	{
-		[JsonProperty("remote_address")] public string RemoteAddress { get; set; }
+		[JsonPropertyName("remote_address")] public string RemoteAddress { get; set; }
 
 		internal Socket DeepCopy() => (Socket)MemberwiseClone();
 
@@ -75,9 +75,13 @@ namespace Elastic.Apm.Api
 			set => _full = Sanitization.TrySanitizeUrl(value, out var newValue, out _) ? newValue : value;
 		}
 
-		[MaxLength][JsonProperty("hostname")] public string HostName { get; set; }
+		[MaxLength]
+		[JsonPropertyName("hostname")]
+		public string HostName { get; set; }
 
-		[MaxLength][JsonProperty("pathname")] public string PathName { get; set; }
+		[MaxLength]
+		[JsonPropertyName("pathname")]
+		public string PathName { get; set; }
 
 		[MaxLength] public string Protocol { get; set; }
 
@@ -93,7 +97,7 @@ namespace Elastic.Apm.Api
 		/// It is expected to have values delimited by ampersands.
 		/// </summary>
 		[MaxLength]
-		[JsonProperty("search")]
+		[JsonPropertyName("search")]
 		public string Search { get; set; }
 
 		internal Url DeepCopy() => (Url)MemberwiseClone();

@@ -7,11 +7,12 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report.Serialization;
 
 namespace Elastic.Apm.Cloud
 {
@@ -56,28 +57,24 @@ namespace Elastic.Apm.Cloud
 				if (string.IsNullOrWhiteSpace(awsToken))
 					return null;
 
-				JObject metadata;
+				JsonObject metadata;
 				using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, MetadataUri))
 				{
 					requestMessage.Headers.Add("X-aws-ec2-metadata-token", awsToken);
 					var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);
 
 					using var stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-					using var streamReader = new StreamReader(stream, Encoding.UTF8);
-					using var jsonReader = new JsonTextReader(streamReader);
-
-					var serializer = new JsonSerializer();
-					metadata = serializer.Deserialize<JObject>(jsonReader);
+					metadata = PayloadItemSerializer.Default.Deserialize<JsonObject>(stream);
 				}
 
 				return new Api.Cloud
 				{
-					Account = new CloudAccount { Id = metadata["accountId"].Value<string>() },
-					Instance = new CloudInstance { Id = metadata["instanceId"].Value<string>() },
-					AvailabilityZone = metadata["availabilityZone"]?.Value<string>(),
-					Machine = new CloudMachine { Type = metadata["instanceType"].Value<string>() },
+					Account = new CloudAccount { Id = metadata["accountId"]?.GetValue<string>() },
+					Instance = new CloudInstance { Id = metadata["instanceId"]?.GetValue<string>() },
+					AvailabilityZone = metadata["availabilityZone"]?.GetValue<string>(),
+					Machine = new CloudMachine { Type = metadata["instanceType"]?.GetValue<string>() },
 					Provider = Provider,
-					Region = metadata["region"].Value<string>()
+					Region = metadata["region"]?.GetValue<string>()
 				};
 
 			}

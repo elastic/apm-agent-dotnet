@@ -111,6 +111,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 			return SafeCaptureSpan<ActionResult>($"{ContactSpanPrefix}{SpanNameSuffix}", $"{ContactSpanPrefix}{SpanTypeSuffix}", async () =>
 			{
+				await Task.Delay(1000); // Force response to take longer than 1 second to validate formatting of duration.
+
 				async Task<HttpResponseMessage> GetContentFromUrl(Uri url)
 				{
 					Console.WriteLine($"Getting `{url}'...");

@@ -67,10 +67,18 @@ namespace Elastic.Apm.StartupHook.Tests
 			apmServer.RunInBackground(port);
 			var waitHandle = new ManualResetEvent(false);
 
+			var error = string.Empty;
+
 			apmServer.OnReceive += o =>
 			{
 				if (o is TransactionDto)
 					waitHandle.Set();
+
+				else if (o is string s) // may occur if there is an error
+				{
+					waitHandle.Set();
+					error = s;
+				}
 			};
 
 			using (var sampleApp = new SampleApplication())
@@ -86,8 +94,9 @@ namespace Elastic.Apm.StartupHook.Tests
 				var response = await client.GetAsync(uri);
 
 				response.IsSuccessStatusCode.Should().BeTrue();
+				waitHandle.WaitOne(TimeSpan.FromMinutes(1));
 
-				waitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				error.Should().BeEmpty();
 				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
 
 				var transaction = apmServer.ReceivedData.Transactions.First();
@@ -108,12 +117,22 @@ namespace Elastic.Apm.StartupHook.Tests
 			var transactionWaitHandle = new ManualResetEvent(false);
 			var errorWaitHandle = new ManualResetEvent(false);
 
+			var serverError = string.Empty;
+
 			apmServer.OnReceive += o =>
 			{
 				if (o is TransactionDto)
 					transactionWaitHandle.Set();
-				if (o is ErrorDto)
+
+				else if (o is ErrorDto)
 					errorWaitHandle.Set();
+
+				else if (o is string s) // may occur if there is an error
+				{
+					transactionWaitHandle.Set();
+					errorWaitHandle.Set();
+					serverError = s;
+				}
 			};
 
 			using (var sampleApp = new SampleApplication())
@@ -131,13 +150,15 @@ namespace Elastic.Apm.StartupHook.Tests
 
 				response.IsSuccessStatusCode.Should().BeFalse();
 
-				transactionWaitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				transactionWaitHandle.WaitOne(TimeSpan.FromMinutes(1));
+				serverError.Should().BeEmpty();
 				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
 
 				var transaction = apmServer.ReceivedData.Transactions.First();
 				transaction.Name.Should().Be("GET Home/Exception");
 
-				errorWaitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				errorWaitHandle.WaitOne(TimeSpan.FromMinutes(1));
+				serverError.Should().BeEmpty();
 				apmServer.ReceivedData.Errors.Should().HaveCount(1);
 
 				var error = apmServer.ReceivedData.Errors.First();
@@ -159,11 +180,19 @@ namespace Elastic.Apm.StartupHook.Tests
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
+			var error = string.Empty;
 			var waitHandle = new ManualResetEvent(false);
+
 			apmServer.OnReceive += o =>
 			{
 				if (o is MetadataDto)
 					waitHandle.Set();
+
+				else if (o is string s) // may occur if there is an error
+				{
+					waitHandle.Set();
+					error = s;
+				}
 			};
 
 			using (var sampleApp = new SampleApplication())
@@ -180,7 +209,9 @@ namespace Elastic.Apm.StartupHook.Tests
 
 				response.IsSuccessStatusCode.Should().BeTrue();
 
-				waitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				waitHandle.WaitOne(TimeSpan.FromMinutes(1));
+
+				error.Should().BeEmpty();
 				apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
 
 				var metadata = apmServer.ReceivedData.Metadata.First();

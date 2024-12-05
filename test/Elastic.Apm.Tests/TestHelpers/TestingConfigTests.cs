@@ -155,7 +155,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			var allDefaultsConfigSnapshot = new MutableSnapshot(new MockRawConfigSnapshot(new Dictionary<string, string>()), _xunitOutputHelper);
 			Options.All.ForEach(optMeta =>
 			{
-				optMeta.MutableSnapshotPropertyInfo.GetValue(allDefaultsConfigSnapshot).Should().Be(optMeta.DefaultValueAsObject);
+				optMeta.MutableSnapshotPropertyInfo.GetValue(allDefaultsConfigSnapshot).Should().Be(optMeta.DefaultValueAsObject, $"{optMeta.Name}");
 			});
 		}
 

@@ -5,10 +5,10 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Api
@@ -17,6 +17,7 @@ namespace Elastic.Apm.Api
 	{
 		private Service() { }
 
+		[JsonConstructor]
 		internal Service(string name, string version) => (Name, Version) = (name, version);
 
 		public AgentC Agent { get; set; }
@@ -119,7 +120,7 @@ namespace Elastic.Apm.Api
 			public string Version { get; set; }
 
 			[MaxLength]
-			[JsonProperty("activation_method")]
+			[JsonPropertyName("activation_method")]
 			public string ActivationMethod { get; set; }
 
 			public override string ToString() =>

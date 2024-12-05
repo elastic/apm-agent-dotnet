@@ -2,65 +2,115 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System.Globalization;
+using System;
+using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Text;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Model;
 
-namespace Elastic.Apm.Report.Serialization
+
+namespace Elastic.Apm.Report.Serialization;
+
+[JsonSerializable(typeof(IntakeError))]
+[JsonSerializable(typeof(IntakeResponse))]
+internal partial class SourceGenerationContext : JsonSerializerContext
 {
-	/// <summary>
-	/// Serializes payloads to send to APM server
-	/// </summary>
-	internal sealed class PayloadItemSerializer
-	{
-		private readonly JsonSerializer _serializer;
+}
 
-		internal PayloadItemSerializer()
+/// <summary>
+/// Serializes payloads to send to APM server
+/// </summary>
+internal sealed class PayloadItemSerializer
+{
+	public JsonSerializerOptions Settings { get; }
+
+	internal PayloadItemSerializer() =>
+		Settings = new JsonSerializerOptions
 		{
-			var settings = new JsonSerializerSettings
+			PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			WriteIndented = false,
+			Converters = { new JsonConverterDouble(), new JsonConverterDecimal(), new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
+			TypeInfoResolver = JsonTypeInfoResolver.Combine(SourceGenerationContext.Default, new DefaultJsonTypeInfoResolver
 			{
-				ContractResolver = new ElasticApmContractResolver(),
-				NullValueHandling = NullValueHandling.Ignore,
-				Formatting = Formatting.None,
-			};
+				Modifiers = { j =>
+					{
+						foreach (var prop in j.Properties)
+						{
+							if (prop.AttributeProvider.GetCustomAttributes(typeof(MaxLengthAttribute), false).FirstOrDefault() is MaxLengthAttribute maxLengthAttribute)
+								prop.CustomConverter = new TruncateJsonConverter(maxLengthAttribute.Length);
 
-			_serializer = JsonSerializer.CreateDefault(settings);
-		}
+							if (prop.PropertyType == typeof(Lazy<Context>))
+								prop.ShouldSerialize = (_, lazy) => (lazy as Lazy<Context>)?.IsValueCreated ?? false;
 
-		public void Serialize(object item, TextWriter writer) => _serializer.Serialize(writer, item);
+							else if ((j.Type == typeof(Transaction) || j.Type == typeof(ITransaction)) && prop.Name == "context")
+								prop.ShouldSerialize = (t, _) => (t as Transaction)?.ShouldSerializeContext() ?? false;
 
-		/// <summary>
-		/// Deserializes an instance of <typeparamref name="T"/> from JSON
-		/// </summary>
-		/// <param name="json">the JSON</param>
-		/// <typeparam name="T">the type to deserialize</typeparam>
-		/// <returns>a new instance of <typeparamref name="T"/></returns>
-		internal T Deserialize<T>(string json)
-		{
-			var val = _serializer.Deserialize<T>(new JsonTextReader(new StringReader(json)));
-			return val ?? default;
-		}
+							else if ((j.Type == typeof(Span) || j.Type == typeof(ISpan)) && prop.Name == "context")
+								prop.ShouldSerialize = (s, _) => (s as Span)?.ShouldSerializeContext() ?? false;
 
-		internal T Deserialize<T>(Stream stream)
-		{
-			using var sr = new StreamReader(stream);
-			using var jsonTextReader = new JsonTextReader(sr);
-			var val = _serializer.Deserialize<T>(jsonTextReader);
-			return val;
-		}
+							else if ((j.Type == typeof(Error) || j.Type == typeof(IError)) && prop.Name == "context")
+								prop.ShouldSerialize = (e, _) => (e as Error)?.ShouldSerializeContext() ?? false;
 
-		/// <summary>
-		/// Serializes the item to JSON
-		/// </summary>
-		/// <param name="item"></param>
-		/// <returns></returns>
-		internal string Serialize(object item)
-		{
-			var builder = new StringBuilder(256);
-			using var writer = new StringWriter(builder, CultureInfo.InvariantCulture);
-			Serialize(item, writer);
-			return builder.ToString();
-		}
+							else if (j.Type == typeof(Context) && prop.Name == "tags")
+								prop.ShouldSerialize = (e, _) => (e as Context)?.ShouldSerializeLabels() ?? false;
+
+							else if (j.Type == typeof(Context) && prop.Name == "custom")
+								prop.ShouldSerialize = (e, _) => (e as Context)?.ShouldSerializeCustom() ?? false;
+
+							else if (j.Type == typeof(SpanContext) && prop.Name == "tags")
+								prop.ShouldSerialize = (e, _) => (e as SpanContext)?.ShouldSerializeLabels() ?? false;
+
+							else if (j.Type == typeof(Metadata) && prop.Name == "tags")
+								prop.ShouldSerialize = (e, _) => (e as Metadata)?.ShouldSerializeLabels() ?? false;
+
+							else if (prop.PropertyType.GetInterfaces().Any(i => i == typeof(IDictionary)))
+								prop.ShouldSerialize = (_, dictionary) => ((dictionary as IDictionary)?.Count ?? 0) > 0;
+
+						}
+					}
+				}
+			}),
+		};
+
+	public static PayloadItemSerializer Default { get; } = new();
+
+	public JsonTypeInfo GetTypeInfo(Type type) => Settings.TypeInfoResolver!.GetTypeInfo(type, Settings);
+
+	public void Serialize(object item, StreamWriter writer)
+	{
+		writer.Flush(); // ensure the base stream is "up-to-date" before we attempt to serialize into it
+		JsonSerializer.Serialize(writer.BaseStream, item, item.GetType(), Settings);
 	}
+
+	/// <summary>
+	/// Deserializes an instance of <typeparamref name="T"/> from JSON
+	/// </summary>
+	/// <param name="json">the JSON</param>
+	/// <typeparam name="T">the type to deserialize</typeparam>
+	/// <returns>a new instance of <typeparamref name="T"/></returns>
+	internal T Deserialize<T>(string json)
+	{
+		var val = JsonSerializer.Deserialize<T>(json, Settings);
+		return val ?? default;
+	}
+
+	internal T Deserialize<T>(Stream stream)
+	{
+		var val = JsonSerializer.Deserialize<T>(stream, Settings);
+		return val;
+	}
+
+	/// <summary>
+	/// Serializes the item to JSON
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
+	internal string Serialize(object item) => JsonSerializer.Serialize(item, item.GetType(), Settings);
 }

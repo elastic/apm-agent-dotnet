@@ -3,85 +3,124 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
+
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Report.Serialization
 {
 	internal class LabelsJsonConverter : JsonConverter<LabelsDictionary>
 	{
-		public override void WriteJson(JsonWriter writer, LabelsDictionary labels, JsonSerializer serializer)
+		public override void Write(Utf8JsonWriter writer, LabelsDictionary labels, JsonSerializerOptions options)
 		{
+			if (labels is null or { MergedDictionary.Count: 0 })
+				return;
+
 			writer.WriteStartObject();
 			foreach (var keyValue in labels.MergedDictionary)
 			{
 				// Labels are trimmed and also de dotted in order to satisfy the Intake API
-				writer.WritePropertyName(keyValue.Key.Truncate()
+				var key = keyValue.Key
+					.Truncate()
 					.Replace('.', '_')
 					.Replace('*', '_')
-					.Replace('"', '_'));
+					.Replace('"', '_');
 
-				if (keyValue.Value != null)
-				{
-					switch (keyValue.Value.Value)
-					{
-						case string strValue:
-							writer.WriteValue(strValue.Truncate());
-							break;
-						default:
-							writer.WriteValue(keyValue.Value.Value);
-							break;
-					}
-				}
-				else
-					writer.WriteNull();
+				writer.WritePropertyName(key);
+
+				SerializeLabelsDictionaryValues(writer, keyValue);
 			}
 			writer.WriteEndObject();
 		}
 
-		public override LabelsDictionary ReadJson(JsonReader reader, Type objectType, LabelsDictionary existingValue,
-			bool hasExistingValue, JsonSerializer serializer
-		)
+		private static void SerializeLabelsDictionaryValues(Utf8JsonWriter writer, KeyValuePair<string, Label> keyValue)
 		{
-			if (reader.TokenType == JsonToken.Null)
+			if (keyValue.Value != null)
+			{
+				switch (keyValue.Value.Value)
+				{
+					case string strValue:
+						writer.WriteStringValue(strValue.Truncate());
+						break;
+					case bool b:
+						writer.WriteBooleanValue(b);
+						break;
+					case decimal b:
+						writer.WriteRawValue(b.ToString("N1", CultureInfo.InvariantCulture));
+						break;
+					case double b:
+						writer.WriteRawValue(b.ToString("N1", CultureInfo.InvariantCulture));
+						break;
+					case int b:
+						writer.WriteNumberValue(b);
+						break;
+					case uint b:
+						writer.WriteNumberValue(b);
+						break;
+					case ulong b:
+						writer.WriteNumberValue(b);
+						break;
+					case long b:
+						writer.WriteNumberValue(b);
+						break;
+					default:
+						writer.WriteNullValue();
+						break;
+				}
+			}
+			else
+				writer.WriteNullValue();
+		}
+
+		public override LabelsDictionary Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.Null)
 				return null;
 
-			if (reader.TokenType != JsonToken.StartObject)
-				throw new JsonException($"expected {JsonToken.StartObject} but received {reader.TokenType}");
+			if (reader.TokenType != JsonTokenType.StartObject)
+				throw new JsonException($"expected {JsonTokenType.StartObject} but received {reader.TokenType}");
 
 			var labels = new LabelsDictionary();
 
 			while (reader.Read())
 			{
-				if (reader.TokenType == JsonToken.EndObject)
+				if (reader.TokenType == JsonTokenType.EndObject)
 					break;
 
-				var property = (string)reader.Value;
+				var property = reader.GetString()!;
 				reader.Read();
 
 				switch (reader.TokenType)
 				{
-					case JsonToken.Integer:
-						labels.InnerDictionary.Add(property, (long)reader.Value);
+					case JsonTokenType.Number:
+						if (reader.TryGetInt64(out var longValue))
+							labels.InnerDictionary.Add(property, longValue);
+						else if (reader.TryGetDouble(out var doubleValue))
+							labels.InnerDictionary.Add(property, doubleValue);
 						break;
-					case JsonToken.Float:
-						labels.InnerDictionary.Add(property, (double)reader.Value);
+					case JsonTokenType.String:
+						labels.Add(property, reader.GetString());
 						break;
-					case JsonToken.String:
-						labels.Add(property, (string)reader.Value);
+					case JsonTokenType.True:
+						labels.InnerDictionary.Add(property, true);
 						break;
-					case JsonToken.Boolean:
-						labels.InnerDictionary.Add(property, (bool)reader.Value);
+					case JsonTokenType.False:
+						labels.InnerDictionary.Add(property, false);
 						break;
 					default:
 						throw new JsonException(
-							$"Expected {JsonToken.Integer}, {JsonToken.Float}, {JsonToken.String} or {JsonToken.Boolean} "
+							$"Expected {JsonTokenType.Number}, {JsonTokenType.String}, {JsonTokenType.True} or {JsonTokenType.False} "
 							+ $"but received {reader.TokenType}");
 				}
 			}
 
 			return labels;
 		}
+
 	}
 }

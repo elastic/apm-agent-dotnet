@@ -3,8 +3,8 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -68,7 +68,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The name of the logger instance used.
 		/// </summary>
-		[JsonProperty("logger_name")]
+		[JsonPropertyName("logger_name")]
 		[MaxLength]
 		public string LoggerName { get; set; }
 
@@ -83,11 +83,11 @@ namespace Elastic.Apm.Api
 		/// together.
 		/// The string is not interpreted, so feel free to use whichever placeholders makes sense in the client language."
 		/// </summary>
-		[JsonProperty("param_message")]
+		[JsonPropertyName("param_message")]
 		[MaxLength]
 		public string ParamMessage { get; set; }
 
-		[JsonProperty("stacktrace")]
+		[JsonPropertyName("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 	}
 }

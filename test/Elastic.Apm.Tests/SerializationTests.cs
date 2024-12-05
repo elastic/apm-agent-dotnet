@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
@@ -66,7 +67,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.StringProp" /> that has a string
+		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.Str" /> that has a string
 		/// which is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the serialized instance still contains the whole string (aka it was not trimmed), since
 		/// the property pointing to the string wasn't marked with any attributes, so it's not trimmed.
@@ -76,14 +77,14 @@ namespace Elastic.Apm.Tests
 		{
 			var str = new string('a', 1200);
 
-			var dummyInstance = new DummyType { IntProp = 42, StringProp = str };
+			var dummyInstance = new DummyType { Int = 42, Str = str };
 
 			var json = _payloadItemSerializer.Serialize(dummyInstance);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject<DummyType>(json);
 
 			deserializedDummyInstance.Should().NotBeNull();
-			deserializedDummyInstance.StringProp.Should().Be(str);
-			deserializedDummyInstance.IntProp.Should().Be(42);
+			deserializedDummyInstance.Str.Should().Be(str);
+			deserializedDummyInstance.Int.Should().Be(42);
 		}
 
 		/// <summary>
@@ -97,7 +98,7 @@ namespace Elastic.Apm.Tests
 			var str = new string('a', 1200);
 
 			var context = new Context();
-			context.InternalLabels.Value.InnerDictionary["foo"] = str;
+			context.InternalLabels.InnerDictionary["foo"] = str;
 
 			var json = _payloadItemSerializer.Serialize(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
@@ -127,9 +128,10 @@ namespace Elastic.Apm.Tests
 			var str = new string('a', 1200);
 
 			var context = new SpanContext();
-			context.InternalLabels.Value.InnerDictionary["foo"] = str;
+			context.InternalLabels.InnerDictionary["foo"] = str;
 
 			var json = _payloadItemSerializer.Serialize(context);
+			json.Should().Contain("tags");
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
 			deserializedContext.Should().NotBeNull();
@@ -153,7 +155,7 @@ namespace Elastic.Apm.Tests
 		public void LabelWithNullValueShouldBeCaptured()
 		{
 			var context = new SpanContext();
-			context.InternalLabels.Value.InnerDictionary["foo"] = null;
+			context.InternalLabels.InnerDictionary["foo"] = null;
 
 			var json = _payloadItemSerializer.Serialize(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
@@ -169,7 +171,7 @@ namespace Elastic.Apm.Tests
 		public void LabelWithEmptyStringShouldBeCaptured()
 		{
 			var context = new SpanContext();
-			context.InternalLabels.Value.InnerDictionary["foo"] = string.Empty;
+			context.InternalLabels.InnerDictionary["foo"] = string.Empty;
 
 			var json = _payloadItemSerializer.Serialize(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
@@ -179,7 +181,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.DictionaryProp" /> that has a value
+		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.Dict" /> that has a value
 		/// which is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the serialized instance still contains the whole value (aka it was not trimmed), since
 		/// the property pointing to the string is not marked with any attributes, so it is not trimmed.
@@ -190,13 +192,13 @@ namespace Elastic.Apm.Tests
 			var str = new string('a', 1200);
 
 			var dummyInstance = new DummyType();
-			dummyInstance.DictionaryProp["foo"] = str;
+			dummyInstance.Dict["foo"] = str;
 
 			var json = _payloadItemSerializer.Serialize(dummyInstance);
-			var deserializedDummyInstance = JsonConvert.DeserializeObject<JObject>(json);
+			var deserializedDummyInstance = _payloadItemSerializer.Deserialize<JsonObject>(json);
 
 			deserializedDummyInstance.Should().NotBeNull();
-			deserializedDummyInstance["dictionaryProp"]["foo"].Value<string>().Should().Be(str);
+			deserializedDummyInstance["dict"]["foo"].GetValue<string>().Should().Be(str);
 		}
 
 		/// <summary>
@@ -280,19 +282,19 @@ namespace Elastic.Apm.Tests
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = _payloadItemSerializer.Serialize(sampledTransaction);
-			var deserializedSampledTransaction = JsonConvert.DeserializeObject<JObject>(serializedSampledTransaction);
+			var deserializedSampledTransaction = _payloadItemSerializer.Deserialize<JsonObject>(serializedSampledTransaction);
 			var serializedNonSampledTransaction = _payloadItemSerializer.Serialize(nonSampledTransaction);
-			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject<JObject>(serializedNonSampledTransaction);
+			var deserializedNonSampledTransaction = _payloadItemSerializer.Deserialize<JsonObject>(serializedNonSampledTransaction);
 
 			// ReSharper disable once PossibleNullReferenceException
-			deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
+			deserializedSampledTransaction["sampled"].GetValue<bool>().Should().BeTrue();
 			deserializedSampledTransaction["context"]["request"]["url"]["full"]
-				.Value<string>()
+				.GetValue<string>()
 				.Should()
 				.Be("https://elastic.co");
 
 			// ReSharper disable once PossibleNullReferenceException
-			deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
+			deserializedNonSampledTransaction["sampled"].GetValue<bool>().Should().BeFalse();
 			deserializedNonSampledTransaction.Should().NotContainKey("context");
 		}
 
@@ -333,34 +335,34 @@ namespace Elastic.Apm.Tests
 		public void LabelDeDotting()
 		{
 			var context = new Context();
-			context.InternalLabels.Value.InnerDictionary["a.b"] = "labelValue";
+			context.InternalLabels.InnerDictionary["a.b"] = "labelValue";
 			var json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
-			context.InternalLabels.Value.InnerDictionary["a.b.c"] = "labelValue";
+			context.InternalLabels.InnerDictionary["a.b.c"] = "labelValue";
 			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b_c\":\"labelValue\"}}");
 
 			context = new Context();
-			context.InternalLabels.Value.InnerDictionary["a.b"] = "labelValue1";
-			context.InternalLabels.Value.InnerDictionary["a.b.c"] = "labelValue2";
+			context.InternalLabels.InnerDictionary["a.b"] = "labelValue1";
+			context.InternalLabels.InnerDictionary["a.b.c"] = "labelValue2";
 			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 
 			context = new Context();
-			context.InternalLabels.Value.InnerDictionary["a\"b"] = "labelValue";
+			context.InternalLabels.InnerDictionary["a\"b"] = "labelValue";
 			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
-			context.InternalLabels.Value.InnerDictionary["a*b"] = "labelValue";
+			context.InternalLabels.InnerDictionary["a*b"] = "labelValue";
 			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
-			context.InternalLabels.Value.InnerDictionary["a*b"] = "labelValue1";
-			context.InternalLabels.Value.InnerDictionary["a\"b_c"] = "labelValue2";
+			context.InternalLabels.InnerDictionary["a*b"] = "labelValue1";
+			context.InternalLabels.InnerDictionary["a\"b_c"] = "labelValue2";
 			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
@@ -409,13 +411,13 @@ namespace Elastic.Apm.Tests
 		{
 			var samples = new List<MetricSample>
 			{
-				new MetricSample("sample_1", 1), new MetricSample("sample*\"2", 2), new MetricSample("sample_1", 3)
+				new("sample_1", 1), new("sample*\"2", 2.1), new("sample_1", 3)
 			};
 
 			var metricSet = new Elastic.Apm.Metrics.MetricSet(1603343944891, samples);
 			var json = _payloadItemSerializer.Serialize(metricSet);
 
-			json.Should().Be("{\"samples\":{\"sample_1\":{\"value\":1.0},\"sample__2\":{\"value\":2.0}},\"timestamp\":1603343944891}");
+			json.Should().Be("{\"samples\":{\"sample_1\":{\"value\":1},\"sample__2\":{\"value\":2.1}},\"timestamp\":1603343944891}");
 
 			var deserialized = _payloadItemSerializer.Deserialize<Elastic.Apm.Metrics.MetricSet>(json);
 			deserialized.Timestamp.Should().Be(metricSet.Timestamp);
@@ -504,10 +506,10 @@ namespace Elastic.Apm.Tests
 		private class DummyType
 		{
 			// ReSharper disable once CollectionNeverQueried.Local - it's by JsonConvert
-			public Dictionary<string, string> DictionaryProp { get; } = new Dictionary<string, string>();
-			public int IntProp { get; set; }
+			public Dictionary<string, string> Dict { get; } = new();
+			public int Int { get; set; }
 
-			public string StringProp { get; set; }
+			public string Str { get; set; }
 		}
 	}
 }

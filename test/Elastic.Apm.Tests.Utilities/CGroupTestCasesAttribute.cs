@@ -8,7 +8,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit.Sdk;
 
 namespace Elastic.Apm.Tests.Utilities;
@@ -36,20 +37,23 @@ public class CGroupTestCasesAttribute : DataAttribute
 		if (!File.Exists(_fileName))
 			throw new ArgumentException($"JSON input file {_fileName} does not exist");
 
-		var jToken = JToken.Parse(File.ReadAllText(_fileName), new JsonLoadSettings
+		var jToken = JsonNode.Parse(File.ReadAllText(_fileName), new JsonNodeOptions(), new JsonDocumentOptions
 		{
-			CommentHandling = CommentHandling.Ignore
+			CommentHandling = JsonCommentHandling.Skip
 		});
-
-		foreach (var kvp in (JObject)jToken)
+		if (jToken is JsonObject jObject)
 		{
-			var name = kvp.Key;
-			var data = ParseTestData(kvp.Value as JObject);
-			yield return [name, data];
+			foreach (var kvp in jObject)
+			{
+				var name = kvp.Key;
+				var data = ParseTestData(kvp.Value as JsonObject);
+				yield return [name, data];
+			}
 		}
+
 	}
 
-	private static CGroupTestData ParseTestData(JObject jToken)
+	private static CGroupTestData ParseTestData(JsonObject jToken)
 	{
 		var testData = new CGroupTestData { Files = new CgroupFiles() };
 
@@ -58,18 +62,18 @@ public class CGroupTestCasesAttribute : DataAttribute
 			switch (kvp.Key)
 			{
 				case "containerId":
-					testData.ContainerId = kvp.Value?.Value<string>();
+					testData.ContainerId = kvp.Value?.GetValue<string>();
 					break;
 				case "podId":
-					testData.PodId = kvp.Value?.Value<string>();
+					testData.PodId = kvp.Value?.GetValue<string>();
 					break;
 				case "files":
-					var o = (JObject)kvp.Value;
-					var cgroupA = o.Property("/proc/self/cgroup")?.Value as JArray;
-					testData.Files.ProcSelfCgroup = cgroupA?.Values<string>().FirstOrDefault();
+					var o = (JsonObject)kvp.Value;
+					var cgroupA = o.TryGetPropertyValue("/proc/self/cgroup", out var cgroup) ? cgroup as JsonArray : null;
+					testData.Files.ProcSelfCgroup = cgroupA?.GetValues<string>().FirstOrDefault();
 
-					var mountInfoA = o.Property("/proc/self/mountinfo")?.Value as JArray;
-					testData.Files.MountInfo = mountInfoA?.Values<string>().ToArray();
+					var mountInfoA = o.TryGetPropertyValue("/proc/self/mountinfo", out var mountinfo) ? mountinfo as JsonArray : null;
+					testData.Files.MountInfo = mountInfoA?.GetValues<string>().ToArray();
 					break;
 			}
 		}
