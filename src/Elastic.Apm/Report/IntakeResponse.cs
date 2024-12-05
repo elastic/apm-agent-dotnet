@@ -19,7 +19,6 @@ internal class IntakeResponse
 
 internal class IntakeError
 {
-
 	[JsonPropertyName("message")]
 	public string Message { get; set; }
 }

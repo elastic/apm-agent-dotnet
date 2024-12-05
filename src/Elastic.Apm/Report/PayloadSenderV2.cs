@@ -422,16 +422,7 @@ namespace Elastic.Apm.Report
 					if (response is null || !response.IsSuccessStatusCode)
 					{
 						var message = "Unknown 400 Bad Request";
-						if (response?.Content != null)
-						{
-#if NET8_0_OR_GREATER
-							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStream());
-#else
-							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
-#endif
-							if (intakeResponse.Errors.Count > 0)
-								message = string.Join(", ", intakeResponse.Errors.Select(e => e.Message).Distinct());
-						}
+
 						_logger?.Error()
 							?.Log("Failed sending event."
 								+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
@@ -441,6 +432,20 @@ namespace Elastic.Apm.Report
 								, response?.StatusCode,
 								message
 								);
+
+						if (response?.Content != null)
+						{
+							IntakeResponse intakeResponse;
+#if NET8_0_OR_GREATER
+							var responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+							_logger?.Warning()?.Log("Received response from server: {ResponseContent}", responseContent);
+							intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(responseContent);
+#else
+							intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
+#endif
+							if (intakeResponse.Errors.Count > 0)
+								message = string.Join(", ", intakeResponse.Errors.Select(e => e.Message).Distinct());
+						}
 					}
 					// ReSharper enable ConditionIsAlwaysTrueOrFalse
 					else
