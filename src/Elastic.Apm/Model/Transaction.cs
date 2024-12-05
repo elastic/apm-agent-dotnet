@@ -473,6 +473,7 @@ internal class Transaction : ITransaction
 	/// <summary>
 	/// Contains data related to FaaS (Function as a Service) events.
 	/// </summary>
+	[JsonPropertyName("faas")]
 	public Faas FaaS { get; set; }
 
 	/// <summary>

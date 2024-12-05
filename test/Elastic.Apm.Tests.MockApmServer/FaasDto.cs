@@ -9,6 +9,7 @@ namespace Elastic.Apm.Tests.MockApmServer;
 
 public class FaasDto
 {
+	[JsonPropertyName("cold_start")]
 	public bool ColdStart { get; set; }
 
 	public string Execution { get; set; }

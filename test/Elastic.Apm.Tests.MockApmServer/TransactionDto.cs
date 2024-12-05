@@ -46,10 +46,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public string Type { get; set; }
 
-
 		[JsonPropertyName("dropped_spans_stats")]
 		public List<DroppedSpanStatsDto> DroppedSpanStats { get; set; }
 
+		[JsonPropertyName("faas")]
 		public FaasDto FaaS { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(TransactionDto))
