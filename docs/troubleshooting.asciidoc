@@ -89,8 +89,8 @@ The default value is `file` if `OTEL_DOTNET_AUTO_LOG_DIRECTORY` is set or `OTEL_
 [[collect-logs-core]]
 ==== ASP.NET Core
 
-If you added the agent to your application as per the <<setup-asp-net-core>> document with the `UseAllElasticApm` or `UseElasticApm` method, it will integrate with the
-https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging[ASP.NET Core logging infrastructure].
+If you added the agent to your application as per the <<setup-asp-net-core>> document with the `AddAllElasticApm` or `AddElasticApm` method, it will integrate with the
+https://learn.microsoft.com/aspnet/core/fundamentals/logging[ASP.NET Core logging infrastructure].
 This means the Agent will pick up the configured logging provider and log as any other component logs.
 
 [IMPORTANT]
@@ -192,17 +192,26 @@ See "<<double-agent-initialization>>".
 [[double-agent-initialization]]
 === An `InstanceAlreadyCreatedException` exception is thrown
 
-In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured.", or an error log appears with the same message. This happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization and transfer to the APM Server.
+In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: 
+"The singleton APM agent has already been instantiated and can no longer be configured.", or an error log appears with the same message. This 
+happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open 
+up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization 
+and transfer to the APM Server.
 
 TIP: Take a look at the initialization section of the <<public-api,Public Agent API>> for more information on how agent initialization works.
 
-As an example, this issue can happen if you call the `Elastic.Apm.Agent.Setup` method multiple times, or if you call another method on `Elastic.Apm.Agent` that implicitly initializes the agent, and then you call the `Elastic.Apm.Agent.Setup` method on the already initialized agent.
+As an example, this issue can happen if you call the `Elastic.Apm.Agent.Setup` method multiple times, or if you call another method on `Elastic.Apm.Agent` 
+that implicitly initializes the agent, and then you call the `Elastic.Apm.Agent.Setup` method on the already initialized agent.
 
-Another example might be when you use the Public Agent API in combination with the IIS module or the ASP.NET Core NuGet package, where you enable the agent with the `UseElasticApm` or `UseAllElasticApm` methods. Both the first call to the IIS module and the `UseElasticApm`/`UseAllElasticApm` methods internally call the `Elastic.Apm.Agent.Setup` method to initialize the agent.
+Another example might be when you use the Public Agent API in combination with the IIS module or the ASP.NET Core NuGet package, where you enable
+the agent with the `AddElasticApm` or `UseAllElasticApm` methods. Both the first call to the IIS module and the `AddElasticApm`/`AddllElasticApm` 
+methods internally call the `Elastic.Apm.Agent.Setup` method to initialize the agent.
 
-You may use the Public Agent API with the `Elastic.Apm.Agent` class in code that can potentially execute before the IIS module initializes or the `UseElasticApm`/`UseAllElasticApm` calls execute. If that happens, those will fail, as the Agent has been implicitly initialized already.
+You may use the Public Agent API with the `Elastic.Apm.Agent` class in code that can potentially execute before the IIS module initializes or
+the `AddElasticApm`/`AddAllElasticApm` calls execute. If that happens, those will fail, as the Agent has been implicitly initialized already.
 
-To prevent the `InstanceAlreadyCreatedException` in these scenarios, first use the `Elastic.Apm.Agent.IsConfigured` method to check if the agent is already initialized. After the check, you can safely use other methods in the Public Agent API. This will prevent accidental implicit agent initialization.
+To prevent the `InstanceAlreadyCreatedException` in these scenarios, first use the `Elastic.Apm.Agent.IsConfigured` method to check if the agent
+is already initialized. After the check, you can safely use other methods in the Public Agent API. This will prevent accidental implicit agent initialization.
 
 [float]
 [[legacy-asp-net-sync-context]]
