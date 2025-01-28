@@ -22,7 +22,7 @@ internal static class FullFrameworkDefaultImplementations
 		if (!string.IsNullOrEmpty(logLevel))
 			Enum.TryParse(logLevel, true, out level);
 
-		return AgentComponents.CheckForProfilerLogger(new TraceLogger(level), level);
+		return AgentComponents.GetGlobalLogger(new TraceLogger(level), level);
 	}
 
 	/// <summary>

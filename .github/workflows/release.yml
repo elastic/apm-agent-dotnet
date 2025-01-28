@@ -5,9 +5,7 @@ on:
     types: [published]
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 env:
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
@@ -39,13 +37,13 @@ jobs:
       run: ./build.sh pack
 
     - name: Release to Nuget
-      run: .ci/linux/deploy.sh ${{ secrets.NUGET_API_KEY }} ${{ secrets.NUGET_API_URL }}
+      run: .ci/deploy.sh ${{ secrets.NUGET_API_KEY }} ${{ secrets.NUGET_API_URL }}
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@d70bba72b1f3fd22344832f00baa16ece964efeb # v3.3.0
+      uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
 
     - name: Log in to the Elastic Container registry
-      uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3.2.0
+      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
       with:
         registry: ${{ secrets.ELASTIC_DOCKER_REGISTRY }}
         username: ${{ secrets.ELASTIC_DOCKER_USERNAME }}
@@ -53,25 +51,26 @@ jobs:
 
     - name: Extract metadata (tags, labels)
       id: docker-meta
-      uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81  # v5.5.1
+      uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96  # v5.6.1
       with:
         images: ${{ env.DOCKER_IMAGE_NAME }}
         flavor: |
           latest=auto
         tags: |
           # "1.2.3" and "latest" Docker tags on push of git tag "v1.2.3"
-          type=raw,value=${{ steps.bootstrap.outputs.agent-version }}
+          type=semver,pattern={{version}},value=${{ steps.bootstrap.outputs.agent-version }}
           # "edge" Docker tag on git push to default branch
           type=edge
 
     - name: Build and Push Profiler Docker Image
       id: docker-push
       continue-on-error: true # continue for now until we see it working in action
-      uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003  # v6.1.0
+      uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc  # v6.11.0
       with:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         context: .
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.docker-meta.outputs.tags }}
         labels: ${{ steps.docker-meta.outputs.labels }}
@@ -79,7 +78,7 @@ jobs:
           AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
     - name: Attest image
-      uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
+      uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb  # v2.1.0
       continue-on-error: true # continue for now until we see it working in action
       with:
         subject-name: ${{ env.DOCKER_IMAGE_NAME }}
@@ -87,12 +86,12 @@ jobs:
         push-to-registry: true
 
     - name: generate build provenance (APM Agent)
-      uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
+      uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb  # v2.1.0
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}"
 
     - name: generate build provenance (APM Profiler)
-      uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
+      uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb  # v2.1.0
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
 
@@ -148,7 +147,7 @@ jobs:
         run: ./build.bat profiler-zip
 
       - name: generate build provenance (APM Profiler)
-        uses: actions/attest-build-provenance@bdd51370e0416ac948727f861e03c2f05d32d78e  # v1.3.2
+        uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb  # v2.1.0
         with:
           subject-path: "${{ github.workspace }}/${{ env.PREFIX_ZIP_FILE }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_ZIP_FILE }}"
 
@@ -162,20 +161,37 @@ jobs:
     needs: [ 'release-windows']
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GIT_TAG: v${{ needs.release-windows.outputs.agent-version }}
       NEW_BRANCH: update/${{ needs.release-windows.outputs.agent-version }}
       TARGET_BRANCH: ${{ needs.release-windows.outputs.major-version }}.x
-
     steps:
+      - name: Get token
+        id: get_token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.OBS_AUTOMATION_APP_ID }}
+          private_key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
+          permissions: >-
+            {
+              "contents": "write",
+              "pull_requests": "write"
+            }
+          repositories: >-
+            ["apm-agent-dotnet"]
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.get_token.outputs.token }}
 
       - name: Setup git config
-        uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
+        uses: elastic/oblt-actions/git/setup@v1
+        with:
+          github-token: ${{ steps.get_token.outputs.token }}
 
       - name: Create GitHub Pull Request if minor release.
+        env:
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
         run: |
           echo "as long as there is a major.x branch"
           existed_in_local=$(git ls-remote --heads origin ${TARGET_BRANCH})

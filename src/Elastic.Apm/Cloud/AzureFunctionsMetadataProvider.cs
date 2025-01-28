@@ -59,7 +59,16 @@ namespace Elastic.Apm.Cloud
 					functionsExtensionVersion) ||
 				helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteOwnerName, websiteOwnerName) ||
 				helper.NullOrEmptyVariable(AzureEnvironmentVariables.WebsiteSiteName, websiteSiteName))
-				return new AzureFunctionsMetaData { IsValid = false };
+				return new AzureFunctionsMetaData
+				{
+					IsValid = false,
+					RegionName = regionName,
+					FunctionsExtensionVersion = functionsExtensionVersion,
+					FunctionsWorkerRuntime = functionsWorkerRuntime,
+					WebsiteSiteName = websiteSiteName,
+					WebsiteResourceGroup = websiteResourceGroup,
+					WebsiteInstanceId = websiteInstanceId,
+				};
 
 			var tokens = helper.TokenizeWebSiteOwnerName(websiteOwnerName);
 			if (!tokens.HasValue)

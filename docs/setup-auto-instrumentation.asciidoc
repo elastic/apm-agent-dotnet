@@ -16,7 +16,7 @@ This approach works with the following
 
 |===
 | 2.+^|**Operating system**
-|**Architecture** |**Windows** |**Linux**
+|**Architecture** |**Windows** |**Linux** **
 
 |x64 
 
@@ -33,7 +33,11 @@ This approach works with the following
 
 _* Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility._
 
-NOTE: The Profiler based agent only supports 64-bit applications. 32-bit applications aren't supported.
+_** Minimum GLIBC version 2.14._
+
+NOTE: The profiler-based agent only supports 64-bit applications. 32-bit applications aren't supported.
+
+NOTE: The profiler-based agent does not currently support ARM.
 
 It instruments the following assemblies:
 
@@ -388,13 +392,27 @@ For example, `dotnet.exe;powershell.exe`. Can be used in scenarios where profile
 environment variables have a global scope that would end up auto-instrumenting
 applications that should not be.
 
+The following processes are _*always*_ excluded from profiling by default.
+
+* powershell.exe
+* ServerManager.exe
+* ReportingServicesService.exe
+* RSHostingService.exe
+* RSMananagement.exe
+* RSPortal.exe
+* RSConfigTool.exe
+
 `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` _(optional)_::
 
 A semi-colon separated list of APM service names to exclude from auto-instrumentation.
 Values defined are checked against the value of <<config-service-name,`ELASTIC_APM_SERVICE_NAME`>>
 environment variable.
 
-`ELASTIC_APM_PROFILER_LOG` _(optional)_::
+The following service names are _*always*_ excluded from profiling by default.
+
+* SQLServerReportingServices
+
+`ELASTIC_OTEL_LOG_LEVEL` _(optional)_::
 
 The log level at which the profiler should log. Valid values are
 
@@ -405,11 +423,15 @@ The log level at which the profiler should log. Valid values are
 * error
 * none
 
+
 The default value is `warn`. More verbose log levels like `trace` and `debug` can
 affect the runtime performance of profiler auto instrumentation, so are recommended
 _only_ for diagnostics purposes.
 
-`ELASTIC_APM_PROFILER_LOG_DIR` _(optional)_::
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG`
+
+
+`ELASTIC_OTEL_LOG_DIRECTORY` _(optional)_::
 
 The directory in which to write profiler log files. If unset, defaults to
 
@@ -420,6 +442,8 @@ If the default directory cannot be written to for some reason, the profiler
 will try to write log files to a `logs` directory in the home directory specified 
 by `ELASTIC_APM_PROFILER_HOME` environment variable.
 
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_DIR`
+
 [IMPORTANT]
 --
 The user account under which the profiler process runs must have permission to 
@@ -428,7 +452,8 @@ on IIS, the https://learn.microsoft.com/en-us/iis/manage/configuring-security/ap
 has write permissions in the target directory.
 --
 
-`ELASTIC_APM_PROFILER_LOG_TARGETS` _(optional)_::
+
+`ELASTIC_OTEL_LOG_TARGETS` _(optional)_::
 
 A semi-colon separated list of targets for profiler logs. Valid values are
 
@@ -437,3 +462,23 @@ A semi-colon separated list of targets for profiler logs. Valid values are
 
 The default value is `file`, which logs to the directory specified by
 `ELASTIC_APM_PROFILER_LOG_DIR` environment variable.
+
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_TARGETS`
+
+[float]
+==== Troubleshooting
+
+[float]
+[[windows-blocked-dlls]]
+===== DLLs are blocked on Windows
+
+Windows may automatically block downloaded DLL files if it considers them suspicious.
+
+To unblock a DLL file on Windows, you can do the following:
+
+- Right-click the DLL file in File Explorer
+- Select Properties
+- In the General tab, look for the Security section at the bottom
+- Select the Unblock check box and click OK
+
+image::./images/unblock-profiler-dll.png[Unblock DLL in Windows file properties]

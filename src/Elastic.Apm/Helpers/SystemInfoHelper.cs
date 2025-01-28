@@ -6,8 +6,6 @@ using System;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
@@ -20,7 +18,7 @@ namespace Elastic.Apm.Helpers
 	{
 		private readonly Regex _containerUidRegex = new Regex("^[0-9a-fA-F]{64}$");
 		private readonly Regex _shortenedUuidRegex = new Regex("^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4,}");
-		private readonly Regex _ecsContainerIdRegex = new Regex("^[a-z0-9]{32}-[0-9]{10}$");
+		private readonly Regex _ecsContainerIdRegex = new Regex("^[a-z0-9]{32}-[0-9]{1,10}$");
 		private readonly Regex _podRegex = new Regex(
 			@"(?:^/kubepods[\S]*/pod([^/]+)$)|(?:^/kubepods\.slice/(kubepods-[^/]+\.slice/)?kubepods[^/]*-pod([^/]+)\.slice$)");
 
@@ -109,9 +107,9 @@ namespace Elastic.Apm.Helpers
 				_logger.Info()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 		}
 
-		internal Api.System GetSystemInfo(string hostName)
+		internal Api.System GetSystemInfo(string hostName, IHostNameDetector detector)
 		{
-			var detectedHostName = GetHostName();
+			var detectedHostName = detector.GetDetectedHostName(_logger);
 			var system = new Api.System { DetectedHostName = detectedHostName, ConfiguredHostName = hostName };
 
 			if (AgentFeaturesProvider.Get(_logger).Check(AgentFeature.ContainerInfo))
@@ -123,78 +121,6 @@ namespace Elastic.Apm.Helpers
 			return system;
 		}
 
-		internal string GetHostName()
-		{
-			var fqdn = string.Empty;
-
-			try
-			{
-				fqdn = Dns.GetHostEntry(string.Empty).HostName;
-			}
-			catch (Exception e)
-			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via Dns.GetHostEntry(string.Empty).HostName.");
-			}
-
-			if (!string.IsNullOrEmpty(fqdn))
-				return NormalizeHostName(fqdn);
-
-			try
-			{
-				var hostName = IPGlobalProperties.GetIPGlobalProperties().HostName;
-				var domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
-
-				if (!string.IsNullOrEmpty(domainName))
-				{
-					hostName = $"{hostName}.{domainName}";
-				}
-
-				fqdn = hostName;
-
-			}
-			catch (Exception e)
-			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via IPGlobalProperties.GetIPGlobalProperties().");
-			}
-
-			if (!string.IsNullOrEmpty(fqdn))
-				return NormalizeHostName(fqdn);
-
-			try
-			{
-				fqdn = Environment.MachineName;
-			}
-			catch (Exception e)
-			{
-				_logger.Warning()?.LogException(e, "Failed to get hostname via Environment.MachineName.");
-			}
-
-			if (!string.IsNullOrEmpty(fqdn))
-				return NormalizeHostName(fqdn);
-
-			_logger.Debug()?.Log("Falling back to environment variables to get hostname.");
-
-			try
-			{
-				fqdn = (Environment.GetEnvironmentVariable("COMPUTERNAME")
-					?? Environment.GetEnvironmentVariable("HOSTNAME"))
-					?? Environment.GetEnvironmentVariable("HOST");
-
-				if (string.IsNullOrEmpty(fqdn))
-					_logger.Error()?.Log("Failed to get hostname via environment variables.");
-
-				return NormalizeHostName(fqdn);
-			}
-			catch (Exception e)
-			{
-				_logger.Error()?.LogException(e, "Failed to get hostname.");
-			}
-
-			return null;
-
-			static string NormalizeHostName(string hostName) =>
-				string.IsNullOrEmpty(hostName) ? null : hostName.Trim().ToLower();
-		}
 
 		private void ParseContainerInfo(Api.System system, string reportedHostName)
 		{

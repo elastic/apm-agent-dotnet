@@ -96,11 +96,7 @@ namespace RabbitMqSample
 					Console.WriteLine($"[{name}] BasicPublish - Sent message: {message}");
 
 					var result = channel.BasicGet(queue, true);
-#if RABBITMQ_6_0
 					var resultMessage = Encoding.UTF8.GetString(result.Body.ToArray());
-#else
-					var resultMessage = Encoding.UTF8.GetString(result.Body);
-#endif
 					Console.WriteLine($"[{name}] BasicGet - Received message: {resultMessage}");
 					// ReSharper restore AccessToDisposedClosure
 				});
@@ -135,11 +131,7 @@ namespace RabbitMqSample
 					Console.WriteLine($"[PublishAndGetDefault] BasicPublish - Sent message: {message}");
 
 					var result = channel.BasicGet(defaultQueueName, true);
-#if RABBITMQ_6_0
 					var resultMessage = Encoding.UTF8.GetString(result.Body.ToArray());
-#else
-					var resultMessage = Encoding.UTF8.GetString(result.Body);
-#endif
 
 					Console.WriteLine($"[PublishAndGetDefault] BasicGet - Received message: {resultMessage}");
 				});
@@ -203,11 +195,7 @@ namespace RabbitMqSample
 					var transaction = Agent.Tracer.CurrentTransaction;
 					var span = transaction?.StartSpan("Consume message", ApiConstants.TypeMessaging);
 
-#if RABBITMQ_6_0
 					var body = ea.Body.ToArray();
-#else
-                    var body = ea.Body;
-#endif
 
 					var message = Encoding.UTF8.GetString(body);
 					Console.WriteLine("[Receive] - [x] Received {0}", message);

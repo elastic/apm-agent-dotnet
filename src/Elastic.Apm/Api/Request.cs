@@ -27,16 +27,11 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		public Dictionary<string, string> Headers { get; set; }
 
-		/// <summary>
-		/// This field is sanitized by a filter
-		/// </summary>
-		public Dictionary<string, string> Cookies { get; set; }
-
 		[JsonProperty("http_version")]
 		[MaxLength]
 		public string HttpVersion { get; set; }
 
-		[MaxLength] [Required] public string Method { get; set; }
+		[MaxLength][Required] public string Method { get; set; }
 
 		public Socket Socket { get; set; }
 
@@ -47,8 +42,6 @@ namespace Elastic.Apm.Api
 			var newItem = (Request)MemberwiseClone();
 			if (Headers != null)
 				newItem.Headers = Headers.ToDictionary(entry => entry.Key, entry => entry.Value);
-			if (Cookies != null)
-				newItem.Cookies = Cookies.ToDictionary(entry => entry.Key, entry => entry.Value);
 
 			newItem.Socket = Socket?.DeepCopy();
 			newItem.Url = Url?.DeepCopy();
@@ -82,9 +75,9 @@ namespace Elastic.Apm.Api
 			set => _full = Sanitization.TrySanitizeUrl(value, out var newValue, out _) ? newValue : value;
 		}
 
-		[MaxLength] [JsonProperty("hostname")] public string HostName { get; set; }
+		[MaxLength][JsonProperty("hostname")] public string HostName { get; set; }
 
-		[MaxLength] [JsonProperty("pathname")] public string PathName { get; set; }
+		[MaxLength][JsonProperty("pathname")] public string PathName { get; set; }
 
 		[MaxLength] public string Protocol { get; set; }
 

@@ -23,30 +23,51 @@ use log4rs::{
 use once_cell::sync::Lazy;
 use std::time::SystemTime;
 use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
+use serde::__private;
 
 const APP_POOL_ID_ENV_VAR: &str = "APP_POOL_ID";
 const DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR: &str = "DOTNET_CLI_TELEMETRY_PROFILE";
 const COMPLUS_LOADEROPTIMIZATION: &str = "COMPLUS_LOADEROPTIMIZATION";
 
-const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str =
-    "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
-const ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS_ENV_VAR: &str =
-    "ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS";
+const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED_ENV_VAR: &str = "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
+const ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_DISABLE_OPTIMIZATIONS";
 const ELASTIC_APM_PROFILER_ENABLE_INLINING_ENV_VAR: &str = "ELASTIC_APM_PROFILER_ENABLE_INLINING";
-const ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR: &str =
-    "ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS";
-const ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR: &str =
-    "ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES";
-const ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR: &str =
-    "ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES";
+const ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS";
+const ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR: &str = "ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES";
+const ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR: &str = "ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES";
 const ELASTIC_APM_PROFILER_HOME_ENV_VAR: &str = "ELASTIC_APM_PROFILER_HOME";
 const ELASTIC_APM_PROFILER_INTEGRATIONS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
-const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
-const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
-const ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_TARGETS";
 const ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_IL";
 
+const ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_TARGETS";
+const ELASTIC_OTEL_LOG_TARGETS_ENV_VAR: &str = "ELASTIC_OTEL_LOG_TARGETS";
+
+const ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG_DIR";
+const ELASTIC_APM_PROFILER_LOG_ENV_VAR: &str = "ELASTIC_APM_PROFILER_LOG";
+
+const OTEL_LOG_LEVEL_ENV_VAR: &str = "OTEL_LOG_LEVEL";
+const OTEL_DOTNET_AUTO_LOG_DIRECTORY_ENV_VAR: &str = "OTEL_DOTNET_AUTO_LOG_DIRECTORY";
+
+const ELASTIC_APM_LOG_LEVEL_ENV_VAR: &str = "ELASTIC_APM_LOG_LEVEL";
+const ELASTIC_APM_LOG_DIRECTORY_ENV_VAR: &str = "ELASTIC_APM_LOG_DIRECTORY";
+
 const ELASTIC_APM_SERVICE_NAME_ENV_VAR: &str = "ELASTIC_APM_SERVICE_NAME";
+
+// These are opinionated defaults for processes that should be excluded from profiling.
+const DEFAULT_EXCLUDED_PROCESSES: &[&str] = &[
+    "powershell.exe",
+    "ServerManager.exe",
+    "ReportingServicesService.exe",
+    "RSHostingService.exe",
+    "RSMananagement.exe",
+    "RSPortal.exe",
+    "RSConfigTool.exe"
+];
+
+// These are opinionated defaults for services that should be excluded from profiling.
+const DEFAULT_EXCLUDED_SERVICE_NAMES: &[&str] = &[
+    "SQLServerReportingServices" // We have reports that this "breaks" when running in IIS with global profiling enabled
+];
 
 pub static ELASTIC_APM_PROFILER_LOG_IL: Lazy<bool> =
     Lazy::new(|| read_bool_env_var(ELASTIC_APM_PROFILER_LOG_IL_ENV_VAR, false));
@@ -101,6 +122,7 @@ pub fn get_env_vars() -> String {
             let key = k.to_uppercase();
             if key.starts_with("ELASTIC_")
                 || key.starts_with("CORECLR_")
+                || key.starts_with("OTEL_")
                 || key.starts_with("COR_")
                 || key == APP_POOL_ID_ENV_VAR
                 || key == DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR
@@ -128,11 +150,17 @@ fn read_semicolon_separated_env_var(key: &str) -> Option<Vec<String>> {
 }
 
 pub fn get_exclude_processes() -> Option<Vec<String>> {
-    read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR)
+    let mut processes = read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES_ENV_VAR)
+        .unwrap_or_else(Vec::new);
+    processes.extend(DEFAULT_EXCLUDED_PROCESSES.iter().map(|s| s.to_string()));
+    Some(processes)
 }
 
 pub fn get_exclude_service_names() -> Option<Vec<String>> {
-    read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR)
+    let mut services = read_semicolon_separated_env_var(ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES_ENV_VAR)
+        .unwrap_or_else(Vec::new);
+    services.extend(DEFAULT_EXCLUDED_SERVICE_NAMES.iter().map(|s| s.to_string()));
+    Some(services)
 }
 
 pub fn get_service_name() -> Option<String> {
@@ -173,16 +201,24 @@ pub fn enable_inlining(default: bool) -> bool {
     read_bool_env_var(ELASTIC_APM_PROFILER_ENABLE_INLINING_ENV_VAR, default)
 }
 
+fn to_target(value: String) -> HashSet<String> {
+    value
+        .split(';')
+        .into_iter()
+        .filter_map(|s| match s.to_lowercase().as_str() {
+            out if out == "file" || out == "stdout" => Some(out.into()),
+            _ => None,
+        })
+        .collect()
+} 
+
 fn read_log_targets_from_env_var() -> HashSet<String> {
-    let mut set = match std::env::var(ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR) {
-        Ok(value) => value
-            .split(';')
-            .into_iter()
-            .filter_map(|s| match s.to_lowercase().as_str() {
-                out if out == "file" || out == "stdout" => Some(out.into()),
-                _ => None,
-            })
-            .collect(),
+    let mut set = match (
+        std::env::var(ELASTIC_OTEL_LOG_TARGETS_ENV_VAR),
+        std::env::var(ELASTIC_APM_PROFILER_LOG_TARGETS_ENV_VAR)
+    ) {
+        (Ok(value), _) => to_target(value),
+        (_, Ok(value)) => to_target(value),
         _ => HashSet::with_capacity(1),
     };
 
@@ -193,8 +229,14 @@ fn read_log_targets_from_env_var() -> HashSet<String> {
 }
 
 pub fn read_log_level_from_env_var(default: LevelFilter) -> LevelFilter {
-    match std::env::var(ELASTIC_APM_PROFILER_LOG_ENV_VAR) {
-        Ok(value) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
+    match (
+        std::env::var(OTEL_LOG_LEVEL_ENV_VAR),
+        std::env::var(ELASTIC_APM_PROFILER_LOG_ENV_VAR),
+        std::env::var(ELASTIC_APM_LOG_DIRECTORY_ENV_VAR)
+    ) {
+        (Ok(value), _, _) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
+        (_, Ok(value), _) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
+        (_, _, Ok(value)) => LevelFilter::from_str(value.as_str()).unwrap_or(default),
         _ => default,
     }
 }
@@ -291,9 +333,15 @@ fn get_home_log_dir() -> PathBuf {
 }
 
 fn get_log_dir() -> PathBuf {
-    match std::env::var(ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR) {
-        Ok(path) => PathBuf::from(path),
-        Err(_) => get_default_log_dir(),
+    match (
+        std::env::var(OTEL_DOTNET_AUTO_LOG_DIRECTORY_ENV_VAR),
+        std::env::var(ELASTIC_APM_PROFILER_LOG_DIR_ENV_VAR),
+        std::env::var(ELASTIC_APM_LOG_DIRECTORY_ENV_VAR),
+    ) {
+        (Ok(path), _, _) => PathBuf::from(path),
+        (_, Ok(path), _) => PathBuf::from(path),
+        (_, _, Ok(path)) => PathBuf::from(path),
+        _ => get_default_log_dir(),
     }
 }
 

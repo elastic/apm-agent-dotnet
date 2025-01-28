@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,13 +13,53 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Logging;
 
+#nullable enable
 internal static class LoggingExtensions
 {
-	private static ConditionalWeakTable<string, LogValuesFormatter> Formatters { get; } = new();
+	// Using a ConcurrentDictionary rather than ConditionalWeakTable as we expect few distinct scopes
+	// and we want to retain them for reuse across the application lifetime. We use the scope name and the
+	// instance of the base logger for the key, for rare scenarios when different base loggers might be
+	// used. In reality, this only seems to affect testing scenarios.
+	private static readonly ConcurrentDictionary<(string, IApmLogger), ScopedLogger> ScopedLoggers = new();
 
-	internal static ScopedLogger Scoped(this IApmLogger logger, string scope) => new(logger is ScopedLogger s ? s.Logger : logger, scope);
+	private static readonly ConditionalWeakTable<string, LogValuesFormatter> Formatters = new();
 
-	private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception e, params object[] args)
+	/// <summary>
+	/// Returns a ScopedLogger, potentially from the cache.
+	/// </summary>
+	/// <param name="logger">An existing <see cref="IApmLogger"/>.</param>
+	/// <param name="scope">The name of the scope.</param>
+	/// <returns>A new scoped logger or <c>null</c> of the <see cref="IApmLogger"/> is <c>null</c>.</returns>
+	/// <exception cref="ArgumentException">Requires <paramref name="scope"/> to be non-null and non-empty.</exception>
+	internal static ScopedLogger? Scoped(this IApmLogger? logger, string scope)
+	{
+		if (string.IsNullOrEmpty(scope))
+			throw new ArgumentException("Scope is required to be non-null and non-empty.", nameof(scope));
+
+		if (logger is null)
+			return null;
+
+		var baseLogger = logger is ScopedLogger s ? s.Logger : logger;
+
+		if (!ScopedLoggers.TryGetValue((scope, baseLogger), out var scopedLogger))
+		{
+			// Ensure we don't allow creations of scoped loggers 'wrapping' other scoped loggers
+			var potentialScopedLogger = new ScopedLogger(baseLogger, scope);
+
+			if (ScopedLoggers.TryAdd((scope, baseLogger), potentialScopedLogger))
+			{
+				scopedLogger = potentialScopedLogger;
+			}
+			else
+			{
+				scopedLogger = ScopedLoggers[(scope, baseLogger)];
+			}
+		}
+
+		return scopedLogger;
+	}
+
+	private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception? exception, params object?[]? args)
 	{
 		try
 		{
@@ -28,9 +69,9 @@ internal static class LoggingExtensions
 
 			var logValues = formatter.GetState(args);
 
-			logger?.Log(level, logValues, e, static (l, _) => l.Formatter.Format(l.Args));
+			logger?.Log(level, logValues, exception, static (l, _) => l.Formatter.Format(l.Args));
 		}
-		catch (Exception exception)
+		catch (Exception ex)
 		{
 			// For now we will just print it to System.Diagnostics.Trace
 			// In the future we should consider error counters to increment and log periodically on a worker thread
@@ -44,12 +85,12 @@ internal static class LoggingExtensions
 
 				System.Diagnostics.Trace.WriteLine("Elastic APM .NET Agent: [CRITICAL] Exception thrown by logging implementation."
 					+ $" Log message: `{message.AsNullableToString()}'."
-					+ $" args.Length: {args.Length}."
+					+ $" args.Length: {args?.Length ?? 0}."
 					+ $" Current thread: {DbgUtils.CurrentThreadDesc}"
 					+ newLine
-					+ $"+-> Exception (exception): {exception.GetType().FullName}: {exception.Message}{newLine}{exception.StackTrace}"
-					+ (e != null
-						? newLine + $"+-> Exception (e): {e.GetType().FullName}: {e.Message}{newLine}{e.StackTrace}"
+					+ $"+-> Exception (exception): {ex.GetType().FullName}: {ex.Message}{newLine}{ex.StackTrace}"
+					+ (exception != null
+						? newLine + $"+-> Exception (e): {exception.GetType().FullName}: {exception.Message}{newLine}{exception.StackTrace}"
 						: $"e: {ObjectExtensions.NullAsString}")
 					+ newLine
 					+ "+-> Current stack trace:" + currentStackTrace
@@ -62,17 +103,17 @@ internal static class LoggingExtensions
 		}
 	}
 
-#if !NET6_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 	private static readonly object _lock = new();
 #endif
 
-	private static LogValuesFormatter GetOrAddFormatter(string message, IReadOnlyCollection<object> args)
+	private static LogValuesFormatter GetOrAddFormatter(string message, IReadOnlyCollection<object?>? args)
 	{
 		if (Formatters.TryGetValue(message, out var formatter))
 			return formatter;
 
 		formatter = new LogValuesFormatter(message, args);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		Formatters.AddOrUpdate(message, formatter);
 		return formatter;
 #else
@@ -162,7 +203,7 @@ internal static class LoggingExtensions
 
 		public MaybeLogger(IApmLogger logger, LogLevel level) => (_logger, _level) = (logger, level);
 
-		public void Log(string message, params object[] args) => _logger.DoLog(_level, message, null, args);
+		public void Log(string message, params object?[]? args) => _logger.DoLog(_level, message, null, args);
 
 		public void LogException(Exception exception, string message, params object[] args) =>
 			_logger.DoLog(_level, message, exception, args);
@@ -179,3 +220,4 @@ internal static class LoggingExtensions
 		}
 	}
 }
+#nullable restore

@@ -13,13 +13,7 @@
     <ProjectReference Include="..\..\instrumentations\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\ElasticApmAgentStartupHook\StartupHookLogger.cs">
-      <Link>StartupHookLogger.cs</Link>
-    </Compile>
+    <PackageReference Include="System.Runtime.Loader"/>
   </ItemGroup>
 
 </Project>

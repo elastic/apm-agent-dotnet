@@ -4,8 +4,13 @@
     <AssemblyName>ElasticApmAgentStartupHook</AssemblyName>
     <IsPackable>false</IsPackable>
     <RootNamespace>ElasticApmStartupHook</RootNamespace>
+    <DefineConstants>$(DefineConstants);STARTUP_HOOKS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+    <Compile Include="$(SolutionRoot)src/Elastic.Apm/Logging/GlobalLogConfiguration.cs" />
+    <Compile Include="$(SolutionRoot)src/Elastic.Apm/Logging/LogLevel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Loader"/>
   </ItemGroup>
 </Project>

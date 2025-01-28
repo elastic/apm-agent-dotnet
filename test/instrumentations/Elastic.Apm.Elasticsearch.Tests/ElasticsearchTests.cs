@@ -44,7 +44,11 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 
-				var parentSpan = spans.Where(s => s.ParentId == s.TransactionId).Single();
+				// could be 2 because product check generates a span too
+				var parentSpans = spans.Where(s => s.ParentId == s.TransactionId && s.Action == "request").ToList();
+
+				parentSpans.Should().HaveCount(1);
+				var parentSpan = parentSpans[0];
 
 				parentSpan.Name.Should().StartWith("Elasticsearch: ");
 				parentSpan.Action.Should().Be("request");

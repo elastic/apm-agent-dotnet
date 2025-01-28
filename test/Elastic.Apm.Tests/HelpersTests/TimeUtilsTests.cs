@@ -14,7 +14,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 	{
 		private static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-		public static TheoryData TimestampAndDateTimeVariantsToTest => new TheoryData<long, DateTime>
+		public static TheoryData<long, DateTime> TimestampAndDateTimeVariantsToTest => new TheoryData<long, DateTime>
 		{
 			{ 0, UnixEpochDateTime },
 			{ 1, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.001) },

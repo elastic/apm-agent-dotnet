@@ -84,8 +84,9 @@ namespace Elastic.Apm.Api
 		{
 			static bool CheckForLoadedAssembly(string name)
 			{
-				return AppDomain.CurrentDomain.GetAssemblies().Any(n =>
-					n.GetName().Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+				// Avoid using Assembly.GetName() which can't be used with globalization-invariant mode enabled
+				return AppDomain.CurrentDomain.GetAssemblies()
+					.Any(n => n.FullName.Split(',')[0].Equals(name, StringComparison.OrdinalIgnoreCase));
 			}
 
 			// Assume NuGet as the default.
@@ -95,7 +96,9 @@ namespace Elastic.Apm.Api
 				// Legacy mechanism: if the profiler is loaded add a `p` suffix to Agent.Version
 				service.Agent.Version += "-p";
 				// Check if profiler was injected via K8S hook.
-				if (new EnvironmentVariables(logger).SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S"))
+				var envvars = new EnvironmentVariables(logger);
+				if (envvars.SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S")
+					|| envvars.SafeCheckValue("ELASTIC_APM_ACTIVATION_METHOD", "K8S_ATTACH"))
 					activationMethod = Consts.ActivationK8SAttach;
 				else
 					activationMethod = Consts.ActivationMethodProfiler;

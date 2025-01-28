@@ -39,7 +39,6 @@ namespace Elastic.Apm
 	internal class ApmAgent : IApmAgent, IDisposable
 	{
 		internal readonly CompositeDisposable Disposables = new();
-
 		internal ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
 
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher => Components.CentralConfigurationFetcher;
@@ -72,15 +71,30 @@ namespace Elastic.Apm
 			lock (InitializationLock)
 			{
 				var agent = new ApmAgent(Components);
-
 				agent.Logger?.Trace()
 					?.Log("Initialization - Agent instance initialized. Callstack: {callstack}", new StackTrace().ToString());
+
+				if (agent.Components.PayloadSender is not IPayloadSenderWithFilters sender)
+					return agent;
+
+				ErrorFilters.ForEach(f => sender.AddFilter(f));
+				TransactionFilters.ForEach(f => sender.AddFilter(f));
+				SpanFilters.ForEach(f => sender.AddFilter(f));
+				agent.Logger?.Trace()
+					?.Log(@"Initialization - Added filters to agent (errors:{{ErrorFilters}}, transactions:{TransactionFilters} spans:{SpanFilters}",
+						ErrorFilters.Count, TransactionFilters.Count, SpanFilters.Count);
 
 				return agent;
 			}
 		});
 
 		private static readonly object InitializationLock = new object();
+
+		private static readonly List<Func<IError, IError>> ErrorFilters = [];
+
+		private static readonly List<Func<ISpan, ISpan>> SpanFilters = [];
+
+		private static readonly List<Func<ITransaction, ITransaction>> TransactionFilters = [];
 
 		internal static AgentComponents Components { get; private set; }
 
@@ -114,7 +128,16 @@ namespace Elastic.Apm
 		/// <code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method
 		/// returns <code>false</code> the filter won't be called.
 		/// </returns>
-		public static bool AddFilter(Func<ITransaction, ITransaction> filter) => CheckAndAddFilter(p => p.TransactionFilters.Add(filter));
+		public static bool AddFilter(Func<ITransaction, ITransaction> filter)
+		{
+			if (!IsConfigured)
+			{
+				TransactionFilters.Add(filter);
+				return true;
+			}
+
+			return CheckAndAddFilter(p => p.AddFilter(filter));
+		}
 
 		/// <summary>
 		/// Adds a filter which gets called before each span gets sent to APM Server.
@@ -133,7 +156,16 @@ namespace Elastic.Apm
 		/// <code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method
 		/// returns <code>false</code> the filter won't be called.
 		/// </returns>
-		public static bool AddFilter(Func<ISpan, ISpan> filter) => CheckAndAddFilter(p => p.SpanFilters.Add(filter));
+		public static bool AddFilter(Func<ISpan, ISpan> filter)
+		{
+			if (!IsConfigured)
+			{
+				SpanFilters.Add(filter);
+				return true;
+			}
+
+			return CheckAndAddFilter(p => p.AddFilter(filter));
+		}
 
 		/// <summary>
 		/// Adds a filter which gets called before each error gets sent to APM Server.
@@ -152,15 +184,23 @@ namespace Elastic.Apm
 		/// <code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method
 		/// returns <code>false</code> the filter won't be called.
 		/// </returns>
-		public static bool AddFilter(Func<IError, IError> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
-
-		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
+		public static bool AddFilter(Func<IError, IError> filter)
 		{
-			if (!(Instance.PayloadSender is PayloadSenderV2 payloadSenderV2))
+			if (!IsConfigured)
+			{
+				ErrorFilters.Add(filter);
+				return true;
+			}
+
+			return CheckAndAddFilter(p => p.AddFilter(filter));
+		}
+
+		private static bool CheckAndAddFilter(Func<IPayloadSenderWithFilters, bool> action)
+		{
+			if (Instance.PayloadSender is not IPayloadSenderWithFilters sender)
 				return false;
 
-			action(payloadSenderV2);
-			return true;
+			return action(sender);
 		}
 
 		/// <summary>
@@ -199,10 +239,12 @@ namespace Elastic.Apm
 					return;
 				}
 
+				Components ??= agentComponents;
+
 				agentComponents?.Logger?.Trace()
 					?.Log("Initialization - Agent.Setup called");
 
-				Components = agentComponents;
+
 				// Force initialization
 				var _ = LazyApmAgent.Value;
 			}

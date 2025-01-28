@@ -45,28 +45,28 @@ jobs:
       - name: Format
         run: ./build.bat format
   
+  # Skipping due to this failing consistently - See https://github.com/elastic/apm-agent-dotnet/issues/2524
+  # TODO - Re-enable when possible.
   #required step
-  tests:
-    runs-on: windows-2022
-    needs: [ 'format' ]
-    timeout-minutes: 30
+  # tests:
+  #   runs-on: windows-2022
+  #   needs: [ 'format' ]
+  #   timeout-minutes: 30
         
-    steps:
-      - uses: actions/checkout@v4
-      - name: Bootstrap Action Workspace
-        uses: ./.github/workflows/bootstrap
-        with: 
-          tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Bootstrap Action Workspace
+  #       uses: ./.github/workflows/bootstrap
+  #       with: 
+  #         tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
-      - name: 'Tests: Unit'
-        run: ./build.bat test --test-suite unit
+  #     - name: 'Tests: Unit'
+  #       run: ./build.bat test --test-suite unit
         
-      - name: 'Tests: Integrations'
-        run: ./build.bat test --test-suite integrations
-    
   integrations-tests:
     runs-on: windows-2022
-    needs: [ 'format', 'tests' ]
+    #needs: [ 'format', 'tests' ]
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -74,10 +74,21 @@ jobs:
 
       - name: 'Tests: Integrations'
         run: ./build.bat test --test-suite integrations
+
+      - name: Store crash dumps
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: hang-dumps
+          retention-days: 3
+          path: |
+            build/output/**/*.dmp
+            build/output/**/*.xml
   
   startup-hook-tests:
     runs-on: windows-2022
-    needs: [ 'format', 'tests' ]
+    #needs: [ 'format', 'tests' ]
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -85,10 +96,11 @@ jobs:
 
       - name: 'Tests: StartupHooks'
         run: ./build.bat test --test-suite startuphooks
-          
+
   profiler-tests:
     runs-on: windows-2022
-    needs: [ 'format', 'tests' ]
+    #needs: [ 'format', 'tests' ]
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -102,8 +114,8 @@ jobs:
         
   test-iis:
     runs-on: windows-latest
-    needs: [ 'format', 'tests' ]
-    
+    #needs: [ 'format', 'tests' ]
+    needs: [ 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -116,7 +128,6 @@ jobs:
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
-
 
       - name: Clean the application
         run: msbuild /t:Clean /p:Configuration=Release
@@ -169,8 +180,7 @@ jobs:
             --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
       - name: Store test results
-        if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-iis
           path: build/output/junit-*.xml

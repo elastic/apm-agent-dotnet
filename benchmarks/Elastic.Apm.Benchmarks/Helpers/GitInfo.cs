@@ -26,8 +26,10 @@ namespace Elastic.Apm.Benchmarks.Helpers
 				WorkingDirectory = Environment.CurrentDirectory
 			};
 
-			_gitProcess = new Process();
-			_gitProcess.StartInfo = processInfo;
+			_gitProcess = new Process
+			{
+				StartInfo = processInfo
+			};
 		}
 
 		public string BranchName => RunCommand("rev-parse --abbrev-ref HEAD");

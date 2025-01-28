@@ -15,7 +15,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 	internal class EfCoreDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
-		private ApmAgent _agent;
+		private readonly ApmAgent _agent;
 
 		public EfCoreDiagnosticListener(IApmAgent agent) : base(agent) => _agent = agent as ApmAgent;
 

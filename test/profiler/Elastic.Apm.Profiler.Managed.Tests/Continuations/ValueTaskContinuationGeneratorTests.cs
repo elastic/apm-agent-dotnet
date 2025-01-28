@@ -7,7 +7,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2017 Datadog, Inc.
 // </copyright>
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +23,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.Continuations
 			returnValue;
 
 		[Fact]
-		public async ValueTask SuccessTest()
+		public async Task SuccessTest()
 		{
 			var tcg = new ValueTaskContinuationGenerator<ValueTaskContinuationGeneratorTests, ValueTaskContinuationGeneratorTests, ValueTask>();
 			var cTask = tcg.SetContinuation(this, GetPreviousTask(), null, CallTargetState.GetDefault());

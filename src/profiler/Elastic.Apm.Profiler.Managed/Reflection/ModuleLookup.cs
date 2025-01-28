@@ -55,8 +55,7 @@ namespace Elastic.Apm.Profiler.Managed.Reflection
 				{
 					if (_shortCircuitLogicHasLogged)
 						return null;
-					Logger.Log(LogLevel.Warn,
-						"Elastic APM is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
+					Logger.Warn("Elastic APM is unable to continue attempting module lookups for this AppDomain. Falling back to legacy method lookups.");
 					_shortCircuitLogicHasLogged = true;
 
 				}

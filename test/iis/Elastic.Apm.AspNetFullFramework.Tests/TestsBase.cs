@@ -322,7 +322,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					(int)response.StatusCode, response.StatusCode);
 			try
 			{
-				response.StatusCode.Should().Be(expectedStatusCode);
+				response.StatusCode.Should().Be((HttpStatusCode)expectedStatusCode);
 			}
 			catch (XunitException ex)
 			{
@@ -629,7 +629,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			system.Should().NotBeNull();
 
-			system.DetectedHostName.Should().Be(new SystemInfoHelper(LoggerBase).GetHostName());
+			system.DetectedHostName.Should().Be(new HostNameDetector().GetDetectedHostName(LoggerBase));
 #pragma warning disable 618
 			system.HostName.Should().Be(AgentConfig.HostName ?? system.DetectedHostName);
 #pragma warning restore 618

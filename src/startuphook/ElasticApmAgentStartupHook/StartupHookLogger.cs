@@ -35,13 +35,10 @@ namespace ElasticApmStartupHook
 		/// <returns></returns>
 		public static StartupHookLogger Create()
 		{
-			var startupHookEnvVar = Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS");
+			var config = GlobalLogConfiguration.FromEnvironment(Environment.GetEnvironmentVariables());
+			var path = config.CreateLogFileName("startup_hook");
 
-			var startupHookDirectory = Path.GetDirectoryName(startupHookEnvVar);
-			var startupHookLoggingEnvVar = Environment.GetEnvironmentVariable("ELASTIC_APM_STARTUP_HOOKS_LOGGING");
-
-			return new StartupHookLogger(Path.Combine(startupHookDirectory, "ElasticApmAgentStartupHook.log"),
-				!string.IsNullOrEmpty(startupHookLoggingEnvVar));
+			return new StartupHookLogger(path, config.IsActive);
 		}
 
 		public void WriteLine(string message)

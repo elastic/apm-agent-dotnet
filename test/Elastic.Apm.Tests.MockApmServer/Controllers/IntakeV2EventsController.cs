@@ -108,10 +108,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 							?.Log("Failed to parse payload line as JSON. Error: {PayloadParsingErrorMessage}, line: `{PayloadLine}'",
 								errorEventArgs.ErrorContext.Error.Message, line);
 					}
-				});
-
-			if (payload is null)
-				throw new ArgumentException("Deserialization failed");
+				}) ?? throw new ArgumentException("Deserialization failed");
 
 			await HandleParsed(nameof(payload.Error), payload.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);
 			await HandleParsed(nameof(payload.Metadata), payload.Metadata, _mockApmServer.ReceivedData.Metadata, _mockApmServer.AddMetadata);

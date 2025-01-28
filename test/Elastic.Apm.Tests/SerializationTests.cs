@@ -31,7 +31,7 @@ namespace Elastic.Apm.Tests
 			_payloadItemSerializer = new PayloadItemSerializer();
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
+		public static TheoryData<string, string> SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
 		{
 			{ "", "" },
 			{ "A", "A" },
@@ -451,7 +451,7 @@ namespace Elastic.Apm.Tests
 			var systemHelper = new SystemInfoHelper(new NoopLogger());
 
 			var hostName = "this_is_my_hostname";
-			var system = systemHelper.GetSystemInfo(hostName);
+			var system = systemHelper.GetSystemInfo(hostName, new TestHostNameDetector("detected_hostname"));
 
 			var json = _payloadItemSerializer.Serialize(system);
 			var jObject = JObject.Parse(json);

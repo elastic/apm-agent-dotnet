@@ -16,7 +16,7 @@ internal class AzureFunctionsContext
 
 	internal AzureFunctionsContext(string loggerScopeName)
 	{
-		Logger = Agent.Instance.Logger.Scoped(loggerScopeName);
+		Logger = Agent.Instance.Logger.Scoped(loggerScopeName) ?? Agent.Instance.Logger;
 		MetaData = AzureFunctionsMetadataProvider.GetAzureFunctionsMetaData(Logger);
 		UpdateServiceInformation(Agent.Instance.Service);
 		FaasIdPrefix =
@@ -40,11 +40,15 @@ internal class AzureFunctionsContext
 			return;
 		}
 
-		if (service.Name == AbstractConfigurationReader.AdaptServiceName(AbstractConfigurationReader.DiscoverDefaultServiceName()))
+		var defaultServiceName = AbstractConfigurationReader.AdaptServiceName(AbstractConfigurationReader.DiscoverDefaultServiceName());
+
+		// In local development `WEBSITE_SITE_NAME` may not be set, in which case, we use the discovered default service name
+		if (service.Name == defaultServiceName && MetaData.WebsiteSiteName is not null)
 		{
 			// Only override the service name if it was set to default.
 			service.Name = MetaData.WebsiteSiteName;
 		}
+
 		service.Framework = new() { Name = "Azure Functions", Version = MetaData.FunctionsExtensionVersion };
 		var runtimeVersion = service.Runtime?.Version ?? "n/a";
 		service.Runtime = new() { Name = MetaData.FunctionsWorkerRuntime, Version = runtimeVersion };

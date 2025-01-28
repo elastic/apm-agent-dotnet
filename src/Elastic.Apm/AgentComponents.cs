@@ -17,7 +17,7 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
 #endif
 
@@ -43,14 +43,16 @@ namespace Elastic.Apm
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			ICentralConfigurationFetcher centralConfigurationFetcher,
 			IApmServerInfo apmServerInfo,
-			BreakdownMetricsProvider breakdownMetricsProvider = null
+			BreakdownMetricsProvider breakdownMetricsProvider = null,
+			IHostNameDetector hostNameDetector = null
 		)
 		{
 			try
 			{
 				var config = CreateConfiguration(logger, configurationReader);
+				hostNameDetector ??= new HostNameDetector();
 
-				Logger = logger ?? CheckForProfilerLogger(DefaultLogger(null, configurationReader), config.LogLevel);
+				Logger = logger ?? GetGlobalLogger(DefaultLogger(null, configurationReader), config.LogLevel);
 				ConfigurationStore = new ConfigurationStore(new RuntimeConfigurationSnapshot(config), Logger);
 
 				Service = Service.GetDefaultService(config, Logger);
@@ -58,13 +60,13 @@ namespace Elastic.Apm
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				// Initialize early because ServerInfoCallback requires it and might execute
 				// before EnsureElasticActivityStarted runs
 				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 #endif
 				var systemInfoHelper = new SystemInfoHelper(Logger);
-				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName);
+				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName, hostNameDetector);
 
 				PayloadSender = payloadSender
 					?? new PayloadSenderV2(Logger, ConfigurationStore.CurrentSnapshot, Service, system,
@@ -79,7 +81,7 @@ namespace Elastic.Apm
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo,
 					breakdownMetricsProvider);
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				EnsureElasticActivityStarted();
 #endif
 
@@ -116,7 +118,7 @@ namespace Elastic.Apm
 
 		private void EnsureElasticActivityStarted()
 		{
-#if !NET5_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 			return;
 #else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
@@ -143,11 +145,11 @@ namespace Elastic.Apm
 
 		private void ServerInfoCallback(bool success, IApmServerInfo serverInfo)
 		{
-#if !NET5_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 			return;
 #else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
-			
+
 			if (success)
 			{
 				if (serverInfo.Version >= new ElasticVersion(7, 16, 0, string.Empty))
@@ -174,7 +176,7 @@ namespace Elastic.Apm
 			}
 #endif
 		}
-
+#pragma warning disable IDE0022
 		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
 		{
 #if NETFRAMEWORK
@@ -196,44 +198,46 @@ namespace Elastic.Apm
 			return configurationReader ?? new EnvironmentConfiguration(configurationLogger);
 #endif
 		}
+#pragma warning restore IDE0022
 
-
-		//
-		// This is the hooking point that checks for the existence of profiler-related
-		// logging settings.
-		// If no agent logging is configured but we detect profiler logging settings, those
-		// will be honoured.
-		// The finer-grained log-level (agent vs profiler) will be used.
-		// This has the benefit that users will also get agent logs in addition to profiler-only
-		// logs.
-		//
-		internal static IApmLogger CheckForProfilerLogger(IApmLogger fallbackLogger, LogLevel agentLogLevel, IDictionary environmentVariables = null)
+		/// <summary>
+		/// This ensures agents will respect externally provided loggers.
+		/// <para>If the agent is started as part of profiling it should adhere to profiling configuration</para>
+		/// <para>If file logging environment variables are set we should always log to that location</para>
+		/// </summary>
+		/// <param name="fallbackLogger"></param>
+		/// <param name="agentLogLevel"></param>
+		/// <param name="environmentVariables"></param>
+		/// <returns></returns>
+		internal static IApmLogger GetGlobalLogger(IApmLogger fallbackLogger, LogLevel agentLogLevel, IDictionary environmentVariables = null)
 		{
 			try
 			{
-				var profilerLogConfig = ProfilerLogConfig.Check(environmentVariables);
-				if (profilerLogConfig.IsActive)
+				var fileLogConfig = GlobalLogConfiguration.FromEnvironment(environmentVariables);
+				if (!fileLogConfig.IsActive)
 				{
-					var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, profilerLogConfig.LogLevel);
-
-					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.File) == ProfilerLogTarget.File)
-						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(profilerLogConfig.LogFilePath));
-					if ((profilerLogConfig.LogTargets & ProfilerLogTarget.StdOut) == ProfilerLogTarget.StdOut)
-						TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
-
-					var logger = new TraceLogger(effectiveLogLevel);
-					logger.Info()?.Log($"{nameof(ProfilerLogConfig)} - {profilerLogConfig}");
-					return logger;
+					fallbackLogger.Info()?.Log("No system wide logging configured, defaulting to fallback logger");
+					return fallbackLogger;
 				}
+
+				var effectiveLogLevel = LogLevelUtils.GetFinest(agentLogLevel, fileLogConfig.LogLevel);
+				if ((fileLogConfig.LogTargets & GlobalLogTarget.File) == GlobalLogTarget.File)
+					TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(fileLogConfig.AgentLogFilePath));
+				if ((fileLogConfig.LogTargets & GlobalLogTarget.StdOut) == GlobalLogTarget.StdOut)
+					TraceLogger.TraceSource.Listeners.Add(new TextWriterTraceListener(Console.Out));
+
+				var logger = new TraceLogger(effectiveLogLevel);
+				logger.Info()?.Log($"{nameof(fileLogConfig)} - {fileLogConfig}");
+				return logger;
 			}
 			catch (Exception e)
 			{
-				fallbackLogger.Warning()?.LogException(e, "Error in CheckForProfilerLogger");
+				fallbackLogger.Warning()?.LogException(e, "Error in GetGlobalLogger");
 			}
 			return fallbackLogger;
 		}
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		private ElasticActivityListener ElasticActivityListener { get; }
 #endif
 
@@ -277,7 +281,7 @@ namespace Elastic.Apm
 			if (PayloadSender is IDisposable disposablePayloadSender)
 				disposablePayloadSender.Dispose();
 			CentralConfigurationFetcher?.Dispose();
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			ElasticActivityListener?.Dispose();
 #endif
 		}

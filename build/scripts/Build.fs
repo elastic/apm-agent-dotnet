@@ -8,20 +8,18 @@ open System
 open System.Collections.Generic
 open System.IO
 open System.IO.Compression
-open System.Linq
 open System.Runtime.InteropServices
 open System.Xml.Linq
-open Buildalyzer
+open System.Xml.XPath
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
 open Scripts.TestEnvironment
-open TestEnvironment
 open Tooling
 
 module Build =
-    
+
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
     let private diagnosticSourceVersion6 = SemVer.parse "6.0.0"
     
@@ -87,15 +85,14 @@ module Build =
                 }) projectOrSln
             
     /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
-    let private getCurrentApmDiagnosticSourceVersion =
+    let getCurrentApmDiagnosticSourceVersion =
         match currentDiagnosticSourceVersion with
         | Some v -> v
-        | None ->        
-            let manager = AnalyzerManager();
-            let analyzer = manager.GetProject(Paths.SrcProjFile "Elastic.Apm")          
-            let analyzeResult = analyzer.Build("netstandard2.0").First()        
-            let values = analyzeResult.PackageReferences.["System.Diagnostics.DiagnosticSource"]
-            let version = SemVer.parse values.["Version"]
+        | None ->
+            let xml = XDocument.Load("Directory.Packages.props")
+            let package = xml.XPathSelectElement("//PackageVersion[@Include='System.Diagnostics.DiagnosticSource']")
+            let version = package.Attribute("Version").Value
+            let version = SemVer.parse version
             currentDiagnosticSourceVersion <- Some(version)
             version
                               
@@ -176,30 +173,44 @@ module Build =
                 let testElseWhere = ["Tests"; "OpenTelemetry.Tests"; "StartupHook.Tests"; "Profiler.Managed.Tests"; "Azure"]
                 let filter = testElseWhere |> List.map (fun s -> $"FullyQualifiedName!~Elastic.Apm.%s{s}") |> String.concat "&"
                 Some filter
-            | _ -> None 
+            | _ -> None
+
+        let verbosity =
+            match suite with
+                | TestSuite.Integrations -> "detailed"
+                | _ -> "minimal"
+
+        let blame =
+            match suite with
+            | TestSuite.Integrations -> Some [
+                "--blame-hang-timeout"; "15m";
+                "--blame-crash-dump-type"; "mini";
+                "--results-directory"; "build/output"]
+            | _ -> None
         
         let command =
-            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; "minimal"; "-s"; "test/.runsettings"]
+            ["test"; "-c"; "Release"; sln; "--no-build"; "--verbosity"; verbosity; "-s"; "test/.runsettings"]
             @ (match filter with None -> [] | Some f -> ["--filter"; f])
             @ (match framework with None -> [] | Some f -> ["-f"; f])
             @ (match logger with None -> [] | Some l -> [l])
+            @ (match blame with None -> [] | Some l -> l)
             @ ["--"; "RunConfiguration.CollectSourceInformation=true"]
             
         DotNet.ExecWithTimeout command (TimeSpan.FromMinutes 30)
-        
-        
+
     /// Builds the CLR profiler and supporting .NET managed assemblies
     let BuildProfiler () =
         dotnet "build" (Paths.ProfilerProjFile "Elastic.Apm.Profiler.Managed")
-        Cargo.Exec [ "make"; "build-release"; "--disable-check-for-update"]
-                              
+        if isWindows then Cargo.Exec [ "make"; "build-release"; "--disable-check-for-update"]
+        else Cargo.Exec [ "make"; "build-release-linux"; "--disable-check-for-update"]
+
     /// Publishes all projects with framework versions
-    let Publish targets =        
+    let Publish targets =
         let projs =
             match targets with
             | Some t -> t
             | None -> allSrcProjects
-        
+
         projs
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
@@ -239,18 +250,14 @@ module Build =
         ToolRestore()
         DotNet.Exec ["restore" ; Paths.Solution; "-v"; "q"]
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
-        
     let Format () =
-        ToolRestore()
-        //dotnet dotnet-format --exclude src/Elastic.Apm/Libraries/
-        DotNet.Exec ["dotnet-format"; "--check"; "--exclude"; "src/Elastic.Apm/Libraries/"]
-            
+        DotNet.Exec ["format"; "--verbosity"; "quiet"; "--verify-no-changes"; "--exclude"; "src/Elastic.Apm/Libraries/"]
     let private copyDllsAndPdbs (destination: DirectoryInfo) (source: DirectoryInfo) =
         source.GetFiles()
         |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
         |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
         
-    /// Creates versioned ElasticApmAgent.zip file    
+    /// Creates versioned ElasticApmAgent.zip file
     let AgentZip () =        
         let name = "ElasticApmAgent"      
         let currentAssemblyVersion = Versioning.CurrentVersion.FileVersion
@@ -280,16 +287,15 @@ module Build =
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
         
-        // assemblies compiled against 6.0 version of System.Diagnostics.DiagnosticSource 
-        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major)) //using old version here, because it the netcoreapp2.2 app can't build with diagnosticsource6
-        ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/net6.0" diagnosticSourceVersion6.Major))
+        // assemblies compiled against 6.0 version of System.Diagnostics.DiagnosticSource
+        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major)) 
+        ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/net8.0" diagnosticSourceVersion6.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyDllsAndPdbs (agentDir.CreateSubdirectory(sprintf "%i.0.0" diagnosticSourceVersion6.Major)))
             
         // include version in the zip file name    
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
-      
       
     let ProfilerIntegrations () =
         DotNet.Exec ["run"; "--project"; Paths.ProfilerProjFile "Elastic.Apm.Profiler.IntegrationsGenerator"; "--"
@@ -299,20 +305,25 @@ module Build =
     /// Creates versioned elastic_apm_profiler.zip file containing all components needed for profiler auto-instrumentation  
     let ProfilerZip () =
         let name = "elastic_apm_profiler"
+        let directory = Paths.BuildOutput name
+
+        if Directory.Exists(directory) then
+            Directory.Delete(directory, true)
+
         let currentAssemblyVersion = Versioning.CurrentVersion.FileVersion
         let versionedName =
             let os =
                 if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then "win-x64"
-                else "linux-x64"      
+                else "linux-x64"
             sprintf "%s_%s-%s" name (currentAssemblyVersion.ToString()) os
                 
-        let profilerDir = Paths.BuildOutput name |> DirectoryInfo                    
+        let profilerDir = directory |> DirectoryInfo
         profilerDir.Create()
-        
+
         seq {
             Paths.SrcProfiler "Elastic.Apm.Profiler.Managed/integrations.yml"
             "target/release/elastic_apm_profiler.dll"
-            "target/release/libelastic_apm_profiler.so"
+            "target/x86_64-unknown-linux-gnu/release/libelastic_apm_profiler.so"
             Paths.SrcProfiler "elastic_apm_profiler/NOTICE"
             Paths.SrcProfiler "elastic_apm_profiler/README"
             "LICENSE"
@@ -321,12 +332,13 @@ module Build =
         |> Seq.filter (fun file -> file.Exists)
         |> Seq.iter (fun file ->
             let destination = Path.combine profilerDir.FullName file.Name
-            let newFile = file.CopyTo(destination, true)      
+            let newFile = file.CopyTo(destination, true)
             if newFile.Name = "README" then
                 File.applyReplace (fun s -> s.Replace("${VERSION}", sprintf "%i.%i" currentAssemblyVersion.Major currentAssemblyVersion.Minor)) newFile.FullName
         )
-            
+
         Directory.GetDirectories((Paths.BuildOutput "Elastic.Apm.Profiler.Managed"), "*", SearchOption.TopDirectoryOnly)
+        |> Array.filter (fun dir -> isWindows || not (dir.EndsWith("net462")))
         |> Seq.map DirectoryInfo
         |> Seq.iter (fun sourceDir -> copyDllsAndPdbs (profilerDir.CreateSubdirectory(sourceDir.Name)) sourceDir)
         
@@ -336,7 +348,3 @@ module Build =
             printf $"%s{zip} already exists on disk"
             File.delete zip
         ZipFile.CreateFromDirectory(profilerDir.FullName, zip)
-        
-        
-        
-        

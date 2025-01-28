@@ -178,9 +178,8 @@ namespace Elastic.Apm.ServerInfo
 			{
 				var ac = aComps[i];
 				var bc = bComps[i];
-				int anum, bnum;
-				var isanum = int.TryParse(ac, out anum);
-				var isbnum = int.TryParse(bc, out bnum);
+				var isanum = int.TryParse(ac, out var anum);
+				var isbnum = int.TryParse(bc, out var bnum);
 				int r;
 				if (isanum && isbnum)
 				{

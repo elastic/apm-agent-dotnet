@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -29,12 +30,12 @@ namespace Elastic.Apm.Report
 	/// Responsible for sending the data to APM server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
-	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender
+	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender, IPayloadSenderWithFilters
 	{
 		private const string ThisClassName = nameof(PayloadSenderV2);
-		internal readonly List<Func<IError, IError>> ErrorFilters = new List<Func<IError, IError>>();
-		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
-		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
+		private readonly List<Func<IError, IError>> ErrorFilters = new();
+		private readonly List<Func<ISpan, ISpan>> SpanFilters = new();
+		private readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new();
 
 		private readonly IApmServerInfo _apmServerInfo;
 
@@ -58,6 +59,7 @@ namespace Elastic.Apm.Report
 
 		private readonly ElasticVersion _brokenActivationMethodVersion;
 		private readonly string _cachedActivationMethod;
+		private readonly bool _isEnabled;
 
 		public PayloadSenderV2(
 			IApmLogger logger,
@@ -73,14 +75,14 @@ namespace Elastic.Apm.Report
 		)
 			: base(isEnabled, logger, ThisClassName, service, configuration, httpMessageHandler)
 		{
-			if (!isEnabled)
-				return;
-
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
+			_isEnabled = isEnabled;
+			if (!_isEnabled)
+				_logger?.Debug()?.Log($"{nameof(PayloadSenderV2)} is not enabled, work loop won't be started.");
+
 			_payloadItemSerializer = new PayloadItemSerializer();
 			_configuration = configuration;
 			_brokenActivationMethodVersion = new ElasticVersion(8, 7, 0);
-
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(configuration.ServerUrl);
 
 			System = system;
@@ -88,12 +90,15 @@ namespace Elastic.Apm.Report
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(configuration.CloudProvider, _logger, environmentVariables);
 			_apmServerInfo = apmServerInfo ?? new ApmServerInfo();
 			_serverInfoCallback = serverInfoCallback;
+
 			var process = ProcessInformation.Create();
 			_metadata = new Metadata { Service = service, System = System, Process = process };
 			foreach (var globalLabelKeyValue in configuration.GlobalLabels)
 				_metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 			_cachedActivationMethod = _metadata.Service?.Agent.ActivationMethod;
-			ResetActivationMethodIfKnownBrokenApmServer();
+
+			if (_isEnabled)
+				ResetActivationMethodIfKnownBrokenApmServer();
 
 			if (configuration.MaxQueueEventCount < configuration.MaxBatchEventCount)
 			{
@@ -123,7 +128,9 @@ namespace Elastic.Apm.Report
 			_eventQueue = new BatchBlock<object>(configuration.MaxBatchEventCount);
 
 			SetUpFilters(TransactionFilters, SpanFilters, ErrorFilters, apmServerInfo, logger);
-			StartWorkLoop();
+
+			if (_isEnabled)
+				StartWorkLoop();
 		}
 
 		internal static void SetUpFilters(
@@ -135,19 +142,20 @@ namespace Elastic.Apm.Report
 		)
 		{
 			transactionFilters.Add(TransactionIgnoreUrlsFilter.Filter);
-			transactionFilters.Add(RequestCookieExtractionFilter.Filter);
+			transactionFilters.Add(CookieHeaderRedactionFilter.Filter);
 			transactionFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
 
 			errorFilters.Add(ErrorContextSanitizerFilter.Filter);
-			errorFilters.Add(RequestCookieExtractionFilter.Filter);
+			errorFilters.Add(CookieHeaderRedactionFilter.Filter);
 			errorFilters.Add(HeaderDictionarySanitizerFilter.Filter);
 		}
 
 		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
+		private bool _allowFilterAdd = true;
 		private static readonly UTF8Encoding Utf8Encoding;
 		private static readonly MediaTypeHeaderValue MediaTypeHeaderValue;
 
@@ -174,6 +182,9 @@ namespace Elastic.Apm.Report
 
 		internal async Task<bool> EnqueueEventInternal(object eventObj, string dbgEventKind)
 		{
+			if (!_isEnabled)
+				return true;
+
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
 			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
 			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
@@ -216,8 +227,12 @@ namespace Elastic.Apm.Report
 			return true;
 		}
 
-		internal void EnqueueEvent(object eventObj, string dbgEventKind) =>
+		internal void EnqueueEvent(object eventObj, string dbgEventKind)
+		{
+			if (!_isEnabled)
+				return;
 			Task.Run(async () => await EnqueueEventInternal(eventObj, dbgEventKind));
+		}
 
 		/// <summary>
 		/// Runs on the background thread dedicated to sending data to APM Server. It's ok to block this thread.
@@ -244,6 +259,8 @@ namespace Elastic.Apm.Report
 			}
 
 			var batch = ReceiveBatch();
+			if (_allowFilterAdd && batch is { Length: > 0 })
+				_allowFilterAdd = false;
 			if (batch != null)
 				ProcessQueueItems(batch);
 		}
@@ -381,7 +398,7 @@ namespace Elastic.Apm.Report
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					HttpResponseMessage response;
 					try
 					{
@@ -404,14 +421,26 @@ namespace Elastic.Apm.Report
 					// ReSharper disable ConditionIsAlwaysTrueOrFalse
 					if (response is null || !response.IsSuccessStatusCode)
 					{
+						var message = "Unknown 400 Bad Request";
+						if (response?.Content != null)
+						{
+#if NET8_0_OR_GREATER
+							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStream());
+#else
+							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
+#endif
+							if (intakeResponse.Errors.Count > 0)
+								message = string.Join(", ", intakeResponse.Errors.Select(e => e.Message).Distinct());
+						}
 						_logger?.Error()
 							?.Log("Failed sending event."
 								+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
 								+ " APM Server response: status code: {ApmServerResponseStatusCode}"
-								+ ", content: \n{ApmServerResponseContent}"
+								+ ", reasons: {ApmServerResponseContent}"
 								, _intakeV2EventsAbsoluteUrl.Sanitize()
 								, response?.StatusCode,
-								response?.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+								message
+								);
 					}
 					// ReSharper enable ConditionIsAlwaysTrueOrFalse
 					else
@@ -496,6 +525,33 @@ namespace Elastic.Apm.Report
 			}
 
 			return item;
+		}
+
+		public bool AddFilter(Func<ITransaction, ITransaction> transactionFilter)
+		{
+			if (!_allowFilterAdd)
+				return false;
+
+			TransactionFilters.Add(transactionFilter);
+			return true;
+		}
+
+		public bool AddFilter(Func<ISpan, ISpan> spanFilter)
+		{
+			if (!_allowFilterAdd)
+				return false;
+
+			SpanFilters.Add(spanFilter);
+			return true;
+		}
+
+		public bool AddFilter(Func<IError, IError> errorFilter)
+		{
+			if (!_allowFilterAdd)
+				return false;
+
+			ErrorFilters.Add(errorFilter);
+			return true;
 		}
 	}
 }

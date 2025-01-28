@@ -16,6 +16,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 	{
 		public virtual TReturn SetContinuation(TTarget instance, TReturn returnValue, Exception exception, CallTargetState state) => returnValue;
 
+#pragma warning disable IDE0022
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static TReturn ToTReturn<TFrom>(TFrom returnValue)
 		{
@@ -35,5 +36,6 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 			return ContinuationsHelper.Convert<TReturn, TTo>(returnValue);
 #endif
 		}
+#pragma warning restore IDE0022
 	}
 }

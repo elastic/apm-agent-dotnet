@@ -9,15 +9,9 @@
       ]
     },
     "minver-cli": {
-      "version": "4.3.0",
+      "version": "6.0.0",
       "commands": [
         "minver"
-      ]
-    },
-    "dotnet-format": {
-      "version": "5.1.250801",
-      "commands": [
-        "dotnet-format"
       ]
     }
   }

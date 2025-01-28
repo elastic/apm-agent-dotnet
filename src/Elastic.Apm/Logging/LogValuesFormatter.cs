@@ -173,8 +173,7 @@ namespace Elastic.Apm.Logging
 				return value;
 
 			// if the value implements IEnumerable, build a comma separated string.
-			var enumerable = value as IEnumerable;
-			if (enumerable != null)
+			if (value is IEnumerable enumerable)
 				return string.Join(", ", enumerable.Cast<object>().Select(o => o ?? NullValue));
 
 			return value;

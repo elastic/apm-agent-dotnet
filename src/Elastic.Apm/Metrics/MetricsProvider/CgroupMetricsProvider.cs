@@ -12,7 +12,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using System.Buffers.Text;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -46,7 +46,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal static readonly Regex Cgroup2MountPoint = new("^\\d+? \\d+? .+? .+? (.*?) .*cgroup2.*cgroup.*");
 		internal static readonly Regex MemoryCgroup = new("^\\d+:memory:.*");
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		private static readonly FileStreamOptions Options = new() { BufferSize = 0, Mode = FileMode.Open, Access = FileAccess.Read };
 #endif
 
@@ -316,7 +316,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						return new MetricSample(SystemProcessCgroupMemoryMemLimitBytes, totalMemory);
 				}
 
-#if NET6_0_OR_GREATER // Optimised code for newer runtimes
+#if NET8_0_OR_GREATER // Optimised code for newer runtimes
 				return GetLongValueFromFile(_cGroupFiles.MaxMemoryFile, SystemProcessCgroupMemoryMemLimitBytes);
 #else
 				using var reader = new StreamReader(_cGroupFiles.MaxMemoryFile);
@@ -339,7 +339,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			try
 			{
-#if NET6_0_OR_GREATER // Optimised code for newer runtimes
+#if NET8_0_OR_GREATER // Optimised code for newer runtimes
 				return GetLongValueFromFile(_cGroupFiles.UsedMemoryFile, SystemProcessCgroupMemoryMemUsageBytes);
 #else
 				using var reader = new StreamReader(_cGroupFiles.UsedMemoryFile);
@@ -356,7 +356,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			return null;
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private MetricSample GetLongValueFromFile(string path, string sampleName)
 		{

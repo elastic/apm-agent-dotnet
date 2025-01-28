@@ -23,6 +23,128 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.31.0]]
+==== 1.31.0 - 2024/12/02
+
+[float]
+===== Breaking changes
+
+{pull}2498[#2498] Remove net 6.0 targets
+
+We no longer ship `net6.0` targets as .NET 6 is now out of support. Applications
+targetting `net6.0` will continue to work, but fall down to the `netstandard2.0`
+target which may not be as optimised. We therefore recommend updating your application
+to `net8.0` or `net9.0` prior to installing 1.31.0 of the Elastic.Apm.* packages.
+
+===== Bug fixes
+
+{pull}2505[#2505] Fixes and enhancements for Azure Functions
+{pull}2508[#2508] Azure Function service name logic
+
+[float]
+===== Features
+
+{pull}2503[#2503] Phase one logger optimisations
+
+[[release-notes-1.30.1]]
+==== 1.30.1 - 2024/11/19
+
+===== Bug fixes
+{pull}2471[#2471] Remove netcoreapp2.0 from Elastic.Apm.Profiler.Managed.Loader
+{pull}2474[#2474] Fix span linking for Azure ServiceBus
+{pull}2482[#2482] Support K8S_ATTACH environment variable for activation
+
+[[release-notes-1.30.0]]
+==== 1.30.0 - 2024/10/11
+
+===== Bug fixes
+
+{pull}2455[#2455] Improve OTel bridge compatibility with existing Azure instrumentation
+{pull}2457[#2457] Revert skipping of System.Web to fix profiler-based installation
+{pull}2461[#2461] Limit attribute count and truncate values in ElasticActivityListener
+{pull}2460[#2460] Add IntakeResponse deserialization for detailed error logging
+
+[[release-notes-1.29.0]]
+==== 1.29.0 - 2024/09/18
+
+This release includes a breaking change in how we parse and send transaction cookies. In 1.26.0, we
+introduced improved cookie redaction based on the `SanitizeFieldNames` configuration. To implement this,
+we extracted each cookie from the `Cookie` header, storing them in a cookie dictionary on the transaction request data. 
+We have identified a problem with the storage of cookies that include period characters due to the mapping of such data 
+when stored in the APM data stream. This behaviour can lead to lost transactions on requests which include such cookies. 
+This is common in ASP.NET Core due to the default cookie names used for sessions, authentication, etc.
+
+In this release, we no longer parse out individual cookies, and the cookie `Dictionary` has been removed from the
+data model. This means that cookies will no longer be indexed individually. However, we have ensured that we
+retain the primary reason for the earlier change, which was to redact the values of sensitive cookies. Any cookies with
+a name matching the `SanitizeFieldNames` patterns will be redacted in the value of the `Cookie` header 
+we store.
+
+For most consumers, we expect the impact to be minimal. However, if you were relying on the parsed cookie
+fields, adjustments will be necessary to work with the `Cookie` header value instead.
+
+===== Breaking changes
+
+{pull}2444[#2444] No longer parse request cookies, but ensure they are still redacted in the `Cookie` header string
+
+[[release-notes-1.28.6]]
+==== 1.28.6 - 2024/09/11
+
+===== Bug fixes
+
+{pull}2431[#2431] Hard exclude several system processes from being auto instrumented.
+{pull}2436[#2436] Disabling the agent should not try to enqueue events, now a NOOP. 
+
+[[release-notes-1.28.5]]
+==== 1.28.5 - 2024/08/28
+
+===== Bug fixes
+
+{pull}2430[#2430] Relax ECS container ID regex.
+
+[[release-notes-1.28.4]]
+==== 1.28.4 - 2024/08/19
+
+===== Bug fixes
+
+{pull}2427[#2427] Ensure we capture baggage when capturing Errors during unsampled transactions 
+{pull}2425[#2425] Ensure safer access to System.Web.Security.Roles 
+{pull}2426[#2426] Fix a bug that prevented the addition of filters to payloadsenders 
+{pull}2423[#2423] SetAgentActivationMethod throws CultureNotFoundException in global-invariant mode 
+
+[[release-notes-1.28.3]]
+==== 1.28.3 - 2024/08/15
+
+===== Bug fixes
+
+{pull}2419[#2419] Update to latest `MongoDB.Driver.Core` to address a breaking change.
+{pull}2418[#2418] Adding filters should not force initialization of Agent.
+
+[[release-notes-1.28.2]]
+==== 1.28.2 - 2024/08/14
+
+===== Bug fixes
+
+{pull}2415[#2415] Fixed check for SqlRoleProvider under AspNet Identity 2.
+
+[[release-notes-1.28.1]]
+==== 1.28.1 - 2024/08/12
+
+===== Bug fixes
+
+{pull}2411[#2389] Skip instrumentation of System.Web to prevent rare double configuration initialization issue
+
+===== Features
+
+{pull}2371[#2371] Global file logging, making it easier to diagnose the agent no matter the deployment type.
+
+[[release-notes-1.28.0]]
+==== 1.28.0 - 2024/07/03
+
+===== Bug fixes
+
+{pull}2389[#2389] Fix Linux build dependency of glibc
+
 [[release-notes-1.27.3]]
 ==== 1.27.3 - 2024/06/18
 

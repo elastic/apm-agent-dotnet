@@ -100,7 +100,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
         public static bool IsCompletedSucessfully(this Task task)
         {
             // IsCompletedSuccessfully is the faster method, but only currently exposed on .NET Core 2.0
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             return task.IsCompletedSuccessfully;
 #else
             return task.Status == TaskStatus.RanToCompletion;

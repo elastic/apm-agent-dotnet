@@ -32,14 +32,65 @@ If you don't see anything suspicious in the agent logs (no warning or error), it
 [[collect-agent-logs]]
 === Collecting agent logs
 
-The way to collect logs depends on the setup of your application.
+[float]
+[[collect-logs-globally]]
+==== Enable global file logging.
+
+The easiest way to get debug information from the Agent, regardless of the way it's run, is to enable global file logging.
+
+Specifying at least one of the following environment variables will ensure the agent logs to a file
+
+`OTEL_LOG_LEVEL` _(optional)_::
+
+The log level at which the profiler should log. Valid values are
+
+* trace
+* debug
+* info
+* warn
+* error
+* none
+
+
+The default value is `warn`. More verbose log levels like `trace` and `debug` can
+affect the runtime performance of profiler auto instrumentation, so are recommended
+_only_ for diagnostics purposes.
+
+NOTE: if `ELASTIC_OTEL_LOG_TARGETS` is not explicitly set to include `file` global file logging will only 
+be enabled when configured with `trace` or `debug`.
+
+`OTEL_DOTNET_AUTO_LOG_DIRECTORY` _(optional)_::
+
+The directory in which to write log files. If unset, defaults to
+
+* `%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` on Windows
+* `/var/log/elastic/apm-agent-dotnet` on Linux
+
+
+[IMPORTANT]
+--
+The user account under which the profiler process runs must have permission to
+write to the destination log directory. Specifically, ensure that when running
+on IIS, the https://learn.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities[AppPool identity]
+has write permissions in the target directory.
+--
+
+`ELASTIC_OTEL_LOG_TARGETS` _(optional)_::
+
+A semi-colon separated list of targets for profiler logs. Valid values are
+
+* file
+* stdout
+
+The default value is `file` if `OTEL_DOTNET_AUTO_LOG_DIRECTORY` is set or `OTEL_LOG_LEVEL` is set to `trace` or `debug`.
+
 
 [float]
 [[collect-logs-core]]
 ==== ASP.NET Core
 
-If you added the agent to your application as per the <<setup-asp-net-core>> document with the `UseAllElasticApm` or `UseElasticApm` method, it will integrate with the
-https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging[ASP.NET Core logging infrastructure].
+If you added the agent to your application as per the <<setup-asp-net-core>> document with the `AddAllElasticApm` or `AddElasticApm` method, it will integrate with the
+https://learn.microsoft.com/aspnet/core/fundamentals/logging[ASP.NET Core logging infrastructure].
 This means the Agent will pick up the configured logging provider and log as any other component logs.
 
 [IMPORTANT]
@@ -63,48 +114,8 @@ For example, the following configuration in `appsettings.json` limits APM agents
 <1> Control the verbosity of the agent logs by setting the log level for the `Elastic.Apm` category
 
 [float]
-[[collect-logs-classic]]
-==== ASP.NET Classic
-
-ASP.NET (classic) does not have a predefined logging system. By default, the agent is configured to
-emit log messages to a 
-https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracesource[`System.Diagnostics.TraceSource`] 
-with the source name `"Elastic.Apm"`. The TraceSource adheres to the log levels defined in the
-APM agent configuration. Typically, you will configure a preferred log level using an application setting in `web.config`.
-
-[IMPORTANT]
---
-System.Diagnostics.TraceSource requires the https://docs.microsoft.com/en-us/dotnet/framework/debug-trace-profile/how-to-compile-conditionally-with-trace-and-debug[`TRACE` compiler directive to be specified], which is specified
-by default for both Debug and Release build configurations.
---
-
-https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracelistener[TraceListeners]
-can be configured to monitor log messages for the trace source, using the https://docs.microsoft.com/en-us/dotnet/framework/configure-apps/file-schema/trace-debug/system-diagnostics-element[`<system.diagnostics>`] section of
-web.config. For example, the following web.config section writes Elastic.Apm log messages to a file
-named my_log_file.log:
-
-[source,xml]
-----
-<configuration>
-  <!-- other sections .... -->
-  <system.diagnostics>
-  <sources>
-    <source name="Elastic.Apm"> <1>
-      <listeners>
-        <add name="file" 
-          type="System.Diagnostics.TextWriterTraceListener" 
-          initializeData="my_log_file.log" />
-      </listeners>
-    </source>
-  </sources>
-</system.diagnostics>
-</configuration>  
-----
-<1> Define listeners under a source with name `"Elastic.Apm"` to capture agent logs
-
-[float]
 [[collect-logs-class-other-logging-systems]]
-===== Other logging systems
+==== Other logging systems
 
 If you have a logging system in place such as https://nlog-project.org/[NLog], https://serilog.net/[Serilog], 
 or similar, you can direct the agent logs into your logging system by creating an adapter between 
@@ -181,17 +192,26 @@ See "<<double-agent-initialization>>".
 [[double-agent-initialization]]
 === An `InstanceAlreadyCreatedException` exception is thrown
 
-In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured.", or an error log appears with the same message. This happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization and transfer to the APM Server.
+In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: 
+"The singleton APM agent has already been instantiated and can no longer be configured.", or an error log appears with the same message. This 
+happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open 
+up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization 
+and transfer to the APM Server.
 
 TIP: Take a look at the initialization section of the <<public-api,Public Agent API>> for more information on how agent initialization works.
 
-As an example, this issue can happen if you call the `Elastic.Apm.Agent.Setup` method multiple times, or if you call another method on `Elastic.Apm.Agent` that implicitly initializes the agent, and then you call the `Elastic.Apm.Agent.Setup` method on the already initialized agent.
+As an example, this issue can happen if you call the `Elastic.Apm.Agent.Setup` method multiple times, or if you call another method on `Elastic.Apm.Agent` 
+that implicitly initializes the agent, and then you call the `Elastic.Apm.Agent.Setup` method on the already initialized agent.
 
-Another example might be when you use the Public Agent API in combination with the IIS module or the ASP.NET Core NuGet package, where you enable the agent with the `UseElasticApm` or `UseAllElasticApm` methods. Both the first call to the IIS module and the `UseElasticApm`/`UseAllElasticApm` methods internally call the `Elastic.Apm.Agent.Setup` method to initialize the agent.
+Another example might be when you use the Public Agent API in combination with the IIS module or the ASP.NET Core NuGet package, where you enable
+the agent with the `AddElasticApm` or `UseAllElasticApm` methods. Both the first call to the IIS module and the `AddElasticApm`/`AddllElasticApm` 
+methods internally call the `Elastic.Apm.Agent.Setup` method to initialize the agent.
 
-You may use the Public Agent API with the `Elastic.Apm.Agent` class in code that can potentially execute before the IIS module initializes or the `UseElasticApm`/`UseAllElasticApm` calls execute. If that happens, those will fail, as the Agent has been implicitly initialized already.
+You may use the Public Agent API with the `Elastic.Apm.Agent` class in code that can potentially execute before the IIS module initializes or
+the `AddElasticApm`/`AddAllElasticApm` calls execute. If that happens, those will fail, as the Agent has been implicitly initialized already.
 
-To prevent the `InstanceAlreadyCreatedException` in these scenarios, first use the `Elastic.Apm.Agent.IsConfigured` method to check if the agent is already initialized. After the check, you can safely use other methods in the Public Agent API. This will prevent accidental implicit agent initialization.
+To prevent the `InstanceAlreadyCreatedException` in these scenarios, first use the `Elastic.Apm.Agent.IsConfigured` method to check if the agent
+is already initialized. After the check, you can safely use other methods in the Public Agent API. This will prevent accidental implicit agent initialization.
 
 [float]
 [[legacy-asp-net-sync-context]]
@@ -242,17 +262,7 @@ The agent is only supported on IIS7 and higher where the `Integrated Pipeline Mo
 [[startup-hook-failure]]
 === Startup hooks failure
 
-If the <<zero-code-change-setup, startup hook>> integration throws an exception, additional detail can be obtained by 
-setting the `ELASTIC_APM_STARTUP_HOOKS_LOGGING` environment variable before starting the application
-
-[source,sh]
-----
-set ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
-----
-
-and then running the application in a context where the environment variable will be visible. In setting this value,
-an `ElasticApmAgentStartupHook.log` file is written to the directory containing the startup hook assembly, in addition to
-writing to standard output.
+If the <<zero-code-change-setup, startup hook>> integration throws an exception, additional detail can be obtained through <<collect-logs-globally, enabling the global log collection>>.
 
 [float]
 [[agent-overhead]]
@@ -283,3 +293,14 @@ Should be changed to:
 image::./images/integrated-pipeline.png[Integrated Managed Pipeline Mode in Properties]
 
 You may need to restart Visual Studio for these changes to fully apply.
+
+[float]
+[[azure-app-services-traceparent]]
+=== Azure App Services / ASE and sampling
+
+Azure/ASE adds trace headers set to unsampled for incoming requests to the cluster.
+
+Elastic APM .NET Agent (and likely also other agents which correctly handle the W3C Trace Parent header sampling) will obey to the traceparent header sampling of the incoming request.
+As a consequence, the traces/spans will not be sent to APM Server/Integration and therefore APM UI will not show anything.
+
+We recommend using `trace_continuation_strategy` set to `restart` or `restart_external`, so that the APM .NET Agent will ignore the incoming traceparent header sampling flag.

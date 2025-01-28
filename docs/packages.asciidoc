@@ -100,13 +100,12 @@ A package containing instrumentation to capture spans for commands sent to redis
 ==== Quick start
 
 Instrumentation can be enabled for Entity Framework Core by referencing {nuget}/Elastic.Apm.EntityFrameworkCore[`Elastic.Apm.EntityFrameworkCore`] package
-and passing `EfCoreDiagnosticsSubscriber` to the `UseElasticApm` method in case of ASP.NET Core as following
+and passing `EfCoreDiagnosticsSubscriber` to the `AddElasticApm` method in case of ASP.NET Core as following
 
 [source,csharp]
 ----
-app.UseElasticApm(Configuration, new EfCoreDiagnosticsSubscriber()); <1>
+app.Services.AddElasticApm(new EfCoreDiagnosticsSubscriber());
 ----
-<1> Configuration is the `IConfiguration` instance passed to your `Startup` type
 
 or passing `EfCoreDiagnosticsSubscriber` to the `Subscribe` method
 
@@ -159,14 +158,13 @@ as this will register multiple instances, causing multiple database spans to be 
 ==== Quick start
 
 Instrumentation can be enabled for Elasticsearch when using the official Elasticsearch clients, Elasticsearch.Net and Nest, by referencing
-{nuget}/Elastic.Apm.Elasticsearch[`Elastic.Apm.Elasticsearch`] package and passing `ElasticsearchDiagnosticsSubscriber` to the `UseElasticApm` 
+{nuget}/Elastic.Apm.Elasticsearch[`Elastic.Apm.Elasticsearch`] package and passing `ElasticsearchDiagnosticsSubscriber` to the `AddElasticApm` 
 method in case of ASP.NET Core as following
 
 [source,csharp]
 ----
-app.UseElasticApm(Configuration, new ElasticsearchDiagnosticsSubscriber()); <1>
+app.Services.AddElasticApm(new ElasticsearchDiagnosticsSubscriber());
 ----
-<1> Configuration is the `IConfiguration` instance passed to your `Startup` type
 
 or passing `ElasticsearchDiagnosticsSubscriber` to the `Subscribe` method
 
@@ -194,13 +192,12 @@ Automatic instrumentation for gRPC can be enabled for both client-side and serve
 Automatic instrumentation for ASP.NET Core server-side is built in to <<setup-asp-net-core, NuGet package>>
 
 Automatic instrumentation can be enabled for the client-side by referencing {nuget}/Elastic.Apm.GrpcClient[`Elastic.Apm.GrpcClient`] package
-and passing `GrpcClientDiagnosticListener` to the `UseElasticApm` method in case of ASP.NET Core
+and passing `GrpcClientDiagnosticListener` to the `AddElasticApm` method in case of ASP.NET Core
 
 [source,csharp]
 ----
-app.UseElasticApm(Configuration, new GrpcClientDiagnosticListener()); <1>
+app.Services.AddElasticApm(new GrpcClientDiagnosticListener());
 ----
-<1> Configuration is the `IConfiguration` instance passed to your `Startup` type
 
 or passing `GrpcClientDiagnosticSubscriber` to the `Subscribe` method
 
@@ -211,7 +208,6 @@ Agent.Subscribe(new GrpcClientDiagnosticSubscriber());
 
 Diagnostic events from `Grpc.Net.Client` are captured as spans.
 
-
 [[setup-sqlclient]]
 === SqlClient
 
@@ -219,14 +215,13 @@ Diagnostic events from `Grpc.Net.Client` are captured as spans.
 ==== Quick start
 
 You can enable auto instrumentation for `System.Data.SqlClient` or `Microsoft.Data.SqlClient` by referencing {nuget}/Elastic.Apm.SqlClient[`Elastic.Apm.SqlClient`] package
-and passing `SqlClientDiagnosticSubscriber` to the `UseElasticApm` method in case of ASP.NET Core as it shown in example:
+and passing `SqlClientDiagnosticSubscriber` to the `AddElasticApm` method in case of ASP.NET Core as it shown in example:
 
 [source,csharp]
 ----
 // Enable tracing of outgoing db requests
-app.UseElasticApm(Configuration, new SqlClientDiagnosticSubscriber()); <1>
+app.Services.AddElasticApm(new SqlClientDiagnosticSubscriber());
 ----
-<1> Configuration is the `IConfiguration` instance passed to your `Startup` type
 
 or passing `SqlClientDiagnosticSubscriber` to the `Subscribe` method and make sure that the code is called only once, otherwise the same database call could be captured multiple times:
 

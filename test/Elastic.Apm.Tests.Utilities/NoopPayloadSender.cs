@@ -2,12 +2,14 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
+using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Tests.Utilities
 {
-	public class NoopPayloadSender : IPayloadSender
+	public class NoopPayloadSender : IPayloadSender, IPayloadSenderWithFilters
 	{
 		public void QueueError(IError error) { }
 
@@ -16,5 +18,12 @@ namespace Elastic.Apm.Tests.Utilities
 		public void QueueSpan(ISpan span) { }
 
 		public void QueueMetrics(IMetricSet metricSet) { }
+
+		public bool AddFilter(Func<ITransaction, ITransaction> transactionFilter) => true;
+
+		public bool AddFilter(Func<ISpan, ISpan> spanFilter) => true;
+
+		public bool AddFilter(Func<IError, IError> errorFilter) => true;
+
 	}
 }

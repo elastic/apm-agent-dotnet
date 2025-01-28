@@ -22,6 +22,7 @@
      but dotnet pack expects to pack it e.g. Microsoft.NET.Sdk.Web test and sample projects. -->
     <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <IsPackable>false</IsPackable>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <!-- MinVer Configuration -->
   <PropertyGroup>
@@ -29,8 +30,4 @@
     <MinVerDefaultPreReleaseIdentifiers>canary.0</MinVerDefaultPreReleaseIdentifiers>
     <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all"/>
-  </ItemGroup>
 </Project>

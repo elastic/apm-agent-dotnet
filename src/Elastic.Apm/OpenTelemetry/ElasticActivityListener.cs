@@ -3,10 +3,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -22,21 +21,29 @@ namespace Elastic.Apm.OpenTelemetry
 {
 	public class ElasticActivityListener : IDisposable
 	{
-		private static readonly string[] ServerPortAttributeKeys = new[] { SemanticConventions.ServerPort, SemanticConventions.NetPeerPort };
+		private static readonly string[] ServerPortAttributeKeys = [SemanticConventions.ServerPort, SemanticConventions.NetPeerPort];
 
 		private static readonly string[] ServerAddressAttributeKeys =
-			new[] { SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp };
+			[SemanticConventions.ServerAddress, SemanticConventions.NetPeerName, SemanticConventions.NetPeerIp];
 
 		private static readonly string[] HttpAttributeKeys =
-			new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl, SemanticConventions.HttpScheme };
+			[SemanticConventions.UrlFull, SemanticConventions.HttpUrl, SemanticConventions.HttpScheme];
 
-		private static readonly string[] HttpUrlAttributeKeys = new[] { SemanticConventions.UrlFull, SemanticConventions.HttpUrl };
+		private static readonly string[] HttpUrlAttributeKeys = [SemanticConventions.UrlFull, SemanticConventions.HttpUrl];
 
 		private readonly ConditionalWeakTable<Activity, Span> _activeSpans = new();
 		private readonly ConditionalWeakTable<Activity, Transaction> _activeTransactions = new();
 
 		internal ElasticActivityListener(IApmAgent agent, HttpTraceConfiguration httpTraceConfiguration) => (_logger, _httpTraceConfiguration) =
 			(agent.Logger?.Scoped(nameof(ElasticActivityListener)), httpTraceConfiguration);
+
+		private static readonly bool HasServiceBusInstrumentation =
+			AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly =>
+				assembly.GetName().Name == "Elastic.Apm.Azure.ServiceBus") != null;
+
+		private static readonly bool HasStorageInstrumentation =
+			AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly =>
+				assembly.GetName().Name == "Elastic.Apm.Azure.Storage") != null;
 
 		private readonly IApmLogger _logger;
 		private Tracer _tracer;
@@ -64,10 +71,47 @@ namespace Elastic.Apm.OpenTelemetry
 		private Action<Activity> ActivityStarted =>
 			activity =>
 			{
-				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
+				// Prevent recording of Azure Functions activities which are quite broken at the moment
+				// See https://github.com/Azure/azure-functions-dotnet-worker/issues/2733
+				// See https://github.com/Azure/azure-functions-dotnet-worker/issues/2875
+				// See https://github.com/Azure/azure-functions-host/issues/10641
+				// See https://github.com/Azure/azure-functions-dotnet-worker/issues/2810
+				if ((activity.Source.Name == "" && activity.DisplayName == "InvokeFunctionAsync")
+					|| (activity.Source.Name == "Microsoft.Azure.Functions.Worker"))
+				{
 					return;
+				}
 
-				_logger.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+				// If the Elastic instrumentation for ServiceBus is present, we skip duplicating the instrumentation through the OTel bridge.
+				// Without this, we end up with some redundant spans in the trace with subtle differences.
+				if (HasServiceBusInstrumentation && activity.Tags.Any(kvp =>
+					kvp.Key.Equals("az.namespace", StringComparison.Ordinal) && kvp.Value.Equals("Microsoft.ServiceBus", StringComparison.Ordinal)))
+				{
+					_logger?.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.ServiceBus' " +
+						"activity because 'Elastic.Apm.Azure.ServiceBus' is present in the application.",
+						activity.DisplayName, activity.Id, activity.TraceId);
+
+					return;
+				}
+
+				if (HasStorageInstrumentation && activity.Tags.Any(kvp =>
+					kvp.Key.Equals("az.namespace", StringComparison.Ordinal) && kvp.Value.Equals("Microsoft.Storage", StringComparison.Ordinal)))
+				{
+					_logger?.Debug()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped 'Microsoft.Storage' " +
+						"activity because 'Elastic.Apm.Azure.Storage' is present in the application.",
+						activity.DisplayName, activity.Id, activity.TraceId);
+
+					return;
+				}
+
+				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
+				{
+					_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
+						"a skipped activity name defined in KnownListeners.", activity.DisplayName, activity.Id, activity.TraceId);
+					return;
+				}
+
+				_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
 
 				var spanLinks = new List<SpanLink>(activity.Links.Count());
@@ -142,15 +186,15 @@ namespace Elastic.Apm.OpenTelemetry
 			{
 				if (activity == null)
 				{
-					_logger.Trace()?.Log("ActivityStopped called with `null` activity. Ignoring `null` activity.");
+					_logger?.Trace()?.Log("ActivityStopped called with `null` activity. Ignoring `null` activity.");
 					return;
 				}
 				activity.Stop();
 
-				_logger.Trace()?.Log("ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
+				_logger?.Trace()?.Log("ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
 
-				if (KnownListeners.KnownListenersList.Contains(activity.DisplayName))
+				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
 					return;
 
 				if (activity.Id == null) return;
@@ -166,7 +210,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 					// By default we set unknown outcome
 					transaction.Outcome = Outcome.Unknown;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					switch (activity.Status)
 					{
 						case ActivityStatusCode.Unset:
@@ -194,9 +238,20 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			if (!activity.TagObjects.Any()) return;
 
+			// https://opentelemetry.io/docs/specs/otel/common/#attribute-limits
+			// copy max 128 keys and truncate values to 10k chars (the current maximum for e.g. statement.db).
+			var i = 0;
 			otel.Attributes ??= new Dictionary<string, object>();
 			foreach (var (key, value) in activity.TagObjects)
-				otel.Attributes[key] = value;
+			{
+				if (i >= 128) break;
+
+				if (value is string s)
+					otel.Attributes[key] = s.Truncate(10_000);
+				else
+					otel.Attributes[key] = value;
+				i++;
+			}
 		}
 
 		private static void UpdateSpan(Activity activity, Span span)
@@ -209,7 +264,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 			// By default we set unknown outcome
 			span.Outcome = Outcome.Unknown;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			switch (activity.Status)
 			{
 				case ActivityStatusCode.Unset:

@@ -36,7 +36,7 @@ runs:
     - uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}-${{ hashFiles('**/*.*.props') }}
         restore-keys: |
           ${{ runner.os }}-nuget
           
@@ -45,13 +45,13 @@ runs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
-          6.0.x
           8.0.x
 
     - id: dotnet
       shell: bash
       run: |
         dotnet --list-sdks
+        dotnet --version
         dotnet tool restore
         AGENT_VERSION=$(dotnet minver -t=v -p=canary.0 -v=e)
         echo "Version Number: ${AGENT_VERSION}"
@@ -60,7 +60,7 @@ runs:
         echo "major-version=$(echo ${AGENT_VERSION} | cut -d"." -f1)" >> $GITHUB_OUTPUT
 
     # Setup git config
-    - uses: elastic/apm-pipeline-library/.github/actions/setup-git@current
+    - uses: elastic/oblt-actions/git/setup@v1
         
     # install common dependencies
     - name: Install common dependencies

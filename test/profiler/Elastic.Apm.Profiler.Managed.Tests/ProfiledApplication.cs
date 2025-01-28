@@ -13,6 +13,7 @@ using System.Text;
 using Elastic.Apm.Tests.Utilities;
 using ProcNet;
 using ProcNet.Std;
+using static Elastic.Apm.Logging.LogEnvironmentVariables;
 
 namespace Elastic.Apm.Profiler.Managed.Tests
 {
@@ -55,7 +56,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			else
 				profilerFile = "libelastic_apm_profiler.dylib";
 
-			_profilerPath = Path.Combine(SolutionPaths.Root, "target", "release", profilerFile);
+			_profilerPath = TestEnvironment.IsLinux ?
+				Path.Combine(SolutionPaths.Root, "target", "x86_64-unknown-linux-gnu", "release", profilerFile) :
+				Path.Combine(SolutionPaths.Root, "target", "release", profilerFile);
 
 			if (!File.Exists(_profilerPath))
 			{
@@ -143,11 +146,11 @@ namespace Elastic.Apm.Profiler.Managed.Tests
 			environmentVariables["ELASTIC_APM_PROFILER_INTEGRATIONS"] =
 				Path.Combine(SolutionPaths.Root, "src", "profiler", "Elastic.Apm.Profiler.Managed", "integrations.yml");
 
-			environmentVariables["ELASTIC_APM_PROFILER_LOG"] = "trace";
+			environmentVariables[OTEL_LOG_LEVEL] = "trace";
 			// log to relative logs directory for managed loader
-			environmentVariables["ELASTIC_APM_PROFILER_LOG_DIR"] = Path.Combine(SolutionPaths.Root, "logs");
+			environmentVariables[OTEL_DOTNET_AUTO_LOG_DIRECTORY] = Path.Combine(SolutionPaths.Root, "logs");
 
-			environmentVariables["ELASTIC_APM_PROFILER_LOG_TARGETS"] = "file;stdout";
+			environmentVariables[ELASTIC_OTEL_LOG_TARGETS] = "file;stdout";
 			//environmentVariables["ELASTIC_APM_PROFILER_LOG_IL"] = "true";
 
 			// use the .exe for net462

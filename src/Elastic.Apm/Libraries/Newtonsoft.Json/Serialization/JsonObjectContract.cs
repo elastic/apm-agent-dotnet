@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 
 // Copyright (c) 2007 James Newton-King
 //
@@ -183,8 +183,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
                 throw new JsonException("Insufficient permissions. Creating an uninitialized '{0}' type requires full trust.".FormatWith(CultureInfo.InvariantCulture, NonNullableUnderlyingType));
             }
 
-            return FormatterServices.GetUninitializedObject(NonNullableUnderlyingType);
-        }
+#pragma warning disable SYSLIB0050
+			return FormatterServices.GetUninitializedObject(NonNullableUnderlyingType);
+#pragma warning restore SYSLIB0050
+		}
 #endif
 	}
 }

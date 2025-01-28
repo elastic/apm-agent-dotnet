@@ -52,7 +52,7 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			var logger = NetCoreLogger.GetApmLogger(builder.ApplicationServices);
+			var logger = ApmExtensionsLogger.GetApmLogger(builder.ApplicationServices);
 
 			var configReader = configuration == null
 				? new EnvironmentConfiguration(logger)
@@ -70,7 +70,7 @@ namespace Elastic.Apm.AspNetCore
 		internal static IApplicationBuilder UseElasticApm(
 			this IApplicationBuilder builder,
 			ApmAgent agent,
-			IApmLogger logger,
+			Logging.IApmLogger logger,
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
@@ -93,7 +93,7 @@ namespace Elastic.Apm.AspNetCore
 		}
 
 		private static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			(serviceProvider.GetService(typeof(IWebHostEnvironment)) as IWebHostEnvironment)?.EnvironmentName;
 #else
 #pragma warning disable CS0246

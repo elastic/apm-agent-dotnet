@@ -9,13 +9,13 @@ namespace Elastic.Apm.Tests.Utilities
 {
 	public static class ShouldWaitDurationExtensions
 	{
-		public static AndConstraint<NumericAssertions<double>>
+		public static AndConstraint<NullableNumericAssertions<double>>
 			BeGreaterOrEqualToMinimumSleepLength(this NullableNumericAssertions<double> duration) =>
-			duration.NotBeNull().And.BeGreaterOrEqualTo(WaitHelpers.SleepLength);
+				duration.NotBeNull().And.BeGreaterOrEqualTo(WaitHelpers.SleepLength);
 
-		public static AndConstraint<NumericAssertions<double>> BeGreaterOrEqualToMinimumSleepLength(this NullableNumericAssertions<double> duration,
-			int numberOfSleeps
-		)
+		public static AndConstraint<NullableNumericAssertions<double>> BeGreaterOrEqualToMinimumSleepLength(
+			this NullableNumericAssertions<double> duration,
+			int numberOfSleeps)
 		{
 			var expectedTransactionLength = numberOfSleeps * WaitHelpers.SleepLength;
 			return duration.NotBeNull()

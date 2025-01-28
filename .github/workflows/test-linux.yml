@@ -77,15 +77,18 @@ jobs:
   azure-tests:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
-    if: ${{ false }}
-    #if: |
-    #  github.event_name != 'pull_request'
-    #  || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    if: |
+      github.event_name != 'pull_request'
+      || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]'
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_USE_OIDC: true
+      AZURE_RESOURCE_GROUP_PREFIX: ci-dotnet-${{ github.run_id }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -93,15 +96,16 @@ jobs:
         with:
           azure: 'true'
 
-      - name: 'Login to Azure'
-        run: |
-          az login --service-principal --username ${{ env.ARM_CLIENT_ID }} --password ${{ env.ARM_CLIENT_SECRET }} --tenant ${{ env.ARM_TENANT_ID }}
-          az account set --subscription ${{ env.ARM_SUBSCRIPTION_ID }}
-          echo "AZURE_RESOURCE_GROUP_PREFIX=ci-dotnet-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
+      - name: 'Az CLI login'
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: 'Tests: Azure'
         run: ./build.sh test --test-suite azure
-        
+
       - name: 'Teardown tests infra'
         if: ${{ always() }}
         run: |
@@ -119,7 +123,18 @@ jobs:
 
       - name: 'Tests: Integrations'
         run: ./build.sh test --test-suite integrations
-  
+
+      - name: Store crash dumps
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: hang-dumps
+          retention-days: 3
+          path: |
+            build/output/**/*.dmp
+            build/output/**/*.xml
+            build/output/**/*.pdb
+    
   startup-hook-tests:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
@@ -130,7 +145,7 @@ jobs:
     
     - name: 'Tests: StartupHooks'
       run: ./build.sh test --test-suite startuphooks
-    
+
   profiler-tests:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]

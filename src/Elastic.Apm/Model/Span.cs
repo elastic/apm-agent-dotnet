@@ -72,16 +72,16 @@ namespace Elastic.Apm.Model
 			Activity current = null
 		)
 		{
-			InstrumentationFlag = instrumentationFlag;
-			Timestamp = timestamp ?? TimeUtils.TimestampNow();
-			Id = id ?? RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
-			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
-
+			_logger = logger?.Scoped(nameof(Span));
 			_payloadSender = payloadSender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
 			_apmServerInfo = apmServerInfo;
+
+			InstrumentationFlag = instrumentationFlag;
+			Timestamp = timestamp ?? TimeUtils.TimestampNow();
+			Id = id ?? ActivitySpanId.CreateRandom().ToString();
 			IsExitSpan = isExitSpan;
 			Name = name;
 			Type = type;
@@ -123,9 +123,10 @@ namespace Elastic.Apm.Model
 
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 
-			_logger.Trace()
-				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
+			var formattedTimestamp = _logger.IsEnabled(LogLevel.Trace) ? TimeUtils.FormatTimestampForLog(Timestamp) : string.Empty;
+
+			_logger?.Trace()?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
+				this, formattedTimestamp, Timestamp, _parentSpan);
 		}
 
 		private void CheckAndCaptureBaggage()
@@ -138,7 +139,7 @@ namespace Elastic.Apm.Model
 				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
 					continue;
 
-				Otel ??= new OTel { Attributes = new Dictionary<string, object>() };
+				Otel ??= new OTel { Attributes = [] };
 
 				var newKey = $"baggage.{baggage.Key}";
 				Otel.Attributes[newKey] = baggage.Value;
@@ -392,17 +393,18 @@ namespace Elastic.Apm.Model
 			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null, Activity current = null
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
+			var span = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
 				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id, links, current: current);
 
 			if (!string.IsNullOrEmpty(subType))
-				retVal.Subtype = subType;
+				span.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action))
-				retVal.Action = action;
+				span.Action = action;
 
-			_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
-			return retVal;
+			_logger?.Trace()?.Log("Starting {SpanDetails}", span.ToString());
+
+			return span;
 		}
 
 		/// <summary>
@@ -416,12 +418,13 @@ namespace Elastic.Apm.Model
 			if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
 				Outcome = Outcome.Success;
 
+			var formattedTimestamp = _logger.IsEnabled(LogLevel.Trace) ? TimeUtils.FormatTimestampForLog(Timestamp) : string.Empty;
+
 			if (Duration.HasValue)
 			{
-				_logger.Trace()
-					?.Log("Ended {Span} (with Duration already set)." +
+				_logger?.Trace()?.Log("Ended {Span} (with Duration already set)." +
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+						this, formattedTimestamp, Timestamp, Duration);
 
 				if (_parentSpan != null)
 					_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
@@ -448,10 +451,9 @@ namespace Elastic.Apm.Model
 
 				_childDurationTimer.OnSpanEnd(endTimestamp);
 
-				_logger.Trace()
-					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
+				_logger?.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						this, formattedTimestamp, Timestamp,
 						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
@@ -473,7 +475,7 @@ namespace Elastic.Apm.Model
 			}
 			catch (Exception e)
 			{
-				_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
+				_logger?.Warning()?.LogException(e, "Failed deducing destination fields for span.");
 			}
 
 			if (_isDropped && _context.IsValueCreated)
@@ -570,7 +572,7 @@ namespace Elastic.Apm.Model
 									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
 								break;
 						}
-						_logger.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
+						_logger?.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
 						return;
 					}
 					if (span.Duration < span.Configuration.ExitSpanMinDuration)
@@ -587,7 +589,7 @@ namespace Elastic.Apm.Model
 									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
 								break;
 						}
-						_logger.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
+						_logger?.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
 						return;
 					}
 				}
@@ -869,8 +871,7 @@ namespace Elastic.Apm.Model
 			}
 			catch (Exception ex)
 			{
-				_logger.Trace()
-					?.LogException(ex, "Failed to deduce destination info from Context.Http."
+				_logger?.Trace()?.LogException(ex, "Failed to deduce destination info from Context.Http."
 						+ " Original URL: {OriginalUrl}. Context.Http.Url: {Context.Http.Url}."
 						, Context.Http.OriginalUrl, Context.Http.Url);
 				return null;

@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
-
     <AssemblyName>Elastic.Apm.Azure.Functions</AssemblyName>
     <RootNamespace>Elastic.Apm.Azure.Functions</RootNamespace>
     <PackageId>Elastic.Apm.Azure.Functions</PackageId>
@@ -18,11 +17,19 @@
     <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Http"/>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Extensions"/>
+  </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.22" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.1.21" />
-    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="1.6.0" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions"/>
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" />
   </ItemGroup>
 
 </Project>

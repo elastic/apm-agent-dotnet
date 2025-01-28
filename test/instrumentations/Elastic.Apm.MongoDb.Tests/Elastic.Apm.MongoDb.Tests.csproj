@@ -4,8 +4,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.24.0" />
-    <PackageReference Include="Testcontainers.MongoDb" Version="3.7.0" />
+    <PackageReference Include="MongoDB.Driver"/>
+    <PackageReference Include="Testcontainers.MongoDb" />
   </ItemGroup>
 
   <ItemGroup>

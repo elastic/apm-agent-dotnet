@@ -126,8 +126,11 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 			_onMessageCurrent = currentSegment switch
 			{
-				Span span => span.StartSpanInternal(name, ApiConstants.TypeMessaging, ServiceBus.SubType, action.ToLowerInvariant(),
-					id: activity.SpanId.ToString()),
+				// NOTE: We explicity set the SpanId here to match the Activity (value of the payload) to ensure that span linking on the
+				// receiver works as expected. The Azure SDK attaches the diagnostic-id and traceparent to the message automatically.
+				// On the receiving end, we need to be able to correctly link the consuming span to the producer.
+
+				Span span => span.StartSpanInternal(name, ApiConstants.TypeMessaging, ServiceBus.SubType, action.ToLowerInvariant(), id: activity.SpanId.ToString()),
 				Transaction transaction => transaction.StartSpanInternal(name, ApiConstants.TypeMessaging, ServiceBus.SubType,
 					action.ToLowerInvariant(), id: activity.SpanId.ToString()),
 				_ => _onMessageCurrent

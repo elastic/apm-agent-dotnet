@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 
 // Copyright (c) 2007 James Newton-King
 //
@@ -35,9 +35,11 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 #nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
-    internal class JsonFormatterConverter : IFormatterConverter
-    {
-        private readonly JsonSerializerInternalReader _reader;
+#pragma warning disable SYSLIB0050
+	internal class JsonFormatterConverter : IFormatterConverter
+#pragma warning restore SYSLIB0050
+	{
+		private readonly JsonSerializerInternalReader _reader;
         private readonly JsonISerializableContract _contract;
         private readonly JsonProperty? _member;
 

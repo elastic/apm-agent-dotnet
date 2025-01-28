@@ -80,7 +80,7 @@ const SKIP_ASSEMBLY_PREFIXES: [&str; 22] = [
     "System.Text",
     "System.Threading",
     "System.Xml",
-    "Newtonsoft",
+    "Newtonsoft"
 ];
 const SKIP_ASSEMBLIES: [&str; 7] = [
     "mscorlib",
@@ -89,7 +89,7 @@ const SKIP_ASSEMBLIES: [&str; 7] = [
     "Microsoft.AspNetCore.Razor.Language",
     "Microsoft.AspNetCore.Mvc.RazorPages",
     "Anonymously Hosted DynamicMethods Assembly",
-    "ISymWrapper",
+    "ISymWrapper"
 ];
 
 /// The git hash defined on build
@@ -521,7 +521,7 @@ impl Profiler {
 
         if let Some(exclude_process_names) = env::get_exclude_processes() {
             for exclude_process_name in exclude_process_names {
-                if process_file_name == exclude_process_name {
+                if process_file_name.to_lowercase() == exclude_process_name.to_lowercase() {
                     log::info!(
                         "Initialize: process name {} matches excluded name {}. Profiler disabled",
                         &process_file_name,
@@ -535,7 +535,7 @@ impl Profiler {
         if let Some(exclude_service_names) = env::get_exclude_service_names() {
             if let Some(service_name) = env::get_service_name() {
                 for exclude_service_name in exclude_service_names {
-                    if service_name == exclude_service_name {
+                    if service_name.to_lowercase() == exclude_service_name.to_lowercase() {
                         log::info!(
                             "Initialize: service name {} matches excluded name {}. Profiler disabled",
                             &service_name,
@@ -1060,7 +1060,7 @@ impl Profiler {
             );
 
             log::trace!("ModuleLoadFinished: tracking {} module(s)", modules.len());
-
+            
             if call_target_enabled {
                 let rejit_count =
                     self.calltarget_request_rejit_for_module(module_id, module_metadata)?;

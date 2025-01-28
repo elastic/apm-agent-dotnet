@@ -3,11 +3,19 @@
   <PropertyGroup>
     <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <DefineConstants>$(DefineConstants);PROFILER_MANAGED</DefineConstants>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="$(SolutionRoot)src/Elastic.Apm/Logging/GlobalLogConfiguration.cs" />
+    <Compile Include="$(SolutionRoot)src/Elastic.Apm/Logging/LogLevel.cs" />
+    <Compile Include="$(SolutionRoot)src/profiler/Elastic.Apm.Profiler.Managed.Loader/Logger.cs" />
+  </ItemGroup>
+
+
   <ItemGroup Condition="'$(TargetFramework)' != 'net462'">
-    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" />
   </ItemGroup>
 
   <!-- ASP.NET integration -->

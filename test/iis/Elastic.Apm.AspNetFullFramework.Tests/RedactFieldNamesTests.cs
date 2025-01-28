@@ -10,9 +10,9 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
-	public class SanitizeFieldNamesTests : TestsBase
+	public class RedactFieldNamesTests : TestsBase
 	{
-		public SanitizeFieldNamesTests(ITestOutputHelper xUnitOutputHelper)
+		public RedactFieldNamesTests(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper)
 		{
 		}
@@ -42,12 +42,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				receivedData.Transactions.Should().ContainSingle();
 				receivedData.Transactions[0].Context.Should().NotBeNull();
 				receivedData.Transactions[0].Context.Request.Should().NotBeNull();
-				receivedData.Transactions[0].Context.Request.Cookies.Should().NotBeNull();
-				receivedData.Transactions[0].Context.Request.Cookies.Should().NotBeNull();
 
-				receivedData.Transactions[0].Context.Request.Headers["Cookie"].Should().Be(Apm.Consts.Redacted);
-				receivedData.Transactions[0].Context.Request.Cookies["MySecureCookie"].Should().Be(Apm.Consts.Redacted);
-				receivedData.Transactions[0].Context.Request.Cookies["SafeCookie"].Should().Be("This is safe to record and should not be redacted.");
+				receivedData.Transactions[0].Context.Request.Headers["Cookie"].Should().Be($"password={Apm.Consts.Redacted}; SafeCookie=This is safe to record and should not be redacted.");
 			}, false);
 		}
 	}
