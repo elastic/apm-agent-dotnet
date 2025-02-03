@@ -35,9 +35,12 @@ _* Due to binding issues introduced by Microsoft, we recommend at least .NET Fra
 
 _** Minimum GLIBC version 2.14._
 
-NOTE: The profiler-based agent only supports 64-bit applications. 32-bit applications aren't supported.
+IMPORTANT: The profiler-based agent only supports 64-bit applications. 32-bit applications aren't supported.
 
-NOTE: The profiler-based agent does not currently support ARM.
+IMPORTANT: The profiler-based agent does not currently support ARM.
+
+IMPORTANT: The profiler-based agent does not currently support instrumenting applications which use resources contained in
+satellite assemblies. See https://github.com/elastic/apm-agent-dotnet/issues/2339[this issue] for more details.
 
 It instruments the following assemblies:
 
