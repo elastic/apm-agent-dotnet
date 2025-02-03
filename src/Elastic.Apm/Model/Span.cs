@@ -572,7 +572,7 @@ namespace Elastic.Apm.Model
 									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
 								break;
 						}
-						_logger?.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", Composite.Sum);
+						_logger?.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", span.Composite.Sum);
 						return;
 					}
 					if (span.Duration < span.Configuration.ExitSpanMinDuration)
@@ -589,7 +589,7 @@ namespace Elastic.Apm.Model
 									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
 								break;
 						}
-						_logger?.Trace()?.Log("Dropping fast exit span. Duration: {duration}", Duration);
+						_logger?.Trace()?.Log("Dropping fast exit span. Duration: {duration}", span.Duration);
 						return;
 					}
 				}
