@@ -73,7 +73,7 @@ jobs:
         
       - name: 'Tests: Unit'
         run: ./build.sh test --test-suite unit
-        
+
   azure-tests:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
@@ -164,3 +164,54 @@ jobs:
       run: |
         docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
             --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+
+  system-tests:
+    runs-on: ubuntu-latest
+    needs: [ 'tests' ]
+    if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: elastic/oblt-actions/google/auth@v1
+
+      - name: Get token
+        id: get_token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.OBS_AUTOMATION_APP_ID }}
+          private_key: ${{ secrets.OBS_AUTOMATION_APP_PEM }}
+          permissions: >-
+            {
+              "contents": "write",
+              "pull_requests": "write"
+            }
+          repositories: >-
+            ["observability-test-environments"]
+
+      - uses: elastic/oblt-actions/git/setup@v1
+        with:
+          github-token: ${{ steps.get_token.outputs.token }}
+
+      - uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@v1
+        with:
+          github-token: ${{ steps.get_token.outputs.token }}
+          remote-cluster: "edge-oblt"
+          cluster-name-prefix: "dotnet"
+          gitops: true
+
+      - uses: elastic/oblt-actions/oblt-cli/cluster-credentials@v1
+        with:
+          cluster-name: "dotnet"
+          github-token: ${{ steps.get_token.outputs.token }}
+
+      - run: echo "TBC"
+
+      - uses: elastic/oblt-actions/oblt-cli/cluster-destroy@v1
+        if: always()
+        continue-on-error: true
+        with:
+          github-token: ${{ steps.get_token.outputs.token }}
+          cluster-name: "dotnet"
