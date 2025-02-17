@@ -199,7 +199,8 @@ jobs:
         with:
           github-token: ${{ steps.get_token.outputs.token }}
           remote-cluster: "edge-oblt"
-          cluster-name-prefix: "dotnet"
+          cluster-name-prefix: "dot"
+          cluster-name-suffix: ''
           gitops: true
 
       - uses: elastic/oblt-actions/oblt-cli/cluster-credentials@v1
