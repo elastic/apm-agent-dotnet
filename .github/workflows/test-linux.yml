@@ -167,7 +167,7 @@ jobs:
 
   system-tests:
     runs-on: ubuntu-latest
-    needs: [ 'tests' ]
+    //needs: [ 'tests' ]
     if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]'
     permissions:
       contents: read
@@ -198,9 +198,8 @@ jobs:
       - uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@v1
         with:
           github-token: ${{ steps.get_token.outputs.token }}
-          remote-cluster: "edge-oblt"
-          cluster-name-prefix: "dot"
-          cluster-name-suffix: ''
+          remote-cluster: 'edge-oblt'
+          cluster-name-prefix: 'dotnet'
           gitops: true
 
       - uses: elastic/oblt-actions/oblt-cli/cluster-credentials@v1
