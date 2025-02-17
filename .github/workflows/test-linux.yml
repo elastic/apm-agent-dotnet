@@ -167,11 +167,22 @@ jobs:
 
   system-tests:
     runs-on: ubuntu-latest
-    #needs: [ 'tests' ]
+    needs: [ 'tests' ]
+    # Skip pull_request event from forks and dependabot
     if: github.event_name != 'pull_request' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]'
     permissions:
       contents: read
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # NOTE: edge-oblt version is the next major version for APM Server
+        #       dev-oblt version is the the next minor release for APM Server
+        #       release-oblt version is the latest release or current BC for APM Server
+        remote-cluster:
+          - 'edge-oblt'
+          - 'dev-oblt'
+          - 'release-oblt'
     steps:
       - uses: actions/checkout@v4
 
@@ -195,23 +206,28 @@ jobs:
         with:
           github-token: ${{ steps.get_token.outputs.token }}
 
-      - uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@feature/wait-return-cluster-name
+      - name: Setup ephemeral cluster
+        uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@feature/wait-return-cluster-name
         id: cluster_create
         with:
           github-token: ${{ steps.get_token.outputs.token }}
-          remote-cluster: 'edge-oblt'
+          remote-cluster: ${{ matrix.remote-cluster }}
           cluster-name-prefix: 'dotnet'
-          gitops: false
           wait: 15
 
-      - uses: elastic/oblt-actions/oblt-cli/cluster-credentials@v1
+      - name: Setup credentials for the ephemeral cluster
+        uses: elastic/oblt-actions/oblt-cli/cluster-credentials@v1
         with:
           cluster-name: ${{ steps.cluster_create.outputs.cluster-name }}
           github-token: ${{ steps.get_token.outputs.token }}
 
+      # NOTE: you can now use the cluster credentials to run your tests
+      #       please see https://github.com/elastic/oblt-actions/tree/v1/oblt-cli/cluster-credentials#exported-environment-variables
+      #       for the environment variables that are set by this action
       - run: echo "TBC"
 
-      - uses: elastic/oblt-actions/oblt-cli/cluster-destroy@v1
+      - name: Tear down ephemeral cluster
+        uses: elastic/oblt-actions/oblt-cli/cluster-destroy@v1
         if: always()
         continue-on-error: true
         with:
