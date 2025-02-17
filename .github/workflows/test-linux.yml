@@ -186,7 +186,7 @@ jobs:
           permissions: >-
             {
               "contents": "write",
-              "pull_requests": "write"
+              "pull_requests": "read"
             }
           repositories: >-
             ["observability-test-environments"]
@@ -195,16 +195,18 @@ jobs:
         with:
           github-token: ${{ steps.get_token.outputs.token }}
 
-      - uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@v1
+      - uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@feature/wait-return-cluster-name
+        id: cluster_create
         with:
           github-token: ${{ steps.get_token.outputs.token }}
           remote-cluster: 'edge-oblt'
           cluster-name-prefix: 'dotnet'
           gitops: false
+          wait: 15
 
       - uses: elastic/oblt-actions/oblt-cli/cluster-credentials@v1
         with:
-          cluster-name: "dotnet"
+          cluster-name: ${{ steps.cluster_create.outputs.cluster-name }}
           github-token: ${{ steps.get_token.outputs.token }}
 
       - run: echo "TBC"
@@ -214,4 +216,4 @@ jobs:
         continue-on-error: true
         with:
           github-token: ${{ steps.get_token.outputs.token }}
-          cluster-name: "dotnet"
+          cluster-name: ${{ steps.cluster_create.outputs.cluster-name }}
