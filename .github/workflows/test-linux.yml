@@ -207,7 +207,7 @@ jobs:
           github-token: ${{ steps.get_token.outputs.token }}
 
       - name: Setup ephemeral cluster
-        uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@feature/wait-return-cluster-name
+        uses: elastic/oblt-actions/oblt-cli/cluster-create-ccs@v1
         id: cluster_create
         with:
           github-token: ${{ steps.get_token.outputs.token }}
