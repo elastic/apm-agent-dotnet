@@ -170,7 +170,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				"--sdk-version",
 				"8.0.404", // Fixing this specific version, for now
 				"--roll-forward",
-				"disable"
+				"LatestPatch"
 			])
 			{
 				WorkingDirectory = directory
