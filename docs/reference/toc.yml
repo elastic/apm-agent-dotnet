@@ -1,0 +1,46 @@
+project: 'APM .NET agent reference'
+toc:
+  - file: index.md
+  - file: set-up-apm-net-agent.md
+    children:
+      - file: setup-auto-instrumentation.md
+      - file: setup-asp-net-core.md
+      - file: setup-dotnet-net-core.md
+      - file: setup-asp-dot-net.md
+      - file: setup-azure-functions.md
+      - file: setup-general.md
+  - file: nuget-packages.md
+    children:
+      - file: setup-ef-core.md
+      - file: setup-ef6.md
+      - file: setup-elasticsearch.md
+      - file: setup-grpc.md
+      - file: setup-sqlclient.md
+      - file: setup-stackexchange-redis.md
+      - file: setup-azure-cosmosdb.md
+      - file: setup-azure-servicebus.md
+      - file: setup-azure-storage.md
+      - file: setup-mongo-db.md
+  - file: supported-technologies.md
+  - file: configuration.md
+    children:
+      - file: configuration-on-asp-net-core.md
+      - file: configuration-for-windows-services.md
+      - file: configuration-on-asp-net.md
+      - file: config-core.md
+      - file: config-reporter.md
+      - file: config-http.md
+      - file: config-messaging.md
+      - file: config-stacktrace.md
+      - file: config-supportability.md
+      - file: config-all-options-summary.md
+  - file: public-api.md
+  - file: opentelemetry-bridge.md
+  - file: metrics.md
+  - file: logs.md
+    children:
+      - file: serilog.md
+      - file: nlog.md
+      - file: log-correlation-manual.md
+  - file: performance-tuning.md
+  - file: upgrading.md
