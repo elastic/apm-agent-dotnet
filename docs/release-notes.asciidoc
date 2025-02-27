@@ -1,9 +1,0 @@
-:pull: https://github.com/elastic/apm-agent-dotnet/pull/
-
-[[release-notes]]
-== Release notes
-
-* <<release-notes-1.x>>
-* <<release-notes-beta>>
-
-include::../CHANGELOG.asciidoc[]
