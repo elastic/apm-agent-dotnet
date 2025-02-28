@@ -316,7 +316,7 @@ finally
 Labels are used to add **indexed** information to transactions, spans, and errors. Indexed means the data is searchable and aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
 
 * Indexed: Yes
-* Elasticsearch type: [object](elasticsearch://docs/reference/elasticsearch/mapping-reference/object.md)
+* Elasticsearch type: [object](elasticsearch://reference/elasticsearch/mapping-reference/object.md)
 * Elasticsearch field: `labels` (previously `context.tags` in <v.7.0)
 
 Label values can be a string, boolean, or number. Because labels for a given key are stored in the same place in Elasticsearch, all label values of a given key must have the same data type. Multiple data types per key will throw an exception, e.g., `{"foo": "bar"}` and `{"foo": 42}`.
@@ -511,7 +511,7 @@ To enable the JavaScript RUM agent in ASP.NET Core, initialize the RUM agent wit
 </script>
 ```
 
-See the  [JavaScript RUM agent documentation](apm-agent-rum-js://docs/reference/index.md) for more information.
+See the  [JavaScript RUM agent documentation](apm-agent-rum-js://reference/index.md) for more information.
 
 
 #### `Dictionary<string,string> Custom` [api-transaction-custom]

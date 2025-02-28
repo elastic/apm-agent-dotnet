@@ -35,7 +35,7 @@ For applications running in IIS, [IIS application pool identities use *virtual* 
 ::::
 
 
-For more system metrics, consider installing [metricbeat](beats://docs/reference/metricbeat/metricbeat.md) on your hosts.
+For more system metrics, consider installing [metricbeat](beats://reference/metricbeat/metricbeat.md) on your hosts.
 
 **`system.cpu.total.norm.pct`**
 :   type: scaled_float
