@@ -309,7 +309,7 @@ ELASTIC_APM_SECRET_TOKEN=<secret token> <3>
 3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
-Then adding an [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/systemd.service.md#Command%20lines) entry to the service’s configuration file that references the path to the environment.env file
+Then adding an [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/systemd.service.html#Command%20lines) entry to the service’s configuration file that references the path to the environment.env file
 
 ```sh
 [Service]
