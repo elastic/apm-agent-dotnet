@@ -14,7 +14,7 @@ The tag dictates the version number. Untagged commits are automatically versione
 
 ### Generating a changelog for the new version
 
-Prior to tagging and releasing the new version we create a changelog commit. Adding relevant new features and bugfixes to [`CHANGELOG.asciidoc`](CHANGELOG.asciidoc). The idea is to fill all the applicable sections so that users can consume an orderly changelog.
+Prior to tagging and releasing the new version we create a changelog commit. Adding relevant new features and bugfixes to [`docs/release-notes/index.md`](docs/release-notes/index.md). The idea is to fill all the applicable sections so that users can consume an orderly changelog.
 
 After a changelog has been manually curated, a new pull request must be opened with the changelog.
 
@@ -32,7 +32,7 @@ Create a new release on Github, creating a new tag for the version `vMAJOR.MINOR
 
 Creating a release will trigger the [release Github Action](.github/workflows/release.yml)
 
-## Steps after the release 
+## Steps after the release
 
 ### Attaching files on GitHub
 
@@ -68,6 +68,8 @@ git push --force  upstream 1.x
 
 In case of a major release, we need to create the `<major>.x` branch from the currently released tag and push the new `<major>.x` branch.
 
+
+<!-- TO DO: Update when instructions are available -->
 #### For a major release
 
 Additionally, in case of a major version release, we need to create a PR in [elastic/docs](https://github.com/elastic/docs).
