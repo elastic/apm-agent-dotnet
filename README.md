@@ -50,7 +50,7 @@ See the [releasing documentation](RELEASING.md)
 These are the main folders within the repository:
 
 * `src`: The source code of the agent. Each project within this folder targets a specific library, and there is one core project, which is referenced by all other projects.
-  * `Elastic.Apm`: The core project targeting .NET Standard 2.0. It contains the [Agent API](/docs/public-api.asciidoc), the infrastructure to report data to the APM Server, the logging infrastructure, and auto-instrumentation for things that are part of .NET Standard 2.0.
+  * `Elastic.Apm`: The core project targeting .NET Standard 2.0. It contains the [Agent API](/docs/reference/public-api.md), the infrastructure to report data to the APM Server, the logging infrastructure, and auto-instrumentation for things that are part of .NET Standard 2.0.
   * `Elastic.Apm.AspNetCore`: Auto-instrumentation for ASP.NET Core.
   * `Elastic.Apm.EntityFrameworkCore`: Auto-instrumentation for EntityFramework Core.
   * `Elastic.Apm.NetCoreAll`: A convenient project that references all other .NET Core related projects from the `src` folder. It contains an ASP.NET Core middleware extension that enables the agent and every other component with a single line of code. In a typical ASP.NET Core application (e.g. apps referencing [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All)) that uses EF Core the `Elastic.Apm.NetCoreAll` can be referenced.
