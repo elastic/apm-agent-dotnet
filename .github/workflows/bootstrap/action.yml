@@ -33,7 +33,7 @@ runs:
         git fetch --prune --unshallow --tags
         git tag --list
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}-${{ hashFiles('**/*.*.props') }}
@@ -42,7 +42,7 @@ runs:
           
     # Install latest .NET SDKs for supported LTS versions
     - name: Setup dotnet
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
       with:
         dotnet-version: |
           8.0.x
@@ -60,7 +60,7 @@ runs:
         echo "major-version=$(echo ${AGENT_VERSION} | cut -d"." -f1)" >> $GITHUB_OUTPUT
 
     # Setup git config
-    - uses: elastic/oblt-actions/git/setup@v1
+    - uses: elastic/oblt-actions/git/setup@31e93d1dfb82adc106fc7820f505db1afefe43b1
         
     # install common dependencies
     - name: Install common dependencies

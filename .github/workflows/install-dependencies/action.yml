@@ -38,7 +38,7 @@
   
       - name: Install cargo-make using cache
         if: "${{ inputs.rust == 'true' }}"
-        uses: baptiste0928/cargo-install@v3
+        uses: baptiste0928/cargo-install@91c5da15570085bcde6f4d7aed98cb82d6769fd3 # v3
         with:
           crate: cargo-make
           version: "^0.36.8"
@@ -48,7 +48,7 @@
         shell: bash
         run: cargo install --force cargo-zigbuild
       
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2
         if: "${{ inputs.rust == 'true' }}"
         with:
           cache-targets: "false"

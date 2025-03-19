@@ -39,7 +39,7 @@ jobs:
   format:
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
       - name: Format
@@ -68,7 +68,7 @@ jobs:
     #needs: [ 'format', 'tests' ]
     needs: [ 'tests' ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
@@ -76,7 +76,7 @@ jobs:
         run: ./build.bat test --test-suite integrations
 
       - name: Store crash dumps
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         if: success() || failure()
         with:
           name: hang-dumps
@@ -90,7 +90,7 @@ jobs:
     #needs: [ 'format', 'tests' ]
     needs: [ 'tests' ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
@@ -102,7 +102,7 @@ jobs:
     #needs: [ 'format', 'tests' ]
     needs: [ 'tests' ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
@@ -117,11 +117,11 @@ jobs:
     #needs: [ 'format', 'tests' ]
     needs: [ 'tests' ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4
         with:
           path: ~/.nuget/packages
           key: "${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}"
@@ -180,7 +180,7 @@ jobs:
             --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
       - name: Store test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: test-results-iis
           path: build/output/junit-*.xml

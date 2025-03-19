@@ -26,7 +26,7 @@ jobs:
       contents: write
       id-token: write
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
     - name: Bootstrap Action Workspace
       id: bootstrap
       uses: ./.github/workflows/bootstrap
@@ -102,7 +102,7 @@ jobs:
         gh release upload ${{ github.ref_name }} "${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}" "${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
 
     - if: ${{ success() }}
-      uses: elastic/oblt-actions/slack/send@v1
+      uses: elastic/oblt-actions/slack/send@31e93d1dfb82adc106fc7820f505db1afefe43b1 # v1
       continue-on-error: true #continue for now until we see it working in action
       with:
         bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -113,7 +113,7 @@ jobs:
           Release URL: (<https://github.com/elastic/apm-agent-dotnet/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}>)
 
     - if: ${{ failure() }}
-      uses: elastic/oblt-actions/slack/send@v1
+      uses: elastic/oblt-actions/slack/send@31e93d1dfb82adc106fc7820f505db1afefe43b1 # v1
       continue-on-error: true #continue for now until we see it working in action
       with:
         bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -136,7 +136,7 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Bootstrap Action Workspace
         id: bootstrap
         uses: ./.github/workflows/bootstrap
@@ -179,13 +179,13 @@ jobs:
           repositories: >-
             ["apm-agent-dotnet"]
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
           token: ${{ steps.get_token.outputs.token }}
 
       - name: Setup git config
-        uses: elastic/oblt-actions/git/setup@v1
+        uses: elastic/oblt-actions/git/setup@31e93d1dfb82adc106fc7820f505db1afefe43b1 # v1
         with:
           github-token: ${{ steps.get_token.outputs.token }}
 
