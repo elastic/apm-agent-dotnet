@@ -1,13 +1,13 @@
 ---
-navigation_title: "Elastic APM .NET Agent"
+navigation_title: "Elastic APM .NET agent"
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/release-notes-1.x.html
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/release-notes.html
 ---
 
-# Elastic APM .NET Agent release notes [elastic-apm-net-agent-release-notes]
+# {{apm-dotnet-agent}} release notes [elastic-apm-net-agent-release-notes]
 
-Review the changes, fixes, and more in each version of Elastic APM .NET Agent.
+Review the changes, fixes, and more in each version of {{apm-dotnet-agent}}.
 
 To check for security updates, go to [Security announcements for the Elastic stack](https://discuss.elastic.co/c/announcements/security-announcements/31).
 

@@ -1,11 +1,9 @@
 ---
-navigation_title: "Elastic APM .NET Agent"
+navigation_title: "Breaking changes"
 ---
 
-# Elastic APM .NET Agent breaking changes [elastic-apm-net-agent-breaking-changes]
-Before you upgrade, carefully review the Elastic APM .NET Agent breaking changes and take the necessary steps to mitigate any issues.
-
-To learn how to upgrade, check out [Upgrading](/reference/upgrading.md).
+# {{apm-dotnet-agent}} breaking changes [elastic-apm-net-agent-breaking-changes]
+Breaking changes can impact your Elastic applications, potentially disrupting normal operations. Before you upgrade, carefully review the {{apm-dotnet-agent}} breaking changes and take the necessary steps to mitigate any issues. To learn how to upgrade, check out [Upgrading](/reference/upgrading.md).
 
 % ## Next version [elastic-apm-net-agent-nextversion-breaking-changes]
 % **Release date:** Month day, year
