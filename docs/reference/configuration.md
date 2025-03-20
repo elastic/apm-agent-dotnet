@@ -12,7 +12,7 @@ By default, the agent uses environment variables. Additionally, on ASP.NET Core,
 
 ## Dynamic configuration [dynamic-configuration]
 
-Configuration options that are marked with the ![dynamic config](../images/dynamic-config.svg "") badge can be changed at runtime when set from a supported source.
+Configuration options that are marked with the ![dynamic config](/reference/images/dynamic-config.svg "") badge can be changed at runtime when set from a supported source.
 
 The .NET Agent supports [Central configuration](docs-content://solutions/observability/apps/apm-agent-central-configuration.md), which allows you to fine-tune certain configurations via the APM app. This feature is enabled in the Agent by default, with [`CentralConfig` ([1.1])](/reference/config-core.md#config-central-config).
 

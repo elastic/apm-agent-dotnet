@@ -92,7 +92,7 @@ Open *Settings > Environment variables* for your Function App in the Azure Porta
 
 For example:
 
-:::{image} ../images/azure-functions-configuration.png
+:::{image} images/azure-functions-configuration.png
 :alt: Configuring the APM Agent in the Azure Portal
 :::
 
