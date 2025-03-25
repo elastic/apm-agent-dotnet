@@ -1,5 +1,5 @@
 ---
-navigation_title: "Elastic APM .NET Agent"
+navigation_title: "Breaking changes"
 ---
 
 # Elastic APM .NET Agent breaking changes [elastic-apm-net-agent-breaking-changes]

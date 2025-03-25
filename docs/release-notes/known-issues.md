@@ -1,5 +1,5 @@
 ---
-navigation_title: "Elastic APM .NET Agent" 
+navigation_title: "Known issues" 
 ---
 
 # Elastic APM .NET Agent known issues [elastic-apm-net-agent-known-issues]
