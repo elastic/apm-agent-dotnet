@@ -112,7 +112,7 @@ This allows for the reported hostname to be manually specified. If this is not s
 
 The name of the environment that this service is deployed in, e.g. "production" or "staging".
 
-Environments allow you to easily filter data on a global level in the APM app. It’s important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apps/filter-application-data.md#apm-filter-your-data-service-environment-filter) in the Kibana UI for more information.
+Environments allow you to easily filter data on a global level in the APM app. It’s important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apm/filter-data.md#apm-filter-your-data-service-environment-filter) in the Kibana UI for more information.
 
 ::::{note}
 This feature is fully supported in the APM app in Kibana versions >= 7.2. You must use the query bar to filter for a specific environment in versions prior to 7.2.
@@ -179,7 +179,7 @@ This setting can be changed after agent starts.
 
 ## `CentralConfig` ([1.1]) [config-central-config]
 
-If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest [APM Agent configuration](docs-content://solutions/observability/apps/apm-agent-central-configuration.md).
+If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest [APM Agent configuration](docs-content://solutions/observability/apm/apm-agent-central-configuration.md).
 
 | Environment variable name | IConfiguration key |
 | --- | --- |

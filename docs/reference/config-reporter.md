@@ -46,7 +46,7 @@ The `SecretToken` is sent as plain-text in every request to the server, so you s
 
 ## `ApiKey` ([1.4]) [config-api-key]
 
-A base64-encoded string used to ensure that only your agents can send data to your APM server. You must have created the API key using the APM server’s [command line tool](docs-content://solutions/observability/apps/api-keys.md).
+A base64-encoded string used to ensure that only your agents can send data to your APM server. You must have created the API key using the APM server’s [command line tool](docs-content://solutions/observability/apm/api-keys.md).
 
 ::::{note}
 This feature is fully supported in the APM Server versions >= 7.6.
