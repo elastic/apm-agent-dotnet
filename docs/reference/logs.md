@@ -24,7 +24,7 @@ If your favorite logging framework is not already supported, there are two other
 * Open a feature request, or contribute code, for additional support, as described in [CONTRIBUTING.md](https://github.com/elastic/apm-agent-dotnet/blob/main/CONTRIBUTING.md).
 * Manually inject trace IDs into log records, as described in [Manual log correlation](/reference/log-correlation-manual.md).
 
-Regardless of how you integrate APM with logging, you can use [Filebeat](beats://reference/filebeat/filebeat-overview.md) to send your logs to Elasticsearch, in order to correlate your traces and logs and link from APM to the [Logs app](docs-content://solutions/observability/logs/explore-logs.md).
+Regardless of how you integrate APM with logging, you can use [Filebeat](beats://reference/filebeat/index.md) to send your logs to Elasticsearch, in order to correlate your traces and logs and link from APM to the [Logs app](docs-content://solutions/observability/logs/explore-logs.md).
 
 
 
