@@ -161,7 +161,7 @@ The approximate accumulated collection elapsed time in milliseconds.
 
 ## Built-in application metrics [metrics-application]
 
-To power the [Time spent by span type](docs-content://solutions/observability/apps/transactions-2.md) graph, the agent collects summarized metrics about the timings of spans and transactions, broken down by span type.
+To power the [Time spent by span type](docs-content://solutions/observability/apm/transactions-ui.md) graph, the agent collects summarized metrics about the timings of spans and transactions, broken down by span type.
 
 **`transaction.duration`**
 :   type: simple timer

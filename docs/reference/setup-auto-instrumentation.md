@@ -85,7 +85,7 @@ The general steps in configuring profiler auto instrumentation are as follows; S
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
     2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+    3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
     ```sh
@@ -100,7 +100,7 @@ The general steps in configuring profiler auto instrumentation are as follows; S
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
     2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+    3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
     ```sh
@@ -115,7 +115,7 @@ The general steps in configuring profiler auto instrumentation are as follows; S
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
     2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+    3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
 Ensure you start your application in a context where the set environment variables are visible.
@@ -207,7 +207,7 @@ Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\<service-name> -Name Env
 
 1. `<unzipped directory>` is the directory to which the zip file was unzipped.
 2. The URL of the APM server intake to which traces and metrics should be sent.
-3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 4. `<service-name>` is the name of the Windows service.
 
 
@@ -248,7 +248,7 @@ $environment.Keys | ForEach-Object {
 2. `<unzipped directory>` is the full path to the directory in which the zip file was unzipped
 3. Forces assemblies **not** to be loaded domain-neutral. There is currently a limitation where Profiler auto-instrumentation cannot instrument assemblies when they are loaded domain-neutral. This limitation is expected to be removed in future, but for now, can be worked around by setting this environment variable. See the [Microsoft documentation for further details](https://docs.microsoft.com/en-us/dotnet/framework/app-domains/application-domains#the-complus_loaderoptimization-environment-variable).
 4. The URL of the APM server intake to which traces and metrics should be sent.
-5. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+5. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
 ```powershell
@@ -273,7 +273,7 @@ $environment.Keys | ForEach-Object {
 1. `<application-pool>` is the name of the Application Pool your application uses. For example, `IIS APPPOOL\DefaultAppPool`.
 2. `<unzipped directory>` is the full path to the directory in which the zip file was unzipped.
 3. The URL of the APM server intake to which traces and metrics should be sent.
-4. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+4. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
 ::::{important}
@@ -306,7 +306,7 @@ ELASTIC_APM_SECRET_TOKEN=<secret token> <3>
 
 1. `<unzipped directory>` is the directory to which the zip file was unzipped.
 2. The URL of the APM server intake to which traces and metrics should be sent.
-3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
 Then adding an [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/systemd.service.html#Command%20lines) entry to the service’s configuration file that references the path to the environment.env file

@@ -168,7 +168,7 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 
 ## `UseElasticTraceparentHeader` ([1.3.0]) [config-use-elastic-apm-traceparent-header]
 
-To enable [distributed tracing](docs-content://solutions/observability/apps/traces.md), the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the [W3C Trace Context](https://www.w3.org/TR/trace-context-1/) specification.
+To enable [distributed tracing](docs-content://solutions/observability/apm/traces.md), the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the [W3C Trace Context](https://www.w3.org/TR/trace-context-1/) specification.
 
 When this setting is `true`, the agent also adds the header `elasticapm-traceparent` for backwards compatibility with older versions of Elastic APM agents. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
 
