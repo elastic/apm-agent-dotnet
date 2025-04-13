@@ -274,7 +274,7 @@ Agent.Tracer.CaptureErrorLog(errorLog);
 
 ## Transaction API [api-transaction]
 
-A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple [Spans](#api-span) into logical groups, and they are the first [Span](#api-span) of a service. More information on Transactions and Spans is available in the [APM data model](docs-content://solutions/observability/apps/learn-about-application-data-types.md) documentation.
+A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple [Spans](#api-span) into logical groups, and they are the first [Span](#api-span) of a service. More information on Transactions and Spans is available in the [APM data model](docs-content://solutions/observability/apm/data-types.md) documentation.
 
 See [`ITransaction CurrentTransaction`](#api-current-transaction) on how to get a reference of the current transaction.
 
@@ -363,7 +363,7 @@ A flat mapping of user-defined labels with string values.
 If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
 
 ::::{tip}
-Before using custom labels, ensure you understand the different types of [metadata](docs-content://solutions/observability/apps/metadata.md) that are available.
+Before using custom labels, ensure you understand the different types of [metadata](docs-content://solutions/observability/apm/metadata.md) that are available.
 ::::
 
 
@@ -659,7 +659,7 @@ Similar to [`Dictionary<string,string> Labels`](#api-transaction-tags) on the [T
 If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
 
 ::::{tip}
-Before using custom labels, ensure you understand the different types of [metadata](docs-content://solutions/observability/apps/metadata.md) that are available.
+Before using custom labels, ensure you understand the different types of [metadata](docs-content://solutions/observability/apm/metadata.md) that are available.
 ::::
 
 
