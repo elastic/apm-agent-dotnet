@@ -3,39 +3,15 @@ updates:
 
   # GitHub actions
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/*"
     reviewers:
       - "elastic/observablt-ci"
     schedule:
       interval: "weekly"
       day: "sunday"
       time: "22:00"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
-
-  # GitHub composite actions
-  - package-ecosystem: "github-actions"
-    directory: "/.github/workflows/bootstrap"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-      time: "22:00"
-    reviewers:
-      - "elastic/observablt-ci"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
-  - package-ecosystem: "github-actions"
-    directory: "/.github/workflows/install-dependencies"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-      time: "22:00"
-    reviewers:
-      - "elastic/observablt-ci"
     groups:
       github-actions:
         patterns:
