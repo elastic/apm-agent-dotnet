@@ -1,4 +1,6 @@
 project: 'APM .NET agent docs'
+products:
+  - id: apm-agent
 cross_links:
   - apm-agent-rum-js
   - beats
