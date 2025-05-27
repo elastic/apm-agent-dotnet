@@ -649,6 +649,7 @@ namespace Elastic.Apm.Model
 				{
 					Name = "Calls to " + Context.Service.Target.ToDestinationServiceResource();
 				}
+
 				return true;
 			}
 
