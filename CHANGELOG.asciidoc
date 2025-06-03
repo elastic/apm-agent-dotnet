@@ -23,6 +23,13 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.32.0]]
+==== 1.32.0 - 2025/05/28
+
+===== Bug fixes
+
+{pull}2602[#2602] Fix NullReferenceException in TryToCompressRegular method in Span.
+
 [[release-notes-1.31.0]]
 ==== 1.31.0 - 2024/12/02
 
