@@ -49,10 +49,11 @@ namespace Elastic.Apm.Api
 		/// <see cref="ITracer.StartTransaction" />.
 		/// </summary>
 		/// <param name="serialized">should be a return value from a call to <see cref="SerializeToString" />.</param>
+		/// <param name="traceStateValue">should be a return value from a call to <see cref="DistributedTracing.TraceState.ToTextHeader"/>.</param>
 		/// <returns>
 		/// Instance deserialized from <paramref name="serialized" />.
 		/// </returns>
-		public static DistributedTracingData TryDeserializeFromString(string serialized) => TraceContext.TryExtractTracingData(serialized);
+		public static DistributedTracingData TryDeserializeFromString(string serialized, string traceStateValue = null) => TraceContext.TryExtractTracingData(serialized, traceStateValue);
 
 		public override string ToString() => new ToStringBuilder(nameof(DistributedTracingData))
 		{
