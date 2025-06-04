@@ -270,9 +270,9 @@ namespace Elastic.Apm.BackendComm
 				}
 			}
 
-			if (configuration.ApiKey != null)
+			if (!string.IsNullOrEmpty(configuration.ApiKey))
 				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("ApiKey", configuration.ApiKey);
-			else if (configuration.SecretToken != null)
+			else if (!string.IsNullOrEmpty(configuration.SecretToken))
 				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configuration.SecretToken);
 
 			return httpClient;
