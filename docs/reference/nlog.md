@@ -30,3 +30,22 @@ In order to use them, you need to add the [Elastic.Apm.NLog](https://www.nuget.o
 
 As you can see in the sample file above, you can reference the current transaction id with `${ElasticApmTransactionId}` and the trace id with `${ElasticApmTraceId}`.
 
+## Alternate [alternate]
+
+Rather than using a Layout Renderer such as `jsonlayout`, you may specify the Trace and Transaction ID in the Target Layout:
+
+```xml
+<nlog>
+  <extensions>
+    <add assembly="Elastic.Apm.NLog"/>
+  </extensions>
+  <targets>
+    <target name="console" 
+        type="console" 
+        layout="${ElasticApmTraceId}|${ElasticApmTransactionId}|${ElasticApmSpanId}|${message}" />
+  </targets>
+  <rules>
+    <logger name="*" minLevel="Debug" writeTo="Console" />
+  </rules>
+</nlog>
+```
