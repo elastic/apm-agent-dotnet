@@ -271,7 +271,7 @@ internal class Transaction : ITransaction
 				try
 				{
 					// Only if the parent does not already exist
-					if (_activity.ParentId != null && _activity.Parent != null)
+					if (_activity.ParentId == null && _activity.Parent == null)
 					{
 						_activity.SetParentId(
 							ActivityTraceId.CreateFromString(distributedTracingData.TraceId.AsSpan()),
