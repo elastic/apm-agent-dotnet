@@ -270,7 +270,7 @@ internal class Transaction : ITransaction
 				// This is so that the distributed tracing data will flow to any child activities
 				try
 				{
-					// Only if the parent does not already exists 
+					// Only if the parent does not already exist
 					if (_activity.ParentId != null && _activity.Parent != null)
 					{
 						_activity.SetParentId(
