@@ -8,7 +8,7 @@ mapped_pages:
 
 ## `CaptureBody` (performance) ([1.0.1]) [config-capture-body]
 
-[![dynamic config](/reference/images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables. If the request has a body and this setting is disabled, the body will be shown as [REDACTED]. This option is case-insensitive.
 
@@ -65,7 +65,7 @@ This setting can be changed after the agent starts.
 
 ## `CaptureHeaders` (performance) [config-capture-headers]
 
-[![dynamic config](/reference/images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 If set to `true`, the agent will capture request and response headers, including cookies.
 
@@ -85,7 +85,7 @@ Setting this to `false` reduces memory allocations, network bandwidth, and disk 
 
 ## `TraceContinuationStrategy` (performance) ([1.17.0]) [config-trace-continuation-strategy]
 
-[![dynamic config](/reference/images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Valid options: `continue`, `restart`, `restart_external`.
 
@@ -110,7 +110,7 @@ In order to handle this properly, the agent offers trace continuation strategies
 
 ## `TransactionIgnoreUrls` (performance) [config-transaction-ignore-urls]
 
-[![dynamic config](/reference/images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 This is used to restrict requests to certain URLs from being instrumented.
 
@@ -151,7 +151,7 @@ Changing this configuration will overwrite the default value.
 
 ## `TransactionNameGroups` ([1.27.0]) [config-transaction-name-groups]
 
-[![dynamic config](/reference/images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 With this option, you can group transaction names that contain dynamic parts with a wildcard expression. For example, the pattern `GET /user/*/cart` would consolidate transactions, such as `GET /users/42/cart` and `GET /users/73/cart` into a single transaction name `GET /users/*/cart`, hence reducing the transaction name cardinality.
 
@@ -183,7 +183,7 @@ When this setting is `true`, the agent also adds the header `elasticapm-tracepar
 
 ## `UsePathAsTransactionName` ([1.27.0]) [config-use-path-as-transaction-name]
 
-[![dynamic config](/reference/images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 If set to `true`, transaction names of unsupported or partially-supported frameworks will be in the form of `$method $path` instead of just `$method unknown route`.
 
@@ -218,7 +218,7 @@ This is useful when using windows authentication on a proxy, that routes APM age
 
 ## `BaggageToAttach` ([1.24]) [config-baggage-to-attach]
 
-[![dynamic config](/reference/images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Controls which baggage values are automatically attached to the given event (transaction, span, error). Baggage values are derived from the `baggage` header defined in the [W3C Baggage specification](https://www.w3.org/TR/baggage/). You can programmatically write and read baggage values via the [Activity API](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0). For more details, see [`our documentation on how to integrate with OpenTelemetry`](/reference/opentelemetry-bridge.md#baggage-api).
 

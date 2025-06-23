@@ -358,16 +358,16 @@ The following processes are **always** excluded from profiling by default.
 * RSPortal.exe
 * RSConfigTool.exe
 
-    `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` *(optional)*
-    :   A semi-colon separated list of APM service names to exclude from auto-instrumentation. Values defined are checked against the value of [`ELASTIC_APM_SERVICE_NAME`](/reference/config-core.md#config-service-name) environment variable.
+`ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` *(optional)*
+:   A semi-colon separated list of APM service names to exclude from auto-instrumentation. Values defined are checked against the value of [`ELASTIC_APM_SERVICE_NAME`](/reference/config-core.md#config-service-name) environment variable.
 
 
 The following service names are **always** excluded from profiling by default.
 
 * SQLServerReportingServices
 
-    `ELASTIC_OTEL_LOG_LEVEL` *(optional)*
-    :   The log level at which the profiler should log. Valid values are
+`OTEL_LOG_LEVEL` *(optional)*
+:   The log level at which the profiler should log. Valid values are
 
 * trace
 * debug
@@ -423,6 +423,4 @@ To unblock a DLL file on Windows, you can do the following:
 * In the General tab, look for the Security section at the bottom
 * Select the Unblock check box and click OK
 
-:::{image} images/unblock-profiler-dll.png
-:alt: Unblock DLL in Windows file properties
-:::
+![Unblock DLL in Windows file properties](images/unblock-profiler-dll.png)
