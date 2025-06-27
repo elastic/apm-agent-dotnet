@@ -69,7 +69,7 @@
           sudo dpkg -i packages-microsoft-prod.deb
           sudo apt-get update
           sudo apt-get install azure-functions-core-tools-4=4.0.6280-1
-
+            
       - name: 'Windows: Azure functions core tools'
         if: "${{ inputs.azure == 'true' && runner.os == 'Windows' }}"
         shell: cmd
