@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
+using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Newtonsoft.Json.Linq;
 
@@ -26,9 +27,13 @@ namespace HttpListenerSample
 				return;
 			}
 
+			Environment.SetEnvironmentVariable("ELASTIC_APM_LOG_FILE", "-");
+			Environment.SetEnvironmentVariable("ELASTIC_APM_LOG_LEVEL", "Debug");
+
 			//Enable outgoing HTTP request capturing with the elastic APM agent:
 			//small inside: with this the agent subscribes to the corresponding diagnosticsource events
 			Agent.Subscribe(new HttpDiagnosticsSubscriber());
+			Agent.Subscribe(new AspNetCoreDiagnosticSubscriber());
 
 			// Create a listener.
 			var listener = new HttpListener();

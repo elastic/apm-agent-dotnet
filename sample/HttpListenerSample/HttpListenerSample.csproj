@@ -7,10 +7,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\..\src\integrations\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json"/>
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 
 </Project>

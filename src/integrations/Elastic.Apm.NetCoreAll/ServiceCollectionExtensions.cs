@@ -63,18 +63,5 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	/// <param name="services">An <see cref="IServiceCollection"/> where services are to be registered.</param>
 	public static IServiceCollection AddAllElasticApm(this IServiceCollection services) =>
-		services.AddElasticApm(
-			new HttpDiagnosticsSubscriber(),
-			new AspNetCoreDiagnosticSubscriber(),
-			new EfCoreDiagnosticsSubscriber(),
-			new SqlClientDiagnosticSubscriber(),
-			new ElasticsearchDiagnosticsSubscriber(),
-			new GrpcClientDiagnosticSubscriber(),
-			new AzureMessagingServiceBusDiagnosticsSubscriber(),
-			new MicrosoftAzureServiceBusDiagnosticsSubscriber(),
-			new AzureBlobStorageDiagnosticsSubscriber(),
-			new AzureQueueStorageDiagnosticsSubscriber(),
-			new AzureFileShareStorageDiagnosticsSubscriber(),
-			new AzureCosmosDbDiagnosticsSubscriber(),
-			new MongoDbDiagnosticsSubscriber());
+		services.AddElasticApm(new AspNetCoreDiagnosticSubscriber());
 }

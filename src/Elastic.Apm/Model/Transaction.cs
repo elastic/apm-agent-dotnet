@@ -270,10 +270,13 @@ internal class Transaction : ITransaction
 				// This is so that the distributed tracing data will flow to any child activities
 				try
 				{
-					_activity.SetParentId(
-						ActivityTraceId.CreateFromString(distributedTracingData.TraceId.AsSpan()),
-						ActivitySpanId.CreateFromString(distributedTracingData.ParentId.AsSpan()),
-						distributedTracingData.FlagRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None);
+					if (_activity.ParentId != null && _activity.Parent != null)
+					{
+						_activity.SetParentId(
+							ActivityTraceId.CreateFromString(distributedTracingData.TraceId.AsSpan()),
+							ActivitySpanId.CreateFromString(distributedTracingData.ParentId.AsSpan()),
+							distributedTracingData.FlagRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None);
+					}
 
 					if (distributedTracingData.HasTraceState)
 						_activity.TraceStateString = distributedTracingData.TraceState.ToTextHeader();
