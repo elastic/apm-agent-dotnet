@@ -66,16 +66,19 @@ namespace Elastic.Apm.Model
 
 			//if context was not set prior we set it now to ensure we capture baggage for errors
 			//occuring during unsampled transactions
-			Context ??= transaction.Context.DeepCopy();
+			Context ??= transaction?.Context.DeepCopy();
 
-			foreach (var baggage in Activity.Current.Baggage)
+			if (Context != null)
 			{
-				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
-					continue;
+				foreach (var baggage in Activity.Current.Baggage)
+				{
+					if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
+						continue;
 
-				var newKey = $"baggage.{baggage.Key}";
-				var labels = Context.InternalLabels.Value;
-				labels[newKey] = baggage.Value;
+					var newKey = $"baggage.{baggage.Key}";
+					var labels = Context.InternalLabels.Value;
+					labels[newKey] = baggage.Value;
+				}
 			}
 		}
 
