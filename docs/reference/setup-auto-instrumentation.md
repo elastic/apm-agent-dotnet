@@ -378,9 +378,13 @@ The following service names are **always** excluded from profiling by default.
 
 The default value is `warn`. More verbose log levels like `trace` and `debug` can affect the runtime performance of profiler auto instrumentation, so are recommended *only* for diagnostics purposes.
 
-This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG`
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG` environment variable.
 
-`ELASTIC_OTEL_LOG_DIRECTORY` *(optional)*
+::::{note} 
+Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for OpenTelemetry SDKs, simplifying migrations.
+::::
+
+`OTEL_DOTNET_AUTO_LOG_DIRECTORY` *(optional)*
 :   The directory in which to write profiler log files. If unset, defaults to
 
     * `%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` on Windows
@@ -389,13 +393,15 @@ This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG`
 
 If the default directory cannot be written to for some reason, the profiler will try to write log files to a `logs` directory in the home directory specified by `ELASTIC_APM_PROFILER_HOME` environment variable.
 
-This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_DIR`
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_DIR` environment variable.
 
 ::::{important}
 The user account under which the profiler process runs must have permission to write to the destination log directory. Specifically, ensure that when running on IIS, the [AppPool identity](https://learn.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities) has write permissions in the target directory.
-
 ::::
 
+::::{note} 
+Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for OpenTelemetry SDKs, simplifying migrations.
+::::
 
 `ELASTIC_OTEL_LOG_TARGETS` *(optional)*
 :   A semi-colon separated list of targets for profiler logs. Valid values are
