@@ -14,12 +14,40 @@ namespace Elastic.Apm.AspNetCore
 	{
 		private readonly HttpRequest _request;
 
+		internal AspNetCoreHttpRequest(HttpRequest request, IConfiguration configuration)
+		{
+			_request = request;
+			if (configuration != null && configuration.CaptureBody == ConfigConsts.SupportedValues.CaptureBodyErrors)
+			{
+				_request?.EnableBuffering();
+			}
+		}
+
 		internal AspNetCoreHttpRequest(HttpRequest request) => _request = request;
 
 		public string ExtractBody(IConfiguration configuration, IApmLogger logger, out bool longerThanMaxLength)
 		{
 			longerThanMaxLength = false;
-			return _request?.ExtractRequestBody(configuration, out longerThanMaxLength);
+
+			var shouldBeBuffered = configuration?.CaptureBody == ConfigConsts.SupportedValues.CaptureBodyErrors;
+
+			// Enable buffering if CaptureBody is set to "errors"
+			if (shouldBeBuffered)
+			{
+				_request?.EnableBuffering();
+				// Reset stream position to the beginning in case the body was already read
+				_request.Body.Position = 0;
+			}
+
+			var bodyContent = _request?.ExtractRequestBody(configuration, out longerThanMaxLength);
+
+			// Reset stream position if buffering was enabled
+			if (shouldBeBuffered)
+			{
+				_request.Body.Position = 0;
+			}
+
+			return bodyContent;
 		}
 
 		public bool HasValue => _request != null;
