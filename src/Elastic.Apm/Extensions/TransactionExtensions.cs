@@ -34,10 +34,26 @@ namespace Elastic.Apm.Extensions
 			// Is request body already captured?
 			// We check transaction.IsContextCreated to avoid creating empty Context (that accessing transaction.Context directly would have done).
 			var hasContext = transaction is Transaction { IsContextCreated: true } || transaction.Context != null;
-			if (hasContext
-				&& transaction.Context.Request.Body != null
-				&& !ReferenceEquals(transaction.Context.Request.Body, Consts.Redacted))
+			var hasCapturedBody = hasContext && transaction.Context.Request != null && transaction.Context.Request.Body != null;
+
+			// If CaptureBody is set to "transactions" and it is an error then we shouldn't capture it.
+			// If the body has already been captured then it has to be redacted.
+			if(isForError
+				&& transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions))
+			{
+				if (hasCapturedBody)
+				{
+					transaction.Context.Request.Body = Consts.Redacted;
+				}
+
 				return;
+			}
+
+			if (hasCapturedBody
+				&& !ReferenceEquals(transaction.Context.Request.Body, Consts.Redacted))
+			{
+				return;
+			}
 
 			if (transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyOff))
 				body = Consts.Redacted;
