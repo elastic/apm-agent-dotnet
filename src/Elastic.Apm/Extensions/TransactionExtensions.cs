@@ -24,7 +24,9 @@ namespace Elastic.Apm.Extensions
 		internal static void CollectRequestBody(this ITransaction transaction, bool isForError, IHttpRequestAdapter httpRequest, IApmLogger logger)
 		{
 			if (!transaction.IsSampled)
+			{
 				return;
+			}
 
 			if (httpRequest == null || !httpRequest.HasValue)
 				return;
@@ -38,22 +40,16 @@ namespace Elastic.Apm.Extensions
 
 			// If CaptureBody is set to "transactions" and it is an error then we shouldn't capture it.
 			// If the body has already been captured then it has to be redacted.
-			if(isForError
-				&& transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions))
+			if (isForError && transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions))
 			{
 				if (hasCapturedBody)
-				{
 					transaction.Context.Request.Body = Consts.Redacted;
-				}
 
 				return;
 			}
 
-			if (hasCapturedBody
-				&& !ReferenceEquals(transaction.Context.Request.Body, Consts.Redacted))
-			{
+			if (hasCapturedBody && !ReferenceEquals(transaction.Context.Request.Body, Consts.Redacted))
 				return;
-			}
 
 			if (transaction.Configuration.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyOff))
 				body = Consts.Redacted;
