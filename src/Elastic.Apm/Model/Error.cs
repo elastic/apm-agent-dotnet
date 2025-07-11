@@ -64,7 +64,7 @@ namespace Elastic.Apm.Model
 				return;
 
 			//if context was not set prior we set it now to ensure we capture baggage for errors
-			//occuring during unsampled transactions.
+			//occuring during unsampled transactions
 			Context ??= transaction?.Context.DeepCopy();
 
 			foreach (var baggage in Activity.Current.Baggage)
