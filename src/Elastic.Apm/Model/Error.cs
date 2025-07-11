@@ -63,14 +63,17 @@ namespace Elastic.Apm.Model
 			if (Activity.Current == null || !Activity.Current.Baggage.Any())
 				return;
 
+			//if context was not set prior we set it now to ensure we capture baggage for errors
+			//occuring during unsampled transactions.
+			Context ??= (transaction?.Context.DeepCopy());
+
 			foreach (var baggage in Activity.Current.Baggage)
 			{
 				if (!WildcardMatcher.IsAnyMatch(Configuration.BaggageToAttach, baggage.Key))
 					continue;
 
-				//if context was not set prior we set it now to ensure we capture baggage for errors
-				//occuring during unsampled transactions. The context is created only if there is a baggage value to insert.
-				Context ??= (transaction?.Context.DeepCopy()) ?? new Context();
+				// The context is created only if there is a baggage value to insert.
+				Context ??= new Context();
 
 				var newKey = $"baggage.{baggage.Key}";
 				var labels = Context.InternalLabels.Value;
