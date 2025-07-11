@@ -120,7 +120,6 @@ public static class LogEnvironmentVariables
 	public const string ELASTIC_APM_LOG_LEVEL = nameof(ELASTIC_APM_LOG_LEVEL);
 	public const string ELASTIC_APM_LOG_DIRECTORY = nameof(ELASTIC_APM_LOG_DIRECTORY);
 
-
 	// profiler logs are deprecated in favor of ELASTIC_OTEL_*
 	public const string ELASTIC_APM_PROFILER_LOG = nameof(ELASTIC_APM_PROFILER_LOG);
 	public const string ELASTIC_APM_PROFILER_LOG_DIR = nameof(ELASTIC_APM_PROFILER_LOG_DIR);
