@@ -74,37 +74,33 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			}
 			switch (kv.Key)
 			{
-				case "Microsoft.AspNetCore.Diagnostics.UnhandledException": //Called when exception handler is registered
+				case "Microsoft.AspNetCore.Diagnostics.UnhandledException":
+					HandleException(_defaultHttpContextFetcher, _exceptionContextPropertyFetcher, kv, false);
+					break;
 				case "Microsoft.AspNetCore.Diagnostics.HandledException":
-					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextDiagnosticsUnhandledException))
-						return;
-					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception diagnosticsException))
-						return;
-					if (!ProcessingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var iDiagnosticsTransaction))
-						return;
-
-					if (iDiagnosticsTransaction is Transaction diagnosticsTransaction)
-					{
-						diagnosticsTransaction.CollectRequestBody(true, new AspNetCoreHttpRequest(httpContextDiagnosticsUnhandledException.Request), Logger);
-						diagnosticsTransaction.CaptureException(diagnosticsException);
-					}
-
+					HandleException(_defaultHttpContextFetcher, _exceptionContextPropertyFetcher, kv, true);
 					break;
 				case "Microsoft.AspNetCore.Hosting.UnhandledException": // Not called when exception handler registered
-					if (!(_hostDefaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextUnhandledException))
-						return;
-					if (!(_hostExceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception))
-						return;
-					if (!ProcessingRequests.TryGetValue(httpContextUnhandledException, out var iCurrentTransaction))
-						return;
-
-					if (iCurrentTransaction is Transaction currentTransaction)
-					{
-						currentTransaction.CollectRequestBody(true, new AspNetCoreHttpRequest(httpContextUnhandledException.Request), Logger);
-						currentTransaction.CaptureException(exception);
-					}
+					HandleException(_hostDefaultHttpContextFetcher, _hostExceptionContextPropertyFetcher, kv, false);
 					break;
 			}
+		}
+
+		private bool HandleException(PropertyFetcher propertyFetcher, PropertyFetcher exceptionPropertyFetcher, KeyValuePair<string, object> kv, bool isHandled)
+		{
+			if (propertyFetcher.Fetch(kv.Value) is not DefaultHttpContext exception)
+				return false;
+			if (exceptionPropertyFetcher.Fetch(kv.Value) is not Exception httpContextException)
+				return false;
+			if (!ProcessingRequests.TryGetValue(exception, out var iTransaction))
+				return false;
+			if (iTransaction is Transaction transaction)
+			{
+				transaction.CollectRequestBody(true, new AspNetCoreHttpRequest(exception.Request), Logger);
+				transaction.CaptureException(httpContextException, isHandled: isHandled);
+			}
+
+			return true;
 		}
 	}
 }
