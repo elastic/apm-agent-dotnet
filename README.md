@@ -1,6 +1,6 @@
 # apm-agent-dotnet
 
-[![Build Status](https://apm-ci.elastic.co/buildStatus/icon?job=apm-agent-dotnet/apm-agent-dotnet-mbp/main)](https://apm-ci.elastic.co/job/apm-agent-dotnet/job/apm-agent-dotnet-mbp/job/main/)
+[![Build Status](https://github.com/elastic/apm-agent-dotnet/actions/workflows/docs-build.yml/badge.svg)](https://github.com/elastic/apm-agent-dotnet/actions)
 [![codecov](https://codecov.io/gh/elastic/apm-agent-dotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/elastic/apm-agent-dotnet)
 
 Please fill out this survey to help us prioritize framework support:
