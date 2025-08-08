@@ -47,6 +47,12 @@
         if: "${{ inputs.rust == 'true' && runner.os == 'Linux' }}"
         shell: bash
         run: cargo install --force cargo-zigbuild
+
+      - name: Install terraform
+        if: "${{ runner.os == 'Linux' }}"
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: 1.11.2
       
       - uses: Swatinem/rust-cache@v2
         if: "${{ inputs.rust == 'true' }}"
