@@ -230,7 +230,6 @@ namespace Elastic.Apm.BackendComm
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
 #endif
-
 #if !NET462
 			httpClientHandler.ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
 			logger.Info()?.Log("CreateHttpClientHandler - Setting ServerCertificateCustomValidationCallback");
