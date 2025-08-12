@@ -216,18 +216,27 @@ namespace Elastic.Apm.BackendComm
 			// and runtime exceptions on .NET Framework versions <4.7.2, we don't attempt to set the certificate
 			// validation callback or SSL protocols on net462, which should also apply to .NET Framework <4.7.2 runtimes
 			// which resolve to that target.
+#if NET8_0_OR_GREATER
+			// The defaults are good out of the box in .NET 8 and upwards, so we don't need to set anything.
+			httpClientHandler.SslProtocols = SslProtocols.None;
+#elif NET3_0_OR_GREATER
+			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
+			httpClientHandler.SslProtocols |= SslProtocols.Tls13;
+			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
+#elif !NET462
+			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
+			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", httpClientHandler.SslProtocols);
+#else
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
+#endif
 #if !NET462
 			httpClientHandler.ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
 			logger.Info()?.Log("CreateHttpClientHandler - Setting ServerCertificateCustomValidationCallback");
-
-			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
-			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", httpClientHandler.SslProtocols);
 #else
 			// We don't set the ServerCertificateCustomValidationCallback on ServicePointManager here as it would
 			// apply to the whole AppDomain and that may not be desired. A consumer can set this themselves if they
 			// need custom validation behaviour.
-			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
 #endif
 			return httpClientHandler;
 		}
