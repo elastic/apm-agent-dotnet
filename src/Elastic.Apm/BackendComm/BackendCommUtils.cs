@@ -239,7 +239,6 @@ namespace Elastic.Apm.BackendComm
 			// apply to the whole AppDomain and that may not be desired. A consumer can set this themselves if they
 			// need custom validation behaviour.
 #endif
-
 			return httpClientHandler;
 		}
 
