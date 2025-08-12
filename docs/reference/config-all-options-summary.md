@@ -5,7 +5,7 @@ mapped_pages:
 
 # All options summary [config-all-options-summary]
 
-| Option name | [![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration) | Keywords |
+| Option name | [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration) | Keywords |
 | --- | --- | --- |
 | [`ApiKey`](/reference/config-reporter.md#config-api-key) | No | Reporter |
 | [`ApplicationNamespaces`](/reference/config-stacktrace.md#config-application-namespaces) | No | Stacktrace |

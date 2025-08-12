@@ -35,7 +35,7 @@ For applications running in IIS, [IIS application pool identities use *virtual* 
 ::::
 
 
-For more system metrics, consider installing [metricbeat](beats://reference/metricbeat/metricbeat.md) on your hosts.
+For more system metrics, consider installing [metricbeat](beats://reference/metricbeat/index.md) on your hosts.
 
 **`system.cpu.total.norm.pct`**
 :   type: scaled_float
@@ -161,7 +161,7 @@ The approximate accumulated collection elapsed time in milliseconds.
 
 ## Built-in application metrics [metrics-application]
 
-To power the [Time spent by span type](docs-content://solutions/observability/apps/transactions-2.md) graph, the agent collects summarized metrics about the timings of spans and transactions, broken down by span type.
+To power the [Time spent by span type](docs-content://solutions/observability/apm/transactions-ui.md) graph, the agent collects summarized metrics about the timings of spans and transactions, broken down by span type.
 
 **`transaction.duration`**
 :   type: simple timer

@@ -10,7 +10,7 @@ The .NET APM Agent can trace HTTP triggered function invocations in an [Azure Fu
 
 ## Prerequisites [_prerequisites]
 
-You need an APM Server to send APM data to. Follow the [APM Quick start](docs-content://solutions/observability/apps/get-started-with-apm.md) if you have not set one up yet. You will need your **APM server URL** and an APM server **secret token** (or **API key**) for configuring the APM agent below.
+You need an APM Server to send APM data to. Follow the [APM Quick start](docs-content://solutions/observability/apm/get-started.md) if you have not set one up yet. You will need your **APM server URL** and an APM server **secret token** (or **API key**) for configuring the APM agent below.
 
 You will also need an Azure Function app to monitor. If you do not have an existing one, you can follow [this Azure guide](https://learn.microsoft.com/en-us/azure/azure-functions/create-first-function-cli-csharp) to create one.
 
@@ -92,9 +92,7 @@ Open *Settings > Environment variables* for your Function App in the Azure Porta
 
 For example:
 
-:::{image} ../images/azure-functions-configuration.png
-:alt: Configuring the APM Agent in the Azure Portal
-:::
+![Configuring the APM Agent in the Azure Portal](images/azure-functions-configuration.png)
 
 
 ## Limitations [azure-functions-limitations]

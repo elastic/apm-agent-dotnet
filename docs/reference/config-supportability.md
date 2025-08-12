@@ -8,7 +8,7 @@ mapped_pages:
 
 ## `LogLevel` [config-log-level]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Sets the logging level for the agent.
 

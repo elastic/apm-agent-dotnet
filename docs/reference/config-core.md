@@ -8,7 +8,7 @@ mapped_pages:
 
 ## `Recording` ([1.7.0]) [config-recording]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 A Boolean specifying if the agent should be recording or not. When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics. When not recording, the agent works as a noop, where it does not collect data or communicate with the APM server, except for polling the central configuration endpoint. This is a reversible switch, so the agent threads are not killed when deactivated, but they will be mostly idle in this state, so the overhead should be negligible.
 
@@ -112,7 +112,7 @@ This allows for the reported hostname to be manually specified. If this is not s
 
 The name of the environment that this service is deployed in, e.g. "production" or "staging".
 
-Environments allow you to easily filter data on a global level in the APM app. It’s important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apps/filter-application-data.md#apm-filter-your-data-service-environment-filter) in the Kibana UI for more information.
+Environments allow you to easily filter data on a global level in the APM app. It’s important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apm/filter-data.md#apm-filter-your-data-service-environment-filter) in the Kibana UI for more information.
 
 ::::{note}
 This feature is fully supported in the APM app in Kibana versions >= 7.2. You must use the query bar to filter for a specific environment in versions prior to 7.2.
@@ -135,7 +135,7 @@ On ASP.NET Core application the agent uses [EnvironmentName from IHostingEnviron
 
 ## `TransactionSampleRate` [config-transaction-sample-rate]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 By default, the agent samples every transaction (e.g. a request to your service). To reduce overhead and storage requirements, set the sample rate to a value between 0.0 and 1.0. The agent will still record the overall time and result for unsampled transactions, but no context information, labels, or spans will be recorded.
 
@@ -157,7 +157,7 @@ This setting can be changed after the agent starts.
 
 ## `TransactionMaxSpans` (performance) ([1.1.1]) [config-transaction-max-spans]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 This limits the amount of spans that are recorded per transaction. This is helpful when a transaction creates a very high amount of spans, for example, thousands of SQL queries. Setting an upper limit helps prevent overloading the Agent and APM server in these edge cases.
 
@@ -179,7 +179,7 @@ This setting can be changed after agent starts.
 
 ## `CentralConfig` ([1.1]) [config-central-config]
 
-If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest [APM Agent configuration](docs-content://solutions/observability/apps/apm-agent-central-configuration.md).
+If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest [APM Agent configuration](docs-content://solutions/observability/apm/apm-agent-central-configuration.md).
 
 | Environment variable name | IConfiguration key |
 | --- | --- |
@@ -192,7 +192,7 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 
 ## `SanitizeFieldNames` ([1.2]) [config-sanitize-field-names]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Sometimes, sanitizing, i.e., redacting sensitive data sent to Elastic APM, is necessary. This configuration accepts a comma-separated list of wildcard patterns of field names that should be sanitized. These apply to HTTP headers for requests and responses, cookies and `application/x-www-form-urlencoded` data.
 
@@ -243,7 +243,7 @@ This option requires APM Server 7.2 or later. It will have no effect on older ve
 
 ## `SpanCompressionEnabled` ([1.14]) [config-span-compression-enabled]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Setting this option to true will enable span compression feature. Span compression reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that some information such as DB statements of all the compressed spans will not be collected.
 
@@ -258,7 +258,7 @@ Setting this option to true will enable span compression feature. Span compressi
 
 ## `SpanCompressionExactMatchMaxDuration` ([1.14]) [config-span-compression-exact-match-max-duration]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Consecutive spans that are exact match and that are under this threshold will be compressed into a single composite span. This option does not apply to composite spans. This reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that the DB statements of all the compressed spans will not be collected.
 
@@ -273,7 +273,7 @@ Consecutive spans that are exact match and that are under this threshold will be
 
 ## `SpanCompressionSameKindMaxDuration` ([1.14]) [config-span-compression-same-kind-max-duration]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Consecutive spans to the same destination that are under this threshold will be compressed into a single composite span. This option does not apply to composite spans. This reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that the DB statements of all the compressed spans will not be collected.
 
@@ -288,7 +288,7 @@ Consecutive spans to the same destination that are under this threshold will be 
 
 ## `ExitSpanMinDuration` ([1.14]) [config-exit-span-min-duration]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded. If the exit span is equal or greater the threshold, it should be kept. In some cases exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services, such as outgoing HTTP requests, can’t be discarded. However, external calls that don’t propagate context, such as calls to a database, can be discarded using this threshold. Additionally, spans that lead to an error can’t be discarded.
 

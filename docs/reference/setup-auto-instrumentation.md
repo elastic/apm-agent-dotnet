@@ -85,7 +85,7 @@ The general steps in configuring profiler auto instrumentation are as follows; S
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
     2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+    3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
     ```sh
@@ -100,7 +100,7 @@ The general steps in configuring profiler auto instrumentation are as follows; S
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
     2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+    3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
     ```sh
@@ -115,7 +115,7 @@ The general steps in configuring profiler auto instrumentation are as follows; S
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
     2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+    3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
 Ensure you start your application in a context where the set environment variables are visible.
@@ -207,7 +207,7 @@ Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\<service-name> -Name Env
 
 1. `<unzipped directory>` is the directory to which the zip file was unzipped.
 2. The URL of the APM server intake to which traces and metrics should be sent.
-3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 4. `<service-name>` is the name of the Windows service.
 
 
@@ -248,7 +248,7 @@ $environment.Keys | ForEach-Object {
 2. `<unzipped directory>` is the full path to the directory in which the zip file was unzipped
 3. Forces assemblies **not** to be loaded domain-neutral. There is currently a limitation where Profiler auto-instrumentation cannot instrument assemblies when they are loaded domain-neutral. This limitation is expected to be removed in future, but for now, can be worked around by setting this environment variable. See the [Microsoft documentation for further details](https://docs.microsoft.com/en-us/dotnet/framework/app-domains/application-domains#the-complus_loaderoptimization-environment-variable).
 4. The URL of the APM server intake to which traces and metrics should be sent.
-5. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+5. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
 ```powershell
@@ -273,7 +273,7 @@ $environment.Keys | ForEach-Object {
 1. `<application-pool>` is the name of the Application Pool your application uses. For example, `IIS APPPOOL\DefaultAppPool`.
 2. `<unzipped directory>` is the full path to the directory in which the zip file was unzipped.
 3. The URL of the APM server intake to which traces and metrics should be sent.
-4. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+4. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
 ::::{important}
@@ -306,10 +306,10 @@ ELASTIC_APM_SECRET_TOKEN=<secret token> <3>
 
 1. `<unzipped directory>` is the directory to which the zip file was unzipped.
 2. The URL of the APM server intake to which traces and metrics should be sent.
-3. The [secret token](docs-content://solutions/observability/apps/secret-token.md) used by the APM Agent to authenticate with APM server.
+3. The [secret token](docs-content://solutions/observability/apm/secret-token.md) used by the APM Agent to authenticate with APM server.
 
 
-Then adding an [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/systemd.service.md#Command%20lines) entry to the service’s configuration file that references the path to the environment.env file
+Then adding an [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/systemd.service.html#Command%20lines) entry to the service’s configuration file that references the path to the environment.env file
 
 ```sh
 [Service]
@@ -358,16 +358,16 @@ The following processes are **always** excluded from profiling by default.
 * RSPortal.exe
 * RSConfigTool.exe
 
-    `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` *(optional)*
-    :   A semi-colon separated list of APM service names to exclude from auto-instrumentation. Values defined are checked against the value of [`ELASTIC_APM_SERVICE_NAME`](/reference/config-core.md#config-service-name) environment variable.
+`ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` *(optional)*
+:   A semi-colon separated list of APM service names to exclude from auto-instrumentation. Values defined are checked against the value of [`ELASTIC_APM_SERVICE_NAME`](/reference/config-core.md#config-service-name) environment variable.
 
 
 The following service names are **always** excluded from profiling by default.
 
 * SQLServerReportingServices
 
-    `ELASTIC_OTEL_LOG_LEVEL` *(optional)*
-    :   The log level at which the profiler should log. Valid values are
+`OTEL_LOG_LEVEL` *(optional)*
+:   The log level at which the profiler should log. Valid values are
 
 * trace
 * debug
@@ -378,9 +378,13 @@ The following service names are **always** excluded from profiling by default.
 
 The default value is `warn`. More verbose log levels like `trace` and `debug` can affect the runtime performance of profiler auto instrumentation, so are recommended *only* for diagnostics purposes.
 
-This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG`
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG` environment variable.
 
-`ELASTIC_OTEL_LOG_DIRECTORY` *(optional)*
+::::{note} 
+Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for OpenTelemetry SDKs, simplifying migrations.
+::::
+
+`OTEL_DOTNET_AUTO_LOG_DIRECTORY` *(optional)*
 :   The directory in which to write profiler log files. If unset, defaults to
 
     * `%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` on Windows
@@ -389,13 +393,15 @@ This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG`
 
 If the default directory cannot be written to for some reason, the profiler will try to write log files to a `logs` directory in the home directory specified by `ELASTIC_APM_PROFILER_HOME` environment variable.
 
-This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_DIR`
+This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_DIR` environment variable.
 
 ::::{important}
 The user account under which the profiler process runs must have permission to write to the destination log directory. Specifically, ensure that when running on IIS, the [AppPool identity](https://learn.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities) has write permissions in the target directory.
-
 ::::
 
+::::{note} 
+Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for OpenTelemetry SDKs, simplifying migrations.
+::::
 
 `ELASTIC_OTEL_LOG_TARGETS` *(optional)*
 :   A semi-colon separated list of targets for profiler logs. Valid values are
@@ -423,6 +429,4 @@ To unblock a DLL file on Windows, you can do the following:
 * In the General tab, look for the Security section at the bottom
 * Select the Unblock check box and click OK
 
-:::{image} ../images/unblock-profiler-dll.png
-:alt: Unblock DLL in Windows file properties
-:::
+![Unblock DLL in Windows file properties](images/unblock-profiler-dll.png)

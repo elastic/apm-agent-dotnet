@@ -10,7 +10,7 @@ Upgrades between minor versions of the agent, like from 1.1 to 1.2 are always ba
 Before upgrading the agent, be sure to review the:
 
 * [Agent release notes](/release-notes/index.md)
-* [Agent and Server compatibility chart](docs-content://solutions/observability/apps/apm-agent-compatibility.md)
+* [Agent and Server compatibility chart](docs-content://solutions/observability/apm/apm-agent-compatibility.md)
 
 
 ## End of life dates [end-of-life-dates]

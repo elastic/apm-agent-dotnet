@@ -39,7 +39,7 @@ Namespaces are checked with `string.StartsWith()`, so "System." matches all Syst
 
 ## `StackTraceLimit` (performance) [config-stack-trace-limit]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 Setting this to `0` disables stack trace collection. Any positive integer value will be used as the maximum number of frames to collect. Setting it to -1 means that all frames will be collected.
 
@@ -59,7 +59,7 @@ If you would like to disable stack trace capturing only for spans, but still cap
 
 ### `SpanStackTraceMinDuration` (performance) [config-span-stack-trace-min-duration]
 
-[![dynamic config](../images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
 In its default settings, the APM agent collects a stack trace for every recorded span with duration longer than `5ms`. While this is very helpful to find the exact place in your code that causes the span, collecting this stack trace does have some overhead. When setting this option to zero (regardless of the time unit), like `0ms`, stack traces are collected for all spans. Setting it to a positive value, e.g. `5ms`, limits stack trace collection to spans with durations equal to or longer than the given value, e.g. 5 milliseconds.
 
