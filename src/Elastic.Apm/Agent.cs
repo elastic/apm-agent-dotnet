@@ -81,7 +81,7 @@ namespace Elastic.Apm
 				TransactionFilters.ForEach(f => sender.AddFilter(f));
 				SpanFilters.ForEach(f => sender.AddFilter(f));
 				agent.Logger?.Trace()
-					?.Log(@"Initialization - Added filters to agent (errors:{{ErrorFilters}}, transactions:{TransactionFilters} spans:{SpanFilters}",
+					?.Log(@"Initialization - Added filters to agent (errors:{ErrorFilters}, transactions:{TransactionFilters} spans:{SpanFilters}",
 						ErrorFilters.Count, TransactionFilters.Count, SpanFilters.Count);
 
 				return agent;

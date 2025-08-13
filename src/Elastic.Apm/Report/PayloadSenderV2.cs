@@ -429,7 +429,7 @@ namespace Elastic.Apm.Report
 #else
 							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
 #endif
-							if (intakeResponse.Errors?.Count > 0)
+							if ((intakeResponse?.Errors?.Count ?? 0) > 0)
 								message = string.Join(", ", intakeResponse.Errors.Select(e => e.Message).Distinct());
 						}
 						_logger?.Error()
