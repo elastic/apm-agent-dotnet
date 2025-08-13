@@ -17,13 +17,12 @@ namespace Elastic.Apm.AspNetCore
 		internal AspNetCoreHttpRequest(HttpRequest request, IConfiguration configuration)
 		{
 			_request = request;
-			if (configuration != null && configuration.CaptureBody == ConfigConsts.SupportedValues.CaptureBodyErrors)
+
+			if (configuration?.CaptureBody == ConfigConsts.SupportedValues.CaptureBodyErrors)
 			{
 				_request?.EnableBuffering();
 			}
 		}
-
-		internal AspNetCoreHttpRequest(HttpRequest request) => _request = request;
 
 		public string ExtractBody(IConfiguration configuration, IApmLogger logger, out bool longerThanMaxLength)
 		{
@@ -34,7 +33,6 @@ namespace Elastic.Apm.AspNetCore
 			// Enable buffering if CaptureBody is set to "errors"
 			if (shouldBeBuffered)
 			{
-				_request?.EnableBuffering();
 				// Reset stream position to the beginning in case the body was already read
 				_request.Body.Position = 0;
 			}
