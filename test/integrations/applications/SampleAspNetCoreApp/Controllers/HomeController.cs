@@ -285,6 +285,13 @@ namespace SampleAspNetCoreApp.Controllers
 		public IActionResult Send([FromBody] BaseReportFilter<SendMessageFilter> filter) => filter == null ? StatusCode(500) : Ok();
 
 		/// <summary>
+		/// A test case to make sure that CaptureBoby is working as expected in case of failure.
+		/// </summary>
+		/// <returns>HTTP500</returns>
+		[HttpPost("api/Home/SendError")]
+		public IActionResult SendError([FromBody] BaseReportFilter<SendMessageFilter> filter) => throw new Exception("This is a post method test exception!");
+
+		/// <summary>
 		/// A test case to make sure that setting <see cref="IExecutionSegment.Outcome"/> manually is not overwritten by auto instrumentation.
 		/// </summary>
 		/// <returns></returns>
