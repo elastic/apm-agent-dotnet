@@ -38,7 +38,7 @@
     <PackageVersion Include="Grpc.Tools" Version="2.62.0" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
     <PackageVersion Include="JetBrains.Profiler.Api" Version="1.4.0" />
     <PackageVersion Include="JunitXml.TestLogger" Version="4.1.0" PrivateAssets="All" />
-    <PackageVersion Include="MongoDB.Driver" Version="3.3.0" />
+    <PackageVersion Include="MongoDB.Driver" Version="3.0.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="MySql.Data" Version="8.0.32.1" />
     <PackageVersion Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
