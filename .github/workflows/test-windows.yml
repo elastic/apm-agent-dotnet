@@ -45,28 +45,25 @@ jobs:
       - name: Format
         run: ./build.bat format
   
-  # Skipping due to this failing consistently - See https://github.com/elastic/apm-agent-dotnet/issues/2524
-  # TODO - Re-enable when possible.
   #required step
-  # tests:
-  #   runs-on: windows-2022
-  #   needs: [ 'format' ]
-  #   timeout-minutes: 30
+  tests:
+    runs-on: windows-2022
+    needs: [ 'format' ]
+    timeout-minutes: 30
         
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Bootstrap Action Workspace
-  #       uses: ./.github/workflows/bootstrap
-  #       with: 
-  #         tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap Action Workspace
+        uses: ./.github/workflows/bootstrap
+        with: 
+          tc-cloud: ${{ secrets.TC_CLOUD_TOKEN }}
 
-  #     - name: 'Tests: Unit'
-  #       run: ./build.bat test --test-suite unit
+      - name: 'Tests: Unit'
+        run: ./build.bat test --test-suite unit
         
   integrations-tests:
     runs-on: windows-2022
-    #needs: [ 'format', 'tests' ]
-    needs: [ 'tests' ]
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -87,8 +84,7 @@ jobs:
   
   startup-hook-tests:
     runs-on: windows-2022
-    #needs: [ 'format', 'tests' ]
-    needs: [ 'tests' ]
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -99,8 +95,7 @@ jobs:
 
   profiler-tests:
     runs-on: windows-2022
-    #needs: [ 'format', 'tests' ]
-    needs: [ 'tests' ]
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -114,8 +109,7 @@ jobs:
         
   test-iis:
     runs-on: windows-latest
-    #needs: [ 'format', 'tests' ]
-    needs: [ 'tests' ]
+    needs: [ 'format', 'tests' ]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Action Workspace
@@ -142,11 +136,7 @@ jobs:
             /p:EnforceCodeStyleInBuild=false /p:_SkipUpgradeNetAnalyzersNuGetWarning=true /p:EnableNETAnalyzers=false ^
              -clp:ForceConsoleColor -clp:Summary -verbosity:minimal ^
             /t:Build /p:Configuration=Release /restore
-          
-      #- name: Discover Windows Features
-      # run: |
-      #    DISM /online /get-features /format:table
-      
+                
       # TODO See if this really needed 
       - name: Enable Windows Features
         run: |
