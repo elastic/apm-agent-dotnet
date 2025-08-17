@@ -24,7 +24,7 @@ jobs:
       SUFFIX_APM_AGENT: ".zip"
       SUFFIX_APM_PROFILER: "-linux-x64.zip"
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Bootstrap Action Workspace
       id: bootstrap
       uses: ./.github/workflows/bootstrap
