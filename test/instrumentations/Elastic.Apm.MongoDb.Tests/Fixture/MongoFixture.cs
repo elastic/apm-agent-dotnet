@@ -19,7 +19,7 @@ namespace Elastic.Apm.MongoDb.Tests.Fixture
 		where TConfiguration : IMongoConfiguration<TDocument>, new()
 	{
 		private readonly IMessageSink _sink;
-		private const string MongoDbImage = "mongo:4.4.5";
+		private const string MongoDbImage = "mongo:8.0.12";
 
 		private readonly TConfiguration _configuration;
 

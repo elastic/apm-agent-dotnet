@@ -8,7 +8,7 @@ mapped_pages:
 
 ## Quick start [_quick_start_14]
 
-Instrumentation for MongoDB works with the official MongoDb.Driver 2.4.4+ driver packages. A prerequisite for auto instrumentation is to configure the `MongoClient` with `MongoDbEventSubscriber`:
+Instrumentation for MongoDB works with the official MongoDb.Driver 3.0.0+ driver packages. A prerequisite for auto instrumentation is to configure the `MongoClient` with `MongoDbEventSubscriber`:
 
 ```csharp
 var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);

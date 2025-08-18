@@ -68,7 +68,7 @@ Automatic instrumentation is supported for the following data access technologie
 | Elasticsearch [1.6] | Elasticsearch.Net 7.6.0+ | [NuGet package](/reference/setup-elasticsearch.md) |
 | NEST 7.6.0+ |
 | MySQL [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
-| MongoDB [1.9] | MongoDB.Driver 2.19.0+ | [NuGet package](/reference/setup-mongo-db.md) |
+| MongoDB | MongoDB.Driver 3.0.0+ | [NuGet package](/reference/setup-mongo-db.md) |
 | Oracle [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 | PostgreSQL [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 | Redis [1.8] | StackExchange.Redis 2.0.495+ | [NuGet package](/reference/setup-stackexchange-redis.md) |
