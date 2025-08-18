@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -283,6 +282,206 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// Assert
 			result.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToAllAndSuccessfulCall_Should_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration());
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/Send", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(10));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)200);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be(body);
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToTransactionsAndSuccessfulCall_Should_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyTransactions));
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/Send", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(3));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)200);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be(body);
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToOffAndSuccessfulCall_ShouldNot_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyOff));
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/Send", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(3));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)200);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be("[REDACTED]");
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToErrorsAndSuccessfulCall_ShouldNot_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyErrors));
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/Send", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(3));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)200);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().BeNull();
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToAllAndFailingCall_Should_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration());
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/SendError", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(3));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)500);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be(body);
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToErrorsAndFailingCall_Should_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyErrors));
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/SendError", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(3));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)500);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be(body);
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToTransactionsAndFailingCall_ShouldNot_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyTransactions));
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/SendError", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(3));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)500);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be("[REDACTED]");
+		}
+
+		[Fact]
+		public async Task When_CaptureBodyConfigurationToOffAndFailingCall_ShouldNot_CaptureBody()
+		{
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyOff));
+
+			// build test data, which we send to the sample app
+			var data = new { Name = "John" };
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			// send data to the sample app
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/SendError", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			// wait for the payload sender to receive the transaction
+			sutEnv.MockPayloadSender.WaitForTransactions(TimeSpan.FromSeconds(3));
+
+			// make sure the sample app received the data
+			result.StatusCode.Should().Be((HttpStatusCode)500);
+
+			// and make sure the data is captured by the agent
+			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
+			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be("[REDACTED]");
 		}
 
 		private static IEnumerable<OptionsTestVariant> BuildOptionsTestVariants()

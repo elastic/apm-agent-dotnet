@@ -96,7 +96,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 				return false;
 			if (iTransaction is Transaction transaction)
 			{
-				transaction.CollectRequestBody(true, new AspNetCoreHttpRequest(exception.Request), Logger);
+				transaction.CollectRequestBody(true, new AspNetCoreHttpRequest(exception.Request, transaction.Configuration), Logger);
 				transaction.CaptureException(httpContextException, isHandled: isHandled);
 			}
 
