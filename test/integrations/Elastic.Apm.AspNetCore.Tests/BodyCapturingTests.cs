@@ -287,7 +287,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToAllAndSuccessfulCall_Should_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("all"));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
@@ -312,7 +312,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToTransactionsAndSuccessfulCall_Should_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("transactions"));
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyTransactions));
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
@@ -337,7 +337,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToOffAndSuccessfulCall_ShouldNot_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("off"));
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyOff));
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
@@ -362,7 +362,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToErrorsAndSuccessfulCall_ShouldNot_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("errors"));
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyErrors));
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
@@ -387,7 +387,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToAllAndFailingCall_Should_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("all"));
+			var sutEnv = StartSutEnv(CreateConfiguration());
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
@@ -412,7 +412,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToErrorsAndFailingCall_Should_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("errors"));
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyErrors));
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
@@ -437,7 +437,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToTransactionsAndFailingCall_ShouldNot_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("transactions"));
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyTransactions));
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
@@ -462,7 +462,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task When_CaptureBodyConfigurationToOffAndFailingCall_ShouldNot_CaptureBody()
 		{
-			var sutEnv = StartSutEnv(CreateConfiguration("off"));
+			var sutEnv = StartSutEnv(CreateConfiguration(ConfigConsts.SupportedValues.CaptureBodyOff));
 
 			// build test data, which we send to the sample app
 			var data = new { Name = "John" };
