@@ -54,6 +54,7 @@ namespace Elastic.Apm.Config
 			public const bool UsePathAsTransactionName = true;
 			public const bool VerifyServerCert = true;
 			public const string TraceContinuationStrategy = "continue";
+			public const ProxyOption ProxyOption = null;
 
 			public static readonly IReadOnlyCollection<string> DefaultApplicationNamespaces = new List<string>().AsReadOnly();
 
