@@ -102,6 +102,18 @@ namespace Elastic.Apm.Config
 		VerifyServerCert,
 		/// <inheritdoc cref="IConfigurationReader.ServerUrls"/>
 		ServerUrls,
+		/// <summary>
+		/// The proxy URL for the APM server.
+		/// </summary>
+		ProxyUrl,
+		/// <summary>
+		/// The proxy user name for the APM server.
+		/// </summary>
+		ProxyUserName,
+		/// <summary>
+		/// The proxy password for the APM server.
+		/// </summary>
+		ProxyPassword,
 		/// <inheritdoc cref="IConfigurationReader.SpanFramesMinDurationInMilliseconds"/>
 		SpanFramesMinDuration,
 		/// <inheritdoc cref="IConfigurationReader.TraceContextIgnoreSampledFalse"/>
@@ -190,6 +202,9 @@ namespace Elastic.Apm.Config
 				UsePathAsTransactionName => EnvPrefix + "USE_PATH_AS_TRANSACTION_NAME",
 				VerifyServerCert => EnvPrefix + "VERIFY_SERVER_CERT",
 				FullFrameworkConfigurationReaderType => EnvPrefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE",
+				ProxyUrl => EnvPrefix + "PROXY_URL",
+				ProxyUserName => EnvPrefix + "PROXY_USERNAME",
+				ProxyPassword => EnvPrefix + "PROXY_PASSWORD",
 				_ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
 			};
 
@@ -244,6 +259,9 @@ namespace Elastic.Apm.Config
 				SpanFramesMinDuration => KeyPrefix + nameof(SpanFramesMinDuration),
 				TraceContextIgnoreSampledFalse => KeyPrefix + nameof(TraceContextIgnoreSampledFalse),
 				FullFrameworkConfigurationReaderType => KeyPrefix + nameof(FullFrameworkConfigurationReaderType),
+				ProxyUrl => KeyPrefix + nameof(ProxyUrl),
+				ProxyUserName => KeyPrefix + nameof(ProxyUserName),
+				ProxyPassword => KeyPrefix + nameof(ProxyPassword),
 				_ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
 			};
 	}

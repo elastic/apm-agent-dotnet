@@ -129,5 +129,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public bool UsePathAsTransactionName => _dynamicConfiguration?.UsePathAsTransactionName ?? _mainConfiguration.UsePathAsTransactionName;
 
 		public bool VerifyServerCert => _mainConfiguration.VerifyServerCert;
+
+		public ProxyOption ProxyOption => _mainConfiguration.ProxyOption;
 	}
 }
