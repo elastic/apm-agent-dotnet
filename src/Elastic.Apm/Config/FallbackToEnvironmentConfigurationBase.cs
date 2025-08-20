@@ -147,10 +147,9 @@ namespace Elastic.Apm.Config
 			ServerUrl = !string.IsNullOrEmpty(urlConfig.Value) ? ParseServerUrl(urlConfig) : ServerUrls.FirstOrDefault();
 #pragma warning restore CS0618
 
-			var proxyUrl = ParseProxyServerUrl(Lookup(ConfigurationOption.ProxyUrl));
-			var proxyUserName = Lookup(ConfigurationOption.ProxyUserName)?.Value;
-			var proxyPassword = Lookup(ConfigurationOption.ProxyPassword)?.Value;
-			ProxyOption = ProxyOption.Create(proxyUrl, proxyUserName, proxyPassword);
+			ProxyUrl = ParseProxyServerUrl(Lookup(ConfigurationOption.ProxyUrl));
+			ProxyUserName = Lookup(ConfigurationOption.ProxyUserName)?.Value;
+			ProxyPassword = Lookup(ConfigurationOption.ProxyPassword)?.Value;
 		}
 
 		private IConfigurationKeyValueProvider KeyValueProvider { get; }
@@ -260,6 +259,10 @@ namespace Elastic.Apm.Config
 
 		public bool OpenTelemetryBridgeEnabled { get; }
 
-		public ProxyOption ProxyOption { get; }
+		public Uri ProxyUrl { get; }
+
+		public string ProxyUserName { get; }
+
+		public string ProxyPassword { get; }
 	}
 }

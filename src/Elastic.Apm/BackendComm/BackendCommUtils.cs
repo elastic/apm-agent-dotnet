@@ -295,13 +295,13 @@ namespace Elastic.Apm.BackendComm
 
 		private static void ConfigureHttpProxy(HttpClientHandler httpClientHandler, IConfiguration configuration)
 		{
-			var proxyOption = configuration.ProxyOption;
+			var proxyUrl = configuration.ProxyUrl;
 
-			if (proxyOption.IsEnabled)
+			if (proxyUrl != null)
 			{
-				var proxy = new WebProxy(proxyOption.Url)
+				var proxy = new WebProxy(proxyUrl)
 				{
-					Credentials = new NetworkCredential(proxyOption.UserName, proxyOption.Password),
+					Credentials = new NetworkCredential(configuration.ProxyUserName, configuration.ProxyPassword),
 
 				};
 

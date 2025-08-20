@@ -439,8 +439,18 @@ namespace Elastic.Apm.Config
 		bool VerifyServerCert { get; }
 
 		/// <summary>
-		/// The proxy configuration used by the agent to communicate with the APM server.
+		/// The URL of the proxy server used by the agent to communicate with the APM server.
 		/// </summary>
-		ProxyOption ProxyOption { get; }
+		Uri ProxyUrl { get; }
+
+		/// <summary>
+		/// The user name used by the agent to authenticate with the proxy server.
+		/// </summary>
+		string ProxyUserName { get; }
+
+		/// <summary>
+		/// The password used by the agent to authenticate with the proxy server.
+		/// </summary>
+		string ProxyPassword { get; }
 	}
 }

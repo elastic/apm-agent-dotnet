@@ -130,6 +130,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		public bool VerifyServerCert => _mainConfiguration.VerifyServerCert;
 
-		public ProxyOption ProxyOption => _mainConfiguration.ProxyOption;
+		public Uri ProxyUrl => _mainConfiguration.ProxyUrl;
+
+		public string ProxyUserName => _mainConfiguration.ProxyUserName;
+
+		public string ProxyPassword => _mainConfiguration.ProxyPassword;
 	}
 }

@@ -340,7 +340,7 @@ namespace Elastic.Apm.Config
 
 		protected Uri ParseProxyServerUrl(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value))
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
 			{
 				return null;
 			}
@@ -348,7 +348,7 @@ namespace Elastic.Apm.Config
 			if (TryParseUri(kv.Value, out var uri))
 				return uri;
 
-			_logger?.Error()?.Log("Failed parsing server URL for proxy from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, kv.Value);
+			_logger?.Error()?.Log("Failed parsing proxy server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, kv.Value);
 
 			return null;
 		}
