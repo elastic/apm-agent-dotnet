@@ -151,10 +151,6 @@ namespace Elastic.Apm.Config
 			var proxyUserName = Lookup(ConfigurationOption.ProxyUserName)?.Value;
 			var proxyPassword = Lookup(ConfigurationOption.ProxyPassword)?.Value;
 			ProxyOption = ProxyOption.Create(proxyUrl, proxyUserName, proxyPassword);
-
-			// Set the service name to the default if not set
-			if (string.IsNullOrEmpty(ServiceName))
-				ServiceName = defaults?.ServiceName ?? "unknown";
 		}
 
 		private IConfigurationKeyValueProvider KeyValueProvider { get; }
