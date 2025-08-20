@@ -125,6 +125,9 @@ namespace Elastic.Apm.Tests.Utilities
 				ConfigurationOption.UsePathAsTransactionName => usePathAsTransactionName,
 				ConfigurationOption.VerifyServerCert => verifyServerCert,
 				ConfigurationOption.FullFrameworkConfigurationReaderType => null,
+				ConfigurationOption.ProxyUrl => null,
+				ConfigurationOption.ProxyUserName => null,
+				ConfigurationOption.ProxyPassword => null,
 				_ => throw new Exception($"{nameof(MockConfiguration)} does not have implementation for configuration : {key}")
 			})
 		)
