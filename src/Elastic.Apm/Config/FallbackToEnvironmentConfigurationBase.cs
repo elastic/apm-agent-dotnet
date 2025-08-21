@@ -148,8 +148,8 @@ namespace Elastic.Apm.Config
 #pragma warning restore CS0618
 
 			ProxyUrl = ParseProxyServerUrl(Lookup(ConfigurationOption.ProxyUrl));
-			ProxyUserName = Lookup(ConfigurationOption.ProxyUserName)?.Value;
-			ProxyPassword = Lookup(ConfigurationOption.ProxyPassword)?.Value;
+			ProxyUserName = ParseProxyUserName(Lookup(ConfigurationOption.ProxyUserName));
+			ProxyPassword = ParseProxyPassword(Lookup(ConfigurationOption.ProxyPassword));
 		}
 
 		private IConfigurationKeyValueProvider KeyValueProvider { get; }

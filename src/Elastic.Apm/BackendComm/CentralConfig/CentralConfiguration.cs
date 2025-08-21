@@ -100,12 +100,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal double? TransactionSampleRate { get; private set; }
 
-		internal string ProxyUrl { get; private set; }
-
-		internal string ProxyUserName { get; private set; }
-
-		internal string ProxyPassword { get; private set; }
-
 		internal bool? UsePathAsTransactionName { get; private set; }
 
 		private CentralConfigurationKeyValue BuildKv(DynamicConfigurationOption option, string value) => new(option, value, Description);

@@ -353,6 +353,22 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
+		protected static string ParseProxyUserName(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				return null;
+
+			return kv.Value;
+		}
+
+		protected static string ParseProxyPassword(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				return null;
+
+			return kv.Value;
+		}
+
 		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
 		{
 			var list = new List<Uri>();

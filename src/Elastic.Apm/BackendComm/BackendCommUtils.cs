@@ -299,11 +299,21 @@ namespace Elastic.Apm.BackendComm
 
 			if (proxyUrl != null)
 			{
-				var proxy = new WebProxy(proxyUrl)
-				{
-					Credentials = new NetworkCredential(configuration.ProxyUserName, configuration.ProxyPassword),
+				WebProxy proxy;
 
-				};
+				if (string.IsNullOrWhiteSpace(configuration.ProxyUserName) || string.IsNullOrWhiteSpace(configuration.ProxyPassword))
+				{
+					proxy = new WebProxy(proxyUrl);
+
+				}
+				else
+				{
+					proxy = new WebProxy(proxyUrl)
+					{
+						Credentials = new NetworkCredential(configuration.ProxyUserName, configuration.ProxyPassword),
+
+					};
+				}
 
 				httpClientHandler.UseProxy = true;
 				httpClientHandler.Proxy = proxy;
