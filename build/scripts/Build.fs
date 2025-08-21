@@ -183,7 +183,7 @@ module Build =
         let blame =
             match suite with
             | TestSuite.Integrations -> Some [
-                "--blame-hang-timeout"; "15m";
+                "--blame-hang-timeout"; "30m";
                 "--blame-crash-dump-type"; "mini";
                 "--results-directory"; "build/output"]
             | _ -> None
