@@ -17,7 +17,12 @@ To learn how to upgrade, check out [Upgrading](/reference/upgrading.md).
 % **Action**<br> Steps for mitigating deprecation impact.
 % ::::
 
-## 1.13.0 [elastic-apm-net-agent-1130-breaking-changes]
+## 1.33.0 [elastic-apm-net-agent-1330-breaking-changes]
+**Release date:** August 19, 2025
+
+This release bumps the minimum `MongoDb.Driver` package to 3.0.0 to unblock consumers who wish to use the latest MongoDb versions. 3.0+. In 3.0, types were moved from `MongoDb.Driver.Core` into `MongoDb.Driver` and deprecated types were removed. To avoid type conflicts, consumers using verions of MongoDb < 3.0.0 will need to first update MongoDb NuGet packages, before updating to this release of Elastic APM agent.
+
+## 1.31.0 [elastic-apm-net-agent-1310-breaking-changes]
 **Release date:** December 2, 2024
 
 We no longer ship net6.0 targets as .NET 6 is now out of support. Applications targetting net6.0 will continue to work, but fall down to the netstandard2.0 target which may not be as optimised. We therefore recommend updating your application to net8.0 or net9.0 prior to installing 1.31.0 of the Elastic.Apm.* packages.
