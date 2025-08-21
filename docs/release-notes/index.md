@@ -20,6 +20,30 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.33.0 [elastic-apm-net-agent-1330-release-notes]
+**Release date:** August 19, 2025
+
+### Features and enhancements [elastic-apm-net-agent-1330-features-enhancements]
+* Update `MongoDB.Driver` PackageReference to 3.0.0 [#2580](https://github.com/elastic/apm-agent-dotnet/pull/2580)
+* Add `traceStateValue` parameter to `DistributedTracingData.TryDeserialize` [#2607](https://github.com/elastic/apm-agent-dotnet/pull/2607)
+* Add TLSv1.3 support for .NET 3 or higher [#2625](https://github.com/elastic/apm-agent-dotnet/pull/2625)
+* Add `isHandled=true` for handled exceptions [#2626](https://github.com/elastic/apm-agent-dotnet/pull/2626)
+
+### Fixes [elastic-apm-net-agent-1330-fixes]
+* Fix payload sender when failing with no http response error [#2606](https://github.com/elastic/apm-agent-dotnet/pull/2606)
+* Avoid shallow exception thrown already existing activity parent [#2613](https://github.com/elastic/apm-agent-dotnet/pull/2613)
+* Add a null check on transaction for Error [#2618](https://github.com/elastic/apm-agent-dotnet/pull/2618)
+* Fix log template resulting in `NullReferenceException` [#2560](https://github.com/elastic/apm-agent-dotnet/pull/2560)
+* Fix detection of API key and secret token [#2562](https://github.com/elastic/apm-agent-dotnet/pull/2562)
+* Avoid `NullReferenceException` on 401 Unauthorized [#2561](https://github.com/elastic/apm-agent-dotnet/pull/2561)
+* Fix `CaptureBody` in AspNetCore [#2623](https://github.com/elastic/apm-agent-dotnet/pull/2623)
+
+## 1.32.0 [elastic-apm-net-agent-1320-release-notes]
+**Release date:** May 28, 2025
+
+### Fixes [elastic-apm-net-agent-1320-fixes]
+* Fix NullReferenceException in TryToCompressRegular method in Span. [#2602](https://github.com/elastic/apm-agent-dotnet/pull/2602)
+
 ## 1.31.0 [elastic-apm-net-agent-1310-release-notes]
 **Release date:** December 2, 2024
 
@@ -30,22 +54,28 @@ To check for security updates, go to [Security announcements for the Elastic sta
 * Fixes and enhancements for Azure Functions [#2505](https://github.com/elastic/apm-agent-dotnet/pull/2505)
 * Azure Function service name logic [#2508](https://github.com/elastic/apm-agent-dotnet/pull/2508)
 
-## 1.31.1 [elastic-apm-net-agent-1311-release-notes]
-**Release date:** November 18, 2024
+## 1.30.1 [elastic-apm-net-agent-1301-release-notes]
+**Release date:** November 19, 2024
 
-### Fixes [elastic-apm-net-agent-1311-fixes]
+### Fixes [elastic-apm-net-agent-1301-fixes]
 * Remove netcoreapp2.0 from Elastic.Apm.Profiler.Managed.Loader [#2471](https://github.com/elastic/apm-agent-dotnet/pull/2471)
 * Fix span linking for Azure ServiceBus [#2474](https://github.com/elastic/apm-agent-dotnet/pull/2474)
 * Support K8S_ATTACH environment variable for activation [#2482](https://github.com/elastic/apm-agent-dotnet/pull/2482)
 
-## 1.31.0 [elastic-apm-net-agent-1310-release-notes]
+## 1.30.0 [elastic-apm-net-agent-1300-release-notes]
 **Release date:** October 11, 2024
 
-### Fixes [elastic-apm-net-agent-1310-fixes]
+### Fixes [elastic-apm-net-agent-1300-fixes]
 * Improve OTel bridge compatibility with existing Azure instrumentation [#2455](https://github.com/elastic/apm-agent-dotnet/pull/2455)
 * Revert skipping of System.Web to fix profiler-based installation [#2457](https://github.com/elastic/apm-agent-dotnet/pull/2457)
 * Limit attribute count and truncate values in ElasticActivityListener [#2461](https://github.com/elastic/apm-agent-dotnet/pull/2461)
 * Add IntakeResponse deserialization for detailed error logging [#2460](https://github.com/elastic/apm-agent-dotnet/pull/2460)
+
+## 1.29.0 [elastic-apm-net-agent-1290-release-notes]
+**Release date:** September 18, 2024
+
+### Fixes [elastic-apm-net-agent-1290-fixes]
+* No longer parse request cookies, but ensure they are still redacted in the Cookie header string [#2444](https://github.com/elastic/apm-agent-dotnet/pull/2444)
 
 ## 1.28.6 [elastic-apm-net-agent-1286-release-notes]
 **Release date:** September 11, 2024
