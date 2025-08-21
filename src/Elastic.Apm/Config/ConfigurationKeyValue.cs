@@ -18,6 +18,8 @@ namespace Elastic.Apm.Config
 			{
 				ApiKey => true,
 				SecretToken => true,
+				ProxyUserName => true,
+				ProxyPassword => true,
 				_ => false
 			};
 		}

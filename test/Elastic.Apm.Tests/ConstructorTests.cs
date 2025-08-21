@@ -155,6 +155,12 @@ public class ConstructorTests
 
 		public bool UsePathAsTransactionName => ConfigConsts.DefaultValues.UsePathAsTransactionName;
 
+		public Uri ProxyUrl { get; }
+
+		public string ProxyUserName { get; }
+
+		public string ProxyPassword { get; }
+
 		// ReSharper restore UnassignedGetOnlyAutoProperty
 		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}

@@ -139,6 +139,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ApiKey.ToEnvironmentVariable(), apiKey);
 			Environment.SetEnvironmentVariable(CaptureHeaders.ToEnvironmentVariable(), false.ToString());
 			Environment.SetEnvironmentVariable(TransactionSampleRate.ToEnvironmentVariable(), "0.123");
+			var proxyUrl = "http://myProxyFromEnvVar.com:1234";
+			Environment.SetEnvironmentVariable(ProxyUrl.ToEnvironmentVariable(), proxyUrl);
+			var proxyUserName = "MyProxyUserName";
+			Environment.SetEnvironmentVariable(ProxyUserName.ToEnvironmentVariable(), proxyUserName);
+			var proxyPassword = "MyProxyPassword";
+			Environment.SetEnvironmentVariable(ProxyPassword.ToEnvironmentVariable(), proxyPassword);
+
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
@@ -158,6 +165,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ApiKey.Should().Be(apiKey);
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.123);
+			config.ProxyUrl.Should().Be(new Uri(proxyUrl));
+			config.ProxyUserName.Should().Be(proxyUserName);
+			config.ProxyPassword.Should().Be(proxyPassword);
 		}
 
 		/// <summary>

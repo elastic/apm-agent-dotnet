@@ -51,4 +51,7 @@ mapped_pages:
 | [`UsePathAsTransactionName`](/reference/config-http.md#config-use-path-as-transaction-name) | Yes | HTTP |
 | [`UseWindowsCredentials`](/reference/config-http.md#config-use-windows-credentials) | No | Reporter |
 | [`VerifyServerCert`](/reference/config-reporter.md#config-verify-server-cert) | No | Reporter |
+| [`ProxyUrl`](/reference/config-http.md#add-proxy-apm) | No | HTTP |
+| [`ProxyUserName`](/reference/config-http.md#add-proxy-apm) | No | HTTP |
+| [`ProxyPassword`](/reference/config-http.md#add-proxy-apm) | No | HTTP |
 

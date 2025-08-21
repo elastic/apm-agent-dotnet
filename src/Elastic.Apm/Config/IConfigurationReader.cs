@@ -20,7 +20,7 @@ namespace Elastic.Apm.Config
 	/// <summary> A description for the configuration </summary>
 	public interface IConfigurationDescription
 	{
-		public string Description { get; }
+		string Description { get; }
 	}
 
 	/// <summary>
@@ -231,7 +231,7 @@ namespace Elastic.Apm.Config
 		/// As this is a reversible switch, agent threads are not terminated when inactivated, but they will be mostly
 		/// idle in this state, so the overhead should be negligible.
 		/// </remarks>
-		public bool Recording { get; }
+		bool Recording { get; }
 
 		/// <summary>
 		/// Sometimes it is necessary to sanitize the data sent to Elastic APM, e.g. remove sensitive data.
@@ -437,5 +437,20 @@ namespace Elastic.Apm.Config
 		/// Verification can be disabled by setting to <c>false</c>.
 		/// </summary>
 		bool VerifyServerCert { get; }
+
+		/// <summary>
+		/// The URL of the proxy server used by the agent to communicate with the APM server.
+		/// </summary>
+		Uri ProxyUrl { get; }
+
+		/// <summary>
+		/// The user name used by the agent to authenticate with the proxy server.
+		/// </summary>
+		string ProxyUserName { get; }
+
+		/// <summary>
+		/// The password used by the agent to authenticate with the proxy server.
+		/// </summary>
+		string ProxyPassword { get; }
 	}
 }

@@ -72,6 +72,9 @@ namespace Elastic.Apm.Feature.Tests
 		public bool UsePathAsTransactionName { get; set; } = DefaultValues.UsePathAsTransactionName;
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
 		public bool OpenTelemetryBridgeEnabled { get; set; }
+		public Uri ProxyUrl { get; set; }
+		public string ProxyUserName { get; set; }
+		public string ProxyPassword { get; set; }
 
 		public ConfigurationKeyValue Lookup(ConfigurationOption option) => null;
 	}

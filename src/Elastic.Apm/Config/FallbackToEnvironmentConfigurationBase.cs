@@ -146,6 +146,10 @@ namespace Elastic.Apm.Config
 			ServerUrls = ParseServerUrls(!string.IsNullOrEmpty(urlsConfig.Value) ? urlsConfig : urlConfig);
 			ServerUrl = !string.IsNullOrEmpty(urlConfig.Value) ? ParseServerUrl(urlConfig) : ServerUrls.FirstOrDefault();
 #pragma warning restore CS0618
+
+			ProxyUrl = ParseProxyServerUrl(Lookup(ConfigurationOption.ProxyUrl));
+			ProxyUserName = ParseProxyUserName(Lookup(ConfigurationOption.ProxyUserName));
+			ProxyPassword = ParseProxyPassword(Lookup(ConfigurationOption.ProxyPassword));
 		}
 
 		private IConfigurationKeyValueProvider KeyValueProvider { get; }
@@ -254,5 +258,11 @@ namespace Elastic.Apm.Config
 		public bool VerifyServerCert { get; }
 
 		public bool OpenTelemetryBridgeEnabled { get; }
+
+		public Uri ProxyUrl { get; }
+
+		public string ProxyUserName { get; }
+
+		public string ProxyPassword { get; }
 	}
 }

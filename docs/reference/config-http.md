@@ -257,3 +257,15 @@ If your application is called by an .NET 5 application that does not have an act
 | Default | Type |
 | --- | --- |
 | `false` | Boolean |
+
+
+## `APM server proxy` [add-proxy-apm]
+
+Add a proxy to the APM server.
+
+| Environment variable name | IConfiguration key |  Default | Type |
+| --- | --- | --- | --- |
+| `ELASTIC_APM_PROXY_URL` | `ElasticApm:ProxyUrl` | `<none>` | String |
+| `ELASTIC_APM_PROXY_USERNAME` | `ElasticApm:ProxyUserName` | `<none>` | String |
+| `ELASTIC_APM_PROXY_PASSWORD` | `ElasticApm:ProxyPassword` | `<none>` | String |
+

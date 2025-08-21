@@ -338,6 +338,37 @@ namespace Elastic.Apm.Config
 			return DefaultValues.ServerUri;
 		}
 
+		protected Uri ParseProxyServerUrl(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+			{
+				return null;
+			}
+
+			if (TryParseUri(kv.Value, out var uri))
+				return uri;
+
+			_logger?.Error()?.Log("Failed parsing proxy server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, kv.Value);
+
+			return null;
+		}
+
+		protected static string ParseProxyUserName(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				return null;
+
+			return kv.Value;
+		}
+
+		protected static string ParseProxyPassword(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				return null;
+
+			return kv.Value;
+		}
+
 		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
 		{
 			var list = new List<Uri>();
