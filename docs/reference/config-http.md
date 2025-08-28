@@ -121,9 +121,9 @@ For example, in order to ignore the URLs `/foo` and `/bar`, set the configuratio
 When an incoming HTTP request is detected, its request path will be tested against each element in this list. For example, adding `/home/index` to this list would match and remove instrumentation from the following URLs:
 
 ```txt
-https://www.mycoolsite.com/home/index
+https://www.example.com/home/index
 http://localhost/home/index
-http://whatever.com/home/index?value1=123
+http://example.com/home/index?value1=123
 ```
 
 In other words, the matching always happens based on the request path—hosts and query strings are ignored.
