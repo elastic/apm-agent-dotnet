@@ -1,12 +1,26 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-messaging.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
+products:
+  - id: cloud-serverless
+  - id: observability
+  - id: apm
 ---
 
 # Messaging configuration options [config-messaging]
 
 
-## `IgnoreMessageQueues` ([1.10]) [config-ignore-message-queues]
+## `IgnoreMessageQueues` [config-ignore-message-queues]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.10
+```
 
 Used to filter out specific messaging queues/topics/exchanges from being traced. When set, sends-to and receives-from the specified queues/topics/exchanges will be ignored.
 
