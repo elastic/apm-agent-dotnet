@@ -1,6 +1,16 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
+products:
+  - id: cloud-serverless
+  - id: observability
+  - id: apm
 ---
 
 # Supported technologies [supported-technologies]
@@ -38,8 +48,8 @@ Automatic instrumentation is supported for the following web frameworks
 
 | Framework | Supported versions | Integration |
 | --- | --- | --- |
-| ASP.NET Core [1.0] | 2.1+ | [NuGet package](/reference/setup-asp-net-core.md) |
-| ASP.NET (.NET Framework) in IIS  [1.1] | 4.6.2+ (IIS 7.0 or newer) | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md)<br>*or*<br>[NuGet package](/reference/setup-asp-dot-net.md) |
+| ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | 2.1+ | [NuGet package](/reference/setup-asp-net-core.md) |
+| ASP.NET (.NET Framework) in IIS  {applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2+ (IIS 7.0 or newer) | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md)<br>*or*<br>[NuGet package](/reference/setup-asp-dot-net.md) |
 
 
 ## RPC Frameworks [supported-rpc-frameworks]
@@ -50,7 +60,7 @@ Streaming is not supported; for streaming use-cases, the agent does not create t
 
 | Framework | Supported versions | Integration |
 | --- | --- | --- |
-| gRPC [1.7] | Grpc.Net.Client 2.23.2+ *(client side)* | [NuGet package](/reference/setup-grpc.md) |
+| gRPC {applies_to}`apm_agent_dotnet: ga 1.7` | Grpc.Net.Client 2.23.2+ *(client side)* | [NuGet package](/reference/setup-grpc.md) |
 | ASP.NET Core 2.1+ *(server side)* | [NuGet package](/reference/setup-asp-net-core.md) |
 
 
@@ -60,21 +70,21 @@ Automatic instrumentation is supported for the following data access technologie
 
 | Data access technology | Supported versions | Integration |
 | --- | --- | --- |
-| Azure CosmosDB [1.11] | Microsoft.Azure.Cosmos 3.0.0+ | [NuGet package](/reference/setup-azure-cosmosdb.md) |
+| Azure CosmosDB {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.Cosmos 3.0.0+ | [NuGet package](/reference/setup-azure-cosmosdb.md) |
 | Microsoft.Azure.DocumentDB.Core 2.4.1+ |
 | Microsoft.Azure.DocumentDB 2.4.1+ |
-| Entity Framework Core [1.0] | Microsoft.EntityFrameworkCore 2.x+ | [NuGet package](/reference/setup-ef-core.md) |
-| Entity Framework 6 [1.2] | EntityFramework 6.2+ | [NuGet package](/reference/setup-ef6.md) |
-| Elasticsearch [1.6] | Elasticsearch.Net 7.6.0+ | [NuGet package](/reference/setup-elasticsearch.md) |
+| Entity Framework Core {applies_to}`apm_agent_dotnet: ga 1.0` | Microsoft.EntityFrameworkCore 2.x+ | [NuGet package](/reference/setup-ef-core.md) |
+| Entity Framework 6 {applies_to}`apm_agent_dotnet: ga 1.2` | EntityFramework 6.2+ | [NuGet package](/reference/setup-ef6.md) |
+| Elasticsearch {applies_to}`apm_agent_dotnet: ga 1.6` | Elasticsearch.Net 7.6.0+ | [NuGet package](/reference/setup-elasticsearch.md) |
 | NEST 7.6.0+ |
-| MySQL [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| MySQL {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 | MongoDB | MongoDB.Driver 3.0.0+ | [NuGet package](/reference/setup-mongo-db.md) |
-| Oracle [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
-| PostgreSQL [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
-| Redis [1.8] | StackExchange.Redis 2.0.495+ | [NuGet package](/reference/setup-stackexchange-redis.md) |
-| SqlClient | System.Data.SqlClient 2.0.495+ [1.8] | [NuGet package](/reference/setup-sqlclient.md) |
-| See profiler documentation [1.12] | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
-| SQLite [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| Oracle {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| PostgreSQL {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| Redis {applies_to}`apm_agent_dotnet: ga 1.8` | StackExchange.Redis 2.0.495+ | [NuGet package](/reference/setup-stackexchange-redis.md) |
+| SqlClient | System.Data.SqlClient 2.0.495+ {applies_to}`apm_agent_dotnet: ga 1.8` | [NuGet package](/reference/setup-sqlclient.md) |
+| See profiler documentation {applies_to}`apm_agent_dotnet: ga 1.12` | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| SQLite {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 
 
 ## Messaging systems [supported-messaging-systems]
@@ -83,11 +93,11 @@ We support automatic instrumentation for the following messaging systems
 
 | Messaging system | Supported versions | Integration |
 | --- | --- | --- |
-| Azure Service Bus [1.10] | Microsoft.Azure.ServiceBus 3.0.0+ | [NuGet package](/reference/setup-azure-servicebus.md) |
+| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus 3.0.0+ | [NuGet package](/reference/setup-azure-servicebus.md) |
 | Azure.Messaging.ServiceBus 7.0.0+ |
-| Azure Queue Storage [1.10] | Azure.Storage.Queues 12.6.0+ | [NuGet package](/reference/setup-azure-storage.md) |
-| Kafka [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
-| RabbitMQ [1.12] | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| Azure Queue Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Queues 12.6.0+ | [NuGet package](/reference/setup-azure-storage.md) |
+| Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| RabbitMQ {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 
 
 ## Networking client-side technologies [supported-networking-client-side-technologies]
@@ -96,8 +106,8 @@ Automatic instrumentation for networking client-side technology means an HTTP sp
 
 | Framework | Supported versions | Integration |
 | --- | --- | --- |
-| System.Net.Http.HttpClient [1.0] | *built-in* | [part of Elastic.Apm](/reference/public-api.md#setup-http) |
-| System.Net.HttpWebRequest [1.1] |
+| System.Net.Http.HttpClient {applies_to}`apm_agent_dotnet: ga 1.0` | *built-in* | [part of Elastic.Apm](/reference/public-api.md#setup-http) |
+| System.Net.HttpWebRequest {applies_to}`apm_agent_dotnet: ga 1.1` |
 
 
 ## Cloud services [supported-cloud-services]
@@ -106,12 +116,12 @@ Automatic instrumentation for the following cloud services
 
 | Cloud service | Supported versions | Integration |
 | --- | --- | --- |
-| Azure CosmosDB [1.11] | Microsoft.Azure.Cosmos 3.0.0+ | [NuGet package](/reference/setup-azure-cosmosdb.md) |
+| Azure CosmosDB {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.Cosmos 3.0.0+ | [NuGet package](/reference/setup-azure-cosmosdb.md) |
 | Microsoft.Azure.DocumentDB.Core 2.4.1+ |
 | Microsoft.Azure.DocumentDB 2.4.1+ |
-| Azure Service Bus [1.10] | Microsoft.Azure.ServiceBus 3.0.0+ | [NuGet package](/reference/setup-azure-servicebus.md) |
+| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus 3.0.0+ | [NuGet package](/reference/setup-azure-servicebus.md) |
 | Azure.Messaging.ServiceBus 7.0.0+ |
-| Azure Storage [1.10] | Azure.Storage.Blobs 12.8.0+ | [NuGet package](/reference/setup-azure-storage.md) |
+| Azure Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Blobs 12.8.0+ | [NuGet package](/reference/setup-azure-storage.md) |
 | Azure.Storage.Queues 12.6.0+ |
 | Azure.Storage.Files.Shares 12.6.0+ |
 

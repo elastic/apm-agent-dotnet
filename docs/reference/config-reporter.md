@@ -1,6 +1,16 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-reporter.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
+products:
+  - id: cloud-serverless
+  - id: observability
+  - id: apm
 ---
 
 # Reporter configuration options [config-reporter]
@@ -67,7 +77,11 @@ The `APIKey` is sent as plain-text in every request to the server, so you should
 | `<none>` | A base64-encoded string |
 
 
-## `VerifyServerCert` ([1.3]) [config-verify-server-cert]
+## `VerifyServerCert` [config-verify-server-cert]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.3
+```
 
 By default, the agent verifies the SSL certificate if you use an HTTPS connection to the APM server.
 
@@ -88,7 +102,11 @@ This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1.
 
 
 
-## `ServerCert` ([1.9]) [config-server-cert]
+## `ServerCert` [config-server-cert]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.9
+```
 
 The path to a PEM-encoded certificate used for SSL/TLS by APM server. Used to perform validation through certificate pinning.
 
@@ -109,7 +127,11 @@ This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1.
 
 
 
-## `FlushInterval` ([1.1]) [config-flush-interval]
+## `FlushInterval` [config-flush-interval]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.1
+```
 
 The maximal amount of time events are held in the queue until there is enough to send a batch. It’s possible for a batch to contain less than [`MaxBatchEventCount`](#config-max-batch-event-count) events if there are events that need to be sent out because they were held for too long. A lower value will increase the load on your APM server, while a higher value can increase the memory pressure on your app. A higher value also impacts the time until transactions are indexed and searchable in Elasticsearch.
 
@@ -128,7 +150,11 @@ Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, 
 | `10s` | TimeDuration |
 
 
-## `MaxBatchEventCount` ([1.1]) [config-max-batch-event-count]
+## `MaxBatchEventCount` [config-max-batch-event-count]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.1
+```
 
 The maximum number of events to send in a batch. It’s possible for a batch to contain less then the maximum events if there are events that need to be sent out because they were held for too long (see [`FlushInterval`](#config-flush-interval)).
 
@@ -143,7 +169,11 @@ Setting `MaxBatchEventCount` to `0` or a negative value is invalid and the Agent
 | 10 | Integer |
 
 
-## `MaxQueueEventCount` ([1.1]) [config-max-queue-event-count]
+## `MaxQueueEventCount` [config-max-queue-event-count]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.1
+```
 
 The maximum number of events to hold in the queue as candidates to be sent. If the queue is at its maximum capacity then the agent discards the new events until the queue has free space.
 
@@ -158,7 +188,11 @@ Setting `MaxQueueEventCount` to `0` or a negative value is invalid and the Agent
 | 1000 | Integer |
 
 
-## `MetricsInterval` ([1.0.0-beta1]) [config-metrics-interval]
+## `MetricsInterval` [config-metrics-interval]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.0.0
+```
 
 The interval at which the agent sends metrics to the APM Server. This must be at least `1s`. Set this to `0s` to deactivate.
 
@@ -173,7 +207,11 @@ Supports the duration suffixes `ms`, `s` and `m`. Example: `30s`. The default un
 | `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval` |
 
 
-## `DisableMetrics` ([1.3.0]) [config-disable-metrics]
+## `DisableMetrics` [config-disable-metrics]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.3.0
+```
 
 This disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected. Example: `foo.*,bar.*`
 
@@ -190,7 +228,11 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 | `ELASTIC_APM_DISABLE_METRICS` | `ElasticApm:DisableMetrics` |
 
 
-## `CloudProvider` ([1.7.0]) [config-cloud-provider]
+## `CloudProvider` [config-cloud-provider]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.7
+```
 
 Specify which cloud provider should be assumed for metadata collection. By default, the agent attempts to detect the cloud provider and, if that fails, uses trial and error to collect the metadata.
 

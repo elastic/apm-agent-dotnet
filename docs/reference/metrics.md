@@ -1,6 +1,16 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/metrics.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
+products:
+  - id: cloud-serverless
+  - id: observability
+  - id: apm
 ---
 
 # Metrics [metrics]

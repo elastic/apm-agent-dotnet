@@ -1,6 +1,16 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-dotnet-net-core.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
+products:
+  - id: cloud-serverless
+  - id: observability
+  - id: apm
 ---
 
 # .NET Core and .NET 5+ [setup-dotnet-net-core]
