@@ -20,6 +20,13 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.34.0 [elastic-apm-net-agent-1340-release-notes]
+**Release date:** September 1, 2025
+
+### Features and enhancements [elastic-apm-net-agent-1340-features-enhancements]
+
+* Add support for configuring proxy server URL, username and password [#2643](https://github.com/elastic/apm-agent-dotnet/pull/2643)
+
 ## 1.33.0 [elastic-apm-net-agent-1330-release-notes]
 **Release date:** August 19, 2025
 
