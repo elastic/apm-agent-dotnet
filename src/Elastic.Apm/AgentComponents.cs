@@ -17,8 +17,10 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
+
 #if NET8_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
+using Elastic.Apm.Model;
 #endif
 
 #if NETFRAMEWORK
@@ -60,10 +62,16 @@ namespace Elastic.Apm
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-#if NET8_0_OR_GREATER
+#if NET
 				// Initialize early because ServerInfoCallback requires it and might execute
 				// before EnsureElasticActivityStarted runs
 				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
+
+				// Ensure we have a listener so that transaction activities are created when the OTel bridge is disabled
+				if (!Configuration.OpenTelemetryBridgeEnabled && !Transaction.ElasticApmActivitySource.HasListeners())
+				{
+					ActivitySource.AddActivityListener(Transaction.Listener);
+				}
 #endif
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName, hostNameDetector);
@@ -81,9 +89,7 @@ namespace Elastic.Apm
 					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo,
 					breakdownMetricsProvider);
 
-#if NET8_0_OR_GREATER
-				EnsureElasticActivityStarted();
-#endif
+				EnsureElasticActivityListenerStarted();
 
 				if (Configuration.Enabled)
 				{
@@ -116,9 +122,9 @@ namespace Elastic.Apm
 			}
 		}
 
-		private void EnsureElasticActivityStarted()
+		private void EnsureElasticActivityListenerStarted()
 		{
-#if !NET8_0_OR_GREATER
+#if !NET
 			return;
 #else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
@@ -237,7 +243,7 @@ namespace Elastic.Apm
 			return fallbackLogger;
 		}
 
-#if NET8_0_OR_GREATER
+#if NET
 		private ElasticActivityListener ElasticActivityListener { get; }
 #endif
 
