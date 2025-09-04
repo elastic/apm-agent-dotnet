@@ -38,16 +38,7 @@ internal class Transaction : ITransaction
 #endif
 
 	internal readonly TraceState _traceState;
-
 	internal readonly ConcurrentDictionary<SpanTimerKey, SpanTimer> SpanTimings = new();
-
-	/// <summary>
-	/// The agent also starts an Activity when a transaction is started and stops it when the transaction ends.
-	/// The TraceId of this activity is always the same as the TraceId of the transaction.
-	/// With this, in case Activity.Current is null, the agent will set it and when the next Activity gets created it'll
-	/// have this activity as its parent and the TraceId will flow to all Activity instances.
-	/// </summary>
-	private readonly Activity _activity;
 
 	private readonly IApmServerInfo _apmServerInfo;
 	private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
@@ -55,6 +46,7 @@ internal class Transaction : ITransaction
 	private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 	private readonly IApmLogger _logger;
 	private readonly IPayloadSender _sender;
+	private bool _ownsActivity;
 
 	[JsonConstructor]
 	// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
@@ -161,12 +153,12 @@ internal class Transaction : ITransaction
 		// If the transaction is created as the result of an activity that is passed directly use that as the activity representing this
 		// transaction
 		if (current != null)
-			_activity = current;
+			Activity = current;
 
 		// Otherwise we will start an activity explicitly and ensure its trace_id and trace_state respect our bookkeeping.
 		// Unless explicitly asked not to through `ignoreActivity`: (https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
 		else if (!ignoreActivity)
-			_activity = StartActivity(shouldRestartTrace);
+			Activity = StartActivity(shouldRestartTrace);
 
 		var isSamplingFromDistributedTracingData = false;
 		if (distributedTracingData == null || shouldRestartTrace)
@@ -175,14 +167,14 @@ internal class Transaction : ITransaction
 			// to be a root transaction.
 			// Ignore the created activity ActivityTraceFlags because it starts out without setting the IsSampled flag,
 			// so relying on that would mean a transaction is never sampled.
-			if (_activity != null)
+			if (Activity != null)
 			{
 				// If an activity was created, reuse its id
-				Id = _activity.SpanId.ToHexString();
-				TraceId = _activity.TraceId.ToHexString();
+				Id = Activity.SpanId.ToHexString();
+				TraceId = Activity.TraceId.ToHexString();
 
 				var idBytesFromActivity = new Span<byte>(new byte[16]);
-				_activity.TraceId.CopyTo(idBytesFromActivity);
+				Activity.TraceId.CopyTo(idBytesFromActivity);
 
 				// Read right most bits. From W3C TraceContext: "it is important for trace-id to carry "uniqueness" and "randomness"
 				// in the right part of the trace-id..."
@@ -191,8 +183,8 @@ internal class Transaction : ITransaction
 				_traceState = new TraceState();
 
 				// If activity has a tracestate, populate the transaction tracestate with it.
-				if (!string.IsNullOrEmpty(_activity.TraceStateString))
-					_traceState.AddTextHeader(_activity.TraceStateString);
+				if (!string.IsNullOrEmpty(Activity.TraceStateString))
+					_traceState.AddTextHeader(Activity.TraceStateString);
 
 				IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
 
@@ -220,7 +212,7 @@ internal class Transaction : ITransaction
 				}
 
 				// sync the activity tracestate with the tracestate of the transaction
-				_activity.TraceStateString = _traceState.ToTextHeader();
+				Activity.TraceStateString = _traceState.ToTextHeader();
 			}
 			else
 			{
@@ -261,26 +253,26 @@ internal class Transaction : ITransaction
 			var idBytes = new byte[8];
 
 
-			if (_activity != null)
+			if (Activity != null)
 			{
-				Id = _activity.SpanId.ToHexString();
-				_activity.SpanId.CopyTo(new Span<byte>(idBytes));
+				Id = Activity.SpanId.ToHexString();
+				Activity.SpanId.CopyTo(new Span<byte>(idBytes));
 
 				// try to set the parent id and tracestate on the created activity, based on passed distributed tracing data.
 				// This is so that the distributed tracing data will flow to any child activities
 				try
 				{
 					// Only if the parent does not already exist
-					if (_activity.ParentId == null && _activity.Parent == null)
+					if (Activity.ParentId == null && Activity.Parent == null)
 					{
-						_activity.SetParentId(
+						Activity.SetParentId(
 							ActivityTraceId.CreateFromString(distributedTracingData.TraceId.AsSpan()),
 							ActivitySpanId.CreateFromString(distributedTracingData.ParentId.AsSpan()),
 							distributedTracingData.FlagRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None);
 					}
 
 					if (distributedTracingData.HasTraceState)
-						_activity.TraceStateString = distributedTracingData.TraceState.ToTextHeader();
+						Activity.TraceStateString = distributedTracingData.TraceState.ToTextHeader();
 				}
 				catch (Exception e)
 				{
@@ -323,8 +315,8 @@ internal class Transaction : ITransaction
 		}
 
 		// Also mark the sampling decision on the Activity
-		if (IsSampled && _activity != null)
-			_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
+		if (IsSampled && Activity != null)
+			Activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
 		CheckAndCaptureBaggage();
 
@@ -538,6 +530,14 @@ internal class Transaction : ITransaction
 	public string Type { get; set; }
 
 	/// <summary>
+	/// The agent also starts an Activity when a transaction is started and stops it when the transaction ends.
+	/// The TraceId of this activity is always the same as the TraceId of the transaction.
+	/// With this, in case Activity.Current is null, the agent will set it and when the next Activity gets created it'll
+	/// have this activity as its parent and the TraceId will flow to all Activity instances.
+	/// </summary>
+	internal Activity Activity { get; }
+
+	/// <summary>
 	/// Changes the <see cref="Outcome" /> by checking the <see cref="_outcomeChangedThroughApi" /> flag.
 	/// This method is intended for all auto instrumentation usages where the <see cref="Outcome" /> property needs to be set.
 	/// Setting outcome via the <see cref="Outcome" /> property is intended for users who use the public API.
@@ -552,20 +552,27 @@ internal class Transaction : ITransaction
 			_outcome = outcome;
 	}
 
-	private static Activity StartActivity(bool shouldRestartTrace)
+	private Activity StartActivity(bool shouldRestartTrace)
 	{
 #if NET
 		var activity = ElasticApmActivitySource.CreateActivity(KnownListeners.ApmTransactionActivityName, ActivityKind.Internal);
 #else
 		var activity = new Activity(KnownListeners.ApmTransactionActivityName);
 #endif
+
+		if (activity is null)
+			return activity;
+
+		_ownsActivity = true;
+
 		if (shouldRestartTrace)
 		{
-			activity?.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
+			activity.SetParentId(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(),
 				Activity.Current != null ? Activity.Current.ActivityTraceFlags : ActivityTraceFlags.None);
 		}
-		activity?.SetIdFormat(ActivityIdFormat.W3C);
-		activity?.Start();
+		activity.SetIdFormat(ActivityIdFormat.W3C);
+		activity.Start();
+
 		return activity;
 	}
 
@@ -685,7 +692,10 @@ internal class Transaction : ITransaction
 					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 		}
 
-		_activity?.Stop();
+		// Only stop the activity if we started it
+		// We could use Dispose here, but Stop is more explicit
+		if (_ownsActivity)
+			Activity?.Stop();
 
 		var isFirstEndCall = !_isEnded;
 		_isEnded = true;
