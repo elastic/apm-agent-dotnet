@@ -48,7 +48,7 @@ namespace Elastic.Apm.Specification
 
 		private static readonly string RootDirectory;
 		private static readonly Regex SpecPathRegex =
-			new Regex("^.*?/docs/spec/v2/(?<path>.*?\\.json)$", RegexOptions.ExplicitCapture);
+			new Regex("^.*?/input/elasticapm/docs/spec/v2/(?<path>.*?\\.json)$", RegexOptions.ExplicitCapture);
 
 		private readonly string _directory;
 
@@ -116,7 +116,7 @@ namespace Elastic.Apm.Specification
 
 			// use the GitHub api to download the tar.gz and extract the specs from the stream.
 			// This is considerably faster than downloading many small files.
-			var response = await client.GetAsync($"https://api.github.com/repos/elastic/apm-server/tarball/{branch}")
+			var response = await client.GetAsync($"https://api.github.com/repos/elastic/apm-data/tarball/{branch}")
 				.ConfigureAwait(false);
 
 			using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
