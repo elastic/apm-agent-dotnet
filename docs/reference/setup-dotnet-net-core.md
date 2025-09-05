@@ -7,10 +7,6 @@ applies_to:
     observability:
   product:
     apm_agent_dotnet: ga
-products:
-  - id: cloud-serverless
-  - id: observability
-  - id: apm
 ---
 
 # .NET Core and .NET 5+ [setup-dotnet-net-core]

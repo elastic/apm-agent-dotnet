@@ -7,10 +7,6 @@ applies_to:
     observability:
   product:
     apm_agent_dotnet: ga
-products:
-  - id: cloud-serverless
-  - id: observability
-  - id: apm
 ---
 
 # Azure Cosmos DB [setup-azure-cosmosdb]

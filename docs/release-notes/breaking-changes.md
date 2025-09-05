@@ -6,10 +6,6 @@ applies_to:
     observability:
   product:
     apm_agent_dotnet: ga
-products:
-  - id: cloud-serverless
-  - id: observability
-  - id: apm
 ---
 
 # Elastic APM .NET Agent breaking changes [elastic-apm-net-agent-breaking-changes]

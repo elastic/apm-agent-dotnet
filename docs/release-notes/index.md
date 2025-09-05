@@ -9,10 +9,6 @@ applies_to:
     observability:
   product:
     apm_agent_dotnet: ga
-products:
-  - id: cloud-serverless
-  - id: observability
-  - id: apm
 ---
 
 # Elastic APM .NET Agent release notes [elastic-apm-net-agent-release-notes]

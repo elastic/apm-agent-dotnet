@@ -7,10 +7,6 @@ applies_to:
     observability:
   product:
     apm_agent_dotnet: ga
-products:
-  - id: cloud-serverless
-  - id: observability
-  - id: apm
 ---
 
 # Entity Framework 6 [setup-ef6]
