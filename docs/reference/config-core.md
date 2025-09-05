@@ -1,12 +1,22 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-core.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # Core configuration options [config-core]
 
 
-## `Recording` ([1.7.0]) [config-recording]
+## `Recording` [config-recording]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.7.0
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -28,7 +38,11 @@ Setting `Recording` to `false` influences the behavior of the [*Public API*](/re
 | `true` | Boolean |
 
 
-## `Enabled` ([1.7.0]) [config-enabled]
+## `Enabled` [config-enabled]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.7.0
+```
 
 Setting this to `false` will completely disable the agent, including instrumentation and remote config polling. If you want to dynamically change the status of the agent, use [`recording`](#config-recording) instead.
 
@@ -64,7 +78,11 @@ The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. I
 | Name of the entry assembly | String |
 
 
-## `ServiceNodeName` ([1.3]) [config-service-node-name]
+## `ServiceNodeName` [config-service-node-name]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.3
+```
 
 This is an optional name used to differentiate between nodes in a service. If this is not set, data aggregations are done based on a container ID (where valid) or on the reported hostname (automatically discovered).
 
@@ -95,7 +113,11 @@ A version string for the currently deployed version of the service. If you donâ€
 | Informational version of the entry assembly | String |
 
 
-## `HostName` ([1.7]) [config-hostname]
+## `HostName` [config-hostname]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.7
+```
 
 This allows for the reported hostname to be manually specified. If this is not set, the hostname will be looked up.
 
@@ -108,7 +130,11 @@ This allows for the reported hostname to be manually specified. If this is not s
 | `<none>` | String |
 
 
-## `Environment` ([1.1]) [config-environment]
+## `Environment` [config-environment]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.1
+```
 
 The name of the environment that this service is deployed in, e.g. "production" or "staging".
 
@@ -155,7 +181,11 @@ This setting can be changed after the agent starts.
 | 1.0 | Double |
 
 
-## `TransactionMaxSpans` (performance) ([1.1.1]) [config-transaction-max-spans]
+## `TransactionMaxSpans` (performance) [config-transaction-max-spans]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.1.1
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -177,7 +207,11 @@ This setting can be changed after agent starts.
 | `500` | Integer |
 
 
-## `CentralConfig` ([1.1]) [config-central-config]
+## `CentralConfig` [config-central-config]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.1
+```
 
 If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest [APM Agent configuration](docs-content://solutions/observability/apm/apm-agent-central-configuration.md).
 
@@ -190,7 +224,11 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 | true | Boolean |
 
 
-## `SanitizeFieldNames` ([1.2]) [config-sanitize-field-names]
+## `SanitizeFieldNames` [config-sanitize-field-names]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.2
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -223,7 +261,11 @@ The `Cookie` header is automatically redacted for incoming HTTP request transact
 | `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, *auth*, set-cookie, *principal*` | Comma separated string |
 
 
-## `GlobalLabels` ([1.2]) [config-global-labels]
+## `GlobalLabels` [config-global-labels]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.2
+```
 
 Labels are added to all events with the format `key=value[,key=value[,...]]`. Any labels set by the application via the agentâ€™s public API will override global labels with the same keys.
 
@@ -241,7 +283,11 @@ This option requires APM Server 7.2 or later. It will have no effect on older ve
 
 
 
-## `SpanCompressionEnabled` ([1.14]) [config-span-compression-enabled]
+## `SpanCompressionEnabled` [config-span-compression-enabled]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.14
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -256,7 +302,11 @@ Setting this option to true will enable span compression feature. Span compressi
 | `true` | Boolean |
 
 
-## `SpanCompressionExactMatchMaxDuration` ([1.14]) [config-span-compression-exact-match-max-duration]
+## `SpanCompressionExactMatchMaxDuration` [config-span-compression-exact-match-max-duration]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.14
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -271,7 +321,11 @@ Consecutive spans that are exact match and that are under this threshold will be
 | `50ms` | TimeDuration |
 
 
-## `SpanCompressionSameKindMaxDuration` ([1.14]) [config-span-compression-same-kind-max-duration]
+## `SpanCompressionSameKindMaxDuration` [config-span-compression-same-kind-max-duration]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.14
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -286,7 +340,11 @@ Consecutive spans to the same destination that are under this threshold will be 
 | `0ms` | TimeDuration |
 
 
-## `ExitSpanMinDuration` ([1.14]) [config-exit-span-min-duration]
+## `ExitSpanMinDuration` [config-exit-span-min-duration]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.14
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -301,7 +359,11 @@ Sets the minimum duration of exit spans. Exit spans with a duration lesser than 
 | `0ms` | TimeDuration |
 
 
-## `OpentelemetryBridgeEnabled` ([1.13]) [config-opentelemetry-bridge-enabled]
+## `OpentelemetryBridgeEnabled` [config-opentelemetry-bridge-enabled]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.13
+```
 
 Setting this option to `false` will disable the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). This will disable the use of the vendor-neutral OpenTelemetry Tracing API (the [Activity API](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0) in .NET) to manually instrument your code, and have the Elastic .NET APM agent handle those API calls.
 

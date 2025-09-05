@@ -1,5 +1,11 @@
 ---
 navigation_title: "Breaking changes"
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # Elastic APM .NET Agent breaking changes [elastic-apm-net-agent-breaking-changes]

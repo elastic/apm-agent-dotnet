@@ -1,5 +1,11 @@
 ---
-navigation_title: "Known issues" 
+navigation_title: "Known issues"
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # Elastic APM .NET Agent known issues [elastic-apm-net-agent-known-issues]

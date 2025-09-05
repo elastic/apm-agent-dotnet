@@ -1,12 +1,22 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-stacktrace.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # Stacktrace configuration options [config-stacktrace]
 
 
-### `ApplicationNamespaces` ([1.5]) [config-application-namespaces]
+### `ApplicationNamespaces` [config-application-namespaces]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.5
+```
 
 This is used to determine whether a stack trace frame is an in-app frame or a library frame. When defined, all namespaces that do not start with one of the values of this collection are ignored when determining error culprit.
 
@@ -23,7 +33,11 @@ This suppresses any configuration of `ExcludedNamespaces`.
 | `ELASTIC_APM_APPLICATION_NAMESPACES` | `ElasticApm:ApplicationNamespaces` |
 
 
-### `ExcludedNamespaces` ([1.5]) [config-excluded-namespaces]
+### `ExcludedNamespaces` [config-excluded-namespaces]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.5
+```
 
 A list of namespaces to exclude when reading an exception StackTrace to determine the culprit.
 

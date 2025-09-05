@@ -3,6 +3,12 @@ navigation_title: 'APM .NET agent'
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/index.html
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/intro.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # APM .NET agent [intro]

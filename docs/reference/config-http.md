@@ -1,12 +1,22 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-http.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # HTTP configuration options [config-http]
 
 
-## `CaptureBody` (performance) ([1.0.1]) [config-capture-body]
+## `CaptureBody` (performance) [config-capture-body]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.0.1
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -46,7 +56,11 @@ This setting can be changed after the agent starts.
 | `off` | String |
 
 
-## `CaptureBodyContentTypes` (performance) ([1.0.1]) [config-capture-body-content-types]
+## `CaptureBodyContentTypes` (performance) [config-capture-body-content-types]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.0.1
+```
 
 Configures the content types to be captured.
 
@@ -83,7 +97,11 @@ Setting this to `false` reduces memory allocations, network bandwidth, and disk 
 | `true` | Boolean |
 
 
-## `TraceContinuationStrategy` (performance) ([1.17.0]) [config-trace-continuation-strategy]
+## `TraceContinuationStrategy` (performance) [config-trace-continuation-strategy]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.17.0
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -149,7 +167,11 @@ Changing this configuration will overwrite the default value.
 
 
 
-## `TransactionNameGroups` ([1.27.0]) [config-transaction-name-groups]
+## `TransactionNameGroups` [config-transaction-name-groups]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.27.0
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -166,7 +188,11 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 | `<none>` | String |
 
 
-## `UseElasticTraceparentHeader` ([1.3.0]) [config-use-elastic-apm-traceparent-header]
+## `UseElasticTraceparentHeader` [config-use-elastic-apm-traceparent-header]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.3.0
+```
 
 To enable [distributed tracing](docs-content://solutions/observability/apm/traces.md), the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the [W3C Trace Context](https://www.w3.org/TR/trace-context-1/) specification.
 
@@ -181,7 +207,11 @@ When this setting is `true`, the agent also adds the header `elasticapm-tracepar
 | `true` | Boolean |
 
 
-## `UsePathAsTransactionName` ([1.27.0]) [config-use-path-as-transaction-name]
+## `UsePathAsTransactionName` [config-use-path-as-transaction-name]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.27
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 
@@ -216,7 +246,11 @@ This is useful when using windows authentication on a proxy, that routes APM age
 | `false` | Boolean |
 
 
-## `BaggageToAttach` ([1.24]) [config-baggage-to-attach]
+## `BaggageToAttach` [config-baggage-to-attach]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.24
+```
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 

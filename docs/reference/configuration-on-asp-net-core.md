@@ -1,6 +1,12 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/configuration-on-asp-net-core.html
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # Configuration on ASP.NET Core [configuration-on-asp-net-core]
@@ -54,7 +60,7 @@ Here is a sample `appsettings.json` configuration file for a typical ASP.NET Cor
 1. With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `Elastic.Apm` category name.
 
 
-In certain scenarios—​like when you’re not using ASP.NET Core—​you won’t activate the agent with the `AddElasticApm()` method. In this case, set the agent log level with [`ElasticApm:LogLevel`](/reference/config-supportability.md#config-log-level), as shown in the following `appsettings.json` file:
+In certain scenarios— like when you’re not using ASP.NET Core— you won’t activate the agent with the `AddElasticApm()` method. In this case, set the agent log level with [`ElasticApm:LogLevel`](/reference/config-supportability.md#config-log-level), as shown in the following `appsettings.json` file:
 
 ```js
 {
