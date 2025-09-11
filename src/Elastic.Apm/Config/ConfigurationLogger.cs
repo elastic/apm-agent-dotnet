@@ -75,20 +75,12 @@ namespace Elastic.Apm.Config
 				info.Log("Time zone: {TimeZone}", TimeZoneInfo.Local);
 				info.Log("Runtime: {RunTime}", RuntimeInformation.FrameworkDescription);
 
-#if NET9_0
-				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net9.0");
-#elif NET8_0
+#if NET8_0
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net8.0");
-#elif NET7_0
-				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net7.0");
-#elif NET6_0
-				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net6.0");
-#elif NET5_0
-				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net5.0");
 #elif NETSTANDARD2_0
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "netstandard2.0");
-#elif NETSTANDARD2_1
-				info.Log("Matched TFM: {TargetFrameworkMoniker}", "netstandard2.1");
+#elif NET472
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net462");
 #elif NET462
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net462");
 #else
