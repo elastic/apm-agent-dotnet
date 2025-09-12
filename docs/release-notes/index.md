@@ -26,6 +26,15 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.34.1 [elastic-apm-net-agent-1341-release-notes]
+**Release date:** September 12, 2025
+
+### Fixes [elastic-apm-net-agent-1341-fixes]
+
+* Ensure we always start an Activity even when OTelBridge disabled [#2656](https://github.com/elastic/apm-agent-dotnet/pull/2656)
+* Remove redundant println from profiler [#2656](https://github.com/elastic/apm-agent-dotnet/pull/2662)
+* Add the target framework moniker to the preamble logs [#2661](https://github.com/elastic/apm-agent-dotnet/pull/2661)
+
 ## 1.34.0 [elastic-apm-net-agent-1340-release-notes]
 **Release date:** September 1, 2025
 
