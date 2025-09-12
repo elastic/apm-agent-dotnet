@@ -74,6 +74,19 @@ namespace Elastic.Apm.Config
 				info.Log("Host: {HostName}", System.Environment.MachineName);
 				info.Log("Time zone: {TimeZone}", TimeZoneInfo.Local);
 				info.Log("Runtime: {RunTime}", RuntimeInformation.FrameworkDescription);
+
+#if NET8_0
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net8.0");
+#elif NETSTANDARD2_0
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "netstandard2.0");
+#elif NET472
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net472");
+#elif NET462
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net462");
+#else
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "<unknown>");
+#endif
+
 				PrintAgentConfiguration(logger, configurationReader);
 			}
 			catch (Exception e)
