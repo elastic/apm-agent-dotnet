@@ -44,3 +44,5 @@ toc:
       - file: log-correlation-manual.md
   - file: performance-tuning.md
   - file: upgrading.md
+  - title: Troubleshooting
+    crosslink: docs-content://troubleshoot/observability/apm-agent-dotnet/apm-dotnet-agent.md

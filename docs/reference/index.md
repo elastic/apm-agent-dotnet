@@ -26,3 +26,7 @@ The Agent automatically registers callback methods for built-in Diagnostic Sourc
 ## Additional Components [additional-components]
 
 APM Agents work in conjunction with the [APM Server](docs-content://solutions/observability/apm/index.md), [Elasticsearch](docs-content://get-started/index.md), and [Kibana](docs-content://get-started/the-stack.md). The [APM Guide](docs-content://solutions/observability/apm/index.md) provides details on how these components work together, and provides a matrix outlining [Agent and Server compatibility](docs-content://solutions/observability/apm/apm-agent-compatibility.md).
+
+## Troubleshooting
+
+If you're experiencing issues with the APM .NET agent, refer to [Troubleshooting](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-dotnet-agent.md).
