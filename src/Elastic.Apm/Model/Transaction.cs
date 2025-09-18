@@ -26,7 +26,6 @@ internal class Transaction : ITransaction
 {
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
-#if NET
 	internal static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
 
 	// This simply ensures our transaction activity is always created.
@@ -35,7 +34,6 @@ internal class Transaction : ITransaction
 		ShouldListenTo = s => s.Name == ElasticApmActivitySource.Name,
 		Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
 	};
-#endif
 
 	internal readonly TraceState _traceState;
 	internal readonly ConcurrentDictionary<SpanTimerKey, SpanTimer> SpanTimings = new();
@@ -554,11 +552,7 @@ internal class Transaction : ITransaction
 
 	private Activity StartActivity(bool shouldRestartTrace)
 	{
-#if NET
 		var activity = ElasticApmActivitySource.CreateActivity(KnownListeners.ApmTransactionActivityName, ActivityKind.Internal);
-#else
-		var activity = new Activity(KnownListeners.ApmTransactionActivityName);
-#endif
 
 		if (activity is null)
 			return activity;

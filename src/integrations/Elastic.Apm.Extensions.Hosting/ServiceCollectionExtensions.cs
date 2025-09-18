@@ -106,7 +106,7 @@ public static class ServiceCollectionExtensions
 	}
 
 	private static string GetDefaultEnvironmentName(IServiceProvider serviceProvider) =>
-#if NET8_0_OR_GREATER
+#if NET
 		(serviceProvider.GetService(typeof(IHostEnvironment)) as IHostEnvironment)?.EnvironmentName; // This is preferred since 3.0
 #else
 #pragma warning disable CS0246

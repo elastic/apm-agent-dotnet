@@ -3,8 +3,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-#if NET8_0_OR_GREATER
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -149,7 +147,8 @@ namespace Elastic.Apm.OpenTelemetry
 			transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
 			if (activity.Id != null)
-				_activeTransactions.AddOrUpdate(activity, transaction);
+				_activeTransactions.Add(activity, transaction);
+
 			return true;
 		}
 
@@ -178,7 +177,7 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 
 			if (activity.Id != null)
-				_activeSpans.AddOrUpdate(activity, newSpan);
+				_activeSpans.Add(activity, newSpan);
 		}
 
 		private Action<Activity> ActivityStopped =>
@@ -210,7 +209,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 					// By default we set unknown outcome
 					transaction.Outcome = Outcome.Unknown;
-#if NET8_0_OR_GREATER
+
 					switch (activity.Status)
 					{
 						case ActivityStatusCode.Unset:
@@ -223,7 +222,6 @@ namespace Elastic.Apm.OpenTelemetry
 							transaction.Outcome = Outcome.Failure;
 							break;
 					}
-#endif
 
 					transaction.End();
 				}
@@ -241,15 +239,15 @@ namespace Elastic.Apm.OpenTelemetry
 			// https://opentelemetry.io/docs/specs/otel/common/#attribute-limits
 			// copy max 128 keys and truncate values to 10k chars (the current maximum for e.g. statement.db).
 			var i = 0;
-			otel.Attributes ??= new Dictionary<string, object>();
-			foreach (var (key, value) in activity.TagObjects)
+			otel.Attributes ??= [];
+			foreach (var tagObject in activity.TagObjects)
 			{
 				if (i >= 128) break;
 
-				if (value is string s)
-					otel.Attributes[key] = s.Truncate(10_000);
+				if (tagObject.Value is string s)
+					otel.Attributes[tagObject.Key] = s.Truncate(10_000);
 				else
-					otel.Attributes[key] = value;
+					otel.Attributes[tagObject.Key] = tagObject.Value;
 				i++;
 			}
 		}
@@ -264,7 +262,7 @@ namespace Elastic.Apm.OpenTelemetry
 
 			// By default we set unknown outcome
 			span.Outcome = Outcome.Unknown;
-#if NET8_0_OR_GREATER
+
 			switch (activity.Status)
 			{
 				case ActivityStatusCode.Unset:
@@ -277,7 +275,6 @@ namespace Elastic.Apm.OpenTelemetry
 					span.Outcome = Outcome.Failure;
 					break;
 			}
-#endif
 			span.End();
 		}
 
@@ -468,4 +465,3 @@ namespace Elastic.Apm.OpenTelemetry
 		}
 	}
 }
-#endif

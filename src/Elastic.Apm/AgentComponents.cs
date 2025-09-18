@@ -17,11 +17,8 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-
-#if NET8_0_OR_GREATER
 using Elastic.Apm.OpenTelemetry;
 using Elastic.Apm.Model;
-#endif
 
 #if NETFRAMEWORK
 using Elastic.Apm.Config.Net4FullFramework;
@@ -62,7 +59,6 @@ namespace Elastic.Apm
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-#if NET
 				// Initialize early because ServerInfoCallback requires it and might execute
 				// before EnsureElasticActivityStarted runs
 				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
@@ -72,7 +68,7 @@ namespace Elastic.Apm
 				{
 					ActivitySource.AddActivityListener(Transaction.Listener);
 				}
-#endif
+
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName, hostNameDetector);
 
@@ -124,9 +120,6 @@ namespace Elastic.Apm
 
 		private void EnsureElasticActivityListenerStarted()
 		{
-#if !NET
-			return;
-#else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
 
 			// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version
@@ -146,14 +139,10 @@ namespace Elastic.Apm
 						ApmServerInfo.Version.ToString());
 				ElasticActivityListener?.Dispose();
 			}
-#endif
 		}
 
 		private void ServerInfoCallback(bool success, IApmServerInfo serverInfo)
 		{
-#if !NET8_0_OR_GREATER
-			return;
-#else
 			if (!Configuration.OpenTelemetryBridgeEnabled) return;
 
 			if (success)
@@ -180,7 +169,6 @@ namespace Elastic.Apm
 						"Unable to read server version - OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer. "
 						+ "The bridge remains active, but due to unknown server version it may not work as expected.");
 			}
-#endif
 		}
 #pragma warning disable IDE0022
 		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
@@ -243,9 +231,7 @@ namespace Elastic.Apm
 			return fallbackLogger;
 		}
 
-#if NET
 		private ElasticActivityListener ElasticActivityListener { get; }
-#endif
 
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }
 
@@ -286,10 +272,9 @@ namespace Elastic.Apm
 
 			if (PayloadSender is IDisposable disposablePayloadSender)
 				disposablePayloadSender.Dispose();
+
 			CentralConfigurationFetcher?.Dispose();
-#if NET8_0_OR_GREATER
 			ElasticActivityListener?.Dispose();
-#endif
 		}
 	}
 }

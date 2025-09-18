@@ -31,6 +31,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
 		{
 			yield return ("net8.0", ".NET 8", "8.0.0.0", "80");
+			yield return ("net9.0", ".NET 9", "9.0.0.0", "90");
 		}
 
 		public static IEnumerable<object[]> DotNetFrameworkVersionInfos()
