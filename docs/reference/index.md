@@ -29,4 +29,4 @@ APM Agents work in conjunction with the [APM Server](docs-content://solutions/ob
 
 ## Troubleshooting
 
-If you're experiencing issues with the APM .NET agent, refer to [Troubleshoot APM .NET Agent](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-dotnet-agent.md).
+If you're experiencing issues with the APM .NET agent, refer to [Troubleshoot APM .NET Agent](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md).
