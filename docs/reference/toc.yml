@@ -45,4 +45,4 @@ toc:
   - file: performance-tuning.md
   - file: upgrading.md
   - title: Troubleshooting
-    crosslink: docs-content://troubleshoot/observability/apm-agent-dotnet/apm-dotnet-agent.md
+    crosslink: docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md
