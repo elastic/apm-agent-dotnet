@@ -23,7 +23,6 @@ use log4rs::{
 use once_cell::sync::Lazy;
 use std::time::SystemTime;
 use std::{collections::HashSet, fs::File, io::BufReader, path::PathBuf, str::FromStr};
-use serde::__private;
 
 const APP_POOL_ID_ENV_VAR: &str = "APP_POOL_ID";
 const DOTNET_CLI_TELEMETRY_PROFILE_ENV_VAR: &str = "DOTNET_CLI_TELEMETRY_PROFILE";
