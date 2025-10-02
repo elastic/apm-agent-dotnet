@@ -132,7 +132,7 @@ To check for security updates, go to [Security announcements for the Elastic sta
 **Release date:** August 14, 2024
 
 ### Fixes [elastic-apm-net-agent-1282-fixes]
-* Fixed check for SqlRoleProvider under AspNet Identity 2 [#2415](https://github.com/elastic/apm-agent-dotnet/pull/2415)
+* Fixed check for SqlRoleProvider under AspNet Identity 2 [#2417](https://github.com/elastic/apm-agent-dotnet/pull/2417)
 
 ## 1.28.1 [elastic-apm-net-agent-1281-release-notes]
 **Release date:** August 12, 2024
