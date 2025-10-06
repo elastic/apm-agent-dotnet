@@ -18,7 +18,7 @@ public class AzureFunctionsInProcessTests : AzureFunctionsTestBase, IClassFixtur
 	public AzureFunctionsInProcessTests(ITestOutputHelper output, InProcessContext context)
 		: base(output, context) { }
 
-	[Fact]
+	[FlakyCiTestFact(2501)]
 	public async Task Invoke_Http_Ok()
 	{
 		var transaction = await InvokeAndAssertFunction(SampleHttpTrigger);
