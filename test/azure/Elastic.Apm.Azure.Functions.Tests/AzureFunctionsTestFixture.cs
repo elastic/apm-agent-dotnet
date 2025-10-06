@@ -124,7 +124,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		var transactionName = $"GET {uri.AbsolutePath}";
 		output.WriteLine($"Invoking {uri} ...");
 		var attempt = 0;
-		const int maxAttempts = 60;
+		const int maxAttempts = 360;
 		using var httpClient = new HttpClient();
 		httpClient.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
 		while (++attempt < maxAttempts)
