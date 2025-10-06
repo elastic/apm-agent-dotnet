@@ -28,7 +28,7 @@ public class AzureFunctionsInProcessTests : AzureFunctionsTestBase, IClassFixtur
 		transaction.Context.Response.StatusCode.Should().Be(200);
 	}
 
-	[Fact]
+	[FlakyCiTestFact(2501)]
 	public async Task Invoke_Http_InternalServerError()
 	{
 		var transaction = await InvokeAndAssertFunction(HttpTriggerWithInternalServerError);
@@ -38,7 +38,7 @@ public class AzureFunctionsInProcessTests : AzureFunctionsTestBase, IClassFixtur
 		transaction.Context.Response.StatusCode.Should().Be(500);
 	}
 
-	[Fact]
+	[FlakyCiTestFact(2501)]
 	public async Task Invoke_Http_FunctionThrowsException()
 	{
 		var transaction = await InvokeAndAssertFunction(HttpTriggerWithException);
