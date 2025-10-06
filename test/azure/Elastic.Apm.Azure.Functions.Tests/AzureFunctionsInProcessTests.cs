@@ -49,7 +49,7 @@ public class AzureFunctionsInProcessTests : AzureFunctionsTestBase, IClassFixtur
 		transaction.Context.Response.StatusCode.Should().Be(500);
 	}
 
-	[Fact]
+	[FlakyCiTestFact(2501)]
 	public async Task Invoke_Http_NotFound()
 	{
 		var transaction = await InvokeAndAssertFunction(HttpTriggerWithNotFound);
