@@ -136,8 +136,9 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 				output.WriteLine(s);
 				break;
 			}
-			catch
+			catch(Exception ex)
 			{
+				LogLines.Add($"Failed: {ex}");
 				await Task.Delay(TimeSpan.FromSeconds(1));
 			}
 		}
