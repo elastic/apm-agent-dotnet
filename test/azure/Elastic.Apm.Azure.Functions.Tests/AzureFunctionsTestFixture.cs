@@ -109,7 +109,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		_funcProcess.BeginOutputReadLine();
 
 		var success = false;
-		for (var i = 0; i < 240; i++)
+		for (var i = 0; i < 60; i++)
 		{
 			Thread.Sleep(1000);
 			if (funcToolIsReady)
