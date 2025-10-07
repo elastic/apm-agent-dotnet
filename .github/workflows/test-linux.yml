@@ -96,6 +96,12 @@ jobs:
         with:
           azure: 'true'
 
+      - name: 'Check Azure Functions Core Tools version'
+        run: func --version
+
+      - name: 'Check port availability'
+        run: netstat -tuln | grep 17073
+
       - name: 'Az CLI login'
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
