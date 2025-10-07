@@ -119,7 +119,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 				break;
 			}
 		}
-
+		
 		if (!success)
 		{
 			LogLines.Add($"Didn't manage to start the in-memory Azure function... {started}");
