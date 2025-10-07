@@ -81,7 +81,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 			StartInfo =
 			{
 				FileName = "func",
-				Arguments = "start",
+				Arguments = "start --verbose",
 				WorkingDirectory = workingDir,
 				EnvironmentVariables =
 				{
@@ -109,7 +109,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		_funcProcess.BeginOutputReadLine();
 
 		var success = false;
-		for (var i = 0; i < 120; i++)
+		for (var i = 0; i < 240; i++)
 		{
 			Thread.Sleep(1000);
 			if (funcToolIsReady)
