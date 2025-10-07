@@ -14,6 +14,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
@@ -138,6 +139,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 			}
 			catch (Exception ex)
 			{
+				output.WriteLine(ex.ToString());
 				LogLines.Add($"Failed: {ex}");
 				await Task.Delay(TimeSpan.FromSeconds(1));
 			}
