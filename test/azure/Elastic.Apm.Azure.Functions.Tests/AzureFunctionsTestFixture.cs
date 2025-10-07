@@ -80,7 +80,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 			StartInfo =
 			{
 				FileName = "func",
-				Arguments = "start --verbose --debug",
+				Arguments = "start --verbose",
 				WorkingDirectory = workingDir,
 				EnvironmentVariables =
 				{
