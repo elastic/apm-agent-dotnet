@@ -105,10 +105,6 @@ jobs:
       - name: 'testing_0'
         run: func --version
 
-      - name: 'Start Azure Functions Core Tools'
-        run: func start --verbose
-        working-directory: ./test/azure/applications/Elastic.AzureFunctionApp.InProcess
-
       - name: 'Az CLI login'
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
