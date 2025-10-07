@@ -107,14 +107,26 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		LogLines.Add($"{DateTime.Now}: Starting func tool");
 		_funcProcess.Start();
 		_funcProcess.BeginOutputReadLine();
-		for (var i = 0; i < 60; i++)
+
+		var success = false;
+		for (var i = 0; i < 120; i++)
 		{
 			Thread.Sleep(1000);
 			if (funcToolIsReady)
 			{
+				success = true;
 				LogLines.Add($"{DateTime.Now}: func tool ready!");
 				break;
 			}
+		}
+
+		if (!success)
+		{
+			LogLines.Add("Didn't manage to start the in-memory Azure function...");
+		}
+		else
+		{
+			LogLines.Add("Managed to start the in-memory Azure function...");
 		}
 	}
 
