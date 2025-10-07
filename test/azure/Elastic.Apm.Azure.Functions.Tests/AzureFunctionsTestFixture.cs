@@ -14,7 +14,6 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Functions.Tests;
@@ -105,8 +104,9 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		};
 
 		LogLines.Add($"{DateTime.Now}: Starting func tool");
-		_funcProcess.Start();
+		var started = _funcProcess.Start();
 		_funcProcess.BeginOutputReadLine();
+
 
 		var success = false;
 		for (var i = 0; i < 60; i++)
@@ -122,11 +122,11 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 
 		if (!success)
 		{
-			LogLines.Add("Didn't manage to start the in-memory Azure function...");
+			LogLines.Add($"Didn't manage to start the in-memory Azure function... {started}");
 		}
 		else
 		{
-			LogLines.Add("Managed to start the in-memory Azure function...");
+			LogLines.Add($"Managed to start the in-memory Azure function... {started}");
 		}
 	}
 
