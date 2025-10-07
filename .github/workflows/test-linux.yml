@@ -99,6 +99,15 @@ jobs:
       - name: 'List working directory contents'
         run: ls -la ./test/azure/applications/Elastic.AzureFunctionApp.InProcess
 
+      - name: 'testing_0'
+        run: dotnet --list-runtimes
+
+      - name: 'testing_0'
+        run: func --version
+
+      - name: 'testing_1'
+        run: func start --verbose
+
       - name: 'Az CLI login'
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
