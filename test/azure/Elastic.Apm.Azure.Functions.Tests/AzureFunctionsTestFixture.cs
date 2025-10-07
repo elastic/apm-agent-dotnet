@@ -80,7 +80,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 			StartInfo =
 			{
 				FileName = "func",
-				Arguments = "start --verbose",
+				Arguments = "start",
 				WorkingDirectory = workingDir,
 				EnvironmentVariables =
 				{
@@ -104,29 +104,17 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		};
 
 		LogLines.Add($"{DateTime.Now}: Starting func tool");
-		var started = _funcProcess.Start();
 		_funcProcess.BeginOutputReadLine();
 		_funcProcess.BeginErrorReadLine();
 
-		var success = false;
 		for (var i = 0; i < 60; i++)
 		{
 			Thread.Sleep(1000);
 			if (funcToolIsReady)
 			{
-				success = true;
 				LogLines.Add($"{DateTime.Now}: func tool ready!");
 				break;
 			}
-		}
-
-		if (!success)
-		{
-			LogLines.Add($"Didn't manage to start the in-memory Azure function... {started}");
-		}
-		else
-		{
-			LogLines.Add($"Managed to start the in-memory Azure function... {started}");
 		}
 	}
 
@@ -149,10 +137,8 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 				output.WriteLine(s);
 				break;
 			}
-			catch (Exception ex)
+			catch
 			{
-				output.WriteLine(ex.ToString());
-				LogLines.Add($"Failed: {ex}");
 				await Task.Delay(TimeSpan.FromSeconds(1));
 			}
 		}
