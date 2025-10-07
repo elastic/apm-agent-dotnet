@@ -80,7 +80,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 			StartInfo =
 			{
 				FileName = "func",
-				Arguments = "start --verbose",
+				Arguments = "start --verbose --debug",
 				WorkingDirectory = workingDir,
 				EnvironmentVariables =
 				{
@@ -106,7 +106,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		LogLines.Add($"{DateTime.Now}: Starting func tool");
 		var started = _funcProcess.Start();
 		_funcProcess.BeginOutputReadLine();
-
+		_funcProcess.BeginErrorReadLine();
 
 		var success = false;
 		for (var i = 0; i < 60; i++)
