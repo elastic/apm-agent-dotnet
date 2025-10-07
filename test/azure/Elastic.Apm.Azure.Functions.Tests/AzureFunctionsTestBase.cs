@@ -23,7 +23,9 @@ public class AzureFunctionsTestBase : IDisposable
 
 		_output.WriteLine("=== START SUT Log ===");
 		foreach (var line in Context.LogLines)
+		{
 			_output.WriteLine(line);
+		}
 		_output.WriteLine("=== END SUT Log ===");
 	}
 
