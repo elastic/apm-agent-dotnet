@@ -108,6 +108,19 @@ jobs:
       - name: 'testing_ls'
         run: ls -la /usr/lib/azure-functions-core-tools-4/in-proc8/func
 
+      # Step 3: Fix permissions for in-proc8 func executable
+      - name: Fix permissions
+        run: sudo chmod +x /usr/lib/azure-functions-core-tools-4/in-proc8/func
+
+      # Step 4: Verify permissions
+      - name: Verify permissions
+        run: ls -la /usr/lib/azure-functions-core-tools-4/in-proc8/func
+
+      # Step 5: Start Azure Functions Core Tools
+      - name: Start Azure Functions Core Tools
+        run: func start --verbose --debug
+        working-directory: ./test/azure/applications/Elastic.AzureFunctionApp.InProcess
+
       - name: 'Az CLI login'
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
