@@ -105,6 +105,9 @@ jobs:
       - name: 'testing_0'
         run: func --version
 
+      - name: 'testing_ls'
+        run: ls -la /usr/lib/azure-functions-core-tools-4/in-proc8/func
+
       - name: 'Az CLI login'
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
