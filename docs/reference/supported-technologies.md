@@ -93,6 +93,7 @@ We support automatic instrumentation for the following messaging systems
 | Azure.Messaging.ServiceBus 7.0.0+ |
 | Azure Queue Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Queues 12.6.0+ | [NuGet package](/reference/setup-azure-storage.md) |
 | Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| Kafka {applies_to}`apm_agent_dotnet: ga v1.34.2` | Confluent.Kafka 2.11.1 | [NuGet package](/reference/setup-kafka.md) |
 | RabbitMQ {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 
 
