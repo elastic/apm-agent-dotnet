@@ -96,6 +96,10 @@ jobs:
         with:
           azure: 'true'
 
+      # Fix permissions for in-proc8 func executable
+      - name: Fix permissions
+        run: sudo chmod +x /usr/lib/azure-functions-core-tools-4/in-proc8/func
+
       - name: 'Az CLI login'
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
