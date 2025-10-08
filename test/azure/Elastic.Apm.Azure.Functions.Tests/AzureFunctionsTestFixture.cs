@@ -104,6 +104,7 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		};
 
 		LogLines.Add($"{DateTime.Now}: Starting func tool");
+		_funcProcess.Start();
 		_funcProcess.BeginOutputReadLine();
 		_funcProcess.BeginErrorReadLine();
 
