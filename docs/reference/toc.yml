@@ -21,6 +21,7 @@ toc:
       - file: setup-azure-servicebus.md
       - file: setup-azure-storage.md
       - file: setup-mongo-db.md
+      - file: setup-kafka.md
   - file: supported-technologies.md
   - file: configuration.md
     children:

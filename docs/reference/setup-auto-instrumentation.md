@@ -45,7 +45,7 @@ It instruments the following assemblies:
 | AdoNet | part of .NET | System.Data 4.0.0 - 4.*.* |
 | part of .NET | System.Data.Common 4.0.0 - 5.*.* |
 | AspNet | part of .NET Framework | System.Web 4.0.0 - 4.*.* |
-| Kafka | [Confluent.Kafka 1.4.0 - 1.*.*](https://www.nuget.org/packages/Confluent.Kafka) | Confluent.Kafka 1.4.0 - 1.*.* |
+| Kafka | [Confluent.Kafka 1.4.0 - 2.*.*](https://www.nuget.org/packages/Confluent.Kafka) | Confluent.Kafka 1.4.0 - 2.*.* |
 | MySqlCommand | [MySql.Data 6.7.0 - 8.*.*](https://www.nuget.org/packages/MySql.Data) | MySql.Data 6.7.0 - 8.*.* |
 | NpgsqlCommand | [Npgsql 4.0.0 - 7.*.*](https://www.nuget.org/packages/Npgsql) | Npgsql 4.0.0 - 7.*.* |
 | OracleCommand | [Oracle.ManagedDataAccess 12.2.1100 - 21.*.*](https://www.nuget.org/packages/Oracle.ManagedDataAccess) | Oracle.ManagedDataAccess 4.122.0 - 4.122.* |

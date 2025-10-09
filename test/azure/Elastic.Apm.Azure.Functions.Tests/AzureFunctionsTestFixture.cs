@@ -106,6 +106,8 @@ public abstract class AzureFunctionTestContextBase : IDisposable
 		LogLines.Add($"{DateTime.Now}: Starting func tool");
 		_funcProcess.Start();
 		_funcProcess.BeginOutputReadLine();
+		_funcProcess.BeginErrorReadLine();
+
 		for (var i = 0; i < 60; i++)
 		{
 			Thread.Sleep(1000);

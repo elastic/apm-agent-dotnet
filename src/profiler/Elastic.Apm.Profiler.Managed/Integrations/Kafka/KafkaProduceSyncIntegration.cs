@@ -29,7 +29,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 			KafkaIntegration.TopicPartitionTypeName, KafkaIntegration.MessageTypeName, KafkaIntegration.ActionOfDeliveryReportTypeName
 		},
 		MinimumVersion = "1.4.0",
-		MaximumVersion = "1.*.*",
+		MaximumVersion = "2.*.*",
 		Group = KafkaIntegration.Name)]
 	[Browsable(false)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
