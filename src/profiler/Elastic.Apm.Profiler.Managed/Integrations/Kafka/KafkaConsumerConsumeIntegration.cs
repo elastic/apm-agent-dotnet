@@ -26,7 +26,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		ReturnType = KafkaIntegration.ConsumeResultTypeName,
 		ParameterTypes = new[] { ClrTypeNames.Int32 },
 		MinimumVersion = "1.4.0",
-		MaximumVersion = "1.*.*",
+		MaximumVersion = "2.*.*",
 		Group = KafkaIntegration.Name)]
 	[Browsable(false)]
 	[EditorBrowsable(EditorBrowsableState.Never)]
