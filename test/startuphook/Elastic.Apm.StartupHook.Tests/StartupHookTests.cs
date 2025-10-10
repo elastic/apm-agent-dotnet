@@ -31,10 +31,21 @@ namespace Elastic.Apm.StartupHook.Tests
 		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
 		{
 			yield return ("net8.0", ".NET 8", "8.0.0.0", "80");
+			yield return ("net9.0", ".NET 9", "9.0.0.0", "90");
 		}
 
+		private static readonly Dictionary<string, string> CommonEnvVars = new()
+		{
+			[CloudProvider.ToEnvironmentVariable()] = "none",
+			[CentralConfig.ToEnvironmentVariable()] = "false",
+			// We disable the OpenTelemetry bridge here to avoid additional transactions
+			// that may be created. In .NET 9 there are some additional activities for
+			// HttpConnection that result in additional spans and transactions.
+			["ELASTIC_APM_OPENTELEMETRY_BRIDGE_ENABLED"] = "false"
+		};
+
 		public static IEnumerable<object[]> DotNetFrameworkVersionInfos()
-			=> GetDotNetFrameworkVersionInfos().Select(i => new[] { i.TargetFramework, i.RuntimeName, i.Version });
+				=> GetDotNetFrameworkVersionInfos().Select(i => new[] { i.TargetFramework, i.RuntimeName, i.Version });
 
 		public static IEnumerable<object[]> DotNetFrameworks()
 			=> DotNetFrameworkVersionInfos().Select(o => o[0..1]);
@@ -75,10 +86,9 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			using (var sampleApp = new SampleApplication())
 			{
-				var environmentVariables = new Dictionary<string, string>
+				var environmentVariables = new Dictionary<string, string>(CommonEnvVars)
 				{
-					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
-					[CloudProvider.ToEnvironmentVariable()] = "none"
+					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}"
 				};
 
 				var uri = sampleApp.Start(targetFramework, environmentVariables);
@@ -118,10 +128,9 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			using (var sampleApp = new SampleApplication())
 			{
-				var environmentVariables = new Dictionary<string, string>
+				var environmentVariables = new Dictionary<string, string>(CommonEnvVars)
 				{
-					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
-					[CloudProvider.ToEnvironmentVariable()] = "none"
+					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}"
 				};
 
 				var uri = sampleApp.Start(targetFramework, environmentVariables);
@@ -168,10 +177,9 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			using (var sampleApp = new SampleApplication())
 			{
-				var environmentVariables = new Dictionary<string, string>
+				var environmentVariables = new Dictionary<string, string>(CommonEnvVars)
 				{
-					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
-					[CloudProvider.ToEnvironmentVariable()] = "none"
+					[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}"
 				};
 
 				var uri = sampleApp.Start(targetFramework, environmentVariables);
@@ -215,10 +223,9 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			using var project = DotnetProject.Create(_output, name, template, targetFramework, "--no-https");
 
-			var environmentVariables = new Dictionary<string, string>
+			var environmentVariables = new Dictionary<string, string>(CommonEnvVars)
 			{
-				[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}",
-				[CloudProvider.ToEnvironmentVariable()] = "none"
+				[ServerUrl.ToEnvironmentVariable()] = $"http://localhost:{port}"
 			};
 
 			using var process = project.CreateProcess(SolutionPaths.AgentZip, environmentVariables);
