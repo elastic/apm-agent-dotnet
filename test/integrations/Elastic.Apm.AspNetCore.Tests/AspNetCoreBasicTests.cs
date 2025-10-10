@@ -89,11 +89,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
 			agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
-#if NET8_0
+
 			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 8");
-#else
-			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
-#endif
 			agent.Service.Runtime.Version.Should().StartWith(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 			var transaction = payloadSender.FirstTransaction;
@@ -118,13 +115,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NET5_0_OR_GREATER
 			transaction.Context.Request.HttpVersion.Should().Be("1.1");
-#elif NETCOREAPP3_0 || NETCOREAPP3_1
-			transaction.Context.Request.HttpVersion.Should().Be("2");
-#else
-			transaction.Context.Request.HttpVersion.Should().Be("2.0");
-#endif
 			transaction.Context.Request.Method.Should().Be("GET");
 
 			//test transaction.context.request.url
@@ -237,14 +228,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(2);
 			agent.Service.Framework.Version.Should().StartWith(aspNetCoreVersion);
 
-#if NET6_0
-			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 6");
-#elif NET7_0
-			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetName + " 7");
-#else
 			agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
-#endif
-
 			agent.Service.Runtime.Version.Should().StartWith(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 			payloadSender.Transactions.Should().ContainSingle();
@@ -272,13 +256,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NET5_0_OR_GREATER
-			transaction.Context.Request.HttpVersion.Should().Be("1.1");
-#elif NETCOREAPP3_0 || NETCOREAPP3_1
-			transaction.Context.Request.HttpVersion.Should().Be("2");
-#else
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
-#endif
 			transaction.Context.Request.Method.Should().Be("POST");
 
 			//test transaction.context.request.url
