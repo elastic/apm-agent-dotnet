@@ -156,7 +156,7 @@ namespace Elastic.Apm.Tests
 			var scopedLogger = consoleLogger.Scoped("MyTestScope");
 			for (var i = 0; i < 10; i++)
 				scopedLogger.Warning()?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1}", i);
-#if NET8_0_OR_GREATER
+#if NET
 			var cachedFormatterCount = scopedLogger.Formatters.Count();
 			cachedFormatterCount.Should().Be(1);
 

@@ -24,7 +24,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// Contains data related to FaaS (Function as a Service) events.
 		/// </summary>
-		public Faas FaaS { get; set; }
+		Faas FaaS { get; set; }
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
@@ -46,7 +46,7 @@ namespace Elastic.Apm.Api
 		/// A snapshot of configuration from when the transaction started. A snapshot contains values
 		/// from initial configuration combined with dynamic values from central configuration, if enabled.
 		/// </summary>
-		public IConfiguration Configuration { get; }
+		IConfiguration Configuration { get; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.

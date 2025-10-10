@@ -16,6 +16,6 @@ namespace Elastic.Apm.ServerInfo
 		/// The agent should not depend on the APM server version and if the version is not (yet) available the agent should
 		/// default to a reasonable behaviour.
 		/// </summary>
-		public ElasticVersion Version { get; set; }
+		ElasticVersion Version { get; set; }
 	}
 }

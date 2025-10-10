@@ -4,8 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.IO;
-using System.Reflection;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;

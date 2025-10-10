@@ -51,7 +51,7 @@ namespace ElasticApmStartupHook
 				var log = $"[{DateTime.Now:u}] {message}";
 				Console.Out.WriteLine(log);
 				Console.Out.Flush();
-				File.AppendAllLines(_logPath, new[] { log });
+				File.AppendAllLines(_logPath, [log]);
 			}
 			catch
 			{

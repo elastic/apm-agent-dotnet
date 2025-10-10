@@ -711,10 +711,6 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 		private Func<object> GetDefaultCreator(Type createdType) =>
 			JsonTypeReflector.ReflectionDelegateFactory.CreateDefaultConstructor<object>(createdType);
 
-#if NET35
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Portability", "CA1903:UseOnlyApiFromTargetedFramework", MessageId =
- "System.Runtime.Serialization.DataContractAttribute.#get_IsReference()")]
-#endif
 		private void InitializeContract(JsonContract contract)
 		{
 			var containerAttribute = JsonTypeReflector.GetCachedAttribute<JsonContainerAttribute>(contract.NonNullableUnderlyingType);
@@ -1258,8 +1254,8 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 			// warning - this method use to cause errors with Intellitrace. Retest in VS Ultimate after changes
 			IValueProvider valueProvider;
 
-#if !(PORTABLE40 || PORTABLE || DOTNET || NET472 || NETSTANDARD2_0 || NET5_0_OR_GREATER)
-            if (DynamicCodeGeneration)
+#if !(DOTNET || NET472 || NETSTANDARD || NET)
+			if (DynamicCodeGeneration)
             {
                 valueProvider = new DynamicValueProvider(member);
             }
@@ -1267,10 +1263,8 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
             {
                 valueProvider = new ReflectionValueProvider(member);
             }
-#elif !(PORTABLE40)
-			valueProvider = new ExpressionValueProvider(member);
 #else
-            valueProvider = new ReflectionValueProvider(member);
+			valueProvider = new ExpressionValueProvider(member);
 #endif
 
 			return valueProvider;

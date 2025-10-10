@@ -5,7 +5,7 @@
 
 // depends on Mock APM server project TargetFramework
 
-#if NET5_0_OR_GREATER
+#if NET
 
 using System;
 using System.IO;
@@ -70,6 +70,11 @@ namespace Elastic.Apm.Tests
 
 			_server.ReceivedData.Transactions.Should().HaveCount(1);
 			var transaction = _server.ReceivedData.Transactions.First();
+
+			transaction.Context.Should().NotBeNull();
+			transaction.Context.Labels.Should().NotBeNull();
+			transaction.Context.Labels.MergedDictionary.Should().NotBeNull();
+
 			transaction.Context.Labels.MergedDictionary.Should().ContainKey("self_signed_cert");
 		}
 

@@ -26,7 +26,7 @@ internal class Transaction : ITransaction
 {
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
-#if NET
+#if NET || NETSTANDARD2_1
 	internal static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
 
 	// This simply ensures our transaction activity is always created.

@@ -56,7 +56,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The outcome of the IExecutionSegment: success, failure, or unknown.
 		/// </summary>
-		public Outcome Outcome { get; set; }
+		Outcome Outcome { get; set; }
 
 		/// <summary>
 		/// Distributed tracing data for this segment as the distributed tracing caller.
@@ -297,7 +297,7 @@ namespace Elastic.Apm.Api
 		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		/// </summary>
-		public void SetLabel(string key, string value);
+		void SetLabel(string key, string value);
 
 		/// <summary>
 		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and
@@ -308,7 +308,7 @@ namespace Elastic.Apm.Api
 		/// with underscores.
 		/// </param>
 		/// <param name="value">The value of the label</param>
-		public void SetLabel(string key, bool value);
+		void SetLabel(string key, bool value);
 
 		/// <summary>
 		/// <inheritdoc cref="SetLabel(string,bool)" />
@@ -319,7 +319,7 @@ namespace Elastic.Apm.Api
 		/// <param name="value">
 		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
-		public void SetLabel(string key, double value);
+		void SetLabel(string key, double value);
 
 		/// <summary>
 		/// <inheritdoc cref="SetLabel(string,bool)" />
@@ -330,7 +330,7 @@ namespace Elastic.Apm.Api
 		/// <param name="value">
 		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
-		public void SetLabel(string key, int value);
+		void SetLabel(string key, int value);
 
 		/// <summary>
 		/// <inheritdoc cref="SetLabel(string,bool)" />
@@ -341,7 +341,7 @@ namespace Elastic.Apm.Api
 		/// <param name="value">
 		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
-		public void SetLabel(string key, long value);
+		void SetLabel(string key, long value);
 
 		/// <summary>
 		/// <inheritdoc cref="SetLabel(string,bool)" />
@@ -352,7 +352,7 @@ namespace Elastic.Apm.Api
 		/// <param name="value">
 		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
-		public void SetLabel(string key, decimal value);
+		void SetLabel(string key, decimal value);
 
 		/// <summary>
 		/// Start and return a new custom span as a child of this execution segment.

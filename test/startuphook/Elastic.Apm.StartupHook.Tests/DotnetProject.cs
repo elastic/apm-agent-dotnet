@@ -5,13 +5,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Xml.Linq;
 using ProcNet;
-using ProcNet.Std;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.StartupHook.Tests
@@ -168,7 +165,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				"new",
 				"globaljson",
 				"--sdk-version",
-				"8.0.404", // Fixing this specific version, for now
+				"9.0.303", // Fixing this specific version, for now
 				"--roll-forward",
 				"LatestPatch"
 			])
