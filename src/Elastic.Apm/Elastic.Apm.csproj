@@ -79,9 +79,23 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and ('$(TargetFramework)'=='net472' or '$(TargetFramework)'=='net462' or '$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1')">
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and '$(TargetFramework)'!='net462' and '$(TargetFramework)'!='net472'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" />
   </ItemGroup>
+
+  <!-- Fallback to 5.0.0 for .NET Framework targets.
+       Ideally, we would like to update to a newer DiagnosticSource because 5.0.0 is technically deprecated.
+       For some reason, the IIS tests fail on CI when we update to a newer version (even with an updated binding redirect).
+       On CI, the IIS test "CustomServiceNodeNameSetViaSettings" fails for two out of the five URLS
+        - "Home/Contact"
+        - "Home/CustomSpanThrows"         
+       Both fail with the span count being zero instead of the expected value. I was unable to reproduce the failure locally
+       and the same tests passed.
+       We can revisit this in a future PR if we feel it is necessary and worth the effort to diagnose this -->
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and ('$(TargetFramework)'=='net462' or '$(TargetFramework)'=='net472')">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" VersionOverride="5.0.0" />
+  </ItemGroup>
+
   <!-- DiagnosticSourceVersion MsBuild property can be used to compile the agent against a specific version of
        System.Diagnostics.DiagnosticSource. Used when creating the ElasticApmAgentStartupHook zip file to
        compile multiple versions of the agent.
