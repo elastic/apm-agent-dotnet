@@ -154,6 +154,9 @@ jobs:
           icacls C:\Windows\Temp /grant "IUSR:(OI)(CI)F" /T
           icacls "c:\Windows\Microsoft.NET\Framework64\v4.0.30319\Temporary ASP.NET Files" /grant "IUSR:(OI)(CI)F" /T
 
+      # The test filter here is intentional.
+      # The IIS tests are slow and quite flaky so we only run one of them in CI, as a smoke test 
+      # to verify that the IIS integration works.
       - name: Run tests
         run: |
           set ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED=true
