@@ -22,6 +22,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <summary>
 		/// Gets the consume result associated with the consume request
 		/// </summary>
-		public IConsumeResult ConsumerRecord { get; }
+		IConsumeResult ConsumerRecord { get; }
 	}
 }

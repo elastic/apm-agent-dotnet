@@ -22,11 +22,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <summary>
 		///     Gets the Kafka partition.
 		/// </summary>
-		public Partition Partition { get; }
+		Partition Partition { get; }
 
 		/// <summary>
 		///     Gets the Kafka offset
 		/// </summary>
-		public Offset Offset { get; }
+		Offset Offset { get; }
 	}
 }

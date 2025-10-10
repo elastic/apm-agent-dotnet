@@ -318,18 +318,18 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
 		public interface ITargetMethodNotFoundException
 		{
-			public void AddTypo(string key, string value);
+			void AddTypo(string key, string value);
 		}
 
 		public interface ITargetMethodNotFound2Exception
 		{
-			public void AddGeneric(object value);
+			void AddGeneric(object value);
 		}
 
 		public interface ITargetMethodNotFound3Exception
 		{
 			[Duck(GenericParameterTypeNames = new string[] { "P1", "P2" })]
-			public void AddGeneric(object value);
+			void AddGeneric(object value);
 		}
 
 		internal class TargetMethodNotFoundExceptionClass
@@ -355,7 +355,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 		public interface IProxyMethodParameterIsMissingException
 		{
 			[Duck(ParameterTypeNames = new string[] { "System.String", "System.String" })]
-			public void Add(string key);
+			void Add(string key);
 		}
 
 		internal class ProxyMethodParameterIsMissingExceptionClass
@@ -384,13 +384,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 		public interface IProxyAndTargetMethodParameterSignatureMismatchException
 		{
 			[Duck(ParameterTypeNames = new string[] { "System.String", "System.String" })]
-			public void Add(string key, ref string value);
+			void Add(string key, ref string value);
 		}
 
 		public interface IProxyAndTargetMethodParameterSignatureMismatch2Exception
 		{
 			[Duck(ParameterTypeNames = new string[] { "System.String", "System.String" })]
-			public void Add(string key, out string value);
+			void Add(string key, out string value);
 		}
 
 		internal class ProxyAndTargetMethodParameterSignatureMismatchExceptionClass
@@ -438,9 +438,9 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 
 		public interface ITargetMethodAmbiguousMatchException
 		{
-			public void Add(string key, object value);
+			void Add(string key, object value);
 
-			public void Add(string key, string value);
+			void Add(string key, string value);
 		}
 
 		internal class TargetMethodAmbiguousMatchExceptionClass

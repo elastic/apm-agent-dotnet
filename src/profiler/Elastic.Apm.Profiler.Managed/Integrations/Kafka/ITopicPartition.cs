@@ -22,11 +22,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <summary>
 		///     Gets the Kafka topic name.
 		/// </summary>
-		public string Topic { get; }
+		string Topic { get; }
 
 		/// <summary>
 		///     Gets the Kafka partition.
 		/// </summary>
-		public Partition Partition { get; }
+		Partition Partition { get; }
 	}
 }

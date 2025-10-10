@@ -102,7 +102,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 		public interface IPrivateTarget
 		{
 			[Duck(Kind = DuckKind.Field)]
-			public string Name { get; }
+			string Name { get; }
 		}
 
 		private class PrivateDuckChainingTarget
