@@ -126,7 +126,7 @@ namespace Elastic.Apm.BackendComm
 
 		private static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
 		{
-#if NET462
+#if NET462 // SSL options are not available in .NET Framework 4.6.2
 			try
 			{
 				var systemNetHttpVersion = typeof(HttpClientHandler).Assembly.GetName().Version;
