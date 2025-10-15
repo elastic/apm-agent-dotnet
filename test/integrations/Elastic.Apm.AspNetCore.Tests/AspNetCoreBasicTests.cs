@@ -115,7 +115,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-			transaction.Context.Request.HttpVersion.Should().Be("1.1");
+			transaction.Context.Request.HttpVersion.Should().Be("2");
 			transaction.Context.Request.Method.Should().Be("GET");
 
 			//test transaction.context.request.url
@@ -256,7 +256,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-			transaction.Context.Request.HttpVersion.Should().Be("2.0");
+			transaction.Context.Request.HttpVersion.Should().Be("2");
 			transaction.Context.Request.Method.Should().Be("POST");
 
 			//test transaction.context.request.url
