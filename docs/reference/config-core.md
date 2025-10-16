@@ -365,7 +365,7 @@ Sets the minimum duration of exit spans. Exit spans with a duration lesser than 
 apm_agent_dotnet: ga 1.13
 ```
 
-Setting this option to `false` will disable the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). This will disable the use of the vendor-neutral OpenTelemetry Tracing API (the [Activity API](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-5.0) in .NET) to manually instrument your code, and have the Elastic .NET APM agent handle those API calls.
+Setting this option to `false` will disable the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). This will disable the use of the vendor-neutral OpenTelemetry Tracing API (the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) in .NET) to manually instrument your code, and have the Elastic .NET APM agent handle those API calls.
 
 | Environment variable name | IConfiguration key |
 | --- | --- |
@@ -375,3 +375,6 @@ Setting this option to `false` will disable the [OpenTelemetry Bridge](/referenc
 | --- | --- |
 | `true` | Boolean |
 
+::::{note}
+The OpenTelemetry Bridge is not supported on .NET Framework.
+::::
