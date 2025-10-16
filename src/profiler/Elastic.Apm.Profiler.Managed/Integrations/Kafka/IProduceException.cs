@@ -22,6 +22,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <summary>
 		/// Gets the delivery result associated with the produce request
 		/// </summary>
-		public IDeliveryResult DeliveryResult { get; }
+		IDeliveryResult DeliveryResult { get; }
 	}
 }

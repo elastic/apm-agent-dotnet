@@ -24,6 +24,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// Sets the delivery report handler
 		/// </summary>
 		[DuckField]
-		public object Handler { set; }
+		object Handler { set; }
 	}
 }

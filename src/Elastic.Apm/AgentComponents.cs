@@ -15,12 +15,12 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
+using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 
-#if NET8_0_OR_GREATER
+#if NET || NETSTANDARD2_1
 using Elastic.Apm.OpenTelemetry;
-using Elastic.Apm.Model;
 #endif
 
 #if NETFRAMEWORK
@@ -62,9 +62,9 @@ namespace Elastic.Apm
 				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-#if NET
 				// Initialize early because ServerInfoCallback requires it and might execute
 				// before EnsureElasticActivityStarted runs
+#if NET || NETSTANDARD2_1
 				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
 
 				// Ensure we have a listener so that transaction activities are created when the OTel bridge is disabled
@@ -73,6 +73,7 @@ namespace Elastic.Apm
 					ActivitySource.AddActivityListener(Transaction.Listener);
 				}
 #endif
+
 				var systemInfoHelper = new SystemInfoHelper(Logger);
 				var system = systemInfoHelper.GetSystemInfo(Configuration.HostName, hostNameDetector);
 
@@ -124,11 +125,18 @@ namespace Elastic.Apm
 
 		private void EnsureElasticActivityListenerStarted()
 		{
-#if !NET
-			return;
-#else
-			if (!Configuration.OpenTelemetryBridgeEnabled) return;
+			if (!Configuration.OpenTelemetryBridgeEnabled)
+				return;
 
+#if NETFRAMEWORK
+			Logger.Info()
+				?.Log(
+					"OpenTelemetry (Activity) bridge is not supported on .NET Framework - bridge won't be enabled. Current Server version: {version}",
+					ApmServerInfo.Version?.ToString() ?? "unknown");
+			return;
+#endif
+
+#if NET || NETSTANDARD2_1
 			// If the server version is not known yet, we enable the listener - and then the callback will do the version check once we have the version
 			if (ApmServerInfo.Version == null || ApmServerInfo.Version == new ElasticVersion(0, 0, 0, null))
 				ElasticActivityListener?.Start(TracerInternal);
@@ -151,10 +159,8 @@ namespace Elastic.Apm
 
 		private void ServerInfoCallback(bool success, IApmServerInfo serverInfo)
 		{
-#if !NET8_0_OR_GREATER
-			return;
-#else
-			if (!Configuration.OpenTelemetryBridgeEnabled) return;
+			if (!Configuration.OpenTelemetryBridgeEnabled)
+				return;
 
 			if (success)
 			{
@@ -170,7 +176,9 @@ namespace Elastic.Apm
 						?.Log(
 							"OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer - bridge won't be enabled. Current Server version: {version}",
 							serverInfo.Version.ToString());
-					ElasticActivityListener?.Dispose();
+#if NET || NETSTANDARD2_1
+				ElasticActivityListener?.Dispose();
+#endif
 				}
 			}
 			else
@@ -180,7 +188,6 @@ namespace Elastic.Apm
 						"Unable to read server version - OpenTelemetry (Activity) bridge is only supported with APM Server 7.16.0 or newer. "
 						+ "The bridge remains active, but due to unknown server version it may not work as expected.");
 			}
-#endif
 		}
 #pragma warning disable IDE0022
 		private static IApmLogger DefaultLogger(IApmLogger logger, IConfigurationReader configurationReader)
@@ -243,7 +250,7 @@ namespace Elastic.Apm
 			return fallbackLogger;
 		}
 
-#if NET
+#if NET || NETSTANDARD2_1
 		private ElasticActivityListener ElasticActivityListener { get; }
 #endif
 
@@ -286,8 +293,9 @@ namespace Elastic.Apm
 
 			if (PayloadSender is IDisposable disposablePayloadSender)
 				disposablePayloadSender.Dispose();
+
 			CentralConfigurationFetcher?.Dispose();
-#if NET8_0_OR_GREATER
+#if NET || NETSTANDARD2_1
 			ElasticActivityListener?.Dispose();
 #endif
 		}

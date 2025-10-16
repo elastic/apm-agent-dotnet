@@ -14,7 +14,7 @@ public sealed class FactRequiresMvcTestingFix : FactAttribute
 	{
 		if (Environment.Version.Major < 7)
 			return;
-		Skip = $"This test is disabled on .NET 7 until https://github.com/dotnet/aspnetcore/issues/45233";
+		Skip = $"This test is disabled on .NET until https://github.com/dotnet/aspnetcore/issues/45233";
 	}
 }
 
@@ -24,6 +24,6 @@ public sealed class TheoryRequiresMvcTestingFix : TheoryAttribute
 	{
 		if (Environment.Version.Major < 7)
 			return;
-		Skip = $"This test is disabled on .NET 7 until https://github.com/dotnet/aspnetcore/issues/45233";
+		Skip = $"This test is disabled on .NET until https://github.com/dotnet/aspnetcore/issues/45233";
 	}
 }

@@ -103,7 +103,7 @@ internal static class LoggingExtensions
 		}
 	}
 
-#if !NET8_0_OR_GREATER
+#if !NET || NETSTANDARD2_1
 	private static readonly object _lock = new();
 #endif
 
@@ -113,7 +113,7 @@ internal static class LoggingExtensions
 			return formatter;
 
 		formatter = new LogValuesFormatter(message, args);
-#if NET8_0_OR_GREATER
+#if NET || NETSTANDARD2_1
 		Formatters.AddOrUpdate(message, formatter);
 		return formatter;
 #else

@@ -126,7 +126,7 @@ namespace Elastic.Apm.BackendComm
 
 		private static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
 		{
-#if NET462
+#if NET462 // SSL options are not available in .NET Framework 4.6.2
 			try
 			{
 				var systemNetHttpVersion = typeof(HttpClientHandler).Assembly.GetName().Version;
@@ -136,9 +136,7 @@ namespace Elastic.Apm.BackendComm
 			{
 				logger.Error()?.LogException(ex, "Could not determine the assembly version of System.Net.Http.");
 			}
-#endif
-
-#if !NET462
+#else
 			Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback = null;
 
 			if (!configuration.VerifyServerCert)
@@ -212,24 +210,14 @@ namespace Elastic.Apm.BackendComm
 				UseDefaultCredentials = configuration.UseWindowsCredentials
 			};
 
-			// Due to the potential for binding issues (e.g.https://github.com/dotnet/runtime/issues/29314)
-			// and runtime exceptions on .NET Framework versions <4.7.2, we don't attempt to set the certificate
-			// validation callback or SSL protocols on net462, which should also apply to .NET Framework <4.7.2 runtimes
-			// which resolve to that target.
-#if NET8_0_OR_GREATER
-			// The defaults are good out of the box in .NET 8 and upwards, so we don't need to set anything.
-			httpClientHandler.SslProtocols = SslProtocols.None;
-#elif NET3_0_OR_GREATER
+#if NETSTANDARD || NET472
 			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
-			httpClientHandler.SslProtocols |= SslProtocols.Tls13;
 			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
-#elif !NET462
-			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
-			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", httpClientHandler.SslProtocols);
 #else
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
 #endif
+
 #if !NET462
 			httpClientHandler.ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
 			logger.Info()?.Log("CreateHttpClientHandler - Setting ServerCertificateCustomValidationCallback");

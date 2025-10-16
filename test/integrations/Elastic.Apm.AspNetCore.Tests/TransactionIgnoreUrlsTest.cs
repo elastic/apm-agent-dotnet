@@ -7,9 +7,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
-using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -53,9 +51,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 #pragma warning disable IDE0022 // Use expression body for methods
 			_client = Helper.GetClient(_agent, _factory);
 #pragma warning restore IDE0022 // Use expression body for methods
-#if NETCOREAPP3_0 || NETCOREAPP3_1
 			_client.DefaultRequestVersion = new Version(2, 0);
-#endif
 		}
 
 		/// <summary>

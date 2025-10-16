@@ -3,8 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-#if NET8_0_OR_GREATER
-
+#if NET || NETSTANDARD2_1
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -104,7 +103,7 @@ namespace Elastic.Apm.OpenTelemetry
 					return;
 				}
 
-				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
+				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.OperationName))
 				{
 					_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
 						"a skipped activity name defined in KnownListeners.", activity.DisplayName, activity.Id, activity.TraceId);
@@ -135,21 +134,23 @@ namespace Elastic.Apm.OpenTelemetry
 
 				transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
 					timestamp, true, activity.SpanId.ToString(),
-					distributedTracingData: dt, links: spanLinks, current: activity);
+					distributedTracingData: dt, links: spanLinks.Count > 0 ? spanLinks : null, current: activity);
 			}
 			else if (activity.ParentId == null)
 			{
 				transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
 					timestamp, true, activity.SpanId.ToString(),
-					activity.TraceId.ToString(), links: spanLinks, current: activity);
+					activity.TraceId.ToString(), links: spanLinks.Count > 0 ? spanLinks : null, current: activity);
 			}
 
-			if (transaction == null) return false;
+			if (transaction == null)
+				return false;
 
 			transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
 			if (activity.Id != null)
 				_activeTransactions.AddOrUpdate(activity, transaction);
+
 			return true;
 		}
 
@@ -159,15 +160,16 @@ namespace Elastic.Apm.OpenTelemetry
 			if (_tracer.CurrentSpan == null)
 			{
 				newSpan = (_tracer.CurrentTransaction as Transaction)?.StartSpanInternal(activity.DisplayName, "unknown",
-					timestamp: timestamp, id: activity.SpanId.ToString(), links: spanLinks, current: activity);
+					timestamp: timestamp, id: activity.SpanId.ToString(), links: spanLinks.Count > 0 ? spanLinks : null, current: activity);
 			}
 			else
 			{
 				newSpan = (_tracer.CurrentSpan as Span)?.StartSpanInternal(activity.DisplayName, "unknown",
-					timestamp: timestamp, id: activity.SpanId.ToString(), links: spanLinks, current: activity);
+					timestamp: timestamp, id: activity.SpanId.ToString(), links: spanLinks.Count > 0 ? spanLinks : null, current: activity);
 			}
 
-			if (newSpan == null) return;
+			if (newSpan == null)
+				return;
 
 			newSpan.Otel = new OTel { SpanKind = activity.Kind.ToString() };
 
@@ -194,10 +196,11 @@ namespace Elastic.Apm.OpenTelemetry
 				_logger?.Trace()?.Log("ActivityStopped: name:{DisplayName} id:{ActivityId} traceId:{TraceId}",
 					activity.DisplayName, activity.Id, activity.TraceId);
 
-				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.DisplayName))
+				if (KnownListeners.SkippedActivityNamesSet.Contains(activity.OperationName))
 					return;
 
-				if (activity.Id == null) return;
+				if (activity.Id == null)
+					return;
 
 				if (_activeTransactions.TryGetValue(activity, out var transaction))
 				{
@@ -210,7 +213,8 @@ namespace Elastic.Apm.OpenTelemetry
 
 					// By default we set unknown outcome
 					transaction.Outcome = Outcome.Unknown;
-#if NET8_0_OR_GREATER
+
+#if NET // Not available in netstandard2.1
 					switch (activity.Status)
 					{
 						case ActivityStatusCode.Unset:
@@ -236,20 +240,22 @@ namespace Elastic.Apm.OpenTelemetry
 
 		private static void UpdateOTelAttributes(Activity activity, OTel otel)
 		{
-			if (!activity.TagObjects.Any()) return;
+			if (!activity.TagObjects.Any())
+				return;
 
 			// https://opentelemetry.io/docs/specs/otel/common/#attribute-limits
 			// copy max 128 keys and truncate values to 10k chars (the current maximum for e.g. statement.db).
 			var i = 0;
-			otel.Attributes ??= new Dictionary<string, object>();
-			foreach (var (key, value) in activity.TagObjects)
+			otel.Attributes ??= [];
+			foreach (var tagObject in activity.TagObjects)
 			{
-				if (i >= 128) break;
+				if (i >= 128)
+					break;
 
-				if (value is string s)
-					otel.Attributes[key] = s.Truncate(10_000);
+				if (tagObject.Value is string s)
+					otel.Attributes[tagObject.Key] = s.Truncate(10_000);
 				else
-					otel.Attributes[key] = value;
+					otel.Attributes[tagObject.Key] = tagObject.Value;
 				i++;
 			}
 		}
@@ -264,7 +270,8 @@ namespace Elastic.Apm.OpenTelemetry
 
 			// By default we set unknown outcome
 			span.Outcome = Outcome.Unknown;
-#if NET8_0_OR_GREATER
+
+#if NET // Not available in netstandard2.1
 			switch (activity.Status)
 			{
 				case ActivityStatusCode.Unset:
@@ -278,6 +285,7 @@ namespace Elastic.Apm.OpenTelemetry
 					break;
 			}
 #endif
+
 			span.End();
 		}
 
@@ -417,7 +425,11 @@ namespace Elastic.Apm.OpenTelemetry
 		{
 			value = null;
 
+#if NET
 			var attribute = activity.GetTagItem(key);
+#else
+			var attribute = activity.TagObjects.FirstOrDefault(kvp => kvp.Key == key).Value;
+#endif
 
 			if (attribute is string stringValue)
 			{

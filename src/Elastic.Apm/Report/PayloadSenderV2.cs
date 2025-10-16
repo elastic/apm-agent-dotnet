@@ -398,7 +398,7 @@ namespace Elastic.Apm.Report
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
 
-#if NET8_0_OR_GREATER
+#if NET
 					HttpResponseMessage response;
 					try
 					{
@@ -424,7 +424,7 @@ namespace Elastic.Apm.Report
 						var message = "Unknown 400 Bad Request";
 						if (response?.Content != null)
 						{
-#if NET8_0_OR_GREATER
+#if NET
 							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStream());
 #else
 							var intakeResponse = _payloadItemSerializer.Deserialize<IntakeResponse>(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());

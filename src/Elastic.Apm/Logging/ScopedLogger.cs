@@ -16,7 +16,7 @@ internal class ScopedLogger : IApmLogger
 
 	public IApmLogger Logger { get; }
 
-#if !NET8_0_OR_GREATER
+#if !NET || NETSTANDARD2_1
 	private readonly object _lock = new();
 #endif
 
@@ -30,7 +30,7 @@ internal class ScopedLogger : IApmLogger
 			return formatter;
 
 		formatter = new LogValuesFormatter($"{{{{{{Scope}}}}}} {message}", args, Scope);
-#if NET8_0_OR_GREATER
+#if NET || NETSTANDARD2_1
 		Formatters.AddOrUpdate(message, formatter);
 		return formatter;
 #else

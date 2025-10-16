@@ -15,13 +15,13 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping.Methods.ProxiesDefinitio
 {
 	public interface IDictioDuckType
 	{
-		public ICollection<string> Keys { get; }
+		ICollection<string> Keys { get; }
 
-		public ICollection<string> Values { get; }
+		ICollection<string> Values { get; }
 
 		int Count { get; }
 
-		public string this[string key] { get; set; }
+		string this[string key] { get; set; }
 
 		void Add(string key, string value);
 

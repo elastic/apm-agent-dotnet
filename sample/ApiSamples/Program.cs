@@ -314,11 +314,9 @@ namespace ApiSamples
 		// ReSharper restore ArrangeMethodOrOperatorBody
 #pragma warning restore IDE0022
 
-#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Test for https://github.com/elastic/apm-agent-dotnet/issues/884
 		/// </summary>
 		private IAsyncEnumerable<int> TestCompilation() => throw new Exception();
-#endif
 	}
 }
