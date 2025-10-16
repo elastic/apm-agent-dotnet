@@ -33,7 +33,7 @@ Agent.Subscribe(new MongoDbDiagnosticsSubscriber());
 ```
 
 ::::{important}
-MongoDB integration is currently supported on .NET Core and newer. Due to MongoDb.Driver assemblies not being strongly named, they cannot be used with Elastic APM’s strongly named assemblies on .NET Framework.
+MongoDB integration is currently supported on .NET runtimes. Due to MongoDb.Driver assemblies not being strongly named, they cannot be used with Elastic APM’s strongly named assemblies on .NET Framework.
 
 ::::
 
