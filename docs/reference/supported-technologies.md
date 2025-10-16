@@ -25,12 +25,12 @@ If, for example, the HTTP client library of your choice is not listed, it means 
 
 ## .NET versions [supported-dotnet-flavors]
 
-The agent works on every .NET flavor and version that supports .NET Standard 2.0. This means .NET Core 2.0 or newer, and .NET Framework 4.6.2* or newer.
+The agent works on every .NET flavor and version that supports .NET Standard 2.0 or .NET Standard 2.1. This means .NET Core 2.0 or newer.
 
 ** Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.*
 
 ::::{important}
-While this library **should** work on .NET Core 2.0+, we limit our support to only those versions currently supported by Microsoft - .NET 6.0 and newer.
+While this library **should** work on .NET Core 2.0+, we limit our support to only those versions currently supported by Microsoft - .NET 8.0+
 
 ::::
 
@@ -50,7 +50,7 @@ Automatic instrumentation is supported for the following web frameworks
 
 ## RPC Frameworks [supported-rpc-frameworks]
 
-The agent supports gRPC on .NET Core both on the client and the server side. Every gRPC call is automatically captured by the agent.
+The agent supports gRPC on .NET both on the client and the server side. Every gRPC call is automatically captured by the agent.
 
 Streaming is not supported; for streaming use-cases, the agent does not create transactions and spans automatically.
 

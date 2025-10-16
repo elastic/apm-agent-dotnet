@@ -17,7 +17,7 @@ These metrics will be sent regularly to the APM Server and from there to Elastic
 
 The metrics will be stored in the `apm-*` index and have the `processor.event` property set to `metric`.
 
-"Platform: all" means that the metric is available on every platform where .NET Core is supported.
+"Platform: all" means that the metric is available on every platform where .NET (i.e. not .NET Framework) is supported.
 
 
 ## System metrics [metrics-system]
