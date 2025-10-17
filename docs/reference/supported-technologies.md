@@ -30,8 +30,7 @@ The agent works on every .NET flavor and version that supports .NET Standard 2.0
 ** Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.*
 
 ::::{important}
-While this library **should** work on .NET Core 2.0+, we limit our support to only those versions currently supported by Microsoft - .NET 8.0+
-
+While this library **may** work on .NET Core 2.0+, we limit our support to only those versions currently supported by Microsoft (Currently .NET 8.0+). See Microsoft's [.NET and .NET Core Support Policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core) for details of supported runtimes.
 ::::
 
 
