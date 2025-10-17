@@ -21,21 +21,20 @@ This approach works with the following
 |     |     |
 | --- | --- |
 |  | **Operating system** |
-| **Architecture** | **Windows** | **Linux** |
+| **Architecture** | **Windows** | **Linux** \*\* |
 | x64 | .NET Framework 4.6.2+\*<br>.NET 8+ | .NET 8+ |
 
 \* Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.*
+
+\*\* Minimum GLIBC version 2.14.
 
 ::::{note}
 While the profiler may work on older .NET runtimes such as .NET 6, it is only officially tested and supported on runtimes that are supported by Microsoft, currently .NET 8 and newer.
 ::::
 
-*** Minimum GLIBC version 2.14.*
-
 ::::{note}
 The profiler-based agent only supports 64-bit applications. 32-bit applications aren’t supported.
 ::::
-
 
 ::::{note}
 The profiler-based agent does not currently support ARM.
