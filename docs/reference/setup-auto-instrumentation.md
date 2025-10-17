@@ -14,24 +14,27 @@ applies_to:
 
 ### Quick start [_quick_start]
 
-The agent can automatically instrument .NET Framework, .NET Core, and .NET applications using the [.NET CLR Profiling APIs](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/profiling-overview#the-profiling-api). The Profiling APIs provide a way to instrument an application or dependency code without code changes.
+The agent can automatically instrument .NET Framework and .NET applications using the [.NET CLR Profiling APIs](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/profiling-overview#the-profiling-api). The Profiling APIs provide a way to instrument an application or dependency code without code changes.
 
 This approach works with the following
 
 |     |     |
 | --- | --- |
 |  | **Operating system** |
-| **Architecture*** | ***Windows*** | ***Linux** ** |
-| x64 | .NET Framework 4.6.2+*<br>.NET Core 2.1+<br>.NET 5+ | .NET Core 2.1+<br>.NET 5+ |
+| **Architecture** | **Windows** | **Linux** \*\* |
+| x64 | .NET Framework 4.6.2+\*<br>.NET 8+ | .NET 8+ |
 
-** Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.*
+\* Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.*
 
-*** Minimum GLIBC version 2.14.*
+\*\* Minimum GLIBC version 2.14.
+
+::::{note}
+While the profiler may work on older .NET runtimes such as .NET 6, it is only officially tested and supported on runtimes that are supported by Microsoft, currently .NET 8 and newer.
+::::
 
 ::::{note}
 The profiler-based agent only supports 64-bit applications. 32-bit applications aren’t supported.
 ::::
-
 
 ::::{note}
 The profiler-based agent does not currently support ARM.
