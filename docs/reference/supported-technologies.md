@@ -39,6 +39,10 @@ We support ASP.NET on IIS 10 versions supported by Microsoft per their [IIS supp
 IIS must be installed on a [supported](https://learn.microsoft.com/windows/release-health/windows-server-release-info#windows-server-major-versions-by-servicing-option--) Windows operating system version.
 ::::
 
+::::{note}
+APM Agent auto instrumentation does not support the Web Garden (multi-worker process) mode of IIS. 
+::::
+
 
 ## RPC Frameworks [supported-rpc-frameworks]
 
