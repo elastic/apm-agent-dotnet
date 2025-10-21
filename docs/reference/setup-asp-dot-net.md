@@ -14,7 +14,7 @@ applies_to:
 
 ## Quick start [_quick_start_4]
 
-To enable auto instrumentation for ASP.NET (Full .NET Framework), you need to install the `Elastic.Apm.AspNetFullFramework` package, add a reference to the package in your `web.config` file, and then compile and deploy your application.
+To enable auto instrumentation for ASP.NET (.NET Framework), you need to install the `Elastic.Apm.AspNetFullFramework` package, add a reference to the package in your `web.config` file, and then compile and deploy your application.
 
 1. Ensure you have access to the application source code and install the [`Elastic.Apm.AspNetFullFramework`](https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework) package.
 2. Reference the `Elastic.Apm.AspNetFullFramework` in your application’s `web.config` file by adding the `ElasticApmModule` IIS module:
@@ -61,7 +61,6 @@ Our IIS module requires:
 * IIS 7 or later
 * Application pool’s pipeline mode has to be set to integrated (default for IIS 7 and up)
 * The deployed .NET application must NOT run under quirks mode. This makes `LegacyAspNetSynchronizationContext` the async context handler and can break `HttpContext.Items` correctly restoring when async code introduces a thread switch.
-
 ::::
 
 

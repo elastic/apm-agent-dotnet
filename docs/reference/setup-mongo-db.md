@@ -14,7 +14,7 @@ applies_to:
 
 ## Quick start [_quick_start_14]
 
-Instrumentation for MongoDB works with the official MongoDb.Driver 3.0.0+ driver packages. A prerequisite for auto instrumentation is to configure the `MongoClient` with `MongoDbEventSubscriber`:
+Instrumentation for MongoDB works with the official MongoDb.Driver driver packages. A prerequisite for auto instrumentation is to configure the `MongoClient` with `MongoDbEventSubscriber`:
 
 ```csharp
 var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
@@ -34,7 +34,4 @@ Agent.Subscribe(new MongoDbDiagnosticsSubscriber());
 
 ::::{important}
 MongoDB integration is currently supported on .NET runtimes. Due to MongoDb.Driver assemblies not being strongly named, they cannot be used with Elastic APM’s strongly named assemblies on .NET Framework.
-
 ::::
-
-
