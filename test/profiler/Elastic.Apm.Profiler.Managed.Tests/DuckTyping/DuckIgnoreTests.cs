@@ -25,7 +25,7 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			Assert.Equal(ValuesDuckType.Third.ToString(), ((IGetValue)copy).GetValueProp);
 		}
 
-#if NET8_0_OR_GREATER
+#if NET
 		[Fact]
 		public void NonPublicStructInterfaceProxyTest()
 		{
@@ -69,17 +69,17 @@ namespace Elastic.Apm.Profiler.Managed.Tests.DuckTyping
 			public string GetValue() => Value.ToString();
 		}
 
-#if NETCOREAPP3_0_OR_GREATER
+#if NET
 		// Interface with a default implementation
 		public interface IPrivateStruct
 		{
 			ValuesDuckType Value { get; }
 
 			[DuckIgnore]
-			public string GetValueProp => Value.ToString();
+			string GetValueProp => Value.ToString();
 
 			[DuckIgnore]
-			public string GetValue() => Value.ToString();
+			string GetValue() => Value.ToString();
 		}
 #endif
 

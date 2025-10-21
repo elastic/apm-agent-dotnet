@@ -24,11 +24,11 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <summary>
 		/// Gets the timestamp type
 		/// </summary>
-		public int Type { get; }
+		int Type { get; }
 
 		/// <summary>
 		/// Gets the UTC DateTime for the timestamp
 		/// </summary>
-		public DateTime UtcDateTime { get; }
+		DateTime UtcDateTime { get; }
 	}
 }

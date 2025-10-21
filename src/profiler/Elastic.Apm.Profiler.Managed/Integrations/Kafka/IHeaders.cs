@@ -24,13 +24,13 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// </summary>
 		/// <param name="key">The header's key value</param>
 		/// <param name="val">The value of the header. May be null. Format strings as UTF8</param>
-		public void Add(string key, byte[] val);
+		void Add(string key, byte[] val);
 
 		/// <summary>
 		///     Removes all headers for the given key.
 		/// </summary>
 		/// <param name="key">The key to remove all headers for</param>
-		public void Remove(string key);
+		void Remove(string key);
 
 		/// <summary>
 		///     Try to get the value of the latest header with the specified key.
@@ -47,6 +47,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		///     true if the a value with the specified key was present in
 		///     the collection, false otherwise.
 		/// </returns>
-		public bool TryGetLastBytes(string key, out byte[] lastHeader);
+		bool TryGetLastBytes(string key, out byte[] lastHeader);
 	}
 }

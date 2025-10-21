@@ -1,13 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net462;net472;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net462;net472;net8.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
     <PackageId>Elastic.Apm</PackageId>
-    <Description>Elastic APM .NET Agent base package. This package provides core functionality for transmitting of all Elastic APM types and is a dependent package for all other Elastic APM package. Additionally this package contains the public Agent API that allows you to manually capture transactions and spans. Please install the platform specific package for the best experience. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
+    <Description>Elastic APM .NET Agent base package. This package provides core functionality for transmitting 
+    of all Elastic APM types and is a dependent package for all other Elastic APM package. 
+    Additionally this package contains the public Agent API that allows you to manually capture 
+    transactions and spans. Please install the platform specific package for the best experience. 
+    See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
   </PropertyGroup>
   <ItemGroup>
@@ -75,9 +79,23 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and ('$(TargetFramework)'=='net472' or '$(TargetFramework)'=='net462' or '$(TargetFramework)' == 'netstandard2.0')">
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and '$(TargetFramework)'!='net462' and '$(TargetFramework)'!='net472'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" />
   </ItemGroup>
+
+  <!-- Fallback to 5.0.0 for .NET Framework targets.
+       Ideally, we would like to update to a newer DiagnosticSource because 5.0.0 is technically deprecated.
+       For some reason, the IIS tests fail on CI when we update to a newer version (even with an updated binding redirect).
+       On CI, the IIS test "CustomServiceNodeNameSetViaSettings" fails for two out of the five URLS
+        - "Home/Contact"
+        - "Home/CustomSpanThrows"         
+       Both fail with the span count being zero instead of the expected value. I was unable to reproduce the failure locally
+       and the same tests passed.
+       We can revisit this in a future PR if we feel it is necessary and worth the effort to diagnose this -->
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == '' and ('$(TargetFramework)'=='net462' or '$(TargetFramework)'=='net472')">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" VersionOverride="5.0.0" />
+  </ItemGroup>
+
   <!-- DiagnosticSourceVersion MsBuild property can be used to compile the agent against a specific version of
        System.Diagnostics.DiagnosticSource. Used when creating the ElasticApmAgentStartupHook zip file to
        compile multiple versions of the agent.
@@ -95,7 +113,7 @@
     <PackageReference Include="System.Diagnostics.PerformanceCounter" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)'=='netstandard2.1'">
     <PackageReference Include="System.Diagnostics.PerformanceCounter" VersionOverride="4.5.0" />
     <!-- Used by Ben.Demystifier -->
     <PackageReference Include="System.Reflection.Metadata" />

@@ -37,6 +37,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.RabbitMq
 		/// <summary>
 		/// Retrieve the routing key with which this message was published.
 		/// </summary>
-		public string RoutingKey { get; }
+		string RoutingKey { get; }
 	}
 }

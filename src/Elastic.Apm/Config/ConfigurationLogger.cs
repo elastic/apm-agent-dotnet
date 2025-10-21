@@ -79,6 +79,8 @@ namespace Elastic.Apm.Config
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net8.0");
 #elif NETSTANDARD2_0
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "netstandard2.0");
+#elif NETSTANDARD2_1
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "netstandard2.1");
 #elif NET472
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net472");
 #elif NET462

@@ -22,6 +22,6 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <summary>
 		/// Gets the Error associated with the delivery report
 		/// </summary>
-		public IError Error { get; }
+		IError Error { get; }
 	}
 }

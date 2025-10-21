@@ -22,12 +22,12 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.Kafka
 		/// <summary>
 		/// Gets a value indicating whether the error is really an error
 		/// </summary>
-		public bool IsError { get; }
+		bool IsError { get; }
 
 		/// <summary>
 		/// Gets the string representation of the error
 		/// </summary>
 		/// <returns>The string representation of the error</returns>
-		public string ToString();
+		string ToString();
 	}
 }
