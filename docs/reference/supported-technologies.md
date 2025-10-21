@@ -31,7 +31,7 @@ Automatic instrumentation is supported for the following web frameworks
 
 | Framework | Supported versions | Integration |
 | --- | --- | --- |
-| ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | 8, 9 | [NuGet package](/reference/setup-asp-net-core.md) |
+| ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0 and <10.0.0 | [NuGet package](/reference/setup-asp-net-core.md) |
 | ASP.NET (.NET Framework) in IIS  {applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2-4.8.1 (IIS 10) | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md)<br>*or*<br>[NuGet package](/reference/setup-asp-dot-net.md) |
 
 ::::{note}
@@ -59,8 +59,8 @@ Automatic instrumentation is supported for the following data access technologie
 | Data access technology | Supported versions | Integration |
 | --- | --- | --- |
 | Azure CosmosDB {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.Cosmos 3.0.0-3.54.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
-| Microsoft.Azure.DocumentDB.Core 2.4.1-2.22.0 |
-| Microsoft.Azure.DocumentDB 2.4.1-2.22.0 |
+| Azure DocumentDb\* | Microsoft.Azure.DocumentDB.Core 2.4.1-2.22.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
+| | Microsoft.Azure.DocumentDB 2.4.1-2.22.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
 | Entity Framework Core {applies_to}`apm_agent_dotnet: ga 1.0` | Microsoft.EntityFrameworkCore 8.0.0-9.0.10 | [NuGet package](/reference/setup-ef-core.md) |
 | Entity Framework 6 {applies_to}`apm_agent_dotnet: ga 1.2` | EntityFramework 6.2-6.5.1 | [NuGet package](/reference/setup-ef6.md) |
 | Elasticsearch | Elastic.Clients.Elasticsearch 8.0.0-9.1.11 | via OpenTelemetry Bridge |
@@ -73,6 +73,7 @@ Automatic instrumentation is supported for the following data access technologie
 | See profiler documentation {applies_to}`apm_agent_dotnet: ga 1.12` | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 | SQLite {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 
+\* `Microsoft.Azure.DocumentDB.Core` and `Microsoft.Azure.DocumentDB` are deprecated. The recommended replacement is the `Microsoft.Azure.Cosmos` package.
 
 ## Messaging systems [supported-messaging-systems]
 
