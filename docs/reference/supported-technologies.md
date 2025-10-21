@@ -16,9 +16,11 @@ applies_to:
 
 The APM Agent for .NET targets every .NET flavor and version that supports .NET Standard 2.0 or .NET Standard 2.1.
 
-However, we only test and support .NET runtimes that are also supported per the [Microsoft .NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core). Therefore, we always recommend you upgrade to a current supported runtime before raising issues.
+However, we only test and support .NET runtimes that are also supported per the [Microsoft .NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core). Therefore, we always recommend you upgrade to a supported runtime before raising issues.
 
+::::{note}
 On .NET Framework, due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.
+::::
 
 
 ## Web frameworks [supported-web-frameworks]
@@ -30,7 +32,12 @@ Automatic instrumentation is supported for the following web frameworks
 | Framework | Supported versions | Integration |
 | --- | --- | --- |
 | ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | 8, 9 | [NuGet package](/reference/setup-asp-net-core.md) |
-| ASP.NET (.NET Framework) in IIS  {applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2-4.8.1 (IIS 7.0 or newer) | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md)<br>*or*<br>[NuGet package](/reference/setup-asp-dot-net.md) |
+| ASP.NET (.NET Framework) in IIS  {applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2-4.8.1 (IIS 10) | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md)<br>*or*<br>[NuGet package](/reference/setup-asp-dot-net.md) |
+
+::::{note}
+We support ASP.NET on IIS 10 versions supported by Microsoft per their [IIS support policy](https://learn.microsoft.com/lifecycle/products/internet-information-services-iis).
+IIS must be installed on a [supported](https://learn.microsoft.com/windows/release-health/windows-server-release-info#windows-server-major-versions-by-servicing-option--) Windows operating system version.
+::::
 
 
 ## RPC Frameworks [supported-rpc-frameworks]
