@@ -34,7 +34,4 @@ Auto instrumentation  for `System.Data.SqlClient` is available for both .NET and
 Auto instrumentation for `Microsoft.Data.SqlClient` is available only for .NET at the moment.
 
 As an alternative to using the `Elastic.Apm.SqlClient` package to instrument database calls, see [Profiler Auto instrumentation](/reference/setup-auto-instrumentation.md).
-
 ::::
-
-
