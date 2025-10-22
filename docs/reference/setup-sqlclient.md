@@ -29,12 +29,9 @@ Agent.Subscribe(new SqlClientDiagnosticSubscriber());
 ```
 
 ::::{note}
-Auto instrumentation  for `System.Data.SqlClient` is available for both .NET Core and .NET Framework applications, however, support of .NET Framework has one limitation: command text cannot be captured.
+Auto instrumentation  for `System.Data.SqlClient` is available for both .NET and .NET Framework applications, however, support of .NET Framework has one limitation: command text cannot be captured.
 
-Auto instrumentation for `Microsoft.Data.SqlClient` is available only for .NET Core at the moment.
+Auto instrumentation for `Microsoft.Data.SqlClient` is available only for .NET at the moment.
 
 As an alternative to using the `Elastic.Apm.SqlClient` package to instrument database calls, see [Profiler Auto instrumentation](/reference/setup-auto-instrumentation.md).
-
 ::::
-
-

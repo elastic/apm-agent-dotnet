@@ -40,5 +40,3 @@ Instrumentation works with EntityFramework 6.2+ NuGet packages.
 ::::{note}
 Be careful not to execute `DbInterception.Add` for the same interceptor type more than once, as this will register multiple instances, causing multiple database spans to be captured for every SQL command.
 ::::
-
-
