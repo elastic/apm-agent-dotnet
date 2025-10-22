@@ -51,17 +51,17 @@ It instruments the following assemblies:
 | --- | --- | --- |
 | AdoNet | part of .NET Framework |
 | AspNet | part of .NET Framework |
-| Kafka | [Confluent.Kafka 1.4.0 - 2.12.0](https://www.nuget.org/packages/Confluent.Kafka) |
-| MySqlCommand | [MySql.Data 6.7.0 - 8.4.0](https://www.nuget.org/packages/MySql.Data) |
-| NpgsqlCommand | [Npgsql 4.0.0 - 7.0.10](https://www.nuget.org/packages/Npgsql) |
-| OracleCommand | [Oracle.ManagedDataAccess 12.2.1100 - 21.20.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess) |
-| [Oracle.ManagedDataAccess.Core 2.0.0 - 3.21.200](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) |
-| RabbitMQ | [RabbitMQ.Client 3.6.9 - 6.8.1](https://www.nuget.org/packages/RabbitMQ.Client) |
+| Kafka | [Confluent.Kafka ≥1.4.0 <3.0.0>](https://www.nuget.org/packages/Confluent.Kafka) |
+| MySqlCommand | [MySql.Data ≥6.7.0 <9.0.0>](https://www.nuget.org/packages/MySql.Data) |
+| NpgsqlCommand | [Npgsql ≥4.0.0 <8.0.0>](https://www.nuget.org/packages/Npgsql) |
+| OracleCommand | [Oracle.ManagedDataAccess ≥12.2.1100 <22.0.0>](https://www.nuget.org/packages/Oracle.ManagedDataAccess) |
+| [Oracle.ManagedDataAccess.Core ≥2.0.0 <4.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) |
+| RabbitMQ | [RabbitMQ.Client ≥3.6.9 <7.0.0>](https://www.nuget.org/packages/RabbitMQ.Client) |
 | SqlCommand | part of .NET Framework |
-| [System.Data.SqlClient 4.0.0 - 4.9.0](https://www.nuget.org/packages/System.Data.SqlClient) |
-| [Microsoft.Data.SqlClient 1.0.0 - 5.2.3](https://www.nuget.org/packages/Microsoft.Data.SqlClient) |
-| SqliteCommand | [Microsoft.Data.Sqlite 2.0.0 - 7.0.20](https://www.nuget.org/packages/Microsoft.Data.Sqlite) |
-| SQLite | [System.Data.SQLite 1.0.0 - 2.0.2](https://www.nuget.org/packages/System.Data.SQLite) |
+| [System.Data.SqlClient ≥4.0.0 <5.0.0](https://www.nuget.org/packages/System.Data.SqlClient) |
+| [Microsoft.Data.SqlClient ≥1.0.0 <6.0.0>](https://www.nuget.org/packages/Microsoft.Data.SqlClient) |
+| SqliteCommand | [Microsoft.Data.Sqlite ≥2.0.0 <8.0.0>](https://www.nuget.org/packages/Microsoft.Data.Sqlite) |
+| SQLite | [System.Data.SQLite ≥1.0.0 <3.0.0](https://www.nuget.org/packages/System.Data.SQLite) |
 
 ::::{important}
 **The .NET CLR Profiling API allows only one profiler to be attached to a .NET process**. In light of this limitation, only one solution that uses the .NET CLR profiling API should be used by an application.
