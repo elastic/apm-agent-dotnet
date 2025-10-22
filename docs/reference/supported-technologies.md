@@ -63,21 +63,22 @@ Automatic instrumentation is supported for the following data access technologie
 | Data access technology | Supported versions | Integration |
 | --- | --- | --- |
 | Azure CosmosDB {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.Cosmos ≥3.0.0 <4.0.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
-| Azure DocumentDb\* | Microsoft.Azure.DocumentDB.Core ≥2.4.1 <3.0.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
-| | Microsoft.Azure.DocumentDB ≥2.4.1 <3.0.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
+| Azure DocumentDb {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.DocumentDB.Core\* ≥2.4.1 <3.0.0<br>Microsoft.Azure.DocumentDB\* ≥2.4.1 <3.0.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
 | Entity Framework Core {applies_to}`apm_agent_dotnet: ga 1.0` | Microsoft.EntityFrameworkCore ≥8.0.0 <10.0.0 | [NuGet package](/reference/setup-ef-core.md) |
 | Entity Framework 6 {applies_to}`apm_agent_dotnet: ga 1.2` | EntityFramework 6.2-6.5.1 | [NuGet package](/reference/setup-ef6.md) |
-| Elasticsearch | Elastic.Clients.Elasticsearch ≥8.0.0 <10.0.0 | via OpenTelemetry Bridge |
+| Elasticsearch {applies_to}`apm_agent_dotnet: ga 1.23` | Elastic.Clients.Elasticsearch ≥8.0.0 <10.0.0 | [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) |
 | MySQL {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 | MongoDB | MongoDB.Driver ≥3.0.0 <4.0.0 | [NuGet package](/reference/setup-mongo-db.md) |
 | Oracle {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 | PostgreSQL {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 | Redis {applies_to}`apm_agent_dotnet: ga 1.8` | StackExchange.Redis ≥2.0.495 <3.0.0 | [NuGet package](/reference/setup-stackexchange-redis.md) |
-| SqlClient | System.Data.SqlClient ≥2.0.495 <5.0.0 {applies_to}`apm_agent_dotnet: ga 1.8` | [NuGet package](/reference/setup-sqlclient.md) |
-| See profiler documentation {applies_to}`apm_agent_dotnet: ga 1.12` | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
+| SqlClient {applies_to}`apm_agent_dotnet: ga 1.8` | System.Data.SqlClient ≥2.0.495 <5.0.0 | [NuGet package](/reference/setup-sqlclient.md) |
 | SQLite {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 
+
+::::{note}
 \* `Microsoft.Azure.DocumentDB.Core` and `Microsoft.Azure.DocumentDB` are deprecated. The recommended replacement is the `Microsoft.Azure.Cosmos` package.
+::::
 
 ## Messaging systems [supported-messaging-systems]
 
@@ -85,11 +86,9 @@ We support automatic instrumentation for the following messaging systems
 
 | Messaging system | Supported versions | Integration |
 | --- | --- | --- |
-| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus ≥3.0.0 <6.0.0 | [NuGet package](/reference/setup-azure-servicebus.md) |
-| Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0 |
+| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus ≥3.0.0 <6.0.0<br>Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0 | [NuGet package](/reference/setup-azure-servicebus.md) |
 | Azure Queue Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Queues ≥12.6.0 <13.0.0 | [NuGet package](/reference/setup-azure-storage.md) |
-| Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
-| Kafka | Confluent.Kafka 2.11.1 | [NuGet package](/reference/setup-kafka.md) |
+| Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation<br>Confluent.Kafka ≥2.11.1 <3.0.0 | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md)<br>[NuGet package](/reference/setup-kafka.md) |
 | RabbitMQ {applies_to}`apm_agent_dotnet: ga 1.12` | See profiler documentation | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md) |
 
 
@@ -110,10 +109,13 @@ Automatic instrumentation for the following cloud services
 | Cloud service | Supported versions | Integration |
 | --- | --- | --- |
 | Azure CosmosDB {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.Cosmos ≥3.0.0 <4.0.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
-| Microsoft.Azure.DocumentDB.Core ≥2.4.1 <3.0.0 |
-| Microsoft.Azure.DocumentDB ≥2.4.1 <3.0.0 |
-| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus ≥3.0.0 <6.0.0 | [NuGet package](/reference/setup-azure-servicebus.md) |
-| Azure.Messaging.ServiceBus 7.0.0-7.20.1 |
-| Azure Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Blobs ≥12.8.0 <13.0.0 [NuGet package](/reference/setup-azure-storage.md) |
-| Azure.Storage.Queues ≥12.6.0 <13.0.0 |
-| Azure.Storage.Files.Shares ≥12.6.0 <13.0.0 |
+| Azure DocumentDb {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.DocumentDB.Core\* ≥2.4.1 <3.0.0<br>Microsoft.Azure.DocumentDB\* ≥2.4.1 <3.0.0 | [NuGet package](/reference/setup-azure-cosmosdb.md) |
+| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus ≥3.0.0 <6.0.0<br>Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0 | [NuGet package](/reference/setup-azure-servicebus.md) |
+| Azure Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Blobs ≥12.8.0 <13.0.0 | [NuGet package](/reference/setup-azure-storage.md) |
+| Azure Storage Queues {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Queues ≥12.6.0 <13.0.0 | [NuGet package](/reference/setup-azure-storage.md) |
+| Azure Storage Files {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Files.Shares ≥12.6.0 <13.0.0 | [NuGet package](/reference/setup-azure-storage.md) |
+
+
+::::{note}
+\* `Microsoft.Azure.DocumentDB.Core` and `Microsoft.Azure.DocumentDB` are deprecated. The recommended replacement is the `Microsoft.Azure.Cosmos` package.
+::::
