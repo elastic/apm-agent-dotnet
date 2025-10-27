@@ -36,8 +36,15 @@ jobs:
     - name: Package
       run: ./build.sh pack
 
+    # Get a short-lived NuGet API key
+    - name: NuGet login (OIDC → temp API key)
+      uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
     - name: Release to Nuget
-      run: .ci/deploy.sh ${{ secrets.NUGET_API_KEY }} ${{ secrets.NUGET_API_URL }}
+      run: .ci/deploy.sh ${{steps.login.outputs.NUGET_API_KEY}} ${{ secrets.NUGET_API_URL }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
