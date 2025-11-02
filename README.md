@@ -124,3 +124,5 @@ https://img.shields.io/nuget/v/Elastic.Apm.Azure.Storage.svg
 [Elastic.Apm.Azure.CosmosDb-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Azure.CosmosDb/
 [Elastic.Apm.Azure.CosmosDb-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.Azure.CosmosDb.svg
+
+
