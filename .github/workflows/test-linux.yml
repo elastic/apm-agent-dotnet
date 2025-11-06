@@ -129,7 +129,7 @@ jobs:
         run: ./build.sh test --test-suite integrations
 
       - name: Store crash dumps
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: hang-dumps

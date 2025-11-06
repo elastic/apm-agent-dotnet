@@ -73,7 +73,7 @@ jobs:
         run: ./build.bat test --test-suite integrations
 
       - name: Store crash dumps
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: success() || failure()
         with:
           name: hang-dumps
@@ -173,7 +173,7 @@ jobs:
             --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
       - name: Store test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-results-iis
           path: build/output/junit-*.xml
