@@ -29,11 +29,11 @@ This approach works with the following
 \*\* Minimum GLIBC version 2.14.
 
 ::::{note}
-While the rofiler-based agent **may** work on older .NET runtimes such as .NET 6, it is only officially tested and supported on runtimes that are supported by Microsoft, currently .NET 8 and newer.
+While the profiler-based agent **may** work on older .NET runtimes such as .NET 6, it is only officially tested and supported on runtimes that are supported by Microsoft, currently .NET 8 and newer.
 ::::
 
 ::::{note}
-While the rofiler-based agent **may** work in the web garden (multi-worker process) mode of IIS, this is not officially tested or supported. 
+While the profiler-based agent **may** work in the web garden (multi-worker process) mode of IIS, this is not officially tested or supported. 
 ::::
 
 ::::{note}

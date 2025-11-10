@@ -18,5 +18,5 @@ or .NET [Activity](https://learn.microsoft.com/dotnet/core/diagnostics/distribut
 
 ::::{important}
 For best flexibility and reduced vendor lock-in, we recommend preferring that custom instrumentation uses the [System.Diagnostics.Activity](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) API. Code instrumented with this API will be picked up by the OpenTelemetry Bridge and is also natively 
-compatible OpenTelemetry.
+compatible with OpenTelemetry.
 ::::
