@@ -61,10 +61,8 @@ It contains numbered directories that each contain APM agent assemblies compiled
 a specific version `System.Diagnostics.DiagnosticSource`.
 
 We maintain the 6.0.0 folder (for now) to not break those using older, unsupported .NET runtimes. We
-offer no support gauruntees and may remove this folder in a future release.
-
-For supported runtimes, the 8.0.0 folder is used and our general dependency on 
-`System.Diagnostics.DiagnosticSource` is fox 8.x or newer.
+offer no support gauruntees and may remove this folder in a future release. For supported runtimes, 
+the 8.0.0 folder is used and our general dependency on `System.Diagnostics.DiagnosticSource` is fox 8.x or newer.
 
 On .NET Framework targets, we continue to depend on 5.0.0 of `System.Diagnostics.DiagnosticSource`.
 
