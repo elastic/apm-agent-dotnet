@@ -33,7 +33,7 @@ Agent instrumentations are released as a set of NuGet packages available on [nug
 The following NuGet packages are available:
 
 [**Elastic.Apm**](https://www.nuget.org/packages/Elastic.Apm)
-:   The core agent package, containing the [*Public API*](/reference/public-api.md) of the agent. It also contains every tracing component to trace classes that are part of .NET Standard 2.0, which includes the monitoring part for `HttpClient`. Every other Elastic APM package references this package.
+:   The core agent package, contains the [*Public API*](/reference/public-api.md) of the agent. It also contains every tracing component to trace classes that are part of .NET Standard 2.0, which includes the monitoring part for `HttpClient`. Every other Elastic APM package references this package.
 
 [**Elastic.Apm.NetCoreAll**](https://www.nuget.org/packages/Elastic.Apm.NetCoreAll)
 :   A meta package that references all other Elastic APM .NET agent package that can automatically configure instrumentation.
