@@ -40,7 +40,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
       - name: Format
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ 'format' ]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
       with:
@@ -67,7 +67,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         
@@ -90,7 +90,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Bootstrap Action Workspace
       uses: ./.github/workflows/bootstrap
     
@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Bootstrap Action Workspace
       id: bootstrap
       uses: ./.github/workflows/bootstrap

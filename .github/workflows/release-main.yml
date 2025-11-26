@@ -24,7 +24,7 @@ jobs:
       SUFFIX_APM_AGENT: ".zip"
       SUFFIX_APM_PROFILER: "-linux-x64.zip"
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Bootstrap Action Workspace
       id: bootstrap
       uses: ./.github/workflows/bootstrap
@@ -58,7 +58,7 @@ jobs:
 
     - name: Extract metadata (tags, labels)
       id: docker-meta
-      uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f  # v5.8.0
+      uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893  # v5.9.0
       with:
         images: ${{ env.DOCKER_IMAGE_NAME }}
         flavor: |
