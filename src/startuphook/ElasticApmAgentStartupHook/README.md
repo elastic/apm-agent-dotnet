@@ -8,7 +8,7 @@ It utilizes the startup hook mechanism described [in the dotnet runtime reposito
 
 ### Prerequisites
 
-- **.NET Core 2.2 or newer**
+- **.NET 6 or newer**
 
 ### How to use it
 
@@ -48,17 +48,23 @@ The layout in the zip file is as follows
 
 ```
 ElasticApmAgent_<version>.zip/
-├── 4.0.0/
-│   └── APM agent assemblies compiled against System.Diagnostics.DiagnosticSource 4.0.0
+├── 6.0.0/
+│   └── APM agent assemblies compiled against System.Diagnostics.DiagnosticSource 6.0.0
 │
-├── 5.0.0/
-│   └── APM agent assemblies compiled against System.Diagnostics.DiagnosticSource 5.0.0
+├── 8.0.0/
+│   └── APM agent assemblies compiled against System.Diagnostics.DiagnosticSource 8.0.0
 │
 └── ElasticApmAgentStartupHook.dll
 ```
 
 It contains numbered directories that each contain APM agent assemblies compiled against
-a specific version System.Diagnostics.DiagnosticSource.
+a specific version `System.Diagnostics.DiagnosticSource`.
+
+We maintain the 6.0.0 folder (for now) to not break those using older, unsupported .NET runtimes. We
+offer no support gauruntees and may remove this folder in a future release. For supported runtimes, 
+the 8.0.0 folder is used and our general dependency on `System.Diagnostics.DiagnosticSource` is fox 8.x or newer.
+
+On .NET Framework targets, we continue to depend on 5.0.0 of `System.Diagnostics.DiagnosticSource`.
 
 ### Troubleshooting
 

@@ -14,24 +14,31 @@ applies_to:
 
 ### Quick start [_quick_start]
 
-The agent can automatically instrument .NET Framework, .NET Core, and .NET applications using the [.NET CLR Profiling APIs](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/profiling-overview#the-profiling-api). The Profiling APIs provide a way to instrument an application or dependency code without code changes.
+The agent can automatically instrument .NET Framework and .NET applications using the [.NET CLR Profiling APIs](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/profiling-overview#the-profiling-api). The Profiling APIs provide a way to instrument an application or dependency code without code changes.
 
 This approach works with the following
 
 |     |     |
 | --- | --- |
 |  | **Operating system** |
-| **Architecture*** | ***Windows*** | ***Linux** ** |
-| x64 | .NET Framework 4.6.2+*<br>.NET Core 2.1+<br>.NET 5+ | .NET Core 2.1+<br>.NET 5+ |
+| **Architecture** | **Windows** | **Linux** \*\* |
+| x64 | .NET Framework 4.6.2-4.8.1\*<br>.NET 8+ | .NET 8+ |
 
-** Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.*
+\* Due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.*
 
-*** Minimum GLIBC version 2.14.*
+\*\* Minimum GLIBC version 2.14.
+
+::::{note}
+While the profiler-based agent **may** work on older .NET runtimes such as .NET 6, it is only officially tested and supported on runtimes that are supported by Microsoft, currently .NET 8 and newer.
+::::
+
+::::{note}
+While the profiler-based agent **may** work in the web garden (multi-worker process) mode of IIS, this is not officially tested or supported. 
+::::
 
 ::::{note}
 The profiler-based agent only supports 64-bit applications. 32-bit applications aren’t supported.
 ::::
-
 
 ::::{note}
 The profiler-based agent does not currently support ARM.
@@ -40,35 +47,33 @@ The profiler-based agent does not currently support ARM.
 
 It instruments the following assemblies:
 
-| Integration name | NuGet package version(s) | Assembly version(s) |
+| Integration name | NuGet package version(s)
 | --- | --- | --- |
-| AdoNet | part of .NET | System.Data 4.0.0 - 4.*.* |
-| part of .NET | System.Data.Common 4.0.0 - 5.*.* |
-| AspNet | part of .NET Framework | System.Web 4.0.0 - 4.*.* |
-| Kafka | [Confluent.Kafka 1.4.0 - 2.*.*](https://www.nuget.org/packages/Confluent.Kafka) | Confluent.Kafka 1.4.0 - 2.*.* |
-| MySqlCommand | [MySql.Data 6.7.0 - 8.*.*](https://www.nuget.org/packages/MySql.Data) | MySql.Data 6.7.0 - 8.*.* |
-| NpgsqlCommand | [Npgsql 4.0.0 - 7.*.*](https://www.nuget.org/packages/Npgsql) | Npgsql 4.0.0 - 7.*.* |
-| OracleCommand | [Oracle.ManagedDataAccess 12.2.1100 - 21.*.*](https://www.nuget.org/packages/Oracle.ManagedDataAccess) | Oracle.ManagedDataAccess 4.122.0 - 4.122.* |
-| [Oracle.ManagedDataAccess.Core 2.0.0 - 3.*.*](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) | Oracle.ManagedDataAccess 2.0.0 - 3.*.* |
-| RabbitMQ | [RabbitMQ.Client 3.6.9 - 6.*.*](https://www.nuget.org/packages/RabbitMQ.Client) | RabbitMQ.Client 3.6.9 - 6.*.* |
-| SqlCommand | part of .NET | System.Data 4.0.0 - 4.*.* |
-| [System.Data.SqlClient 4.0.0 - 4.*.*](https://www.nuget.org/packages/System.Data.SqlClient) | System.Data.SqlClient 4.0.0 - 4.*.* |
-| [Microsoft.Data.SqlClient 1.0.0 - 5.*.*](https://www.nuget.org/packages/Microsoft.Data.SqlClient) | Microsoft.Data.SqlClient 1.0.0 - 5.*.* |
-| SqliteCommand | [Microsoft.Data.Sqlite 2.0.0 - 7.*.*](https://www.nuget.org/packages/Microsoft.Data.Sqlite) | Microsoft.Data.Sqlite 2.0.0 - 7.*.* |
-| [System.Data.SQLite 1.0.0 - 2.*.*](https://www.nuget.org/packages/System.Data.SQLite) | System.Data.SQLite 1.0.0 - 2.*.* |
+| AdoNet | part of .NET Framework |
+| AspNet | part of .NET Framework |
+| Kafka | [Confluent.Kafka ≥1.4.0 <3.0.0>](https://www.nuget.org/packages/Confluent.Kafka) |
+| MySqlCommand | [MySql.Data ≥6.7.0 <9.0.0>](https://www.nuget.org/packages/MySql.Data) |
+| NpgsqlCommand | [Npgsql ≥4.0.0 <8.0.0>](https://www.nuget.org/packages/Npgsql) |
+| OracleCommand | [Oracle.ManagedDataAccess ≥12.2.1100 <22.0.0>](https://www.nuget.org/packages/Oracle.ManagedDataAccess) |
+| [Oracle.ManagedDataAccess.Core ≥2.0.0 <4.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) |
+| RabbitMQ | [RabbitMQ.Client ≥3.6.9 <7.0.0>](https://www.nuget.org/packages/RabbitMQ.Client) |
+| SqlCommand | part of .NET Framework |
+| [System.Data.SqlClient ≥4.0.0 <5.0.0](https://www.nuget.org/packages/System.Data.SqlClient) |
+| [Microsoft.Data.SqlClient ≥1.0.0 <6.0.0>](https://www.nuget.org/packages/Microsoft.Data.SqlClient) |
+| SqliteCommand | [Microsoft.Data.Sqlite ≥2.0.0 <8.0.0>](https://www.nuget.org/packages/Microsoft.Data.Sqlite) |
+| SQLite | [System.Data.SQLite ≥1.0.0 <3.0.0](https://www.nuget.org/packages/System.Data.SQLite) |
 
 ::::{important}
 **The .NET CLR Profiling API allows only one profiler to be attached to a .NET process**. In light of this limitation, only one solution that uses the .NET CLR profiling API should be used by an application.
 
 Auto instrumentation using the .NET CLR Profiling API can be used in conjunction with
 
-* the [Public API](/reference/public-api.md) to perform manual instrumentation.
+* OpenTelemetry native instrumentation using the [Activity](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) API and the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md).
+* The [Public API](/reference/public-api.md) to perform manual instrumentation.
 * NuGet packages that perform instrumentation using a `IDiagnosticsSubscriber` to subscribe to diagnostic events.
 
 The version number of NuGet packages referenced by a project instrumented with a profiler must be the same as the version number of profiler zip file used.
-
 ::::
-
 
 
 ### General steps [_general_steps]

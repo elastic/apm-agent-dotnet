@@ -24,9 +24,9 @@ The version of the `Elastic.Apm` nuget package used
 
 **Operating system and version:**
 
-**.NET Framework/Core name and version** (e.g. .NET 4.6.2, NET Core 3.1.100) :
+**.NET Framework/Core name and version** (e.g. .NET 4.6.2, NET 8) :
 
-**Application Target Framework(s)** (e.g. net462, netcoreapp3.1):
+**Application Target Framework(s)** (e.g. net462, net8.0):
 
 ### Describe the bug
 A clear and concise description of what the bug is.

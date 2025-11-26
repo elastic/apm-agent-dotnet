@@ -9,12 +9,12 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# .NET Core and .NET 5+ [setup-dotnet-net-core]
+# .NET 8+ [setup-dotnet-net-core]
 
 
 ## Quick start [_quick_start_3]
 
-In .NET (Core) applications using `Microsoft.Extensions.Hosting`, the agent can be registered on the `IServiceCollection`. This applies to ASP.NET Core and to other .NET applications that depend on the hosting APIs, such as those created using the [worker services](https://learn.microsoft.com/en-us/dotnet/core/extensions/workers) template.
+In .NET applications using `Microsoft.Extensions.Hosting`, the agent can be registered on the `IServiceCollection`. This applies to ASP.NET Core and to other .NET applications that depend on the hosting APIs, such as those created using the [worker services](https://learn.microsoft.com/en-us/dotnet/core/extensions/workers) template.
 
 The simplest way to enable the agent and its instrumentations requires a reference to the [`Elastic.Apm.NetCoreAll`](https://www.nuget.org/packages/Elastic.Apm.NetCoreAll) package.
 
@@ -95,7 +95,7 @@ namespace WorkerServiceSample
 1. The `CaptureTransaction` method creates a transaction named *UnitOfWork* and type *App*. The lambda passed to it represents the unit of work that should be captured within the context of the transaction.
 
 
-When this application runs, a new transaction will be captured and sent for each while loop iteration. A span named *HTTP GET* within the transaction will be created for the HTTP request to `https://www.elastic.co`. The HTTP span is captured because the NetCoreAll package enables this instrumentation automatically.
+When this application runs, a new transaction will be captured and sent for each while loop iteration. A span named *HTTP GET* within the transaction will be created for the HTTP request to `https://www.elastic.co`. The HTTP span is captured because the `NetCoreAll` package enables this instrumentation automatically.
 
 
 ## Manual instrumentation using OpenTelemetry [_manual_instrumentation_using_opentelemetry]
@@ -164,9 +164,9 @@ host.Run();
 
 
 
-## Zero code change setup on .NET Core and .NET 5+ ([1.7]) [zero-code-change-setup]
+## Zero code change setup on .NET 8+ ([1.7]) [zero-code-change-setup]
 
-If you can’t or don’t want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core 3.0, .NET Core 3.1 or .NET 5 or newer.
+If you can’t or don’t want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET 8 or newer.
 
 To configure startup hooks
 
@@ -180,7 +180,7 @@ To configure startup hooks
 
     1. `<path-to-agent>` is the unzipped directory from step 2.
 
-4. Start your .NET Core application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
+4. Start your .NET application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
 
 With this setup, the agent will be injected into the application during startup, enabling every instrumentation feature. Incoming requests will be automatically captured on ASP.NET Core (including gRPC).
 
@@ -188,5 +188,3 @@ With this setup, the agent will be injected into the application during startup,
 Agent configuration can be controlled through environment variables when using the startup hook feature.
 
 ::::
-
-
