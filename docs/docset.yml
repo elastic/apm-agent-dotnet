@@ -9,6 +9,7 @@ cross_links:
   - ecs-dotnet
   - ecs-logging
   - elasticsearch
+  - elastic-otel-dotnet
 toc:
   - toc: reference
   - toc: release-notes
