@@ -12,17 +12,9 @@ applies_to:
 # Configuration for Windows services [configuration-for-windows-services]
 
 ::::{important}
-While the APM agent supports transaction auto-creation for web frameworks such as ASP.NET and ASP.NET Core, it
-doesn't know where the "unit of work" starts for bespoke services. Therefore, it cannot start a transaction
-automatically. As a result, spans, such as those for outbound HTTP requests, are also not captured, as they expect
-a running transaction. Therefore, no trace data will be generated or exported out of the box.
+While the APM agent supports automatic transaction creation for web frameworks such as ASP.NET and ASP.NET Core, it doesn't know where the "unit of work" starts for bespoke services. Therefore, it cannot start a transaction automatically. As a result, spans, such as those for outbound HTTP requests, aren't captured, as they expect a running transaction, and no trace data is generated or exported by default.
 
-You will need to manually instrument the code for the service to manually create a transaction around the appropriate
-unit of work for your scenario. A custom transaction can be started via the [Public API](/reference/public-api.md).
-
-Alternatively, consider using the [Elastic Distribution of OpenTelemetry for .NET](https://www.elastic.co/docs/reference/opentelemetry/edot-sdks/dotnet)
-where any spans, including those for outbound HTTP requests, are automatically captured. The first span without a
-parent will be considered a transaction when ingested into Elastic Observability.
+To manually create a transaction around the appropriate unit of work for your scenario, instrument your code manually. You can start a custom transaction using the [Public API](/reference/public-api.md). Alternatively, consider using the [Elastic Distribution of OpenTelemetry for .NET](elastic-otel-dotnet://reference/index.md), which captures all spans automatically, including those for outbound HTTP requests. The first span without a parent is considered a transaction when ingested into Elastic Observability.
 ::::
 
 Configuration for Windows services can be provided by setting environment variables for the specific Windows service in the Windows registry. With PowerShell
