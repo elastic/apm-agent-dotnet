@@ -392,7 +392,7 @@ The default value is `warn`. More verbose log levels like `trace` and `debug` ca
 This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG` environment variable.
 
 ::::{note} 
-Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for OpenTelemetry SDKs, simplifying migrations.
+Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for EDOT .NET and OpenTelemetry SDKs, simplifying migrations.
 ::::
 
 `OTEL_DOTNET_AUTO_LOG_DIRECTORY` *(optional)*
@@ -411,7 +411,7 @@ The user account under which the profiler process runs must have permission to w
 ::::
 
 ::::{note} 
-Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for OpenTelemetry SDKs, simplifying migrations.
+Although prefixed with `OTEL_` we prefer `OTEL_DOTNET_AUTO_LOG_DIRECTORY`, when present as this aligns with the configuration for EDOT .NET and OpenTelemetry SDKs, simplifying migrations.
 ::::
 
 `ELASTIC_OTEL_LOG_TARGETS` *(optional)*
@@ -421,7 +421,7 @@ Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this 
     * stdout
 
 
-The default value is `file`, which logs to the directory specified by `ELASTIC_APM_PROFILER_LOG_DIR` environment variable.
+The default value is `file`, which logs to the directory specified by `OTEL_DOTNET_AUTO_LOG_DIRECTORY` environment variable.
 
 This takes precedence over the now deprecated `ELASTIC_APM_PROFILER_LOG_TARGETS`
 

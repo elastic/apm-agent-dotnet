@@ -27,9 +27,12 @@ The `AddElasticApm()` extension enables configuration, as is typical in an ASP.N
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
-| `ELASTIC_APM_LOG_LEVEL` | `ElasticApm:LogLevel` |
+| `OTEL_LOG_LEVEL` | `ElasticApm:LogLevel` |
 
 | Default | Type |
 | --- | --- |
 | `Error` | String |
 
+::::{note} 
+Although prefixed with `OTEL_` we prefer `OTEL_LOG_LEVEL`, when present as this aligns with the configuration for EDOT .NET and OpenTelemetry SDKs, simplifying migrations.
+::::
