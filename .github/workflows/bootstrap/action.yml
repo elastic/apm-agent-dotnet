@@ -33,7 +33,7 @@ runs:
         git fetch --prune --unshallow --tags
         git tag --list
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v5
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}-${{ hashFiles('**/*.*.props') }}

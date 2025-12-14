@@ -73,7 +73,7 @@ jobs:
         run: ./build.bat test --test-suite integrations
 
       - name: Store crash dumps
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: success() || failure()
         with:
           name: hang-dumps
@@ -115,7 +115,7 @@ jobs:
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: "${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}"
@@ -173,7 +173,7 @@ jobs:
             --logger:"junit;LogFilePath=%cd%\build\output\junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
 
       - name: Store test results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: test-results-iis
           path: build/output/junit-*.xml
