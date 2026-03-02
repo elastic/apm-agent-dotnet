@@ -117,7 +117,8 @@ namespace Elastic.Apm.Config
 							 "*.webp",
 							 "*.svg",
 							 "*.woff",
-							 "*.woff2"
+							 "*.woff2",
+							 "*.ttf"
 						 })
 					transactionIgnoreUrls.Add(WildcardMatcher.ValueOf(item));
 				TransactionIgnoreUrls = transactionIgnoreUrls.AsReadOnly();
