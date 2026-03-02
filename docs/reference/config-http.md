@@ -159,7 +159,7 @@ All errors that are captured during a request to an ignored URL are still sent t
 
 | Default | Type |
 | --- | --- |
-| `/VAADIN/*, /heartbeat*, /favicon.ico, *.js, *.css, *.jpg, *.jpeg, *.png, *.gif, *.webp, *.svg, *.woff, *.woff2` | Comma separated string |
+| `/VAADIN/*, /heartbeat*, /favicon.ico, *.js, *.css, *.jpg, *.jpeg, *.png, *.gif, *.webp, *.svg, *.woff, *.woff2, *.ttf` | Comma separated string |
 
 ::::{note}
 Changing this configuration will overwrite the default value.
