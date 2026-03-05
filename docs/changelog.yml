@@ -186,10 +186,11 @@ bundle:
   profiles:
     # Fetch the PR list from GitHub release notes
     gh-release:
-    #   # Output filename ({version} is substituted at runtime)
+      source: github_release
+      # Output filename ({version} is substituted at runtime)
       output: "apm-agent-dotnet-{version}.yaml"
-    #   # Optional: override the products array written to the bundle output.
-    #   # Useful when the bundle should advertise a different lifecycle than was used for filtering.
+      # Optional: override the products array written to the bundle output.
+      # Useful when the bundle should advertise a different lifecycle than was used for filtering.
       output_products: "apm-agent-dotnet {version} {lifecycle}"
 
     # Example: Serverless release profile (product ID "cloud-serverless" differs from repo "cloud")
