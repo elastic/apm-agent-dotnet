@@ -172,9 +172,9 @@ bundle:
   # Optional: default GitHub repo name applied to all profiles that do not specify their own.
   # Used by the {changelog} directive to generate correct PR/issue links when the product ID
   # differs from the GitHub repository name. Can be overridden per profile.
-  # repo: elasticsearch
+  repo: apm-agent-dotnet
   # Optional: default GitHub owner applied to all profiles that do not specify their own.
-  # owner: elastic
+  owner: elastic
 
   # Named bundle profiles for different release scenarios.
   # Profiles can be used with both 'changelog bundle' and 'changelog remove':

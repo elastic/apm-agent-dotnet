@@ -1,0 +1,8 @@
+﻿prs:
+- https://github.com/elastic/apm-agent-dotnet/pull/2643
+type: other
+products:
+- product: apm-agent-dotnet
+  target: 1.34.0
+  lifecycle: ga
+title: Add support for configuring proxy URL, username and password
