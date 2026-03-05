@@ -184,20 +184,13 @@ bundle:
   # The 'output', 'output_products', 'repo', 'owner', and 'hide_features' fields are
   # bundle-specific and are ignored for removal.
   profiles:
-    # Example: Elasticsearch release profile
-    # elasticsearch-release:
-    #   # Filter: which input changelogs to include ({version} and {lifecycle} are substituted at runtime)
-    #   products: "elasticsearch {version} {lifecycle}"
+    # Fetch the PR list from GitHub release notes
+    gh-release:
     #   # Output filename ({version} is substituted at runtime)
-    #   output: "elasticsearch-{version}.yaml"
+      output: "apm-agent-dotnet-{version}.yaml"
     #   # Optional: override the products array written to the bundle output.
     #   # Useful when the bundle should advertise a different lifecycle than was used for filtering.
-    #   # output_products: "elasticsearch {version} ga"
-    #   # Optional: profile-specific GitHub repo name (overrides bundle.repo if set).
-    #   # Only needed when this profile's product ID differs from the repository name.
-    #   # repo: elasticsearch
-    #   # Optional: profile-specific GitHub owner (overrides bundle.owner if set).
-    #   # owner: elastic
+      output_products: "apm-agent-dotnet {version} {lifecycle}"
 
     # Example: Serverless release profile (product ID "cloud-serverless" differs from repo "cloud")
     # serverless-release:
