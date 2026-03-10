@@ -75,8 +75,9 @@ jobs:
       continue-on-error: true # continue for now until we see it working in action
       uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7.0.0
       with:
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        # Disabled cache to mitigate cache poisoning attack vector
+        # cache-from: type=gha
+        # cache-to: type=gha,mode=max
         context: .
         platforms: linux/amd64,linux/arm64
         push: true
