@@ -1,0 +1,51 @@
+﻿products:
+- product: apm-agent-dotnet
+  target: 1.34.1
+  lifecycle: ga
+  repo: apm-agent-dotnet
+  owner: elastic
+entries:
+- file:
+    name: 2662-other-remove-redundant-println-from-profiler.yaml
+    checksum: d83a5ab0f429bdf65a86fcbda3c364a1f3e55f70
+  type: other
+  title: Remove redundant println from profiler
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.1
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2662
+- file:
+    name: 2646-other-fix-mongodb-test-failure-in-integration.yaml
+    checksum: 28e545a1417b77ce052f8c3e22c533097a7eb1dd
+  type: other
+  title: Fix MongoDb test failure in integration tests
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.1
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2646
+- file:
+    name: 2661-other-add-the-target-framework-moniker-to.yaml
+    checksum: 2795e076a85d7a16c8eee00457ceed6af5e77a87
+  type: other
+  title: Add the target framework moniker to the preamble logs
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.1
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2661
+- file:
+    name: 2656-other-ensure-we-always-start-an-activity.yaml
+    checksum: a04bdb33f55cb456aacaafaf03c80b76c14374bb
+  type: other
+  title: Ensure we always start an Activity even when OTelBridge disabled
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.1
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2656

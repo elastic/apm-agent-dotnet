@@ -1,0 +1,51 @@
+﻿products:
+- product: apm-agent-dotnet
+  target: 1.34.0
+  lifecycle: ga
+  repo: apm-agent-dotnet
+  owner: elastic
+entries:
+- file:
+    name: 2647-docs-docs-replace-placeholder-urls.yaml
+    checksum: 72333356c8bdd5d8714dd77c207f2f30e6c1ee95
+  type: docs
+  title: '[docs] Replace placeholder URLs'
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.0
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2647
+- file:
+    name: 2645-other-update-and-fix-release-notes.yaml
+    checksum: 4680f15bec969f169684609c4ebbc640ffb181dc
+  type: other
+  title: Update and fix release notes + breaking changes
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.0
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2645
+- file:
+    name: 2644-other-remove-post-release-step-to-backport.yaml
+    checksum: d14a5edd412f0a8a736e3fa58a4cf53c14f95429
+  type: other
+  title: Remove post release step to backport docs to 1.x
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.0
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2644
+- file:
+    name: 2643-other-add-support-for-configuring-proxy-url.yaml
+    checksum: 9cbd61e9459d5baede8d2b5282bf64df40266740
+  type: other
+  title: Add support for configuring proxy URL, username and password
+  products:
+  - product: apm-agent-dotnet
+    target: 1.34.0
+    lifecycle: ga
+  prs:
+  - https://github.com/elastic/apm-agent-dotnet/pull/2643
