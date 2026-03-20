@@ -11,6 +11,9 @@ applies_to:
 
 # Supported technologies [supported-technologies]
 
+The APM Agent for .NET supports the technologies listed below.
+
+Elastic supports OpenTelemetry, which allows logs, metrics, and trace signal collection for many of these technologies. Consider using the [EDOT .NET SDK](elastic-otel-dotnet://reference/edot-dotnet/index.md) for observability data so you continue to get the full power of Elastic's platform.
 
 ## .NET versions [supported-dotnet-flavors]
 
