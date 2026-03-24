@@ -1,0 +1,8 @@
+﻿prs:
+- https://github.com/elastic/apm-agent-dotnet/pull/2661
+type: other
+products:
+- product: apm-agent-dotnet
+  target: 1.34.1
+  lifecycle: ga
+title: Add the target framework moniker to the preamble logs

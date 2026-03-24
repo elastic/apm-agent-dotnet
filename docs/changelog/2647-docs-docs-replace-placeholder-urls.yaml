@@ -1,0 +1,8 @@
+﻿prs:
+- https://github.com/elastic/apm-agent-dotnet/pull/2647
+type: docs
+products:
+- product: apm-agent-dotnet
+  target: 1.34.0
+  lifecycle: ga
+title: '[docs] Replace placeholder URLs'
