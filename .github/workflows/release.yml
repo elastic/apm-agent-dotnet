@@ -39,7 +39,7 @@ jobs:
 
     # Get a short-lived NuGet API key
     - name: NuGet login (OIDC → temp API key)
-      uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1
+      uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
       id: login
       with:
         user: ${{ secrets.NUGET_USER }}
@@ -51,7 +51,7 @@ jobs:
       uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
     - name: Log in to the Elastic Container registry
-      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ secrets.ELASTIC_DOCKER_REGISTRY }}
         username: ${{ secrets.ELASTIC_DOCKER_USERNAME }}
@@ -73,7 +73,7 @@ jobs:
     - name: Build and Push Profiler Docker Image
       id: docker-push
       continue-on-error: true # continue for now until we see it working in action
-      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7.0.0
+      uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
       with:
         # Disabled cache to mitigate cache poisoning attack vector
         # cache-from: type=gha
