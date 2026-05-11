@@ -8,5 +8,8 @@ members = [
 [profile.release]
 lto = true
 codegen-units = 1
+# Emit a PDB next to the release DLL on Windows so customer crash dumps
+# resolve to named frames / source lines. Separate file; DLL is unaffected.
+debug = true
 # reduce binary size by not unwinding on panic to get a backtrace
 #panic = "abort"
