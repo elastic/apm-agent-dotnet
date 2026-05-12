@@ -19,7 +19,7 @@ Elastic supports OpenTelemetry, which allows logs, metrics, and trace signal col
 
 The APM Agent for .NET targets every .NET flavor and version that supports .NET Standard 2.0 or .NET Standard 2.1.
 
-However, we only test and support .NET runtimes that are also supported per the [Microsoft .NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core). Therefore, we always recommend you upgrade to a supported runtime before raising issues.
+However, we only test and support .NET runtimes <= 10.0.x that are also supported per the [Microsoft .NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core). Therefore, we always recommend you upgrade to a supported runtime before raising issues.
 
 ::::{note}
 On .NET Framework, due to binding issues introduced by Microsoft, we recommend at least .NET Framework 4.7.2 for best compatibility.
@@ -34,7 +34,7 @@ Automatic instrumentation is supported for the following web frameworks
 
 | Framework | Supported versions | Integration |
 | --- | --- | --- |
-| ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0 <10.0.0 | [NuGet package](/reference/setup-asp-net-core.md) |
+| ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0 ≤10.0.x | [NuGet package](/reference/setup-asp-net-core.md) |
 | ASP.NET (.NET Framework) in IIS  {applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2-4.8.1 (IIS 10) | [Profiler auto instrumentation](/reference/setup-auto-instrumentation.md)<br>*or*<br>[NuGet package](/reference/setup-asp-dot-net.md) |
 
 ::::{note}
@@ -43,7 +43,7 @@ IIS must be installed on a [supported](https://learn.microsoft.com/windows/relea
 ::::
 
 ::::{note}
-APM Agent auto instrumentation does not support the Web Garden (multi-worker process) mode of IIS. 
+APM Agent auto instrumentation does not support the Web Garden (multi-worker process) mode of IIS.
 ::::
 
 
