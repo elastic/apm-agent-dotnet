@@ -28,12 +28,12 @@ The APM Agent for .NET libraries and components target .NET Standard 2.0 or .NET
 
 We support .NET runtimes<br>≤10.0.x and .NET Framework runtimes from 4.6.2 to 4.8.1 for as long as they receive active support from Microsoft per the [.NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core) and [.NET Framework support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-framework). When Microsoft ends support for a runtime version, we do too. Issues reported against unsupported runtimes will not be acted on unless they also affect a supported runtime.
 
-::::{note}
-On .NET Framework, we strongly recommend at least .NET Framework 4.7.2 because of binding issues introduced by Microsoft.
-::::
-
 ::::{warning}
 Native AOT is not supported. The agent relies on reflection, runtime IL emit, and embedded libraries that are incompatible with AOT compilation. Attempting to use the agent in a Native AOT-published application will fail at runtime.
+::::
+
+::::{note}
+On .NET Framework, we strongly recommend at least .NET Framework 4.7.2 because of binding issues introduced by Microsoft.
 ::::
 
 ## Installation methods [supported-installation-methods]
@@ -116,13 +116,9 @@ Streaming is not supported - the agent does not create transactions or spans for
 
 ::::{note}
 `Microsoft.Azure.DocumentDB.Core` and `Microsoft.Azure.DocumentDB` are deprecated. The recommended replacement is the `Microsoft.Azure.Cosmos` package.
-::::
 
-::::{note}
-`Elastic.Clients.Elasticsearch` emits native OpenTelemetry spans. The legacy `Elasticsearch.Net` and `NEST` clients use a `DiagnosticSource`-based subscriber instead.
-::::
+`Elastic.Clients.Elasticsearch` emits native OpenTelemetry spans. The legacy (deprecated) `Elasticsearch.Net` and `NEST` clients use a `DiagnosticSource`-based subscriber instead.
 
-::::{note}
 `MongoDB.Driver` ≥3.7.0 emits native OpenTelemetry spans. When running without the NuGet package (profiler-only install), these are captured automatically by the OpenTelemetry Bridge.
 ::::
 
