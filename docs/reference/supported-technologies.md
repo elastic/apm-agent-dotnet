@@ -11,7 +11,14 @@ applies_to:
 
 # Supported technologies [supported-technologies]
 
-The tables below summarize the technologies the APM Agent for .NET supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but may work.
+The tables below summarize the technologies the APM Agent for .NET supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but might work.
+
+Use this page as a compatibility matrix:
+
+1. Find the framework or library you use.
+2. Check that your package or runtime version falls within the supported range.
+3. Check the installation method you plan to use: Profiler, NuGet, or OpenTelemetry Bridge.
+4. Read any footnotes or notes directly below that table for important limitations or setup requirements.
 
 If you are already using OpenTelemetry, consider the [EDOT .NET SDK](elastic-otel-dotnet://reference/edot-dotnet/index.md) for traces, metrics, and logs. It covers many of these technologies and fits naturally with Elastic's observability platform.
 
@@ -34,9 +41,11 @@ Native AOT is not supported. The agent relies on reflection, runtime IL emit, an
 Each table below shows which installation methods apply to each technology. A checkmark (✓) means the technology is supported via that installation method for the listed version range. Where a cell shows a version qualifier such as `(≥3.7.0)`, only that narrower range is covered by that method.
 
 ::::{note}
-The **OpenTelemetry Bridge** column requires .NET 8+ and APM Server ≥7.16. A checkmark there means the library's native OpenTelemetry spans are captured by the agent regardless of whether the agent was installed via the Profiler or a NuGet package — no additional Elastic integration package is needed for that coverage.
+The **OpenTelemetry Bridge** column requires .NET 8+ and APM Server ≥7.16. A checkmark there means the technology is covered through the built-in OpenTelemetry Bridge, whether the agent was installed via the Profiler or a NuGet package.
 
-The startup hook used by the profiler on .NET 8+ is not available on .NET Framework. Technologies that depend on the startup hook or the OpenTelemetry Bridge therefore need the NuGet install method on .NET Framework. Technologies with no Elastic APM NuGet package, such as `Elastic.Clients.Elasticsearch`, are not supported on .NET Framework.
+On .NET Framework, technologies that depend on the startup hook or the OpenTelemetry Bridge need the NuGet install method instead.
+
+If no Elastic APM NuGet package exists for that technology, such as `Elastic.Clients.Elasticsearch`, it is not supported on .NET Framework.
 ::::
 
 | Column | Meaning |
@@ -92,7 +101,7 @@ Streaming is not supported — the agent does not create transactions or spans f
 ¹ Via startup hook on .NET.
 
 ::::{note}
-`Grpc.Net.Client` ≥2.57.0 emits native OpenTelemetry spans. The OpenTelemetry Bridge provides automatic coverage when using the profiler without the NuGet package. When the NuGet package is installed, the dedicated subscriber takes precedence and the bridge is suppressed to prevent duplicate spans.
+`Grpc.Net.Client` ≥2.57.0 emits native OpenTelemetry spans. When using the profiler without the NuGet package, the OpenTelemetry Bridge captures them automatically. When the NuGet package is installed, the dedicated subscriber takes precedence to prevent duplicate spans.
 ::::
 
 ## Data access technologies [supported-data-access-technologies]
@@ -136,13 +145,13 @@ MongoDB.Driver ≥3.7.0 emits native OpenTelemetry spans. When running without t
 | --- | --- | :---: | :---: | :---: |
 | Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-servicebus.md) | [✓](/reference/opentelemetry-bridge.md) |
 | Azure Service Bus, legacy {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus ≥3.0.0 <6.0.0 | — | [✓](/reference/setup-azure-servicebus.md) | — |
-| Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | Confluent.Kafka ≥1.4.0 <3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | [✓ ¹](/reference/setup-kafka.md) |
+| Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | Confluent.Kafka ≥1.4.0 <3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | [✓ via adapter ¹](/reference/setup-kafka.md) |
 | RabbitMQ {applies_to}`apm_agent_dotnet: ga 1.12` | RabbitMQ.Client ≥3.6.9 <7.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | — |
 
-¹ Requires [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) to wrap producers and consumers to emit spans captured by the OpenTelemetry Bridge. Code changes are required — see the [setup page](/reference/setup-kafka.md).
+¹ Requires adding [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) which wraps producers and consumers so they emit spans for the OpenTelemetry Bridge to capture. Code changes are required — see the [setup page](/reference/setup-kafka.md).
 
 ::::{note}
-`Azure.Messaging.ServiceBus` emits native OpenTelemetry spans. The OpenTelemetry Bridge provides automatic coverage when using the profiler without the NuGet package. When the NuGet package is installed, the dedicated subscriber takes precedence and the bridge is suppressed to prevent duplicate spans.
+`Azure.Messaging.ServiceBus` emits native OpenTelemetry spans. When using the profiler without the NuGet package, the OpenTelemetry Bridge captures them automatically. When the NuGet package is installed, the dedicated subscriber takes precedence to prevent duplicate spans.
 
 The legacy `Microsoft.Azure.ServiceBus` package does not emit native OpenTelemetry spans and requires the NuGet package.
 ::::
@@ -156,7 +165,7 @@ The legacy `Microsoft.Azure.ServiceBus` package does not emit native OpenTelemet
 | Azure File Share Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Files.Shares ≥12.6.0 <13.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-storage.md) | [✓](/reference/opentelemetry-bridge.md) |
 
 ::::{note}
-For Azure Storage services, the OpenTelemetry Bridge provides automatic coverage when using the profiler without the NuGet package. When the NuGet package is installed, the dedicated subscriber takes precedence and the bridge is suppressed to prevent duplicate spans.
+Azure Storage SDKs emit native OpenTelemetry spans. When using the profiler without the NuGet package, the OpenTelemetry Bridge captures them automatically. When the NuGet package is installed, the dedicated subscriber takes precedence to prevent duplicate spans.
 ::::
 
 ## Networking client-side technologies [supported-networking-client-side-technologies]
