@@ -11,7 +11,7 @@ applies_to:
 
 # Supported technologies [supported-technologies]
 
-The tables below summarize the technologies the APM Agent for .NET supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but might work.
+This page summarizes the technologies the APM Agent for .NET supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but might work.
 
 Use this page as a compatibility matrix:
 
@@ -20,7 +20,7 @@ Use this page as a compatibility matrix:
 3. Check the installation method you plan to use: Profiler, NuGet, or OpenTelemetry Bridge.
 4. Read any footnotes or notes directly below that table for important limitations or setup requirements.
 
-If you are already using OpenTelemetry, consider the [EDOT .NET SDK](elastic-otel-dotnet://reference/edot-dotnet/index.md) for traces, metrics, and logs. It covers many of these technologies and fits naturally with Elastic's observability platform.
+If you are already using OpenTelemetry, consider the [EDOT .NET SDK](elastic-otel-dotnet://reference/edot-dotnet/index.md) for traces, metrics, and logs. It covers many of the same technologies (and more) and integrates naturally with Elastic's observability platform.
 
 ## Supported .NET runtimes [supported-dotnet-runtimes]
 
@@ -38,7 +38,7 @@ Native AOT is not supported. The agent relies on reflection, runtime IL emit, an
 
 ## Installation methods [supported-installation-methods]
 
-Each table below shows which installation methods apply to each technology. A checkmark (✓) means the technology is supported via that installation method for the listed version range. Where a cell shows a version qualifier such as `(≥3.7.0)`, only that narrower range is covered by that method.
+Each table below shows which installation methods apply to each technology. A checkmark (✓) means the technology is supported via that installation method for the listed version range; a cross (✗) means it is not supported via that method. Where a cell shows a version qualifier such as `(≥3.7.0)`, only that narrower range is covered by that method.
 
 ::::{note}
 The **OpenTelemetry Bridge** column requires .NET 8+ and APM Server ≥7.16. A checkmark there means the technology is covered through the built-in OpenTelemetry Bridge, whether the agent was installed via the Profiler or a NuGet package.
@@ -53,7 +53,6 @@ If no Elastic APM NuGet package exists for that technology, such as `Elastic.Cli
 | **[Profiler](/reference/setup-auto-instrumentation.md)** | Instrumented automatically by the [Elastic APM .NET Profiler](/reference/setup-auto-instrumentation.md) with no code changes. On .NET, a startup hook loads DiagnosticSource subscribers and the built-in OpenTelemetry Bridge. On .NET Framework, the profiler uses IL rewriting instead. |
 | **NuGet** | Install the linked integration NuGet package alongside the core `Elastic.Apm` package and add the setup call to application startup. |
 | **OpenTelemetry Bridge** | The library emits native [OpenTelemetry](https://opentelemetry.io/) spans that the agent captures through its built-in [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). |
-| **—** | Not supported via this installation method. |
 
 ## Web frameworks [supported-web-frameworks]
 
@@ -61,8 +60,8 @@ For supported web frameworks, the agent creates one transaction per incoming req
 
 | Framework | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0 ≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-net-core.md) | — |
-| ASP.NET (.NET Framework) in IIS {applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2–4.8.1 (IIS 10) | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-dot-net.md) | — |
+| ASP.NET Core {applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0 ≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-net-core.md) | ✗ |
+| ASP.NET (.NET Framework) in IIS {applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2–4.8.1 (IIS 10) | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-dot-net.md) | ✗ |
 
 ¹ Via startup hook on .NET.
 
@@ -78,25 +77,25 @@ For supported Azure Functions hosting models, the agent creates one transaction 
 
 | Hosting model | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| Azure Functions isolated worker {applies_to}`apm_agent_dotnet: ga 1.19` | Microsoft.Azure.Functions.Worker ≥2.0.0 | — | [✓](/reference/setup-azure-functions.md) | — |
-| Azure Functions in-process {applies_to}`apm_agent_dotnet: ga 1.24` | Microsoft.Azure.Functions.Extensions ≥1.1.0 | — | [✓](/reference/setup-azure-functions.md) | — |
+| Azure Functions isolated worker {applies_to}`apm_agent_dotnet: ga 1.19` | `Microsoft.Azure.Functions.Worker` ≥2.0.0 | ✗ | [✓](/reference/setup-azure-functions.md) | ✗ |
+| Azure Functions in-process {applies_to}`apm_agent_dotnet: ga 1.24` | `Microsoft.Azure.Functions.Extensions` ≥1.1.0 | ✗ | [✓](/reference/setup-azure-functions.md) | ✗ |
 
 ::::{note}
 Only HTTP-triggered invocations are traced. System metrics are not collected because of a concern with unintentionally increasing Azure Functions costs on Consumption plans.
 
-The isolated worker model requires .NET 8+. The in-process model is [deprecated by Microsoft](https://learn.microsoft.com/en-us/azure/azure-functions/migrate-dotnet-in-process-to-isolated) — new apps should use the isolated worker model.
+The isolated worker model requires .NET 8+. The in-process model is [deprecated by Microsoft](https://learn.microsoft.com/en-us/azure/azure-functions/migrate-dotnet-in-process-to-isolated) - new apps should use the isolated worker model.
 ::::
 
 ## RPC frameworks [supported-rpc-frameworks]
 
 For supported gRPC frameworks, the agent automatically captures both client-side and server-side calls.
 
-Streaming is not supported — the agent does not create transactions or spans for streaming calls automatically.
+Streaming is not supported - the agent does not create transactions or spans for streaming calls automatically.
 
 | Framework | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| gRPC client {applies_to}`apm_agent_dotnet: ga 1.7` | Grpc.Net.Client ≥2.23.2 <3.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-grpc.md) | [✓ (≥2.57.0)](/reference/opentelemetry-bridge.md) |
-| gRPC server (ASP.NET Core) {applies_to}`apm_agent_dotnet: ga 1.7` | ≥8.0.0 ≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-net-core.md) | — |
+| gRPC client {applies_to}`apm_agent_dotnet: ga 1.7` | `Grpc.Net.Client` ≥2.23.2 <3.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-grpc.md) | [✓ (≥2.57.0)](/reference/opentelemetry-bridge.md) |
+| gRPC server (ASP.NET Core) {applies_to}`apm_agent_dotnet: ga 1.7` | ≥8.0.0 ≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-net-core.md) | ✗ |
 
 ¹ Via startup hook on .NET.
 
@@ -108,27 +107,27 @@ Streaming is not supported — the agent does not create transactions or spans f
 
 | Data access technology | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| Azure CosmosDB {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.Cosmos ≥3.0.0 <4.0.0 | — | [✓](/reference/setup-azure-cosmosdb.md) | — |
-| Azure DocumentDB, legacy {applies_to}`apm_agent_dotnet: ga 1.11` | Microsoft.Azure.DocumentDB.Core\* ≥2.4.1 <3.0.0; Microsoft.Azure.DocumentDB\* ≥2.4.1 <3.0.0 | — | [✓](/reference/setup-azure-cosmosdb.md) | — |
-| Elasticsearch {applies_to}`apm_agent_dotnet: ga 1.23` | Elastic.Clients.Elasticsearch ≥8.0.0 <10.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | [✓](/reference/opentelemetry-bridge.md) |
-| Elasticsearch, legacy {applies_to}`apm_agent_dotnet: ga 1.6` | Elasticsearch.Net / NEST ≥7.6.0 <8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | — |
-| Entity Framework Core {applies_to}`apm_agent_dotnet: ga 1.0` | Microsoft.EntityFrameworkCore ≥8.0.0 ≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-ef-core.md) | — |
-| Entity Framework 6 {applies_to}`apm_agent_dotnet: ga 1.2` | EntityFramework ≥6.2 ≤6.5.2 | — | [✓](/reference/setup-ef6.md) | — |
-| MongoDB {applies_to}`apm_agent_dotnet: ga 1.9` | MongoDB.Driver ≥3.0.0 <4.0.0 | [✓ (≥3.7.0)](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
-| MySQL {applies_to}`apm_agent_dotnet: ga 1.12` | MySql.Data ≥6.7.0 <9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | — |
-| Oracle.ManagedDataAccess {applies_to}`apm_agent_dotnet: ga 1.12` | Oracle.ManagedDataAccess 4.122.x | [✓](/reference/setup-auto-instrumentation.md) | — | — |
-| Oracle.ManagedDataAccess.Core {applies_to}`apm_agent_dotnet: ga 1.12` | Oracle.ManagedDataAccess.Core ≥2.0.0 <4.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | — |
-| PostgreSQL {applies_to}`apm_agent_dotnet: ga 1.12` | Npgsql ≥4.0.0 <8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | — |
-| Redis {applies_to}`apm_agent_dotnet: ga 1.8` | StackExchange.Redis ≥2.0.495 <3.0.0 | — | [✓ ²](/reference/setup-stackexchange-redis.md) | — |
-| SqlClient {applies_to}`apm_agent_dotnet: ga 1.0` | System.Data.SqlClient ≥4.0.0 <5.0.0; Microsoft.Data.SqlClient ≥1.0.0 <6.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | — |
-| Microsoft.Data.Sqlite {applies_to}`apm_agent_dotnet: ga 1.12` | Microsoft.Data.Sqlite ≥2.0.0 <9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | — |
-| System.Data.SQLite {applies_to}`apm_agent_dotnet: ga 1.12` | System.Data.SQLite ≥1.0.0 <3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | — |
+| Azure CosmosDB {applies_to}`apm_agent_dotnet: ga 1.11` | `Microsoft.Azure.Cosmos` ≥3.0.0 <4.0.0 | ✗ | [✓](/reference/setup-azure-cosmosdb.md) | ✗ |
+| Azure DocumentDB, legacy {applies_to}`apm_agent_dotnet: ga 1.11` | `Microsoft.Azure.DocumentDB.Core`\* ≥2.4.1 <3.0.0; `Microsoft.Azure.DocumentDB`\* ≥2.4.1 <3.0.0 | ✗ | [✓](/reference/setup-azure-cosmosdb.md) | ✗ |
+| Elasticsearch {applies_to}`apm_agent_dotnet: ga 1.23` | `Elastic.Clients.Elasticsearch` ≥8.0.0 <10.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | [✓](/reference/opentelemetry-bridge.md) |
+| Elasticsearch, legacy {applies_to}`apm_agent_dotnet: ga 1.6` | `Elasticsearch.Net` / `NEST` ≥7.6.0 <8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | ✗ |
+| Entity Framework Core {applies_to}`apm_agent_dotnet: ga 1.0` | `Microsoft.EntityFrameworkCore` ≥8.0.0 ≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-ef-core.md) | ✗ |
+| Entity Framework 6 {applies_to}`apm_agent_dotnet: ga 1.2` | `EntityFramework` ≥6.2 ≤6.5.2 | ✗ | [✓](/reference/setup-ef6.md) | ✗ |
+| MongoDB {applies_to}`apm_agent_dotnet: ga 1.9` | `MongoDB.Driver` ≥3.0.0 <4.0.0 | [✓ (≥3.7.0)](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
+| MySQL {applies_to}`apm_agent_dotnet: ga 1.12` | `MySql.Data` ≥6.7.0 <9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| Oracle.ManagedDataAccess {applies_to}`apm_agent_dotnet: ga 1.12` | `Oracle.ManagedDataAccess` 4.122.x | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| Oracle.ManagedDataAccess.Core {applies_to}`apm_agent_dotnet: ga 1.12` | `Oracle.ManagedDataAccess.Core` ≥2.0.0 <4.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| PostgreSQL {applies_to}`apm_agent_dotnet: ga 1.12` | `Npgsql` ≥4.0.0 <8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| Redis {applies_to}`apm_agent_dotnet: ga 1.8` | `StackExchange.Redis` ≥2.0.495 <3.0.0 | ✗ | [✓ ²](/reference/setup-stackexchange-redis.md) | ✗ |
+| SqlClient {applies_to}`apm_agent_dotnet: ga 1.0` | `System.Data.SqlClient` ≥4.0.0 <5.0.0; `Microsoft.Data.SqlClient` ≥1.0.0 <6.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | ✗ |
+| Microsoft.Data.Sqlite {applies_to}`apm_agent_dotnet: ga 1.12` | `Microsoft.Data.Sqlite` ≥2.0.0 <9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| System.Data.SQLite {applies_to}`apm_agent_dotnet: ga 1.12` | `System.Data.SQLite` ≥1.0.0 <3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
 ¹ Via startup hook on .NET.
-² Requires calling `connection.UseElasticApm()` on each `IConnectionMultiplexer` instance — see the [setup page](/reference/setup-stackexchange-redis.md).
+² Requires calling `connection.UseElasticApm()` on each `IConnectionMultiplexer` instance - see the [setup page](/reference/setup-stackexchange-redis.md).
 
 ::::{note}
-\* `Microsoft.Azure.DocumentDB.Core` and `Microsoft.Azure.DocumentDB` are deprecated. The recommended replacement is the `Microsoft.Azure.Cosmos` package.
+`Microsoft.Azure.DocumentDB.Core` and `Microsoft.Azure.DocumentDB` are deprecated. The recommended replacement is the `Microsoft.Azure.Cosmos` package.
 ::::
 
 ::::{note}
@@ -136,19 +135,19 @@ Streaming is not supported — the agent does not create transactions or spans f
 ::::
 
 ::::{note}
-MongoDB.Driver ≥3.7.0 emits native OpenTelemetry spans. When running without the NuGet package (profiler-only install), these are captured automatically by the OpenTelemetry Bridge.
+`MongoDB.Driver` ≥3.7.0 emits native OpenTelemetry spans. When running without the NuGet package (profiler-only install), these are captured automatically by the OpenTelemetry Bridge.
 ::::
 
 ## Messaging systems [supported-messaging-systems]
 
 | Messaging system | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-servicebus.md) | [✓](/reference/opentelemetry-bridge.md) |
-| Azure Service Bus, legacy {applies_to}`apm_agent_dotnet: ga 1.10` | Microsoft.Azure.ServiceBus ≥3.0.0 <6.0.0 | — | [✓](/reference/setup-azure-servicebus.md) | — |
-| Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | Confluent.Kafka ≥1.4.0 <3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | [✓ via adapter ¹](/reference/setup-kafka.md) |
-| RabbitMQ {applies_to}`apm_agent_dotnet: ga 1.12` | RabbitMQ.Client ≥3.6.9 <7.0.0 | [✓](/reference/setup-auto-instrumentation.md) | — | — |
+| Azure Service Bus {applies_to}`apm_agent_dotnet: ga 1.10` | `Azure.Messaging.ServiceBus` ≥7.0.0 <8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-servicebus.md) | [✓](/reference/opentelemetry-bridge.md) |
+| Azure Service Bus, legacy {applies_to}`apm_agent_dotnet: ga 1.10` | `Microsoft.Azure.ServiceBus` ≥3.0.0 <6.0.0 | ✗ | [✓](/reference/setup-azure-servicebus.md) | ✗ |
+| Kafka {applies_to}`apm_agent_dotnet: ga 1.12` | `Confluent.Kafka` ≥1.4.0 <3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | [✓ via adapter ¹](/reference/setup-kafka.md) |
+| RabbitMQ {applies_to}`apm_agent_dotnet: ga 1.12` | `RabbitMQ.Client` ≥3.6.9 <7.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
-¹ Requires adding [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) which wraps producers and consumers so they emit spans for the OpenTelemetry Bridge to capture. Code changes are required — see the [setup page](/reference/setup-kafka.md).
+¹ Requires adding [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) which wraps producers and consumers so they emit spans for the OpenTelemetry Bridge to capture. Code changes are required - see the [setup page](/reference/setup-kafka.md).
 
 ::::{note}
 `Azure.Messaging.ServiceBus` emits native OpenTelemetry spans. When using the profiler without the NuGet package, the OpenTelemetry Bridge captures them automatically. When the NuGet package is installed, the dedicated subscriber takes precedence to prevent duplicate spans.
@@ -160,9 +159,9 @@ The legacy `Microsoft.Azure.ServiceBus` package does not emit native OpenTelemet
 
 | Storage service | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| Azure Blob Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Blobs ≥12.8.0 <13.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-storage.md) | [✓](/reference/opentelemetry-bridge.md) |
-| Azure Queue Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Queues ≥12.6.0 <13.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-storage.md) | [✓](/reference/opentelemetry-bridge.md) |
-| Azure File Share Storage {applies_to}`apm_agent_dotnet: ga 1.10` | Azure.Storage.Files.Shares ≥12.6.0 <13.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-storage.md) | [✓](/reference/opentelemetry-bridge.md) |
+| Azure Blob Storage {applies_to}`apm_agent_dotnet: ga 1.10` | `Azure.Storage.Blobs` ≥12.8.0 <13.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-storage.md) | [✓](/reference/opentelemetry-bridge.md) |
+| Azure Queue Storage {applies_to}`apm_agent_dotnet: ga 1.10` | `Azure.Storage.Queues` ≥12.6.0 <13.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-storage.md) | [✓](/reference/opentelemetry-bridge.md) |
+| Azure File Share Storage {applies_to}`apm_agent_dotnet: ga 1.10` | `Azure.Storage.Files.Shares` ≥12.6.0 <13.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-storage.md) | [✓](/reference/opentelemetry-bridge.md) |
 
 ::::{note}
 Azure Storage SDKs emit native OpenTelemetry spans. When using the profiler without the NuGet package, the OpenTelemetry Bridge captures them automatically. When the NuGet package is installed, the dedicated subscriber takes precedence to prevent duplicate spans.
@@ -174,5 +173,5 @@ For supported networking client-side technologies, the agent creates an HTTP spa
 
 | Framework | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| System.Net.Http.HttpClient {applies_to}`apm_agent_dotnet: ga 1.0` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | — |
-| System.Net.HttpWebRequest {applies_to}`apm_agent_dotnet: ga 1.1` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | — |
+| System.Net.Http.HttpClient {applies_to}`apm_agent_dotnet: ga 1.0` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | ✗ |
+| System.Net.HttpWebRequest {applies_to}`apm_agent_dotnet: ga 1.1` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | ✗ |
