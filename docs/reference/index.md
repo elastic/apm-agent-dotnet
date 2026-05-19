@@ -13,10 +13,13 @@ applies_to:
 
 # APM .NET agent [intro]
 
-The Elastic APM .NET Agent automatically measures the performance of your application and tracks errors. It has built-in support for the most popular frameworks, as well as a basic API which allows you to instrument any application.
+The Elastic APM .NET Agent automatically measures the performance of your application and tracks errors. It has built-in support observing traces and metrics for many popular frameworks, as well as an API(/reference/public-api.md) which allows you to instrument any application.
+
+Before you begin, review the [supported technologies](/reference/supported-technologies.md) to
+check if your framework and libraries are compatible.
 
 :::::{note}
-Elastic supports OpenTelemetry, which allows logs, metrics, and trace signal collection for many of the [supported technologies](/reference/supported-technologies.md) below. Consider using the [EDOT .NET SDK](elastic-otel-dotnet://reference/edot-dotnet/index.md) for observability data so you continue to get the full power of Elastic's platform.
+Elastic supports OpenTelemetry, which allows logs, metrics, and trace signal collection for many of the [supported technologies](/reference/supported-technologies.md). Consider using the [EDOT .NET SDK](elastic-otel-dotnet://reference/edot-dotnet/index.md) for observability data so you continue to get the full power of Elastic's platform.
 :::::
 
 ## How does the Agent work? [how-it-works]

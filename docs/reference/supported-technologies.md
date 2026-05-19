@@ -93,23 +93,23 @@ Streaming is not supported - the agent does not create transactions or spans for
 | Data access technology | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
 | Azure CosmosDB<br>`Microsoft.Azure.Cosmos`<br>{applies_to}`apm_agent_dotnet: ga 1.11` | ≥3.0.0<br><4.0.0 | ✗ | [✓](/reference/setup-azure-cosmosdb.md) | ✗ |
-| Azure DocumentDB.Core, legacy<br>`Microsoft.Azure.DocumentDB.Core`<br>{applies_to}`apm_agent_dotnet: ga 1.11` | ≥2.4.1<br><3.0.0 | ✗ | [✓](/reference/setup-azure-cosmosdb.md) | ✗ |
-| Azure DocumentDB, legacy<br>`Microsoft.Azure.DocumentDB`<br>{applies_to}`apm_agent_dotnet: ga 1.11` | ≥2.4.1<br><3.0.0 | ✗ | [✓](/reference/setup-azure-cosmosdb.md) | ✗ |
+| Azure DocumentDB.Core (legacy)<br>`Microsoft.Azure.DocumentDB.Core`<br>{applies_to}`apm_agent_dotnet: ga 1.11` | ≥2.4.1<br><3.0.0 | ✗ | [✓](/reference/setup-azure-cosmosdb.md) | ✗ |
+| Azure DocumentDB (legacy)<br>`Microsoft.Azure.DocumentDB`<br>{applies_to}`apm_agent_dotnet: ga 1.11` | ≥2.4.1<br><3.0.0 | ✗ | [✓](/reference/setup-azure-cosmosdb.md) | ✗ |
 | Elasticsearch<br>`Elastic.Clients.Elasticsearch`<br>{applies_to}`apm_agent_dotnet: ga 1.23` | ≥8.0.0<br><10.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | [✓](/reference/opentelemetry-bridge.md) |
-| Elasticsearch.Net<br>{applies_to}`apm_agent_dotnet: ga 1.6` | ≥7.6.0<br><8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | ✗ |
-| NEST<br>{applies_to}`apm_agent_dotnet: ga 1.6` | ≥7.6.0<br><8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | ✗ |
+| Elasticsearch (legacy)<br>`Elasticsearch.Net`<br>{applies_to}`apm_agent_dotnet: ga 1.6` | ≥7.6.0<br><8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | ✗ |
+| Elasticsearch (legacy)<br>`NEST`<br>{applies_to}`apm_agent_dotnet: ga 1.6` | ≥7.6.0<br><8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | ✗ |
 | Entity Framework Core<br>`Microsoft.EntityFrameworkCore`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0<br>≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-ef-core.md) | ✗ |
 | Entity Framework 6<br>`EntityFramework`<br>{applies_to}`apm_agent_dotnet: ga 1.2` | ≥6.2<br>≤6.5.2 | ✗ | [✓](/reference/setup-ef6.md) | ✗ |
 | MongoDB<br>`MongoDB.Driver`<br>{applies_to}`apm_agent_dotnet: ga 1.9` | ≥3.0.0<br><4.0.0 | [✓ (≥3.7.0)](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
 | MySQL<br>`MySql.Data`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥6.7.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
-| Oracle.ManagedDataAccess<br>{applies_to}`apm_agent_dotnet: ga 1.12` | 4.122.x | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
-| Oracle.ManagedDataAccess.Core<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><4.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| Oracle<br>`Oracle.ManagedDataAccess`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | 4.122.x | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| Oracle<br>`Oracle.ManagedDataAccess.Core`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><4.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | PostgreSQL<br>`Npgsql`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥4.0.0<br><8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | Redis<br>`StackExchange.Redis`<br>{applies_to}`apm_agent_dotnet: ga 1.8` | ≥2.0.495<br><3.0.0 | ✗ | [✓ ²](/reference/setup-stackexchange-redis.md) | ✗ |
-| System.Data.SqlClient<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥4.0.0<br><5.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | ✗ |
-| Microsoft.Data.SqlClient<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥1.0.0<br><6.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | ✗ |
-| Microsoft.Data.Sqlite<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
-| System.Data.SQLite<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.0.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| MS SQL<br>`System.Data.SqlClient`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥4.0.0<br><5.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | ✗ |
+| MS SQL<br>`Microsoft.Data.SqlClient`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥1.0.0<br><6.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | ✗ |
+| SQLLite<br>`Microsoft.Data.Sqlite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| SQLLite<br>`System.Data.SQLite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.0.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
 ¹ Via startup hook on .NET.
 ² Requires calling `connection.UseElasticApm()` on each `IConnectionMultiplexer` instance - see the [setup page](/reference/setup-stackexchange-redis.md).
@@ -131,7 +131,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | Messaging system | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
 | Azure Service Bus<br>`Azure.Messaging.ServiceBus`<br>{applies_to}`apm_agent_dotnet: ga 1.10` | ≥7.0.0<br><8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-servicebus.md) | [✓](/reference/opentelemetry-bridge.md) |
-| Azure Service Bus, legacy<br>`Microsoft.Azure.ServiceBus`<br>{applies_to}`apm_agent_dotnet: ga 1.10` | ≥3.0.0<br><6.0.0 | ✗ | [✓](/reference/setup-azure-servicebus.md) | ✗ |
+| Azure Service Bus (legacy)<br>`Microsoft.Azure.ServiceBus`<br>{applies_to}`apm_agent_dotnet: ga 1.10` | ≥3.0.0<br><6.0.0 | ✗ | [✓](/reference/setup-azure-servicebus.md) | ✗ |
 | Kafka<br>`Confluent.Kafka`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.4.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | [✓ via adapter ¹](/reference/setup-kafka.md) |
 | RabbitMQ<br>`RabbitMQ.Client`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥3.6.9<br><7.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
