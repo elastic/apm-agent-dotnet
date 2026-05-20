@@ -19,7 +19,7 @@ num-derive = "0.3"
 num-traits = "0.2"
 once_cell = "1.8.0"
 rust-crypto = "^0.2"
-rust-embed = { version = "5.9.0", features = ["compression", "debug-embed"] }
+rust-embed = { version = "6.3.0", features = ["compression", "debug-embed"] }
 serde = { version = "1.0.126", features = ["derive"] }
 serde_yaml = "0.8.17"
 widestring = "0.4.2"
