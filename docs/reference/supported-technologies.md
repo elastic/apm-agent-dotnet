@@ -102,7 +102,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | Entity Framework 6<br>`EntityFramework`<br>{applies_to}`apm_agent_dotnet: ga 1.2` | ≥6.2<br>≤6.5.2 | ✗ | [✓](/reference/setup-ef6.md) | ✗ |
 | MongoDB<br>`MongoDB.Driver`<br>{applies_to}`apm_agent_dotnet: ga 1.9` | ≥3.0.0<br><4.0.0 | [✓ (≥3.7.0)](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
 | MySQL<br>`MySql.Data`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥6.7.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
-| Oracle<br>`Oracle.ManagedDataAccess`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | 4.122.x | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| Oracle<br>`Oracle.ManagedDataAccess`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥12.2.1100<br><22.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | Oracle<br>`Oracle.ManagedDataAccess.Core`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><4.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | PostgreSQL<br>`Npgsql`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥4.0.0<br><8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | Redis<br>`StackExchange.Redis`<br>{applies_to}`apm_agent_dotnet: ga 1.8` | ≥2.0.495<br><3.0.0 | ✗ | [✓ ²](/reference/setup-stackexchange-redis.md) | ✗ |
