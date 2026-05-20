@@ -39,7 +39,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 			return typeof(object);
 		}
 
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET
 #else
 		internal static TTo Convert<TFrom, TTo>(TFrom value) => Converter<TFrom, TTo>.Convert(value);
 

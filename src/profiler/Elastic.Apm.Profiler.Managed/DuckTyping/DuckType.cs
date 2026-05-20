@@ -114,8 +114,10 @@ namespace Elastic.Apm.Profiler.Managed.DuckTyping
 						// If the proxy type definition is an interface we create an struct proxy
 						// If the proxy type definition is an struct then we use that struct to copy the values from the target type
 						parentType = typeof(ValueType);
+#pragma warning disable SYSLIB0050
 						typeAttributes = TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit
 							| TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.Serializable;
+#pragma warning restore SYSLIB0050
 						if (proxyDefinitionType.IsInterface)
 							interfaceTypes = new[] { proxyDefinitionType, typeof(IDuckType) };
 						else
