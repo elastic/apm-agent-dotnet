@@ -359,3 +359,6 @@ test/Elastic.Apm.Feature.Tests/SpecFlow/userid
 # Azurite
 __azurite_*
 __blobstorage__
+
+# C# Dev Kit
+*.lscache

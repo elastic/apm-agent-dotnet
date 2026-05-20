@@ -65,7 +65,7 @@ namespace Elastic.Apm
 				// Initialize early because ServerInfoCallback requires it and might execute
 				// before EnsureElasticActivityStarted runs
 #if NET || NETSTANDARD2_1
-				ElasticActivityListener = new ElasticActivityListener(this, HttpTraceConfiguration);
+				ElasticActivityListener = new ElasticActivityListener(this);
 
 				// Ensure we have a listener so that transaction activities are created when the OTel bridge is disabled
 				if (!Configuration.OpenTelemetryBridgeEnabled && !Transaction.ElasticApmActivitySource.HasListeners())
@@ -251,7 +251,7 @@ namespace Elastic.Apm
 		}
 
 #if NET || NETSTANDARD2_1
-		private ElasticActivityListener ElasticActivityListener { get; }
+		internal ElasticActivityListener ElasticActivityListener { get; }
 #endif
 
 		internal ICentralConfigurationFetcher CentralConfigurationFetcher { get; }

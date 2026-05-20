@@ -15,7 +15,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		public const string SystemNetHttpDesktopHttpRequestOut = "System.Net.Http.Desktop.HttpRequestOut";
 		public const string ApmTransactionActivityName = "ElasticApm.Transaction";
 
-		public static HashSet<string> SkippedActivityNamesSet =>
+		public static readonly HashSet<string> SkippedActivityNamesSet =
 		[
 			MicrosoftAspNetCoreHostingHttpRequestIn,
 			SystemNetHttpHttpRequestOut,

@@ -40,4 +40,7 @@ internal static class SemanticConventions
 	// RPC SYSTEM
 	public const string RpcSystem = "rpc.system";
 	public const string RpcService = "rpc.service";
+
+	// AZURE
+	public const string AzNamespace = "az.namespace";
 }
