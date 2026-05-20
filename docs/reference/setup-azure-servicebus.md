@@ -120,7 +120,7 @@ Before Service Bus tracing will work, ensure the agent is connected to your APM 
 * `ELASTIC_APM_SERVICE_NAME` — Your application's name
 
 ::::{tip}
-For development, you can set these via environment variables. For production, use your application's configuration mechanism (e.g., `appsettings.json` for ASP.NET Core).
+For development, you can set these via environment variables. For production, use your application's configuration mechanism (for example, `appsettings.json` for ASP.NET Core).
 ::::
 
 ### Additional messaging options [_additional_messaging_options]
