@@ -158,7 +158,10 @@ namespace Elastic.Apm.OpenTelemetry
 			}
 
 			// If the Elastic instrumentation for an Azure service is present, skip duplicating through the OTel bridge.
-			if (_hasServiceBusInstrumentation || _hasStorageInstrumentation || _hasCosmosDbInstrumentation)
+			// Guard with a source name prefix check to avoid the tag lookup on non-Azure activities.
+			if ((_hasServiceBusInstrumentation || _hasStorageInstrumentation || _hasCosmosDbInstrumentation)
+				&& (activity.Source.Name.StartsWith("Azure.", StringComparison.Ordinal)
+					|| activity.Source.Name.StartsWith("Microsoft.Azure.", StringComparison.Ordinal)))
 			{
 				OTelActivityMapper.TryGetStringValue(activity, SemanticConventions.AzNamespace, out var azNamespace);
 

@@ -53,7 +53,8 @@ namespace Elastic.Apm.OpenTelemetry
 		internal static void InferTransactionType(Transaction transaction, Activity activity)
 		{
 			if (activity.Kind == ActivityKind.Server && (TryGetStringValue(activity, SemanticConventions.RpcSystem, out _)
-					|| TryGetStringValue(activity, HttpAttributeKeys, out _)))
+					|| TryGetStringValue(activity, HttpAttributeKeys, out _)
+					|| TryGetStringValue(activity, SemanticConventions.HttpScheme, out _)))
 				transaction.Type = ApiConstants.TypeRequest;
 			else if (activity.Kind == ActivityKind.Consumer && TryGetStringValue(activity, SemanticConventions.MessagingSystem, out _))
 				transaction.Type = ApiConstants.TypeMessaging;
@@ -112,7 +113,8 @@ namespace Elastic.Apm.OpenTelemetry
 						: null;
 				resource = serviceTargetName ?? span.Subtype;
 			}
-			else if (TryGetStringValue(activity, HttpAttributeKeys, out var httpUrl))
+			else if (TryGetStringValue(activity, HttpAttributeKeys, out var httpUrl)
+				|| TryGetStringValue(activity, SemanticConventions.HttpScheme, out _))
 			{
 				var hasHttpHost = TryGetStringValue(activity, SemanticConventions.HttpHost, out var httpHost);
 				var hasHttpScheme = TryGetStringValue(activity, SemanticConventions.HttpScheme, out var httpScheme);
