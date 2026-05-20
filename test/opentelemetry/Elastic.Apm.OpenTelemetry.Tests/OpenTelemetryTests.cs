@@ -222,7 +222,8 @@ public class OpenTelemetryTests
 		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
 		{
 			var src = new ActivitySource("Microsoft.Azure.Functions.Worker");
-			using (src.StartActivity("SomeFunction")) { }
+			using (src.StartActivity("SomeFunction"))
+			{ }
 		}
 		payloadSender.Transactions.Should().BeEmpty();
 		payloadSender.Spans.Should().BeEmpty();
@@ -235,7 +236,8 @@ public class OpenTelemetryTests
 		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
 		{
 			var src = new ActivitySource(string.Empty);
-			using (src.StartActivity("InvokeFunctionAsync")) { }
+			using (src.StartActivity("InvokeFunctionAsync"))
+			{ }
 		}
 		payloadSender.Transactions.Should().BeEmpty();
 		payloadSender.Spans.Should().BeEmpty();
@@ -287,7 +289,8 @@ public class OpenTelemetryTests
 		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
 		{
 			var src = new ActivitySource(sourceName);
-			using (src.StartActivity("operation", ActivityKind.Client)) { }
+			using (src.StartActivity("operation", ActivityKind.Client))
+			{ }
 		}
 		payloadSender.WaitForTransactions();
 		payloadSender.Transactions.Should().HaveCount(1);
@@ -304,7 +307,8 @@ public class OpenTelemetryTests
 		{
 			components.ElasticActivityListener.CheckAssembly(packageAssemblyName);
 			var src = new ActivitySource(sourceName);
-			using (src.StartActivity("operation", ActivityKind.Client)) { }
+			using (src.StartActivity("operation", ActivityKind.Client))
+			{ }
 		}
 		payloadSender.Transactions.Should().BeEmpty();
 		payloadSender.Spans.Should().BeEmpty();
@@ -324,7 +328,8 @@ public class OpenTelemetryTests
 		{
 			var src = new ActivitySource("Azure.Test.Source");
 			var tags = new ActivityTagsCollection { ["az.namespace"] = azNamespace };
-			using (src.StartActivity("operation", ActivityKind.Client, default(ActivityContext), tags)) { }
+			using (src.StartActivity("operation", ActivityKind.Client, default(ActivityContext), tags))
+			{ }
 		}
 		payloadSender.WaitForTransactions();
 		payloadSender.Transactions.Should().HaveCount(1);
@@ -343,7 +348,8 @@ public class OpenTelemetryTests
 			components.ElasticActivityListener.CheckAssembly(packageAssemblyName);
 			var src = new ActivitySource("Azure.Test.Source");
 			var tags = new ActivityTagsCollection { ["az.namespace"] = azNamespace };
-			using (src.StartActivity("operation", ActivityKind.Client, default(ActivityContext), tags)) { }
+			using (src.StartActivity("operation", ActivityKind.Client, default(ActivityContext), tags))
+			{ }
 		}
 		payloadSender.Transactions.Should().BeEmpty();
 		payloadSender.Spans.Should().BeEmpty();
@@ -364,7 +370,8 @@ public class OpenTelemetryTests
 		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
 		{
 			var src = new ActivitySource("Test.KnownListeners");
-			using (src.StartActivity(operationName)) { }
+			using (src.StartActivity(operationName))
+			{ }
 		}
 		payloadSender.Transactions.Should().BeEmpty();
 		payloadSender.Spans.Should().BeEmpty();
@@ -405,7 +412,8 @@ public class OpenTelemetryTests
 		agent.Dispose();
 
 		var src = new ActivitySource("Test.PostDispose");
-		using (src.StartActivity("root", ActivityKind.Server)) { }
+		using (src.StartActivity("root", ActivityKind.Server))
+		{ }
 
 		payloadSender.Transactions.Should().BeEmpty();
 		payloadSender.Spans.Should().BeEmpty();
