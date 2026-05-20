@@ -43,14 +43,12 @@ Each table below shows which installation methods apply to each technology. A ch
 ::::{note}
 The **OpenTelemetry Bridge** column requires .NET 8+ and APM Server ≥7.16. A checkmark there means the technology is covered through the built-in OpenTelemetry Bridge, whether the agent was installed via the Profiler or a NuGet package.
 
-On .NET Framework, technologies that depend on the startup hook or the OpenTelemetry Bridge need the NuGet install method instead.
-
-If no Elastic APM NuGet package exists for that technology, such as `Elastic.Clients.Elasticsearch`, it is not supported on .NET Framework.
+On .NET Framework, technologies that depend on the startup hook or the OpenTelemetry Bridge need the NuGet install method instead. If no Elastic APM NuGet package exists for that technology, such as `Elastic.Clients.Elasticsearch`, it is not supported on .NET Framework.
 ::::
 
 | Column | Meaning |
 | --- | --- |
-| **[Profiler](/reference/setup-auto-instrumentation.md)** | Instrumented automatically by the [Elastic APM .NET Profiler](/reference/setup-auto-instrumentation.md) with no code changes. On .NET, a startup hook loads DiagnosticSource subscribers and the built-in OpenTelemetry Bridge. On .NET Framework, the profiler uses IL rewriting instead. |
+| **[Profiler](/reference/setup-auto-instrumentation.md)** | Instrumented automatically by the [Elastic APM .NET Profiler](/reference/setup-auto-instrumentation.md) with no code changes. On .NET, a startup hook loads `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge. On .NET Framework, the profiler uses IL rewriting instead. |
 | **NuGet** | Install the linked integration NuGet package alongside the core `Elastic.Apm` package and add the setup call to application startup. |
 | **OpenTelemetry Bridge** | The library emits native [OpenTelemetry](https://opentelemetry.io/) spans that the agent captures through its built-in [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). |
 
@@ -100,7 +98,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | Elasticsearch (legacy)<br>`NEST`<br>{applies_to}`apm_agent_dotnet: ga 1.6` | ≥7.6.0<br><8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | ✗ |
 | Entity Framework Core<br>`Microsoft.EntityFrameworkCore`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0<br>≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-ef-core.md) | ✗ |
 | Entity Framework 6<br>`EntityFramework`<br>{applies_to}`apm_agent_dotnet: ga 1.2` | ≥6.2<br>≤6.5.2 | ✗ | [✓](/reference/setup-ef6.md) | ✗ |
-| MongoDB<br>`MongoDB.Driver`<br>{applies_to}`apm_agent_dotnet: ga 1.9` | ≥3.0.0<br><4.0.0 | [✓ (≥3.7.0)](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
+| MongoDB<br>`MongoDB.Driver`<br>{applies_to}`apm_agent_dotnet: ga 1.9` | ≥3.0.0<br><4.0.0 | [✓ (≥3.7.0) ³](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
 | MySQL<br>`MySql.Data`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥6.7.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | Oracle<br>`Oracle.ManagedDataAccess`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥12.2.1100<br><22.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | Oracle<br>`Oracle.ManagedDataAccess.Core`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><4.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
@@ -112,7 +110,10 @@ Streaming is not supported - the agent does not create transactions or spans for
 | SQLLite<br>`System.Data.SQLite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.0.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
 ¹ Via startup hook on .NET.
+
 ² Requires calling `connection.UseElasticApm()` on each `IConnectionMultiplexer` instance - see the [setup page](/reference/setup-stackexchange-redis.md).
+
+³ Requires the OpenTelemetry Bridge to be active. `MongoDB.Driver` ≥3.7.0 emits native OpenTelemetry spans; the profiler captures them through the bridge rather than a dedicated subscriber.
 
 ::::{note}
 `Microsoft.Azure.DocumentDB.Core` and `Microsoft.Azure.DocumentDB` are deprecated. The recommended replacement is the `Microsoft.Azure.Cosmos` package.
