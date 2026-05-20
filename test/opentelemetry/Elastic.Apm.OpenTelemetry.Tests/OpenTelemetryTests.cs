@@ -471,7 +471,7 @@ public class OpenTelemetryTests
 	}
 
 	[Fact]
-	public void HttpSchemeOnlyDoesNotClassifySpanAsHttp()
+	public void HttpSchemeAloneClassifiesClientSpanAsHttp()
 	{
 		var payloadSender = new MockPayloadSender();
 		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
@@ -488,16 +488,12 @@ public class OpenTelemetryTests
 		payloadSender.WaitForSpans();
 
 		var span = payloadSender.Spans.Should().ContainSingle().Subject;
-		span.Type.Should().Be(ApiConstants.TypeUnknown);
-		span.Subtype.Should().BeNull();
+		span.Type.Should().Be(ApiConstants.TypeExternal);
+		span.Subtype.Should().Be(ApiConstants.SubtypeHttp);
 	}
 
-	/// <summary>
-	/// http.scheme alone is not sufficient to classify a root Server activity as an HTTP request transaction;
-	/// url.full or http.url is required (aligned with span HTTP detection).
-	/// </summary>
 	[Fact]
-	public void HttpSchemeOnlyDoesNotClassifyServerTransactionAsRequest()
+	public void HttpSchemeAloneClassifiesServerActivityAsRequest()
 	{
 		var payloadSender = new MockPayloadSender();
 		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
@@ -508,7 +504,7 @@ public class OpenTelemetryTests
 		}
 
 		payloadSender.WaitForTransactions();
-		payloadSender.FirstTransaction.Type.Should().Be("unknown");
+		payloadSender.FirstTransaction.Type.Should().Be(ApiConstants.TypeRequest);
 	}
 
 	[Fact]
