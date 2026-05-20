@@ -39,7 +39,7 @@ dotnet add package Elastic.Apm.Azure.Functions
 
 ### Step 2: Add the tracing middleware [_step_2_add_the_tracing_middleware]
 
-Register `ApmMiddleware` in your `Program.cs`. The example below uses `ConfigureFunctionsWebApplication`, which is the recommended approach when using the [ASP.NET Core integration](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide#aspnet-core-integration) (requires the `Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore` package):
+Register `ApmMiddleware` in your `Program.cs`. The following element uses `ConfigureFunctionsWebApplication`, which is the recommended approach when using the [ASP.NET Core integration](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide#aspnet-core-integration) (requires the `Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore` package):
 
 ```csharp
 using Elastic.Apm.Azure.Functions;
@@ -185,7 +185,7 @@ Add the `ELASTIC_APM_*` variables to your `local.settings.json` file. Note that 
 
 **Configuring in Azure**
 
-Open *Settings > Environment variables* for your Function App in the Azure Portal and configure the `ELASTIC_APM_*` variables as required. If targeting .NET 8, also add `FUNCTIONS_INPROC_NET8_ENABLED` with a value of `1`.
+Open *Settings → Environment variables* for your Function App in the Azure Portal and configure the `ELASTIC_APM_*` variables as required. If targeting .NET 8, also add `FUNCTIONS_INPROC_NET8_ENABLED` with a value of `1`.
 
 Using environment variables allows you to use [application settings in the Azure Portal](https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#settings), enabling you to update settings without needing to re-deploy code.
 
@@ -198,7 +198,7 @@ Once configured, see [Verify and troubleshoot](#_verify_and_troubleshoot) to con
 
 After deploying your function or running it locally:
 
-1. Open Kibana and navigate to **Observability** > **Applications** > **Service inventory**
+1. Open Kibana and navigate to **Observability** → **Applications** → **Service inventory**
 2. Look for your service name (configured via `ELASTIC_APM_SERVICE_NAME` or the function app name)
 3. Click on the service to see captured transactions and spans
 
