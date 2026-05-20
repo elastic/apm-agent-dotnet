@@ -71,10 +71,10 @@ pub extern "C" fn GetAssemblyAndSymbolsBytes(
     };
     let a =
         ManagedLoader::get(&format!("{}/{}.dll", tfm, MANAGED_PROFILER_ASSEMBLY_LOADER)).unwrap();
-    unsafe { *assembly = a.as_ptr() as *mut _ };
-    *assembly_size = a.len() as i32;
+    unsafe { *assembly = a.data.as_ptr() as *mut _ };
+    *assembly_size = a.data.len() as i32;
     let s =
         ManagedLoader::get(&format!("{}/{}.pdb", tfm, MANAGED_PROFILER_ASSEMBLY_LOADER)).unwrap();
-    unsafe { *symbols = s.as_ptr() as *mut _ };
-    *symbols_size = s.len() as i32;
+    unsafe { *symbols = s.data.as_ptr() as *mut _ };
+    *symbols_size = s.data.len() as i32;
 }
