@@ -20,7 +20,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static TReturn ToTReturn<TFrom>(TFrom returnValue)
 		{
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET
 			return Unsafe.As<TFrom, TReturn>(ref returnValue);
 #else
 			return ContinuationsHelper.Convert<TFrom, TReturn>(returnValue);
@@ -30,7 +30,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static TTo FromTReturn<TTo>(TReturn returnValue)
 		{
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET
 			return Unsafe.As<TReturn, TTo>(ref returnValue);
 #else
 			return ContinuationsHelper.Convert<TReturn, TTo>(returnValue);

@@ -46,7 +46,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 						typeof(TaskContinuationGenerator<,,,>).MakeGenericType(typeof(TIntegration), typeof(TTarget), returnType,
 							ContinuationsHelper.GetResultType(returnType)));
 				}
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET
 				else if (genericReturnType == typeof(ValueTask<>))
 				{
 					// The type is a ValueTask<>
@@ -63,7 +63,7 @@ namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers
 					// The type is a Task
 					_continuationGenerator = new TaskContinuationGenerator<TIntegration, TTarget, TReturn>();
 				}
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET
 				else if (returnType == typeof(ValueTask))
 				{
 					// The type is a ValueTask

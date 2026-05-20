@@ -22,10 +22,13 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         private static string ResolveDirectory()
         {
 			var version = Environment.Version;
-			// use netcoreapp3.1 for netcoreapp3.1 and later
-			var framework = version.Major == 3 && version.Minor >= 1 || version.Major >= 6
-				? "netstandard2.1"
-				: "netstandard2.0";
+			string framework;
+			if (version.Major >= 8)
+				framework = "net8.0";
+			else if ((version.Major == 3 && version.Minor >= 1) || version.Major >= 5)
+				framework = "netstandard2.1";
+			else
+				framework = "netstandard2.0";
 
             var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
 			Logger.Log(LogLevel.Debug, "Resolving assemblies from {0}", directory);
