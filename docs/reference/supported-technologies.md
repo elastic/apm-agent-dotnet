@@ -11,7 +11,7 @@ applies_to:
 
 # Supported technologies [supported-technologies]
 
-This page summarizes the technologies the APM Agent for .NET supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but might work.
+This page details the technologies the APM Agent for .NET supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but might work.
 
 Use this page as a compatibility matrix:
 
@@ -173,5 +173,5 @@ For supported networking client-side technologies, the agent creates an HTTP spa
 
 | Framework | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |
-| System.Net.Http.HttpClient<br>{applies_to}`apm_agent_dotnet: ga 1.0` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | ✗ |
-| System.Net.HttpWebRequest<br>{applies_to}`apm_agent_dotnet: ga 1.1` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | ✗ |
+| HttpClient<br>`System.Net.Http.HttpClient`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | ✗ |
+| HttpWebRequest<br>`System.Net.HttpWebRequest`<br>{applies_to}`apm_agent_dotnet: ga 1.1` | *built-in (.NET)* | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/public-api.md#setup-http) | ✗ |
