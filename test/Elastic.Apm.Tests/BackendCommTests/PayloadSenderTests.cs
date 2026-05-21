@@ -396,6 +396,168 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			payloadSender.IsRunning.Should().BeFalse();
 		}
 
+		/// <summary>
+		/// Regression test for https://github.com/elastic/apm-agent-dotnet/issues/288.
+		/// Events queued just before Dispose must not be silently dropped.
+		/// </summary>
+		[Fact]
+		public async Task Dispose_sends_queued_events_before_stopping()
+		{
+			var received = new List<string>();
+			var handler = new MockHttpMessageHandler((request, _) =>
+			{
+				var body = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+				lock (received)
+					received.Add(body);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+			});
+
+			var config = new MockConfiguration(_logger, flushInterval: "3600s");
+			var service = Service.GetDefaultService(config, _logger);
+			var payloadSender = new PayloadSenderV2(_logger, config, service, new Api.System(),
+				MockApmServerInfo.Version710, handler, TestDisplayName);
+
+			using var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
+
+			// Use EnqueueEventInternal directly (awaitable) so the item is guaranteed to be
+			// in the BatchBlock before Dispose is called. EnqueueEvent (fire-and-forget) has
+			// a race with Dispose where the item may not be counted yet.
+			await payloadSender.EnqueueEventInternal(
+				new Transaction(agent, "TestTransaction", "TestType"), "Transaction");
+
+			agent.Dispose();
+
+			lock (received)
+			{
+				received.Should().NotBeEmpty("Dispose must flush queued events before cancelling");
+				received.Any(r => r.Contains("\"transaction\"")).Should().BeTrue();
+			}
+		}
+
+		/// <summary>
+		/// Agent.FlushAsync() and the IApmAgent extension must complete without deadlock and
+		/// signal only after all queued events have been sent.
+		/// </summary>
+		[Fact]
+		public async Task FlushAsync_waits_for_events_to_be_sent()
+		{
+			var sendCount = 0;
+			var handler = new MockHttpMessageHandler((_, _) =>
+			{
+				Interlocked.Increment(ref sendCount);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+			});
+
+			var config = new MockConfiguration(_logger, flushInterval: "3600s");
+			var service = Service.GetDefaultService(config, _logger);
+			using var payloadSender = new PayloadSenderV2(_logger, config, service, new Api.System(),
+				MockApmServerInfo.Version710, handler, TestDisplayName);
+
+			using var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
+
+			// Use EnqueueEventInternal directly so the item is in the BatchBlock before FlushAsync,
+			// avoiding a race with the fire-and-forget Task.Run in EnqueueEvent.
+			await payloadSender.EnqueueEventInternal(
+				new Transaction(agent, "TestTransaction", "TestType"), "Transaction");
+
+			await agent.FlushAsync(new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
+
+			sendCount.Should().Be(1, "FlushAsync must return only after the HTTP POST completes");
+		}
+
+		/// <summary>
+		/// FlushAsync on an empty queue must return immediately without deadlock.
+		/// </summary>
+		[Fact]
+		public async Task FlushAsync_on_empty_queue_returns_immediately()
+		{
+			var config = new MockConfiguration(_logger);
+			var service = Service.GetDefaultService(config, _logger);
+			using var payloadSender = new PayloadSenderV2(_logger, config, service, new Api.System(),
+				MockApmServerInfo.Version710, dbgName: TestDisplayName);
+
+			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+			await payloadSender.FlushAsync(cts.Token);
+		}
+
+		/// <summary>
+		/// FlushAsync via the public QueueTransaction path (EnqueueEvent → Task.Run) must wait
+		/// for the HTTP send to complete. Regression for the synchronous count-increment fix:
+		/// _eventQueueCount is incremented before Task.Run so FlushAsync cannot miss the event.
+		/// </summary>
+		[Fact]
+		public async Task FlushAsync_via_public_QueueTransaction_waits_for_send()
+		{
+			var sendCount = 0;
+			var handler = new MockHttpMessageHandler((_, _) =>
+			{
+				Interlocked.Increment(ref sendCount);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+			});
+
+			// Long flushInterval: the only batch trigger comes from FlushAsync's TriggerBatch calls.
+			var config = new MockConfiguration(_logger, flushInterval: "3600s", maxBatchEventCount: "1");
+			var service = Service.GetDefaultService(config, _logger);
+			using var payloadSender = new PayloadSenderV2(_logger, config, service, new Api.System(),
+				MockApmServerInfo.Version710, handler, TestDisplayName);
+			using var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
+
+			// Public path: QueueTransaction calls EnqueueEvent which now increments _eventQueueCount
+			// synchronously, so FlushAsync will see the event even before Task.Run executes.
+			agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestTransaction", "TestType"));
+
+			await agent.FlushAsync(new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
+
+			sendCount.Should().Be(1, "FlushAsync must not return before the HTTP POST completes");
+		}
+
+		/// <summary>
+		/// FlushAsync called while a batch has already been received by the work loop (so
+		/// _eventQueueCount is already 0) but ProcessQueueItems has not yet finished must still
+		/// wait for the HTTP send to complete. Regression for the _inFlightSends-in-ReceiveBatch fix.
+		/// </summary>
+		[Fact]
+		public async Task FlushAsync_waits_when_called_while_batch_is_in_flight()
+		{
+			var sendStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+			var sendCanComplete = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+			var sendCount = 0;
+
+			var handler = new MockHttpMessageHandler(async (_, _) =>
+			{
+				sendStarted.TrySetResult(true);
+				await sendCanComplete.Task;
+				Interlocked.Increment(ref sendCount);
+				return new HttpResponseMessage(HttpStatusCode.Accepted);
+			});
+
+			var config = new MockConfiguration(_logger, flushInterval: "100ms", maxBatchEventCount: "1");
+			var service = Service.GetDefaultService(config, _logger);
+			using var payloadSender = new PayloadSenderV2(_logger, config, service, new Api.System(),
+				MockApmServerInfo.Version710, handler, TestDisplayName);
+			using var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
+
+			await payloadSender.EnqueueEventInternal(
+				new Transaction(agent, "TestTransaction", "TestType"), "Transaction");
+
+			// Wait until the HTTP handler has started: at this point _eventQueueCount is already 0
+			// (decremented by ReceiveBatch) but _inFlightSends is 1 (incremented in ReceiveBatch
+			// before the decrement), so FlushAsync must not take the fast path.
+			await sendStarted.Task;
+
+			var flushTask = agent.FlushAsync(new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
+
+			// Yield so FlushAsync evaluates the counters; it must not have completed yet.
+			// 500 ms gives generous headroom on loaded CI runners (Windows timer resolution is ~15 ms).
+			await Task.Delay(500);
+			flushTask.IsCompleted.Should().BeFalse("FlushAsync must wait while the HTTP send is still in progress");
+
+			sendCanComplete.TrySetResult(true);
+			await flushTask;
+
+			sendCount.Should().Be(1, "FlushAsync must return only after the HTTP POST completes");
+		}
+
 		internal class TestArgs
 		{
 			internal int ArgsIndex { get; set; }

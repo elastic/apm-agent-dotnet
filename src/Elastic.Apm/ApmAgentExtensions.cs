@@ -5,8 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Report;
 using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Logging;
 
@@ -75,6 +78,19 @@ namespace Elastic.Apm
 
 			return agent.Subscribe(userProvidedAndDefaultSubs);
 		}
+
+		/// <summary>
+		/// Flushes all queued APM events for this agent instance, waiting until they have been
+		/// sent to APM Server.
+		/// </summary>
+		/// <remarks>
+		/// See <see cref="Agent.FlushAsync"/> for details on coverage, semantics, and the
+		/// fire-and-forget enqueue race in short-lived process scenarios.
+		/// </remarks>
+		public static Task FlushAsync(this IApmAgent agent, CancellationToken cancellationToken = default) =>
+			agent.PayloadSender is IFlushablePayloadSender flushable
+				? flushable.FlushAsync(cancellationToken)
+				: Task.CompletedTask;
 
 		internal static IExecutionSegment GetCurrentExecutionSegment(this IApmAgent agent) =>
 			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
