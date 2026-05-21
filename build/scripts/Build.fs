@@ -124,7 +124,7 @@ module Build =
     /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
     let Build () =
         // On Windows, pre-build this first to prevent a parallel build race condition: both
-        // Elastic.Apm.Profiler.Managed (net462 TFM) and AspNetFullFrameworkSampleApp reference
+        // Elastic.Apm.Profiler.Managed (net462 and net472 TFMs) and AspNetFullFrameworkSampleApp reference
         // Elastic.Apm.AspNetFullFramework, so a parallel solution build can hit a file lock
         // on the obj DLL. Pre-building ensures the output exists and incremental build skips it.
         if isWindows then dotnet "build" aspNetFullFramework
@@ -320,7 +320,7 @@ module Build =
         )
 
         Directory.GetDirectories((Paths.BuildOutput "Elastic.Apm.Profiler.Managed"), "*", SearchOption.TopDirectoryOnly)
-        |> Array.filter (fun dir -> isWindows || not (dir.EndsWith("net462")))
+        |> Array.filter (fun dir -> isWindows || (not (dir.EndsWith("net462")) && not (dir.EndsWith("net472"))))
         |> Seq.map DirectoryInfo
         |> Seq.iter (fun sourceDir -> copyDllsAndPdbs (profilerDir.CreateSubdirectory(sourceDir.Name)) sourceDir)
         
