@@ -16,7 +16,7 @@ applies_to:
 The [`Elastic.Apm.MongoDb`](https://www.nuget.org/packages/Elastic.Apm.MongoDb) NuGet package instruments the official `MongoDB.Driver` to capture MongoDB operations as APM spans, including the command name, target database, and duration.
 
 ::::{note}
-**MongoDB Driver ≥3.7.0** natively emits OpenTelemetry spans. For that version and newer, no extra package is needed — the agent's [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) captures MongoDB spans automatically whether you use the [Profiler](/reference/setup-auto-instrumentation.md) or a NuGet-based install. This package is only needed for MongoDB.Driver ≥3.0.0 <3.7.0.
+**MongoDB Driver ≥3.7.0** natively emits OpenTelemetry spans. On runtimes where the agent's [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) is supported, those spans are captured automatically whether you use the [Profiler](/reference/setup-auto-instrumentation.md) or a NuGet-based install, so no extra package is needed. On **.NET Framework**, the OpenTelemetry Bridge is not supported, so you should continue using `Elastic.Apm.MongoDb` if you want MongoDB spans. This package is also needed for MongoDB.Driver ≥3.0.0 <3.7.0.
 ::::
 
 **Supported versions:** MongoDB.Driver ≥3.0.0 <4.0.0, on .NET 8.0 or newer and .NET Framework 4.7.2 or newer.
