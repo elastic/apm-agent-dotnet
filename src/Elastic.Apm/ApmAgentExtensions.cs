@@ -9,9 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Report;
 using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
 
 namespace Elastic.Apm
 {
