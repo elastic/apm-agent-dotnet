@@ -5,6 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -217,6 +219,26 @@ namespace Elastic.Apm
 		/// desired.
 		/// </returns>
 		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
+
+		/// <summary>
+		/// Flushes all queued APM events, waiting until they have been sent to APM Server.
+		/// Useful for short-lived processes (Lambda functions, CLI tools, console apps) where the
+		/// process may exit before the agent's background sender has transmitted all events.
+		/// </summary>
+		/// <param name="cancellationToken">
+		/// Cancels the wait. The events that were already in-flight are not affected.
+		/// </param>
+		/// <remarks>
+		/// Waits until the sender is idle: the event queue is empty and any in-progress HTTP send
+		/// has completed. Completion indicates the send attempt finished; it does not guarantee the
+		/// server accepted the data.
+		/// If the agent uses a custom <see cref="IPayloadSender"/> that does not implement the
+		/// internal flush interface, this method returns a completed task immediately.
+		/// </remarks>
+		public static Task FlushAsync(CancellationToken cancellationToken = default) =>
+			Instance.PayloadSender is IFlushablePayloadSender flushable
+				? flushable.FlushAsync(cancellationToken)
+				: Task.CompletedTask;
 
 		public static void Setup(AgentComponents agentComponents)
 		{
