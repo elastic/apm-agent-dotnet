@@ -393,6 +393,285 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
+		// -----------------------------------------------------------------------
+		// Issue #2466 — NTLM/Negotiate authentication
+		//
+		// Root cause: HttpHandlerDiagnosticListener.IsLastResponse returns true for
+		// any non-redirect status code, so it fires Ex.Stop for every intermediate
+		// 401 NTLM challenge *before* the final HttpWebResponse is constructed.
+		// The agent was treating that Ex.Stop as the terminal event, ending the span
+		// with status 401 and capturing an error.  The subsequent Stop event (fired
+		// when the real 200 arrives) then found nothing in ProcessingRequests and
+		// was silently dropped.
+		// -----------------------------------------------------------------------
+
+#pragma warning disable SYSLIB0014 // WebRequest.Create is the only way to get an HttpWebRequest in tests
+		private static (HttpDiagnosticListenerFullFrameworkImpl Listener, HttpWebRequest Request)
+			CreateFullFrameworkListenerAndRequest(ApmAgent agent)
+		{
+			agent.HttpTraceConfiguration.CaptureSpan = true;
+			var listener = new HttpDiagnosticListenerFullFrameworkImpl(agent);
+			var request = (HttpWebRequest)WebRequest.Create("http://elastic.co");
+			return (listener, request);
+		}
+#pragma warning restore SYSLIB0014
+
+		private static void FireExStop(HttpDiagnosticListenerFullFrameworkImpl listener, HttpWebRequest request,
+			HttpStatusCode statusCode, WebHeaderCollection headers) =>
+			listener.OnNext(new KeyValuePair<string, object>(
+				"System.Net.Http.Desktop.HttpRequestOut.Ex.Stop",
+				new { Request = request, StatusCode = statusCode, Headers = headers }));
+
+		private static void FireStart(HttpDiagnosticListenerFullFrameworkImpl listener, HttpWebRequest request) =>
+			listener.OnNext(new KeyValuePair<string, object>(
+				"System.Net.Http.Desktop.HttpRequestOut.Start",
+				new { Request = request }));
+
+		private static void FireStop(HttpDiagnosticListenerFullFrameworkImpl listener, HttpWebRequest request) =>
+			listener.OnNext(new KeyValuePair<string, object>(
+				"System.Net.Http.Desktop.HttpRequestOut.Stop",
+				new { Request = request, Response = (HttpWebResponse)null }));
+
+		/// <summary>
+		/// Reproduces https://github.com/elastic/apm-agent-dotnet/issues/2466 — single NTLM round.
+		/// Proves the failure: without the fix, ProcessExceptionEvent calls CaptureError + span.End(),
+		/// so payloadSender.Errors would be non-empty and the span would carry StatusCode 401.
+		/// Proves the fix: the intermediate Ex.Stop is ignored; the span is only ended by the final
+		/// Stop event, leaving Errors empty.
+		/// </summary>
+		[Fact]
+		public void NtlmChallenge_SingleRound_SpanCapturedWithoutError()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			// 1. Request starts
+			FireStart(listener, request);
+			listener.ProcessingRequests.Should().ContainKey(request);
+
+			// 2. Server returns 401 + NTLM challenge (intermediate handshake step).
+			//    HttpHandlerDiagnosticListener fires Ex.Stop because IsLastResponse(401) == true.
+			//    Before the fix: CaptureError + span.End() would be called here → span status 401.
+			var ntlmHeaders = new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "NTLM" };
+			FireExStop(listener, request, HttpStatusCode.Unauthorized, ntlmHeaders);
+
+			// Span must survive the challenge — still tracked, not ended with 401
+			listener.ProcessingRequests.Should().ContainKey(request,
+				"span must not be prematurely ended on the intermediate NTLM 401 challenge");
+
+			// 3. NTLM handshake succeeds; final Stop fires.
+			//    (HttpWebResponse has no public ctor so Response is null — the span still ends cleanly.)
+			FireStop(listener, request);
+			listener.ProcessingRequests.Should().NotContainKey(request, "span must be ended by the final Stop");
+
+			// Core proof of the fix: without it, CaptureError would have been called for the 401 challenge
+			payloadSender.WaitForSpans(count: 1);
+			using (new AssertionScope())
+			{
+				payloadSender.Errors.Should().BeEmpty("the NTLM challenge must not be recorded as an APM error");
+				payloadSender.Spans.Should().HaveCount(1, "exactly one span should be sent for the whole request");
+				payloadSender.FirstSpan.Context.Http.StatusCode.Should().NotBe(401,
+					"the span must not carry the intermediate challenge status code");
+			}
+		}
+
+		/// <summary>
+		/// Full two-round NTLM handshake: the runtime fires Ex.Stop twice (type-1 and type-2 challenges)
+		/// before the final Stop.  Both intermediate events must be ignored.
+		/// </summary>
+		[Fact]
+		public void NtlmChallenge_TwoRounds_BothChallengesIgnoredSpanCapturedOnce()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			FireStart(listener, request);
+
+			// Round 1: bare NTLM challenge
+			FireExStop(listener, request, HttpStatusCode.Unauthorized,
+				new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "NTLM" });
+			listener.ProcessingRequests.Should().ContainKey(request, "span must survive round-1 NTLM challenge");
+
+			// Round 2: NTLM type-2 message with server's challenge token
+			FireExStop(listener, request, HttpStatusCode.Unauthorized,
+				new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "NTLM dummybase64token==" });
+			listener.ProcessingRequests.Should().ContainKey(request, "span must survive round-2 NTLM challenge");
+
+			FireStop(listener, request);
+
+			payloadSender.WaitForSpans(count: 1);
+			using (new AssertionScope())
+			{
+				payloadSender.Errors.Should().BeEmpty();
+				payloadSender.Spans.Should().HaveCount(1);
+			}
+		}
+
+		/// <summary>
+		/// Negotiate (SPNEGO/Kerberos) challenges use the same code path as NTLM.
+		/// </summary>
+		[Fact]
+		public void NegotiateChallenge_SingleRound_SpanCapturedWithoutError()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			FireStart(listener, request);
+
+			FireExStop(listener, request, HttpStatusCode.Unauthorized,
+				new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "Negotiate" });
+			listener.ProcessingRequests.Should().ContainKey(request, "span must survive a Negotiate challenge");
+
+			FireStop(listener, request);
+			listener.ProcessingRequests.Should().NotContainKey(request);
+
+			payloadSender.WaitForSpans(count: 1);
+			using (new AssertionScope())
+			{
+				payloadSender.Errors.Should().BeEmpty("Negotiate challenge must not be recorded as an APM error");
+				payloadSender.Spans.Should().HaveCount(1);
+				payloadSender.FirstSpan.Context.Http.StatusCode.Should().NotBe(401);
+			}
+		}
+
+		/// <summary>
+		/// A genuine 401 (Basic auth, no NTLM/Negotiate header) must still be recorded as a failure.
+		/// Regression guard: the fix must not suppress real auth failures.
+		/// </summary>
+		[Fact]
+		public void Genuine401_ExStopWithBasicAuthHeader_SpanEndedWithFailure()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			FireStart(listener, request);
+			FireExStop(listener, request, HttpStatusCode.Unauthorized,
+				new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "Basic realm=\"example\"" });
+
+			listener.ProcessingRequests.Should().NotContainKey(request, "genuine 401 must end the span immediately");
+			payloadSender.WaitForErrors();
+			using (new AssertionScope())
+			{
+				payloadSender.Errors.Should().NotBeEmpty("genuine 401 must be reported as a failure");
+				payloadSender.WaitForSpans(count: 1);
+				payloadSender.FirstSpan.Context.Http.StatusCode.Should().Be(401);
+			}
+		}
+
+		/// <summary>
+		/// Regression guard: Ex.Stop with a null Headers payload (edge case) must still end the span as a failure.
+		/// </summary>
+		[Fact]
+		public void ExStop_With401AndNullHeaders_SpanEndedWithFailure()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			FireStart(listener, request);
+			// Headers property present but null — must not crash, must still record the 401
+			FireExStop(listener, request, HttpStatusCode.Unauthorized, headers: null);
+
+			listener.ProcessingRequests.Should().NotContainKey(request);
+			payloadSender.WaitForErrors();
+			payloadSender.Errors.Should().NotBeEmpty("a 401 with null headers is still a failure");
+		}
+
+		/// <summary>
+		/// Regression guard: Ex.Stop with a non-401 status code (500) must still end the span as a failure.
+		/// The NTLM check is gated on 401 Unauthorized; all other codes go through the original path.
+		/// </summary>
+		[Fact]
+		public void ExStop_WithNon401StatusCode_SpanEndedWithFailure()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			FireStart(listener, request);
+			FireExStop(listener, request, HttpStatusCode.InternalServerError, new WebHeaderCollection());
+
+			listener.ProcessingRequests.Should().NotContainKey(request, "500 must end the span immediately");
+			payloadSender.WaitForErrors();
+			using (new AssertionScope())
+			{
+				payloadSender.Errors.Should().NotBeEmpty("500 must be reported as a failure");
+				payloadSender.WaitForSpans(count: 1);
+				payloadSender.FirstSpan.Context.Http.StatusCode.Should().Be(500);
+			}
+		}
+
+		/// <summary>
+		/// Regression guard: WWW-Authenticate: Basic realm="Negotiate" must NOT be treated as NTLM/Negotiate.
+		/// "Negotiate" appears in the realm value, not as the authentication scheme token.
+		/// </summary>
+		[Fact]
+		public void Genuine401_BasicRealmContainingNegotiate_SpanEndedWithFailure()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			FireStart(listener, request);
+			FireExStop(listener, request, HttpStatusCode.Unauthorized,
+				new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "Basic realm=\"Negotiate\"" });
+
+			listener.ProcessingRequests.Should().NotContainKey(request,
+				"Basic realm=\"Negotiate\" is not an NTLM/Negotiate challenge and must end the span immediately");
+			payloadSender.WaitForErrors();
+			using (new AssertionScope())
+			{
+				payloadSender.Errors.Should().NotBeEmpty("a Basic 401 with Negotiate in the realm must be recorded as a failure");
+				payloadSender.WaitForSpans(count: 1);
+				payloadSender.FirstSpan.Context.Http.StatusCode.Should().Be(401);
+			}
+		}
+
+		/// <summary>
+		/// When NTLM authentication ultimately fails (wrong credentials), the server returns a terminal 401
+		/// with WWW-Authenticate: NTLM.  The .NET Framework runtime fires Ex.Stop for the terminal challenge
+		/// and then Stop when the request completes; the span must survive the second Ex.Stop and be ended by Stop.
+		/// </summary>
+		[Fact]
+		public void NtlmChallenge_TerminalAuthFailure_SpanEndedByFinalStop()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			StartTransaction(agent);
+			var (listener, request) = CreateFullFrameworkListenerAndRequest(agent);
+
+			FireStart(listener, request);
+
+			// Intermediate NTLM type-1 challenge
+			FireExStop(listener, request, HttpStatusCode.Unauthorized,
+				new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "NTLM" });
+			listener.ProcessingRequests.Should().ContainKey(request, "span must survive intermediate NTLM challenge");
+
+			// Terminal 401: credentials rejected; server re-issues NTLM challenge — Ex.Stop fires again
+			FireExStop(listener, request, HttpStatusCode.Unauthorized,
+				new WebHeaderCollection { [HttpResponseHeader.WwwAuthenticate] = "NTLM" });
+			listener.ProcessingRequests.Should().ContainKey(request,
+				"span must survive terminal NTLM 401 until the final Stop arrives");
+
+			// Stop fires when the request completes — this must end the span
+			FireStop(listener, request);
+			listener.ProcessingRequests.Should().NotContainKey(request, "span must be ended by the final Stop");
+
+			payloadSender.WaitForSpans(count: 1);
+			payloadSender.Spans.Should().HaveCount(1, "exactly one span must be sent for the whole request");
+		}
+
 		/// <summary>
 		/// Makes sure we set the correct type and subtype for external, http spans
 		/// </summary>
