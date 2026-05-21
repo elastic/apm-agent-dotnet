@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
+    <TargetFrameworks>net462;net472;netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);PROFILER_MANAGED</DefineConstants>
   </PropertyGroup>
@@ -12,26 +12,24 @@
     <Compile Include="$(SolutionRoot)src/profiler/Elastic.Apm.Profiler.Managed.Loader/Logger.cs" />
   </ItemGroup>
 
-
-  <ItemGroup Condition="'$(TargetFramework)' != 'net462'">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net462' And '$(TargetFramework)' != 'net472'">
     <PackageReference Include="System.Reflection.Emit" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" />
   </ItemGroup>
 
-  <!-- ASP.NET integration -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+  <!-- ASP.NET Full Framework integration (net462, net472) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'net472'">
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" />
     <Reference Include="System.Web" />
   </ItemGroup>
-  <!-- ASP.NET Core integration -->
-  <ItemGroup  Condition="'$(TargetFramework)' != 'net462'">
+  <!-- ASP.NET Core integration (netstandard, net8+) -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'net462' And '$(TargetFramework)' != 'net472'">
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Elastic.Apm.Profiler.Managed.Core\Elastic.Apm.Profiler.Managed.Core.csproj" />
     <ProjectReference Include="..\..\Elastic.Apm\Elastic.Apm.csproj" />
-    <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

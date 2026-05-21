@@ -11,6 +11,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Microsoft.Win32;
 
 namespace Elastic.Apm.Profiler.Managed.Loader
 {
@@ -18,9 +19,46 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 	{
 		private static string ResolveDirectory()
 		{
-			var framework = "net462";
 			var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
-			return Path.Combine(directory, framework);
+
+			// Prefer the net472 build on .NET Framework 4.7.2+ — it supports VerifyServerCert and ServerCert
+			// via HttpClientHandler.ServerCertificateCustomValidationCallback (added in 4.7.1).
+			// Fall back to net462 if the net472 directory is absent (e.g. older profiler zip) so loading
+			// still succeeds rather than silently failing to resolve assemblies.
+			if (IsNet472OrHigher())
+			{
+				var net472Dir = Path.Combine(directory, "net472");
+				if (System.IO.Directory.Exists(net472Dir))
+				{
+					Logger.Log(LogLevel.Debug, "Resolving assemblies from {0}", net472Dir);
+					return net472Dir;
+				}
+
+				Logger.Log(LogLevel.Warning,
+					"Running on .NET Framework 4.7.2+ but net472 directory not found at {0}. "
+					+ "Falling back to net462: VerifyServerCert and ServerCert will have no effect.",
+					net472Dir);
+			}
+
+			var net462Dir = Path.Combine(directory, "net462");
+			Logger.Log(LogLevel.Debug, "Resolving assemblies from {0}", net462Dir);
+			return net462Dir;
+		}
+
+		private static bool IsNet472OrHigher()
+		{
+			try
+			{
+				using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
+				// Release value 461808 corresponds to .NET Framework 4.7.2 on Windows 10 1803+;
+				// 461814 is the value for all other OS versions. Checking >= 461808 covers both.
+				var release = Convert.ToInt32(key?.GetValue("Release") ?? 0);
+				return release >= 461808;
+			}
+			catch
+			{
+				return false;
+			}
 		}
 
 		private static Assembly ResolveDependencies(object sender, ResolveEventArgs args)
