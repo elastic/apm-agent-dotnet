@@ -107,7 +107,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 			agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 
-			waitHandle.WaitHandle.WaitOne(TimeSpan.FromSeconds(5));
+			var completed = waitHandle.Wait(TimeSpan.FromSeconds(30));
+			completed.Should().BeTrue("all 3 events should have been sent within the timeout");
 			return requests;
 		}
 	}

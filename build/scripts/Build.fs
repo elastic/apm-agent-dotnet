@@ -123,6 +123,11 @@ module Build =
     /// Runs dotnet build on all .NET core projects in the solution.
     /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
     let Build () =
+        // On Windows, pre-build this first to prevent a parallel build race condition: both
+        // Elastic.Apm.Profiler.Managed (net462 TFM) and AspNetFullFrameworkSampleApp reference
+        // Elastic.Apm.AspNetFullFramework, so a parallel solution build can hit a file lock
+        // on the obj DLL. Pre-building ensures the output exists and incremental build skips it.
+        if isWindows then dotnet "build" aspNetFullFramework
         dotnet "build" Paths.Solution
         if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()

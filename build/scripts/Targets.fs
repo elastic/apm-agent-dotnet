@@ -139,7 +139,9 @@ module Main =
                 | false, TestSuite.Profiler ->
                     printfn "Skip building dependent startup hooks zip or profilers because --clean false was specified"
                 | _, TestSuite.Profiler ->
-                    Targets.RunTargetsWithoutExiting (["profiler-integrations"; "clean-profiler"; "build-profiler"])
+                    Build.ProfilerIntegrations()
+                    if not isCI then Build.CleanProfiler()
+                    Build.BuildProfiler()
                     profilerZip()
                 | _, TestSuite.StartupHooks -> startupHookZip()
                 | _ -> ignore()
