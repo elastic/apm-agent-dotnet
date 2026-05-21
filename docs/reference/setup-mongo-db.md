@@ -11,27 +11,49 @@ applies_to:
 
 # MongoDB [setup-mongo-db]
 
-
 ## Quick start [_quick_start_14]
 
-Instrumentation for MongoDB works with the official MongoDb.Driver driver packages. A prerequisite for auto instrumentation is to configure the `MongoClient` with `MongoDbEventSubscriber`:
+The [`Elastic.Apm.MongoDb`](https://www.nuget.org/packages/Elastic.Apm.MongoDb) NuGet package instruments the official `MongoDB.Driver` to capture MongoDB operations as APM spans, including the command name, target database, and duration.
+
+::::{note}
+**MongoDB Driver ≥3.7.0** natively emits OpenTelemetry spans. For that version and newer, no extra package is needed — the agent's [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) captures MongoDB spans automatically whether you use the [Profiler](/reference/setup-auto-instrumentation.md) or a NuGet-based install. This package is only needed for MongoDB.Driver ≥3.0.0 <3.7.0.
+::::
+
+**Supported versions:** MongoDB.Driver ≥3.0.0 <4.0.0, on .NET 8.0 or newer and .NET Framework 4.7.2 or newer.
+
+### Step 1: Install the package
+
+```sh
+dotnet add package Elastic.Apm.MongoDb
+```
+
+### Step 2: Configure the MongoClient
+
+Register the `MongoDbEventSubscriber` when creating your `MongoClient`:
 
 ```csharp
-var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
+using MongoDB.Driver;
+using Elastic.Apm.MongoDb;
 
+var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
 settings.ClusterConfigurator = builder => builder.Subscribe(new MongoDbEventSubscriber());
 var mongoClient = new MongoClient(settings);
 ```
 
-Once the above configuration is in place
+### Step 3: Subscribe the agent
 
-* if the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, it will automatically capture calls to MongoDB on every active transaction, and no further action is required.
-* you can manually activate auto instrumentation from the `Elastic.Apm.MongoDb` package by calling
+How you complete the setup depends on how the APM agent was added to your application:
+
+**Using `Elastic.Apm.NetCoreAll`** (the all-in-one package for ASP.NET Core) — no further action is needed. MongoDB calls are captured automatically on every active transaction.
+
+**Using `Elastic.Apm.MongoDb` directly** — also subscribe the diagnostics subscriber once at application startup:
 
 ```csharp
+using Elastic.Apm;
+using Elastic.Apm.MongoDb;
+
 Agent.Subscribe(new MongoDbDiagnosticsSubscriber());
 ```
 
-::::{important}
-MongoDB integration is currently supported on .NET runtimes. Due to MongoDb.Driver assemblies not being strongly named, they cannot be used with Elastic APM’s strongly named assemblies on .NET Framework.
-::::
+Make sure this is called only once. Calling it multiple times causes MongoDB operations to be captured as duplicate spans.
+
