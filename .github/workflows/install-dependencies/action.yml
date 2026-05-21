@@ -22,8 +22,9 @@
       # ZIG
       - name: Zig
         if: "${{ inputs.rust == 'true' && runner.os == 'Linux' }}"
-        shell: bash
-        run: sudo snap install zig --beta --classic
+        uses: mlugg/setup-zig@v1
+        with:
+          version: "0.13.0"
   
       # RUST
       - name: Rustup
