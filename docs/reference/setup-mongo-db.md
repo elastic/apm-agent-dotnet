@@ -21,7 +21,9 @@ The [`Elastic.Apm.MongoDb`](https://www.nuget.org/packages/Elastic.Apm.MongoDb) 
 
 **Supported versions:** MongoDB.Driver ≥3.0.0 <4.0.0, on .NET 8.0 or newer and .NET Framework 4.7.2 or newer.
 
-### Step 1: Install the package
+### Step 1: Install the package if needed
+
+If you are **not** already using `Elastic.Apm.NetCoreAll`, install [`Elastic.Apm.MongoDb`](https://www.nuget.org/packages/Elastic.Apm.MongoDb). If you are using `Elastic.Apm.NetCoreAll`, you can skip this install step and continue with Step 2.
 
 ```sh
 dotnet add package Elastic.Apm.MongoDb
