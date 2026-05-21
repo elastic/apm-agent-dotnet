@@ -14,10 +14,10 @@ applies_to:
 
 ## Quick start [_quick_start_2]
 
-For ASP.NET Core, once you reference the [`Elastic.Apm.NetCoreAll`](https://www.nuget.org/packages/Elastic.Apm.NetCoreAll) package, you can enable auto instrumentation by calling the `AddAllElasticApm()` extension method on the `IServiceCollection` in the `Program.cs` file.
+For ASP.NET Core, once you reference the [`Elastic.Apm.NetCoreAll`](https://www.nuget.org/packages/Elastic.Apm.NetCoreAll) package, you can enable every agent component by calling the `AddAllElasticApm()` extension method on the `IServiceCollection` in the `Program.cs` file.
 
 ::::{note}
-The following code sample assumes the instrumentation of a ASP.NET Core 8 application, using [top-level statements](https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/top-level-statements).
+The following code sample assumes the instrumentation of an ASP.NET Core 8 application, using [top-level statements](https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/top-level-statements).
 
 ::::
 
@@ -49,4 +49,11 @@ builder.Services.AddElasticApm(
 ```
 
 In case you only want to use the [*Public API*](/reference/public-api.md), you don’t need to do any initialization, you can simply start using the API and the agent will send the data to the APM Server.
+
+
+## Configure the agent [asp-net-core-configuration]
+
+After adding the agent, configure it to connect to your APM Server. The fastest way is through environment variables or `appsettings.json`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
+
+To set configuration values programmatically, for example to derive the APM service name or environment from other application configuration, see [Overriding configuration values programmatically](/reference/configuration-on-asp-net-core.md#asp-net-core-programmatic-config).
 
