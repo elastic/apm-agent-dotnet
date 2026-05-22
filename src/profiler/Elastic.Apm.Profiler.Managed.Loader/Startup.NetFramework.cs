@@ -53,10 +53,13 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 				// Release value 461808 corresponds to .NET Framework 4.7.2 on Windows 10 1803+;
 				// 461814 is the value for all other OS versions. Checking >= 461808 covers both.
 				var release = Convert.ToInt32(key?.GetValue("Release") ?? 0);
-				return release >= 461808;
+				var result = release >= 461808;
+				Logger.Log(LogLevel.Debug, "IsNet472OrHigher: registry release={0}, result={1}", release, result);
+				return result;
 			}
-			catch
+			catch (Exception e)
 			{
+				Logger.Log(LogLevel.Warning, e, "IsNet472OrHigher: failed to read registry, assuming false");
 				return false;
 			}
 		}
@@ -78,13 +81,24 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 
 			Logger.Log(LogLevel.Trace, "Probing: {0}, exists on disk: {1}", path, exists);
 
-			if (exists)
+			if (!exists)
 			{
-				Logger.Log(LogLevel.Debug, "Loading {0} assembly", assemblyName);
-				return Assembly.LoadFrom(path);
+				Logger.Log(LogLevel.Debug, "AssemblyResolve: {0} not found in profiler directory, returning null", assemblyName);
+				return null;
 			}
 
-			return null;
+			try
+			{
+				Logger.Log(LogLevel.Debug, "Loading {0} assembly from {1}", assemblyName, path);
+				var assembly = Assembly.LoadFrom(path);
+				Logger.Log(LogLevel.Debug, "Loaded {0} from {1}", assemblyName, assembly.Location);
+				return assembly;
+			}
+			catch (Exception e)
+			{
+				Logger.Log(LogLevel.Error, e, "AssemblyResolve: failed to load {0} from {1}", assemblyName, path);
+				return null;
+			}
 		}
 	}
 }

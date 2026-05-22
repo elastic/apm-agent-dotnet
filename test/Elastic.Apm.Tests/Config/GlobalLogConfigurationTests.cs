@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections;
+using System.Text.RegularExpressions;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using FluentAssertions;
@@ -23,6 +24,16 @@ namespace Elastic.Apm.Tests.Config
 			config.AgentLogFilePath.Should().EndWith(".agent.log");
 			//because is active is false log targets defaults to none;
 			config.LogTargets.Should().Be(GlobalLogTarget.None);
+		}
+
+		[Fact]
+		public void Check_LogFilePath_ContainsAppDomainIdAndTimestamp()
+		{
+			var config = GlobalLogConfiguration.FromEnvironment(new Hashtable());
+			var fileName = System.IO.Path.GetFileName(config.AgentLogFilePath);
+			// Expected format: {processName}_{pid}_ad{appDomainId}_{yyyyMMddTHHmmssfff}.agent.log
+			Regex.IsMatch(fileName, @"^.+_\d+_ad\d+_\d{8}T\d{9}\.agent\.log$").Should().BeTrue(
+				"filename '{0}' should match {{processName}}_{{pid}}_ad{{appDomainId}}_{{yyyyMMddTHHmmssfff}}.agent.log", fileName);
 		}
 
 
