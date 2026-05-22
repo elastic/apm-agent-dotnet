@@ -119,7 +119,7 @@ builder.Services.AddAllElasticApm();
 ```
 
 ::::{note}
-When not explicitly configured, the agent’s `Environment` option defaults to the ASP.NET Core hosting environment name from `IHostEnvironment.EnvironmentName` (typically driven by `ASPNETCORE_ENVIRONMENT`). If you want APM to report a different environment label, set `ElasticApm:Environment` explicitly as shown above.
+When not explicitly configured, the agent’s `Environment` option defaults to the ASP.NET Core hosting environment name from `IHostEnvironment.EnvironmentName` (typically driven by `ASPNETCORE_ENVIRONMENT`). If you want APM to report a different environment label, set `ElasticApm:Environment` explicitly as shown in the preceding example.
 ::::
 
 **Source ordering and environment variable precedence**
@@ -129,7 +129,7 @@ The agent resolves each configuration option through two layers in order:
 1. `IConfiguration` — checked first. This includes all registered sources: `appsettings.json`, `ElasticApm__*` environment variables (double underscore is the .NET section separator), command-line arguments, and any in-memory values.
 2. `ELASTIC_APM_*` environment variables — the agent's own env var form, checked only when layer 1 returns no value.
 
-Because `AddInMemoryCollection` is appended to the end of the `IConfiguration` source list, it wins over all other layer-1 sources. It also implicitly overrides `ELASTIC_APM_*` variables, because a hit in layer 1 means the agent never falls through to layer 2.
+Because `AddInMemoryCollection` is appended to the end of the `IConfiguration` source list, it wins over all other layer 1 sources. It also implicitly overrides `ELASTIC_APM_*` variables, because a hit in layer 1 means the agent never falls through to layer 2.
 
 If you want either form of environment variable to remain able to override a value at deployment time, check for both before injecting:
 
