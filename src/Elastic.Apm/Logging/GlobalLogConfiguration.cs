@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -194,7 +195,9 @@ internal readonly struct GlobalLogConfiguration
 	private static string GetLogFilePrefix()
 	{
 		var process = Process.GetCurrentProcess();
-		return $"{process.ProcessName}_{process.Id}_{Environment.TickCount}";
+		var appDomainId = AppDomain.CurrentDomain.Id;
+		var timestamp = DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff", CultureInfo.InvariantCulture);
+		return $"{process.ProcessName}_{process.Id}_ad{appDomainId}_{timestamp}";
 	}
 
 	public string CreateLogFileName(string applicationName = "agent")
