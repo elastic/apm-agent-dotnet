@@ -37,7 +37,7 @@ use com::{
     AbiTransferable, CLSID, IID,
 };
 use core::ffi::c_void;
-use std::{intrinsics::transmute, ptr};
+use std::{mem::transmute, ptr};
 
 // numeric types
 pub type c_int = i32;

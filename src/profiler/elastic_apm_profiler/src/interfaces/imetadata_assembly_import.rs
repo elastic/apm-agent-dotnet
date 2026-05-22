@@ -149,8 +149,21 @@ impl IMetaDataAssemblyImport {
         }
 
         let mut name_buffer = Vec::<WCHAR>::with_capacity(name_len as usize);
-        let sz_locale = U16CString::default();
-        assembly_metadata.szLocale = sz_locale.into_raw();
+
+        // Allocate the szLocale buffer using the cbLocale wide-char count returned by the
+        // first GetAssemblyProps call. The previous implementation allocated a single-WCHAR
+        // buffer (from U16CString::default()) regardless of the assembly's actual locale
+        // length, which caused a heap buffer overrun for satellite resource assemblies
+        // whose locale is non-empty (e.g. "en-US"), corrupting adjacent heap entries and
+        // terminating the process with STATUS_HEAP_CORRUPTION (0xC0000374).
+        let locale_capacity = assembly_metadata.cbLocale as usize;
+        let mut locale_buffer = vec![0u16; locale_capacity];
+        assembly_metadata.szLocale = if locale_capacity > 0 {
+            locale_buffer.as_mut_ptr()
+        } else {
+            ptr::null_mut()
+        };
+
         let mut assembly_flags = 0;
         let mut hash_algorithm = 0;
         let mut public_key = MaybeUninit::uninit();
@@ -178,8 +191,9 @@ impl IMetaDataAssemblyImport {
                     .to_string_lossy();
                 let public_key = self.get_public_key(public_key, public_key_len as usize);
                 let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
-                let sz_locale = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
                 let locale = self.get_locale(&mut assembly_metadata);
+                // locale_buffer must outlive get_locale because szLocale points into it.
+                drop(locale_buffer);
 
                 Ok(AssemblyMetaData {
                     name,
@@ -263,8 +277,15 @@ impl IMetaDataAssemblyImport {
         let mut name_length = 0;
         let mut public_key = MaybeUninit::uninit();
         let mut assembly_metadata = ASSEMBLYMETADATA::default();
-        let sz_locale = U16CString::default();
-        assembly_metadata.szLocale = sz_locale.into_raw();
+
+        // Pre-allocate an szLocale buffer of MAX_LENGTH wide chars. GetAssemblyRefProps is a
+        // one-shot API (no size-discovery pass), so we must provide a buffer big enough to
+        // hold any locale string the API will write. Previously, a single-WCHAR buffer was
+        // used, causing a heap buffer overrun for any non-neutral-culture assembly reference.
+        let mut locale_buffer = vec![0u16; MAX_LENGTH as usize];
+        assembly_metadata.szLocale = locale_buffer.as_mut_ptr();
+        assembly_metadata.cbLocale = MAX_LENGTH;
+
         let mut public_key_length = 0;
         let mut assembly_flags = 0;
 
@@ -294,8 +315,9 @@ impl IMetaDataAssemblyImport {
 
         let public_key = self.get_public_key(public_key, public_key_length as usize);
         let assembly_flags = CorAssemblyFlags::from_bits(assembly_flags).unwrap();
-        let sz_locale = unsafe { U16CString::from_raw(assembly_metadata.szLocale) };
         let locale = self.get_locale(&mut assembly_metadata);
+        // locale_buffer must outlive get_locale because szLocale points into it.
+        drop(locale_buffer);
 
         Ok(AssemblyMetaData {
             name,

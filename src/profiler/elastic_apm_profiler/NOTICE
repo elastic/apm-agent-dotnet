@@ -124,14 +124,13 @@ Available at
 https://github.com/matklad/once_cell/blob/master/LICENSE-APACHE
 
 ---
-License notice for rust-crypto crate
+License notice for sha1 crate
 
-Copyright (c) 2006-2009 Graydon Hoare
-Copyright (c) 2009-2013 Mozilla Foundation
+Copyright (c) RustCrypto Developers
 Licensed under the Apache License, Version 2.0.
 
 Available at
-https://github.com/DaGenix/rust-crypto/blob/master/LICENSE-APACHE
+https://github.com/RustCrypto/hashes/blob/master/sha1/LICENSE-APACHE
 
 ---
 License notice for rust-embed crate
@@ -151,12 +150,13 @@ Available at
 https://github.com/serde-rs/serde/blob/master/LICENSE-APACHE
 
 ---
-License notice for serde_yaml crate
+License notice for serde_yml crate
 
+Copyright (c) Serde YML Contributors
 Licensed under the Apache License, Version 2.0.
 
 Available at
-https://github.com/dtolnay/serde-yaml/blob/master/LICENSE-APACHE
+https://github.com/sebastienrousseau/serde_yml/blob/master/LICENSE-APACHE
 
 ---
 License notice for widestring crate
