@@ -19,7 +19,7 @@ use crate::{
 };
 use com::sys::{GUID, HRESULT};
 use core::fmt;
-use crypto::{digest::Digest, sha1::Sha1};
+use sha1::{Digest, Sha1};
 use num_traits::FromPrimitive;
 use serde::{
     de,
@@ -30,7 +30,6 @@ use std::{
     cmp::Ordering,
     collections::{BTreeMap, HashMap, HashSet},
     fmt::{Display, Formatter},
-    iter::repeat,
     marker::PhantomData,
     str::FromStr,
 };
@@ -600,12 +599,15 @@ impl<'a> MetadataBuilder<'a> {
     }
 
     pub fn emit_assembly_ref(&self, assembly_reference: &AssemblyReference) -> Result<(), HRESULT> {
+        let mut locale_vec = if &assembly_reference.locale == "neutral" {
+            Vec::new()
+        } else {
+            U16CString::from_str(&assembly_reference.locale).unwrap().into_vec()
+        };
         let (sz_locale, cb_locale) = if &assembly_reference.locale == "neutral" {
             (std::ptr::null_mut() as *mut WCHAR, 0)
         } else {
-            let wstr = U16CString::from_str(&assembly_reference.locale).unwrap();
-            let len = wstr.len() as ULONG;
-            (wstr.into_vec().as_mut_ptr(), len)
+            (locale_vec.as_mut_ptr(), locale_vec.len() as ULONG)
         };
 
         let assembly_metadata = ASSEMBLYMETADATA {
@@ -1185,14 +1187,14 @@ pub struct ParsedFunctionMethodSignature {
 }
 
 impl ParsedFunctionMethodSignature {
-    pub fn arguments(&self) -> Vec<FunctionMethodArgument> {
+    pub fn arguments(&self) -> Vec<FunctionMethodArgument<'_>> {
         self.args
             .iter()
             .map(|(s, e)| FunctionMethodArgument::new(&self.data[*s..*e]))
             .collect()
     }
 
-    pub fn return_type(&self) -> FunctionMethodArgument {
+    pub fn return_type(&self) -> FunctionMethodArgument<'_> {
         FunctionMethodArgument::new(&self.data[self.ret_type.0..self.ret_type.1])
     }
 }
@@ -1395,11 +1397,10 @@ impl PublicKey {
         match &self.hash_algorithm {
             Some(HashAlgorithmType::Sha1) => {
                 let mut sha1 = Sha1::new();
-                sha1.input(&self.bytes);
-                let mut buf: Vec<u8> = repeat(0).take((sha1.output_bits() + 7) / 8).collect();
-                sha1.result(&mut buf);
-                buf.reverse();
-                hex::encode(buf[0..8].as_ref())
+                sha1.update(&self.bytes);
+                let mut result = sha1.finalize().to_vec();
+                result.reverse();
+                hex::encode(&result[0..8])
             }
             _ => String::new(),
         }
@@ -1450,7 +1451,7 @@ pub mod tests {
     use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
 
     fn deserialize_and_assert(json: &str, expected: Version) -> Result<(), Box<dyn Error>> {
-        let version: Version = serde_yaml::from_str(json)?;
+        let version: Version = serde_yml::from_str(json)?;
         assert_eq!(expected, version);
         Ok(())
     }
@@ -1483,7 +1484,7 @@ pub mod tests {
     #[test]
     fn deserialize_method_signature() -> Result<(), Box<dyn Error>> {
         let json = "\"00 08 1C 1C 1C 1C 1C 1C 08 08 0A\"";
-        let method_signature: MethodSignature = serde_yaml::from_str(json)?;
+        let method_signature: MethodSignature = serde_yml::from_str(json)?;
         assert_eq!(
             MethodSignature {
                 data: vec![0, 8, 28, 28, 28, 28, 28, 28, 8, 8, 10]
@@ -1497,7 +1498,7 @@ pub mod tests {
     fn deserialize_assembly_reference() -> Result<(), Box<dyn Error>> {
         let json =
             "\"Elastic.Apm, Version=1.9.0.0, Culture=neutral, PublicKeyToken=ae7400d2c189cf22\"";
-        let assembly_reference: AssemblyReference = serde_yaml::from_str(json)?;
+        let assembly_reference: AssemblyReference = serde_yml::from_str(json)?;
 
         let expected_assembly_reference = AssemblyReference {
             name: "Elastic.Apm".into(),
@@ -1530,7 +1531,7 @@ method_replacements:
     type: Elastic.Apm.Profiler.Integrations.AdoNet.CommandExecuteNonQueryAsyncIntegration
     action: CallTargetModification"#;
 
-        let integration: Integration = serde_yaml::from_str(json)?;
+        let integration: Integration = serde_yml::from_str(json)?;
 
         assert_eq!(&integration.name, "AdoNet");
         assert_eq!(integration.method_replacements.len(), 1);
@@ -1580,7 +1581,7 @@ method_replacements:
         path.push("../Elastic.Apm.Profiler.Managed/integrations.yml");
         let file = File::open(path)?;
         let reader = BufReader::new(file);
-        let integrations: Vec<Integration> = serde_yaml::from_reader(reader)?;
+        let integrations: Vec<Integration> = serde_yml::from_reader(reader)?;
         assert!(integrations.len() > 0);
         Ok(())
     }

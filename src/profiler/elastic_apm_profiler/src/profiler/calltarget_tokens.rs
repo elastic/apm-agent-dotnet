@@ -186,12 +186,15 @@ impl CallTargetTokens {
             let assembly_reference =
                 crate::profiler::managed::MANAGED_PROFILER_FULL_ASSEMBLY_VERSION.deref();
 
+            let mut locale_vec = if &assembly_reference.locale == "neutral" {
+                Vec::new()
+            } else {
+                U16CString::from_str(&assembly_reference.locale).unwrap().into_vec()
+            };
             let (sz_locale, cb_locale) = if &assembly_reference.locale == "neutral" {
                 (std::ptr::null_mut() as *mut WCHAR, 0)
             } else {
-                let wstr = U16CString::from_str(&assembly_reference.locale).unwrap();
-                let len = wstr.len() as ULONG;
-                (wstr.into_vec().as_mut_ptr(), len)
+                (locale_vec.as_mut_ptr(), locale_vec.len() as ULONG)
             };
 
             let assembly_metadata = ASSEMBLYMETADATA {

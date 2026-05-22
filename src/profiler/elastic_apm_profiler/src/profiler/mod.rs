@@ -1347,8 +1347,9 @@ impl Profiler {
             U16CString::from_str(&assembly_reference.locale).unwrap()
         };
 
-        let cb_locale = locale.len() as ULONG;
-        let sz_locale = locale.into_vec_with_nul().as_mut_ptr();
+        let mut locale_vec = locale.into_vec_with_nul();
+        let cb_locale = locale_vec.len() as ULONG;
+        let sz_locale = locale_vec.as_mut_ptr();
         let assembly_metadata = ASSEMBLYMETADATA {
             usMajorVersion: assembly_reference.version.major,
             usMinorVersion: assembly_reference.version.minor,
