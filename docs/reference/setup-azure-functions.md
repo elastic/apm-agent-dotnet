@@ -20,7 +20,7 @@ The .NET APM Agent can trace function invocations in an [Azure Functions](https:
 
 You need an APM Server to send APM data to. Follow the [APM Quick start](docs-content://solutions/observability/apm/get-started.md) if you have not set one up yet. You will need your **APM server URL** and an APM server **API key** for configuring the APM agent below. (If your APM Server uses secret tokens instead, both are supported.)
 
-You will also need an Azure Function app to monitor running on **.NET 8+** (for isolated worker model) or **.NET Framework 4.7.2+ or .NET 8+** (for in-process model; .NET 8 requires the `FUNCTIONS_INPROC_NET8_ENABLED=1` setting). If you do not have an existing one, you can follow [this Azure guide](https://learn.microsoft.com/en-us/azure/azure-functions/create-first-function-cli-csharp) to create one.
+You also need an Azure Function app to monitor running on **.NET 8+** (for isolated worker model) or **.NET Framework 4.7.2+ or .NET 8+** (for in-process model; .NET 8 requires the `FUNCTIONS_INPROC_NET8_ENABLED=1` setting). If you do not have an existing one, you can follow [Create your first C# function in Azure](https://learn.microsoft.com/en-us/azure/azure-functions/create-first-function-cli-csharp) to create one.
 
 
 ## Azure Functions isolated worker model [_azure_functions_isolated_worker_model]
