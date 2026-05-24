@@ -109,7 +109,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | SQLite<br>`Microsoft.Data.Sqlite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | SQLite<br>`System.Data.SQLite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.0.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
-¹ Via startup hook on .NET.
+¹ Using a startup hook on .NET.
 
 ² Requires calling `connection.UseElasticApm()` on each `IConnectionMultiplexer` instance - see the [setup page](/reference/setup-stackexchange-redis.md).
 
