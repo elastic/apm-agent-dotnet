@@ -161,7 +161,7 @@ ELASTIC_APM_SERVICE_NAME: <your service name> (optional)
 
 If `ELASTIC_APM_SERVICE_NAME` is not configured, the agent uses the same fallback values as the isolated worker model:
 
-* **Local development** - The discovered service name (the entry Assembly name) will be used.
+* **Local development** - The discovered service name (the entry assembly name) will be used.
 * **Azure** - The Function App name (retrieved from the `WEBSITE_SITE_NAME` environment variable) will be used.
 
 **Configuring for local development**
