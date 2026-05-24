@@ -80,7 +80,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | gRPC server (ASP.NET Core)<br>{applies_to}`apm_agent_dotnet: ga 1.7` | ≥8.0.0<br>≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-net-core.md) | ✗ |
 | gRPC client<br>`Grpc.Net.Client`<br>{applies_to}`apm_agent_dotnet: ga 1.7` | ≥2.23.2<br><3.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-grpc.md) | [✓ (≥2.57.0)](/reference/opentelemetry-bridge.md) |
 
-¹ Via startup hook on .NET.
+¹ Using a startup hook on .NET.
 
 ::::{note}
 `Grpc.Net.Client` ≥2.57.0 emits native OpenTelemetry spans. When using the profiler without the NuGet package, the OpenTelemetry Bridge captures them automatically. When the NuGet package is installed, the dedicated subscriber takes precedence to prevent duplicate spans.
