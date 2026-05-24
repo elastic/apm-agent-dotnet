@@ -129,7 +129,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | --- | --- | :---: | :---: | :---: |
 | Azure Service Bus<br>`Azure.Messaging.ServiceBus`<br>{applies_to}`apm_agent_dotnet: ga 1.10` | ≥7.0.0<br><8.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-azure-servicebus.md) | [✓](/reference/opentelemetry-bridge.md) |
 | Azure Service Bus (legacy)<br>`Microsoft.Azure.ServiceBus`<br>{applies_to}`apm_agent_dotnet: ga 1.10` | ≥3.0.0<br><6.0.0 | ✗ | [✓](/reference/setup-azure-servicebus.md) | ✗ |
-| Kafka<br>`Confluent.Kafka`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.4.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | [✓ via adapter ¹](/reference/setup-kafka.md) |
+| Kafka<br>`Confluent.Kafka`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.4.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | [✓ using an adapter ¹](/reference/setup-kafka.md) |
 | RabbitMQ<br>`RabbitMQ.Client`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥3.6.9<br><7.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
 ¹ Requires adding [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) which wraps producers and consumers so they emit spans for the OpenTelemetry Bridge to capture. Code changes are required - see the [setup page](/reference/setup-kafka.md).
