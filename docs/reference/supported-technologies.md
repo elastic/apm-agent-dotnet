@@ -106,7 +106,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | Redis<br>`StackExchange.Redis`<br>{applies_to}`apm_agent_dotnet: ga 1.8` | ≥2.0.495<br><3.0.0 | ✗ | [✓ ²](/reference/setup-stackexchange-redis.md) | ✗ |
 | MS SQL<br>`System.Data.SqlClient`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥4.0.0<br><5.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | ✗ |
 | MS SQL<br>`Microsoft.Data.SqlClient`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥1.0.0<br><6.0.0 | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-sqlclient.md) | ✗ |
-| SQLLite<br>`Microsoft.Data.Sqlite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
+| SQLite<br>`Microsoft.Data.Sqlite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | SQLLite<br>`System.Data.SQLite`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥1.0.0<br><3.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 
 ¹ Via startup hook on .NET.
