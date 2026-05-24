@@ -26,7 +26,7 @@ If you are already using OpenTelemetry, consider the [EDOT .NET SDK](elastic-ote
 
 The APM Agent for .NET libraries and components target .NET Standard 2.0 or .NET Standard 2.1.
 
-We support .NET runtimes ≤10.0.x and .NET Framework runtimes from 4.6.2 to 4.8.1 for as long as they receive active support from Microsoft per the [.NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core) and [.NET Framework support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-framework). When Microsoft ends support for a runtime version, we do too. Issues reported against unsupported runtimes will not be acted on unless they also affect a supported runtime.
+We support .NET runtimes ≤10.0.x and .NET Framework runtimes from 4.6.2 to 4.8.1 for as long as they receive active support from Microsoft per the [.NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core) and [.NET Framework support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-framework). When Microsoft ends support for a runtime version, so does Elastic. Issues reported against unsupported runtimes will only be acted on if they also affect a supported runtime.
 
 ::::{warning}
 Native AOT is not supported. The agent relies on reflection, runtime IL emit, and embedded libraries that are incompatible with AOT compilation. Attempting to use the agent in a Native AOT-published application will fail at runtime.
