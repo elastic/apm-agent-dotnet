@@ -61,7 +61,7 @@ For supported web frameworks, the agent creates one transaction per incoming req
 | ASP.NET Core<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0<br>≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-net-core.md) | ✗ |
 | ASP.NET (.NET Framework) in IIS<br>{applies_to}`apm_agent_dotnet: ga 1.1` | 4.6.2–4.8.1 (IIS 10) | [✓](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-asp-dot-net.md) | ✗ |
 
-¹ Via startup hook on .NET.
+¹ Using a startup hook on .NET.
 
 ::::{note}
 We support ASP.NET on IIS 10 versions supported by Microsoft per their [IIS support policy](https://learn.microsoft.com/lifecycle/products/internet-information-services-iis). IIS must be installed on a [supported](https://learn.microsoft.com/windows/release-health/windows-server-release-info#windows-server-major-versions-by-servicing-option--) Windows operating system version.
