@@ -38,7 +38,7 @@ On .NET Framework, we strongly recommend at least .NET Framework 4.7.2 because o
 
 ## Installation methods [supported-installation-methods]
 
-Each table below shows which installation methods apply to each technology. A checkmark (✓) means the technology is supported via that installation method for the listed version range; a cross (✗) means it is not supported via that method. Where a cell shows a version qualifier such as `(≥3.7.0)`, only that narrower range is covered by that method.
+Each table below shows which installation methods apply to each technology. A checkmark (✓) means the technology is supported with that installation method for the listed version range; a cross (✗) means it is not supported using that method. Where a cell shows a version qualifier such as `(≥3.7.0)`, only that narrower range is covered by that method.
 
 ::::{note}
 The **OpenTelemetry Bridge** column requires .NET 8+ and APM Server ≥7.16. A checkmark there means the technology is covered through the built-in OpenTelemetry Bridge, whether the agent was installed via the Profiler or a NuGet package.
