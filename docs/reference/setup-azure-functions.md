@@ -207,7 +207,7 @@ On Consumption plans, allow 30-60 seconds for the first transaction to appear af
 **Service doesn't appear in Kibana**
 
 - Verify `ELASTIC_APM_SERVER_URL` is reachable and correct
-- Confirm `ELASTIC_APM_API_KEY` has the required permissions on your APM Server
+- Confirm `ELASTIC_APM_API_KEY` has the required privileges on your APM Server
 - Check your function's application logs in the Azure Portal for APM-related errors
 - Invoke the function at least once to generate a transaction
 
