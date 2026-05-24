@@ -150,7 +150,7 @@ For supported Azure Functions hosting models, the agent creates one transaction 
 | Azure Functions in-process<br>`Microsoft.Azure.Functions.Extensions`<br>{applies_to}`apm_agent_dotnet: ga 1.24` | ≥1.1.0<br><2.0.0 | ✗ | [✓](/reference/setup-azure-functions.md) | ✗ |
 
 ::::{note}
-Only HTTP-triggered invocations are traced. System metrics are not collected because of a concern with unintentionally increasing Azure Functions costs on Consumption plans.
+Only HTTP-triggered invocations are traced. To avoid unintentionally increasing Azure Functions costs on Consumption plans, system metrics are not collected.
 
 The isolated worker model requires .NET 8+. The in-process model is [deprecated by Microsoft](https://learn.microsoft.com/en-us/azure/azure-functions/migrate-dotnet-in-process-to-isolated) - new apps should use the isolated worker model.
 ::::
