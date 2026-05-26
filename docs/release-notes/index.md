@@ -26,6 +26,21 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.34.2 [elastic-apm-net-agent-1342-release-notes]
+**Release date:** May 26, 2025
+
+### Fixes [elastic-apm-net-agent-1342-fixes]
+
+* Support for auto-instrumentation of Confluent Kafka .NET Client 2.x [#2677](https://github.com/elastic/apm-agent-dotnet/pull/2677)
+* Add `netstandard2.1` target and update `DiagnosticSource` dependency [#2679](https://github.com/elastic/apm-agent-dotnet/pull/2679)
+* Ship managed profiler for net8.0 [#2745](https://github.com/elastic/apm-agent-dotnet/pull/2745)
+* Fix bug where NTLM challenge causes incorrect span status [#2751](https://github.com/elastic/apm-agent-dotnet/pull/2751)
+* Include targets for `net472` in the profiler zip [#2752](https://github.com/elastic/apm-agent-dotnet/pull/2752)
+* Add ttf and otf extensions to default ignore list [#2712](https://github.com/elastic/apm-agent-dotnet/pull/2712)
+* Add a Flush API and fixes dispose bugs [#2758](https://github.com/elastic/apm-agent-dotnet/pull/2758)
+* Improve logging and profiler diagnostics [#2759](https://github.com/elastic/apm-agent-dotnet/pull/2759)
+* Switch to wolfi image for zip distro image [#2762](https://github.com/elastic/apm-agent-dotnet/pull/2762)
+
 ## 1.34.1 [elastic-apm-net-agent-1341-release-notes]
 **Release date:** September 12, 2025
 
