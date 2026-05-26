@@ -92,7 +92,7 @@ gRPC server calls in ASP.NET Core applications are captured automatically using 
 ‡ Captured via the built-in OpenTelemetry Bridge rather than a dedicated subscriber. `MongoDB.Driver` ≥3.7.0 emits native OpenTelemetry spans that the profiler captures through this bridge. If you have `MongoDB.Driver` 3.0-3.6, use the [MongoDB NuGet integration](/reference/setup-mongo-db.md) instead.
 
 ::::{important}
-**The .NET CLR Profiling API allows only one profiler to be attached to a .NET process**. In light of this limitation, only one solution that uses the .NET CLR profiling API should be used by an application.
+**The .NET CLR Profiling API allows only one profiler to be attached to a .NET process**. Because of this, only one solution that uses the .NET CLR profiling API should be used by an application.
 
 Auto instrumentation using the .NET CLR Profiling API can be used in conjunction with
 
