@@ -153,6 +153,7 @@ jobs:
   profiler-tests:
     runs-on: ubuntu-latest
     needs: [ 'format', 'tests' ]
+    timeout-minutes: 45
     steps:
     - uses: actions/checkout@v6
     - name: Bootstrap Action Workspace
@@ -160,9 +161,9 @@ jobs:
       uses: ./.github/workflows/bootstrap
       with:
           rust: 'true'
-    
+
     - name: 'Tests: Profiler'
       run: ./build.sh test --test-suite profiler
-    
+
     - name: 'Tests: Profiler Docker Image'
-      run: dotnet test test/profiler/Elastic.Apm.Profiler.Image.Tests/Elastic.Apm.Profiler.Image.Tests.csproj
+      run: dotnet test test/profiler/Elastic.Apm.Profiler.Image.Tests/Elastic.Apm.Profiler.Image.Tests.csproj -s test/.runsettings --logger "GitHubActions;summary.includePassedTests=false;summary.includeNotFoundTests=false"
