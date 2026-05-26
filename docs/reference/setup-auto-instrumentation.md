@@ -36,7 +36,7 @@ This approach supports the following platforms and runtimes:
 \*\* Minimum GLIBC version 2.14.
 
 ::::{note}
-The profiler-based agent is only officially tested and supported on .NET 8 and newer we recommend .NET 10 for new projects. While it **may** work on older runtimes no longer supported by Microsoft, this is not guaranteed. ARM and 32-bit processes are not supported. IIS web garden (multi-worker process) mode is not supported.
+The profiler-based agent is only officially tested and supported on .NET 8 and newer we recommend .NET 10 for new projects. While it might work on older runtimes no longer supported by Microsoft, this is not guaranteed. ARM and 32-bit processes are not supported. IIS web garden (multi-worker process) mode is not supported.
 ::::
 
 It instruments the following technologies:
