@@ -22,9 +22,13 @@
       # ZIG
       - name: Zig
         if: "${{ inputs.rust == 'true' && runner.os == 'Linux' }}"
-        uses: mlugg/setup-zig@v2
-        with:
-          version: "0.13.0"
+        shell: bash
+        run: |
+          ZIG_DIR="zig-linux-x86_64-0.13.0"
+          wget -q "https://ziglang.org/download/0.13.0/${ZIG_DIR}.tar.xz"
+          tar -xf "${ZIG_DIR}.tar.xz"
+          echo "${GITHUB_WORKSPACE}/${ZIG_DIR}" >> "${GITHUB_PATH}"
+          rm "${ZIG_DIR}.tar.xz"
   
       # RUST
       - name: Rustup
@@ -42,7 +46,7 @@
         uses: baptiste0928/cargo-install@v3
         with:
           crate: cargo-make
-          version: "^0.36.8"
+          version: "^0.37"
   
       - name: Install cargo zigbuild
         if: "${{ inputs.rust == 'true' && runner.os == 'Linux' }}"
