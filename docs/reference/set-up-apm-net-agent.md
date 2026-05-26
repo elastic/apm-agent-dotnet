@@ -37,7 +37,7 @@ The three approaches can be used independently or in combination. Use the guidan
 | Full control over application startup; want explicit, code-level setup | NuGet packages |
 | .NET Framework application using a technology not in the profiler's IL-rewriting list (for example, Entity Framework 6, Redis) | NuGet package required — the startup hook is not available on .NET Framework |
 | Want zero-code-change entry point *and* richer coverage for specific libraries | Profiler + NuGet augmentation — add the relevant integration packages alongside the profiler |
-| Library already emits native OpenTelemetry spans (e.g. `Elastic.Clients.Elasticsearch`, MongoDB Driver ≥3.7) | Profiler or NuGet provides the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) automatically — no extra Elastic integration package needed |
+| Library already emits native OpenTelemetry spans (for example, `Elastic.Clients.Elasticsearch`, MongoDB Driver ≥3.7) | Profiler or NuGet provides the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) automatically — no extra Elastic integration package needed |
 
 For the full breakdown of which technologies are supported by each method, see [Supported technologies](/reference/supported-technologies.md).
 
