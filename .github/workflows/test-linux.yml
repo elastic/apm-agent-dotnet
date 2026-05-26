@@ -164,7 +164,5 @@ jobs:
     - name: 'Tests: Profiler'
       run: ./build.sh test --test-suite profiler
     
-    - name: Build Profiler Docker Image
-      run: |
-        docker build . -t docker.elastic.co/observability/apm-agent-dotnet:${{ steps.bootstrap.outputs.agent-version }} \
-            --build-arg AGENT_ZIP_FILE=build/output/elastic_apm_profiler_${{ steps.bootstrap.outputs.agent-version }}-linux-x64.zip
+    - name: 'Tests: Profiler Docker Image'
+      run: dotnet test test/profiler/Elastic.Apm.Profiler.Image.Tests/Elastic.Apm.Profiler.Image.Tests.csproj

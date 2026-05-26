@@ -72,7 +72,6 @@ jobs:
 
     - name: Build and Push Profiler Docker Image
       id: docker-push
-      continue-on-error: true # continue for now until we see it working in action
       uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
       with:
         # Disabled cache to mitigate cache poisoning attack vector
@@ -88,7 +87,6 @@ jobs:
 
     - name: Attest image
       uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26  # v4.1.0
-      continue-on-error: true # continue for now until we see it working in action
       with:
         subject-name: ${{ env.DOCKER_IMAGE_NAME }}
         subject-digest: ${{ steps.docker-push.outputs.digest }}
