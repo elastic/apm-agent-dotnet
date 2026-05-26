@@ -24,7 +24,7 @@ Host startup hook
 
 
 ::::{warning}
-Native AOT is not supported. See [Supported .NET runtimes](/reference/supported-technologies.md#supported-dotnet-runtimes) for details.
+Native AOT is not supported. Refer to [Supported .NET runtimes](/reference/supported-technologies.md#supported-dotnet-runtimes) for details.
 ::::
 
 ## Choosing an approach [choosing-an-approach]
