@@ -22,8 +22,9 @@
       # ZIG
       - name: Zig
         if: "${{ inputs.rust == 'true' && runner.os == 'Linux' }}"
-        shell: bash
-        run: sudo snap install zig --beta --classic
+        uses: mlugg/setup-zig@v2
+        with:
+          version: "0.13.0"
   
       # RUST
       - name: Rustup
@@ -50,7 +51,7 @@
 
       - name: Install terraform
         if: "${{ runner.os == 'Linux' }}"
-        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.11.2
       

@@ -69,6 +69,40 @@ namespace Elastic.Apm.Config
 				info.Log("Process ID: {ProcessId}", Process.GetCurrentProcess().Id);
 				info.Log("Process Name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 				info.Log("Command line arguments: '{ProcessArguments}'", string.Join(", ", System.Environment.GetCommandLineArgs()));
+				info.Log("AppDomain ID: {AppDomainId}", AppDomain.CurrentDomain.Id);
+				info.Log("AppDomain Name: {AppDomainFriendlyName}", AppDomain.CurrentDomain.FriendlyName);
+				info.Log("AppDomain BaseDirectory: {AppDomainBaseDirectory}", AppDomain.CurrentDomain.BaseDirectory);
+				info.Log("AppDomain IsDefault: {AppDomainIsDefault}", AppDomain.CurrentDomain.IsDefaultAppDomain());
+#if NETFRAMEWORK
+				try
+				{
+					info.Log("AppDomain Config File: {AppDomainConfigFile}", AppDomain.CurrentDomain.SetupInformation.ConfigurationFile);
+					info.Log("AppDomain Shadow Copy: {AppDomainShadowCopy}", AppDomain.CurrentDomain.SetupInformation.ShadowCopyFiles);
+				}
+				catch (Exception e)
+				{
+					info.Log("AppDomain setup info unavailable: {Error}", e.Message);
+				}
+				// Reflect against System.Web only if it is already loaded — avoids pulling the assembly into
+				// non-IIS processes (console apps, Windows services) where it has no business being loaded.
+				try
+				{
+					var systemWebAssembly = AppDomain.CurrentDomain.GetAssemblies()
+						.FirstOrDefault(a => string.Equals(a.GetName().Name, "System.Web", StringComparison.OrdinalIgnoreCase));
+					var hostingEnvType = systemWebAssembly?.GetType("System.Web.Hosting.HostingEnvironment");
+					var isHosted = hostingEnvType != null && (bool)(hostingEnvType.GetProperty("IsHosted")?.GetValue(null) ?? false);
+					info.Log("IIS Hosted: {IisHosted}", isHosted);
+					if (isHosted)
+					{
+						info.Log("IIS Site Name: {IisSiteName}", hostingEnvType.GetProperty("SiteName")?.GetValue(null) ?? "<unknown>");
+						info.Log("IIS Application Virtual Path: {IisVirtualPath}", hostingEnvType.GetProperty("ApplicationVirtualPath")?.GetValue(null) ?? "<unknown>");
+					}
+				}
+				catch (Exception e)
+				{
+					info.Log("IIS hosting info unavailable: {Error}", e.Message);
+				}
+#endif
 				info.Log("Operating System: {OSDescription}", RuntimeInformation.OSDescription);
 				info.Log("CPU architecture: {OSArchitecture}", RuntimeInformation.OSArchitecture);
 				info.Log("Host: {HostName}", System.Environment.MachineName);

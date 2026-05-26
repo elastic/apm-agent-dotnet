@@ -43,10 +43,17 @@ namespace Elastic.Apm.Profiler.Managed
 				// was instantiated here.
 				// ReSharper disable once ConvertIfToOrExpression
 				if (System.Web.Hosting.HostingEnvironment.IsHosted)
+				{
+					Logger.Log(LogLevel.Debug,
+						"IIS hosted application detected (HostingEnvironment.IsHosted=true) — skipping agent instantiation. "
+						+ "The agent will be configured by ElasticApmModule; native profiler ReJIT hooks will provide SQL/HTTP instrumentation. "
+						+ "Application: {0}",
+						System.Web.Hosting.HostingEnvironment.ApplicationVirtualPath ?? "(unknown)");
 					skipInstantiation = true;
+				}
 #endif
 				Logger.Log(LogLevel.Debug,
-					"{0}: value of {1}", $"{nameof(AutoInstrumentation)}.{nameof(Initialize)}", skipInstantiation);
+					"{0}: skipInstantiation={1}", $"{nameof(AutoInstrumentation)}.{nameof(Initialize)}", skipInstantiation);
 
 				// ensure global instance is created if it's not already
 				if (!skipInstantiation)

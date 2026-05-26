@@ -196,16 +196,16 @@ namespace Elastic.Apm.Tests
 			for (var i = 0; i < count; i++)
 			{
 				using var transaction = source.StartActivity($"Trace {i}");
-				using var span = new Activity("UnitTestActivity").Start();
+				using var span = source.StartActivity("UnitTestActivity", ActivityKind.Internal);
 				await Task.Delay(1);
 			}
-			//Activity.Current.Should().BeNull();
 			payloadSender.WaitForTransactions(count: count);
 
 			var sampled = payloadSender.Transactions.Where(t => t.IsSampled).ToArray();
 			sampled.Length.Should().BeLessThan(count);
 			sampled.Length.Should().BeGreaterThan(count / 10);
 
+			payloadSender.WaitForSpans(count: sampled.Length);
 			var sampledSpans = payloadSender.Spans.Where(t => t.IsSampled).ToArray();
 			sampledSpans.Length.Should().Be(sampled.Length);
 		}

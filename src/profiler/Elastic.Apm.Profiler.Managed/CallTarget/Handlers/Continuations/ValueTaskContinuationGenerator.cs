@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Elastic.Apm.Profiler.Managed.CallTarget.Handlers.Continuations
 {
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET
 	internal class ValueTaskContinuationGenerator<TIntegration, TTarget, TReturn> : ContinuationGenerator<TTarget, TReturn>
 	{
 		private static readonly Func<TTarget, object, Exception, CallTargetState, object> _continuation;

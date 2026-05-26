@@ -76,6 +76,19 @@ namespace Elastic.Apm.DiagnosticListeners
 				{
 					if (statusCodeObject is HttpStatusCode statusCode)
 					{
+						// HttpHandlerDiagnosticListener fires Ex.Stop for every non-redirect response, including
+						// intermediate 401 challenges during NTLM/Negotiate authentication. Detect these by checking
+						// the WWW-Authenticate header (also present in the Ex.Stop payload) and keep the span alive
+						// so the subsequent Stop event can record the final status code instead.
+						if (statusCode == HttpStatusCode.Unauthorized && IsNtlmOrNegotiateChallenge(eventValue))
+						{
+							Logger.Trace()?.Log("NTLM/Negotiate 401 challenge detected - keeping span open for final response. Request URL: {RequestUrl}", requestUrl);
+							if (ProcessingRequests.TryAdd(request, span))
+								return;
+							Logger.Error()?.Log("Failed to re-add span after NTLM challenge - ending span to avoid leak. Request URL: {RequestUrl}", requestUrl);
+							// Fall through to record the 401 and end the span
+						}
+
 						span.Context.Http.StatusCode = (int)statusCode;
 
 						if (span.Context.Http.StatusCode >= 300)
@@ -95,6 +108,38 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 
 			span.End();
+		}
+
+		// Exposed as internal so tests can exercise header parsing directly without going through reflection.
+		internal static bool IsNtlmOrNegotiateChallenge(WebHeaderCollection headers)
+		{
+			var wwwAuthenticate = headers?[HttpResponseHeader.WwwAuthenticate];
+			if (string.IsNullOrEmpty(wwwAuthenticate))
+				return false;
+
+			// Parse the scheme token from each comma-delimited challenge. Taking the first whitespace-delimited
+			// token per challenge avoids false-positives such as Basic realm="Negotiate" where "Negotiate" is a
+			// realm value, not a scheme name.
+			foreach (var part in wwwAuthenticate.Split(','))
+			{
+				var challenge = part.Trim();
+				if (string.IsNullOrEmpty(challenge))
+					continue;
+
+				var spaceIndex = challenge.IndexOf(' ');
+				var scheme = spaceIndex < 0 ? challenge : challenge.Substring(0, spaceIndex);
+
+				if (scheme.Equals("NTLM", StringComparison.OrdinalIgnoreCase) ||
+					scheme.Equals("Negotiate", StringComparison.OrdinalIgnoreCase))
+					return true;
+			}
+			return false;
+		}
+
+		private static bool IsNtlmOrNegotiateChallenge(object eventValue)
+		{
+			var headersObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty("Headers")?.GetValue(eventValue);
+			return headersObject is WebHeaderCollection headers && IsNtlmOrNegotiateChallenge(headers);
 		}
 	}
 }

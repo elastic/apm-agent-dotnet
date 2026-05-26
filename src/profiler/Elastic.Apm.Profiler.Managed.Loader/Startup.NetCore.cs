@@ -22,10 +22,13 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         private static string ResolveDirectory()
         {
 			var version = Environment.Version;
-			// use netcoreapp3.1 for netcoreapp3.1 and later
-			var framework = version.Major == 3 && version.Minor >= 1 || version.Major >= 6
-				? "netstandard2.1"
-				: "netstandard2.0";
+			string framework;
+			if (version.Major >= 8)
+				framework = "net8.0";
+			else if ((version.Major == 3 && version.Minor >= 1) || version.Major >= 5)
+				framework = "netstandard2.1";
+			else
+				framework = "netstandard2.0";
 
             var directory = ReadEnvironmentVariable("ELASTIC_APM_PROFILER_HOME") ?? string.Empty;
 			Logger.Log(LogLevel.Debug, "Resolving assemblies from {0}", directory);
@@ -51,6 +54,12 @@ namespace Elastic.Apm.Profiler.Managed.Loader
 
 			Logger.Log(LogLevel.Trace, "Probing: {0}, exists on disk: {1}", path, exists);
 
+			if (!exists)
+			{
+				Logger.Log(LogLevel.Debug, "AssemblyResolve: {0} not found in profiler directory, returning null", assemblyName.Name);
+				return null;
+			}
+
             // Only load the main Elastic.Apm.Profiler.Managed.dll into the default Assembly Load Context.
             // If Elastic.Apm or other libraries are provided by the NuGet package, their loads are handled in the following two ways.
             // 1) The AssemblyVersion is greater than or equal to the version used by Elastic.Apm.Profiler.Managed, the assembly
@@ -58,20 +67,27 @@ namespace Elastic.Apm.Profiler.Managed.Loader
             // 2) The AssemblyVersion is lower than the version used by Elastic.Apm.Profiler.Managed, the assembly will fail to load
             //    and invoke this resolve event. It must be loaded in a separate AssemblyLoadContext since the application will only
             //    load the originally referenced version
-			if (exists)
+			try
 			{
 				if (assemblyName.Name.StartsWith("Elastic.Apm.Profiler.Managed", StringComparison.OrdinalIgnoreCase)
 					&& assemblyName.FullName.IndexOf("PublicKeyToken=ae7400d2c189cf22", StringComparison.OrdinalIgnoreCase) >= 0)
 				{
-					Logger.Log(LogLevel.Debug, "Loading {0} assembly using Assembly.LoadFrom", assemblyName);
-					return Assembly.LoadFrom(path);
+					Logger.Log(LogLevel.Debug, "Loading {0} assembly using Assembly.LoadFrom", assemblyName.Name);
+					var assembly = Assembly.LoadFrom(path);
+					Logger.Log(LogLevel.Debug, "Loaded {0} from {1}", assemblyName.Name, assembly.Location);
+					return assembly;
 				}
 
-				Logger.Log(LogLevel.Debug, "Loading {0} assembly using DependencyLoadContext.LoadFromAssemblyPath", assemblyName);
-				return DependencyLoadContext.LoadFromAssemblyPath(path);
+				Logger.Log(LogLevel.Debug, "Loading {0} assembly using DependencyLoadContext.LoadFromAssemblyPath", assemblyName.Name);
+				var depAssembly = DependencyLoadContext.LoadFromAssemblyPath(path);
+				Logger.Log(LogLevel.Debug, "Loaded {0} from {1}", assemblyName.Name, depAssembly.Location);
+				return depAssembly;
 			}
-
-			return null;
+			catch (Exception e)
+			{
+				Logger.Log(LogLevel.Error, e, "AssemblyResolve: failed to load {0} from {1}", assemblyName.Name, path);
+				return null;
+			}
         }
     }
 

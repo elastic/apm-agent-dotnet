@@ -485,7 +485,7 @@ pub fn load_integrations() -> Result<Vec<Integration>, HRESULT> {
     })?;
 
     let reader = BufReader::new(file);
-    let mut integrations: Vec<Integration> = serde_yaml::from_reader(reader).map_err(|e| {
+    let mut integrations: Vec<Integration> = serde_yml::from_reader(reader).map_err(|e| {
         log::warn!(
             "problem reading integrations file {}: {}. profiler is disabled.",
             &path,

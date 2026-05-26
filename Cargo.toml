@@ -8,5 +8,10 @@ members = [
 [profile.release]
 lto = true
 codegen-units = 1
+# Emit a PDB next to the release DLL on Windows so customer crash dumps
+# resolve to named frames / source lines. The PDB is a separate file; the DLL
+# is unaffected. On Linux, debug = true embeds DWARF into the .so; the
+# strip-release-linux-debuginfo task in Makefile.toml strips it before packaging.
+debug = true
 # reduce binary size by not unwinding on panic to get a backtrace
 #panic = "abort"
