@@ -39,7 +39,7 @@ dotnet add package Elastic.Apm.Azure.Functions
 
 ### Step 2: Add the tracing middleware [_step_2_add_the_tracing_middleware]
 
-Register `ApmMiddleware` in your `Program.cs`. The following element uses `ConfigureFunctionsWebApplication`, which is the recommended approach when using the [ASP.NET Core integration](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide#aspnet-core-integration) (requires the `Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore` package):
+Register `ApmMiddleware` in your `Program.cs`. The following example uses `ConfigureFunctionsWebApplication`, which is the recommended approach when using the [ASP.NET Core integration](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide#aspnet-core-integration) (requires the `Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore` package):
 
 ```csharp
 using Elastic.Apm.Azure.Functions;
