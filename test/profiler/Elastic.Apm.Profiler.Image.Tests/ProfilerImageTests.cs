@@ -26,6 +26,9 @@ public class ProfilerImageTests(ProfilerImageFixture fixture) : IClassFixture<Pr
 	[ProfilerImageFact]
 	public void Container_RunsAs_NonRoot_User()
 	{
+		if (fixture.SkipReason is not null)
+			Assert.Fail(fixture.SkipReason);
+
 		var (exitCode, stdout) = Docker("run", "--rm", fixture.ImageTag!, "id", "-u");
 
 		exitCode.Should().Be(0);
@@ -35,12 +38,19 @@ public class ProfilerImageTests(ProfilerImageFixture fixture) : IClassFixture<Pr
 	[ProfilerImageFact]
 	public void Agent_Files_Are_Present_And_Readable()
 	{
+		if (fixture.SkipReason is not null)
+			Assert.Fail(fixture.SkipReason);
+
 		foreach (var file in ExpectedFiles)
 		{
 			var (exitCode, _) = Docker("run", "--rm", fixture.ImageTag!,
 				"sh", "-c", $"test -r /usr/agent/apm-dotnet-agent/{file}");
 			exitCode.Should().Be(0, $"'{file}' should be present and readable at /usr/agent/apm-dotnet-agent/");
 		}
+
+		var (soExit, _) = Docker("run", "--rm", fixture.ImageTag!,
+			"sh", "-c", "test -x /usr/agent/apm-dotnet-agent/libelastic_apm_profiler.so");
+		soExit.Should().Be(0, "libelastic_apm_profiler.so must have execute permission for the CLR to load it");
 	}
 
 	/// <summary>
@@ -51,10 +61,20 @@ public class ProfilerImageTests(ProfilerImageFixture fixture) : IClassFixture<Pr
 	[ProfilerImageFact]
 	public void InitContainer_CopiesFiles_ToSharedVolume()
 	{
+		if (fixture.SkipReason is not null)
+			Assert.Fail(fixture.SkipReason);
+
 		var volume = $"apm-agent-dotnet-imagetest-{Guid.NewGuid():N}";
 		Docker("volume", "create", volume).ExitCode.Should().Be(0);
 		try
 		{
+			// Docker named volumes are root:root 0755 by default; Kubernetes emptyDir volumes
+			// are 0777. Run a one-shot root container to replicate k8s emptyDir permissions
+			// so the non-root user (65532) can write to the volume.
+			Docker("run", "--rm", "-v", $"{volume}:/target", "--user", "0",
+				fixture.ImageTag!, "sh", "-c", "chmod 777 /target")
+				.ExitCode.Should().Be(0, "volume must be world-writable to simulate k8s emptyDir");
+
 			var (cpExit, _) = Docker("run", "--rm",
 				"-v", $"{volume}:/target",
 				fixture.ImageTag!,

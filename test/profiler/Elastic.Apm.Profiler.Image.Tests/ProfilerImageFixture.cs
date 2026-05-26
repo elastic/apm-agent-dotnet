@@ -24,7 +24,9 @@ public sealed class ProfilerImageFixture(IMessageSink sink) : IAsyncLifetime
 	{
 		var buildOutput = Path.Combine(SolutionPaths.Root, "build", "output");
 		var zipFile = Directory.Exists(buildOutput)
-			? Directory.GetFiles(buildOutput, "elastic_apm_profiler_*-linux-x64.zip").FirstOrDefault()
+			? Directory.GetFiles(buildOutput, "elastic_apm_profiler_*-linux-x64.zip")
+				.OrderByDescending(f => new FileInfo(f).LastWriteTimeUtc)
+				.FirstOrDefault()
 			: null;
 
 		if (zipFile is null)
