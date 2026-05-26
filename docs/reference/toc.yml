@@ -1,6 +1,7 @@
 project: 'APM .NET agent reference'
 toc:
   - file: index.md
+  - file: supported-technologies.md
   - file: set-up-apm-net-agent.md
     children:
       - file: setup-auto-instrumentation.md
@@ -22,7 +23,6 @@ toc:
       - file: setup-azure-storage.md
       - file: setup-mongo-db.md
       - file: setup-kafka.md
-  - file: supported-technologies.md
   - file: configuration.md
     children:
       - file: configuration-on-asp-net-core.md
