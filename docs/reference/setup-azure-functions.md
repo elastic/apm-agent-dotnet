@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-azure-functions.html
+description: "Set up the Elastic APM .NET agent to trace Azure Functions invocations using the isolated worker or in-process execution model."
 applies_to:
   stack:
   serverless:
@@ -14,6 +15,17 @@ applies_to:
 The .NET APM Agent can trace function invocations in an [Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions) app. Two execution models are supported.
 
 **Don't know which model you're using?** Isolated worker is the recommended and current model. In-process is legacy (reaching end-of-support November 10, 2026). If you're creating a new Azure Function app, use **isolated worker**. If you have an existing in-process app and want to add APM, you'll find instructions in the in-process section below.
+
+## Supported versions [_supported_versions_azure_functions]
+
+| Hosting model | Package | Supported versions |
+| --- | --- | --- |
+| Isolated worker | `Microsoft.Azure.Functions.Worker` | ≥2.0.0 <3.0.0 |
+| In-process (legacy, deprecated) | `Microsoft.Azure.Functions.Extensions` | ≥1.1.0 <2.0.0 |
+
+Runtime requirements: The isolated worker model requires .NET 8+. The in-process model supports .NET Framework 4.7.2+ and .NET 8+ (with `FUNCTIONS_INPROC_NET8_ENABLED=1`).
+
+For the full compatibility matrix including supported installation methods, refer to [Azure Functions](/reference/supported-technologies.md#supported-azure-functions).
 
 
 ## Prerequisites [_prerequisites]
