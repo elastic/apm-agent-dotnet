@@ -536,7 +536,7 @@ Some technologies are not covered by the profiler and require a dedicated Elasti
 
 For technologies that the profiler already covers, dedicated NuGet packages also exist, for example [Entity Framework Core](/reference/setup-ef-core.md), [SqlClient](/reference/setup-sqlclient.md), [MongoDB](/reference/setup-mongo-db.md), [gRPC](/reference/setup-grpc.md), [Azure Service Bus](/reference/setup-azure-servicebus.md), and [Azure Storage](/reference/setup-azure-storage.md). You can add these packages alongside the profiler; both mechanisms use the same `DiagnosticSource`/`Activity`-based instrumentation and do not conflict with each other.
 
-See [Supported technologies](/reference/supported-technologies.md) for the full table showing which technologies are covered by the profiler, by NuGet packages, or by both.
+Refer to [Supported technologies](/reference/supported-technologies.md) for the full table showing which technologies are covered by the profiler, by NuGet packages, or by both.
 
 ::::{important}
 When combining the profiler with any Elastic APM NuGet integration packages, every package version must exactly match the version of the profiler zip file. A version mismatch will cause errors at startup.
