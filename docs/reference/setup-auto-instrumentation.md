@@ -224,7 +224,7 @@ The general steps in configuring profiler auto instrumentation are as follows. S
    Setting `OTEL_LOG_LEVEL=debug` produces more verbose output useful during troubleshooting. See [Troubleshoot APM .NET Agent](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md) for further guidance.
 
 ::::{note}
-Under the hood, the .NET runtime loads Elastic's CLR profiler into the process early in startup. For .NET Framework, the profiler uses IL rewriting to instrument methods directly. For .NET, it additionally uses the startup hook mechanism to load `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge, which together cover the broader set of technologies marked †.
+At runtime, the .NET runtime loads Elastic's CLR profiler into the process early in startup. For .NET Framework, the profiler uses IL rewriting to instrument methods directly. For .NET, it additionally uses the startup hook mechanism to load `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge, which together cover the broader set of technologies marked †.
 ::::
 
 
