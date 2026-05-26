@@ -561,7 +561,7 @@ The profiler auto instrumentation has its own set of environment variables to ma
 `ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS` *(optional)*
 :   A semicolon-separated list of integrations to exclude from auto-instrumentation. Valid values are: `AdoNet`, `AspNet`, `Kafka`, `MySqlCommand`, `NpgsqlCommand`, `OracleCommand`, `RabbitMQ`, `SqlCommand`, `SqliteCommand`.
 
-    This variable only controls integrations that use IL rewriting (the `integrations.yml`-based mechanism). Technologies instrumented via the startup hook (such as ASP.NET Core, Entity Framework Core, Elasticsearch, gRPC, Azure SDKs, and MongoDB) cannot be selectively disabled using this variable.
+    This variable only controls integrations that use IL rewriting (the `integrations.yml`-based mechanism). Technologies instrumented using the startup hook (such as ASP.NET Core, Entity Framework Core, Elasticsearch, gRPC, Azure SDKs, and MongoDB) cannot be selectively turned off using this variable.
 
 `ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES` *(optional)*
 :   A semi-colon separated list of process names to exclude from auto-instrumentation. For example, `dotnet.exe;powershell.exe`. Can be used in scenarios where profiler environment variables have a global scope that would end up auto-instrumenting applications that should not be.
