@@ -55,5 +55,5 @@ using Elastic.Apm.MongoDb;
 Agent.Subscribe(new MongoDbDiagnosticsSubscriber());
 ```
 
-Make sure this is called only once. Calling it multiple times causes MongoDB operations to be captured as duplicate spans.
+Make sure this is called only once. Calling it multiple times causes the agent to record duplicate spans for MongoDB operations.
 
