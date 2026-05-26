@@ -498,7 +498,7 @@ systemctl reload-or-restart <service>
 
 ## Augmenting profiler coverage with NuGet packages [augmenting-with-nuget]
 
-The profiler captures spans automatically for the supported libraries and frameworks listed above. It cannot, however, instrument your own application code. For example: a background job, a business operation you want to trace, or a code path that doesn't go through a supported library will not be automatically traced. For that, use the [Public API](/reference/public-api.md) to create custom transactions and spans manually.
+The profiler captures spans automatically for the supported libraries and frameworks listed in the preceding section. It cannot, however, instrument your own application code. For example: a background job, a business operation you want to trace, or a code path that doesn't go through a supported library will not be automatically traced. For that, use the [Public API](/reference/public-api.md) to create custom transactions and spans manually.
 
 ### Custom instrumentation with the Public API [augmenting-public-api]
 
