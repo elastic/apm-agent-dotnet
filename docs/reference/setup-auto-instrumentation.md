@@ -22,7 +22,7 @@ Profiler auto instrumentation lets you add APM to a .NET application (including 
 ::::
 
 ::::{tip}
-Not sure whether profiler auto instrumentation is the right setup for your application? See [Choosing an approach](/reference/set-up-apm-net-agent.md#choosing-an-approach) for a comparison of zero-code and code-based options.
+Not sure whether profiler auto instrumentation is the right setup for your application? Refer to [Choosing an approach](/reference/set-up-apm-net-agent.md#choosing-an-approach) for a comparison of zero-code and code-based options.
 ::::
 
 This approach supports the following platforms and runtimes:
