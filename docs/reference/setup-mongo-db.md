@@ -42,7 +42,7 @@ var mongoClient = new MongoClient(settings);
 
 ### Step 3: Subscribe the agent
 
-How you complete the setup depends on how the APM agent was added to your application:
+How you complete the setup depends on how you added the APM agent to your application:
 
 **Using `Elastic.Apm.NetCoreAll`** (the all-in-one package for ASP.NET Core) — no further action is needed. MongoDB calls are captured automatically on every active transaction.
 
