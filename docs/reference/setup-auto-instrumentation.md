@@ -100,7 +100,7 @@ Auto instrumentation using the .NET CLR Profiling API can be used in conjunction
 * The [Public API](/reference/public-api.md) to perform manual instrumentation.
 * NuGet packages that perform instrumentation using an `IDiagnosticsSubscriber` to subscribe to diagnostic events.
 
-The version number of NuGet packages referenced by a project instrumented with a profiler must be the same as the version number of the profiler zip file used.
+NuGet packages must use the same version number as the profiler zip file.
 ::::
 
 ## Prerequisites [_prerequisites]
