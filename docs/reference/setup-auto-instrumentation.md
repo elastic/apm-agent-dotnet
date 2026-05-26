@@ -559,7 +559,7 @@ The profiler auto instrumentation has its own set of environment variables to ma
 :   The path to the integrations.yml file that determines which methods to target for auto instrumentation. You don't normally need to set this. The profiler automatically looks for `integrations.yml` in the directory specified by `ELASTIC_APM_PROFILER_HOME`. Set it only if your integrations file is at a different location.
 
 `ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS` *(optional)*
-:   A semi-colon separated list of integrations to exclude from auto-instrumentation. Valid values are: `AdoNet`, `AspNet`, `Kafka`, `MySqlCommand`, `NpgsqlCommand`, `OracleCommand`, `RabbitMQ`, `SqlCommand`, `SqliteCommand`.
+:   A semicolon-separated list of integrations to exclude from auto-instrumentation. Valid values are: `AdoNet`, `AspNet`, `Kafka`, `MySqlCommand`, `NpgsqlCommand`, `OracleCommand`, `RabbitMQ`, `SqlCommand`, `SqliteCommand`.
 
     This variable only controls integrations that use IL rewriting (the `integrations.yml`-based mechanism). Technologies instrumented via the startup hook (such as ASP.NET Core, Entity Framework Core, Elasticsearch, gRPC, Azure SDKs, and MongoDB) cannot be selectively disabled using this variable.
 
