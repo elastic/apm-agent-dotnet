@@ -411,7 +411,7 @@ You can also set these variables through IIS Manager: select your Application Po
 ::::
 
 ::::{warning}
-Avoid setting these as machine-wide system environment variables. Doing so loads the profiler into **every** .NET process on the host. If AppCmd is unavailable and system-level variables are your only option, use `ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES` or `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` (see [Profiler environment variables](#profiler-configuration)) to limit scope.
+Avoid setting these as machine-wide system environment variables. Doing so loads the profiler into **every** .NET process on the host. If AppCmd is unavailable and system-level variables are your only option, use `ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES` or `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` (refer to [Profiler environment variables](#profiler-configuration)) to limit scope.
 ::::
 
 
