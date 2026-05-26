@@ -46,9 +46,9 @@ It instruments the following technologies:
 | Technology | Required library |
 | --- | --- |
 | ASP.NET | built-in (.NET Framework) |
-| ASP.NET Core | built-in (.NET), via startup hook† |
-| HTTP client | built-in (.NET), via startup hook† |
-| gRPC client | [Grpc.Net.Client ≥2.23.2 <3.0.0](https://www.nuget.org/packages/Grpc.Net.Client), via startup hook† |
+| ASP.NET Core | built-in (.NET), using startup hook† |
+| HTTP client | built-in (.NET), using startup hook† |
+| gRPC client | [Grpc.Net.Client ≥2.23.2 <3.0.0](https://www.nuget.org/packages/Grpc.Net.Client), using startup hook† |
 
 ::::{note}
 gRPC server calls in ASP.NET Core applications are captured automatically using ASP.NET Core instrumentation. No separate integration is needed for the server side.
