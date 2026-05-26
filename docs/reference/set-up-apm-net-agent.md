@@ -52,4 +52,4 @@ For the full breakdown of which technologies are supported by each method, refer
 
 ## Next: Configure the agent [configure-the-agent]
 
-Once installed, the agent needs to know where to send data. At a minimum you'll need to set your APM Server URL, an authentication credential, and optionally a service name. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings that every deployment needs.
+Once installed, the agent needs to know where to send data. At a minimum you'll need to set your APM Server URL, an authentication credential, and optionally a service name. Refer to [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings that every deployment needs.
