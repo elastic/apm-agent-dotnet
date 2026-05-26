@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-auto-instrumentation.html
+description: "Step-by-step guidance for enabling profiler-based, zero-code auto instrumentation in .NET applications by configuring environment variables and startup settings."
 applies_to:
   stack:
   serverless:
