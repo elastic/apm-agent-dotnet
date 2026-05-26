@@ -39,7 +39,7 @@ The three approaches can be used independently or in combination. Use the guidan
 | Want zero-code-change entry point *and* richer coverage for specific libraries | Profiler + NuGet augmentation — add the relevant integration packages alongside the profiler |
 | Library already emits native OpenTelemetry spans (for example, `Elastic.Clients.Elasticsearch`, MongoDB Driver ≥3.7) | Profiler or NuGet provides the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) automatically — no extra Elastic integration package needed |
 
-For the full breakdown of which technologies are supported by each method, see [Supported technologies](/reference/supported-technologies.md).
+For the full breakdown of which technologies are supported by each method, refer to [Supported technologies](/reference/supported-technologies.md).
 
 ## Get started [_get_started]
 
