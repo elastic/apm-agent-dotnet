@@ -22,7 +22,7 @@
       # ZIG
       - name: Zig
         if: "${{ inputs.rust == 'true' && runner.os == 'Linux' }}"
-        uses: mlugg/setup-zig@v1
+        uses: mlugg/setup-zig@v2
         with:
           version: "0.13.0"
   
