@@ -269,7 +269,7 @@ ENTRYPOINT ["dotnet", "your-application.dll"]
 3. The name used to identify your service in APM.
 
 ::::{important}
-Pass `ELASTIC_APM_SERVER_URL` and `ELASTIC_APM_API_KEY` at container runtime rather than baking them into the image. For example, pass them with `docker run -e ELASTIC_APM_SERVER_URL=... -e ELASTIC_APM_API_KEY=...` or via your orchestrator's secret injection.
+Pass `ELASTIC_APM_SERVER_URL` and `ELASTIC_APM_API_KEY` at container runtime rather than baking them into the image. For example, pass them with `docker run -e ELASTIC_APM_SERVER_URL=... -e ELASTIC_APM_API_KEY=...` or using your orchestrator's secret injection.
 ::::
 
 
