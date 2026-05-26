@@ -29,7 +29,7 @@ If you are **not** already using `Elastic.Apm.NetCoreAll`, install [`Elastic.Apm
 dotnet add package Elastic.Apm.MongoDb
 ```
 
-### Step 2: Configure the MongoClient
+### Step 2: Configure the `MongoClient`
 
 Register the `MongoDbEventSubscriber` when creating your `MongoClient`:
 
