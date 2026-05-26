@@ -459,7 +459,7 @@ kubectl create secret generic elastic-apm-secret \
 
 ### systemd / systemctl [_systemd_systemctl]
 
-On Linux, environment variables can be added to specific services managed by systemd by creating an environment file (e.g., `elastic-apm.env`) containing the following:
+On Linux, environment variables can be added to specific services managed by `systemd` by creating an environment file (for example, `elastic-apm.env`) containing the following:
 
 ```sh
 CORECLR_ENABLE_PROFILING=1
