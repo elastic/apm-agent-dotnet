@@ -2,6 +2,7 @@
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/serilog.html
 description: "How to integrate the Elastic APM .NET agent with Serilog to automatically inject trace and transaction IDs into structured log output."
+navigation_title: Serilog
 applies_to:
   stack:
   serverless:
@@ -10,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Serilog [serilog]
+# Serilog log correlation [serilog]
 
 We offer a [Serilog Enricher](https://github.com/serilog/serilog/wiki/Enrichment) that adds the trace id to every log line that is created during an active trace.
 

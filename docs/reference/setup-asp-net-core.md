@@ -14,6 +14,15 @@ applies_to:
 # Set up ASP.NET Core instrumentation [setup-asp-net-core]
 
 
+## Supported versions [_supported_versions_asp_net_core]
+
+| Framework | Supported versions |
+| --- | --- |
+| ASP.NET Core | ≥8.0.0 ≤10.0.x |
+
+For the full compatibility matrix including supported installation methods, refer to [Web frameworks](/reference/supported-technologies.md#supported-web-frameworks).
+
+
 ## Quick start [_quick_start_2]
 
 For ASP.NET Core, once you reference the [`Elastic.Apm.NetCoreAll`](https://www.nuget.org/packages/Elastic.Apm.NetCoreAll) package, you can enable every agent component by calling the `AddAllElasticApm()` extension method on the `IServiceCollection` in the `Program.cs` file.

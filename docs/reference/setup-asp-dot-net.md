@@ -14,6 +14,15 @@ applies_to:
 # Set up ASP.NET instrumentation [setup-asp-dot-net]
 
 
+## Supported versions [_supported_versions_asp_net]
+
+| Framework | Supported versions |
+| --- | --- |
+| ASP.NET (.NET Framework) | 4.6.2–4.8.1 (IIS 10) |
+
+For the full compatibility matrix including supported installation methods, refer to [Web frameworks](/reference/supported-technologies.md#supported-web-frameworks).
+
+
 ## Quick start [_quick_start_4]
 
 To enable tracing for ASP.NET (.NET Framework), install the `Elastic.Apm.AspNetFullFramework` package, add a reference to the package in your `web.config` file, and then compile and deploy your application.
@@ -102,3 +111,8 @@ Our IIS module requires:
     Now, the `ElasticApmModule` will use the instantiated instance of the APM agent upon initialization.
 
 
+## Configure the agent [asp-net-configuration]
+
+After adding the agent, configure it to connect to your APM Server. The fastest way is through environment variables or `web.config`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
+
+For the full list of configuration options available to ASP.NET applications, see [Configuration on ASP.NET](/reference/configuration-on-asp-net.md).

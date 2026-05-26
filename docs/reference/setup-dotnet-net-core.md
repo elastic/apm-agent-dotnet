@@ -14,6 +14,15 @@ applies_to:
 # Set up .NET 8+ instrumentation [setup-dotnet-net-core]
 
 
+## Supported versions [_supported_versions_dotnet_net_core]
+
+| Runtime | Supported versions |
+| --- | --- |
+| .NET | ≥8.0 ≤10.0.x |
+
+For the full list of supported runtime versions, refer to [Supported .NET runtimes](/reference/supported-technologies.md#supported-dotnet-runtimes).
+
+
 ## Quick start [_quick_start_3]
 
 In .NET applications using `Microsoft.Extensions.Hosting`, the agent can be registered on the `IServiceCollection`. This applies to ASP.NET Core and to other .NET applications that depend on the hosting APIs, such as those created using the [worker services](https://learn.microsoft.com/en-us/dotnet/core/extensions/workers) template.
@@ -190,3 +199,10 @@ With this setup, the agent will be injected into the application during startup,
 Agent configuration can be controlled through environment variables when using the startup hook feature.
 
 ::::
+
+
+## Configure the agent [dotnet-net-core-configuration]
+
+After adding the agent, configure it to connect to your APM Server. The fastest way is through environment variables or `appsettings.json`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
+
+To set configuration values programmatically, see [Overriding configuration values programmatically](/reference/configuration-on-asp-net-core.md#asp-net-core-programmatic-config).
