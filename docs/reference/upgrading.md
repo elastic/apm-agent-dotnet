@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/upgrading.html
+description: "Guidance for upgrading the Elastic APM .NET agent between versions, including links to release notes and agent-server compatibility information."
 ---
 
 # Upgrading [upgrading]

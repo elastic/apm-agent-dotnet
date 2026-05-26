@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-azure-servicebus.html
+description: "How to enable Elastic APM .NET agent instrumentation of Azure Service Bus messaging operations for both the current and legacy SDK versions."
+navigation_title: Azure Service Bus
 applies_to:
   stack:
   serverless:
@@ -9,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Azure Service Bus [setup-azure-servicebus]
+# Set up Azure Service Bus instrumentation [setup-azure-servicebus]
 
 
 ## Supported versions [_supported_versions_servicebus]
@@ -19,7 +21,7 @@ applies_to:
 | `Azure.Messaging.ServiceBus` (current) | ≥7.0.0 <8.0.0 |
 | `Microsoft.Azure.ServiceBus` (legacy, deprecated) | ≥3.0.0 <6.0.0 |
 
-For the full compatibility matrix including supported installation methods, see [Messaging systems](/reference/supported-technologies.md#supported-messaging-systems).
+For the full compatibility matrix including supported installation methods, refer to [Messaging systems](/reference/supported-technologies.md#supported-messaging-systems).
 
 
 ## Quick start [_quick_start_12]
@@ -46,18 +48,27 @@ The subscribers are registered automatically — no further action is required.
 **If using `Azure.Messaging.ServiceBus` (current SDK):**
 
 ```csharp
+using Elastic.Apm;
+using Elastic.Apm.Azure.ServiceBus;
+
 Agent.Subscribe(new AzureMessagingServiceBusDiagnosticsSubscriber());
 ```
 
 **If using `Microsoft.Azure.ServiceBus` (legacy, deprecated):**
 
 ```csharp
+using Elastic.Apm;
+using Elastic.Apm.Azure.ServiceBus;
+
 Agent.Subscribe(new MicrosoftAzureServiceBusDiagnosticsSubscriber());
 ```
 
 For ASP.NET Core applications, call `Agent.Subscribe()` in your `Program.cs`:
 
 ```csharp
+using Elastic.Apm;
+using Elastic.Apm.Azure.ServiceBus;
+
 var builder = WebApplication.CreateBuilder(args);
 
 Agent.Subscribe(new AzureMessagingServiceBusDiagnosticsSubscriber());
@@ -116,7 +127,7 @@ When receiving or processing a batch of messages, the agent creates a span link 
 
 Before Service Bus tracing will work, ensure the agent is connected to your APM Server. See [Minimum configuration](/reference/configuration.md#minimum-configuration) to configure:
 
-* `ELASTIC_APM_SERVER_URLS` — APM Server endpoint
+* `ELASTIC_APM_SERVER_URL` — APM Server endpoint
 * `ELASTIC_APM_SERVICE_NAME` — Your application's name
 
 ::::{tip}

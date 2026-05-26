@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-supportability.html
+description: "Reference for supportability configuration options that control agent logging level and diagnostic output."
 applies_to:
   stack:
   serverless:

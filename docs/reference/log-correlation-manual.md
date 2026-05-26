@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/log-correlation-manual.html
+description: "How to manually inject APM trace IDs into structured or unstructured log output when the agent's built-in logging integrations are not available."
 applies_to:
   stack:
   serverless:
@@ -26,6 +27,8 @@ Given a transaction object, you can obtain its trace id by using the `Transactio
 You can also use the [Elastic.Apm.Agent.Tracer.CurrentTransaction](/reference/public-api.md#api-current-transaction) property anywhere in the code to access the currently active transaction.
 
 ```csharp
+using Elastic.Apm;
+
 public (string traceId, string transactionId) GetTraceIds()
 {
 	if (!Agent.IsConfigured) return default;
@@ -44,6 +47,8 @@ For correlating unstructured logs (e.g. basic printf-style logging, like `Consol
 If you already have a transaction object, then you can use the `TraceId` and `Id` properties. Both are of type `string`, so you can simply add them to the log.
 
 ```csharp
+using Elastic.Apm;
+
 var currentTransaction = //Get Current transaction, e.g.: Agent.Tracer.CurrentTransaction;
 
 Console.WriteLine($"ERROR [trace.id={currentTransaction.TraceId} transaction.id={currentTransaction.Id}] an error occurred");

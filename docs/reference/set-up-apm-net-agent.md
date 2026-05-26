@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup.html
+description: "Overview of the available setup methods for the Elastic APM .NET agent, including profiler auto instrumentation, NuGet packages, and host startup hooks."
 applies_to:
   stack:
   serverless:

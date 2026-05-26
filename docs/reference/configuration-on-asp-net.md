@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/configuration-on-asp-net.html
+description: "How to configure the Elastic APM .NET agent in classic ASP.NET applications using Web.config appSettings or environment variables."
 applies_to:
   stack:
   serverless:

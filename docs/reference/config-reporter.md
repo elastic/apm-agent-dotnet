@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-reporter.html
+description: "Reference for reporter configuration options that control how the agent connects to the APM Server, including server URL, authentication, and data buffering settings."
 applies_to:
   stack:
   serverless:
@@ -92,7 +93,7 @@ Verification can be disabled by changing this setting to false.
 | `true` | Boolean |
 
 ::::{note}
-This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1. We recommend upgrading to .NET Framework 4.7.2 or newer to use this configuration setting.
+This configuration setting has no effect on .NET Framework 4.6.2–4.7.1. Upgrade to .NET Framework 4.7.2 or newer to use this setting.
 
 ::::
 
@@ -117,7 +118,7 @@ This can be specified when using a certificate signed by a Certificate Authority
 | `<none>` | String |
 
 ::::{note}
-This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1. We recommend upgrading to .NET Framework 4.7.2 or newer to use this configuration setting.
+This configuration setting has no effect on .NET Framework 4.6.2–4.7.1. Upgrade to .NET Framework 4.7.2 or newer to use this setting.
 
 ::::
 

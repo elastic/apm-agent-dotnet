@@ -143,7 +143,7 @@ The legacy `Microsoft.Azure.ServiceBus` package does not emit native OpenTelemet
 
 ## Azure Functions [supported-azure-functions]
 
-For supported Azure Functions hosting models, the agent creates one transaction per HTTP-triggered invocation.
+For supported Azure Functions hosting models, the agent creates one transaction per invocation.
 
 | Hosting model | Supported versions | [Profiler](/reference/setup-auto-instrumentation.md) | NuGet | OpenTelemetry Bridge |
 | --- | --- | :---: | :---: | :---: |

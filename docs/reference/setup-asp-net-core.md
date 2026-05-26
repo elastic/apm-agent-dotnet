@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-asp-net-core.html
+description: "How to set up the Elastic APM .NET agent to trace ASP.NET Core applications using the AddAllElasticApm extension method."
+navigation_title: ASP.NET Core
 applies_to:
   stack:
   serverless:
@@ -9,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# ASP.NET Core [setup-asp-net-core]
+# Set up ASP.NET Core instrumentation [setup-asp-net-core]
 
 
 ## Quick start [_quick_start_2]
@@ -43,6 +45,9 @@ In case you would like to turn on specific tracing components you can pass those
 For example:
 
 ```csharp
+using Elastic.Apm.DiagnosticSource;     // for HttpDiagnosticsSubscriber
+using Elastic.Apm.EntityFrameworkCore;  // for EfCoreDiagnosticsSubscriber
+
 builder.Services.AddElasticApm(
     new HttpDiagnosticsSubscriber(),  /* Enable tracing of outgoing HTTP requests */
     new EfCoreDiagnosticsSubscriber()); /* Enable tracing of database calls through EF Core*/

@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/configuration-for-windows-services.html
+description: "How to configure the Elastic APM .NET agent for Windows services by setting environment variables in the Windows registry."
 applies_to:
   stack:
   serverless:

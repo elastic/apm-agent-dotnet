@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/metrics.html
+description: "Reference for system and application metrics collected and reported by the Elastic APM .NET agent, including CPU, memory, and runtime metrics."
 applies_to:
   stack:
   serverless:
@@ -14,8 +15,6 @@ applies_to:
 The .NET agent tracks certain system and application metrics. Some of them have built-in visualizations and some can only be visualized with custom Kibana dashboards.
 
 These metrics will be sent regularly to the APM Server and from there to Elasticsearch. You can adjust the interval with the setting [`MetricsInterval`](/reference/config-reporter.md#config-metrics-interval).
-
-The metrics will be stored in the `apm-*` index and have the `processor.event` property set to `metric`.
 
 "Platform: all" means that the metric is available on every platform where .NET (i.e. not .NET Framework) is supported.
 

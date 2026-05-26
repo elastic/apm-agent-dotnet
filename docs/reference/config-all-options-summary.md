@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-all-options-summary.html
+description: "Quick-reference table of all available Elastic APM .NET agent configuration options, grouped by category, with links to detailed documentation."
 applies_to:
   stack:
   serverless:
@@ -15,6 +16,7 @@ applies_to:
 | --- | --- | --- |
 | [`ApiKey`](/reference/config-reporter.md#config-api-key) | No | Reporter |
 | [`ApplicationNamespaces`](/reference/config-stacktrace.md#config-application-namespaces) | No | Stacktrace |
+| [`BaggageToAttach`](/reference/config-http.md#config-baggage-to-attach) | Yes | HTTP |
 | [`CaptureBody`](/reference/config-http.md#config-capture-body) | Yes | HTTP, Performance |
 | [`CaptureBodyContentTypes`](/reference/config-http.md#config-capture-body-content-types) | Yes | HTTP, Performance |
 | [`CaptureHeaders`](/reference/config-http.md#config-capture-headers) | Yes | HTTP, Performance |
@@ -27,6 +29,7 @@ applies_to:
 | [`ExcludedNamespaces`](/reference/config-stacktrace.md#config-excluded-namespaces) | No | Stacktrace |
 | [`ExitSpanMinDuration`](/reference/config-core.md#config-exit-span-min-duration) | Yes | Core, Performance |
 | [`FlushInterval`](/reference/config-reporter.md#config-flush-interval) | No | Reporter |
+| [`FullFrameworkConfigurationReaderType`](/reference/configuration-on-asp-net.md#config-full-framework-configuration-reader-type) | No | Reporter |
 | [`GlobalLabels`](/reference/config-core.md#config-global-labels) | No | Core |
 | [`IgnoreMessageQueues`](/reference/config-messaging.md#config-ignore-message-queues) | Yes | Messaging, Performance |
 | [`HostName`](/reference/config-core.md#config-hostname) | No | Core |
@@ -47,7 +50,7 @@ applies_to:
 | [`SpanCompressionSameKindMaxDuration`](/reference/config-core.md#config-span-compression-same-kind-max-duration) | Yes | Core, Performance |
 | [`SpanStackTraceMinDuration`](/reference/config-stacktrace.md#config-span-stack-trace-min-duration) | Yes | Stacktrace, Performance |
 | [`StackTraceLimit`](/reference/config-stacktrace.md#config-stack-trace-limit) | Yes | Stacktrace, Performance |
-| [`TraceContextIgnoreSampledFalse`](/reference/config-http.md#config-trace-context-ignore-sampled-false) | No | Core |
+| [`TraceContextIgnoreSampledFalse`](/reference/config-http.md#config-trace-context-ignore-sampled-false) *(deprecated — use `TraceContinuationStrategy`)* | No | Core |
 | [`TransactionIgnoreUrls`](/reference/config-http.md#config-transaction-ignore-urls) | Yes | HTTP, Performance |
 | [`TransactionNameGroups`](/reference/config-http.md#config-transaction-name-groups) | Yes | HTTP |
 | [`TransactionMaxSpans`](/reference/config-core.md#config-transaction-max-spans) | Yes | Core, Performance |
@@ -55,7 +58,7 @@ applies_to:
 | [`TraceContinuationStrategy`](/reference/config-http.md#config-trace-continuation-strategy) | Yes | HTTP, Performance |
 | [`UseElasticTraceparentHeader`](/reference/config-http.md#config-use-elastic-apm-traceparent-header) | No | HTTP |
 | [`UsePathAsTransactionName`](/reference/config-http.md#config-use-path-as-transaction-name) | Yes | HTTP |
-| [`UseWindowsCredentials`](/reference/config-http.md#config-use-windows-credentials) | No | Reporter |
+| [`UseWindowsCredentials`](/reference/config-http.md#config-use-windows-credentials) | No | HTTP |
 | [`VerifyServerCert`](/reference/config-reporter.md#config-verify-server-cert) | No | Reporter |
 | [`ProxyUrl`](/reference/config-http.md#add-proxy-apm) | No | HTTP |
 | [`ProxyUserName`](/reference/config-http.md#add-proxy-apm) | No | HTTP |

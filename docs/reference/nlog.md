@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/nlog.html
+description: "How to integrate the Elastic APM .NET agent with NLog to automatically inject trace and transaction IDs into log output."
 applies_to:
   stack:
   serverless:

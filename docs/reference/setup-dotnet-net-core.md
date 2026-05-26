@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-dotnet-net-core.html
+description: "How to set up the Elastic APM .NET agent in .NET 8+ applications using Microsoft.Extensions.Hosting, including worker services."
+navigation_title: .NET 8+
 applies_to:
   stack:
   serverless:
@@ -9,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# .NET 8+ [setup-dotnet-net-core]
+# Set up .NET 8+ instrumentation [setup-dotnet-net-core]
 
 
 ## Quick start [_quick_start_3]

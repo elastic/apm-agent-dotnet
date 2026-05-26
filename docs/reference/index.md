@@ -3,6 +3,7 @@ navigation_title: 'APM .NET agent'
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/index.html
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/intro.html
+description: "Introduction to the Elastic APM .NET agent, explaining how it automatically instruments supported frameworks and libraries to measure performance and track errors."
 applies_to:
   stack:
   serverless:

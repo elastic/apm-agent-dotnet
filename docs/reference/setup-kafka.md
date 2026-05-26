@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-kafka.html
+description: "How to enable Elastic APM .NET agent tracing of Confluent Kafka producers and consumers via OpenTelemetry activities or the profiler."
+navigation_title: Confluent Kafka
 applies_to:
   stack:
   serverless:
@@ -9,13 +11,25 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Confluent Kafka [setup-kafka]
+# Set up Confluent Kafka instrumentation [setup-kafka]
+
+## Supported versions [_supported_versions_kafka]
+
+| Package | Supported versions |
+| --- | --- |
+| `Confluent.Kafka` | ≥1.4.0 <3.0.0 |
+
+For the full compatibility matrix including supported installation methods, refer to [Messaging systems](/reference/supported-technologies.md#supported-messaging-systems).
 
 ## Quick start [_get_started]
 
-Instrumentation can be performed for Confluent Kafka by referencing [`Confluent.Kafka`](https://www.nuget.org/packages/confluent.kafka) and [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) packages.
+This page assumes the core agent is already set up. If not, see [Set up the APM .NET agent](/reference/set-up-apm-net-agent.md) first.
 
-`Confluent.Kafka` is not instrumented automatically but `Confluent.Kafka.Extensions.Diagnostics` provides instrumentations on top of `Confluent.Kafka`.
+`Confluent.Kafka` does not natively emit OpenTelemetry activities. To enable tracing without the profiler, add [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) (a third-party package) to your project. This package wraps producers and consumers to emit OpenTelemetry activities, which the agent's built-in [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) captures automatically.
 
-Please, follow the instructions provided in [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics), especially for the `Producer`.
+Follow the setup instructions in the [`Confluent.Kafka.Extensions.Diagnostics`](https://www.nuget.org/packages/Confluent.Kafka.Extensions.Diagnostics) package, in particular the producer configuration which requires explicit wrapping.
+
+::::{note}
+If you are using the [Elastic APM Profiler](/reference/setup-auto-instrumentation.md), Kafka is instrumented automatically via IL rewriting for `Confluent.Kafka` ≥1.4.0 <3.0.0 with no code changes required. The `Confluent.Kafka.Extensions.Diagnostics` package is not needed in that case.
+::::
 

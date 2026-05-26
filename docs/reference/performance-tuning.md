@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/performance-tuning.html
+description: "Guidance for tuning the Elastic APM .NET agent's performance impact by adjusting sampling rate, span collection, and other configuration options."
 applies_to:
   stack:
   serverless:

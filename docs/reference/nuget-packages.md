@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/packages.html
+description: "Catalog of NuGet packages available for the Elastic APM .NET agent, covering the core agent and per-technology instrumentation packages."
 applies_to:
   stack:
   serverless:
@@ -38,15 +39,11 @@ The following NuGet packages are available:
 [**Elastic.Apm.NetCoreAll**](https://www.nuget.org/packages/Elastic.Apm.NetCoreAll)
 :   A meta package that references all other Elastic APM .NET agent package that can automatically configure instrumentation.
 
-    If you plan to monitor a typical ASP.NET Core application that depends on the [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All) package, you should reference this package.
-
-    In order to avoid adding unnecessary dependencies in applications that aren’t dependent on the [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All) package, we also offer some other packages - those are all referenced by the `Elastic.Apm.NetCoreAll` package.
+    Reference this package to instrument all supported technologies automatically in an ASP.NET Core or .NET application. Individual component packages are also available — they are all referenced by this meta package.
 
 
-[**Elastic.Apm.Extensions.Hosting**](https://www.nuget.org/packages/Elastic.Apm.Extensions.Hosting) ([1.6.0-beta])
+[**Elastic.Apm.Extensions.Hosting**](https://www.nuget.org/packages/Elastic.Apm.Extensions.Hosting)
 :   A package for agent registration integration with `Microsoft.Extensions.Hosting.IHostBuilder` registration.
-
-$$$setup-asp-net$$$
 
 [Elastic.Apm.AspNetCore](/reference/setup-asp-net-core.md)
 :   A package for instrumenting ASP.NET Core applications. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package only instruments ASP.NET Core by default, whereas `Elastic.Apm.NetCoreAll` instruments all components that can be automatically configured, such as Entity Framework Core, HTTP calls with `HttpClient`, database calls to SQL Server with `SqlClient`, etc. Additional instrumentations can be added when using `Elastic.Apm.AspNetCore` by referencing the respective NuGet packages and including their configuration code in agent setup.

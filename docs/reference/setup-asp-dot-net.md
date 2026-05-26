@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-asp-dot-net.html
+description: "How to set up the Elastic APM .NET agent to trace ASP.NET full framework applications using the ElasticApmModule IIS module."
+navigation_title: ASP.NET
 applies_to:
   stack:
   serverless:
@@ -9,12 +11,12 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# ASP.NET [setup-asp-dot-net]
+# Set up ASP.NET instrumentation [setup-asp-dot-net]
 
 
 ## Quick start [_quick_start_4]
 
-To enable auto instrumentation for ASP.NET (.NET Framework), you need to install the `Elastic.Apm.AspNetFullFramework` package, add a reference to the package in your `web.config` file, and then compile and deploy your application.
+To enable tracing for ASP.NET (.NET Framework), install the `Elastic.Apm.AspNetFullFramework` package, add a reference to the package in your `web.config` file, and then compile and deploy your application.
 
 1. Ensure you have access to the application source code and install the [`Elastic.Apm.AspNetFullFramework`](https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework) package.
 2. Reference the `Elastic.Apm.AspNetFullFramework` in your application’s `web.config` file by adding the `ElasticApmModule` IIS module:
@@ -73,6 +75,10 @@ Our IIS module requires:
     For example, you can add transaction filters to the agent in the application start:
 
     ```csharp
+    using Elastic.Apm;
+    using Elastic.Apm.Api;
+    using Elastic.Apm.AspNetFullFramework;
+
     public class MvcApplication : HttpApplication
     {
         protected void Application_Start()

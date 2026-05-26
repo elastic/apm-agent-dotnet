@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-stackexchange-redis.html
+description: "How to enable Elastic APM .NET agent instrumentation of Redis commands using the StackExchange.Redis client."
+navigation_title: StackExchange.Redis
 applies_to:
   stack:
   serverless:
@@ -9,15 +11,32 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# StackExchange.Redis [setup-stackexchange-redis]
+# Set up StackExchange.Redis instrumentation [setup-stackexchange-redis]
+
+
+## Supported versions [_supported_versions_redis]
+
+| Package | Supported versions |
+| --- | --- |
+| `StackExchange.Redis` | ≥2.0.495 <3.0.0 |
+
+For the full compatibility matrix including supported installation methods, refer to [Data access technologies](/reference/supported-technologies.md#supported-data-access-technologies).
 
 
 ## Quick start [_quick_start_10]
 
-Instrumentation can be enabled for `StackExchange.Redis` by referencing [`Elastic.Apm.StackExchange.Redis`](https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis) package and calling the `UseElasticApm()` extension method defined in `Elastic.Apm.StackExchange.Redis`, on `IConnectionMultiplexer`
+This page assumes the core agent is already set up. If not, see [Set up the APM .NET agent](/reference/set-up-apm-net-agent.md) first.
+
+Add the [`Elastic.Apm.StackExchange.Redis`](https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis) NuGet package to your project:
+
+```sh
+dotnet add package Elastic.Apm.StackExchange.Redis
+```
+
+Call the `UseElasticApm()` extension method on your `IConnectionMultiplexer`:
 
 ```csharp
-// using Elastic.Apm.StackExchange.Redis;
+using Elastic.Apm.StackExchange.Redis;
 
 var connection = await ConnectionMultiplexer.ConnectAsync("<redis connection>");
 connection.UseElasticApm();

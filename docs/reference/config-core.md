@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-core.html
+description: "Reference for core configuration options that control fundamental agent behavior such as recording, sampling, service naming, and transaction management."
 applies_to:
   stack:
   serverless:
@@ -154,7 +155,7 @@ This feature is fully supported in the APM app in Kibana versions >= 7.2. You mu
 | See note below | String |
 
 ::::{note}
-On ASP.NET Core application the agent uses [EnvironmentName from IHostingEnvironment](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName) as default environment name.
+On ASP.NET Core applications the agent uses [EnvironmentName from IHostEnvironment](https://learn.microsoft.com/dotnet/api/microsoft.extensions.hosting.ihostenvironment.environmentname) as the default environment name.
 ::::
 
 

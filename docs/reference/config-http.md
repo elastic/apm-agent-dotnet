@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-http.html
+description: "Reference for HTTP configuration options that control how the agent captures and redacts HTTP request and response data, headers, and body content."
 applies_to:
   stack:
   serverless:

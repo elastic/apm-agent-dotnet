@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html
+description: "Reference for the Elastic APM .NET agent's public API, which allows manually creating transactions and spans, tracking errors, and customizing trace data."
 applies_to:
   stack:
   serverless:
@@ -12,6 +13,10 @@ applies_to:
 # Public API [public-api]
 
 The public API of the Elastic APM .NET agent lets you customize and manually create spans and transactions, as well as track errors.
+
+::::{note}
+All code examples on this page assume `using Elastic.Apm;` and `using Elastic.Apm.Api;` are in scope.
+::::
 
 
 ## Initialization [api-initialization]
@@ -49,9 +54,9 @@ In the case of ASP.NET Core, when you register the agent, the `AddElasticApm` an
 
 
 
-## Auto instrumentation in combination with the Public Agent API [auto-instrumentation-and-agent-api]
+## Instrumentation subscribers in combination with the Public Agent API [auto-instrumentation-and-agent-api]
 
-With the `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
+With the `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can subscribe to diagnostic events for supported libraries.
 
 In the case of ASP.NET Core, when you turn on the agent with the `AddAllElasticApm` method, the agent will do this automatically.
 
@@ -75,6 +80,36 @@ When the agent is configured with [`Enabled` set to `false`](/reference/config-c
 
 ::::
 
+
+
+## Flushing events in short-lived processes [api-flush]
+
+In long-running processes (web applications, services) the agent's background sender transmits events automatically. In short-lived processes — AWS Lambda functions, CLI tools, console apps — the process may exit before the last batch is sent. Use `Agent.FlushAsync` to wait until the sender is idle (queue empty, any in-progress HTTP send complete) before the process shuts down.
+
+```csharp
+await Agent.Tracer.CaptureTransactionAsync("MyOperation", "request", async transaction =>
+{
+    // ... your work here ...
+});
+
+// Wait for all queued events to be sent (or time out after 5 s).
+await Agent.FlushAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+```
+
+The same method is available as an extension on `IApmAgent` for dependency-injected scenarios:
+
+```csharp
+// agent is an IApmAgent injected via DI
+await agent.FlushAsync(cancellationToken);
+```
+
+::::{note}
+Completion indicates the send attempt finished; it does not guarantee APM Server accepted the data.
+::::
+
+::::{note}
+When using a custom `IPayloadSender` implementation, `FlushAsync` returns a completed task immediately because the flush interface is not part of the public `IPayloadSender` contract.
+::::
 
 
 ## Tracer API [api-tracer-api]
@@ -352,7 +387,7 @@ transaction.SetLabel("intSample", 42);
 Returns the transaction’s label in the `value` out parameter. If the `key` does not exist, this method returns false. Labels can be added with the [SetLabel](#api-transaction-set-label) method.
 
 ```csharp
-if(transaction.TryGetLabel<int>("foo", our var myLabel))
+if(transaction.TryGetLabel<int>("foo", out var myLabel))
     Console.WriteLine(myLabel);
 ```
 
@@ -451,7 +486,7 @@ It has 3 required parameters:
 
 and 2 optional parameters:
 
-* `supType`: The subtype of the span
+* `subType`: The subtype of the span
 * `action`: The action of the span
 
 The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-transaction-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
@@ -512,7 +547,7 @@ To enable the JavaScript RUM agent in ASP.NET Core, initialize the RUM agent wit
 		serverUrl: 'http://localhost:8200',
 		pageLoadTraceId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.TraceId',
 		pageLoadSpanId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.EnsureParentId()',
-		pageLoadSampled: @Json.Serialize(Elastic.Apm.Agent.Tracer?.CurrentTransaction.IsSampled)
+		pageLoadSampled: @Json.Serialize(Elastic.Apm.Agent.Tracer.CurrentTransaction?.IsSampled)
 		})
 </script>
 ```
@@ -765,7 +800,7 @@ It has 3 required parameters:
 
 and 2 optional parameters:
 
-* `supType`: The subtype of the span
+* `subType`: The subtype of the span
 * `action`: The action of the span
 
 The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-span-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.

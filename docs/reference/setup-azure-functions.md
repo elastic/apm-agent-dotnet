@@ -2,6 +2,7 @@
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-azure-functions.html
 description: "Set up the Elastic APM .NET agent to trace Azure Functions invocations using the isolated worker or in-process execution model."
+navigation_title: Azure Functions
 applies_to:
   stack:
   serverless:
@@ -10,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Azure Functions [setup-azure-functions]
+# Set up Azure Functions instrumentation [setup-azure-functions]
 
 The .NET APM Agent can trace function invocations in an [Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions) app. Two execution models are supported.
 

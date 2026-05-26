@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/configuration-on-asp-net-core.html
+description: "How to configure the Elastic APM .NET agent in ASP.NET Core applications using the Microsoft.Extensions.Configuration infrastructure and appsettings.json."
 applies_to:
   stack:
   serverless:

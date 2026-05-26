@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/serilog.html
+description: "How to integrate the Elastic APM .NET agent with Serilog to automatically inject trace and transaction IDs into structured log output."
 applies_to:
   stack:
   serverless:
@@ -18,6 +19,9 @@ The enricher lives in the [Elastic.Apm.SerilogEnricher](https://www.nuget.org/pa
 You can enable it when you configure your Serilog logger:
 
 ```csharp
+using Serilog;
+using Elastic.Apm.SerilogEnricher;
+
 var logger = new LoggerConfiguration()
    .Enrich.WithElasticApmCorrelationInfo()
    .WriteTo.Console(outputTemplate: "[{ElasticApmTraceId} {ElasticApmTransactionId} {Message:lj} {NewLine}{Exception}")
@@ -36,6 +40,11 @@ If you want to send your logs directly to Elasticsearch you can use the [Serilog
 Once you added the two packages mentioned above, you can configure your logger like this:
 
 ```csharp
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
+using Elastic.Apm.SerilogEnricher;
+using Elastic.CommonSchema.Serilog;
+
 Log.Logger = new LoggerConfiguration()
 .Enrich.WithElasticApmCorrelationInfo()
 .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://localhost:9200"))

@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-stacktrace.html
+description: "Reference for stack trace configuration options that control how the agent collects and filters stack frames, including application namespace filtering and stack trace depth."
 applies_to:
   stack:
   serverless:
@@ -12,7 +13,7 @@ applies_to:
 # Stacktrace configuration options [config-stacktrace]
 
 
-### `ApplicationNamespaces` [config-application-namespaces]
+## `ApplicationNamespaces` [config-application-namespaces]
 
 ```{applies_to}
 apm_agent_dotnet: ga 1.5
@@ -33,7 +34,7 @@ This suppresses any configuration of `ExcludedNamespaces`.
 | `ELASTIC_APM_APPLICATION_NAMESPACES` | `ElasticApm:ApplicationNamespaces` |
 
 
-### `ExcludedNamespaces` [config-excluded-namespaces]
+## `ExcludedNamespaces` [config-excluded-namespaces]
 
 ```{applies_to}
 apm_agent_dotnet: ga 1.5
@@ -71,7 +72,7 @@ If you would like to disable stack trace capturing only for spans, but still cap
 
 
 
-### `SpanStackTraceMinDuration` (performance) [config-span-stack-trace-min-duration]
+## `SpanStackTraceMinDuration` (performance) [config-span-stack-trace-min-duration]
 
 [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
 

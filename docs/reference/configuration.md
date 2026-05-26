@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/configuration.html
+description: "Overview of configuration methods for the Elastic APM .NET agent, covering environment variables, appsettings.json, and minimum required settings."
 applies_to:
   stack:
   serverless:

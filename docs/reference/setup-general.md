@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-general.html
+description: "How to manually instrument .NET applications that are not covered by the agent's built-in integrations, using the Public API or Activity APIs."
+navigation_title: Other .NET applications
 applies_to:
   stack:
   serverless:
@@ -9,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Other .NET applications [setup-general]
+# Set up other .NET applications [setup-general]
 
 If you have a .NET application that is not covered in this section, you can still use the agent and instrument your application manually.
 

@@ -27,10 +27,9 @@ For the full compatibility matrix including supported installation methods, refe
 
 ## Quick start [_quick_start_14]
 
-The [`Elastic.Apm.MongoDb`](https://www.nuget.org/packages/Elastic.Apm.MongoDb) NuGet package instruments the official `MongoDB.Driver` to capture MongoDB operations as APM spans, including the command name, target database, and duration.
+This page assumes the core agent is already set up. If not, see [Set up the APM .NET agent](/reference/set-up-apm-net-agent.md) first.
 
-::::{note}
-::::
+The [`Elastic.Apm.MongoDb`](https://www.nuget.org/packages/Elastic.Apm.MongoDb) NuGet package instruments the official `MongoDB.Driver` to capture MongoDB operations as APM spans, including the command name, target database, and duration.
 
 ### Step 1: Install the package if needed
 
