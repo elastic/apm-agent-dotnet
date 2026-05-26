@@ -598,7 +598,7 @@ The following service names are **always** excluded from profiling by default.
     * error
     * none
 
-    The default value is `warn`. More verbose log levels like `trace` and `debug` can affect the runtime performance of profiler auto instrumentation, so are recommended *only* for diagnostics purposes.
+    The default value is `warn`. More verbose log levels like `trace` and `debug` can affect the runtime performance of profiler auto instrumentation, so are recommended only for diagnostics purposes.
 
     Supersedes the deprecated `ELASTIC_APM_PROFILER_LOG` environment variable.
 
