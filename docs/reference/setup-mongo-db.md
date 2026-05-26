@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-mongo-db.html
+description: "Set up the Elastic APM .NET agent to instrument MongoDB operations and capture them as APM spans."
+navigation_title: MongoDB
 applies_to:
   stack:
   serverless:
@@ -9,7 +11,19 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# MongoDB [setup-mongo-db]
+# Set up MongoDB instrumentation [setup-mongo-db]
+
+## Supported versions [_supported_versions_mongodb]
+
+| Package | Supported versions |
+| --- | --- |
+| `MongoDB.Driver` | ≥3.0.0 <4.0.0 |
+
+For the full compatibility matrix including supported installation methods, refer to [Data access technologies](/reference/supported-technologies.md#supported-data-access-technologies).
+
+::::{note}
+`MongoDB.Driver` ≥3.7.0 natively emits OpenTelemetry spans. On runtimes where the agent's [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) is supported, those spans are captured automatically, so no extra package is needed. On .NET Framework, the OpenTelemetry Bridge is not supported; use `Elastic.Apm.MongoDb` instead. This package is also required for `MongoDB.Driver` ≥3.0.0 <3.7.0.
+::::
 
 ## Quick start [_quick_start_14]
 
@@ -17,7 +31,6 @@ The [`Elastic.Apm.MongoDb`](https://www.nuget.org/packages/Elastic.Apm.MongoDb) 
 
 ::::{note}
 ::::
-
 
 ### Step 1: Install the package if needed
 
@@ -56,4 +69,3 @@ Agent.Subscribe(new MongoDbDiagnosticsSubscriber());
 ```
 
 Make sure this is called only once. Calling it multiple times causes the agent to record duplicate spans for MongoDB operations.
-
