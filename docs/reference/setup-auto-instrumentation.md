@@ -59,11 +59,11 @@ gRPC server calls in ASP.NET Core applications are captured automatically via AS
 | Technology | Required library |
 | --- | --- |
 | ADO.NET | built-in (.NET Framework) |
-| Elasticsearch | [Elastic.Clients.Elasticsearch ≥8.0.0 <10.0.0](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch), via startup hook† |
-| Elasticsearch.Net (legacy) | [Elasticsearch.Net ≥7.6.0 <8.0.0](https://www.nuget.org/packages/Elasticsearch.Net), via startup hook† |
-| NEST (legacy) | [NEST ≥7.6.0 <8.0.0](https://www.nuget.org/packages/NEST), via startup hook† |
-| Entity Framework Core | [Microsoft.EntityFrameworkCore ≥8.0.0 ≤10.0.x](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore), via startup hook† |
-| MongoDB | [MongoDB.Driver ≥3.7.0 <4.0.0](https://www.nuget.org/packages/MongoDB.Driver), via startup hook†‡ |
+| Elasticsearch | [Elastic.Clients.Elasticsearch ≥8.0.0 <10.0.0](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch), using startup hook† |
+| Elasticsearch.Net (legacy) | [Elasticsearch.Net ≥7.6.0 <8.0.0](https://www.nuget.org/packages/Elasticsearch.Net), using startup hook† |
+| NEST (legacy) | [NEST ≥7.6.0 <8.0.0](https://www.nuget.org/packages/NEST), using startup hook† |
+| Entity Framework Core | [Microsoft.EntityFrameworkCore ≥8.0.0 ≤10.0.x](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore), using startup hook† |
+| MongoDB | [MongoDB.Driver ≥3.7.0 <4.0.0](https://www.nuget.org/packages/MongoDB.Driver), using startup hook†‡ |
 | MySQL | [MySql.Data ≥6.7.0 <9.0.0](https://www.nuget.org/packages/MySql.Data) |
 | Oracle | [Oracle.ManagedDataAccess ≥12.2.1100 <22.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess)<br>[Oracle.ManagedDataAccess.Core ≥2.0.0 <4.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) |
 | PostgreSQL | [Npgsql ≥4.0.0 <8.0.0](https://www.nuget.org/packages/Npgsql) |
