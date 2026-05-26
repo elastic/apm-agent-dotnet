@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html
+description: "Compatibility matrix listing the frameworks, runtimes, data access libraries, and messaging systems supported by the Elastic APM Agent for .NET, with supported version ranges and installation methods."
 applies_to:
   stack:
   serverless:
