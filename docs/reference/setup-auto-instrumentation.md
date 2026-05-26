@@ -265,7 +265,7 @@ ENTRYPOINT ["dotnet", "your-application.dll"]
 ```
 
 1. Replace `<VERSION>` with the version number of the profiler zip file to be downloaded (e.g. `1.34.1`).
-2. Replace `<your-base-image>` with your application's base image (e.g. `mcr.microsoft.com/dotnet/aspnet:8.0`).
+2. Replace `<your-base-image>` with your application's base image (for example, `mcr.microsoft.com/dotnet/aspnet:8.0`).
 3. The name used to identify your service in APM.
 
 ::::{important}
