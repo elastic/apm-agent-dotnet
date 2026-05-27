@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/configuration-on-asp-net.html
+description: "How to configure the Elastic APM .NET Agent in classic ASP.NET applications using Web.config appSettings or environment variables."
 applies_to:
   stack:
   serverless:
@@ -60,4 +61,3 @@ Use type name in  [AssemblyQualifiedName](https://docs.microsoft.com/en-us/dotne
 | None | String |
 
 If this setting is set in both the web.config file and as an environment variable, then the web.config file has precedence.
-

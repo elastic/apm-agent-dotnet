@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html
+description: "Reference for the Elastic APM .NET Agents public API, which allows manually creating transactions and spans, tracking errors, and customizing trace data."
 applies_to:
   stack:
   serverless:
@@ -11,7 +12,11 @@ applies_to:
 
 # Public API [public-api]
 
-The public API of the Elastic APM .NET agent lets you customize and manually create spans and transactions, as well as track errors.
+The public API of the Elastic {{product.apm-agent-dotnet}} lets you customize and manually create spans and transactions, as well as track errors.
+
+::::{note}
+All code examples on this page assume `using Elastic.Apm;` and `using Elastic.Apm.Api;` are in scope.
+::::
 
 
 ## Initialization [api-initialization]
@@ -40,7 +45,7 @@ The default agent setup should cover most of the use cases and the primary way t
 If you would like to replace one of the agent components, you can do so by calling the `Elastic.Apm.Agent.Setup(AgentComponents)` method. In the AgentComponents you can pass following optional components to the agent:
 
 * `IApmLogger`: A logger implementation that will be used to print log messages. Default: A console logger.
-* `IPayloadSender`: A component that receives all the captured events like spans, transactions, and metrics. The default implementation serializes all events and sends them to the Elastic APM Server
+* `IPayloadSender`: A component that receives all the captured events like spans, transactions, and metrics. The default implementation serializes all events and sends them to the Elastic {{product.apm-server}}
 * `IConfigurationReader`: A component that reads [agent configuration settings](/reference/configuration.md). The default implementation reads configuration through environment variables.
 
 ::::{note}
@@ -48,16 +53,15 @@ In the case of ASP.NET Core, when you register the agent, the `AddElasticApm` an
 ::::
 
 
+## Instrumentation subscribers in combination with the Public Agent API [auto-instrumentation-and-agent-api]
 
-## Auto instrumentation in combination with the Public Agent API [auto-instrumentation-and-agent-api]
-
-With the `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
+With the `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can subscribe to diagnostic events for supported libraries.
 
 In the case of ASP.NET Core, when you turn on the agent with the `AddAllElasticApm` method, the agent will do this automatically.
 
 With a typical console application, you need to do this manually by calling `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method somewhere in your application, ideally in the startup code.
 
-`IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources in order to capture events automatically.
+`IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources to capture events automatically.
 
 Some examples:
 
@@ -72,9 +76,37 @@ Some examples:
 
 ::::{note}
 When the agent is configured with [`Enabled` set to `false`](/reference/config-core.md#config-enabled), `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` will not subscribe the subscribers to diagnostic source events.
-
 ::::
 
+
+## Flushing events in short-lived processes [api-flush]
+
+In long-running processes (web applications, services) the agent's background sender transmits events automatically. In short-lived processes (AWS Lambda functions, CLI tools, console apps) the process might exit before the last batch is sent. Use `Agent.FlushAsync` to wait until the sender is idle (queue empty, any in-progress HTTP send complete) before the process shuts down.
+
+```csharp
+await Agent.Tracer.CaptureTransactionAsync("MyOperation", "request", async transaction =>
+{
+    // ... your work here ...
+});
+
+// Wait for all queued events to be sent (or time out after 5 s).
+await Agent.FlushAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+```
+
+The same method is available as an extension on `IApmAgent` for dependency-injected scenarios:
+
+```csharp
+// agent is an IApmAgent injected via DI
+await agent.FlushAsync(cancellationToken);
+```
+
+::::{note}
+Completion indicates the send attempt finished. It does not guarantee {{product.apm-server}} accepted the data.
+::::
+
+::::{note}
+When using a custom `IPayloadSender` implementation, `FlushAsync` returns a completed task immediately because the flush interface is not part of the public `IPayloadSender` contract.
+::::
 
 
 ## Tracer API [api-tracer-api]
@@ -190,7 +222,6 @@ Return value of [`CaptureTransaction`](#convenient-capture-transaction) method o
 ::::
 
 
-
 #### Manually propagating distributed tracing context [manually-propagating-distributed-tracing-context]
 
 Agent automatically propagates distributed tracing context for the supported technologies (see [Networking client-side technologies](/reference/supported-technologies.md#supported-networking-client-side-technologies)). If your application communicates over a protocol that is not supported by the agent you can manually propagate distributed tracing context from the caller to the callee side using Public Agent API.
@@ -215,13 +246,12 @@ The `OutgoingDistributedTracingData` property can be `null`. One such scenario i
 ::::
 
 
-
 #### `void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null);` [api-start-capture-error]
 
-Use this method to capture an APM error with a message and a culprit.
+Use this method to capture an {{product.apm}} error with a message and a culprit.
 
 ::::{note}
-Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in the APM app but will not be correlated with a transaction.
+Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in {{product.kibana}} but will not be correlated with a transaction.
 ::::
 
 
@@ -234,10 +264,10 @@ Agent.Tracer.CaptureError("Something went wrong", "Database issue");
 
 #### `void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);` [api-start-capture-exception]
 
-Use this method to capture a .NET exception as an APM error.
+Use this method to capture a .NET exception as an {{product.apm}} error.
 
 ::::{note}
-Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in the APM app but will not be correlated with a transaction.
+Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in {{product.kibana}} but will not be correlated with a transaction.
 ::::
 
 
@@ -258,10 +288,10 @@ catch (Exception e)
 
 #### `void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null);` [api-start-capture-error-log]
 
-Use this method to capture a log event as an APM error.
+Use this method to capture a log event as an {{product.apm}} error.
 
 ::::{note}
-Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in the APM app but will not be correlated with a transaction.
+Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in {{product.kibana}} but will not be correlated with a transaction.
 ::::
 
 
@@ -280,14 +310,13 @@ Agent.Tracer.CaptureErrorLog(errorLog);
 
 ## Transaction API [api-transaction]
 
-A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple [Spans](#api-span) into logical groups, and they are the first [Span](#api-span) of a service. More information on Transactions and Spans is available in the [APM data model](docs-content://solutions/observability/apm/data-types.md) documentation.
+A transaction describes an event captured by an Elastic {{product.apm-agent-dotnet}} monitoring a service. Transactions help combine multiple [Spans](#api-span) into logical groups, and they are the first [Span](#api-span) of a service. More information on Transactions and Spans is available in the [{{product.apm}} data model](docs-content://solutions/observability/apm/data-types.md) documentation.
 
 See [`ITransaction CurrentTransaction`](#api-current-transaction) on how to get a reference of the current transaction.
 
 ::::{note}
-Calling any of the transaction’s methods after [`void End()`](#api-transaction-end) has been called is illegal. You may only interact with a transaction when you have control over its lifecycle.
+Calling any of the transaction’s methods after [`void End()`](#api-transaction-end) has been called is illegal. You can only interact with a transaction when you have control over its lifecycle.
 ::::
-
 
 
 #### `ISpan StartSpan(string name, string type, string subType = null, string action = null)` [api-transaction-create-span]
@@ -319,18 +348,17 @@ finally
 
 #### `void SetLabel(string key, T value)` [1.7.0] [api-transaction-set-label]
 
-Labels are used to add **indexed** information to transactions, spans, and errors. Indexed means the data is searchable and aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
+Labels are used to add **indexed** information to transactions, spans, and errors. Indexed means the data is searchable and aggregatable in {{product.elasticsearch}}. Multiple labels can be defined with different key-value pairs.
 
 * Indexed: Yes
-* Elasticsearch type: [object](elasticsearch://reference/elasticsearch/mapping-reference/object.md)
-* Elasticsearch field: `labels` (previously `context.tags` in <v.7.0)
+* {{product.elasticsearch}} type: [object](elasticsearch://reference/elasticsearch/mapping-reference/object.md)
+* {{product.elasticsearch}} field: `labels` (previously `context.tags` in <v.7.0)
 
-Label values can be a string, boolean, or number. Because labels for a given key are stored in the same place in Elasticsearch, all label values of a given key must have the same data type. Multiple data types per key will throw an exception, e.g., `{"foo": "bar"}` and `{"foo": 42}`.
+Label values can be a string, boolean, or number. Because labels for a given key are stored in the same place in {{product.elasticsearch}}, all label values of a given key must have the same data type. Multiple data types per key will throw an exception, for example, `{"foo": "bar"}` and `{"foo": 42}`.
 
 ::::{note}
-Number and boolean labels were only introduced in APM Server 6.7+. Using this API in combination with an older APM Server versions leads to validation errors.
+Number and boolean labels were only introduced in {{product.apm-server}} 6.7+. Using this API in combination with an older {{product.apm-server}} versions leads to validation errors.
 ::::
-
 
 ::::{important}
 Avoid defining too many user-specified labels. Defining too many unique fields in an index is a condition that can lead to a [mapping explosion](docs-content://manage-data/data-store/mapping.md#mapping-limit-settings).
@@ -352,7 +380,7 @@ transaction.SetLabel("intSample", 42);
 Returns the transaction’s label in the `value` out parameter. If the `key` does not exist, this method returns false. Labels can be added with the [SetLabel](#api-transaction-set-label) method.
 
 ```csharp
-if(transaction.TryGetLabel<int>("foo", our var myLabel))
+if(transaction.TryGetLabel<int>("foo", out var myLabel))
     Console.WriteLine(myLabel);
 ```
 
@@ -360,7 +388,7 @@ if(transaction.TryGetLabel<int>("foo", our var myLabel))
 #### `Dictionary<string,string> Labels` [api-transaction-tags]
 
 ::::{warning}
-This property is obsolete and will be be removed in a future version. Use the [`void SetLabel()`](#api-transaction-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to APM server, with values in `Labels` taking precedence.
+This property is obsolete and will be removed in a future version. Use the [`void SetLabel()`](#api-transaction-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
 ::::
 
 
@@ -371,7 +399,6 @@ If the key contains any special characters (`.`,`*`, `"`), they will be replaced
 ::::{tip}
 Before using custom labels, ensure you understand the different types of [metadata](docs-content://solutions/observability/apm/metadata.md) that are available.
 ::::
-
 
 ::::{warning}
 Avoid defining too many user-specified labels. Defining too many unique fields in an index is a condition that can lead to a [mapping explosion](docs-content://manage-data/data-store/mapping.md#mapping-limit-settings).
@@ -394,7 +421,7 @@ Agent.Tracer
 
 #### `void End()` [api-transaction-end]
 
-Ends the transaction and schedules it to be reported to the APM Server.
+Ends the transaction and schedules it to be reported to the {{product.apm-server}}.
 
 It is illegal to call any methods on a span instance which has already ended. This also includes this method and [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-transaction-create-span).
 
@@ -409,24 +436,23 @@ If you use the [`CaptureTransaction`](#convenient-capture-transaction) method yo
 ::::
 
 
-
 #### `void CaptureException(Exception e)` [api-transaction-capture-exception]
 
-Captures an exception and reports it to the APM server.
+Captures an exception and reports it to the {{product.apm-server}}.
 
 
 #### `void CaptureError(string message, string culprit, StackFrame[] frames)` [api-transaction-capture-error]
 
-Captures a custom error and reports it to the APM server.
+Captures a custom error and reports it to the {{product.apm-server}}.
 
 This method is typically used when you want to report an error, but you don’t have an `Exception` instance.
 
 
 #### `void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null);` [api-transaction-capture-error-log]
 
-Captures a custom error and reports it to the APM server with a log attached to it.
+Captures a custom error and reports it to the {{product.apm-server}} with a log attached to it.
 
-This method is typically used when you already log errors in your code and you want to attach this error to an APM transaction. The log will show up on the APM UI as part of the error and it will be correlated to the transaction.
+This method is typically used when you already log errors in your code and you want to attach this error to an {{product.apm}} transaction. The log will show up on {{product.kibana}} as part of the error and it will be correlated to the transaction.
 
 
 #### `CaptureSpan` [convenient-capture-span]
@@ -448,13 +474,12 @@ It has 3 required parameters:
     * `Func<Task<T>>`
     * `Func<ITransaction,Task<T>>`
 
-
 and 2 optional parameters:
 
-* `supType`: The subtype of the span
+* `subType`: The subtype of the span
 * `action`: The action of the span
 
-The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-transaction-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
+The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-transaction-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you created.
 
 ```csharp
 ITransaction transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
@@ -488,7 +513,6 @@ var asyncResult = await transaction.CaptureSpan("Select FROM customer", ApiConst
 Return value of [`CaptureSpan`](#convenient-capture-span) method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call [`CaptureSpan`](#convenient-capture-span) with `await` keyword.
 ::::
 
-
 ::::{note}
 Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
 ::::
@@ -512,7 +536,7 @@ To enable the JavaScript RUM agent in ASP.NET Core, initialize the RUM agent wit
 		serverUrl: 'http://localhost:8200',
 		pageLoadTraceId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.TraceId',
 		pageLoadSpanId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.EnsureParentId()',
-		pageLoadSampled: @Json.Serialize(Elastic.Apm.Agent.Tracer?.CurrentTransaction.IsSampled)
+		pageLoadSampled: @Json.Serialize(Elastic.Apm.Agent.Tracer.CurrentTransaction?.IsSampled)
 		})
 </script>
 ```
@@ -522,7 +546,7 @@ See the  [JavaScript RUM agent documentation](apm-agent-rum-js://reference/index
 
 #### `Dictionary<string,string> Custom` [api-transaction-custom]
 
-Custom context is used to add non-indexed, custom contextual information to transactions. Non-indexed means the data is not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data. However, non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug performance issues or errors.
+Custom context is used to add non-indexed, custom contextual information to transactions. Non-indexed means the data is not searchable or aggregatable in {{product.elasticsearch}}, and you cannot build dashboards on top of the data. However, non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug performance issues or errors.
 
 If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
 
@@ -589,7 +613,7 @@ Agent.Tracer.CaptureTransaction("MyCustomTransaction",ApiConstants.TypeRequest, 
 
 A span contains information about a specific code path, executed as part of a transaction.
 
-If for example a database query happens within a recorded transaction, a span representing this database query may be created. In such a case, the name of the span will contain information about the query itself, and the type will hold information about the database type.
+If for example a database query happens within a recorded transaction, a span representing this database query might be created. In such a case, the name of the span will contain information about the query itself, and the type will hold information about the database type.
 
 
 #### `ISpan StartSpan(string name, string type, string subType = null, string action = null)` [api-span-create-span]
@@ -624,12 +648,11 @@ finally
 A flat mapping of user-defined labels with string, number or boolean values.
 
 ::::{note}
-In version 6.x, labels are stored under `context.tags` in Elasticsearch. As of version 7.x, they are stored as `labels` to comply with the [Elastic Common Schema (ECS)](https://github.com/elastic/ecs).
+In version 6.x, labels are stored under `context.tags` in {{product.elasticsearch}}. As of version 7.x, they are stored as `labels` to comply with the [{{product.ecs}}](https://github.com/elastic/ecs).
 ::::
 
-
 ::::{note}
-The labels are indexed in Elasticsearch so that they are searchable and aggregatable. By all means, you should avoid that user specified data, like URL parameters, is used as a tag key as it can lead to mapping explosions.
+The labels are indexed in {{product.elasticsearch}} so that they are searchable and aggregatable. By all means, you should avoid that user specified data, like URL parameters, is used as a tag key as it can lead to mapping explosions.
 ::::
 
 
@@ -656,7 +679,7 @@ if(span.TryGetLabel<bool>("foo", out var myLabel))
 #### `Dictionary<string,string> Labels` [api-span-tags]
 
 ::::{warning}
-This property is obsolete and will be be removed in a future version. Use the [`void SetLabel()`](#api-span-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to APM server, with values in `Labels` taking precedence.
+This property is obsolete and will be removed in a future version. Use the [`void SetLabel()`](#api-span-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
 ::::
 
 
@@ -667,7 +690,6 @@ If the key contains any special characters (`.`,`*`, `"`), they will be replaced
 ::::{tip}
 Before using custom labels, ensure you understand the different types of [metadata](docs-content://solutions/observability/apm/metadata.md) that are available.
 ::::
-
 
 ::::{warning}
 Avoid defining too many user-specified labels. Defining too many unique fields in an index is a condition that can lead to a [mapping explosion](docs-content://manage-data/data-store/mapping.md#mapping-limit-settings).
@@ -686,26 +708,26 @@ span =>
 
 #### `void CaptureException(Exception e)` [api-span-capture-exception]
 
-Captures an exception and reports it to the APM server.
+Captures an exception and reports it to the {{product.apm-server}}.
 
 
 #### `void CaptureError(string message, string culprit, StackFrame[] frames)` [api-span-capture-error]
 
-Captures a custom error and reports it to the APM server.
+Captures a custom error and reports it to the {{product.apm-server}}.
 
 This method is typically used when you want to report an error, but you don’t have an `Exception` instance.
 
 
 #### `void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null);` [api-span-capture-error-log]
 
-Captures a custom error and reports it to the APM server with a log attached to it.
+Captures a custom error and reports it to the {{product.apm-server}} with a log attached to it.
 
-This method is typically used when you already log errors in your code and you want to attach this error to an APM transaction. The log will show up on the APM UI as part of the error and it will be correlated to the transaction of the given span.
+This method is typically used when you already log errors in your code and you want to attach this error to an {{product.apm}} transaction. The log will show up in {{product.kibana}} as part of the error and it will be correlated to the transaction of the given span.
 
 
 #### `void End()` [api-span-end]
 
-Ends the span and schedules it to be reported to the APM Server.
+Ends the span and schedules it to be reported to the {{product.apm-server}}.
 
 It is illegal to call any methods on a span instance which has already ended.
 
@@ -762,13 +784,12 @@ It has 3 required parameters:
     * `Func<Task<T>>`
     * `Func<ITransaction,Task<T>>`
 
-
 and 2 optional parameters:
 
-* `supType`: The subtype of the span
+* `subType`: The subtype of the span
 * `action`: The action of the span
 
-The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-span-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
+The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-span-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you created.
 
 ```csharp
 span.CaptureSpan("SampleSpan", ApiConstants.TypeDb, (s) =>
@@ -799,22 +820,20 @@ var asyncResult = await span.CaptureSpan("Select FROM customer", ApiConstants.Ty
 Return value of [`CaptureSpan`](#convenient-capture-span) method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call [`CaptureSpan`](#convenient-capture-span) with `await` keyword.
 ::::
 
-
 ::::{note}
 Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
 ::::
-
 
 
 ## Filter API ([1.5]) [filter-api]
 
 Use `Agent.AddFilter(filter)` to supply a filter callback.
 
-Each filter callback will be called just before data is sent to the APM Server. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
+Each filter callback will be called before data is sent to the {{product.apm-server}}. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
 
-Each filter callback is called in the order they are added and will receive a payload object containing the data about to be sent to the APM Server as the only argument.
+Each filter callback is called in the order they are added and will receive a payload object containing the data about to be sent to the {{product.apm-server}} as the only argument.
 
-The filter callback is synchronous and should return the manipulated payload object. If a filter callback doesn’t return any value or returns a falsy value, the remaining filter callback will not be called and the payload will not be sent to the APM Server.
+The filter callback is synchronous and should return the manipulated payload object. If a filter callback doesn’t return any value or returns a falsy value, the remaining filter callback will not be called and the payload will not be sent to the {{product.apm-server}}.
 
 There are 3 overloads of the `Agent.AddFilter` method with the following arguments:
 
@@ -844,4 +863,3 @@ Agent.AddFilter((ITransaction transaction) =>
 	return transaction;
 });
 ```
-

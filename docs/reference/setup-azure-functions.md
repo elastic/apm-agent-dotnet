@@ -1,7 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-azure-functions.html
-description: "Set up the Elastic APM .NET agent to trace Azure Functions invocations using the isolated worker or in-process execution model."
+description: "Set up the Elastic APM .NET Agent to trace Azure Functions invocations using the isolated worker or in-process execution model."
+navigation_title: Azure Functions
 applies_to:
   stack:
   serverless:
@@ -10,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Azure Functions [setup-azure-functions]
+# Set up Azure Functions instrumentation [setup-azure-functions]
 
 The .NET APM Agent can trace function invocations in an [Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions) app. Two execution models are supported.
 
@@ -30,7 +31,7 @@ For the full compatibility matrix including supported installation methods, refe
 
 ## Prerequisites [_prerequisites]
 
-You need an APM Server to send APM data to. Follow the [APM Quick start](docs-content://solutions/observability/apm/get-started.md) if you have not set one up yet. You need your **APM server URL** and an APM server **API key** for configuring the APM agent below. (If your APM Server uses secret tokens instead, both are supported.)
+You need an {{product.apm-server}} to send APM data to. Follow the [APM Quick start](docs-content://solutions/observability/apm/get-started.md) if you have not set one up yet. You need your **{{product.apm-server}} URL** and an {{product.apm-server}} **API key** for configuring the {{product.apm-agent-dotnet}} below. (If your {{product.apm-server}} uses secret tokens instead, both are supported.)
 
 You also need an Azure Function app to monitor running on **.NET 8+** (for isolated worker model) or **.NET Framework 4.7.2+ or .NET 8+** (for in-process model; .NET 8 requires the `FUNCTIONS_INPROC_NET8_ENABLED=1` setting). If you do not have an existing one, you can follow [Create your first C# function in Azure](https://learn.microsoft.com/en-us/azure/azure-functions/create-first-function-cli-csharp) to create one.
 
@@ -70,12 +71,12 @@ host.Run();
 If your app uses `ConfigureFunctionsWorkerDefaults` instead, replace the method name. The middleware registration syntax is the same.
 
 
-### Step 3: Configure the APM agent [_step_3_configure_the_apm_agent]
+### Step 3: Configure the {{product.apm-agent-dotnet}} [_step_3_configure_the_apm_agent]
 
-The APM agent can be configured with environment variables.
+The {{product.apm-agent-dotnet}} can be configured with environment variables.
 
 ```yaml
-ELASTIC_APM_SERVER_URL: <your APM server URL from the prerequisites step>
+ELASTIC_APM_SERVER_URL: <your {{product.apm-server}} URL from the prerequisites step>
 ELASTIC_APM_API_KEY: <your APM API key from the prerequisites step>
 ELASTIC_APM_ENVIRONMENT: <your environment>
 ELASTIC_APM_SERVICE_NAME: <your service name> (optional)
@@ -138,7 +139,7 @@ dotnet add package Elastic.Apm.Azure.Functions
 ```
 
 
-### Step 2: Register the APM agent [_step_2_register_the_apm_agent_in_process]
+### Step 2: Register the {{product.apm-agent-dotnet}} [_step_2_register_the_apm_agent_in_process]
 
 The in-process model does not support middleware. Instead, create a startup class that inherits `FunctionsStartup` and call `AddElasticApm()` on the `IFunctionsHostBuilder`:
 
@@ -160,12 +161,12 @@ public class Startup : FunctionsStartup
 The `[assembly: FunctionsStartup]` attribute tells the Azure Functions runtime to invoke this class at startup. No changes to individual function classes are needed.
 
 
-### Step 3: Configure the APM agent [_step_3_configure_the_apm_agent_in_process]
+### Step 3: Configure the {{product.apm-agent-dotnet}} [_step_3_configure_the_apm_agent_in_process]
 
-The APM agent is configured with environment variables:
+The {{product.apm-agent-dotnet}} is configured with environment variables:
 
 ```yaml
-ELASTIC_APM_SERVER_URL: <your APM server URL from the prerequisites step>
+ELASTIC_APM_SERVER_URL: <your {{product.apm-server}} URL from the prerequisites step>
 ELASTIC_APM_API_KEY: <your APM API key from the prerequisites step>
 ELASTIC_APM_ENVIRONMENT: <your environment>
 ELASTIC_APM_SERVICE_NAME: <your service name> (optional)
@@ -206,26 +207,26 @@ Once configured, see [Verify and troubleshoot](#_verify_and_troubleshoot) to con
 
 ## Verify and troubleshoot [_verify_and_troubleshoot]
 
-**Verify in Kibana**
+**Verify in {{product.kibana}}**
 
 After deploying your function or running it locally:
 
-1. Open Kibana and navigate to **Observability** → **Applications** → **Service inventory**
+1. Open {{product.kibana}} and navigate to **Observability** → **Applications** → **Service inventory**
 2. Look for your service name (configured via `ELASTIC_APM_SERVICE_NAME` or the function app name)
 3. Click on the service to see captured transactions and spans
 
 On Consumption plans, allow 30-60 seconds for the first transaction to appear after invoking your function.
 
-**Service doesn't appear in Kibana**
+**Service doesn't appear in {{product.kibana}}**
 
 - Verify `ELASTIC_APM_SERVER_URL` is reachable and correct
-- Confirm `ELASTIC_APM_API_KEY` has the required privileges on your APM Server
+- Confirm `ELASTIC_APM_API_KEY` has the required privileges on your {{product.apm-server}}
 - Check your function's application logs in the Azure Portal for APM-related errors
 - Invoke the function at least once to generate a transaction
 
 **No transactions appear locally**
 
-- Ensure the APM Server URL in `local.settings.json` is accessible (not `localhost` if running in Docker)
+- Ensure the {{product.apm-server}} URL in `local.settings.json` is accessible (not `localhost` if running in Docker)
 - Verify your function was actually invoked (check the HTTP response)
 - Confirm middleware is registered correctly in `Program.cs` (isolated model) or `Startup.cs` (in-process model)
 

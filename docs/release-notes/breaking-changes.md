@@ -8,8 +8,8 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Elastic APM .NET Agent breaking changes [elastic-apm-net-agent-breaking-changes]
-Before you upgrade, carefully review the Elastic APM .NET Agent breaking changes and take the necessary steps to mitigate any issues.
+# Elastic {{product.apm-agent-dotnet}} breaking changes [elastic-apm-net-agent-breaking-changes]
+Before you upgrade, carefully review the Elastic {{product.apm-agent-dotnet}} breaking changes and take the necessary steps to mitigate any issues.
 
 To learn how to upgrade, check out [Upgrading](/reference/upgrading.md).
 
@@ -26,7 +26,7 @@ To learn how to upgrade, check out [Upgrading](/reference/upgrading.md).
 ## 1.33.0 [elastic-apm-net-agent-1330-breaking-changes]
 **Release date:** August 19, 2025
 
-This release bumps the minimum `MongoDb.Driver` package to 3.0.0 to unblock consumers who wish to use the latest MongoDb versions. 3.0+. In 3.0, types were moved from `MongoDb.Driver.Core` into `MongoDb.Driver` and deprecated types were removed. To avoid type conflicts, consumers using verions of MongoDb < 3.0.0 will need to first update MongoDb NuGet packages, before updating to this release of Elastic APM agent.
+This release bumps the minimum `MongoDb.Driver` package to 3.0.0 to unblock consumers who wish to use the latest MongoDb versions. 3.0+. In 3.0, types were moved from `MongoDb.Driver.Core` into `MongoDb.Driver` and deprecated types were removed. To avoid type conflicts, consumers using verions of MongoDb < 3.0.0 will need to first update MongoDb NuGet packages, before updating to this release of Elastic {{product.apm-agent-dotnet}}.
 
 ## 1.31.0 [elastic-apm-net-agent-1310-breaking-changes]
 **Release date:** December 2, 2024
@@ -38,7 +38,7 @@ For more information, check [#2498](https://github.com/elastic/apm-agent-dotnet/
 ## 1.29.0 [elastic-apm-net-agent-1290-breaking-changes]
 **Release date:** September 18, 2024
 
-This release includes a breaking change in how we parse and send transaction cookies. In 1.26.0, we introduced improved cookie redaction based on the SanitizeFieldNames configuration. To implement this, we extracted each cookie from the Cookie header, storing them in a cookie dictionary on the transaction request data. We have identified a problem with the storage of cookies that include period characters due to the mapping of such data when stored in the APM data stream. This behaviour can lead to lost transactions on requests which include such cookies. This is common in ASP.NET Core due to the default cookie names used for sessions, authentication, etc.
+This release includes a breaking change in how we parse and send transaction cookies. In 1.26.0, we introduced improved cookie redaction based on the SanitizeFieldNames configuration. To implement this, we extracted each cookie from the Cookie header, storing them in a cookie dictionary on the transaction request data. We have identified a problem with the storage of cookies that include period characters due to the mapping of such data when stored in the APM data stream. This behaviour can lead to lost transactions on requests which include such cookies. This is common in ASP.NET Core due to the default cookie names used for sessions, authentication, and so on.
 
 In this release, we no longer parse out individual cookies, and the cookie Dictionary has been removed from the data model. This means that cookies will no longer be indexed individually. However, we have ensured that we retain the primary reason for the earlier change, which was to redact the values of sensitive cookies. Any cookies with a name matching the SanitizeFieldNames patterns will be redacted in the value of the Cookie header we store.
 
@@ -54,7 +54,7 @@ For more information, check [#2444](https://github.com/elastic/apm-agent-dotnet/
 This release includes two breaking changes that have minimal impact.
 
 We removed support for target frameworks which have gone into end-of-life support by Microsoft. The impact should be minimal, however as we continue to support netstandard2.0 and netstandard2.1 where applicable.
-We removed the collection of GC metrics over ETW on .NET Full Framework. The collection over ETW requires elevated privileges, especially in IIS deployments. This runs counter to best practices. Since these are currently not displayed in the APM UI, while technically breaking, the impact should be minimal. The GC metric collection on modern .NET platforms is not impacted.
+We removed the collection of GC metrics over ETW on .NET Full Framework. The collection over ETW requires elevated privileges, especially in IIS deployments. This runs counter to best practices. Since these are currently not displayed in {{product.kibana}}, while technically breaking, the impact should be minimal. The GC metric collection on modern .NET platforms is not impacted.
 
 * Remove ETW powered GC metrics on FullFramework. For more information, check [#2036](https://github.com/elastic/apm-agent-dotnet/pull/2036).
 * Remove unsupported TFM’s. For more information, check [#2027](https://github.com/elastic/apm-agent-dotnet/pull/2027).
@@ -76,7 +76,7 @@ For more information, check [#1520](https://github.com/elastic/apm-agent-dotnet/
 
 ## 1.10.0 [elastic-apm-net-agent-1100-breaking-changes]
 
-Do not capture HTTP child spans for Elasticsearch.
+Do not capture HTTP child spans for {{product.elasticsearch}}.
 
 For more information, check [#1306](https://github.com/elastic/apm-agent-dotnet/pull/1306) and [#1276](https://github.com/elastic/apm-agent-dotnet/pull/1276).
 

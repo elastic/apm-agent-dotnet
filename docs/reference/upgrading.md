@@ -1,6 +1,14 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/upgrading.html
+description: "Guidance for upgrading the Elastic APM .NET Agent between versions, including links to release notes and agent-server compatibility information."
+navigation_title: MongoDB
+applies_to:
+  stack:
+  serverless:
+    observability:
+  product:
+    apm_agent_dotnet: ga
 ---
 
 # Upgrading [upgrading]

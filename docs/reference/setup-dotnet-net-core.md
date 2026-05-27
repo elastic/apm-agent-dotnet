@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-dotnet-net-core.html
+description: "How to set up the Elastic APM .NET Agent in .NET 8+ applications using Microsoft.Extensions.Hosting, including worker services."
+navigation_title: .NET 8+
 applies_to:
   stack:
   serverless:
@@ -9,7 +11,16 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# .NET 8+ [setup-dotnet-net-core]
+# Set up .NET 8+ instrumentation [setup-dotnet-net-core]
+
+
+## Supported versions [_supported_versions_dotnet_net_core]
+
+| Runtime | Supported versions |
+| --- | --- |
+| .NET | ≥8.0 ≤10.0.x |
+
+For the full list of supported runtime versions, refer to [Supported .NET runtimes](/reference/supported-technologies.md#supported-dotnet-runtimes).
 
 
 ## Quick start [_quick_start_3]
@@ -49,7 +60,7 @@ host.Run();
 1. Register Elastic APM before registering other IHostedServices to ensure its dependencies are initialized first.
 
 
-When registering services with `AddAllElasticApm()`, an APM agent with all instrumentations is enabled. On ASP.NET Core, it’ll automatically capture incoming requests, database calls through supported technologies, outgoing HTTP requests, etc.
+When registering services with `AddAllElasticApm()`, an {{product.apm-agent-dotnet}} with all instrumentations is enabled. On ASP.NET Core, it’ll automatically capture incoming requests, database calls through supported technologies, outgoing HTTP requests, and so on.
 
 For other application templates, such as worker services, you must manually instrument your `BackgroundService` to identify one or more units of work that should be captured.
 
@@ -100,7 +111,7 @@ When this application runs, a new transaction will be captured and sent for each
 
 ## Manual instrumentation using OpenTelemetry [_manual_instrumentation_using_opentelemetry]
 
-As an alternative to using the Elastic APM API by injecting an `ITracer`, you can use the OpenTelemetry API to manually instrument your application. The Elastic APM agent automatically bridges instrumentations created using the OpenTelemetry API, so you can use it to create spans and transactions. In .NET, the [`Activity` API](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs) can be used to instrument applications.
+As an alternative to using the Elastic APM API by injecting an `ITracer`, you can use the OpenTelemetry API to manually instrument your application. The Elastic {{product.apm-agent-dotnet}} automatically bridges instrumentations created using the OpenTelemetry API, so you can use it to create spans and transactions. In .NET, the [`Activity` API](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs) can be used to instrument applications.
 
 In the case of this sample worker service, we can update the code to prefer the OpenTelemetry API.
 
@@ -144,7 +155,7 @@ namespace WorkerServiceSample
 
 The `Elastic.Apm.NetCoreAll` package references every agent component that can be automatically configured. This is usually not a problem, but if you want to keep dependencies minimal, you can instead reference the `Elastic.Apm.Extensions.Hosting` package and register services with `AddElasticApm` method, instead of `AddAllElasticApm`. With this setup you can explicitly control what the agent will listen for.
 
-The following example only turns on outgoing HTTP monitoring (so, for instance, database and Elasticsearch calls won’t be automatically captured):
+The following example only turns on outgoing HTTP monitoring (so, for instance, database and {{product.elasticsearch}} calls won’t be automatically captured):
 
 ```csharp
 using Elastic.Apm.DiagnosticSource;
@@ -188,3 +199,10 @@ With this setup, the agent will be injected into the application during startup,
 Agent configuration can be controlled through environment variables when using the startup hook feature.
 
 ::::
+
+
+## Configure the agent [dotnet-net-core-configuration]
+
+After adding the agent, configure it to connect to your {{product.apm-server}}. The fastest way is through environment variables or `appsettings.json`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
+
+To set configuration values programmatically, see [Overriding configuration values programmatically](/reference/configuration-on-asp-net-core.md#asp-net-core-programmatic-config).

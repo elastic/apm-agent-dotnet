@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/nlog.html
+description: "How to integrate the Elastic APM .NET Agent with NLog to automatically inject trace and transaction IDs into log output."
+navigation_title: NLog
 applies_to:
   stack:
   serverless:
@@ -9,11 +11,11 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# NLog [nlog]
+# NLog log correlation [nlog]
 
 For NLog, we offer two [LayoutRenderers](https://github.com/NLog/NLog/wiki/Layout-Renderers) that inject the current trace and transaction id into logs.
 
-In order to use them, you need to add the [Elastic.Apm.NLog](https://www.nuget.org/packages/Elastic.Apm.NLog) NuGet package to your application and load it in the `<extensions>` section of your NLog config file:
+To use them, you need to add the [Elastic.Apm.NLog](https://www.nuget.org/packages/Elastic.Apm.NLog) NuGet package to your application and load it in the `<extensions>` section of your NLog config file:
 
 ```xml
 <nlog>

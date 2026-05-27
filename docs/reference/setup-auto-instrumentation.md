@@ -1,7 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-auto-instrumentation.html
-description: "Step-by-step guidance for enabling profiler-based, zero-code auto instrumentation in .NET applications by configuring environment variables and startup settings."
+description: "How to enable zero-code-change profiler-based auto instrumentation of .NET and .NET Framework applications using the CLR Profiling APIs."
+navigation_title: Profiler auto-instrumentation
 applies_to:
   stack:
   serverless:
@@ -10,7 +11,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Profiler auto instrumentation (zero-code) [setup-auto-instrumentation]
+# Set up profiler auto instrumentation (zero-code) [setup-auto-instrumentation]
 
 ## Overview [profiler-overview]
 
@@ -297,6 +298,8 @@ $environment = [string[]]@(
   "ELASTIC_APM_SERVER_URL=<apm server url>", <2>
   "ELASTIC_APM_API_KEY=<api key>", <3>
   "ELASTIC_APM_SERVICE_NAME=<your-service-name>") <4>
+  "ELASTIC_APM_SERVER_URL=<apm server url>",
+  "ELASTIC_APM_SECRET_TOKEN=<secret token>")
 
 Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Services\<service-name> -Name Environment -Value $environment <5>
 ```

@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-core.html
+description: "Reference for core configuration options that control fundamental agent behavior such as recording, sampling, service naming, and transaction management."
 applies_to:
   stack:
   serverless:
@@ -11,18 +12,17 @@ applies_to:
 
 # Core configuration options [config-core]
 
-
 ## `Recording` [config-recording]
 
 ```{applies_to}
 apm_agent_dotnet: ga 1.7.0
 ```
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-A Boolean specifying if the agent should be recording or not. When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics. When not recording, the agent works as a noop, where it does not collect data or communicate with the APM server, except for polling the central configuration endpoint. This is a reversible switch, so the agent threads are not killed when deactivated, but they will be mostly idle in this state, so the overhead should be negligible.
+A Boolean specifying if the agent should be recording or not. When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics. When not recording, the agent works as a noop, where it does not collect data or communicate with the {{product.apm-server}}, except for polling the central configuration endpoint. This is a reversible switch, so the agent threads are not killed when deactivated, but they will be mostly idle in this state, so the overhead should be negligible.
 
-Use this setting to dynamically disable Elastic APM at runtime.
+Use this setting to dynamically turn off Elastic {{product.apm-agent-dotnet}} at runtime.
 
 ::::{warning}
 Setting `Recording` to `false` influences the behavior of the [*Public API*](/reference/public-api.md). When the agent is not active, it won’t keep track of transactions, spans, and any related properties.
@@ -62,7 +62,7 @@ Setting `Enabled` to `false` influences the behavior of the [*Public API*](/refe
 
 ## `ServiceName` [config-service-name]
 
-This is used to keep all the errors and transactions of your service together and is the primary filter in the Elastic APM user interface.
+This is used to keep all the errors and transactions of your service together and is the primary filter in {{product.kibana}}.
 
 ::::{note}
 The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. In other words, your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores, and spaces. Characters in service names that don’t match the regular expression will be replaced with the `_` symbol.
@@ -87,7 +87,7 @@ apm_agent_dotnet: ga 1.3
 This is an optional name used to differentiate between nodes in a service. If this is not set, data aggregations are done based on a container ID (where valid) or on the reported hostname (automatically discovered).
 
 ::::{note}
-This feature requires APM Server versions >= 7.5
+This feature requires {{product.apm-server}} versions ≥ 7.5
 ::::
 
 
@@ -102,7 +102,7 @@ This feature requires APM Server versions >= 7.5
 
 ## `ServiceVersion` [config-service-version]
 
-A version string for the currently deployed version of the service. If you don’t version your deployments, the recommended value for this field is the commit identifier of the deployed revision, e.g. the output of `git rev-parse HEAD`.
+A version string for the currently deployed version of the service. If you don’t version your deployments, the recommended value for this field is the commit identifier of the deployed revision, for example, the output of `git rev-parse HEAD`.
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -136,12 +136,12 @@ This allows for the reported hostname to be manually specified. If this is not s
 apm_agent_dotnet: ga 1.1
 ```
 
-The name of the environment that this service is deployed in, e.g. "production" or "staging".
+The name of the environment that this service is deployed in, for example, "production" or "staging."
 
-Environments allow you to easily filter data on a global level in the APM app. It’s important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apm/filter-data.md#apm-filter-your-data-service-environment-filter) in the Kibana UI for more information.
+Environments allow you to efficiently filter data on a global level in {{product.kibana}}. It's important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apm/filter-data.md#apm-filter-your-data-service-environment-filter) in the {{product.kibana}} UI for more information.
 
 ::::{note}
-This feature is fully supported in the APM app in Kibana versions >= 7.2. You must use the query bar to filter for a specific environment in versions prior to 7.2.
+This feature is fully supported in the {{product.apm}} app in {{product.kibana}} versions ≥ 7.2. You must use the query bar to filter for a specific environment in versions before 7.2.
 ::::
 
 
@@ -154,16 +154,15 @@ This feature is fully supported in the APM app in Kibana versions >= 7.2. You mu
 | See note below | String |
 
 ::::{note}
-On ASP.NET Core application the agent uses [EnvironmentName from IHostingEnvironment](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName) as default environment name.
+On ASP.NET Core applications the agent uses [EnvironmentName from IHostEnvironment](https://learn.microsoft.com/dotnet/api/microsoft.extensions.hosting.ihostenvironment.environmentname) as the default environment name.
 ::::
-
 
 
 ## `TransactionSampleRate` [config-transaction-sample-rate]
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-By default, the agent samples every transaction (e.g. a request to your service). To reduce overhead and storage requirements, set the sample rate to a value between 0.0 and 1.0. The agent will still record the overall time and result for unsampled transactions, but no context information, labels, or spans will be recorded.
+By default, the agent samples every transaction (for example, a request to your service). To reduce overhead and storage requirements, set the sample rate to a value between 0.0 and 1.0. The agent will still record the overall time and result for unsampled transactions, but no context information, labels, or spans will be recorded.
 
 ::::{note}
 When parsing the value for this option, the agent doesn’t consider the current culture. It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
@@ -187,9 +186,9 @@ This setting can be changed after the agent starts.
 apm_agent_dotnet: ga 1.1.1
 ```
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-This limits the amount of spans that are recorded per transaction. This is helpful when a transaction creates a very high amount of spans, for example, thousands of SQL queries. Setting an upper limit helps prevent overloading the Agent and APM server in these edge cases.
+This limits the amount of spans that are recorded per transaction. This is helpful when a transaction creates a very high amount of spans, for example, thousands of SQL queries. Setting an upper limit helps prevent overloading the {{product.apm-agent-dotnet}} and {{product.apm-server}} in these edge cases.
 
 ::::{note}
 A value of `0` means that spans will never be collected. Setting `-1` means that spans will never be dropped. The Agent will revert to the default value if the value is set below `-1`.
@@ -213,7 +212,7 @@ This setting can be changed after agent starts.
 apm_agent_dotnet: ga 1.1
 ```
 
-If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest [APM Agent configuration](docs-content://solutions/observability/apm/apm-agent-central-configuration.md).
+If set to `true`, the agent makes periodic requests to the {{product.apm-server}} to fetch the latest [{{product.apm-agent-dotnet}} configuration](docs-content://solutions/observability/apm/apm-agent-central-configuration.md).
 
 | Environment variable name | IConfiguration key |
 | --- | --- |
@@ -230,9 +229,9 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 apm_agent_dotnet: ga 1.2
 ```
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-Sometimes, sanitizing, i.e., redacting sensitive data sent to Elastic APM, is necessary. This configuration accepts a comma-separated list of wildcard patterns of field names that should be sanitized. These apply to HTTP headers for requests and responses, cookies and `application/x-www-form-urlencoded` data.
+Sometimes, sanitizing, that is, redacting sensitive data sent to Elastic {{product.apm}}, is necessary. This configuration accepts a comma-separated list of wildcard patterns of field names that should be sanitized. These apply to HTTP headers for requests and responses, cookies and `application/x-www-form-urlencoded` data.
 
 ::::{important}
 This setting only applies to values captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn’t apply, and the agent won’t sanitize the body.
@@ -241,7 +240,7 @@ This setting only applies to values captured automatically by the agent. If you 
 
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default. Prepending an element with `(?-i)` makes the matching case sensitive. Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 
-Please review the data captured by Elastic APM carefully to ensure it does not contain sensitive information. If you find sensitive data in your {{es}} index, add an additional entry to this list. Setting a value here will **overwrite** the defaults, so be sure to include the default entries as well.
+Please review the data captured by Elastic {{product.apm}} carefully to ensure it does not contain sensitive information. If you find sensitive data in your {{product.elasticsearch}} index, add an additional entry to this list. Setting a value here will **overwrite** the defaults, so be sure to include the default entries as well.
 
 ::::{note}
 Sensitive information should not be sent in the query string. Data in the query string is considered non-sensitive. See [owasp.org](https://www.owasp.org/index.php/Information_exposure_through_query_strings_in_url) for more information.
@@ -278,9 +277,8 @@ Labels are added to all events with the format `key=value[,key=value[,...]]`. An
 | <empty map> | Map of string to string |
 
 ::::{note}
-This option requires APM Server 7.2 or later. It will have no effect on older versions.
+This option requires {{product.apm-server}} 7.2 or later. It will have no effect on earlier versions.
 ::::
-
 
 
 ## `SpanCompressionEnabled` [config-span-compression-enabled]
@@ -289,7 +287,7 @@ This option requires APM Server 7.2 or later. It will have no effect on older ve
 apm_agent_dotnet: ga 1.14
 ```
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
 Setting this option to true will enable span compression feature. Span compression reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that some information such as DB statements of all the compressed spans will not be collected.
 
@@ -308,7 +306,7 @@ Setting this option to true will enable span compression feature. Span compressi
 apm_agent_dotnet: ga 1.14
 ```
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
 Consecutive spans that are exact match and that are under this threshold will be compressed into a single composite span. This option does not apply to composite spans. This reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that the DB statements of all the compressed spans will not be collected.
 
@@ -327,7 +325,7 @@ Consecutive spans that are exact match and that are under this threshold will be
 apm_agent_dotnet: ga 1.14
 ```
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
 Consecutive spans to the same destination that are under this threshold will be compressed into a single composite span. This option does not apply to composite spans. This reduces the collection, processing, and storage overhead, and removes clutter from the UI. The tradeoff is that the DB statements of all the compressed spans will not be collected.
 
@@ -346,9 +344,9 @@ Consecutive spans to the same destination that are under this threshold will be 
 apm_agent_dotnet: ga 1.14
 ```
 
-[![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration)
+[![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded. If the exit span is equal or greater the threshold, it should be kept. In some cases exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services, such as outgoing HTTP requests, can’t be discarded. However, external calls that don’t propagate context, such as calls to a database, can be discarded using this threshold. Additionally, spans that lead to an error can’t be discarded.
+Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded. If the exit span is equal or greater the threshold, it should be kept. Sometimes exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services, such as outgoing HTTP requests, can’t be discarded. However, external calls that don’t propagate context, such as calls to a database, can be discarded using this threshold. Additionally, spans that lead to an error can’t be discarded.
 
 | Environment variable name | IConfiguration key |
 | --- | --- |
@@ -365,7 +363,7 @@ Sets the minimum duration of exit spans. Exit spans with a duration lesser than 
 apm_agent_dotnet: ga 1.13
 ```
 
-Setting this option to `false` will disable the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). This will disable the use of the vendor-neutral OpenTelemetry Tracing API (the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) in .NET) to manually instrument your code, and have the Elastic .NET APM agent handle those API calls.
+Setting this option to `false` will turn off the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). This will deactivate the use of the vendor-neutral OpenTelemetry Tracing API (the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) in .NET) to manually instrument your code, and have the Elastic .NET {{product.apm-agent-dotnet}} handle those API calls.
 
 | Environment variable name | IConfiguration key |
 | --- | --- |

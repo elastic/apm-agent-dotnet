@@ -1,6 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-asp-dot-net.html
+description: "How to set up the Elastic APM .NET Agent to trace ASP.NET full framework applications using the ElasticApmModule IIS module."
+navigation_title: ASP.NET
 applies_to:
   stack:
   serverless:
@@ -9,12 +11,21 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# ASP.NET [setup-asp-dot-net]
+# Set up ASP.NET instrumentation [setup-asp-dot-net]
+
+
+## Supported versions [_supported_versions_asp_net]
+
+| Framework | Supported versions |
+| --- | --- |
+| ASP.NET (.NET Framework) | 4.6.2–4.8.1 (IIS 10) |
+
+For the full compatibility matrix including supported installation methods, refer to [Web frameworks](/reference/supported-technologies.md#supported-web-frameworks).
 
 
 ## Quick start [_quick_start_4]
 
-To enable auto instrumentation for ASP.NET (.NET Framework), you need to install the `Elastic.Apm.AspNetFullFramework` package, add a reference to the package in your `web.config` file, and then compile and deploy your application.
+To enable tracing for ASP.NET (.NET Framework), install the `Elastic.Apm.AspNetFullFramework` package, add a reference to the package in your `web.config` file, and then compile and deploy your application.
 
 1. Ensure you have access to the application source code and install the [`Elastic.Apm.AspNetFullFramework`](https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework) package.
 2. Reference the `Elastic.Apm.AspNetFullFramework` in your application’s `web.config` file by adding the `ElasticApmModule` IIS module:
@@ -35,7 +46,7 @@ To enable auto instrumentation for ASP.NET (.NET Framework), you need to install
     ::::
 
 
-    By default, the agent creates transactions for all HTTP requests, including static content: .html pages, images, etc.
+    By default, the agent creates transactions for all HTTP requests, including static content: .html pages, images, and so on.
 
     To create transactions only for HTTP requests with dynamic content, such as `.aspx` pages, add the `managedHandler` preCondition to your `web.config` file:
 
@@ -66,18 +77,22 @@ Our IIS module requires:
 
 1. Recompile your application and deploy it.
 
-    The `ElasticApmModule` instantiates the APM agent on the first initialization. However, there may be some scenarios where you want to control the agent instantiation, such as configuring filters in the application start.
+    The `ElasticApmModule` instantiates the {{product.apm-agent-dotnet}} on the first initialization. However, there might be some scenarios where you want to control the agent instantiation, such as configuring filters in the application start.
 
     To do so, the `ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with ASP.NET Full Framework, which can then instantiate the agent.
 
     For example, you can add transaction filters to the agent in the application start:
 
     ```csharp
+    using Elastic.Apm;
+    using Elastic.Apm.Api;
+    using Elastic.Apm.AspNetFullFramework;
+
     public class MvcApplication : HttpApplication
     {
         protected void Application_Start()
         {
-            // other application startup e.g. RouteConfig, etc.
+            // other application startup for example, RouteConfig, and so on.
 
             // set up agent with components
             var agentComponents = ElasticApmModule.CreateAgentComponents();
@@ -93,6 +108,11 @@ Our IIS module requires:
     }
     ```
 
-    Now, the `ElasticApmModule` will use the instantiated instance of the APM agent upon initialization.
+    Now, the `ElasticApmModule` will use the instantiated instance of the {{product.apm-agent-dotnet}} upon initialization.
 
 
+## Configure the agent [asp-net-configuration]
+
+After adding the agent, configure it to connect to your {{product.apm-server}}. The fastest way is through environment variables or `web.config`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
+
+For the full list of configuration options available to ASP.NET applications, see [Configuration on ASP.NET](/reference/configuration-on-asp-net.md).

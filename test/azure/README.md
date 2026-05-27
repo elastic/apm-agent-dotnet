@@ -19,7 +19,7 @@ which is required to execute the Azure Functions tests.
 ## Set Environment Variables
 
 *Optional*: Create a environment variable named "AZURE_RESOURCE_GROUP_PREFIX" with 
-a custom prefix "dotnet-apm-local-dev-<YOURNAME>". e.g. "dotnet-apm-local-dev-stevegordon". 
+a custom prefix "dotnet-apm-local-dev-<YOURNAME>". For example, "dotnet-apm-local-dev-stevegordon". 
 This can be used to identify the resource group created in Azure when deploying 
 the required resources.
 

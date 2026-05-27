@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/configuration-on-asp-net-core.html
+description: "How to configure the Elastic APM .NET Agent in ASP.NET Core applications using the Microsoft.Extensions.Configuration infrastructure and appsettings.json."
 applies_to:
   stack:
   serverless:
@@ -27,12 +28,11 @@ app.Run();
 
 With this setup, the Agent is able to be configured in the same way as any other library in your application. For example, any configuration source that has been configured on the `IConfiguration` instance in use in the application can be used to set Agent configuration values.
 
-More information is available in the official [Microsoft .NET Core configuration docs](https://learn.microsoft.com/aspnet/core/fundamentals/configuration). You can find the key for each APM configuration option in this documentation, under the `IConfiguration or Web.config key` column of the option’s description.
+More information is available in the official [Microsoft .NET Core configuration docs](https://learn.microsoft.com/aspnet/core/fundamentals/configuration). You can find the key for each {{product.apm-agent-dotnet}} configuration option in this documentation, under the `IConfiguration or Web.config key` column of the option’s description.
 
 ::::{note}
 The `AddElasticApm` method only turns on ASP.NET Core monitoring. To turn on tracing for everything supported by the Agent on .NET Core, including HTTP and database monitoring, use the `AddAllElasticApm` method from the `Elastic.Apm NetCoreAll` package. Learn more in [ASP.NET Core setup](/reference/setup-asp-net-core.md).
 ::::
-
 
 
 ## Sample configuration file [sample-config]
@@ -57,7 +57,7 @@ Here is a sample `appsettings.json` configuration file for a typical ASP.NET Cor
 }
 ```
 
-1. With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `Elastic.Apm` category name.
+1. With ASP.NET Core, you must set `LogLevel` for the internal {{product.apm-agent-dotnet}} logger in the standard `Logging` section with the `Elastic.Apm` category name.
 
 
 In certain scenarios, like when you’re not using ASP.NET Core, you won’t activate the agent with the `AddElasticApm()` method. In this case, set the agent log level with [`ElasticApm:LogLevel`](/reference/config-supportability.md#config-log-level), as shown in the following `appsettings.json` file:
@@ -88,7 +88,7 @@ Because the agent reads all configuration from `IConfiguration`, you can inject 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-// Derive the APM environment from application-specific configuration
+// Derive the {{product.apm}} environment from application-specific configuration
 var apmEnvironment = $"{builder.Configuration["App:Region"]}-{builder.Environment.EnvironmentName}";
 
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
@@ -119,7 +119,7 @@ builder.Services.AddAllElasticApm();
 ```
 
 ::::{note}
-When not explicitly configured, the agent’s `Environment` option defaults to the ASP.NET Core hosting environment name from `IHostEnvironment.EnvironmentName` (typically driven by `ASPNETCORE_ENVIRONMENT`). If you want APM to report a different environment label, set `ElasticApm:Environment` explicitly as shown in the preceding example.
+When not explicitly configured, the agent’s `Environment` option defaults to the ASP.NET Core hosting environment name from `IHostEnvironment.EnvironmentName` (typically driven by `ASPNETCORE_ENVIRONMENT`). If you want {{product.apm-agent-dotnet}} to report a different environment label, set `ElasticApm:Environment` explicitly as shown in the preceding example.
 ::::
 
 **Source ordering and environment variable precedence**
@@ -149,4 +149,3 @@ builder.Services.AddAllElasticApm();
 Most agent configuration options are read once when the agent initializes at startup. In-memory values must be in place before `builder.Build()` is called; changes made after that point will not be picked up.
 
 The `IConfiguration` key for each agent option is listed under the **IConfiguration or Web.config key** column in the [configuration reference](/reference/configuration.md).
-

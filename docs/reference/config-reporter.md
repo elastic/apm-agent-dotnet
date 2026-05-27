@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-reporter.html
+description: "Reference for reporter configuration options that control how the agent connects to the APM Server, including server URL, authentication, and data buffering settings."
 applies_to:
   stack:
   serverless:
@@ -11,15 +12,13 @@ applies_to:
 
 # Reporter configuration options [config-reporter]
 
-
 ## `ServerUrl` [config-server-url]
 
-The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
+The URL for your {{product.apm-server}}. The URL must be fully qualified, including protocol (`http` or `https`) and port.
 
 ::::{important}
 Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 ::::
-
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -32,14 +31,13 @@ Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 
 ## `SecretToken` [config-secret-token]
 
-A string used to ensure that only your agents can send data to your APM server.
+A string used to ensure that only your agents can send data to your {{product.apm-server}}.
 
-Both the agents and the APM server have to be configured with the same secret token. Use this setting if the APM Server requires a secret token, for example, when using our hosted {{es}} Service on Elastic Cloud.
+Both the agents and the {{product.apm-server}} have to be configured with the same secret token. Use this setting if the {{product.apm-server}} requires a secret token, for example, when using our hosted {{product.elasticsearch}} Service on Elastic Cloud.
 
 ::::{warning}
 The `SecretToken` is sent as plain-text in every request to the server, so you should also secure your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
 ::::
-
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -52,17 +50,15 @@ The `SecretToken` is sent as plain-text in every request to the server, so you s
 
 ## `ApiKey` ([1.4]) [config-api-key]
 
-A base64-encoded string used to ensure that only your agents can send data to your APM server. You must have created the API key using the APM server’s [command line tool](docs-content://solutions/observability/apm/api-keys.md).
+A base64-encoded string used to ensure that only your agents can send data to your {{product.apm-server}}. You must have created the API key using one of the methods described in [API keys for Elastic {{product.apm}}](docs-content://solutions/observability/apm/api-keys.md).
 
 ::::{note}
-This feature is fully supported in the APM Server versions >= 7.6.
+This feature is fully supported in the {{product.apm-server}} versions ≥ 7.6.
 ::::
-
 
 ::::{warning}
 The `APIKey` is sent as plain-text in every request to the server, so you should also secure your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
 ::::
-
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -79,9 +75,9 @@ The `APIKey` is sent as plain-text in every request to the server, so you should
 apm_agent_dotnet: ga 1.3
 ```
 
-By default, the agent verifies the SSL certificate if you use an HTTPS connection to the APM server.
+By default, the agent verifies the SSL certificate if you use an HTTPS connection to the {{product.apm-server}}.
 
-Verification can be disabled by changing this setting to false.
+Verification can be turned off by changing this setting to false.
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -92,10 +88,8 @@ Verification can be disabled by changing this setting to false.
 | `true` | Boolean |
 
 ::::{note}
-This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1. We recommend upgrading to .NET Framework 4.7.2 or newer to use this configuration setting.
-
+This configuration setting has no effect on .NET Framework versions 4.6.2 to 4.7.1. Upgrade to .NET Framework 4.7.2 or newer to use this setting.
 ::::
-
 
 
 ## `ServerCert` [config-server-cert]
@@ -104,7 +98,7 @@ This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1.
 apm_agent_dotnet: ga 1.9
 ```
 
-The path to a PEM-encoded certificate used for SSL/TLS by APM server. Used to perform validation through certificate pinning.
+The path to a PEM-encoded certificate used for SSL/TLS by {{product.apm-server}}. Used to perform validation through certificate pinning.
 
 This can be specified when using a certificate signed by a Certificate Authority (CA) that is not in the trust store, such as a self-signed certificate.
 
@@ -117,10 +111,8 @@ This can be specified when using a certificate signed by a Certificate Authority
 | `<none>` | String |
 
 ::::{note}
-This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1. We recommend upgrading to .NET Framework 4.7.2 or newer to use this configuration setting.
-
+This configuration setting has no effect on .NET Framework versions 4.6.2 to 4.7.1. Upgrade to .NET Framework 4.7.2 or newer to use this setting.
 ::::
-
 
 
 ## `FlushInterval` [config-flush-interval]
@@ -129,13 +121,13 @@ This configuration setting has no effect on .NET Framework versions 4.6.2-4.7.1.
 apm_agent_dotnet: ga 1.1
 ```
 
-The maximal amount of time events are held in the queue until there is enough to send a batch. It’s possible for a batch to contain less than [`MaxBatchEventCount`](#config-max-batch-event-count) events if there are events that need to be sent out because they were held for too long. A lower value will increase the load on your APM server, while a higher value can increase the memory pressure on your app. A higher value also impacts the time until transactions are indexed and searchable in Elasticsearch.
+The maximal amount of time events are held in the queue until there is enough to send a batch. It’s possible for a batch to contain less than [`MaxBatchEventCount`](#config-max-batch-event-count) events if there are events that need to be sent out because they were held for too long. A lower value will increase the load on your {{product.apm-server}}, while a higher value can increase the memory pressure on your app. A higher value also impacts the time until transactions are indexed and searchable in {{product.elasticsearch}}.
 
 Supports the duration suffixes `ms`, `s` and `m`. Example: `30s`. The default unit for this option is `s`.
 
-If `FlushInterval` is set to `0` (or `0s`, `0ms`, etc.) and there’s no event sending operation still in progress, then the Agent won’t hold events in the queue and will send them immediately.
+If `FlushInterval` is set to `0` (or `0s`, `0ms`, and so on) and there’s no event sending operation still in progress, then the Agent won’t hold events in the queue and will send them immediately.
 
-Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and in that case agent uses the default value instead.
+Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, and so on) is invalid and in that case agent uses the default value instead.
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -190,7 +182,7 @@ Setting `MaxQueueEventCount` to `0` or a negative value is invalid and the Agent
 apm_agent_dotnet: ga 1.0.0
 ```
 
-The interval at which the agent sends metrics to the APM Server. This must be at least `1s`. Set this to `0s` to deactivate.
+The interval at which the agent sends metrics to the {{product.apm-server}}. This must be at least `1s`. Set this to `0s` to deactivate.
 
 Supports the duration suffixes `ms`, `s` and `m`. Example: `30s`. The default unit for this option is `s`.
 
@@ -209,7 +201,7 @@ Supports the duration suffixes `ms`, `s` and `m`. Example: `30s`. The default un
 apm_agent_dotnet: ga 1.3.0
 ```
 
-This disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected. Example: `foo.*,bar.*`
+This turns off the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected. Example: `foo.*,bar.*`
 
 You can find the name of the available metrics in [*Metrics*](/reference/metrics.md).
 
@@ -241,4 +233,3 @@ Valid options are `"auto"`, `"aws"`, `"gcp"`, `"azure"`, and `"none"`. If this c
 | Default | Type |
 | --- | --- |
 | `auto` | String |
-

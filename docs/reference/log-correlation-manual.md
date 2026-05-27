@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/log-correlation-manual.html
+description: "How to manually inject APM trace IDs into structured or unstructured log output when the agent's built-in logging integrations are not available."
 applies_to:
   stack:
   serverless:
@@ -26,6 +27,8 @@ Given a transaction object, you can obtain its trace id by using the `Transactio
 You can also use the [Elastic.Apm.Agent.Tracer.CurrentTransaction](/reference/public-api.md#api-current-transaction) property anywhere in the code to access the currently active transaction.
 
 ```csharp
+using Elastic.Apm;
+
 public (string traceId, string transactionId) GetTraceIds()
 {
 	if (!Agent.IsConfigured) return default;
@@ -34,17 +37,19 @@ public (string traceId, string transactionId) GetTraceIds()
 }
 ```
 
-In case the agent is configured and there is an active transaction, the `traceId` and `transactionId` will always return the current trace and transaction ids that you can manually add to your logs. Make sure you store those in the fields `trace.id` and `transaction.id` when you send them to Elasticsearch.
+In case the agent is configured and there is an active transaction, the `traceId` and `transactionId` will always return the current trace and transaction ids that you can manually add to your logs. Make sure you store those in the fields `trace.id` and `transaction.id` when you send them to {{product.elasticsearch}}.
 
 
 ## Manual log correlation (unstructured) [log-correlation-manual-unstructured]
 
-For correlating unstructured logs (e.g. basic printf-style logging, like `Console.WriteLine`), you will need to include the trace ids in your log message, and then extract them using Filebeat.
+For correlating unstructured logs (for example, basic printf-style logging, like `Console.WriteLine`), you will need to include the trace ids in your log message, and then extract them using {{product.filebeat}}.
 
-If you already have a transaction object, then you can use the `TraceId` and `Id` properties. Both are of type `string`, so you can simply add them to the log.
+If you already have a transaction object, then you can use the `TraceId` and `Id` properties. Both are of type `string`, so you can add them to the log.
 
 ```csharp
-var currentTransaction = //Get Current transaction, e.g.: Agent.Tracer.CurrentTransaction;
+using Elastic.Apm;
+
+var currentTransaction = Agent.Tracer.CurrentTransaction;
 
 Console.WriteLine($"ERROR [trace.id={currentTransaction.TraceId} transaction.id={currentTransaction.Id}] an error occurred");
 ```
@@ -55,7 +60,7 @@ This would print a log message along the lines of:
     ERROR [trace.id=cd04f33b9c0c35ae8abe77e799f126b7 transaction.id=cd04f33b9c0c35ae] an error occurred
 ```
 
-For log correlation to work, the trace ids must be extracted from the log message and stored in separate fields in the Elasticsearch document. This can be achieved by [parsing the data by using ingest node](beats://reference/filebeat/configuring-ingest-node.md), in particular by using [the grok processor](elasticsearch://reference/enrich-processor/grok-processor.md).
+For log correlation to work, the trace ids must be extracted from the log message and stored in separate fields in the {{product.elasticsearch}} document. This can be achieved by [parsing the data by using ingest node](beats://reference/filebeat/configuring-ingest-node.md), in particular by using [the grok processor](elasticsearch://reference/enrich-processor/grok-processor.md).
 
 ```json
 {
@@ -74,4 +79,3 @@ For log correlation to work, the trace ids must be extracted from the log messag
   ]
 }
 ```
-

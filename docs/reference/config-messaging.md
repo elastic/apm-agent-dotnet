@@ -1,6 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-messaging.html
+description: "Reference for messaging configuration options that control how the agent traces message queue and topic interactions, including filtering queues from tracing."
 applies_to:
   stack:
   serverless:
@@ -10,7 +11,6 @@ applies_to:
 ---
 
 # Messaging configuration options [config-messaging]
-
 
 ## `IgnoreMessageQueues` [config-ignore-message-queues]
 
@@ -24,11 +24,10 @@ This config accepts a comma separated string of wildcard patterns of queues/topi
 
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default. Prepending an element with `(?-i)` makes the matching case sensitive. Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 
-| Default | Type |
-| --- | --- |
-| <empty string> | String |
-
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
 | `ELASTIC_APM_IGNORE_MESSAGE_QUEUES` | `ElasticApm:IgnoreMessageQueues` |
 
+| Default | Type |
+| --- | --- |
+| <empty string> | String |
