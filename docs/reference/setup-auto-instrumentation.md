@@ -46,9 +46,9 @@ It instruments the following technologies:
 | Technology | Required library | Notes |
 | --- | --- | --- |
 | ASP.NET | built-in (.NET Framework) | |
-| ASP.NET Core | built-in (.NET) | startup hook† |
+| ASP.NET Core | built-in (.NET) | (.NET only) startup hook† |
 | HTTP client | built-in (.NET Framework)<br>built-in (.NET) | |
-| gRPC client | [`Grpc.Net.Client`](https://www.nuget.org/packages/Grpc.Net.Client)<br>`≥2.23.2 <3.0.0` | startup hook† |
+| gRPC client | [`Grpc.Net.Client`](https://www.nuget.org/packages/Grpc.Net.Client)<br>≥2.23.2 <3.0.0 | (.NET only) startup hook† |
 
 ::::{note}
 gRPC server calls in ASP.NET Core applications are captured automatically using ASP.NET Core instrumentation. No separate integration is needed for the server side.
@@ -60,35 +60,35 @@ gRPC server calls in ASP.NET Core applications are captured automatically using 
 | Technology | Required library | Notes |
 | --- | --- | --- |
 | ADO.NET | built-in (.NET Framework) | |
-| {{es}} | [`Elastic.Clients.Elasticsearch`](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch)<br>`≥8.0.0 <10.0.0` | startup hook† |
-| Elasticsearch.Net (legacy) | [`Elasticsearch.Net`](https://www.nuget.org/packages/Elasticsearch.Net)<br>`≥7.6.0 <8.0.0` | startup hook† |
-| NEST (legacy) | [`NEST`](https://www.nuget.org/packages/NEST)<br>`≥7.6.0 <8.0.0` | startup hook† |
-| Entity Framework Core | [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)<br>`≥8.0.0 ≤10.0.x` | startup hook† |
-| MongoDB | [`MongoDB.Driver`](https://www.nuget.org/packages/MongoDB.Driver)<br>`≥3.7.0 <4.0.0` | startup hook†<br>OTel bridge‡ |
-| MySQL | [`MySql.Data`](https://www.nuget.org/packages/MySql.Data)<br>`≥6.7.0 <9.0.0` | |
-| Oracle | [`Oracle.ManagedDataAccess`](https://www.nuget.org/packages/Oracle.ManagedDataAccess)<br>`≥12.2.1100 <22.0.0`<br>[`Oracle.ManagedDataAccess.Core`](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core)<br>`≥2.0.0 <4.0.0` | |
-| PostgreSQL | [`Npgsql`](https://www.nuget.org/packages/Npgsql)<br>`≥4.0.0 <8.0.0` | |
-| SqlClient | built-in (.NET Framework)<br>[`System.Data.SqlClient`](https://www.nuget.org/packages/System.Data.SqlClient)<br>`≥4.0.0 <5.0.0`<br>[`Microsoft.Data.SqlClient`](https://www.nuget.org/packages/Microsoft.Data.SqlClient)<br>`≥1.0.0 <6.0.0` | |
-| SQLite (Microsoft.Data.Sqlite) | [`Microsoft.Data.Sqlite`](https://www.nuget.org/packages/Microsoft.Data.Sqlite)<br>`≥2.0.0 <9.0.0` | |
-| SQLite (System.Data.SQLite) | [`System.Data.SQLite`](https://www.nuget.org/packages/System.Data.SQLite)<br>`≥1.0.0 <3.0.0` | |
+| {{es}} | [`Elastic.Clients.Elasticsearch`](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch)<br>≥8.0.0 <10.0.0 | (.NET only) startup hook† |
+| Elasticsearch.Net (legacy) | [`Elasticsearch.Net`](https://www.nuget.org/packages/Elasticsearch.Net)<br>≥7.6.0 <8.0.0 | (.NET only) startup hook† |
+| NEST (legacy) | [`NEST`](https://www.nuget.org/packages/NEST)<br>≥7.6.0 <8.0.0 | (.NET only) startup hook† |
+| Entity Framework Core | [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)<br>≥8.0.0 ≤10.0.x | (.NET only) startup hook† |
+| MongoDB | [`MongoDB.Driver`](https://www.nuget.org/packages/MongoDB.Driver)<br>≥3.7.0 <4.0.0 | startup hook†<br>OTel bridge‡ |
+| MySQL | [`MySql.Data`](https://www.nuget.org/packages/MySql.Data)<br>≥6.7.0 <9.0.0 | |
+| Oracle | [`Oracle.ManagedDataAccess`](https://www.nuget.org/packages/Oracle.ManagedDataAccess)<br>≥12.2.1100 <22.0.0<br>[`Oracle.ManagedDataAccess.Core`](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core)<br>≥2.0.0 <4.0.0 | |
+| PostgreSQL | [`Npgsql`](https://www.nuget.org/packages/Npgsql)<br>≥4.0.0 <8.0.0 | |
+| SqlClient | built-in (.NET Framework)<br>[`System.Data.SqlClient`](https://www.nuget.org/packages/System.Data.SqlClient)<br>≥4.0.0 <5.0.0<br>[`Microsoft.Data.SqlClient`](https://www.nuget.org/packages/Microsoft.Data.SqlClient)<br>≥1.0.0 <6.0.0 | |
+| SQLite (Microsoft.Data.Sqlite) | [`Microsoft.Data.Sqlite`](https://www.nuget.org/packages/Microsoft.Data.Sqlite)<br>≥2.0.0 <9.0.0 | |
+| SQLite (System.Data.SQLite) | [`System.Data.SQLite`](https://www.nuget.org/packages/System.Data.SQLite)<br>≥1.0.0 <3.0.0 | |
 
 
 ### Messaging
 
 | Technology | Required library | Notes |
 | --- | --- | --- |
-| Azure Service Bus | [`Azure.Messaging.ServiceBus`](https://www.nuget.org/packages/Azure.Messaging.ServiceBus)<br>`≥7.0.0 <8.0.0` | startup hook† |
-| Kafka | [`Confluent.Kafka`](https://www.nuget.org/packages/Confluent.Kafka)<br>`≥1.4.0 <3.0.0` | |
-| RabbitMQ | [`RabbitMQ.Client`](https://www.nuget.org/packages/RabbitMQ.Client)<br>`≥3.6.9 <7.0.0` | |
+| Azure Service Bus | [`Azure.Messaging.ServiceBus`](https://www.nuget.org/packages/Azure.Messaging.ServiceBus)<br>≥7.0.0 <8.0.0 | (.NET only) startup hook† |
+| Kafka | [`Confluent.Kafka`](https://www.nuget.org/packages/Confluent.Kafka)<br>≥1.4.0 <3.0.0 | |
+| RabbitMQ | [`RabbitMQ.Client`](https://www.nuget.org/packages/RabbitMQ.Client)<br>≥3.6.9 <7.0.0 | |
 
 
 ### Azure Storage
 
 | Technology | Required library | Notes |
 | --- | --- | --- |
-| Azure Blob Storage | [`Azure.Storage.Blobs`](https://www.nuget.org/packages/Azure.Storage.Blobs)<br>`≥12.8.0 <13.0.0` | startup hook† |
-| Azure Queue Storage | [`Azure.Storage.Queues`](https://www.nuget.org/packages/Azure.Storage.Queues)<br>`≥12.6.0 <13.0.0` | startup hook† |
-| Azure File Share Storage | [`Azure.Storage.Files.Shares`](https://www.nuget.org/packages/Azure.Storage.Files.Shares)<br>`≥12.6.0 <13.0.0` | startup hook† |
+| Azure Blob Storage | [`Azure.Storage.Blobs`](https://www.nuget.org/packages/Azure.Storage.Blobs)<br>≥12.8.0 <13.0.0 | (.NET only) startup hook† |
+| Azure Queue Storage | [`Azure.Storage.Queues`](https://www.nuget.org/packages/Azure.Storage.Queues)<br>≥12.6.0 <13.0.0 | (.NET only) startup hook† |
+| Azure File Share Storage | [`Azure.Storage.Files.Shares`](https://www.nuget.org/packages/Azure.Storage.Files.Shares)<br>≥12.6.0 <13.0.0 | (.NET only) startup hook† |
 
 † .NET only; not supported on .NET Framework. The profiler uses the [.NET startup hook](https://learn.microsoft.com/en-us/dotnet/core/tutorials/dotnet-startup-hooks) mechanism to automatically load both `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge.
 
