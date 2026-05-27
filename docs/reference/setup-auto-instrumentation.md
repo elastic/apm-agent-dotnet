@@ -108,7 +108,7 @@ NuGet packages must use the same version number as the profiler zip file.
 Before starting, ensure you have:
 
 * **APM server URL**: the URL of the APM server you want to send data to (for example, `https://my-apm-server:8200`). You can find this in your Elastic deployment settings.
-* **API key**: used by the agent to authenticate with APM server. See [API key](docs-content://solutions/observability/apm/api-keys.md) for details. If your environment uses secret tokens, set `ELASTIC_APM_SECRET_TOKEN` in place of `ELASTIC_APM_API_KEY` in the examples below.
+* **API key**: used by the agent to authenticate with APM server. Refer to [API key](docs-content://solutions/observability/apm/api-keys.md) for details. If your environment uses secret tokens, set `ELASTIC_APM_SECRET_TOKEN` in place of `ELASTIC_APM_API_KEY` in the examples below.
 * **Host access**: you must be able to set environment variables for the process or service you want to instrument (for example, using a Dockerfile, service definition, or system settings).
 * **Supported platform**: verify that your runtime and architecture appear in the support table in the [Overview](#overview) section. If you are unsure which runtime your app targets, refer to the note about .NET vs .NET Framework in the same section.
 * **Profiler zip version**: if you plan to add any `Elastic.Apm` NuGet packages alongside the profiler, download a zip whose version exactly matches the NuGet package versions you intend to use.
