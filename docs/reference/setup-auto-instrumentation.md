@@ -75,7 +75,7 @@ gRPC server calls in ASP.NET Core applications are captured automatically using 
 
 | Technology | Required library |
 | --- | --- |
-| Azure Service Bus | [Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0](https://www.nuget.org/packages/Azure.Messaging.ServiceBus), via startup hook† |
+| Azure Service Bus | [Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0](https://www.nuget.org/packages/Azure.Messaging.ServiceBus), using startup hook† |
 | Kafka | [Confluent.Kafka ≥1.4.0 <3.0.0](https://www.nuget.org/packages/Confluent.Kafka) |
 | RabbitMQ | [RabbitMQ.Client ≥3.6.9 <7.0.0](https://www.nuget.org/packages/RabbitMQ.Client) |
 
