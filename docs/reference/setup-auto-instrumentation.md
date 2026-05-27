@@ -116,7 +116,7 @@ Before starting, ensure you have:
 
 ## General steps [_general_steps]
 
-The general steps in configuring profiler auto instrumentation are as follows. See [Instrumenting containers and services](#instrumenting-containers-and-services) for configuration for common deployment environments.
+The general steps in configuring profiler auto instrumentation are as follows. Refer to [Instrumenting containers and services](#instrumenting-containers-and-services) for configuration for common deployment environments.
 
 1. Download `elastic_apm_profiler_<version>.zip` from the [GitHub Releases page](https://github.com/elastic/apm-agent-dotnet/releases) (look under **Assets**, where `<version>` is the release version number).
 2. Unzip the zip file into a folder on the host that is hosting the application to instrument.
