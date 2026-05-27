@@ -14,7 +14,7 @@ applies_to:
 
 ## Overview [profiler-overview]
 
-Profiler auto instrumentation lets you add {{product.apm}} to a .NET application (including ASP.NET Core and ASP.NET apps) without modifying source code or adding NuGet packages. Set a few environment variables, start your application, and the profiler automatically captures incoming request transactions, outgoing HTTP calls, database queries, and more for the technologies listed below. This approach is useful for getting started quickly with zero code changes, for instrumenting applications you don't own, or for applying a single configuration change across all services on a host.
+Profiler auto instrumentation lets you add {{product.apm}} to a .NET application (including ASP.NET Core and ASP.NET apps) without modifying source code or adding NuGet packages. Set a few environment variables, start your application, and the profiler automatically captures incoming request transactions, outgoing HTTP calls, database queries, and more for the technologies in the following section. This approach is useful for getting started quickly with zero code changes, for instrumenting applications you don't own, or for applying a single configuration change across all services on a host.
 
 ::::{note}
 **Not sure whether you have .NET or .NET Framework?** ".NET" (formerly ".NET Core") refers to .NET 8, .NET 9, and .NET 10. ".NET Framework" is the older Windows-only runtime (versions 4.6.1 to 4.8.1). If you're unsure which your application targets, open its `.csproj` file and check the `<TargetFramework>` element: values like `net8.0` or `net10.0` mean .NET; values like `net472` or `net48` mean .NET Framework.
@@ -43,12 +43,12 @@ It instruments the following technologies:
 
 ### Web and networking
 
-| Technology | Required library |
-| --- | --- |
-| ASP.NET | built-in (.NET Framework) |
-| ASP.NET Core | built-in (.NET), using startup hook† |
-| HTTP client | built-in (.NET), using startup hook† |
-| gRPC client | [Grpc.Net.Client ≥2.23.2 <3.0.0](https://www.nuget.org/packages/Grpc.Net.Client), using startup hook† |
+| Technology | Required library | Notes |
+| --- | --- | --- |
+| ASP.NET | built-in (.NET Framework) | |
+| ASP.NET Core | built-in (.NET) | startup hook† |
+| HTTP client | built-in (.NET Framework)<br>built-in (.NET) | |
+| gRPC client | [`Grpc.Net.Client`](https://www.nuget.org/packages/Grpc.Net.Client)<br>`≥2.23.2 <3.0.0` | startup hook† |
 
 ::::{note}
 gRPC server calls in ASP.NET Core applications are captured automatically using ASP.NET Core instrumentation. No separate integration is needed for the server side.
@@ -57,38 +57,38 @@ gRPC server calls in ASP.NET Core applications are captured automatically using 
 
 ### Data access
 
-| Technology | Required library |
-| --- | --- |
-| ADO.NET | built-in (.NET Framework) |
-| {{es}} | [`Elastic.Clients.Elasticsearch` ≥8.0.0 <10.0.0](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch), using startup hook† |
-| Elasticsearch.Net (legacy) | [`Elasticsearch.Net` ≥7.6.0 <8.0.0](https://www.nuget.org/packages/Elasticsearch.Net), using startup hook† |
-| NEST (legacy) | [`NEST` ≥7.6.0 <8.0.0](https://www.nuget.org/packages/NEST), using startup hook† |
-| Entity Framework Core | [`Microsoft.EntityFrameworkCore` ≥8.0.0 ≤10.0.x](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore), using startup hook† |
-| MongoDB | [`MongoDB.Driver` ≥3.7.0 <4.0.0](https://www.nuget.org/packages/MongoDB.Driver), using startup hook†‡ |
-| MySQL | [`MySql.Data` ≥6.7.0 <9.0.0](https://www.nuget.org/packages/MySql.Data) |
-| Oracle | [`Oracle.ManagedDataAccess` ≥12.2.1100 <22.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess)<br>[`Oracle.ManagedDataAccess.Core` ≥2.0.0 <4.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) |
-| PostgreSQL | [`Npgsql` ≥4.0.0 <8.0.0](https://www.nuget.org/packages/Npgsql) |
-| SqlClient | built-in (.NET Framework)<br>[`System.Data.SqlClient` ≥4.0.0 <5.0.0](https://www.nuget.org/packages/System.Data.SqlClient)<br>[`Microsoft.Data.SqlClient` ≥1.0.0 <6.0.0](https://www.nuget.org/packages/Microsoft.Data.SqlClient) |
-| SQLite (Microsoft.Data.Sqlite) | [`Microsoft.Data.Sqlite` ≥2.0.0 <9.0.0](https://www.nuget.org/packages/Microsoft.Data.Sqlite) |
-| SQLite (System.Data.SQLite) | [`System.Data.SQLite` ≥1.0.0 <3.0.0](https://www.nuget.org/packages/System.Data.SQLite) |
+| Technology | Required library | Notes |
+| --- | --- | --- |
+| ADO.NET | built-in (.NET Framework) | |
+| {{es}} | [`Elastic.Clients.Elasticsearch`](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch)<br>`≥8.0.0 <10.0.0` | startup hook† |
+| Elasticsearch.Net (legacy) | [`Elasticsearch.Net`](https://www.nuget.org/packages/Elasticsearch.Net)<br>`≥7.6.0 <8.0.0` | startup hook† |
+| NEST (legacy) | [`NEST`](https://www.nuget.org/packages/NEST)<br>`≥7.6.0 <8.0.0` | startup hook† |
+| Entity Framework Core | [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)<br>`≥8.0.0 ≤10.0.x` | startup hook† |
+| MongoDB | [`MongoDB.Driver`](https://www.nuget.org/packages/MongoDB.Driver)<br>`≥3.7.0 <4.0.0` | startup hook†<br>OTel bridge‡ |
+| MySQL | [`MySql.Data`](https://www.nuget.org/packages/MySql.Data)<br>`≥6.7.0 <9.0.0` | |
+| Oracle | [`Oracle.ManagedDataAccess`](https://www.nuget.org/packages/Oracle.ManagedDataAccess)<br>`≥12.2.1100 <22.0.0`<br>[`Oracle.ManagedDataAccess.Core`](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core)<br>`≥2.0.0 <4.0.0` | |
+| PostgreSQL | [`Npgsql`](https://www.nuget.org/packages/Npgsql)<br>`≥4.0.0 <8.0.0` | |
+| SqlClient | built-in (.NET Framework)<br>[`System.Data.SqlClient`](https://www.nuget.org/packages/System.Data.SqlClient)<br>`≥4.0.0 <5.0.0`<br>[`Microsoft.Data.SqlClient`](https://www.nuget.org/packages/Microsoft.Data.SqlClient)<br>`≥1.0.0 <6.0.0` | |
+| SQLite (Microsoft.Data.Sqlite) | [`Microsoft.Data.Sqlite`](https://www.nuget.org/packages/Microsoft.Data.Sqlite)<br>`≥2.0.0 <9.0.0` | |
+| SQLite (System.Data.SQLite) | [`System.Data.SQLite`](https://www.nuget.org/packages/System.Data.SQLite)<br>`≥1.0.0 <3.0.0` | |
 
 
 ### Messaging
 
-| Technology | Required library |
-| --- | --- |
-| Azure Service Bus | [`Azure.Messaging.ServiceBus` ≥7.0.0 <8.0.0](https://www.nuget.org/packages/Azure.Messaging.ServiceBus), using startup hook† |
-| Kafka | [`Confluent.Kafka` ≥1.4.0 <3.0.0](https://www.nuget.org/packages/Confluent.Kafka) |
-| RabbitMQ | [`RabbitMQ.Client` ≥3.6.9 <7.0.0](https://www.nuget.org/packages/RabbitMQ.Client) |
+| Technology | Required library | Notes |
+| --- | --- | --- |
+| Azure Service Bus | [`Azure.Messaging.ServiceBus`](https://www.nuget.org/packages/Azure.Messaging.ServiceBus)<br>`≥7.0.0 <8.0.0` | startup hook† |
+| Kafka | [`Confluent.Kafka`](https://www.nuget.org/packages/Confluent.Kafka)<br>`≥1.4.0 <3.0.0` | |
+| RabbitMQ | [`RabbitMQ.Client`](https://www.nuget.org/packages/RabbitMQ.Client)<br>`≥3.6.9 <7.0.0` | |
 
 
 ### Azure Storage
 
-| Technology | Required library |
-| --- | --- |
-| Azure Blob Storage | [`Azure.Storage.Blobs` ≥12.8.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Blobs), using startup hook† |
-| Azure Queue Storage | [`Azure.Storage.Queues` ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Queues), using startup hook† |
-| Azure File Share Storage | [`Azure.Storage.Files.Shares` ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Files.Shares), using startup hook† |
+| Technology | Required library | Notes |
+| --- | --- | --- |
+| Azure Blob Storage | [`Azure.Storage.Blobs`](https://www.nuget.org/packages/Azure.Storage.Blobs)<br>`≥12.8.0 <13.0.0` | startup hook† |
+| Azure Queue Storage | [`Azure.Storage.Queues`](https://www.nuget.org/packages/Azure.Storage.Queues)<br>`≥12.6.0 <13.0.0` | startup hook† |
+| Azure File Share Storage | [`Azure.Storage.Files.Shares`](https://www.nuget.org/packages/Azure.Storage.Files.Shares)<br>`≥12.6.0 <13.0.0` | startup hook† |
 
 † .NET only; not supported on .NET Framework. The profiler uses the [.NET startup hook](https://learn.microsoft.com/en-us/dotnet/core/tutorials/dotnet-startup-hooks) mechanism to automatically load both `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge.
 
@@ -111,7 +111,7 @@ NuGet packages must use the same version number as the profiler zip file.
 
 Before starting, ensure you have:
 
-* **{{product.apm}} server URL**: the URL of the {{product.apm}} server you want to send data to (for example, `https://my-apm-server:8200`). You can find this in your Elastic deployment settings.
+* **{{product.apm}} server URL**: the URL of the {{product.apm}} server you want to send data to (for example, `https://my-apm-server:8200`). This can be found in the Elastic deployment settings.
 * **API key**: used by the agent to authenticate with {{product.apm}} server. Refer to [API key](docs-content://solutions/observability/apm/api-keys.md) for details. If your environment uses secret tokens, set `ELASTIC_APM_SECRET_TOKEN` in place of `ELASTIC_APM_API_KEY` in the examples below.
 * **Host access**: you must be able to set environment variables for the process or service you want to instrument (for example, using a Dockerfile, service definition, or system settings).
 * **Supported platform**: verify that your runtime and architecture appear in the support table in the [Overview](#profiler-overview) section. If you are unsure which runtime your app targets, refer to the note about .NET vs .NET Framework in the same section.
@@ -538,7 +538,7 @@ The `Elastic.Apm` package version must exactly match the version of the profiler
 
 Some technologies are not covered by the profiler and require a dedicated Elastic {{product.apm}} NuGet package: [Entity Framework 6](/reference/setup-ef6.md), [Redis (`StackExchange.Redis`)](/reference/setup-stackexchange-redis.md), [Azure CosmosDB](/reference/setup-azure-cosmosdb.md), [Azure Functions](/reference/setup-azure-functions.md), and [legacy Azure Service Bus (`Microsoft.Azure.ServiceBus`)](/reference/setup-azure-servicebus.md). For these technologies, install the corresponding package and follow its setup guide.
 
-For technologies that the profiler already covers, dedicated NuGet packages also exist, for example [Entity Framework Core](/reference/setup-ef-core.md), [SqlClient](/reference/setup-sqlclient.md), [MongoDB](/reference/setup-mongo-db.md), [gRPC](/reference/setup-grpc.md), [Azure Service Bus](/reference/setup-azure-servicebus.md), and [Azure Storage](/reference/setup-azure-storage.md). You can add these packages alongside the profiler; both mechanisms use the same `DiagnosticSource`/`Activity`-based instrumentation and do not conflict with each other.
+For technologies that the profiler already covers, dedicated NuGet packages also exist, for example [Entity Framework Core](/reference/setup-ef-core.md), [SqlClient](/reference/setup-sqlclient.md), [MongoDB](/reference/setup-mongo-db.md), [gRPC](/reference/setup-grpc.md), [Azure Service Bus](/reference/setup-azure-servicebus.md), and [Azure Storage](/reference/setup-azure-storage.md). You can add these packages alongside the profiler. Both mechanisms use the same `DiagnosticSource`/`Activity`-based instrumentation and do not conflict with each other.
 
 Refer to [Supported technologies](/reference/supported-technologies.md) for the full table showing which technologies are covered by the profiler, by NuGet packages, or by both.
 
@@ -636,7 +636,7 @@ The user account under which the profiler process runs must have permission to w
 
 ### DLLs are blocked on Windows [windows-blocked-dlls]
 
-Windows may automatically block downloaded DLL files if it considers them suspicious.
+Windows might automatically block downloaded DLL files if it considers them suspicious.
 
 To unblock a DLL file on Windows, you can do the following:
 
