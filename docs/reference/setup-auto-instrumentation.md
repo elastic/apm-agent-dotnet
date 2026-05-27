@@ -114,7 +114,7 @@ Before starting, ensure you have:
 * **{{product.apm}} server URL**: the URL of the {{product.apm}} server you want to send data to (for example, `https://my-apm-server:8200`). You can find this in your Elastic deployment settings.
 * **API key**: used by the agent to authenticate with {{product.apm}} server. Refer to [API key](docs-content://solutions/observability/apm/api-keys.md) for details. If your environment uses secret tokens, set `ELASTIC_APM_SECRET_TOKEN` in place of `ELASTIC_APM_API_KEY` in the examples below.
 * **Host access**: you must be able to set environment variables for the process or service you want to instrument (for example, using a Dockerfile, service definition, or system settings).
-* **Supported platform**: verify that your runtime and architecture appear in the support table in the [Overview](#profiler_overview) section. If you are unsure which runtime your app targets, refer to the note about .NET vs .NET Framework in the same section.
+* **Supported platform**: verify that your runtime and architecture appear in the support table in the [Overview](#profiler-overview) section. If you are unsure which runtime your app targets, refer to the note about .NET vs .NET Framework in the same section.
 * **Profiler zip version**: if you plan to add any `Elastic.Apm` NuGet packages alongside the profiler, download a zip whose version exactly matches the NuGet package versions you intend to use.
 
 
@@ -421,7 +421,7 @@ Avoid setting these as machine-wide system environment variables. Doing so loads
 
 ### Kubernetes [kubernetes]
 
-In Kubernetes, set environment variables in your Pod or Deployment spec using the `env` field on your container. First, add the profiler files to your container image (for example, using a multi-stage build as shown in the [Docker containers](#_docker_containers) section), then add the variables under `spec.containers[].env`:
+In Kubernetes, set environment variables in your Pod or Deployment spec using the `env` field on your container. First, add the profiler files to your container image (for example, using a multi-stage build as shown in the [Docker containers](#docker-containers) section), then add the variables under `spec.containers[].env`:
 
 ```yaml
 containers:
