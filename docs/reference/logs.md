@@ -12,7 +12,7 @@ applies_to:
 
 # Logs [logs]
 
-Elastic .NET Agent provides [Log correlation](#log-correlation-ids). The agent will automatically inject correlation IDs that allow navigation between logs, traces and services.
+Elastic .NET Agent provides [Log correlation](#log-correlation-ids). The agent will automatically inject correlation IDs that allow navigation between logs, traces, and services.
 
 This features is part of [Application log ingestion strategies](docs-content://solutions/observability/logs/stream-application-logs.md).
 

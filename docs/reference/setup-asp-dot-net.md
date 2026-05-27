@@ -46,7 +46,7 @@ To enable tracing for ASP.NET (.NET Framework), install the `Elastic.Apm.AspNetF
     ::::
 
 
-    By default, the agent creates transactions for all HTTP requests, including static content: .html pages, images, etc.
+    By default, the agent creates transactions for all HTTP requests, including static content: .html pages, images, and so on.
 
     To create transactions only for HTTP requests with dynamic content, such as `.aspx` pages, add the `managedHandler` preCondition to your `web.config` file:
 
@@ -92,7 +92,7 @@ Our IIS module requires:
     {
         protected void Application_Start()
         {
-            // other application startup e.g. RouteConfig, etc.
+            // other application startup for example, RouteConfig, and so on.
 
             // set up agent with components
             var agentComponents = ElasticApmModule.CreateAgentComponents();

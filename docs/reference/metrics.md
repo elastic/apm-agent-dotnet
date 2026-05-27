@@ -16,7 +16,7 @@ The .NET agent tracks certain system and application metrics. Some of them have 
 
 These metrics will be sent regularly to the {{product.apm-server}} and from there to {{product.elasticsearch}}. You can adjust the interval with the setting [`MetricsInterval`](/reference/config-reporter.md#config-metrics-interval).
 
-"Platform: all" means that the metric is available on every platform where .NET (i.e. not .NET Framework) is supported.
+"Platform: all" means that the metric is available on every platform where .NET (that is not .NET Framework) is supported.
 
 
 ## System metrics [metrics-system]

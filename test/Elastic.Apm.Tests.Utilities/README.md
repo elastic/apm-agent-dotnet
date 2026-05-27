@@ -6,7 +6,7 @@ test inputs, etc.) which are used in other test projects.
 ## json-specs
 
 The folder `/TestResources/json-specs` contains test specifications in JSON format that are used as test inputs in
-different projects (e.g. `Elastic.Apm.Tests`).
+different projects (for example, `Elastic.Apm.Tests`).
 
 These specifications are synchronized from the [`github.com/elastic/apm`](https://github.com/elastic/apm) repository from the
 [`tests/agents/json-specs`](https://github.com/elastic/apm/tree/main/tests/agents/json-specs) folder

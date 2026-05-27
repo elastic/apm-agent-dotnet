@@ -22,7 +22,7 @@ apm_agent_dotnet: ga 1.7.0
 
 A Boolean specifying if the agent should be recording or not. When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics. When not recording, the agent works as a noop, where it does not collect data or communicate with the {{product.apm-server}}, except for polling the central configuration endpoint. This is a reversible switch, so the agent threads are not killed when deactivated, but they will be mostly idle in this state, so the overhead should be negligible.
 
-Use this setting to dynamically disable Elastic {{product.apm-agent-dotnet}} at runtime.
+Use this setting to dynamically turn off Elastic {{product.apm-agent-dotnet}} at runtime.
 
 ::::{warning}
 Setting `Recording` to `false` influences the behavior of the [*Public API*](/reference/public-api.md). When the agent is not active, it won’t keep track of transactions, spans, and any related properties.
@@ -102,7 +102,7 @@ This feature requires {{product.apm-server}} versions ≥ 7.5
 
 ## `ServiceVersion` [config-service-version]
 
-A version string for the currently deployed version of the service. If you don’t version your deployments, the recommended value for this field is the commit identifier of the deployed revision, e.g. the output of `git rev-parse HEAD`.
+A version string for the currently deployed version of the service. If you don’t version your deployments, the recommended value for this field is the commit identifier of the deployed revision, for example, the output of `git rev-parse HEAD`.
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -136,12 +136,12 @@ This allows for the reported hostname to be manually specified. If this is not s
 apm_agent_dotnet: ga 1.1
 ```
 
-The name of the environment that this service is deployed in, e.g. "production" or "staging".
+The name of the environment that this service is deployed in, for example, "production" or "staging".
 
-Environments allow you to easily filter data on a global level in {{product.kibana}}. It's important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apm/filter-data.md#apm-filter-your-data-service-environment-filter) in the {{product.kibana}} UI for more information.
+Environments allow you to efficiently filter data on a global level in {{product.kibana}}. It's important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apm/filter-data.md#apm-filter-your-data-service-environment-filter) in the {{product.kibana}} UI for more information.
 
 ::::{note}
-This feature is fully supported in the {{product.apm}} app in {{product.kibana}} versions ≥ 7.2. You must use the query bar to filter for a specific environment in versions prior to 7.2.
+This feature is fully supported in the {{product.apm}} app in {{product.kibana}} versions ≥ 7.2. You must use the query bar to filter for a specific environment in versions before 7.2.
 ::::
 
 
@@ -162,7 +162,7 @@ On ASP.NET Core applications the agent uses [EnvironmentName from IHostEnvironme
 
 [![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-By default, the agent samples every transaction (e.g. a request to your service). To reduce overhead and storage requirements, set the sample rate to a value between 0.0 and 1.0. The agent will still record the overall time and result for unsampled transactions, but no context information, labels, or spans will be recorded.
+By default, the agent samples every transaction (for example, a request to your service). To reduce overhead and storage requirements, set the sample rate to a value between 0.0 and 1.0. The agent will still record the overall time and result for unsampled transactions, but no context information, labels, or spans will be recorded.
 
 ::::{note}
 When parsing the value for this option, the agent doesn’t consider the current culture. It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
@@ -231,7 +231,7 @@ apm_agent_dotnet: ga 1.2
 
 [![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-Sometimes, sanitizing, i.e., redacting sensitive data sent to Elastic {{product.apm}}, is necessary. This configuration accepts a comma-separated list of wildcard patterns of field names that should be sanitized. These apply to HTTP headers for requests and responses, cookies and `application/x-www-form-urlencoded` data.
+Sometimes, sanitizing, that is, redacting sensitive data sent to Elastic {{product.apm}}, is necessary. This configuration accepts a comma-separated list of wildcard patterns of field names that should be sanitized. These apply to HTTP headers for requests and responses, cookies and `application/x-www-form-urlencoded` data.
 
 ::::{important}
 This setting only applies to values captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn’t apply, and the agent won’t sanitize the body.
@@ -277,7 +277,7 @@ Labels are added to all events with the format `key=value[,key=value[,...]]`. An
 | <empty map> | Map of string to string |
 
 ::::{note}
-This option requires {{product.apm-server}} 7.2 or later. It will have no effect on older versions.
+This option requires {{product.apm-server}} 7.2 or later. It will have no effect on earlier versions.
 ::::
 
 
@@ -346,7 +346,7 @@ apm_agent_dotnet: ga 1.14
 
 [![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded. If the exit span is equal or greater the threshold, it should be kept. In some cases exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services, such as outgoing HTTP requests, can’t be discarded. However, external calls that don’t propagate context, such as calls to a database, can be discarded using this threshold. Additionally, spans that lead to an error can’t be discarded.
+Sets the minimum duration of exit spans. Exit spans with a duration lesser than this threshold are attempted to be discarded. If the exit span is equal or greater the threshold, it should be kept. Sometimes exit spans cannot be discarded. For example, spans that propagate the trace context to downstream services, such as outgoing HTTP requests, can’t be discarded. However, external calls that don’t propagate context, such as calls to a database, can be discarded using this threshold. Additionally, spans that lead to an error can’t be discarded.
 
 | Environment variable name | IConfiguration key |
 | --- | --- |
@@ -363,7 +363,7 @@ Sets the minimum duration of exit spans. Exit spans with a duration lesser than 
 apm_agent_dotnet: ga 1.13
 ```
 
-Setting this option to `false` will disable the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). This will disable the use of the vendor-neutral OpenTelemetry Tracing API (the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) in .NET) to manually instrument your code, and have the Elastic .NET {{product.apm-agent-dotnet}} handle those API calls.
+Setting this option to `false` will turn off the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). This will deactivate the use of the vendor-neutral OpenTelemetry Tracing API (the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) in .NET) to manually instrument your code, and have the Elastic .NET {{product.apm-agent-dotnet}} handle those API calls.
 
 | Environment variable name | IConfiguration key |
 | --- | --- |

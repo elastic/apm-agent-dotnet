@@ -20,12 +20,12 @@ apm_agent_dotnet: ga 1.0.1
 
 [![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables. If the request has a body and this setting is disabled, the body will be shown as [REDACTED]. This option is case-insensitive.
+For transactions that are HTTP requests, the agent can optionally capture the request body, for example, POST variables. If the request has a body and this setting is deactivated, the body will be shown as [REDACTED]. This option is case-insensitive.
 
 ::::{important}
 To allow capturing request bodies, the agent sets `AllowSynchronousIO` to `true` on a per request basis in ASP.NET Core, since capturing can occur in synchronous code paths.
 
-[With ASP.NET Core 3.0 onwards, `AllowSynchronousIO` is `false` by default](https://docs.microsoft.com/en-us/aspnet/core/migration/22-to-30?#allowsynchronousio-disabled) because a large number of blocking synchronous I/O operations can lead to thread pool starvation, which makes the application unresponsive. If your application becomes unresponsive with this feature enabled, consider disabling capturing.
+[With ASP.NET Core 3.0 onwards, `AllowSynchronousIO` is `false` by default](https://docs.microsoft.com/en-us/aspnet/core/migration/22-to-30?#allowsynchronousio-disabled) because many blocking synchronous I/O operations can lead to thread pool starvation, which makes the application unresponsive. If your application becomes unresponsive with this feature enabled, consider disabling capturing.
 
 In ASP.NET (.NET Full Framework), this setting has no effect on non-buffered requests (see [HttpRequest.ReadEntityBodyMode](https://docs.microsoft.com/en-us/dotnet/api/system.web.httprequest.readentitybodymode?view=netframework-4.8)).
 ::::
@@ -116,7 +116,7 @@ The `traceparent` header of requests that are traced by the Elastic {{product.ap
 
 This situation becomes more and more common as the w3c trace context gets adopted. In such cases you may end up with traces where part of the trace is outside of Elastic {{product.apm}}.
 
-In order to handle this properly, the agent offers trace continuation strategies with the following values and behavior:
+To handle this properly, the agent offers trace continuation strategies with the following values and behavior:
 
 * `continue`: The agent takes the `traceparent` header as it is and applies it to the new transaction.
 * `restart`: The agent always creates a new trace with a new trace id. In this case the agent creates a span link in the new transaction pointing to the original `traceparent`.
@@ -192,7 +192,7 @@ apm_agent_dotnet: ga 1.3.0
 
 To enable [distributed tracing](docs-content://solutions/observability/apm/traces.md), the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the [W3C Trace Context](https://www.w3.org/TR/trace-context-1/) specification.
 
-When this setting is `true`, the agent also adds the header `elasticapm-traceparent` for backwards compatibility with older versions of Elastic {{product.apm-agent-dotnet}}s. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
+When this setting is `true`, the agent also adds the header `elasticapm-traceparent` for backwards compatibility with earlier versions of Elastic {{product.apm-agent-dotnet}}s. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -211,7 +211,7 @@ apm_agent_dotnet: ga 1.27
 
 [![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-If set to `true`, transaction names of unsupported or partially-supported frameworks will be in the form of `$method $path` instead of just `$method unknown route`.
+If set to `true`, transaction names of unsupported or partially-supported frameworks will be in the form of `$method $path` instead of `$method unknown route`.
 
 ::::{warning}
 If your URLs contain path parameters like `/user/$userId`, you should be very careful when enabling this flag, as it can lead to an explosion of transaction groups. Take a look at the [`TransactionNameGroups`](#config-transaction-name-groups) option on how to mitigate this problem by grouping URLs together.

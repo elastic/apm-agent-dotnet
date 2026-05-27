@@ -37,9 +37,9 @@ Here’s an example of setting the sample rate to 20% using [Configuration on AS
 In a complex application, a request may produce many spans. Capturing a stack trace for every span can result in significant memory usage. Stack traces are also captured for every error. There are several settings to adjust how stack traces are captured.
 
 
-### Disable capturing stack traces [performance-tuning-disable-capturing-stack-traces]
+### Deactivate capturing stack traces [performance-tuning-deactivate-capturing-stack-traces]
 
-To disable capturing stack traces (for both spans and errors), set [`StackTraceLimit`](/reference/config-stacktrace.md#config-stack-trace-limit) to `0`.
+To deactivate capturing stack traces (for both spans and errors), set [`StackTraceLimit`](/reference/config-stacktrace.md#config-stack-trace-limit) to `0`.
 
 
 ### Capture stack traces only for long running spans [performance-tuning-stack-traces-for-long-running-spans]
@@ -52,12 +52,11 @@ In its default settings, the {{product.apm-agent-dotnet}} collects a stack trace
 The [`StackTraceLimit`](/reference/config-stacktrace.md#config-stack-trace-limit) controls how many stack frames should be collected when a capturing stack trace.
 
 
-## Disable capturing HTTP request and response headers [performance-tuning-disable-capture-headers]
+## Deactivate capturing HTTP request and response headers [performance-tuning-deactivate-capture-headers]
 
-Capturing HTTP request and response headers increases memory allocations, network bandwidth and disk space used by {{product.elasticsearch}}. To disable capturing HTTP request and response headers, set [`CaptureHeaders`](/reference/config-http.md#config-capture-headers) to `false`.
+Capturing HTTP request and response headers increases memory allocations, network bandwidth and disk space used by {{product.elasticsearch}}. To deactivate capturing HTTP request and response headers, set [`CaptureHeaders`](/reference/config-http.md#config-capture-headers) to `false`.
 
 
 ## Increase metrics collection interval [performance-tuning-increase-metrics-collection-interval]
 
 The .NET agent tracks certain system and application metrics. These metrics are regularly collected and sent to the {{product.apm-server}} and from there to {{product.elasticsearch}}. You can adjust the interval for metrics collection with the setting [`MetricsInterval`](/reference/config-reporter.md#config-metrics-interval).
-

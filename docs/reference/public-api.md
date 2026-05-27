@@ -61,7 +61,7 @@ In the case of ASP.NET Core, when you turn on the agent with the `AddAllElasticA
 
 With a typical console application, you need to do this manually by calling `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method somewhere in your application, ideally in the startup code.
 
-`IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources in order to capture events automatically.
+`IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources to capture events automatically.
 
 Some examples:
 
@@ -81,7 +81,7 @@ When the agent is configured with [`Enabled` set to `false`](/reference/config-c
 
 ## Flushing events in short-lived processes [api-flush]
 
-In long-running processes (web applications, services) the agent's background sender transmits events automatically. In short-lived processes (AWS Lambda functions, CLI tools, console apps) the process may exit before the last batch is sent. Use `Agent.FlushAsync` to wait until the sender is idle (queue empty, any in-progress HTTP send complete) before the process shuts down.
+In long-running processes (web applications, services) the agent's background sender transmits events automatically. In short-lived processes (AWS Lambda functions, CLI tools, console apps) the process might exit before the last batch is sent. Use `Agent.FlushAsync` to wait until the sender is idle (queue empty, any in-progress HTTP send complete) before the process shuts down.
 
 ```csharp
 await Agent.Tracer.CaptureTransactionAsync("MyOperation", "request", async transaction =>
@@ -101,7 +101,7 @@ await agent.FlushAsync(cancellationToken);
 ```
 
 ::::{note}
-Completion indicates the send attempt finished; it does not guarantee {{product.apm-server}} accepted the data.
+Completion indicates the send attempt finished. It does not guarantee {{product.apm-server}} accepted the data.
 ::::
 
 ::::{note}
@@ -315,7 +315,7 @@ A transaction describes an event captured by an Elastic {{product.apm-agent-dotn
 See [`ITransaction CurrentTransaction`](#api-current-transaction) on how to get a reference of the current transaction.
 
 ::::{note}
-Calling any of the transaction’s methods after [`void End()`](#api-transaction-end) has been called is illegal. You may only interact with a transaction when you have control over its lifecycle.
+Calling any of the transaction’s methods after [`void End()`](#api-transaction-end) has been called is illegal. You can only interact with a transaction when you have control over its lifecycle.
 ::::
 
 
@@ -354,7 +354,7 @@ Labels are used to add **indexed** information to transactions, spans, and error
 * {{product.elasticsearch}} type: [object](elasticsearch://reference/elasticsearch/mapping-reference/object.md)
 * {{product.elasticsearch}} field: `labels` (previously `context.tags` in <v.7.0)
 
-Label values can be a string, boolean, or number. Because labels for a given key are stored in the same place in {{product.elasticsearch}}, all label values of a given key must have the same data type. Multiple data types per key will throw an exception, e.g., `{"foo": "bar"}` and `{"foo": 42}`.
+Label values can be a string, boolean, or number. Because labels for a given key are stored in the same place in {{product.elasticsearch}}, all label values of a given key must have the same data type. Multiple data types per key will throw an exception, for example, `{"foo": "bar"}` and `{"foo": 42}`.
 
 ::::{note}
 Number and boolean labels were only introduced in {{product.apm-server}} 6.7+. Using this API in combination with an older {{product.apm-server}} versions leads to validation errors.
@@ -479,7 +479,7 @@ and 2 optional parameters:
 * `subType`: The subtype of the span
 * `action`: The action of the span
 
-The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-transaction-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
+The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-transaction-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you created.
 
 ```csharp
 ITransaction transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
@@ -613,7 +613,7 @@ Agent.Tracer.CaptureTransaction("MyCustomTransaction",ApiConstants.TypeRequest, 
 
 A span contains information about a specific code path, executed as part of a transaction.
 
-If for example a database query happens within a recorded transaction, a span representing this database query may be created. In such a case, the name of the span will contain information about the query itself, and the type will hold information about the database type.
+If for example a database query happens within a recorded transaction, a span representing this database query might be created. In such a case, the name of the span will contain information about the query itself, and the type will hold information about the database type.
 
 
 #### `ISpan StartSpan(string name, string type, string subType = null, string action = null)` [api-span-create-span]
@@ -679,7 +679,7 @@ if(span.TryGetLabel<bool>("foo", out var myLabel))
 #### `Dictionary<string,string> Labels` [api-span-tags]
 
 ::::{warning}
-This property is obsolete and will be be removed in a future version. Use the [`void SetLabel()`](#api-span-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
+This property is obsolete and will be removed in a future version. Use the [`void SetLabel()`](#api-span-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
 ::::
 
 
@@ -789,7 +789,7 @@ and 2 optional parameters:
 * `subType`: The subtype of the span
 * `action`: The action of the span
 
-The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-span-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
+The following code is the equivalent of the previous example from the [`ISpan StartSpan(string name, string type, string subType = null, string action = null)`](#api-span-create-span) section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you created.
 
 ```csharp
 span.CaptureSpan("SampleSpan", ApiConstants.TypeDb, (s) =>
@@ -829,7 +829,7 @@ Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In product
 
 Use `Agent.AddFilter(filter)` to supply a filter callback.
 
-Each filter callback will be called just before data is sent to the {{product.apm-server}}. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
+Each filter callback will be called before data is sent to the {{product.apm-server}}. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
 
 Each filter callback is called in the order they are added and will receive a payload object containing the data about to be sent to the {{product.apm-server}} as the only argument.
 

@@ -45,7 +45,7 @@ var app = builder.Build();
 app.Run();
 ```
 
-With this you enable every agent component including ASP.NET Core tracing, monitoring of outgoing HTTP request, Entity Framework Core database tracing, etc.
+With this you enable every agent component including ASP.NET Core tracing, monitoring of outgoing HTTP request, Entity Framework Core database tracing, and so on.
 
 In case you only reference the [`Elastic.Apm.AspNetCore`](https://www.nuget.org/packages/Elastic.Apm.AspNetCore) package, you won’t find the `AddAllElasticApm`. Instead you need to use the `AddElasticApmForAspNetCore()` method. This method turns on ASP.NET Core tracing, and gives you the opportunity to manually turn on other components. By default it will only trace ASP.NET Core requests - No HTTP request tracing, database call tracing or any other tracing component will be turned on.
 

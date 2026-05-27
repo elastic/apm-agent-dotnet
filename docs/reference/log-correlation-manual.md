@@ -42,14 +42,14 @@ In case the agent is configured and there is an active transaction, the `traceId
 
 ## Manual log correlation (unstructured) [log-correlation-manual-unstructured]
 
-For correlating unstructured logs (e.g. basic printf-style logging, like `Console.WriteLine`), you will need to include the trace ids in your log message, and then extract them using {{product.filebeat}}.
+For correlating unstructured logs (for example, basic printf-style logging, like `Console.WriteLine`), you will need to include the trace ids in your log message, and then extract them using {{product.filebeat}}.
 
 If you already have a transaction object, then you can use the `TraceId` and `Id` properties. Both are of type `string`, so you can simply add them to the log.
 
 ```csharp
 using Elastic.Apm;
 
-var currentTransaction = //Get Current transaction, e.g.: Agent.Tracer.CurrentTransaction;
+var currentTransaction = Agent.Tracer.CurrentTransaction;
 
 Console.WriteLine($"ERROR [trace.id={currentTransaction.TraceId} transaction.id={currentTransaction.Id}] an error occurred");
 ```

@@ -66,7 +66,7 @@ Setting this to `0` disables stack trace collection. Any positive integer value 
 | `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit` |
 
 ::::{note}
-If you would like to disable stack trace capturing only for spans, but still capture stack traces for errors, set the [`SpanStackTraceMinDuration` (performance)](#config-span-stack-trace-min-duration) config to `-1`.
+If you would like to turn off stack trace capturing only for spans, but still capture stack traces for errors, set the [`SpanStackTraceMinDuration` (performance)](#config-span-stack-trace-min-duration) config to `-1`.
 ::::
 
 
@@ -74,9 +74,9 @@ If you would like to disable stack trace capturing only for spans, but still cap
 
 [![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration)
 
-In its default settings, the {{product.apm-agent-dotnet}} collects a stack trace for every recorded span with duration longer than `5ms`. While this is very helpful to find the exact place in your code that causes the span, collecting this stack trace does have some overhead. When setting this option to zero (regardless of the time unit), like `0ms`, stack traces are collected for all spans. Setting it to a positive value, e.g. `5ms`, limits stack trace collection to spans with durations equal to or longer than the given value, e.g. 5 milliseconds.
+In its default settings, the {{product.apm-agent-dotnet}} collects a stack trace for every recorded span with duration longer than `5ms`. While this is very helpful to find the exact place in your code that causes the span, collecting this stack trace does have some overhead. When setting this option to zero (regardless of the time unit), like `0ms`, stack traces are collected for all spans. Setting it to a positive value, for example, `5ms`, limits stack trace collection to spans with durations equal to or longer than the given value, for example, 5 milliseconds.
 
-To disable stack trace collection for spans completely, set this option to a negative value, like `-1ms`.
+To turn off stack trace collection for spans completely, set this option to a negative value, like `-1ms`.
 
 Supports the duration suffixes `ms`, `s` and `m`. Example: `5ms`. The default unit for this option is `ms`
 

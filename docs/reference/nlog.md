@@ -15,7 +15,7 @@ applies_to:
 
 For NLog, we offer two [LayoutRenderers](https://github.com/NLog/NLog/wiki/Layout-Renderers) that inject the current trace and transaction id into logs.
 
-In order to use them, you need to add the [Elastic.Apm.NLog](https://www.nuget.org/packages/Elastic.Apm.NLog) NuGet package to your application and load it in the `<extensions>` section of your NLog config file:
+To use them, you need to add the [Elastic.Apm.NLog](https://www.nuget.org/packages/Elastic.Apm.NLog) NuGet package to your application and load it in the `<extensions>` section of your NLog config file:
 
 ```xml
 <nlog>

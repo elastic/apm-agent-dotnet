@@ -60,7 +60,7 @@ host.Run();
 1. Register Elastic APM before registering other IHostedServices to ensure its dependencies are initialized first.
 
 
-When registering services with `AddAllElasticApm()`, an {{product.apm-agent-dotnet}} with all instrumentations is enabled. On ASP.NET Core, it’ll automatically capture incoming requests, database calls through supported technologies, outgoing HTTP requests, etc.
+When registering services with `AddAllElasticApm()`, an {{product.apm-agent-dotnet}} with all instrumentations is enabled. On ASP.NET Core, it’ll automatically capture incoming requests, database calls through supported technologies, outgoing HTTP requests, and so on.
 
 For other application templates, such as worker services, you must manually instrument your `BackgroundService` to identify one or more units of work that should be captured.
 

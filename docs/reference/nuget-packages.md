@@ -46,7 +46,7 @@ The following NuGet packages are available:
 :   A package for agent registration integration with `Microsoft.Extensions.Hosting.IHostBuilder` registration.
 
 [Elastic.Apm.AspNetCore](/reference/setup-asp-net-core.md)
-:   A package for instrumenting ASP.NET Core applications. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package only instruments ASP.NET Core by default, whereas `Elastic.Apm.NetCoreAll` instruments all components that can be automatically configured, such as Entity Framework Core, HTTP calls with `HttpClient`, database calls to SQL Server with `SqlClient`, etc. Additional instrumentations can be added when using `Elastic.Apm.AspNetCore` by referencing the respective NuGet packages and including their configuration code in agent setup.
+:   A package for instrumenting ASP.NET Core applications. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package only instruments ASP.NET Core by default, whereas `Elastic.Apm.NetCoreAll` instruments all components that can be automatically configured, such as Entity Framework Core, HTTP calls with `HttpClient`, database calls to SQL Server with `SqlClient`, and so on Additional instrumentations can be added when using `Elastic.Apm.AspNetCore` by referencing the respective NuGet packages and including their configuration code in agent setup.
 
 [**Elastic.Apm.AspNetFullFramework**](/reference/setup-asp-dot-net.md)
 :   A package containing ASP.NET .NET Framework instrumentation.

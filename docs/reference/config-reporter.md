@@ -77,7 +77,7 @@ apm_agent_dotnet: ga 1.3
 
 By default, the agent verifies the SSL certificate if you use an HTTPS connection to the {{product.apm-server}}.
 
-Verification can be disabled by changing this setting to false.
+Verification can be turned off by changing this setting to false.
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -125,9 +125,9 @@ The maximal amount of time events are held in the queue until there is enough to
 
 Supports the duration suffixes `ms`, `s` and `m`. Example: `30s`. The default unit for this option is `s`.
 
-If `FlushInterval` is set to `0` (or `0s`, `0ms`, etc.) and there’s no event sending operation still in progress, then the Agent won’t hold events in the queue and will send them immediately.
+If `FlushInterval` is set to `0` (or `0s`, `0ms`, and so on) and there’s no event sending operation still in progress, then the Agent won’t hold events in the queue and will send them immediately.
 
-Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and in that case agent uses the default value instead.
+Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, and so on) is invalid and in that case agent uses the default value instead.
 
 | Environment variable name | IConfiguration or Web.config key |
 | --- | --- |
@@ -201,7 +201,7 @@ Supports the duration suffixes `ms`, `s` and `m`. Example: `30s`. The default un
 apm_agent_dotnet: ga 1.3.0
 ```
 
-This disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected. Example: `foo.*,bar.*`
+This turns off the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected. Example: `foo.*,bar.*`
 
 You can find the name of the available metrics in [*Metrics*](/reference/metrics.md).
 
