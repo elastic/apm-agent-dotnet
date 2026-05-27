@@ -362,7 +362,7 @@ $environment.Keys | ForEach-Object {
 
 1. `<application-pool>` is the name of the Application Pool your application uses, as shown in IIS Manager. For example, `DefaultAppPool`.
 2. `<unzipped directory>` is the full path to the directory in which the zip file was unzipped.
-3. Forces assemblies **not** to be loaded domain-neutral. This is a .NET Framework IIS-specific workaround: the profiler cannot instrument assemblies loaded domain-neutral. This limitation is expected to be removed in future, but for now can be worked around by setting this environment variable. See the [Microsoft documentation for further details](https://docs.microsoft.com/en-us/dotnet/framework/app-domains/application-domains#the-complus_loaderoptimization-environment-variable). This setting is **not** needed for .NET (non-Framework) applications.
+3. Forces assemblies **not** to be loaded domain-neutral. This is a .NET Framework IIS-specific workaround: the profiler cannot instrument assemblies loaded domain-neutral. This limitation is expected to be removed in future, but for now can be worked around by setting the `COMPlus_LoaderOptimization` environment variable. See the [Microsoft documentation for further details](https://docs.microsoft.com/en-us/dotnet/framework/app-domains/application-domains#the-complus_loaderoptimization-environment-variable). This setting is **not** needed for .NET (non-Framework) applications.
 4. The URL of the APM server intake to which traces and metrics should be sent.
 5. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
 6. The name used to identify your service in APM.
