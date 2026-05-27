@@ -11,9 +11,9 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Elastic APM .NET Agent release notes [elastic-apm-net-agent-release-notes]
+# Elastic {{product.apm-agent-dotnet}} release notes [elastic-apm-net-agent-release-notes]
 
-Review the changes, fixes, and more in each version of Elastic APM .NET Agent.
+Review the changes, fixes, and more in each version of Elastic {{product.apm-agent-dotnet}}.
 
 To check for security updates, go to [Security announcements for the Elastic stack](https://discuss.elastic.co/c/announcements/security-announcements/31).
 
@@ -309,7 +309,7 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 
 ### Features and enhancements [elastic-apm-net-agent-1200-features-enhancements]
 * Support for Azure Functions through new `Elastic.Apm.Azure.Functions` nuget package [#1981](https://github.com/elastic/apm-agent-dotnet/pull/1981)
-* Support new Elasticsearch Client: `Elastic.Clients.Elasticsearch` [#1935](https://github.com/elastic/apm-agent-dotnet/pull/1935)
+* Support new {{product.elasticsearch}} Client: `Elastic.Clients.{{product.elasticsearch}}` [#1935](https://github.com/elastic/apm-agent-dotnet/pull/1935)
 * Suppport latest version of Microsoft.Data.SqlClient [#1988](https://github.com/elastic/apm-agent-dotnet/pull/1988)
 * Support latest version OracleManagedDataAccess [#1988](https://github.com/elastic/apm-agent-dotnet/pull/1968)
 * Loose MSVC redistributable as requirement for the profiler [#1983](https://github.com/elastic/apm-agent-dotnet/pull/1983)
@@ -348,7 +348,7 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 ### Features and enhancements [elastic-apm-net-agent-1180-features-enhancements]
 * Profiler based agent is now GA
 * Capture request body in ASP.NET Full Framework [#379](https://github.com/elastic/apm-agent-dotnet/issues/379) and [#1806](https://github.com/elastic/apm-agent-dotnet/pull/1806)
-* `UseWindowsCredentials`: new configuration to force the agent to use the credentials of the authenticated Windows user when events are sent to the APM Server [#1825](https://github.com/elastic/apm-agent-dotnet/issues/1825) and [#1832](https://github.com/elastic/apm-agent-dotnet/pull/1832)
+* `UseWindowsCredentials`: new configuration to force the agent to use the credentials of the authenticated Windows user when events are sent to the {{product.apm-server}} [#1825](https://github.com/elastic/apm-agent-dotnet/issues/1825) and [#1832](https://github.com/elastic/apm-agent-dotnet/pull/1832)
 
 ### Fixes [elastic-apm-net-agent-1180-fixes]
 * Fix incorrect transaction name in ASP.NET Web Api [#1637](https://github.com/elastic/apm-agent-dotnet/issues/1645) and [#1800](https://github.com/elastic/apm-agent-dotnet/pull/1800)
@@ -371,7 +371,7 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 * Fix default for the `ApplicationNamespaces` config [#1746](https://github.com/elastic/apm-agent-dotnet/pull/1746)
 * Flow SynchronizationContext across public API calls [#1660](https://github.com/elastic/apm-agent-dotnet/issues/1660) and [#1755](https://github.com/elastic/apm-agent-dotnet/pull/1755)
 * PayloadSender threading improvements [#1571](https://github.com/elastic/apm-agent-dotnet/issues/1571) and [#1753](https://github.com/elastic/apm-agent-dotnet/pull/1753)
-* Include Accept header on APM server info call (caused errors when reading APM Server info) [#1624](https://github.com/elastic/apm-agent-dotnet/issues/1624) and [#1773](https://github.com/elastic/apm-agent-dotnet/pull/1773)
+* Include Accept header on {{product.apm-server}} info call (caused errors when reading {{product.apm-server}} info) [#1624](https://github.com/elastic/apm-agent-dotnet/issues/1624) and [#1773](https://github.com/elastic/apm-agent-dotnet/pull/1773)
 * Significantly improved the performance of database query parsing [#1763](https://github.com/elastic/apm-agent-dotnet/issues/1763) and [#1781](https://github.com/elastic/apm-agent-dotnet/pull/1781)
 * Fix FillApmServerInfo : Invalid ElasticApm_ApiKey throws Exception [#1735](https://github.com/elastic/apm-agent-dotnet/issues/1735) and [#1787](https://github.com/elastic/apm-agent-dotnet/pull/1787)
 
@@ -412,9 +412,9 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 **Release date:** March 10, 2022
 
 ### Fixes [elastic-apm-net-agent-1150-fixes]
-* Make sure events are sent after APM Server timeout [#1630](https://github.com/elastic/apm-agent-dotnet/pull/1630) and [#1634](https://github.com/elastic/apm-agent-dotnet/pull/1634)
+* Make sure events are sent after {{product.apm-server}} timeout [#1630](https://github.com/elastic/apm-agent-dotnet/pull/1630) and [#1634](https://github.com/elastic/apm-agent-dotnet/pull/1634)
 * Error on composite span validation [#1631](https://github.com/elastic/apm-agent-dotnet/issues/1631) and [#1639](https://github.com/elastic/apm-agent-dotnet/pull/1639)
-* OpenTelemetry (Activity) bridge - APM Server version check [#1648](https://github.com/elastic/apm-agent-dotnet/pull/1648)
+* OpenTelemetry (Activity) bridge - {{product.apm-server}} version check [#1648](https://github.com/elastic/apm-agent-dotnet/pull/1648)
 
 ## 1.14.0 [elastic-apm-net-agent-1140-release-notes]
 **Release date:** February 9, 2022
@@ -436,7 +436,7 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 ## 1.12.1 [elastic-apm-net-agent-1121-release-notes]
 
 ### Fixes [elastic-apm-net-agent-1121-fixes]
-* Failed sending event error with missing span.context.destination.service.name required field on older APM Servers [#1563](https://github.com/elastic/apm-agent-dotnet/issues/1563) and [#1564](https://github.com/elastic/apm-agent-dotnet/pull/1564) )
+* Failed sending event error with missing span.context.destination.service.name required field on older {{product.apm-server}}s [#1563](https://github.com/elastic/apm-agent-dotnet/issues/1563) and [#1564](https://github.com/elastic/apm-agent-dotnet/pull/1564) )
 
 ## 1.12.0 [elastic-apm-net-agent-1120-release-notes]
 
@@ -528,10 +528,10 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 * Add support for capturing redis commands from StackExchange.Redis ([documentation](/reference/setup-stackexchange-redis.md)) [#874](https://github.com/elastic/apm-agent-dotnet/issues/874) and [#1063](https://github.com/elastic/apm-agent-dotnet/pull/1063)
 * Introduce `ServerUrl` config - (`ServerUrls` is still working but will be removed in the future) [#1035](https://github.com/elastic/apm-agent-dotnet/issues/1035) and [#1065](https://github.com/elastic/apm-agent-dotnet/pull/1065)
 * Support for more k8s cgroup path patterns [#968](https://github.com/elastic/apm-agent-dotnet/issues/968) and [#1048](https://github.com/elastic/apm-agent-dotnet/pull/1048)
-* `SanitizeFieldNames` config became changeable though Kibana central configuration [#1082](https://github.com/elastic/apm-agent-dotnet/pull/1082)
+* `SanitizeFieldNames` config became changeable though {{product.kibana}} central configuration [#1082](https://github.com/elastic/apm-agent-dotnet/pull/1082)
 * Azure App Service cloud metadata collection [#1083](https://github.com/elastic/apm-agent-dotnet/pull/1083)
 * Capture error logs as APM errors from `Microsoft.Extensions.Logging` automatically and extend the Public API to capture custom logs as APM errors [#894](https://github.com/elastic/apm-agent-dotnet/issues/894) and [#1135](https://github.com/elastic/apm-agent-dotnet/pull/1135)
-* Support changing log level through Kibana central configuration and support `"off"` level [#970](https://github.com/elastic/apm-agent-dotnet/issues/970) and [#1096](https://github.com/elastic/apm-agent-dotnet/pull/1096)
+* Support changing log level through {{product.kibana}} central configuration and support `"off"` level [#970](https://github.com/elastic/apm-agent-dotnet/issues/970) and [#1096](https://github.com/elastic/apm-agent-dotnet/pull/1096)
 
 ### Fixes [elastic-apm-net-agent-180-fixes]
 * `NullReferenceException` with disabled agent on `Transaction.Custom` [#1080](https://github.com/elastic/apm-agent-dotnet/issues/1080) and [#1081](https://github.com/elastic/apm-agent-dotnet/pull/1081)
@@ -584,14 +584,14 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 ## 1.6.0 [elastic-apm-net-agent-160-release-notes]
 
 ### Features and enhancements [elastic-apm-net-agent-160-features-enhancements]
-* Elasticsearch client instrumentation [#329](https://github.com/elastic/apm-agent-dotnet/pull/329)
+* {{product.elasticsearch}} client instrumentation [#329](https://github.com/elastic/apm-agent-dotnet/pull/329)
 * Introducing `Elastic.Apm.Extensions.Hosting` package with an extension method on `IHostBuilder` [#537](https://github.com/elastic/apm-agent-dotnet/pull/537)
 * Stack trace improvements: async call stack demystification ([#847](https://github.com/elastic/apm-agent-dotnet/pull/847)) and showing frames from user code for outgoing HTTP calls ([#845](https://github.com/elastic/apm-agent-dotnet/pull/845))
 * Making fields on `IError` public [#847](https://github.com/elastic/apm-agent-dotnet/pull/847)
 * Service map improvements: [#893](https://github.com/elastic/apm-agent-dotnet/pull/893)
 
 ### Fixes [elastic-apm-net-agent-160-fixes]
-* Missing traces from the Kibana traces list due to setting `Transaction.ParentId` to an `Activity` [#888](https://github.com/elastic/apm-agent-dotnet/pull/888)
+* Missing traces from the {{product.kibana}} traces list due to setting `Transaction.ParentId` to an `Activity` [#888](https://github.com/elastic/apm-agent-dotnet/pull/888)
 * Exception around runtime detection [#859](https://github.com/elastic/apm-agent-dotnet/pull/859)
 * Missing outgoing HTTP calls in .NET Framework applications and causing memory issues [#896](https://github.com/elastic/apm-agent-dotnet/pull/896)
 
@@ -694,7 +694,7 @@ This release fixes a bug in `Elastic.Apm.AspNetCore` when using ` UseElasticApm(
 * Handling [`Labels`](/reference/public-api.md#api-transaction-tags) with `null` [#429](https://github.com/elastic/apm-agent-dotnet/pull/429)
 
 ## 1.0.0 [elastic-apm-net-agent-100-release-notes]
-The 1.0.0 GA release of the Elastic APM .NET Agent. Stabilization of the 1.0.0-beta feature for production usage.
+The 1.0.0 GA release of the Elastic {{product.apm-agent-dotnet}}. Stabilization of the 1.0.0-beta feature for production usage.
 
 ### Features and enhancements [elastic-apm-net-agent-100-features-enhancements]
 * Out of the box integration with `ILoggerFactory` and the logging  infrastructure in ASP.NET Core [#249](https://github.com/elastic/apm-agent-dotnet/pull/249)

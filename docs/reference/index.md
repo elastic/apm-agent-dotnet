@@ -1,9 +1,9 @@
 ---
-navigation_title: 'APM .NET agent'
+navigation_title: '{{product.apm-agent-dotnet}}'
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/index.html
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/intro.html
-description: "Introduction to the Elastic APM .NET agent, explaining how it automatically instruments supported frameworks and libraries to measure performance and track errors."
+description: "Introduction to the Elastic APM .NET Agent, explaining how it automatically instruments supported frameworks and libraries to measure performance and track errors."
 applies_to:
   stack:
   serverless:
@@ -12,9 +12,9 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# APM .NET agent [intro]
+# {{product.apm-agent-dotnet}} [intro]
 
-The Elastic APM .NET Agent automatically measures the performance of your application and tracks errors. It has built-in support for observing traces and metrics for many popular frameworks, as well as an [API](/reference/public-api.md) which allows you to instrument any application.
+The Elastic {{product.apm-agent-dotnet}} automatically measures the performance of your application and tracks errors. It has built-in support for observing traces and metrics for many popular frameworks, as well as an [API](/reference/public-api.md) which allows you to instrument any application.
 
 Before you begin, review the [supported technologies](/reference/supported-technologies.md) to
 check if your framework and libraries are compatible.
@@ -27,13 +27,13 @@ Elastic supports OpenTelemetry, which allows logs, metrics, and trace signal col
 
 The agent auto-instruments [supported technologies](/reference/supported-technologies.md) and records interesting events, like HTTP requests and database queries. To do this, it uses built-in capabilities of the instrumented frameworks like [Diagnostic Source](https://docs.microsoft.com/dotnet/api/system.diagnostics.diagnosticsource), an HTTP module for IIS, or [IDbCommandInterceptor](https://docs.microsoft.com/dotnet/api/system.data.entity.infrastructure.interception.idbcommandinterceptor?view=entity-framework-6.2.0) for Entity Framework. This means that for the supported technologies, there are no code changes required beyond enabling [auto-instrumentation](/reference/set-up-apm-net-agent.md).
 
-The Agent automatically registers callback methods for built-in Diagnostic Source events. With this, the supported frameworks trigger Agent code for relevant events to measure their duration and collect metadata, like DB statements, as well as HTTP related information, like the URL, parameters, and headers. These events, called Transactions and Spans, are sent to the APM Server. The APM Server converts them to a format suitable for Elasticsearch, and sends them to an Elasticsearch cluster. You can then use the APM app in Kibana to gain insight into latency issues and error culprits within your application.
+The Agent automatically registers callback methods for built-in Diagnostic Source events. With this, the supported frameworks trigger Agent code for relevant events to measure their duration and collect metadata, like DB statements, as well as HTTP related information, like the URL, parameters, and headers. These events, called Transactions and Spans, are sent to the {{product.apm-server}}. The {{product.apm-server}} converts them to a format suitable for {{product.elasticsearch}}, and sends them to an {{product.elasticsearch}} cluster. You can then use {{product.kibana}} to gain insight into latency issues and error culprits within your application.
 
 
 ## Additional Components [additional-components]
 
-APM Agents work in conjunction with the [APM Server](docs-content://solutions/observability/apm/index.md), [Elasticsearch](docs-content://get-started/index.md), and [Kibana](docs-content://get-started/the-stack.md). The [APM Guide](docs-content://solutions/observability/apm/index.md) provides details on how these components work together, and provides a matrix outlining [Agent and Server compatibility](docs-content://solutions/observability/apm/apm-agent-compatibility.md).
+{{product.apm}} agents work in conjunction with the [{{product.apm-server}}](docs-content://solutions/observability/apm/index.md), [{{product.elasticsearch}}](docs-content://get-started/index.md), and [{{product.kibana}}](docs-content://get-started/the-stack.md). The [{{product.apm}} Guide](docs-content://solutions/observability/apm/index.md) provides details on how these components work together, and provides a matrix outlining [Agent and Server compatibility](docs-content://solutions/observability/apm/apm-agent-compatibility.md).
 
 ## Troubleshooting
 
-If you're experiencing issues with the APM .NET agent, refer to [Troubleshoot APM .NET Agent](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md).
+If you're experiencing issues with the {{product.apm-agent-dotnet}}, refer to [Troubleshoot {{product.apm-agent-dotnet}}](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md).

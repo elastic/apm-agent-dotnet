@@ -12,7 +12,6 @@ applies_to:
 
 # Messaging configuration options [config-messaging]
 
-
 ## `IgnoreMessageQueues` [config-ignore-message-queues]
 
 ```{applies_to}
@@ -32,4 +31,3 @@ The wildcard, `*`, matches zero or more characters, and matching is case insensi
 | Default | Type |
 | --- | --- |
 | <empty string> | String |
-

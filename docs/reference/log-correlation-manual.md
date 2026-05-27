@@ -37,12 +37,12 @@ public (string traceId, string transactionId) GetTraceIds()
 }
 ```
 
-In case the agent is configured and there is an active transaction, the `traceId` and `transactionId` will always return the current trace and transaction ids that you can manually add to your logs. Make sure you store those in the fields `trace.id` and `transaction.id` when you send them to Elasticsearch.
+In case the agent is configured and there is an active transaction, the `traceId` and `transactionId` will always return the current trace and transaction ids that you can manually add to your logs. Make sure you store those in the fields `trace.id` and `transaction.id` when you send them to {{product.elasticsearch}}.
 
 
 ## Manual log correlation (unstructured) [log-correlation-manual-unstructured]
 
-For correlating unstructured logs (e.g. basic printf-style logging, like `Console.WriteLine`), you will need to include the trace ids in your log message, and then extract them using Filebeat.
+For correlating unstructured logs (e.g. basic printf-style logging, like `Console.WriteLine`), you will need to include the trace ids in your log message, and then extract them using {{product.filebeat}}.
 
 If you already have a transaction object, then you can use the `TraceId` and `Id` properties. Both are of type `string`, so you can simply add them to the log.
 
@@ -60,7 +60,7 @@ This would print a log message along the lines of:
     ERROR [trace.id=cd04f33b9c0c35ae8abe77e799f126b7 transaction.id=cd04f33b9c0c35ae] an error occurred
 ```
 
-For log correlation to work, the trace ids must be extracted from the log message and stored in separate fields in the Elasticsearch document. This can be achieved by [parsing the data by using ingest node](beats://reference/filebeat/configuring-ingest-node.md), in particular by using [the grok processor](elasticsearch://reference/enrich-processor/grok-processor.md).
+For log correlation to work, the trace ids must be extracted from the log message and stored in separate fields in the {{product.elasticsearch}} document. This can be achieved by [parsing the data by using ingest node](beats://reference/filebeat/configuring-ingest-node.md), in particular by using [the grok processor](elasticsearch://reference/enrich-processor/grok-processor.md).
 
 ```json
 {
@@ -79,4 +79,3 @@ For log correlation to work, the trace ids must be extracted from the log messag
   ]
 }
 ```
-

@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-asp-dot-net.html
-description: "How to set up the Elastic APM .NET agent to trace ASP.NET full framework applications using the ElasticApmModule IIS module."
+description: "How to set up the Elastic APM .NET Agent to trace ASP.NET full framework applications using the ElasticApmModule IIS module."
 navigation_title: ASP.NET
 applies_to:
   stack:
@@ -77,7 +77,7 @@ Our IIS module requires:
 
 1. Recompile your application and deploy it.
 
-    The `ElasticApmModule` instantiates the APM agent on the first initialization. However, there may be some scenarios where you want to control the agent instantiation, such as configuring filters in the application start.
+    The `ElasticApmModule` instantiates the {{product.apm-agent-dotnet}} on the first initialization. However, there may be some scenarios where you want to control the agent instantiation, such as configuring filters in the application start.
 
     To do so, the `ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with ASP.NET Full Framework, which can then instantiate the agent.
 
@@ -108,11 +108,11 @@ Our IIS module requires:
     }
     ```
 
-    Now, the `ElasticApmModule` will use the instantiated instance of the APM agent upon initialization.
+    Now, the `ElasticApmModule` will use the instantiated instance of the {{product.apm-agent-dotnet}} upon initialization.
 
 
 ## Configure the agent [asp-net-configuration]
 
-After adding the agent, configure it to connect to your APM Server. The fastest way is through environment variables or `web.config`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
+After adding the agent, configure it to connect to your {{product.apm-server}}. The fastest way is through environment variables or `web.config`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
 
 For the full list of configuration options available to ASP.NET applications, see [Configuration on ASP.NET](/reference/configuration-on-asp-net.md).

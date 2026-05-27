@@ -19,6 +19,6 @@ To do this, add the [Elastic.Apm](https://www.nuget.org/packages/Elastic.Apm) pa
 or .NET [Activity](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs) APIs to manually create spans and transactions.
 
 ::::{important}
-For best flexibility and reduced vendor lock-in, we recommend preferring that custom instrumentation uses the [System.Diagnostics.Activity](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) API. Code instrumented with this API will be picked up by the OpenTelemetry Bridge and is also natively 
+For best flexibility and reduced vendor lock-in, we recommend preferring that custom instrumentation uses the [System.Diagnostics.Activity](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) API. Code instrumented with this API will be picked up by the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) and is also natively 
 compatible with OpenTelemetry.
 ::::

@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/logs.html
-description: "Overview of log correlation and application log ingestion features in the Elastic APM .NET agent, including supported logging framework integrations."
+description: "Overview of log correlation and application log ingestion features in the Elastic APM .NET Agent, including supported logging framework integrations."
 applies_to:
   stack:
   serverless:
@@ -16,12 +16,12 @@ Elastic .NET Agent provides [Log correlation](#log-correlation-ids). The agent w
 
 This features is part of [Application log ingestion strategies](docs-content://solutions/observability/logs/stream-application-logs.md).
 
-The [`ecs-logging-dotnet`](ecs-dotnet://reference/index.md) library can also be used to use the [ECS logging](ecs-logging://reference/intro.md) format without an APM agent. ECS .NET logging will always provide [log correlation](#log-correlation-ids) IDs through [`System.Diagnostics.Activity`](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-7.0). When paired with the APM Agent it will pick up the appropriate service correlation features too.
+The [`ecs-logging-dotnet`](ecs-dotnet://reference/index.md) library can also be used to use the [ECS logging](ecs-logging://reference/intro.md) format without an {{product.apm-agent-dotnet}}. {{product.ecs}} .NET logging will always provide [log correlation](#log-correlation-ids) IDs through [`System.Diagnostics.Activity`](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-7.0). When paired with the {{product.apm-agent-dotnet}} it will pick up the appropriate service correlation features too.
 
 
 ## Log correlation [log-correlation-ids]
 
-The Elastic APM .NET agent provides integrations for popular logging frameworks, which take care of injecting trace ID fields into your application’s log records. Currently supported logging frameworks are:
+The Elastic {{product.apm-agent-dotnet}} provides integrations for popular logging frameworks, which take care of injecting trace ID fields into your application’s log records. Currently supported logging frameworks are:
 
 * [Serilog](/reference/serilog.md)
 * [NLog](/reference/nlog.md)
@@ -31,8 +31,5 @@ If your favorite logging framework is not already supported, there are two other
 * Open a feature request, or contribute code, for additional support, as described in [CONTRIBUTING.md](https://github.com/elastic/apm-agent-dotnet/blob/main/CONTRIBUTING.md).
 * Manually inject trace IDs into log records, as described in [Manual log correlation](/reference/log-correlation-manual.md).
 
-Regardless of how you integrate APM with logging, you can use [Filebeat](beats://reference/filebeat/index.md) to send your logs to Elasticsearch, in order to correlate your traces and logs and link from APM to the [Logs app](docs-content://solutions/observability/logs/explore-logs.md).
-
-
-
+Regardless of how you integrate {{product.apm-agent-dotnet}} with logging, you can use [{{product.filebeat}}](beats://reference/filebeat/index.md) to send your logs to {{product.elasticsearch}}, in order to correlate your traces and logs and link from {{product.apm}} to [explore logs](docs-content://solutions/observability/logs/explore-logs.md).
 

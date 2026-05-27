@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/opentelemetry-bridge.html
-description: "How to use the OpenTelemetry bridge to instrument .NET applications with the vendor-neutral OpenTelemetry Tracing API while using the Elastic APM agent for data collection."
+description: "How to use the OpenTelemetry bridge to instrument .NET applications with the vendor-neutral OpenTelemetry Tracing API while using the Elastic APM .NET Agent for data collection."
 applies_to:
   stack:
   serverless:
@@ -12,7 +12,7 @@ applies_to:
 
 # OpenTelemetry bridge [opentelemetry-bridge]
 
-The OpenTelemetry Bridge in the Elastic .NET APM Agent bridges OpenTelemetry spans into Elastic APM transactions and spans. The Elastic APM OpenTelemetry bridge allows you to use the vendor-neutral OpenTelemetry Tracing API to manually instrument your code and have the Elastic .NET APM agent handle those API calls. This means you can use the Elastic APM agent for tracing, without any vendor lock-in from adding manual tracing using the APM agent’s own [Public API](/reference/public-api.md).
+The OpenTelemetry Bridge in the Elastic {{product.apm-agent-dotnet}} bridges OpenTelemetry spans into Elastic {{product.apm}} transactions and spans. The Elastic {{product.apm-agent-dotnet}} OpenTelemetry Bridge allows you to use the vendor-neutral OpenTelemetry Tracing API to manually instrument your code and have the Elastic {{product.apm-agent-dotnet}} handle those API calls. This means you can use the Elastic {{product.apm-agent-dotnet}} for tracing, without any vendor lock-in from adding manual tracing using the {{product.apm-agent-dotnet}}s own [Public API](/reference/public-api.md).
 
 ::::{note}
 The OpenTelemetry Bridge is not supported on .NET Framework.
@@ -68,7 +68,7 @@ public static void Sample()
 The code snippet above creates a span named `Sample` and a child span on `Sample` named `foo`. The bridge will create a transaction from `Sample` and a child span named `foo`.
 
 
-### Mixing OpenTelemetry and the Elastic APM Public API [mixing-apis]
+### Mixing OpenTelemetry and the Elastic {{product.apm-agent-dotnet}} Public API [mixing-apis]
 
 You can also mix the Activity API with the [Public API](/reference/public-api.md), the OpenTelemetry bridge will take care of putting the spans into the right place. The advantage of this is that if you already have some libraries that you instrumented via the [Public API](/reference/public-api.md), but going forward, you’d like to use the vendor-independent OpenTelemetry API, you don’t need to replace all Public API calls in one go.
 
@@ -94,14 +94,14 @@ tracer.CaptureTransaction( nameof(Sample4), "test", t =>
 });
 ```
 
-The code snippet above creates a transaction with the Elastic .NET APM Agent’s [Public API](/reference/public-api.md). Then it creates an activity called `foo`; this activity will be a child of the previously created transaction. Finally, a span is created again using the Elastic .NET APM Agent’s [Public API](/reference/public-api.md); this span will be a child span of the OpenTelemetry span.
+The code snippet above creates a transaction with the Elastic {{product.apm-agent-dotnet}}s [Public API](/reference/public-api.md). Then it creates an activity called `foo`; this activity will be a child of the previously created transaction. Finally, a span is created again using theElastic {{product.apm-agent-dotnet}}s [Public API](/reference/public-api.md); this span will be a child span of the OpenTelemetry span.
 
 Of course these calls don’t have to be in the same method. The concept described here works across different methods, types, or libraries.
 
 
 ### Baggage support [baggage-api]
 
-The Elastic APM Agent also integrates with [Activity.Baggage](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity.baggage).
+The Elastic {{product.apm-agent-dotnet}} also integrates with [Activity.Baggage](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity.baggage).
 
 Here is an example that sets a baggage value with the above API:
 
@@ -111,7 +111,7 @@ using System.Diagnostics;
 _activitySource.StartActivity("MyActivity")?.AddBaggage("foo", "bar");
 ```
 
-The Elastic APM Agent will automatically propagate such values according to the [W3C Baggage specification](https://www.w3.org/TR/baggage/) and `Activity.Baggage` is automatically populated based on the incoming `baggage` header.
+The Elastic {{product.apm-agent-dotnet}} will automatically propagate such values according to the [W3C Baggage specification](https://www.w3.org/TR/baggage/) and `Activity.Baggage` is automatically populated based on the incoming `baggage` header.
 
 Furthermore, the agent offers the [BaggageToAttach](/reference/config-http.md#config-baggage-to-attach) configuration to automatically attach values from `Activity.Baggage` to captured events.
 
@@ -120,7 +120,7 @@ Furthermore, the agent offers the [BaggageToAttach](/reference/config-http.md#co
 
 OpenTelemetry in .NET is implemented via the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity) and there is an [OpenTelemetry shim](https://opentelemetry.io/docs/languages/dotnet/shim/) which follows the OpenTelemetry specification more closer. This shim is built on top of the Activity API.
 
-The OpenTelemetry bridge in the Elastic .NET APM Agent targets the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity). Since the [OpenTelemetry .NET shim](https://opentelemetry.io/docs/languages/dotnet/shim/) builds on top of the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity), the shim is implicitly supported as well, although we don’t directly test it, because the Activity API is the recommended OpenTelemetry API for .NET.
+The OpenTelemetry bridge in theElastic {{product.apm-agent-dotnet}} targets the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity). Since the [OpenTelemetry .NET shim](https://opentelemetry.io/docs/languages/dotnet/shim/) builds on top of the [Activity API](https://learn.microsoft.com/dotnet/api/system.diagnostics.activity), the shim is implicitly supported as well, although we don’t directly test it, because the Activity API is the recommended OpenTelemetry API for .NET.
 
 
 ## Caveats [otel-caveats]
@@ -138,4 +138,3 @@ This bridge only supports the tracing API. The Metrics API is currently not supp
 #### Span Events [otel-span-events]
 
 Span events are not currently supported. Events will be silently dropped.
-

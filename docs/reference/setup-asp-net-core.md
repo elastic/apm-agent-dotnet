@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-asp-net-core.html
-description: "How to set up the Elastic APM .NET agent to trace ASP.NET Core applications using the AddAllElasticApm extension method."
+description: "How to set up the Elastic APM .NET Agent to trace ASP.NET Core applications using the AddAllElasticApm extension method."
 navigation_title: ASP.NET Core
 applies_to:
   stack:
@@ -62,11 +62,11 @@ builder.Services.AddElasticApm(
     new EfCoreDiagnosticsSubscriber()); /* Enable tracing of database calls through EF Core*/
 ```
 
-In case you only want to use the [*Public API*](/reference/public-api.md), you don’t need to do any initialization, you can start using the API and the agent will send the data to the APM Server.
+In case you only want to use the [*Public API*](/reference/public-api.md), you don’t need to do any initialization, you can start using the API and the agent will send the data to the {{product.apm-server}}.
 
 
 ## Configure the agent [asp-net-core-configuration]
 
-After adding the agent, configure it to connect to your APM Server. The fastest way is through environment variables or `appsettings.json`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
+After adding the agent, configure it to connect to your {{product.apm-server}}. The fastest way is through environment variables or `appsettings.json`. See [Minimum configuration](/reference/configuration.md#minimum-configuration) for the three settings every deployment needs.
 
 To set configuration values programmatically, for example to derive the APM service name or environment from other application configuration, see [Overriding configuration values programmatically](/reference/configuration-on-asp-net-core.md#asp-net-core-programmatic-config).

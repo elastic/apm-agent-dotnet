@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup.html
-description: "Overview of the available setup methods for the Elastic APM .NET agent, including profiler auto instrumentation, NuGet packages, and host startup hooks."
+description: "Overview of the available setup methods for the Elastic APM .NET Agent, including profiler auto instrumentation, NuGet packages, and host startup hooks."
 applies_to:
   stack:
   serverless:
@@ -10,7 +10,7 @@ applies_to:
     apm_agent_dotnet: ga
 ---
 
-# Set up the APM .NET agent [setup]
+# Set up the {{product.apm-agent-dotnet}} [setup]
 
 The .NET agent can be added to an application in three different ways
 

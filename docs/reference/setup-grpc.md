@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-grpc.html
-description: "How to enable Elastic APM .NET agent automatic instrumentation of gRPC client and server-side calls."
+description: "How to enable Elastic APM .NET Agent automatic instrumentation of gRPC client and server-side calls."
 navigation_title: gRPC
 applies_to:
   stack:
@@ -27,7 +27,7 @@ For the full compatibility matrix including supported installation methods, refe
 
 ## Quick start [_quick_start_8]
 
-This page assumes the core agent is already set up. If not, see [Set up the APM .NET agent](/reference/set-up-apm-net-agent.md) first.
+This page assumes the core agent is already set up. If not, see [Set up the {{product.apm-agent-dotnet}}](/reference/set-up-apm-net-agent.md) first.
 
 ### Server-side
 
@@ -59,4 +59,3 @@ Agent.Subscribe(new GrpcClientDiagnosticSubscriber());
 ```
 
 Diagnostic events from `Grpc.Net.Client` are captured as spans.
-

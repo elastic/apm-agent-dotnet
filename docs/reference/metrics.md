@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/metrics.html
-description: "Reference for system and application metrics collected and reported by the Elastic APM .NET agent, including CPU, memory, and runtime metrics."
+description: "Reference for system and application metrics collected and reported by the Elastic APM .NET Agent, including CPU, memory, and runtime metrics."
 applies_to:
   stack:
   serverless:
@@ -12,16 +12,16 @@ applies_to:
 
 # Metrics [metrics]
 
-The .NET agent tracks certain system and application metrics. Some of them have built-in visualizations and some can only be visualized with custom Kibana dashboards.
+The .NET agent tracks certain system and application metrics. Some of them have built-in visualizations and some can only be visualized with custom {{product.kibana}} dashboards.
 
-These metrics will be sent regularly to the APM Server and from there to Elasticsearch. You can adjust the interval with the setting [`MetricsInterval`](/reference/config-reporter.md#config-metrics-interval).
+These metrics will be sent regularly to the {{product.apm-server}} and from there to {{product.elasticsearch}}. You can adjust the interval with the setting [`MetricsInterval`](/reference/config-reporter.md#config-metrics-interval).
 
 "Platform: all" means that the metric is available on every platform where .NET (i.e. not .NET Framework) is supported.
 
 
 ## System metrics [metrics-system]
 
-As of APM version 6.6, these metrics will be visualized in the APM app.
+As of {{product.apm}} version 6.6, these metrics will be visualized in {{product.kibana}}.
 
 ::::{important}
 System CPU usage metric is collected using Performance Counters on Windows. The account under which a traced application runs must be part of the **Performance Monitor Users** group to be able to access performance counter values.
@@ -102,7 +102,6 @@ platform: all
 The total physical memory the process has.
 
 
-
 ## Runtime metrics [metrics-runtime]
 
 **`clr.gc.count`**
@@ -161,7 +160,6 @@ format: ms
 Platform: all.
 
 The approximate accumulated collection elapsed time in milliseconds.
-
 
 
 ## Built-in application metrics [metrics-application]

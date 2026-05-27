@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/packages.html
-description: "Catalog of NuGet packages available for the Elastic APM .NET agent, covering the core agent and per-technology instrumentation packages."
+description: "Catalog of NuGet packages available for the Elastic APM .NET Agent, covering the core agent and per-technology instrumentation packages."
 applies_to:
   stack:
   serverless:
@@ -22,7 +22,7 @@ Agent instrumentations are released as a set of NuGet packages available on [nug
 * [Azure Storage](/reference/setup-azure-storage.md)
 * [Entity Framework 6](/reference/setup-ef6.md)
 * [Entity Framework Core](/reference/setup-ef-core.md)
-* [Elasticsearch](/reference/setup-elasticsearch.md)
+* [{{product.elasticsearch}}](/reference/setup-elasticsearch.md)
 * [gRPC](/reference/setup-grpc.md)
 * [MongoDB](/reference/setup-mongo-db.md)
 * [SqlClient](/reference/setup-sqlclient.md)
@@ -34,10 +34,10 @@ Agent instrumentations are released as a set of NuGet packages available on [nug
 The following NuGet packages are available:
 
 [**Elastic.Apm**](https://www.nuget.org/packages/Elastic.Apm)
-:   The core agent package, contains the [*Public API*](/reference/public-api.md) of the agent. It also contains every tracing component to trace classes that are part of .NET Standard 2.0, which includes the monitoring part for `HttpClient`. Every other Elastic APM package references this package.
+:   The core agent package, contains the [*Public API*](/reference/public-api.md) of the agent. It also contains every tracing component to trace classes that are part of .NET Standard 2.0, which includes the monitoring part for `HttpClient`. Every other Elastic {{product.apm-agent-dotnet}} package references this package.
 
 [**Elastic.Apm.NetCoreAll**](https://www.nuget.org/packages/Elastic.Apm.NetCoreAll)
-:   A meta package that references all other Elastic APM .NET agent package that can automatically configure instrumentation.
+:   A meta package that references all other Elastic {{product.apm-agent-dotnet}} package that can automatically configure instrumentation.
 
     Reference this package to instrument all supported technologies automatically in an ASP.NET Core or .NET application. Individual component packages are also available — they are all referenced by this meta package.
 

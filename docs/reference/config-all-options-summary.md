@@ -1,7 +1,7 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-all-options-summary.html
-description: "Quick-reference table of all available Elastic APM .NET agent configuration options, grouped by category, with links to detailed documentation."
+description: "Quick-reference table of all available Elastic APM .NET Agent configuration options, grouped by category, with links to detailed documentation."
 applies_to:
   stack:
   serverless:
@@ -12,7 +12,7 @@ applies_to:
 
 # All options summary [config-all-options-summary]
 
-| Option name | [![dynamic config](images/dynamic-config.svg "") ](/reference/configuration.md#dynamic-configuration) | Keywords |
+| Option name | [![dynamic config](images/dynamic-config.svg "")](/reference/configuration.md#dynamic-configuration) | Keywords |
 | --- | --- | --- |
 | [`ApiKey`](/reference/config-reporter.md#config-api-key) | No | Reporter |
 | [`ApplicationNamespaces`](/reference/config-stacktrace.md#config-application-namespaces) | No | Stacktrace |
@@ -63,4 +63,3 @@ applies_to:
 | [`ProxyUrl`](/reference/config-http.md#add-proxy-apm) | No | HTTP |
 | [`ProxyUserName`](/reference/config-http.md#add-proxy-apm) | No | HTTP |
 | [`ProxyPassword`](/reference/config-http.md#add-proxy-apm) | No | HTTP |
-

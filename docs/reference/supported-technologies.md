@@ -12,7 +12,7 @@ applies_to:
 
 # Supported technologies [supported-technologies]
 
-This page details the technologies the APM Agent for .NET supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but might work.
+This page details the technologies the {{product.apm-agent-dotnet}} supports, the package or runtime versions we test, and which installation methods work for each one. Versions beyond the listed upper bound have not been tested and are not supported, but might work.
 
 Use this page as a compatibility matrix:
 
@@ -25,7 +25,7 @@ If you are already using OpenTelemetry, consider the [EDOT .NET SDK](elastic-ote
 
 ## Supported .NET runtimes [supported-dotnet-runtimes]
 
-The APM Agent for .NET libraries and components target .NET Standard 2.0 or .NET Standard 2.1.
+The {{product.apm-agent-dotnet}} for .NET libraries and components target .NET Standard 2.0 or .NET Standard 2.1.
 
 We support .NET runtimes ≤10.0.x and .NET Framework runtimes from 4.6.2 to 4.8.1 for as long as they receive active support from Microsoft per the [.NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core) and [.NET Framework support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-framework). When Microsoft ends support for a runtime version, so does Elastic. Issues reported against unsupported runtimes will only be acted on if they also affect a supported runtime.
 
@@ -42,14 +42,14 @@ On .NET Framework, we strongly recommend at least .NET Framework 4.7.2 because o
 Each table below shows which installation methods apply to each technology. A checkmark (✓) means the technology is supported with that installation method for the listed version range; a cross (✗) means it is not supported using that method. Where a cell shows a version qualifier such as `(≥3.7.0)`, only that narrower range is covered by that method.
 
 ::::{note}
-The **OpenTelemetry Bridge** column requires .NET 8+ and APM Server ≥7.16. A checkmark there means the technology is covered through the built-in OpenTelemetry Bridge, whether the agent was installed using the Profiler or a NuGet package.
+The **OpenTelemetry Bridge** column requires .NET 8+ and {{product.apm-server}} ≥7.16. A checkmark there means the technology is covered through the built-in OpenTelemetry Bridge, whether the agent was installed using the Profiler or a NuGet package.
 
-On .NET Framework, technologies that depend on the startup hook or the OpenTelemetry Bridge need the NuGet install method instead. If no Elastic APM NuGet package exists for that technology, such as `Elastic.Clients.Elasticsearch`, it is not supported on .NET Framework.
+On .NET Framework, technologies that depend on the startup hook or the OpenTelemetry Bridge need the NuGet install method instead. If no Elastic {{product.apm-agent-dotnet}} NuGet package exists for that technology, such as `Elastic.Clients.Elasticsearch`, it is not supported on .NET Framework.
 ::::
 
 | Column | Meaning |
 | --- | --- |
-| **[Profiler](/reference/setup-auto-instrumentation.md)** | Instrumented automatically by the [Elastic APM .NET Profiler](/reference/setup-auto-instrumentation.md) with no code changes. On .NET, a startup hook loads `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge. On .NET Framework, the profiler uses IL rewriting instead. |
+| **[Profiler](/reference/setup-auto-instrumentation.md)** | Instrumented automatically by the [Elastic {{product.apm}} .NET Profiler](/reference/setup-auto-instrumentation.md) with no code changes. On .NET, a startup hook loads `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge. On .NET Framework, the profiler uses IL rewriting instead. |
 | **NuGet** | Install the linked integration NuGet package alongside the core `Elastic.Apm` package and add the setup call to application startup. |
 | **OpenTelemetry Bridge** | The library emits native [OpenTelemetry](https://opentelemetry.io/) spans that the agent captures through its built-in [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md). |
 
