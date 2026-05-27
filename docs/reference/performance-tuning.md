@@ -34,7 +34,7 @@ Here’s an example of setting the sample rate to 20% using [Configuration on AS
 
 ## Stack traces [performance-tuning-stack-traces]
 
-In a complex application, a request may produce many spans. Capturing a stack trace for every span can result in significant memory usage. Stack traces are also captured for every error. There are several settings to adjust how stack traces are captured.
+In a complex application, a request might produce many spans. Capturing a stack trace for every span can result in significant memory usage. Stack traces are also captured for every error. There are several settings to adjust how stack traces are captured.
 
 
 ### Deactivate capturing stack traces [performance-tuning-deactivate-capturing-stack-traces]

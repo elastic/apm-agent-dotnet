@@ -77,7 +77,7 @@ Our IIS module requires:
 
 1. Recompile your application and deploy it.
 
-    The `ElasticApmModule` instantiates the {{product.apm-agent-dotnet}} on the first initialization. However, there may be some scenarios where you want to control the agent instantiation, such as configuring filters in the application start.
+    The `ElasticApmModule` instantiates the {{product.apm-agent-dotnet}} on the first initialization. However, there might be some scenarios where you want to control the agent instantiation, such as configuring filters in the application start.
 
     To do so, the `ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with ASP.NET Full Framework, which can then instantiate the agent.
 

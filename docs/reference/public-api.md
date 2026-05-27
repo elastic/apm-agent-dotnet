@@ -388,7 +388,7 @@ if(transaction.TryGetLabel<int>("foo", out var myLabel))
 #### `Dictionary<string,string> Labels` [api-transaction-tags]
 
 ::::{warning}
-This property is obsolete and will be be removed in a future version. Use the [`void SetLabel()`](#api-transaction-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
+This property is obsolete and will be removed in a future version. Use the [`void SetLabel()`](#api-transaction-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
 ::::
 
 
@@ -679,7 +679,7 @@ if(span.TryGetLabel<bool>("foo", out var myLabel))
 #### `Dictionary<string,string> Labels` [api-span-tags]
 
 ::::{warning}
-This property is obsolete and will be removed in a future version. Use the [`void SetLabel()`](#api-span-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
+This property is obsolete and will be removed in a future version. Use the [`void SetLabel()`](#api-span-set-label) method instead, which allows setting labels of string, boolean and number. This property remains for now to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to {{product.apm-server}}, with values in `Labels` taking precedence.
 ::::
 
 

@@ -44,7 +44,7 @@ In case the agent is configured and there is an active transaction, the `traceId
 
 For correlating unstructured logs (for example, basic printf-style logging, like `Console.WriteLine`), you will need to include the trace ids in your log message, and then extract them using {{product.filebeat}}.
 
-If you already have a transaction object, then you can use the `TraceId` and `Id` properties. Both are of type `string`, so you can simply add them to the log.
+If you already have a transaction object, then you can use the `TraceId` and `Id` properties. Both are of type `string`, so you can add them to the log.
 
 ```csharp
 using Elastic.Apm;

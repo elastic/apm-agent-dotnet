@@ -114,7 +114,7 @@ Valid options: `continue`, `restart`, `restart_external`.
 
 The `traceparent` header of requests that are traced by the Elastic {{product.apm-agent-dotnet}} might have been added by a 3rd party component.
 
-This situation becomes more and more common as the w3c trace context gets adopted. In such cases you may end up with traces where part of the trace is outside of Elastic {{product.apm}}.
+This situation becomes more and more common as the w3c trace context gets adopted. In such cases you might end up with traces where part of the trace is outside of Elastic {{product.apm}}.
 
 To handle this properly, the agent offers trace continuation strategies with the following values and behavior:
 
