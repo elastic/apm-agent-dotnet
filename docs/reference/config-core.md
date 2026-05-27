@@ -136,7 +136,7 @@ This allows for the reported hostname to be manually specified. If this is not s
 apm_agent_dotnet: ga 1.1
 ```
 
-The name of the environment that this service is deployed in, for example, "production" or "staging".
+The name of the environment that this service is deployed in, for example, "production" or "staging."
 
 Environments allow you to efficiently filter data on a global level in {{product.kibana}}. It's important to be consistent when naming environments across agents. See [environment selector](docs-content://solutions/observability/apm/filter-data.md#apm-filter-your-data-service-environment-filter) in the {{product.kibana}} UI for more information.
 
