@@ -12,10 +12,9 @@ applies_to:
 
 # Profiler auto instrumentation (zero-code) [setup-auto-instrumentation]
 
+## Overview [profiler-overview]
 
-## Overview [_overview]
-
-Profiler auto instrumentation lets you add APM to a .NET application (including ASP.NET Core and ASP.NET apps) without modifying source code or adding NuGet packages. Set a few environment variables, start your application, and the profiler automatically captures incoming request transactions, outgoing HTTP calls, database queries, and more for the technologies listed below. This approach is useful for getting started quickly with zero code changes, for instrumenting applications you don't own, or for applying a single configuration change across all services on a host.
+Profiler auto instrumentation lets you add {{product.apm}} to a .NET application (including ASP.NET Core and ASP.NET apps) without modifying source code or adding NuGet packages. Set a few environment variables, start your application, and the profiler automatically captures incoming request transactions, outgoing HTTP calls, database queries, and more for the technologies listed below. This approach is useful for getting started quickly with zero code changes, for instrumenting applications you don't own, or for applying a single configuration change across all services on a host.
 
 ::::{note}
 **Not sure whether you have .NET or .NET Framework?** ".NET" (formerly ".NET Core") refers to .NET 8, .NET 9, and .NET 10. ".NET Framework" is the older Windows-only runtime (versions 4.6.1 to 4.8.1). If you're unsure which your application targets, open its `.csproj` file and check the `<TargetFramework>` element: values like `net8.0` or `net10.0` mean .NET; values like `net472` or `net48` mean .NET Framework.
@@ -41,7 +40,8 @@ The profiler-based agent is only officially tested and supported on .NET 8 and n
 
 It instruments the following technologies:
 
-**Web and networking**
+
+### Web and networking
 
 | Technology | Required library |
 | --- | --- |
@@ -54,38 +54,41 @@ It instruments the following technologies:
 gRPC server calls in ASP.NET Core applications are captured automatically using ASP.NET Core instrumentation. No separate integration is needed for the server side.
 ::::
 
-**Data access**
+
+### Data access
 
 | Technology | Required library |
 | --- | --- |
 | ADO.NET | built-in (.NET Framework) |
-| Elasticsearch | [Elastic.Clients.Elasticsearch ≥8.0.0 <10.0.0](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch), using startup hook† |
-| Elasticsearch.Net (legacy) | [Elasticsearch.Net ≥7.6.0 <8.0.0](https://www.nuget.org/packages/Elasticsearch.Net), using startup hook† |
-| NEST (legacy) | [NEST ≥7.6.0 <8.0.0](https://www.nuget.org/packages/NEST), using startup hook† |
-| Entity Framework Core | [Microsoft.EntityFrameworkCore ≥8.0.0 ≤10.0.x](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore), using startup hook† |
-| MongoDB | [MongoDB.Driver ≥3.7.0 <4.0.0](https://www.nuget.org/packages/MongoDB.Driver), using startup hook†‡ |
-| MySQL | [MySql.Data ≥6.7.0 <9.0.0](https://www.nuget.org/packages/MySql.Data) |
-| Oracle | [Oracle.ManagedDataAccess ≥12.2.1100 <22.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess)<br>[Oracle.ManagedDataAccess.Core ≥2.0.0 <4.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) |
-| PostgreSQL | [Npgsql ≥4.0.0 <8.0.0](https://www.nuget.org/packages/Npgsql) |
-| SqlClient | built-in (.NET Framework)<br>[System.Data.SqlClient ≥4.0.0 <5.0.0](https://www.nuget.org/packages/System.Data.SqlClient)<br>[Microsoft.Data.SqlClient ≥1.0.0 <6.0.0](https://www.nuget.org/packages/Microsoft.Data.SqlClient) |
-| SQLite (Microsoft.Data.Sqlite) | [Microsoft.Data.Sqlite ≥2.0.0 <9.0.0](https://www.nuget.org/packages/Microsoft.Data.Sqlite) |
-| SQLite (System.Data.SQLite) | [System.Data.SQLite ≥1.0.0 <3.0.0](https://www.nuget.org/packages/System.Data.SQLite) |
+| {{es}} | [`Elastic.Clients.Elasticsearch` ≥8.0.0 <10.0.0](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch), using startup hook† |
+| Elasticsearch.Net (legacy) | [`Elasticsearch.Net` ≥7.6.0 <8.0.0](https://www.nuget.org/packages/Elasticsearch.Net), using startup hook† |
+| NEST (legacy) | [`NEST` ≥7.6.0 <8.0.0](https://www.nuget.org/packages/NEST), using startup hook† |
+| Entity Framework Core | [`Microsoft.EntityFrameworkCore` ≥8.0.0 ≤10.0.x](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore), using startup hook† |
+| MongoDB | [`MongoDB.Driver` ≥3.7.0 <4.0.0](https://www.nuget.org/packages/MongoDB.Driver), using startup hook†‡ |
+| MySQL | [`MySql.Data` ≥6.7.0 <9.0.0](https://www.nuget.org/packages/MySql.Data) |
+| Oracle | [`Oracle.ManagedDataAccess` ≥12.2.1100 <22.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess)<br>[`Oracle.ManagedDataAccess.Core` ≥2.0.0 <4.0.0](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) |
+| PostgreSQL | [`Npgsql` ≥4.0.0 <8.0.0](https://www.nuget.org/packages/Npgsql) |
+| SqlClient | built-in (.NET Framework)<br>[`System.Data.SqlClient` ≥4.0.0 <5.0.0](https://www.nuget.org/packages/System.Data.SqlClient)<br>[`Microsoft.Data.SqlClient` ≥1.0.0 <6.0.0](https://www.nuget.org/packages/Microsoft.Data.SqlClient) |
+| SQLite (Microsoft.Data.Sqlite) | [`Microsoft.Data.Sqlite` ≥2.0.0 <9.0.0](https://www.nuget.org/packages/Microsoft.Data.Sqlite) |
+| SQLite (System.Data.SQLite) | [`System.Data.SQLite` ≥1.0.0 <3.0.0](https://www.nuget.org/packages/System.Data.SQLite) |
 
-**Messaging**
 
-| Technology | Required library |
-| --- | --- |
-| Azure Service Bus | [Azure.Messaging.ServiceBus ≥7.0.0 <8.0.0](https://www.nuget.org/packages/Azure.Messaging.ServiceBus), using startup hook† |
-| Kafka | [Confluent.Kafka ≥1.4.0 <3.0.0](https://www.nuget.org/packages/Confluent.Kafka) |
-| RabbitMQ | [RabbitMQ.Client ≥3.6.9 <7.0.0](https://www.nuget.org/packages/RabbitMQ.Client) |
-
-**Azure Storage**
+### Messaging
 
 | Technology | Required library |
 | --- | --- |
-| Azure Blob Storage | [Azure.Storage.Blobs ≥12.8.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Blobs), using startup hook† |
-| Azure Queue Storage | [Azure.Storage.Queues ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Queues), using startup hook† |
-| Azure File Share Storage | [Azure.Storage.Files.Shares ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Files.Shares), using startup hook† |
+| Azure Service Bus | [`Azure.Messaging.ServiceBus` ≥7.0.0 <8.0.0](https://www.nuget.org/packages/Azure.Messaging.ServiceBus), using startup hook† |
+| Kafka | [`Confluent.Kafka` ≥1.4.0 <3.0.0](https://www.nuget.org/packages/Confluent.Kafka) |
+| RabbitMQ | [`RabbitMQ.Client` ≥3.6.9 <7.0.0](https://www.nuget.org/packages/RabbitMQ.Client) |
+
+
+### Azure Storage
+
+| Technology | Required library |
+| --- | --- |
+| Azure Blob Storage | [`Azure.Storage.Blobs` ≥12.8.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Blobs), using startup hook† |
+| Azure Queue Storage | [`Azure.Storage.Queues` ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Queues), using startup hook† |
+| Azure File Share Storage | [`Azure.Storage.Files.Shares` ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Files.Shares), using startup hook† |
 
 † .NET only; not supported on .NET Framework. The profiler uses the [.NET startup hook](https://learn.microsoft.com/en-us/dotnet/core/tutorials/dotnet-startup-hooks) mechanism to automatically load both `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge.
 
@@ -103,18 +106,19 @@ Auto instrumentation using the .NET CLR Profiling API can be used in conjunction
 NuGet packages must use the same version number as the profiler zip file.
 ::::
 
-## Prerequisites [_prerequisites]
+
+## Prerequisites [profiler-prerequisites]
 
 Before starting, ensure you have:
 
-* **APM server URL**: the URL of the APM server you want to send data to (for example, `https://my-apm-server:8200`). You can find this in your Elastic deployment settings.
-* **API key**: used by the agent to authenticate with APM server. Refer to [API key](docs-content://solutions/observability/apm/api-keys.md) for details. If your environment uses secret tokens, set `ELASTIC_APM_SECRET_TOKEN` in place of `ELASTIC_APM_API_KEY` in the examples below.
+* **{{product.apm}} server URL**: the URL of the {{product.apm}} server you want to send data to (for example, `https://my-apm-server:8200`). You can find this in your Elastic deployment settings.
+* **API key**: used by the agent to authenticate with {{product.apm}} server. Refer to [API key](docs-content://solutions/observability/apm/api-keys.md) for details. If your environment uses secret tokens, set `ELASTIC_APM_SECRET_TOKEN` in place of `ELASTIC_APM_API_KEY` in the examples below.
 * **Host access**: you must be able to set environment variables for the process or service you want to instrument (for example, using a Dockerfile, service definition, or system settings).
-* **Supported platform**: verify that your runtime and architecture appear in the support table in the [Overview](#overview) section. If you are unsure which runtime your app targets, refer to the note about .NET vs .NET Framework in the same section.
+* **Supported platform**: verify that your runtime and architecture appear in the support table in the [Overview](#profiler_overview) section. If you are unsure which runtime your app targets, refer to the note about .NET vs .NET Framework in the same section.
 * **Profiler zip version**: if you plan to add any `Elastic.Apm` NuGet packages alongside the profiler, download a zip whose version exactly matches the NuGet package versions you intend to use.
 
 
-## General steps [_general_steps]
+## General steps [profiler-general-steps]
 
 The general steps in configuring profiler auto instrumentation are as follows. Refer to [Instrumenting containers and services](#instrumenting-containers-and-services) for configuration for common deployment environments.
 
@@ -138,9 +142,9 @@ The general steps in configuring profiler auto instrumentation are as follows. R
     ```
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
-    2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-    4. The name used to identify your service in APM. If not set, the agent uses the application assembly name.
+    2. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+    3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+    4. The name used to identify your service in {{product.apm}}. If not set, the agent uses the application assembly name.
 
     Command Prompt:
 
@@ -171,9 +175,9 @@ The general steps in configuring profiler auto instrumentation are as follows. R
     ```
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
-    2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-    4. The name used to identify your service in APM. If not set, the agent uses the application assembly name.
+    2. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+    3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+    4. The name used to identify your service in {{product.apm}}. If not set, the agent uses the application assembly name.
 
     Command Prompt:
 
@@ -206,22 +210,22 @@ The general steps in configuring profiler auto instrumentation are as follows. R
     ```
 
     1. `<unzipped directory>` is the directory to which the zip file was unzipped in step 2.
-    2. The URL of the APM server intake to which traces and metrics should be sent.
-    3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-    4. The name used to identify your service in APM. If not set, the agent uses the application assembly name.
+    2. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+    3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+    4. The name used to identify your service in {{product.apm}}. If not set, the agent uses the application assembly name.
 
 4. Start your application. The environment variables must be visible to the application process. Either set them in the same terminal session before starting, or configure them in your service or container definition.
 
 5. Verify the agent is running.
 
-   Send a test request to your application, then open **APM → Services** in Elastic Observability and look for your service name. Data typically appears within a few seconds of the first request.
+   Send a test request to your application, then open **{{product.apm}} → Services** in {{product.observability}} and look for your service name. Data typically appears within a few seconds of the first request.
 
    If no data appears after a minute, check the profiler log files for errors:
 
    * Windows: `%PROGRAMDATA%\elastic\apm-agent-dotnet\logs`
    * Linux: `/var/log/elastic/apm-agent-dotnet`
 
-   Setting `OTEL_LOG_LEVEL=debug` produces more verbose output useful during troubleshooting. See [Troubleshoot APM .NET Agent](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md) for further guidance.
+   Setting `OTEL_LOG_LEVEL=debug` produces more verbose output useful during troubleshooting. See [Troubleshoot {{product.apm-agent-dotnet}}](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md) for further guidance.
 
 ::::{note}
 At runtime, the .NET runtime loads Elastic's CLR profiler into the process early in startup. For .NET Framework, the profiler uses IL rewriting to instrument methods directly. For .NET, it additionally uses the startup hook mechanism to load `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge, which together cover the broader set of technologies marked †.
@@ -233,7 +237,7 @@ At runtime, the .NET runtime loads Elastic's CLR profiler into the process early
 Using global environment variables causes profiler auto instrumentation to be loaded for **any** .NET process started on the host. Often, the environment variables should be set only for specific services or containers. The following sections demonstrate how to configure common containers and services.
 
 
-### Docker containers [_docker_containers]
+### Docker containers [docker-containers]
 
 The following example shows how to download the profiler and configure it as part of a [multi-stage build](https://docs.docker.com/develop/develop-images/multistage-build/). This example targets Linux containers, which use `libelastic_apm_profiler.so`. For Windows containers, use `elastic_apm_profiler.dll` and set `CORECLR_PROFILER_PATH` to point to the `.dll` file instead.
 
@@ -266,14 +270,14 @@ ENTRYPOINT ["dotnet", "your-application.dll"]
 
 1. Replace `<VERSION>` with the version number of the profiler zip file to be downloaded (for example, `1.34.1`).
 2. Replace `<your-base-image>` with your application's base image (for example, `mcr.microsoft.com/dotnet/aspnet:8.0`).
-3. The name used to identify your service in APM.
+3. The name used to identify your service in {{product.apm}}.
 
 ::::{important}
 Pass `ELASTIC_APM_SERVER_URL` and `ELASTIC_APM_API_KEY` at container runtime rather than baking them into the image. For example, pass them with `docker run -e ELASTIC_APM_SERVER_URL=... -e ELASTIC_APM_API_KEY=...` or using your orchestrator's secret injection.
 ::::
 
 
-### Windows services [_windows_services]
+### Windows services [windows-services]
 
 Environment variables can be added to specific Windows services by adding an entry to the Windows registry. Using PowerShell:
 
@@ -298,9 +302,9 @@ Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Services\<service-name> -Name En
 ```
 
 1. `<unzipped directory>` is the directory to which the zip file was unzipped.
-2. The URL of the APM server intake to which traces and metrics should be sent.
-3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-4. The name used to identify your service in APM.
+2. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+4. The name used to identify your service in {{product.apm}}.
 5. `<service-name>` is the name of the Windows service.
 
 **.NET service**
@@ -320,9 +324,9 @@ Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Services\<service-name> -Name En
 ```
 
 1. `<unzipped directory>` is the directory to which the zip file was unzipped.
-2. The URL of the APM server intake to which traces and metrics should be sent.
-3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-4. The name used to identify your service in APM.
+2. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+4. The name used to identify your service in {{product.apm}}.
 5. `<service-name>` is the name of the Windows service.
 
 
@@ -333,7 +337,7 @@ Restart-Service <service-name>
 ```
 
 
-### Internet Information Services (IIS) [_internet_information_services_iis]
+### Internet Information Services (IIS) [internet-information-services]
 
 Set environment variables on a specific Application Pool using `AppCmd.exe` (IIS 10+, available on Windows Server 2016 / Windows 10 and later). This scopes the profiler to that pool only and does not affect other .NET applications on the host. Run the following in an elevated PowerShell prompt:
 
@@ -363,9 +367,9 @@ $environment.Keys | ForEach-Object {
 1. `<application-pool>` is the name of the Application Pool your application uses, as shown in IIS Manager. For example, `DefaultAppPool`.
 2. `<unzipped directory>` is the full path to the directory in which the zip file was unzipped.
 3. Forces assemblies **not** to be loaded domain-neutral. This is a .NET Framework IIS-specific workaround: the profiler cannot instrument assemblies loaded domain-neutral. This limitation is expected to be removed in future, but for now can be worked around by setting the `COMPlus_LoaderOptimization` environment variable. See the [Microsoft documentation for further details](https://docs.microsoft.com/en-us/dotnet/framework/app-domains/application-domains#the-complus_loaderoptimization-environment-variable). This setting is **not** needed for .NET (non-Framework) applications.
-4. The URL of the APM server intake to which traces and metrics should be sent.
-5. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-6. The name used to identify your service in APM.
+4. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+5. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+6. The name used to identify your service in {{product.apm}}.
 
 **.NET**
 
@@ -391,9 +395,9 @@ $environment.Keys | ForEach-Object {
 
 1. `<application-pool>` is the name of the Application Pool your application uses, as shown in IIS Manager. For example, `DefaultAppPool`.
 2. `<unzipped directory>` is the full path to the directory in which the zip file was unzipped.
-3. The URL of the APM server intake to which traces and metrics should be sent.
-4. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-5. The name used to identify your service in APM.
+3. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+4. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+5. The name used to identify your service in {{product.apm}}.
 
 ::::{important}
 Ensure that the `<unzipped directory>` is accessible and executable by the [Identity account under which the Application Pool runs](https://docs.microsoft.com/en-us/iis/manage/configuring-security/application-pool-identities).
@@ -415,7 +419,7 @@ Avoid setting these as machine-wide system environment variables. Doing so loads
 ::::
 
 
-### Kubernetes [_kubernetes]
+### Kubernetes [kubernetes]
 
 In Kubernetes, set environment variables in your Pod or Deployment spec using the `env` field on your container. First, add the profiler files to your container image (for example, using a multi-stage build as shown in the [Docker containers](#_docker_containers) section), then add the variables under `spec.containers[].env`:
 
@@ -457,7 +461,7 @@ kubectl create secret generic elastic-apm-secret \
 ```
 
 
-### systemd / systemctl [_systemd_systemctl]
+### systemd / systemctl [systemd-systemctl]
 
 On Linux, environment variables can be added to specific services managed by `systemd` by creating an environment file (for example, `elastic-apm.env`) containing the following:
 
@@ -473,9 +477,9 @@ ELASTIC_APM_SERVICE_NAME=<your-service-name> <4>
 ```
 
 1. `<unzipped directory>` is the directory to which the zip file was unzipped.
-2. The URL of the APM server intake to which traces and metrics should be sent.
-3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the APM Agent to authenticate with APM server.
-4. The name used to identify your service in APM.
+2. The URL of the {{product.apm}} server intake to which traces and metrics should be sent.
+3. The [API key](docs-content://solutions/observability/apm/api-keys.md) used by the {{product.apm-agent}} to authenticate with {{product.apm}} server.
+4. The name used to identify your service in {{product.apm}}.
 
 
 Then add an [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/systemd.service.html#Command%20lines) entry to the service's configuration file that references the path to the environment file:
@@ -532,14 +536,14 @@ The `Elastic.Apm` package version must exactly match the version of the profiler
 
 ### Adding integration NuGet packages [augmenting-nuget-integrations]
 
-Some technologies are not covered by the profiler and require a dedicated Elastic APM NuGet package: [Entity Framework 6](/reference/setup-ef6.md), [Redis (`StackExchange.Redis`)](/reference/setup-stackexchange-redis.md), [Azure CosmosDB](/reference/setup-azure-cosmosdb.md), [Azure Functions](/reference/setup-azure-functions.md), and [legacy Azure Service Bus (`Microsoft.Azure.ServiceBus`)](/reference/setup-azure-servicebus.md). For these technologies, install the corresponding package and follow its setup guide.
+Some technologies are not covered by the profiler and require a dedicated Elastic {{product.apm}} NuGet package: [Entity Framework 6](/reference/setup-ef6.md), [Redis (`StackExchange.Redis`)](/reference/setup-stackexchange-redis.md), [Azure CosmosDB](/reference/setup-azure-cosmosdb.md), [Azure Functions](/reference/setup-azure-functions.md), and [legacy Azure Service Bus (`Microsoft.Azure.ServiceBus`)](/reference/setup-azure-servicebus.md). For these technologies, install the corresponding package and follow its setup guide.
 
 For technologies that the profiler already covers, dedicated NuGet packages also exist, for example [Entity Framework Core](/reference/setup-ef-core.md), [SqlClient](/reference/setup-sqlclient.md), [MongoDB](/reference/setup-mongo-db.md), [gRPC](/reference/setup-grpc.md), [Azure Service Bus](/reference/setup-azure-servicebus.md), and [Azure Storage](/reference/setup-azure-storage.md). You can add these packages alongside the profiler; both mechanisms use the same `DiagnosticSource`/`Activity`-based instrumentation and do not conflict with each other.
 
 Refer to [Supported technologies](/reference/supported-technologies.md) for the full table showing which technologies are covered by the profiler, by NuGet packages, or by both.
 
 ::::{important}
-When combining the profiler with any Elastic APM NuGet integration packages, every package version must exactly match the version of the profiler zip file. A version mismatch will cause errors at startup.
+When combining the profiler with any Elastic {{product.apm}} NuGet integration packages, every package version must exactly match the version of the profiler zip file. A version mismatch will cause errors at startup.
 ::::
 
 
@@ -561,7 +565,7 @@ The profiler auto instrumentation has its own set of environment variables to ma
 `ELASTIC_APM_PROFILER_EXCLUDE_INTEGRATIONS` *(optional)*
 :   A semicolon-separated list of integrations to exclude from auto-instrumentation. Valid values are: `AdoNet`, `AspNet`, `Kafka`, `MySqlCommand`, `NpgsqlCommand`, `OracleCommand`, `RabbitMQ`, `SqlCommand`, `SqliteCommand`.
 
-    This variable only controls integrations that use IL rewriting (the `integrations.yml`-based mechanism). Technologies instrumented using the startup hook (such as ASP.NET Core, Entity Framework Core, Elasticsearch, gRPC, Azure SDKs, and MongoDB) cannot be selectively turned off using this variable.
+    This variable only controls integrations that use IL rewriting (the `integrations.yml`-based mechanism). Technologies instrumented using the startup hook (such as ASP.NET Core, Entity Framework Core, {{es}}, gRPC, Azure SDKs, and MongoDB) cannot be selectively turned off using this variable.
 
 `ELASTIC_APM_PROFILER_EXCLUDE_PROCESSES` *(optional)*
 :   A semi-colon separated list of process names to exclude from auto-instrumentation. For example, `dotnet.exe;powershell.exe`. Can be used in scenarios where profiler environment variables have a global scope that would end up auto-instrumenting applications that should not be.
@@ -577,7 +581,7 @@ The following processes are **always** excluded from profiling by default.
 * RSConfigTool.exe
 
 `ELASTIC_APM_PROFILER_EXCLUDE_SERVICE_NAMES` *(optional)*
-:   A semi-colon separated list of APM service names to exclude from auto-instrumentation. Values defined are checked against the value of [`ELASTIC_APM_SERVICE_NAME`](/reference/config-core.md#config-service-name) environment variable.
+:   A semi-colon separated list of {{product.apm}} service names to exclude from auto-instrumentation. Values defined are checked against the value of [`ELASTIC_APM_SERVICE_NAME`](/reference/config-core.md#config-service-name) environment variable.
 
 
 The following service names are **always** excluded from profiling by default.
@@ -627,7 +631,7 @@ The user account under which the profiler process runs must have permission to w
     Supersedes the deprecated `ELASTIC_APM_PROFILER_LOG_TARGETS`.
 
 
-## Troubleshooting [_troubleshooting]
+## Troubleshooting [profiler-troubleshooting]
 
 
 ### DLLs are blocked on Windows [windows-blocked-dlls]
@@ -643,4 +647,4 @@ To unblock a DLL file on Windows, you can do the following:
 
 ![Unblock DLL in Windows file properties](images/unblock-profiler-dll.png)
 
-For further troubleshooting guidance, refer to [Troubleshoot APM .NET Agent](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md).
+For further troubleshooting guidance, refer to [Troubleshoot {{product.apm-agent-dotnet}}](docs-content://troubleshoot/observability/apm-agent-dotnet/apm-net-agent.md).
