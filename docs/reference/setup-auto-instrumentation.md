@@ -83,9 +83,9 @@ gRPC server calls in ASP.NET Core applications are captured automatically using 
 
 | Technology | Required library |
 | --- | --- |
-| Azure Blob Storage | [Azure.Storage.Blobs ≥12.8.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Blobs), via startup hook† |
-| Azure Queue Storage | [Azure.Storage.Queues ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Queues), via startup hook† |
-| Azure File Share Storage | [Azure.Storage.Files.Shares ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Files.Shares), via startup hook† |
+| Azure Blob Storage | [Azure.Storage.Blobs ≥12.8.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Blobs), using startup hook† |
+| Azure Queue Storage | [Azure.Storage.Queues ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Queues), using startup hook† |
+| Azure File Share Storage | [Azure.Storage.Files.Shares ≥12.6.0 <13.0.0](https://www.nuget.org/packages/Azure.Storage.Files.Shares), using startup hook† |
 
 † .NET only; not supported on .NET Framework. The profiler uses the [.NET startup hook](https://learn.microsoft.com/en-us/dotnet/core/tutorials/dotnet-startup-hooks) mechanism to automatically load both `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge.
 
