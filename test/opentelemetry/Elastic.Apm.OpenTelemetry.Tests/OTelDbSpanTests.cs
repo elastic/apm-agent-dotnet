@@ -156,9 +156,9 @@ public class OTelDbSpanTests
 	/// used as span.db.instance. Only db.name should be used, to avoid incorrect service target grouping.
 	/// </summary>
 	[Theory]
-	[InlineData("elasticsearch", "my-cluster",  "logs-index",  "logs-index")]  // db.namespace = cluster name — ignored; db.name used
-	[InlineData("postgresql",    "mydb|public", "mydb",        "mydb")]        // db.namespace = composite "{db}|{schema}" — ignored; db.name used
-	[InlineData("mssql",         "inst1|mydb",  "mydb",        "mydb")]        // db.namespace = composite "{instance}|{db}" — ignored; db.name used
+	[InlineData("elasticsearch", "my-cluster", "logs-index", "logs-index")]  // db.namespace = cluster name — ignored; db.name used
+	[InlineData("postgresql", "mydb|public", "mydb", "mydb")]        // db.namespace = composite "{db}|{schema}" — ignored; db.name used
+	[InlineData("mssql", "inst1|mydb", "mydb", "mydb")]        // db.namespace = composite "{instance}|{db}" — ignored; db.name used
 	public void ExcludedSystem_DbNamespace_NotUsedAsInstance_DbNameUsedInstead(
 		string dbSystem, string dbNamespace, string dbName, string expectedInstance)
 	{
@@ -186,11 +186,11 @@ public class OTelDbSpanTests
 	/// takes precedence over db.name when both are present.
 	/// </summary>
 	[Theory]
-	[InlineData("mongodb",        "ns-value", "name-value")]
-	[InlineData("mysql",          "ns-value", "name-value")]
-	[InlineData("cassandra",      "ns-value", "name-value")]
+	[InlineData("mongodb", "ns-value", "name-value")]
+	[InlineData("mysql", "ns-value", "name-value")]
+	[InlineData("cassandra", "ns-value", "name-value")]
 	[InlineData("azure.cosmosdb", "ns-value", "name-value")]  // normalized to "cosmosdb" before approved-systems check
-	[InlineData("cosmosdb",       "ns-value", "name-value")]
+	[InlineData("cosmosdb", "ns-value", "name-value")]
 	public void ApprovedSystem_DbNamespace_TakesPrecedenceOverDbName(
 		string dbSystem, string dbNamespace, string dbName)
 	{
@@ -342,7 +342,7 @@ public class OTelDbSpanTests
 	/// This matches the behaviour of the NuGet MongoDB, Redis and CosmosDb integrations.
 	/// </summary>
 	[Theory]
-	[InlineData("db.system",      "mysql")]
+	[InlineData("db.system", "mysql")]
 	[InlineData("db.system.name", "mongodb")]
 	[InlineData("db.system.name", "redis")]
 	public void DbSpan_ActionIsAlwaysQuery(string systemKey, string systemValue)
