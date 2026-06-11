@@ -133,6 +133,8 @@ public class OpenTelemetryTests
 
 		payloadSender.Spans.ElementAt(1).Type.Should().Be(ApiConstants.TypeDb);
 		payloadSender.Spans.ElementAt(1).Subtype.Should().Be("mysql");
+		payloadSender.Spans.ElementAt(1).Context.Db.Should().NotBeNull();
+		payloadSender.Spans.ElementAt(1).Context.Db.Type.Should().Be("mysql");
 
 		payloadSender.Spans.ElementAt(2).Type.Should().Be(ApiConstants.TypeExternal);
 		payloadSender.Spans.ElementAt(2).Subtype.Should().Be("grpc");
