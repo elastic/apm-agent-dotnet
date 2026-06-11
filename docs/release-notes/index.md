@@ -26,8 +26,15 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.34.3 [elastic-apm-net-agent-1343-release-notes]
+**Release date:** June 11, 2026
+
+### Fixes [elastic-apm-net-agent-1343-fixes]
+
+* Improve OTel bridge mapping of newer semcon for databases [#2768](https://github.com/elastic/apm-agent-dotnet/pull/2768)
+
 ## 1.34.2 [elastic-apm-net-agent-1342-release-notes]
-**Release date:** May 26, 2025
+**Release date:** May 26, 2026
 
 ### Fixes [elastic-apm-net-agent-1342-fixes]
 
