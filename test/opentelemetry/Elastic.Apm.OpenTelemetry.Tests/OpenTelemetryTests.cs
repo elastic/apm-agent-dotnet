@@ -14,6 +14,7 @@ using Xunit;
 
 namespace Elastic.Apm.OpenTelemetry.Tests;
 
+[Collection("OpenTelemetry")]
 public class OpenTelemetryTests
 {
 	[Fact]

@@ -15,6 +15,7 @@ namespace Elastic.Apm.OpenTelemetry.Tests;
 /// Verifies that the OTel bridge correctly maps database activity attributes to the Elastic APM span model
 /// (span.context.db.*, span.context.destination.*) for both old and new OTel semantic conventions.
 /// </summary>
+[Collection("OpenTelemetry")]
 public class OTelDbSpanTests
 {
 	private static ApmAgent CreateAgent(MockPayloadSender payloadSender) =>
