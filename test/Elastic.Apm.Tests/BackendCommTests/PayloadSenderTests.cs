@@ -558,6 +558,73 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			sendCount.Should().Be(1, "FlushAsync must return only after the HTTP POST completes");
 		}
 
+		/// <summary>
+		/// Regression guard for the serialization-buffer reuse optimisation.
+		///
+		/// <para>
+		/// Before the fix, <see cref="PayloadSenderV2"/> allocated a new
+		/// <c>MemoryStream</c> for every outgoing batch, which caused LOH pressure
+		/// under sustained load.  After the fix a single buffer is reused via
+		/// <c>SetLength(0)</c>.
+		/// </para>
+		///
+		/// <para>
+		/// This test verifies that the reset is complete: data written in batch A
+		/// must not bleed into the body received by the server for batch B.
+		/// </para>
+		/// </summary>
+		[Fact]
+		public async Task SequentialBatches_SerializationBufferIsIsolated()
+		{
+			var receivedBodies = new List<string>();
+			var handler = new MockHttpMessageHandler((request, _) =>
+			{
+				var body = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+				lock (receivedBodies)
+					receivedBodies.Add(body);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+			});
+
+			// flushInterval: "0" forces the work loop to send immediately after each item.
+			var config = new MockConfiguration(_logger, flushInterval: "0", maxBatchEventCount: "3");
+			var service = Service.GetDefaultService(config, _logger);
+			using var payloadSender = new PayloadSenderV2(_logger, config, service, new Api.System(),
+				MockApmServerInfo.Version710, handler, TestDisplayName);
+			using var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
+
+			// Batch A: three transactions with a distinguishable name prefix.
+			for (var i = 0; i < 3; i++)
+				await payloadSender.EnqueueEventInternal(
+					new Transaction(agent, $"BatchA-Tx{i}", "test"), "Transaction");
+
+			await agent.FlushAsync(new CancellationTokenSource(10.Seconds()).Token);
+
+			// Batch B: three transactions with a different name prefix.
+			for (var i = 0; i < 3; i++)
+				await payloadSender.EnqueueEventInternal(
+					new Transaction(agent, $"BatchB-Tx{i}", "test"), "Transaction");
+
+			await agent.FlushAsync(new CancellationTokenSource(10.Seconds()).Token);
+
+			string batchABody, batchBBody;
+			lock (receivedBodies)
+			{
+				receivedBodies.Should().HaveCountGreaterOrEqualTo(2,
+					"two distinct flushes must produce at least two separate HTTP POSTs");
+
+				batchABody = receivedBodies[0];
+				batchBBody = receivedBodies[receivedBodies.Count - 1];
+			}
+
+			// Batch A's body must contain only A-prefixed names.
+			batchABody.Should().Contain("BatchA-Tx", "first batch must include BatchA transactions");
+			batchABody.Should().NotContain("BatchB-Tx", "BatchB data must not bleed into BatchA's HTTP body");
+
+			// Batch B's body must contain only B-prefixed names.
+			batchBBody.Should().Contain("BatchB-Tx", "second batch must include BatchB transactions");
+			batchBBody.Should().NotContain("BatchA-Tx", "BatchA data must not bleed into BatchB's HTTP body");
+		}
+
 		internal class TestArgs
 		{
 			internal int ArgsIndex { get; set; }
