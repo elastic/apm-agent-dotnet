@@ -146,10 +146,10 @@ public class PayloadSenderSerializationBenchmarks
 			var eventType = item switch
 			{
 				Transaction => "transaction",
-				Span        => "span",
-				Error       => "error",
-				MetricSet   => "metricset",
-				_           => null
+				Span => "span",
+				Error => "error",
+				MetricSet => "metricset",
+				_ => null
 			};
 
 			if (eventType is null)
