@@ -559,15 +559,13 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		}
 
 		/// <summary>
-		/// Regression guard for the serialization-buffer reuse optimisation.
-		///
+		/// Regression guard for the serialization-buffer reuse optimization.
 		/// <para>
 		/// Before the fix, <see cref="PayloadSenderV2"/> allocated a new
 		/// <c>MemoryStream</c> for every outgoing batch, which caused LOH pressure
 		/// under sustained load.  After the fix a single buffer is reused via
 		/// <c>SetLength(0)</c>.
 		/// </para>
-		///
 		/// <para>
 		/// This test verifies that the reset is complete: data written in batch A
 		/// must not bleed into the body received by the server for batch B.
