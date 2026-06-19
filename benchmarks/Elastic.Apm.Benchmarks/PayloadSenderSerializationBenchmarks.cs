@@ -18,7 +18,6 @@ namespace Elastic.Apm.Benchmarks;
 /// <summary>
 /// Measures the allocation cost of the serialization buffer strategy used by
 /// <see cref="Elastic.Apm.Report.PayloadSenderV2"/> when flushing a batch of APM events.
-///
 /// <para>
 /// <b>Old approach</b>: <c>new MemoryStream(1024)</c> allocated on every batch.
 /// As the stream grows it doubles its internal <c>byte[]</c>, producing a chain of
@@ -27,13 +26,11 @@ namespace Elastic.Apm.Benchmarks;
 /// Over a long-running deployment this causes LOH fragmentation and sustained
 /// process-level memory growth.
 /// </para>
-///
 /// <para>
 /// <b>New approach</b>: a single <c>MemoryStream</c> is allocated once and reset with
 /// <c>SetLength(0)</c> before each batch.  The internal buffer is reused, so no new
 /// heap objects are created per batch.
 /// </para>
-///
 /// <para>
 /// Key metrics to watch in the results:
 /// <list type="bullet">
@@ -123,7 +120,7 @@ public class PayloadSenderSerializationBenchmarks
 	}
 
 	/// <summary>
-	/// Optimised implementation: reuses a single <see cref="MemoryStream"/>.
+	/// Optimized implementation: reuses a single <see cref="MemoryStream"/>.
 	/// <c>SetLength(0)</c> resets both the logical length and the write cursor
 	/// without releasing the underlying buffer.
 	/// </summary>
