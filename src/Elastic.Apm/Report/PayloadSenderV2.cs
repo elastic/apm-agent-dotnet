@@ -63,6 +63,10 @@ namespace Elastic.Apm.Report
 		private int _inFlightSends;
 		private readonly ConcurrentQueue<TaskCompletionSource<bool>> _flushWaiters = new();
 
+		// Reused across batches by the single work-loop thread — avoids per-batch heap allocations
+		// that could otherwise exceed the 85 KB LOH threshold and cause long-lived fragmentation.
+		private readonly MemoryStream _serializationBuffer = new(4096);
+
 		private readonly ElasticVersion _brokenActivationMethodVersion;
 		private readonly string _cachedActivationMethod;
 		private readonly bool _isEnabled;
@@ -200,7 +204,11 @@ namespace Elastic.Apm.Report
 			}
 
 			_eventQueue?.Complete();
+			// base.Dispose cancels the token and joins the work-loop thread, so
+			// _serializationBuffer is guaranteed idle before we dispose it.
 			base.Dispose(disposing);
+			if (disposing)
+				_serializationBuffer.Dispose();
 		}
 
 		/// <inheritdoc cref="IFlushablePayloadSender"/>
@@ -502,14 +510,13 @@ namespace Elastic.Apm.Report
 
 		private void ProcessQueueItems(object[] queueItems)
 		{
-			// can reuse underlying buffers from a pool in future.
-			using var stream = new MemoryStream(1024);
+			_serializationBuffer.SetLength(0);
 
 			try
 			{
 				_cachedMetadataJsonLine ??= _payloadItemSerializer.Serialize(_metadata);
 
-				using (var writer = new StreamWriter(stream, Utf8Encoding, 1024, true))
+				using (var writer = new StreamWriter(_serializationBuffer, Utf8Encoding, 1024, leaveOpen: true))
 				{
 					writer.Write("{\"metadata\":");
 					writer.Write(_cachedMetadataJsonLine);
@@ -538,8 +545,9 @@ namespace Elastic.Apm.Report
 					}
 				}
 
-				stream.Position = 0;
-				using (var content = new StreamContent(stream))
+				// Wrap in a non-owning view so StreamContent.Dispose() doesn't close _serializationBuffer.
+				var sendStream = new MemoryStream(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Length, writable: false);
+				using (var content = new StreamContent(sendStream))
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
 
