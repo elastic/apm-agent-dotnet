@@ -7,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.StartupHook.Loader;
@@ -20,6 +21,8 @@ internal static class AssemblyLoadLogger
 
 	private static readonly ConcurrentDictionary<string, byte> Logged = new(StringComparer.OrdinalIgnoreCase);
 
+	private static int _subscribed;
+
 	/// <summary>
 	/// Subscribes to <see cref="AppDomain.AssemblyLoad"/> and logs assemblies as they load.
 	/// Also scans assemblies already loaded at call time. Subscription is established first
@@ -27,6 +30,9 @@ internal static class AssemblyLoadLogger
 	/// </summary>
 	internal static void Subscribe(IApmLogger logger)
 	{
+		if (Interlocked.Exchange(ref _subscribed, 1) == 1)
+			return;
+
 		AppDomain.CurrentDomain.AssemblyLoad += (_, args) => TryLog(logger, args.LoadedAssembly);
 
 		foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -80,7 +86,7 @@ internal static class AssemblyLoadLogger
 		}
 		catch
 		{
-			logger.Error()?.Log("Failed to log assembly load for {Assembly}", assembly.FullName);
+			logger.Error()?.Log("Failed to log loaded assembly");
 		}
 	}
 }
