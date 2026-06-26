@@ -39,6 +39,8 @@ namespace Elastic.Apm.StartupHook.Loader
 
 			HostBuilderExtensions.UpdateServiceInformation(Agent.Instance.Service);
 
+			AssemblyLoadLogger.Subscribe(logger);
+
 			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber, IApmLogger logger)
 			{
 				try
