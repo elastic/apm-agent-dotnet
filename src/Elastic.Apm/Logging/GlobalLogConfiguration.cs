@@ -149,11 +149,11 @@ internal readonly struct GlobalLogConfiguration
 		{
 			try
 			{
-				Directory.CreateDirectory(logFileDirectory); 
+				Directory.CreateDirectory(logFileDirectory);
 			}
 			catch
-			{ 
-				/* best-effort: file logging will fail gracefully if directory can't be created */ 
+			{
+				/* best-effort: file logging will fail gracefully if directory can't be created */
 			}
 		}
 	}
