@@ -34,6 +34,13 @@ internal class StartupHook
 	/// </summary>
 	public static void Initialize()
 	{
+		// DOTNET_STARTUP_HOOKS applies to every .NET process in the environment, including the
+		// dotnet CLI itself when using 'dotnet run', 'dotnet build', 'dotnet watch', etc.
+		// Those CLI host processes are not user applications — bail out immediately so we don't
+		// waste resources initialising the agent in them or produce noise log files.
+		if (string.Equals(Assembly.GetEntryAssembly()?.GetName().Name, "dotnet", StringComparison.OrdinalIgnoreCase))
+			return;
+
 		Logger = StartupHookLogger.Create();
 
 		if (!IsNet8OrHigher())

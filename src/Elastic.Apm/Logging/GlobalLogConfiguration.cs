@@ -144,6 +144,18 @@ internal readonly struct GlobalLogConfiguration
 		LogFilePrefix = logFilePrefix;
 
 		AgentLogFilePath = CreateLogFileName();
+
+		if (isActive && (logTarget & GlobalLogTarget.File) == GlobalLogTarget.File)
+		{
+			try
+			{
+				Directory.CreateDirectory(logFileDirectory);
+			}
+			catch
+			{
+				/* best-effort: file logging will fail gracefully if directory can't be created */
+			}
+		}
 	}
 
 	internal bool IsActive { get; }
