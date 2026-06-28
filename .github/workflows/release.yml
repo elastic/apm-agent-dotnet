@@ -87,19 +87,19 @@ jobs:
           AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
     - name: Attest image
-      uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26  # v4.1.0
+      uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763  # v4.1.1
       with:
         subject-name: ${{ env.DOCKER_IMAGE_NAME }}
         subject-digest: ${{ steps.docker-push.outputs.digest }}
         push-to-registry: true
 
     - name: generate build provenance (APM Agent)
-      uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26  # v4.1.0
+      uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763  # v4.1.1
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}"
 
     - name: generate build provenance (APM Profiler)
-      uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26  # v4.1.0
+      uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763  # v4.1.1
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
 
@@ -156,7 +156,7 @@ jobs:
         run: ./build.bat profiler-zip
 
       - name: generate build provenance (APM Profiler)
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26  # v4.1.0
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763  # v4.1.1
         with:
           subject-path: "${{ github.workspace }}/${{ env.PREFIX_ZIP_FILE }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_ZIP_FILE }}"
 
