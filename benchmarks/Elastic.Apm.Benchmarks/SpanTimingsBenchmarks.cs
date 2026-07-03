@@ -60,9 +60,9 @@ public class SpanTimingsBenchmarks
 	}
 
 	/// <summary>
-	/// Optimized implementation: 1 key allocation, 1 lookup on hit (steady state).
+	/// Optimized implementation: 1 key construction, 1 lookup on hit (steady state).
 	/// </summary>
-	[Benchmark(Description = "New: TryGetValue + TryAdd (1 key alloc, 1 lookup on hit)")]
+	[Benchmark(Description = "New: TryGetValue + TryAdd (1 key construction, 1 lookup on hit)")]
 	public void NewApproach()
 	{
 		const string type = "db";
