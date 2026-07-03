@@ -115,7 +115,7 @@ jobs:
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: "${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}"
