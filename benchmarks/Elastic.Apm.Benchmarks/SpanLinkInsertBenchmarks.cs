@@ -54,7 +54,7 @@ public class SpanLinkInsertBenchmarks
 	}
 
 	/// <summary>New Span logic — early return, no duplicates, zero extra allocations.</summary>
-	[Benchmark(Description = "New: Span first-call (null Links) — correct, one alloc")]
+	[Benchmark(Description = "New: Span first-call (null Links) — correct, zero alloc (array input)")]
 	public int NewSpan_FirstCall()
 	{
 		IEnumerable<SpanLink> links = _linksToInsert;
