@@ -26,6 +26,20 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.34.5 [elastic-apm-net-agent-1345-release-notes]
+**Release date:** June 29, 2026
+
+### Fixes [elastic-apm-net-agent-1345-fixes]
+
+* Diagnostic logs for loaded assemblies and remove `dotnet` process startup hook file logger redundancy [#2774](https://github.com/elastic/apm-agent-dotnet/pull/2774)
+
+## 1.34.4 [elastic-apm-net-agent-1344-release-notes]
+**Release date:** June 22, 2026
+
+### Fixes [elastic-apm-net-agent-1344-fixes]
+
+* Reuse serialization buffer in `PayloadSenderV2` to eliminate LOH fragmentation [#2770](https://github.com/elastic/apm-agent-dotnet/pull/2770)
+
 ## 1.34.3 [elastic-apm-net-agent-1343-release-notes]
 **Release date:** June 11, 2026
 

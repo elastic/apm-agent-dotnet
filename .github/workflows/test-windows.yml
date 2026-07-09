@@ -39,7 +39,7 @@ jobs:
   format:
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
       - name: Format
@@ -52,7 +52,7 @@ jobs:
     timeout-minutes: 30
         
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with: 
@@ -65,7 +65,7 @@ jobs:
     runs-on: windows-2022
     needs: [ 'format', 'tests' ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
@@ -86,7 +86,7 @@ jobs:
     runs-on: windows-2022
     needs: [ 'format', 'tests' ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
@@ -97,7 +97,7 @@ jobs:
     runs-on: windows-2022
     needs: [ 'format', 'tests' ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
         with:
@@ -111,11 +111,11 @@ jobs:
     runs-on: windows-latest
     needs: [ 'format', 'tests' ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Bootstrap Action Workspace
         uses: ./.github/workflows/bootstrap
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: "${{ runner.os }}-nuget-${{ hashFiles('**/*.[cf]sproj*') }}"
