@@ -442,15 +442,14 @@ internal class Transaction : ITransaction
 
 	internal void InsertSpanLinkInternal(IEnumerable<SpanLink> links)
 	{
-		var spanLinks = links as SpanLink[] ?? links.ToArray();
 		if (Links == null || !Links.Any())
-			Links = spanLinks;
-		else
 		{
-			var newList = new List<SpanLink>(Links);
-			newList.AddRange(spanLinks);
-			Links = new List<SpanLink>(newList);
+			Links = links as SpanLink[] ?? links.ToArray();
+			return;
 		}
+		var newList = new List<SpanLink>(Links);
+		newList.AddRange(links);
+		Links = newList;
 	}
 
 	[MaxLength]
