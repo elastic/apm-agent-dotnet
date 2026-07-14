@@ -108,9 +108,7 @@
     <!-- Used by Ben.Demystifier -->
     <PackageReference Include="System.Reflection.Metadata" />
     <PackageReference Include="System.Threading.Tasks.Extensions" />
-
     <PackageReference Include="System.Threading.Tasks.Dataflow" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)'=='netstandard2.1'">
@@ -120,7 +118,7 @@
     <PackageReference Include="System.Threading.Tasks.Dataflow" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+  <ItemGroup>
     <PackageReference Include="System.Diagnostics.PerformanceCounter" />
   </ItemGroup>
 
