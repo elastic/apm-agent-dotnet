@@ -125,7 +125,7 @@
     <PackageVersion Include="System.Data.SQLite" Version="1.0.112" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
-    <PackageVersion Include="System.Diagnostics.PerformanceCounter" Version="6.0.1" />
+    <PackageVersion Include="System.Diagnostics.PerformanceCounter" Version="8.0.1" />
     <PackageVersion Include="System.IO.FileSystem.AccessControl" Version="4.7.0" />
     <PackageVersion Include="System.Reflection.Emit" Version="4.3.0" />
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
