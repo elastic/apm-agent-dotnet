@@ -702,8 +702,8 @@ internal class Transaction : ITransaction
 		if (!isFirstEndCall)
 			return;
 
-		if (SpanTimings.TryGetValue(SpanTimerKey.AppSpanType, out var timing))
-			timing.IncrementTimer(SelfDuration);
+		if (SpanTimings.TryGetValue(SpanTimerKey.AppSpanType, out var appTimer))
+			appTimer.IncrementTimer(SelfDuration);
 		else
 			SpanTimings.TryAdd(SpanTimerKey.AppSpanType, new SpanTimer(SelfDuration));
 
