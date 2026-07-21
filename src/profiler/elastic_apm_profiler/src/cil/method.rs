@@ -73,6 +73,9 @@ pub struct TinyMethodHeader {
 
 impl TinyMethodHeader {
     pub const MAX_STACK: u8 = 8;
+    /// The maximum code size a tiny header can encode. The code size is stored in the
+    /// upper 6 bits of the single header byte, so the largest representable value is 63.
+    pub const MAX_CODE_SIZE: u8 = 0x3F;
 }
 
 #[derive(Debug)]
@@ -564,6 +567,17 @@ impl Method {
     }
 
     fn update_header(&mut self, len: i64, stack_size: Option<i64>) -> Result<(), Error> {
+        // A tiny header can only encode a code size up to 63 bytes (the size is stored in the
+        // upper 6 bits of a single byte). If growing the method would exceed that limit, expand
+        // it to a fat header first so the new size can be represented. Without this, the header
+        // silently stayed tiny and `code_size << 2` overflowed a u8 when serialized, producing an
+        // invalid method header and an InvalidProgramException at JIT time.
+        if let MethodHeader::Tiny(header) = &self.header {
+            if header.code_size as i64 + len > TinyMethodHeader::MAX_CODE_SIZE as i64 {
+                self.expand_tiny_to_fat();
+            }
+        }
+
         // update code_size and max_stack in method_header
         match &mut self.header {
             MethodHeader::Fat(header) => {
@@ -576,8 +590,7 @@ impl Method {
             }
             MethodHeader::Tiny(header) => {
                 let size = header.code_size as i64 + len as i64;
-                header.code_size = u8::try_from(size)
-                    .or_else(|err| todo!("Expand tiny into fat header!, {:?}", err))?;
+                header.code_size = u8::try_from(size).or(Err(Error::CodeSize))?;
             }
         }
 
@@ -751,5 +764,64 @@ impl Display for Method {
         }
 
         d.finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cil::Instruction;
+
+    /// A tiny method whose body is exactly 60 bytes. Injecting a 5-byte `call` prelude grows
+    /// the code size to 65, which no longer fits a tiny header (max 63 bytes) and must be
+    /// expanded to a fat header.
+    ///
+    /// Regression test for a bug where the method silently stayed tiny: `update_header` only
+    /// rejected sizes above `u8::MAX` (255) instead of the tiny limit (63), so `into_bytes`
+    /// then computed `code_size << 2` on a `u8` and overflowed, emitting a corrupt header byte.
+    /// The CLR decoded that as a near-zero-length tiny method and raised
+    /// `InvalidProgramException` when JIT-compiling it (observed on the app's `Main`).
+    #[test]
+    fn insert_prelude_expands_tiny_header_to_fat_when_crossing_limit() {
+        let mut instructions: Vec<Instruction> = (0..59).map(|_| Instruction::nop()).collect();
+        instructions.push(Instruction::ret());
+        let mut method = Method::tiny(instructions).unwrap();
+        assert!(matches!(method.header, MethodHeader::Tiny(_)));
+        assert_eq!(method.header.code_size(), 60);
+
+        method
+            .insert_prelude(vec![Instruction::call(0x0A00_0001)])
+            .unwrap();
+
+        // The header must have been promoted to fat with the correct code size...
+        match &method.header {
+            MethodHeader::Fat(header) => assert_eq!(header.code_size, 65),
+            other => panic!("expected fat header after crossing tiny limit, got {:?}", other),
+        }
+
+        // ...and the serialized header must be a well-formed fat header, not a corrupted
+        // tiny byte. A fat header starts with the FatFormat flag in the low two bits.
+        let bytes = method.into_bytes();
+        assert_eq!(
+            bytes[0] & CorILMethodFlags::CorILMethod_FormatMask.bits(),
+            CorILMethodFlags::CorILMethod_FatFormat.bits()
+        );
+    }
+
+    /// A tiny method that stays within the 63-byte limit after injection must remain tiny.
+    #[test]
+    fn insert_prelude_keeps_tiny_header_when_within_limit() {
+        let mut instructions: Vec<Instruction> = (0..9).map(|_| Instruction::nop()).collect();
+        instructions.push(Instruction::ret()); // 10-byte body
+        let mut method = Method::tiny(instructions).unwrap();
+
+        method
+            .insert_prelude(vec![Instruction::call(0x0A00_0001)])
+            .unwrap(); // -> 15-byte body, still tiny
+
+        match &method.header {
+            MethodHeader::Tiny(header) => assert_eq!(header.code_size, 15),
+            other => panic!("expected tiny header to be retained, got {:?}", other),
+        }
     }
 }
