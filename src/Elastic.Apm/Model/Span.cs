@@ -672,13 +672,14 @@ namespace Elastic.Apm.Model
 
 		internal void InsertSpanLinkInternal(IEnumerable<SpanLink> links)
 		{
-			var spanLinks = links as SpanLink[] ?? links.ToArray();
 			if (Links == null || !Links.Any())
-				Links = spanLinks;
-
+			{
+				Links = links as SpanLink[] ?? links.ToArray();
+				return;
+			}
 			var newList = new List<SpanLink>(Links);
-			newList.AddRange(spanLinks);
-			Links = new List<SpanLink>(newList);
+			newList.AddRange(links);
+			Links = newList;
 		}
 
 		private void SetThisToParentsBuffer()
