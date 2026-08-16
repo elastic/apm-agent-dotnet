@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Elastic.Apm.Helpers
 {
@@ -114,10 +113,10 @@ namespace Elastic.Apm.Helpers
 			if (matchers is null)
 				return null;
 
-			for (var i = 0; i < matchers.Count; i++)
+			foreach (var m in matchers)
 			{
-				if (matchers.ElementAt(i).Matches(firstPart, secondPart))
-					return matchers.ElementAt(i);
+				if (m.Matches(firstPart, secondPart))
+					return m;
 			}
 
 			return null;
@@ -162,7 +161,7 @@ namespace Elastic.Apm.Helpers
 					var c = ignoreCase
 						? char.ToLowerInvariant(CharAt(ii, haystack1, haystack2, haystack1Length))
 						: CharAt(ii, haystack1, haystack2, haystack1Length);
-					var c2 = ignoreCase ? char.ToLowerInvariant(needle.ElementAt(j)) : needle.ElementAt(j);
+					var c2 = ignoreCase ? char.ToLowerInvariant(needle[j]) : needle[j];
 					if (c != c2)
 						break;
 
@@ -179,7 +178,7 @@ namespace Elastic.Apm.Helpers
 		}
 
 		internal static char CharAt(int i, string firstPart, string secondPart, int firstPartLength) =>
-			i < firstPartLength ? firstPart.ElementAt(i) : secondPart.ElementAt(i - firstPartLength);
+			i < firstPartLength ? firstPart[i] : secondPart[i - firstPartLength];
 
 		/// <summary>
 		/// This <see cref="WildcardMatcher" /> supports wildcards in the middle of the matcher by decomposing the matcher into
@@ -200,9 +199,9 @@ namespace Elastic.Apm.Helpers
 			public override bool Matches(string s)
 			{
 				var offset = 0;
-				for (var i = 0; i < _wildcardMatchers.Count(); i++)
+				for (var i = 0; i < _wildcardMatchers.Count; i++)
 				{
-					var matcher = _wildcardMatchers.ElementAt(i);
+					var matcher = _wildcardMatchers[i];
 					offset = matcher.IndexOf(s, offset);
 					if (offset == -1)
 						return false;
@@ -217,7 +216,7 @@ namespace Elastic.Apm.Helpers
 				var offset = 0;
 				for (var i = 0; i < _wildcardMatchers.Count; i++)
 				{
-					var wildcardMatcher = _wildcardMatchers.ElementAt(i);
+					var wildcardMatcher = _wildcardMatchers[i];
 					offset = wildcardMatcher.IndexOf(firstPart, secondPart, offset);
 					if (offset == -1)
 						return false;
