@@ -3,7 +3,14 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+#if NET462
+using System.Net;
+#else
+using System.Net.Http;
+using System.Security.Authentication;
+#endif
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -18,6 +25,25 @@ namespace Elastic.Apm.Tests.BackendCommTests
 	public class BackendCommUtilsTests : LoggingTestBase
 	{
 		public BackendCommUtilsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
+#if NET462
+		[Theory]
+		[InlineData(0, 0)]
+		[InlineData((int)SecurityProtocolType.Tls, (int)(SecurityProtocolType.Tls | SecurityProtocolType.Tls12))]
+		[InlineData((int)SecurityProtocolType.Tls12, (int)SecurityProtocolType.Tls12)]
+		public void EnsureTls12ForExplicitSecurityProtocols_preserves_system_default_and_adds_tls12(int input, int expected) =>
+			BackendCommUtils.EnsureTls12ForExplicitSecurityProtocols((SecurityProtocolType)input)
+				.Should()
+				.Be((SecurityProtocolType)expected);
+#else
+		[Fact]
+		public void CreateHttpClientHandler_uses_os_default_tls_protocols()
+		{
+			using var handler = BackendCommUtils.CreateHttpClientHandler(new MockConfiguration(), new NoopLogger());
+
+			handler.SslProtocols.Should().Be(SslProtocols.None);
+		}
+#endif
 
 		[Theory]
 		[InlineData("http://1.2.3.4", "My svc", "My env", "http://1.2.3.4/config/v1/agents?service.name=My+svc&service.environment=My+env")]
