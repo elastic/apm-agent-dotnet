@@ -30,6 +30,12 @@ namespace Elastic.Apm.BackendComm
 
 		private static readonly TimeSpan DnsTimeout = TimeSpan.FromMinutes(1);
 
+#if NET462
+		internal static SecurityProtocolType EnsureTls12ForExplicitSecurityProtocols(SecurityProtocolType protocols) =>
+			// SecurityProtocolType.SystemDefault is zero but is unavailable in the net462 reference assemblies.
+			protocols == 0 ? protocols : protocols | SecurityProtocolType.Tls12;
+#endif
+
 		internal static class ApmServerEndpoints
 		{
 			/// <summary>
@@ -124,7 +130,7 @@ namespace Elastic.Apm.BackendComm
 				servicePoint.ConnectionLimit = 20;
 			});
 
-		private static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
+		internal static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
 		{
 #if NET462 // SSL options are not available in .NET Framework 4.6.2
 			try
@@ -210,12 +216,24 @@ namespace Elastic.Apm.BackendComm
 				UseDefaultCredentials = configuration.UseWindowsCredentials
 			};
 
-#if NETSTANDARD || NET472
-			httpClientHandler.SslProtocols |= SslProtocols.Tls12;
-			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
+#if NET462
+			// HttpClientHandler.SslProtocols requires .NET Framework 4.7.1 or later, so protocols cannot be
+			// selected for this handler alone on this target. Preserve the existing TLS 1.2 opt-in when
+			// the host uses an explicit protocol list, but do not replace the OS-managed SystemDefault value.
+			var currentProtocols = ServicePointManager.SecurityProtocol;
+			var securityProtocols = EnsureTls12ForExplicitSecurityProtocols(currentProtocols);
+			if (securityProtocols == 0)
+				logger.Info()?.Log("CreateHttpClientHandler - SecurityProtocol: SystemDefault (OS default)");
+			else
+			{
+				if (securityProtocols != currentProtocols)
+					ServicePointManager.SecurityProtocol = securityProtocols;
+				logger.Info()?.Log("CreateHttpClientHandler - SecurityProtocol: {SecurityProtocol}", securityProtocols);
+			}
 #else
-			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols}", ServicePointManager.SecurityProtocol);
+			// Defer protocol selection to the operating system so newer protocols can be used automatically.
+			httpClientHandler.SslProtocols = SslProtocols.None;
+			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols} (OS default)", httpClientHandler.SslProtocols);
 #endif
 
 #if !NET462
