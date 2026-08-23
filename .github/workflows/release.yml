@@ -48,10 +48,10 @@ jobs:
       run: .ci/deploy.sh ${{steps.login.outputs.NUGET_API_KEY}} ${{ secrets.NUGET_API_URL }}
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
     - name: Log in to the Elastic Container registry
-      uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
       with:
         registry: ${{ secrets.ELASTIC_DOCKER_REGISTRY }}
         username: ${{ secrets.ELASTIC_DOCKER_USERNAME }}
@@ -87,19 +87,19 @@ jobs:
           AGENT_ZIP_FILE=${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}
 
     - name: Attest image
-      uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6  # v4.2.0
+      uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6  # v4.2.2
       with:
         subject-name: ${{ env.DOCKER_IMAGE_NAME }}
         subject-digest: ${{ steps.docker-push.outputs.digest }}
         push-to-registry: true
 
     - name: generate build provenance (APM Agent)
-      uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6  # v4.2.0
+      uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6  # v4.2.2
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_AGENT }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_AGENT }}"
 
     - name: generate build provenance (APM Profiler)
-      uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6  # v4.2.0
+      uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6  # v4.2.2
       with:
         subject-path: "${{ github.workspace }}/${{ env.PREFIX_APM_PROFILER }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_APM_PROFILER }}"
 
@@ -156,7 +156,7 @@ jobs:
         run: ./build.bat profiler-zip
 
       - name: generate build provenance (APM Profiler)
-        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6  # v4.2.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6  # v4.2.2
         with:
           subject-path: "${{ github.workspace }}/${{ env.PREFIX_ZIP_FILE }}${{ steps.bootstrap.outputs.agent-version }}${{ env.SUFFIX_ZIP_FILE }}"
 
