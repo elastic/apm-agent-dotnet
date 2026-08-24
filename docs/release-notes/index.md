@@ -26,6 +26,14 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.34.6 [elastic-apm-net-agent-1346-release-notes]
+**Release date:** August 24, 2026
+
+### Fixes [elastic-apm-net-agent-1346-fixes]
+
+* Update System.Diagnostics.PerformanceCounter to remove System.Drawing.Common transitive dependency [#2783](https://github.com/elastic/apm-agent-dotnet/pull/2783)
+* Ensure we don't block TLS 1.3 negotiation [#2792](https://github.com/elastic/apm-agent-dotnet/pull/2792)
+
 ## 1.34.5 [elastic-apm-net-agent-1345-release-notes]
 **Release date:** June 29, 2026
 
