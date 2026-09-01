@@ -91,7 +91,7 @@ namespace Elastic.Apm.Helpers
 		/// <param name="matchers">The matchers which should be used to match the provided string</param>
 		/// <param name="s">The string to match against</param>
 		/// <returns><code>true</code>, if any of the matchers match the provided string</returns>
-		public static bool IsAnyMatch(IReadOnlyList<WildcardMatcher> matchers, string s) => AnyMatch(matchers, s) != null;
+		public static bool IsAnyMatch(IReadOnlyCollection<WildcardMatcher> matchers, string s) => AnyMatch(matchers, s) != null;
 
 		/// <summary>
 		/// Returns the first <see cref="WildcardMatcher" /> that matches the provided string.
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Helpers
 		/// <param name="matchers"> The matchers which should be used to match the provided string</param>
 		/// <param name="s">The string to match against</param>
 		/// <returns>The first matching <see cref="WildcardMatcher" />, or <code>null</code> if none match.</returns>
-		internal static WildcardMatcher AnyMatch(IReadOnlyList<WildcardMatcher> matchers, string s) => s == null ? null : AnyMatch(matchers, s, null);
+		internal static WildcardMatcher AnyMatch(IReadOnlyCollection<WildcardMatcher> matchers, string s) => s == null ? null : AnyMatch(matchers, s, null);
 
 		/// <summary>
 		/// Returns the first <see cref="WildcardMatcher" /> that matches the provided partitioned string.
@@ -113,10 +113,20 @@ namespace Elastic.Apm.Helpers
 			if (matchers is null)
 				return null;
 
-			foreach (var m in matchers)
+			if (matchers is IReadOnlyList<WildcardMatcher> list)
 			{
-				if (m.Matches(firstPart, secondPart))
-					return m;
+				for (var i = 0; i < list.Count; i++)
+				{
+					if (list[i].Matches(firstPart, secondPart))
+						return list[i];
+				}
+				return null;
+			}
+
+			foreach (var matcher in matchers)
+			{
+				if (matcher.Matches(firstPart, secondPart))
+					return matcher;
 			}
 
 			return null;
