@@ -245,7 +245,7 @@ namespace Elastic.Apm.Config
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
-		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups { get; }
+		public IReadOnlyList<WildcardMatcher> TransactionNameGroups { get; }
 
 		public int TransactionMaxSpans { get; }
 

@@ -150,7 +150,7 @@ public class ConstructorTests
 
 		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 
-		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups =>
+		public IReadOnlyList<WildcardMatcher> TransactionNameGroups =>
 			ConfigConsts.DefaultValues.TransactionNameGroups;
 
 		public bool UsePathAsTransactionName => ConfigConsts.DefaultValues.UsePathAsTransactionName;

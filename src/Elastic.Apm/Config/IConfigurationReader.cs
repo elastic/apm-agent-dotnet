@@ -390,7 +390,7 @@ namespace Elastic.Apm.Config
 		///	name cardinality."
 		/// </para>
 		/// </remarks>
-		IReadOnlyCollection<WildcardMatcher> TransactionNameGroups { get; }
+		IReadOnlyList<WildcardMatcher> TransactionNameGroups { get; }
 
 		/// <summary>
 		/// The number of spans that are recorded per transaction.

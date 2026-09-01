@@ -117,8 +117,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			_dynamicConfiguration?.TransactionIgnoreUrls ?? _mainConfiguration.TransactionIgnoreUrls;
 
-		public IReadOnlyCollection<WildcardMatcher> TransactionNameGroups =>
-			 _dynamicConfiguration?.TransactionNameGroups ?? _mainConfiguration.TransactionNameGroups;
+		public IReadOnlyList<WildcardMatcher> TransactionNameGroups =>
+			_dynamicConfiguration?.TransactionNameGroups ?? _mainConfiguration.TransactionNameGroups;
 
 		public int TransactionMaxSpans => _dynamicConfiguration?.TransactionMaxSpans ?? _mainConfiguration.TransactionMaxSpans;
 

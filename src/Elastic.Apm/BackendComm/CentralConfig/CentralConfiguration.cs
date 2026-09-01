@@ -94,7 +94,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; private set; }
 
-		internal IReadOnlyCollection<WildcardMatcher> TransactionNameGroups { get; private set; }
+		internal IReadOnlyList<WildcardMatcher> TransactionNameGroups { get; private set; }
 
 		internal int? TransactionMaxSpans { get; private set; }
 

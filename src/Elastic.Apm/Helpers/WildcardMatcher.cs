@@ -108,15 +108,15 @@ namespace Elastic.Apm.Helpers
 		/// <param name="firstPart"> The first part of the string to match against.</param>
 		/// <param name="secondPart"> The second part of the string to match against.</param>
 		/// <returns>The first matching <see cref="WildcardMatcher" />, or <code>null</code> if none match.</returns>
-		internal static WildcardMatcher AnyMatch(IReadOnlyCollection<WildcardMatcher> matchers, string firstPart, string secondPart)
+		internal static WildcardMatcher AnyMatch(IReadOnlyList<WildcardMatcher> matchers, string firstPart, string secondPart)
 		{
 			if (matchers is null)
 				return null;
 
-			foreach (var m in matchers)
+			for (var i = 0; i < matchers.Count; i++)
 			{
-				if (m.Matches(firstPart, secondPart))
-					return m;
+				if (matchers[i].Matches(firstPart, secondPart))
+					return matchers[i];
 			}
 
 			return null;

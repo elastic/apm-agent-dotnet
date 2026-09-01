@@ -78,7 +78,7 @@ namespace Elastic.Apm.Config
 
 			public static readonly IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls;
 
-			public static readonly IReadOnlyCollection<WildcardMatcher> TransactionNameGroups = new List<WildcardMatcher>().AsReadOnly();
+			public static readonly IReadOnlyList<WildcardMatcher> TransactionNameGroups = new List<WildcardMatcher>().AsReadOnly();
 
 			static DefaultValues()
 			{

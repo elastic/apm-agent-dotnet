@@ -514,7 +514,7 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected IReadOnlyCollection<WildcardMatcher> ParseTransactionNameGroups(ConfigurationKeyValue kv)
+		protected IReadOnlyList<WildcardMatcher> ParseTransactionNameGroups(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null)
 				return DefaultValues.TransactionNameGroups;
