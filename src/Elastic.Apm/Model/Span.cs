@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
@@ -33,8 +34,13 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
+		private readonly bool _restoreCurrentSpanOnEnd;
 
 		private Span _compressionBuffer;
+
+		// Token returned by the parent's ChildDurationTimer.OnChildStart; used to complete or abandon this child in O(1).
+		// -1 means unregistered (no parent, or parent timer already ended, or not yet set by Transaction.StartSpanInternal).
+		internal int _childDurationToken = -1;
 
 		// Indicates if the context was already propagated outside the span
 		// This typically means that this span was already used for distributed tracing and potentially there is a span outside of the process
@@ -69,7 +75,8 @@ namespace Elastic.Apm.Model
 			bool isExitSpan = false,
 			string id = null,
 			IEnumerable<SpanLink> links = null,
-			Activity current = null
+			Activity current = null,
+			bool makeCurrent = true
 		)
 		{
 			_logger = logger?.Scoped(nameof(Span));
@@ -78,6 +85,7 @@ namespace Elastic.Apm.Model
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
 			_apmServerInfo = apmServerInfo;
+			_restoreCurrentSpanOnEnd = makeCurrent;
 
 			InstrumentationFlag = instrumentationFlag;
 			Timestamp = timestamp ?? TimeUtils.TimestampNow();
@@ -87,7 +95,8 @@ namespace Elastic.Apm.Model
 			Type = type;
 			Links = links;
 
-			_parentSpan?._childDurationTimer.OnChildStart(Timestamp);
+			if (_parentSpan != null)
+				_childDurationToken = _parentSpan._childDurationTimer.OnChildStart(Timestamp);
 
 			ParentId = parentId;
 			TraceId = traceId;
@@ -121,7 +130,8 @@ namespace Elastic.Apm.Model
 
 			CheckAndCaptureBaggage();
 
-			_currentExecutionSegmentsContainer.CurrentSpan = this;
+			if (makeCurrent)
+				_currentExecutionSegmentsContainer.CurrentSpan = this;
 
 			var formattedTimestamp = _logger.IsEnabled(LogLevel.Trace) ? TimeUtils.FormatTimestampForLog(Timestamp) : string.Empty;
 
@@ -196,7 +206,9 @@ namespace Elastic.Apm.Model
 		}
 #pragma warning restore CS0618
 
-		private bool _isEnded;
+		private int _ended;
+
+		private bool IsEnded => Volatile.Read(ref _ended) != 0;
 
 		/// <summary>
 		/// In general if there is an error on the span, the outcome will be <code>Outcome.Failure</code>, otherwise it'll be
@@ -338,6 +350,8 @@ namespace Elastic.Apm.Model
 		[JsonProperty("transaction_id")]
 		public string TransactionId => _enclosingTransaction.Id;
 
+		internal Transaction EnclosingTransaction => _enclosingTransaction;
+
 		[MaxLength]
 		public string Type { get; set; }
 
@@ -390,11 +404,12 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null, Activity current = null
+			string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null, Activity current = null, bool makeCurrent = true
 		)
 		{
 			var span = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id, links, current: current);
+				_apmServerInfo, this, instrumentationFlag, captureStackTraceOnStart, timestamp, isExitSpan, id, links, current: current,
+				makeCurrent: makeCurrent);
 
 			if (!string.IsNullOrEmpty(subType))
 				span.Subtype = subType;
@@ -414,6 +429,9 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
+			if (Interlocked.CompareExchange(ref _ended, 1, 0) != 0)
+				return;
+
 			// If the outcome is still unknown and it was not specifically set to unknown, then it's success
 			if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
 				Outcome = Outcome.Success;
@@ -427,27 +445,21 @@ namespace Elastic.Apm.Model
 						this, formattedTimestamp, Timestamp, Duration);
 
 				if (_parentSpan != null)
-					_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+					_parentSpan._childDurationTimer.OnChildEnd(_childDurationToken, (long)(Timestamp + Duration.Value * 1000));
 				else
-					_enclosingTransaction.ChildDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd(_childDurationToken, (long)(Timestamp + Duration.Value * 1000));
 
 				_childDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
 			}
 			else
 			{
-				Assertion.IfEnabled?.That(!_isEnded,
-					$"Span's Duration doesn't have value even though {nameof(End)} method was already called." +
-					$" It contradicts the invariant enforced by {nameof(End)} method - Duration should have value when {nameof(End)} method exits" +
-					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
-					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
-
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 
 				if (_parentSpan != null)
-					_parentSpan?._childDurationTimer.OnChildEnd(endTimestamp);
+					_parentSpan._childDurationTimer.OnChildEnd(_childDurationToken, endTimestamp);
 				else
-					_enclosingTransaction.ChildDurationTimer.OnChildEnd(endTimestamp);
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd(_childDurationToken, endTimestamp);
 
 				_childDurationTimer.OnSpanEnd(endTimestamp);
 
@@ -456,9 +468,6 @@ namespace Elastic.Apm.Model
 						this, formattedTimestamp, Timestamp,
 						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
-
-			var isFirstEndCall = !_isEnded;
-			_isEnded = true;
 
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);
@@ -489,7 +498,7 @@ namespace Elastic.Apm.Model
 					DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
 			}
 
-			if (ShouldBeSentToApmServer && isFirstEndCall)
+			if (ShouldBeSentToApmServer)
 			{
 				// If we recorded the stack trace on start, but the duration of the span does not require
 				// inclusion of the stack trace, remove it.
@@ -505,7 +514,7 @@ namespace Elastic.Apm.Model
 
 				if (Configuration.SpanCompressionEnabled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 				{
-					if (!IsCompressionEligible() || _parentSpan is { _isEnded: true })
+					if (!IsCompressionEligible() || _parentSpan is { IsEnded: true })
 					{
 						if (buffered != null)
 						{
@@ -520,15 +529,13 @@ namespace Elastic.Apm.Model
 							QueueSpan(_compressionBuffer);
 
 						QueueSpan(this);
-						if (isFirstEndCall)
-							_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+						RestoreCurrentSpan();
 						return;
 					}
 					if (buffered == null)
 					{
 						SetThisToParentsBuffer();
-						if (isFirstEndCall)
-							_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+						RestoreCurrentSpan();
 						return;
 					}
 
@@ -536,17 +543,14 @@ namespace Elastic.Apm.Model
 					{
 						QueueSpan(buffered);
 						SetThisToParentsBuffer();
-
-						if (isFirstEndCall)
-							_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+						RestoreCurrentSpan();
 					}
 				}
 				else
 					QueueSpan(this);
 			}
 
-			if (isFirstEndCall)
-				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+			RestoreCurrentSpan();
 
 			void QueueSpan(Span span)
 			{
@@ -596,6 +600,34 @@ namespace Elastic.Apm.Model
 
 				_payloadSender.QueueSpan(span);
 			}
+		}
+
+		private void RestoreCurrentSpan()
+		{
+			if (_restoreCurrentSpanOnEnd && ReferenceEquals(_currentExecutionSegmentsContainer.CurrentSpan, this))
+				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+		}
+
+		/// <summary>
+		/// Drops this span without reporting it. Releases child-duration bookkeeping on the parent so an orphaned
+		/// in-flight span cannot leak <c>activeChildren</c> or inflate parent child-duration / deflate self-time.
+		/// Mutually exclusive with <see cref="End"/> via a shared completion gate.
+		/// </summary>
+		internal void Abandon()
+		{
+			if (Interlocked.CompareExchange(ref _ended, 1, 0) != 0)
+				return;
+
+			_logger?.Trace()?.Log("Abandoning {Span} (not reported)", this);
+
+			if (_parentSpan != null)
+				_parentSpan._childDurationTimer.OnChildAbandoned(_childDurationToken);
+			else
+				_enclosingTransaction.ChildDurationTimer.OnChildAbandoned(_childDurationToken);
+
+			_childDurationTimer.OnSpanEnd(TimeUtils.TimestampNow());
+			Ended = null;
+			RestoreCurrentSpan();
 		}
 
 		private bool TryToCompress(Span sibling)
@@ -966,45 +998,145 @@ namespace Elastic.Apm.Model
 
 	internal class ChildDurationTimer
 	{
-		private int _activeChildren;
-		private long _start;
+		private readonly object _lock = new();
+		private readonly Dictionary<int, long> _activeStarts = [];
+		private readonly List<(long Start, long End)> _waveIntervals = [];
+		private int _nextToken;
+		private double _duration;
+		private bool _isEnded;
 
-		public double Duration { get; private set; }
-
-		/// <summary>
-		/// Starts the timer if it has not been started already.
-		/// </summary>
-		/// <param name="startTimestamp"></param>
-		public void OnChildStart(long startTimestamp)
+		public double Duration
 		{
-			if (++_activeChildren == 1)
-				_start = startTimestamp;
-		}
-
-		/// <summary>
-		/// Stops the timer and increments the duration if no other direct children are still running
-		/// </summary>
-		/// <param name="endTimestamp"></param>
-		public void OnChildEnd(long endTimestamp)
-		{
-			if (--_activeChildren == 0)
-				IncrementDuration(endTimestamp);
-		}
-
-		/// <summary>
-		/// Stops the timer and increments the duration even if there are direct children which are still running
-		/// </summary>
-		/// <param name="endTimestamp"></param>
-		public void OnSpanEnd(long endTimestamp)
-		{
-			if (_activeChildren != 0)
+			get
 			{
-				IncrementDuration(endTimestamp);
-				_activeChildren = 0;
+				lock (_lock)
+					return _duration;
 			}
 		}
 
-		private void IncrementDuration(long epochMicros)
-			=> Duration += TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
+		internal int ActiveChildren
+		{
+			get
+			{
+				lock (_lock)
+					return _activeStarts.Count;
+			}
+		}
+
+		/// <summary>
+		/// Registers a direct child starting at <paramref name="startTimestamp"/> and returns a token that
+		/// uniquely identifies this registration. Pass the token to <see cref="OnChildEnd"/> or
+		/// <see cref="OnChildAbandoned"/> for O(1) removal.
+		/// Returns -1 when the timer has already ended, in which case the child is not tracked.
+		/// </summary>
+		public int OnChildStart(long startTimestamp)
+		{
+			lock (_lock)
+			{
+				if (_isEnded)
+					return -1;
+
+				var token = _nextToken++;
+				_activeStarts.Add(token, startTimestamp);
+				return token;
+			}
+		}
+
+		/// <summary>
+		/// Registers a direct child ending at <paramref name="endTimestamp"/>, identified by the token returned from
+		/// <see cref="OnChildStart"/>, and when no other direct children remain, adds the union of that wave's intervals
+		/// to <see cref="Duration"/>.
+		/// </summary>
+		public void OnChildEnd(int token, long endTimestamp)
+		{
+			lock (_lock)
+			{
+				if (_isEnded || !_activeStarts.TryGetValue(token, out var start))
+					return;
+
+				_activeStarts.Remove(token);
+				AddWaveInterval(start, Math.Max(endTimestamp, start));
+
+				if (_activeStarts.Count == 0)
+					FlushWave();
+			}
+		}
+
+		/// <summary>
+		/// Drops a direct child that will not be reported, identified by the token returned from
+		/// <see cref="OnChildStart"/>. Does not contribute duration for that child; any intervals already
+		/// completed by siblings in the same wave are still flushed when the wave becomes empty.
+		/// </summary>
+		public void OnChildAbandoned(int token)
+		{
+			lock (_lock)
+			{
+				if (_isEnded || !_activeStarts.Remove(token))
+					return;
+
+				if (_activeStarts.Count == 0)
+					FlushWave();
+			}
+		}
+
+		/// <summary>
+		/// Closes any still-open children at <paramref name="endTimestamp"/> and finalizes the timer.
+		/// </summary>
+		public void OnSpanEnd(long endTimestamp)
+		{
+			lock (_lock)
+			{
+				if (_isEnded)
+					return;
+
+				foreach (var start in _activeStarts.Values)
+					AddWaveInterval(start, Math.Max(endTimestamp, start));
+
+				_activeStarts.Clear();
+				FlushWave();
+				_isEnded = true;
+			}
+		}
+
+		private void AddWaveInterval(long start, long end)
+		{
+			if (end < start)
+				end = start;
+			_waveIntervals.Add((start, end));
+		}
+
+		private void FlushWave()
+		{
+			if (_waveIntervals.Count == 0)
+				return;
+
+			_duration += UnionDurationMilliseconds(_waveIntervals);
+			_waveIntervals.Clear();
+		}
+
+		private static double UnionDurationMilliseconds(List<(long Start, long End)> intervals)
+		{
+			intervals.Sort(static (a, b) => a.Start.CompareTo(b.Start));
+
+			var unionStart = intervals[0].Start;
+			var unionEnd = intervals[0].End;
+			double total = 0;
+
+			for (var i = 1; i < intervals.Count; i++)
+			{
+				var (start, end) = intervals[i];
+				if (start <= unionEnd)
+					unionEnd = Math.Max(unionEnd, end);
+				else
+				{
+					total += TimeUtils.DurationBetweenTimestamps(unionStart, unionEnd);
+					unionStart = start;
+					unionEnd = end;
+				}
+			}
+
+			total += TimeUtils.DurationBetweenTimestamps(unionStart, unionEnd);
+			return total;
+		}
 	}
 }

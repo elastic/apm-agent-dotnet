@@ -14,6 +14,15 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 	/// </summary>
 	public class SqlClientDiagnosticSubscriber : IDiagnosticsSubscriber
 	{
+		private readonly PendingSpanStore _spanStore;
+
+		/// <summary>
+		/// Creates a new SQL Client diagnostic subscriber.
+		/// </summary>
+		public SqlClientDiagnosticSubscriber() { }
+
+		internal SqlClientDiagnosticSubscriber(PendingSpanStore spanStore) => _spanStore = spanStore;
+
 		/// <inheritdoc />
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{
@@ -24,13 +33,15 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet)
 			{
-				var initializer = new DiagnosticInitializer(agentComponents, new SqlClientDiagnosticListener(agentComponents));
+				var listener = new SqlClientDiagnosticListener(agentComponents, _spanStore);
+				var initializer = new DiagnosticInitializer(agentComponents, listener);
 
 				retVal.Add(initializer);
 
 				retVal.Add(DiagnosticListener
 					.AllListeners
 					.Subscribe(initializer));
+				retVal.Add(listener);
 			}
 			else
 				retVal.Add(new SqlEventListener(agentComponents));

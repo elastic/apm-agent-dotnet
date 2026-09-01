@@ -25,13 +25,13 @@ namespace Elastic.Apm.Model
 			internal const int PostgreSql = 5432;
 		}
 
-		internal ISpan StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag, string subType = null,
-			bool captureStackTraceOnStart = false
+		internal static ISpan StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag, string subType = null,
+			bool captureStackTraceOnStart = false, bool makeCurrent = true
 		)
 		{
 			var spanName = GetDbSpanName(dbCommand);
 			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, subType, instrumentationFlag,
-				captureStackTraceOnStart, true);
+				captureStackTraceOnStart, true, makeCurrent);
 		}
 
 		internal static string GetDbSpanName(IDbCommand dbCommand)

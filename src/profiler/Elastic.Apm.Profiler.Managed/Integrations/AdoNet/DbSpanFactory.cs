@@ -39,7 +39,7 @@ namespace Elastic.Apm.Profiler.Managed.Integrations.AdoNet
 				span.Name == DbSpanCommon.GetDbSpanName(command))
 				return null;
 
-			return agent.TracerInternal.DbSpanCommon.StartSpan(agent, command, _instrumentationFlag);
+			return DbSpanCommon.StartSpan(agent, command, _instrumentationFlag);
 		}
 
 		internal static void EndSpan(ApmAgent agent, IDbCommand command, ISpan span, Exception exception)

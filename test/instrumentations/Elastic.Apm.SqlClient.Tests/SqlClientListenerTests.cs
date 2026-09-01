@@ -6,9 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Instrumentations.SqlClient;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
@@ -217,6 +220,73 @@ namespace Elastic.Apm.SqlClient.Tests
 			// Cumulative would mean the last span takes 100 * 10ms = 1000ms
 			_payloadSender.Spans.Last().Duration.Should().BeLessThan(1000);
 		}
+
+#if !NETFRAMEWORK
+		[DockerTheory]
+		[MemberData(nameof(Connections))]
+		public async Task SqlClientDiagnosticListener_ShouldReleasePendingSpanAfterCommandTimeout(string providerName,
+			Func<string, DbConnection> connectionCreator
+		)
+		{
+			_testOutputHelper.WriteLine(providerName);
+			using var store = new PendingSpanStore(_apmAgent.Logger, sweepInterval: TimeSpan.FromMilliseconds(50),
+				minimumMaxAge: TimeSpan.Zero);
+			using var listener = new SqlClientDiagnosticListener(_apmAgent, store);
+			using var startOnlyObserver = new StartOnlySqlClientObserver(listener);
+			using var allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(startOnlyObserver);
+
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async _ =>
+			{
+				using var dbConnection = connectionCreator.Invoke(_connectionString);
+				await dbConnection.OpenAsync();
+				using var sqlCommand = dbConnection.CreateCommand();
+				sqlCommand.CommandText = "WAITFOR DELAY '00:00:10'";
+				sqlCommand.CommandTimeout = 1;
+
+				var executionTask = sqlCommand.ExecuteNonQueryAsync();
+				SpinWait.SpinUntil(() => store.Count == 1, TimeSpan.FromSeconds(5)).Should().BeTrue();
+				_apmAgent.Tracer.CurrentSpan.Should().BeNull();
+
+				await Assert.ThrowsAnyAsync<DbException>(() => executionTask);
+				store.Count.Should().Be(1);
+			});
+
+			SpinWait.SpinUntil(() => store.Count == 0, TimeSpan.FromSeconds(10)).Should().BeTrue();
+		}
+
+		private sealed class StartOnlySqlClientObserver(SqlClientDiagnosticListener listener) : IObserver<DiagnosticListener>, IDisposable
+		{
+			private readonly SqlClientDiagnosticListener _listener = listener;
+			private readonly CompositeDisposable _subscriptions = new();
+
+			public void OnCompleted() { }
+
+			public void OnError(Exception error) { }
+
+			public void OnNext(DiagnosticListener listener)
+			{
+				if (listener.Name == _listener.Name)
+					_subscriptions.Add(listener.Subscribe(new StartOnlyEventObserver(_listener)));
+			}
+
+			public void Dispose() => _subscriptions.Dispose();
+		}
+
+		private sealed class StartOnlyEventObserver(SqlClientDiagnosticListener listener) : IObserver<KeyValuePair<string, object>>
+		{
+			private readonly SqlClientDiagnosticListener _listener = listener;
+
+			public void OnCompleted() { }
+
+			public void OnError(Exception error) { }
+
+			public void OnNext(KeyValuePair<string, object> value)
+			{
+				if (value.Key.EndsWith("WriteCommandBefore", StringComparison.Ordinal))
+					_listener.OnNext(value);
+			}
+		}
+#endif
 
 		public void Dispose()
 		{

@@ -239,6 +239,156 @@ namespace Elastic.Apm.Tests
 				spanFramesMinDurationInMilliseconds: "23ms")).IsCaptureStackTraceOnStartEnabled().Should().BeTrue();
 		}
 
+		[Fact]
+		public void Abandon_Then_End_DoesNotReportSpan_OrUpdateChildDuration()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				var transaction = (Model.Transaction)t;
+				var span = transaction.StartSpanInternal("db", "db", makeCurrent: false);
+
+				span.Abandon();
+				span.End(); // must be a no-op after Abandon
+
+				transaction.ChildDurationTimer.ActiveChildren.Should().Be(0);
+				transaction.ChildDurationTimer.Duration.Should().Be(0);
+			});
+
+			payloadSender.Spans.Should().BeEmpty();
+		}
+
+		[Fact]
+		public void End_Then_Abandon_ReportsSpanOnce()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				var transaction = (Model.Transaction)t;
+				var span = transaction.StartSpanInternal("db", "db", makeCurrent: false);
+				span.End();
+				span.Abandon();
+			});
+
+			payloadSender.WaitForSpans();
+			payloadSender.Spans.Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void EndAndAbandon_OverlappingSpans_UpdateExactChildRegistrations()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				var transaction = (Model.Transaction)t;
+				var timestamp = transaction.Timestamp;
+				var abandonedSpan = transaction.StartSpanInternal("abandoned", "db", timestamp: timestamp, makeCurrent: false);
+				var endedSpan = transaction.StartSpanInternal("ended", "db", timestamp: timestamp, makeCurrent: false);
+				endedSpan.Duration = 100;
+
+				endedSpan.End();
+				abandonedSpan.Abandon();
+
+				transaction.ChildDurationTimer.ActiveChildren.Should().Be(0);
+				transaction.ChildDurationTimer.Duration.Should().Be(100);
+			});
+
+			payloadSender.WaitForSpans();
+			payloadSender.Spans.Should().ContainSingle(span => span.Name == "ended");
+		}
+
+		[Fact]
+		public void Abandon_DoesNotStealParentSelfTime()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			Model.Transaction transaction = null;
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				transaction = (Model.Transaction)t;
+				var span = transaction.StartSpanInternal("db", "db", makeCurrent: false);
+				span.Abandon();
+
+				transaction.ChildDurationTimer.ActiveChildren.Should().Be(0);
+				transaction.ChildDurationTimer.Duration.Should().Be(0);
+			});
+
+			payloadSender.WaitForTransactions();
+			payloadSender.Spans.Should().BeEmpty();
+			transaction.Should().NotBeNull();
+			transaction.Duration.Should().HaveValue();
+			transaction.SelfDuration.Should().Be(transaction.Duration!.Value);
+			transaction.ChildDurationTimer.Duration.Should().Be(0);
+		}
+
+		[Fact]
+		public void MakeCurrentFalse_DoesNotReplaceOrRestoreCurrentSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				var parent = t.StartSpan("parent", "type");
+				agent.Tracer.CurrentSpan.Should().BeSameAs(parent);
+
+				var sql = ((Model.Transaction)t).StartSpanInternal("db", "db", makeCurrent: false);
+				agent.Tracer.CurrentSpan.Should().BeSameAs(parent);
+
+				sql.End();
+				agent.Tracer.CurrentSpan.Should().BeSameAs(parent);
+
+				parent.End();
+			});
+		}
+
+		[Fact]
+		public void MakeCurrentTrue_RestoresParentOnEnd()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				var parent = t.StartSpan("parent", "type");
+				var child = parent.StartSpan("child", "type");
+				agent.Tracer.CurrentSpan.Should().BeSameAs(child);
+
+				child.End();
+				agent.Tracer.CurrentSpan.Should().BeSameAs(parent);
+
+				parent.End();
+				agent.Tracer.CurrentSpan.Should().BeNull();
+			});
+		}
+
+		[Fact]
+		public void Abandon_WithMakeCurrentTrue_RestoresParent()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				var parent = t.StartSpan("parent", "type");
+				var child = (Model.Span)parent.StartSpan("child", "type");
+				agent.Tracer.CurrentSpan.Should().BeSameAs(child);
+
+				child.Abandon();
+				agent.Tracer.CurrentSpan.Should().BeSameAs(parent);
+				payloadSender.Spans.Should().BeEmpty();
+
+				parent.End();
+			});
+		}
+
 		private static Model.Span Create_Span_ForCaptureStackTraceTest(IConfiguration configuration)
 		{
 			var agent = new ApmAgent(new TestAgentComponents(configuration: configuration,
