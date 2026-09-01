@@ -16,6 +16,6 @@ namespace Elastic.Apm.Model
 		public readonly string Type { get; }
 		public readonly string SubType { get; }
 
-		public static SpanTimerKey AppSpanType => new("app");
+		public static readonly SpanTimerKey AppSpanType = new("app");
 	}
 }

@@ -246,5 +246,65 @@ namespace Elastic.Apm.Tests
 			var transaction = agent.Tracer.StartTransaction("transaction", "type");
 			return transaction.StartSpan("span", "type") as Model.Span;
 		}
+
+		[Fact]
+		public void SpanTimings_SameTypeSpans_AccumulatesCountAndDuration()
+		{
+			var mockSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockSender));
+
+			Model.Transaction capturedTx = null;
+			agent.Tracer.CaptureTransaction("tx", "test", t =>
+			{
+				capturedTx = t as Model.Transaction;
+				for (var i = 0; i < 5; i++)
+					t.CaptureSpan("SELECT", "db", () => { }, "mssql");
+			});
+
+			capturedTx.Should().NotBeNull();
+			var key = new Model.SpanTimerKey("db", "mssql");
+			capturedTx.SpanTimings.TryGetValue(key, out var timer).Should().BeTrue();
+			timer.Count.Should().Be(5);
+			timer.TotalDuration.Should().BeGreaterThan(0);
+		}
+
+		[Fact]
+		public void SpanTimings_DifferentTypeSpans_CreatesDistinctEntries()
+		{
+			var mockSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockSender));
+
+			Model.Transaction capturedTx = null;
+			agent.Tracer.CaptureTransaction("tx", "test", t =>
+			{
+				capturedTx = t as Model.Transaction;
+				t.CaptureSpan("SELECT", "db", () => { }, "mssql");
+				t.CaptureSpan("GET /api", "http", () => { }, "external");
+			});
+
+			capturedTx.Should().NotBeNull();
+			capturedTx.SpanTimings.Should().ContainKey(new Model.SpanTimerKey("db", "mssql"));
+			capturedTx.SpanTimings.Should().ContainKey(new Model.SpanTimerKey("http", "external"));
+			capturedTx.SpanTimings.Count.Should().BeGreaterThanOrEqualTo(2);
+		}
+
+		[Fact]
+		public void SpanTimings_SingleSpan_CountIsOne()
+		{
+			var mockSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockSender));
+
+			Model.Transaction capturedTx = null;
+			agent.Tracer.CaptureTransaction("tx", "test", t =>
+			{
+				capturedTx = t as Model.Transaction;
+				t.CaptureSpan("op", "cache", () => { }, "redis");
+			});
+
+			capturedTx.Should().NotBeNull();
+			var key = new Model.SpanTimerKey("cache", "redis");
+			capturedTx.SpanTimings.TryGetValue(key, out var timer).Should().BeTrue();
+			timer.Count.Should().Be(1);
+		}
 	}
 }

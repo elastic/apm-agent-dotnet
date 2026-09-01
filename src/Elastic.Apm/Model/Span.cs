@@ -464,10 +464,11 @@ namespace Elastic.Apm.Model
 			handler?.Invoke(this, EventArgs.Empty);
 			Ended = null;
 
-			if (_enclosingTransaction.SpanTimings.ContainsKey(new SpanTimerKey(Type, Subtype)))
-				_enclosingTransaction.SpanTimings[new SpanTimerKey(Type, Subtype)].IncrementTimer(SelfDuration);
+			var spanTimerKey = new SpanTimerKey(Type, Subtype);
+			if (_enclosingTransaction.SpanTimings.TryGetValue(spanTimerKey, out var spanTimer))
+				spanTimer.IncrementTimer(SelfDuration);
 			else
-				_enclosingTransaction.SpanTimings.TryAdd(new SpanTimerKey(Type, Subtype), new SpanTimer(SelfDuration));
+				_enclosingTransaction.SpanTimings.TryAdd(spanTimerKey, new SpanTimer(SelfDuration));
 
 			try
 			{
