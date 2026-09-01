@@ -44,8 +44,11 @@ internal class Transaction : ITransaction
 	private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 	private readonly Lazy<Context> _context = new();
 	private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
+	private readonly object _endingHandlersLock = new();
 	private readonly IApmLogger _logger;
 	private readonly IPayloadSender _sender;
+	private Action _endingHandlers;
+	private bool _endingStarted;
 	private bool _ownsActivity;
 
 	[JsonConstructor]
@@ -651,6 +654,42 @@ internal class Transaction : ITransaction
 	}.ToString();
 
 	/// <summary>
+	/// Atomically registers a callback that is invoked when the transaction starts ending. Returns <c>false</c>
+	/// when ending has already begun, so callers can clean up immediately rather than retaining work that will
+	/// never receive a callback.
+	/// </summary>
+	internal bool TryRegisterEndingHandler(Action handler)
+	{
+		lock (_endingHandlersLock)
+		{
+			if (_endingStarted)
+				return false;
+
+			_endingHandlers += handler;
+			return true;
+		}
+	}
+
+	/// <summary>Unregisters a callback previously registered with <see cref="TryRegisterEndingHandler"/>.</summary>
+	internal void UnregisterEndingHandler(Action handler)
+	{
+		lock (_endingHandlersLock)
+		{
+			if (!_endingStarted)
+				_endingHandlers -= handler;
+		}
+	}
+
+	internal int EndingHandlerCount
+	{
+		get
+		{
+			lock (_endingHandlersLock)
+				return _endingHandlers?.GetInvocationList().Length ?? 0;
+		}
+	}
+
+	/// <summary>
 	/// When the transaction has ended and before being queued to send to APM server
 	/// </summary>
 	public event EventHandler Ended;
@@ -658,6 +697,31 @@ internal class Transaction : ITransaction
 	public void End()
 	{
 		var endTimestamp = TimeUtils.TimestampNow();
+
+		var isFirstEndCall = !_isEnded;
+		Action ending = null;
+		if (isFirstEndCall)
+		{
+			lock (_endingHandlersLock)
+			{
+				if (!_endingStarted)
+				{
+					_endingStarted = true;
+					ending = _endingHandlers;
+					_endingHandlers = null;
+				}
+			}
+
+			try
+			{
+				// Abandon orphaned pending children before closing child-duration bookkeeping.
+				ending?.Invoke();
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()?.LogException(e, "Exception in transaction Ending handlers");
+			}
+		}
 
 		// If the outcome is still unknown and it was not specifically set to unknown, then it's success
 		if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
@@ -697,7 +761,6 @@ internal class Transaction : ITransaction
 		if (_ownsActivity)
 			Activity?.Stop();
 
-		var isFirstEndCall = !_isEnded;
 		_isEnded = true;
 		if (!isFirstEndCall)
 			return;
@@ -784,12 +847,12 @@ internal class Transaction : ITransaction
 
 	internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 		InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null,
-		string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null, Activity current = null
+		string id = null, bool isExitSpan = false, IEnumerable<SpanLink> links = null, Activity current = null, bool makeCurrent = true
 	)
 	{
 		var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 			instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp,
-			isExitSpan: isExitSpan, id: id, links: links);
+			isExitSpan: isExitSpan, id: id, links: links, makeCurrent: makeCurrent);
 
 		ChildDurationTimer.OnChildStart(retVal.Timestamp);
 		if (!string.IsNullOrEmpty(subType))

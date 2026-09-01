@@ -34,7 +34,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 				case { } k when k == RelationalEventId.CommandExecuting.Name && ApmAgent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = _agent?.TracerInternal.DbSpanCommon.StartSpan(ApmAgent, commandEventData.Command, InstrumentationFlag.EfCore,
+						var newSpan = DbSpanCommon.StartSpan(ApmAgent, commandEventData.Command, InstrumentationFlag.EfCore,
 							captureStackTraceOnStart: true);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}

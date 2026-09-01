@@ -135,7 +135,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation started - starting a new span...", command, interceptCtx, dbgOriginalCaller);
 
-				var span = Agent.Instance.TracerInternal.DbSpanCommon.StartSpan(Agent.Instance, command, InstrumentationFlag.EfClassic);
+				var span = DbSpanCommon.StartSpan(Agent.Instance, command, InstrumentationFlag.EfClassic);
 				interceptCtx.SetUserState(_userStateKey, span);
 			}
 
