@@ -279,6 +279,31 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void EndAndAbandon_OverlappingSpans_UpdateExactChildRegistrations()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("transaction", "type", t =>
+			{
+				var transaction = (Model.Transaction)t;
+				var timestamp = transaction.Timestamp;
+				var abandonedSpan = transaction.StartSpanInternal("abandoned", "db", timestamp: timestamp, makeCurrent: false);
+				var endedSpan = transaction.StartSpanInternal("ended", "db", timestamp: timestamp, makeCurrent: false);
+				endedSpan.Duration = 100;
+
+				endedSpan.End();
+				abandonedSpan.Abandon();
+
+				transaction.ChildDurationTimer.ActiveChildren.Should().Be(0);
+				transaction.ChildDurationTimer.Duration.Should().Be(100);
+			});
+
+			payloadSender.WaitForSpans();
+			payloadSender.Spans.Should().ContainSingle(span => span.Name == "ended");
+		}
+
+		[Fact]
 		public void Abandon_DoesNotStealParentSelfTime()
 		{
 			var payloadSender = new MockPayloadSender();

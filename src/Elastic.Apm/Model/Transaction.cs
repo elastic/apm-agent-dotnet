@@ -854,7 +854,7 @@ internal class Transaction : ITransaction
 			instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp,
 			isExitSpan: isExitSpan, id: id, links: links, makeCurrent: makeCurrent);
 
-		ChildDurationTimer.OnChildStart(retVal.Timestamp);
+		retVal._childDurationToken = ChildDurationTimer.OnChildStart(retVal.Timestamp);
 		if (!string.IsNullOrEmpty(subType))
 			retVal.Subtype = subType;
 

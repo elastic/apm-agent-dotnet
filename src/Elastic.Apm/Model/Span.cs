@@ -38,6 +38,10 @@ namespace Elastic.Apm.Model
 
 		private Span _compressionBuffer;
 
+		// Token returned by the parent's ChildDurationTimer.OnChildStart; used to complete or abandon this child in O(1).
+		// -1 means unregistered (no parent, or parent timer already ended, or not yet set by Transaction.StartSpanInternal).
+		internal int _childDurationToken = -1;
+
 		// Indicates if the context was already propagated outside the span
 		// This typically means that this span was already used for distributed tracing and potentially there is a span outside of the process
 		// which points to this span.
@@ -91,7 +95,8 @@ namespace Elastic.Apm.Model
 			Type = type;
 			Links = links;
 
-			_parentSpan?._childDurationTimer.OnChildStart(Timestamp);
+			if (_parentSpan != null)
+				_childDurationToken = _parentSpan._childDurationTimer.OnChildStart(Timestamp);
 
 			ParentId = parentId;
 			TraceId = traceId;
@@ -440,9 +445,9 @@ namespace Elastic.Apm.Model
 						this, formattedTimestamp, Timestamp, Duration);
 
 				if (_parentSpan != null)
-					_parentSpan._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+					_parentSpan._childDurationTimer.OnChildEnd(_childDurationToken, (long)(Timestamp + Duration.Value * 1000));
 				else
-					_enclosingTransaction.ChildDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd(_childDurationToken, (long)(Timestamp + Duration.Value * 1000));
 
 				_childDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
 			}
@@ -452,9 +457,9 @@ namespace Elastic.Apm.Model
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 
 				if (_parentSpan != null)
-					_parentSpan._childDurationTimer.OnChildEnd(endTimestamp);
+					_parentSpan._childDurationTimer.OnChildEnd(_childDurationToken, endTimestamp);
 				else
-					_enclosingTransaction.ChildDurationTimer.OnChildEnd(endTimestamp);
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd(_childDurationToken, endTimestamp);
 
 				_childDurationTimer.OnSpanEnd(endTimestamp);
 
@@ -616,9 +621,9 @@ namespace Elastic.Apm.Model
 			_logger?.Trace()?.Log("Abandoning {Span} (not reported)", this);
 
 			if (_parentSpan != null)
-				_parentSpan._childDurationTimer.OnChildAbandoned(Timestamp);
+				_parentSpan._childDurationTimer.OnChildAbandoned(_childDurationToken);
 			else
-				_enclosingTransaction.ChildDurationTimer.OnChildAbandoned(Timestamp);
+				_enclosingTransaction.ChildDurationTimer.OnChildAbandoned(_childDurationToken);
 
 			_childDurationTimer.OnSpanEnd(TimeUtils.TimestampNow());
 			Ended = null;
@@ -994,8 +999,9 @@ namespace Elastic.Apm.Model
 	internal class ChildDurationTimer
 	{
 		private readonly object _lock = new();
-		private readonly List<long> _activeStarts = [];
-		private readonly List<(long Start, long End)> _waveIntervals = new();
+		private readonly Dictionary<int, long> _activeStarts = [];
+		private readonly List<(long Start, long End)> _waveIntervals = [];
+		private int _nextToken;
 		private double _duration;
 		private bool _isEnded;
 
@@ -1018,31 +1024,37 @@ namespace Elastic.Apm.Model
 		}
 
 		/// <summary>
-		/// Registers a direct child starting at <paramref name="startTimestamp"/>.
+		/// Registers a direct child starting at <paramref name="startTimestamp"/> and returns a token that
+		/// uniquely identifies this registration. Pass the token to <see cref="OnChildEnd"/> or
+		/// <see cref="OnChildAbandoned"/> for O(1) removal.
+		/// Returns -1 when the timer has already ended, in which case the child is not tracked.
 		/// </summary>
-		public void OnChildStart(long startTimestamp)
+		public int OnChildStart(long startTimestamp)
 		{
 			lock (_lock)
 			{
 				if (_isEnded)
-					return;
+					return -1;
 
-				_activeStarts.Add(startTimestamp);
+				var token = _nextToken++;
+				_activeStarts.Add(token, startTimestamp);
+				return token;
 			}
 		}
 
 		/// <summary>
-		/// Registers a direct child ending at <paramref name="endTimestamp"/> and, when no other direct children
-		/// remain, adds the union of that wave's intervals to <see cref="Duration"/>.
+		/// Registers a direct child ending at <paramref name="endTimestamp"/>, identified by the token returned from
+		/// <see cref="OnChildStart"/>, and when no other direct children remain, adds the union of that wave's intervals
+		/// to <see cref="Duration"/>.
 		/// </summary>
-		public void OnChildEnd(long endTimestamp)
+		public void OnChildEnd(int token, long endTimestamp)
 		{
 			lock (_lock)
 			{
-				if (_isEnded || _activeStarts.Count == 0)
+				if (_isEnded || !_activeStarts.TryGetValue(token, out var start))
 					return;
 
-				var start = TakeStartForEnd(endTimestamp);
+				_activeStarts.Remove(token);
 				AddWaveInterval(start, Math.Max(endTimestamp, start));
 
 				if (_activeStarts.Count == 0)
@@ -1051,22 +1063,16 @@ namespace Elastic.Apm.Model
 		}
 
 		/// <summary>
-		/// Drops a direct child that will not be reported, identified by its start timestamp.
-		/// Does not contribute duration for that child; any intervals already completed by siblings in the
-		/// same wave are still flushed when the wave becomes empty.
+		/// Drops a direct child that will not be reported, identified by the token returned from
+		/// <see cref="OnChildStart"/>. Does not contribute duration for that child; any intervals already
+		/// completed by siblings in the same wave are still flushed when the wave becomes empty.
 		/// </summary>
-		public void OnChildAbandoned(long startTimestamp)
+		public void OnChildAbandoned(int token)
 		{
 			lock (_lock)
 			{
-				if (_isEnded || _activeStarts.Count == 0)
+				if (_isEnded || !_activeStarts.Remove(token))
 					return;
-
-				var index = _activeStarts.LastIndexOf(startTimestamp);
-				if (index < 0)
-					return;
-
-				_activeStarts.RemoveAt(index);
 
 				if (_activeStarts.Count == 0)
 					FlushWave();
@@ -1083,42 +1089,13 @@ namespace Elastic.Apm.Model
 				if (_isEnded)
 					return;
 
-				foreach (var start in _activeStarts)
+				foreach (var start in _activeStarts.Values)
 					AddWaveInterval(start, Math.Max(endTimestamp, start));
 
 				_activeStarts.Clear();
 				FlushWave();
 				_isEnded = true;
 			}
-		}
-
-		/// <summary>
-		/// Pairs an end with the latest still-open start at or before the end timestamp (nested/overlapping
-		/// friendly). Falls back to the earliest open start when all starts are after the end.
-		/// </summary>
-		private long TakeStartForEnd(long endTimestamp)
-		{
-			var bestIndex = -1;
-			for (var i = 0; i < _activeStarts.Count; i++)
-			{
-				var start = _activeStarts[i];
-				if (start <= endTimestamp && (bestIndex < 0 || start > _activeStarts[bestIndex]))
-					bestIndex = i;
-			}
-
-			if (bestIndex < 0)
-			{
-				bestIndex = 0;
-				for (var i = 1; i < _activeStarts.Count; i++)
-				{
-					if (_activeStarts[i] < _activeStarts[bestIndex])
-						bestIndex = i;
-				}
-			}
-
-			var chosen = _activeStarts[bestIndex];
-			_activeStarts.RemoveAt(bestIndex);
-			return chosen;
 		}
 
 		private void AddWaveInterval(long start, long end)
