@@ -87,7 +87,8 @@ namespace Elastic.Apm.OpenTelemetry
 			else if (name == "Elastic.Apm.Azure.CosmosDb")
 			{
 				_hasCosmosDbInstrumentation = true;
-				_logger?.Debug()?.Log("Detected 'Elastic.Apm.Azure.CosmosDb' — 'Microsoft.DocumentDB' activities will be skipped by the OTel bridge.");
+				_logger?.Debug()?.Log("Detected 'Elastic.Apm.Azure.CosmosDb' — non-operation 'Microsoft.DocumentDB' activities will be skipped by the OTel bridge; " +
+				"'Azure.Cosmos.Operation' activities will pass through.");
 			}
 			else if (name == "Elastic.Apm.MongoDb")
 			{
@@ -177,7 +178,8 @@ namespace Elastic.Apm.OpenTelemetry
 					return true;
 				}
 
-				if (_hasCosmosDbInstrumentation && azNamespace == "Microsoft.DocumentDB")
+				if (_hasCosmosDbInstrumentation && azNamespace == "Microsoft.DocumentDB"
+					&& activity.Source.Name != KnownListeners.AzureCosmosOperationActivitySource)
 				{
 					skipReason = ActivitySkipReason.CosmosDbDedup;
 					return true;
