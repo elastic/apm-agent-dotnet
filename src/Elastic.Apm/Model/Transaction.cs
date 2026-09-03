@@ -444,17 +444,7 @@ internal class Transaction : ITransaction
 	public IEnumerable<SpanLink> Links { get; private set; }
 
 	internal void InsertSpanLinkInternal(IEnumerable<SpanLink> links)
-	{
-		if (Links == null || !Links.Any())
-		{
-			// Always copy: the caller may keep and later mutate the passed-in array.
-			Links = links.ToArray();
-			return;
-		}
-		var newList = new List<SpanLink>(Links);
-		newList.AddRange(links);
-		Links = newList;
-	}
+		=> Links = ExecutionSegmentCommon.InsertSpanLinks(Links, links);
 
 	[MaxLength]
 	public string Name
