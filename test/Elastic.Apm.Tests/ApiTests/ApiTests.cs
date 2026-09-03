@@ -1276,6 +1276,101 @@ namespace Elastic.Apm.Tests.ApiTests
 			capturedChildSpan!.Links.ElementAt(1).TraceId.Should().Be(span2.TraceId);
 		}
 
+		/// <summary>
+		/// Regression test for a missing 'else' in Span.InsertSpanLinkInternal that caused
+		/// links to be duplicated when Links was initially null.
+		/// </summary>
+		[Fact]
+		public void Span_InsertSpanLinkInternal_WhenLinksInitiallyNull_DoesNotDuplicate()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction = agent.Tracer.StartTransaction("tx", "test");
+			var span = transaction.StartSpan("op", "test") as Model.Span;
+			span.Should().NotBeNull();
+
+			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
+			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+
+			// Links starts null — first call must not duplicate
+			span!.InsertSpanLinkInternal(new[] { link1, link2 });
+
+			span.Links.Should().HaveCount(2, "first InsertSpanLinkInternal call must not duplicate links");
+			span.Links.Should().ContainSingle(l => l.SpanId == link1.SpanId);
+			span.Links.Should().ContainSingle(l => l.SpanId == link2.SpanId);
+
+			span.End();
+			transaction.End();
+		}
+
+		[Fact]
+		public void Span_InsertSpanLinkInternal_AppendToExistingLinks()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction = agent.Tracer.StartTransaction("tx", "test");
+			var span = transaction.StartSpan("op", "test") as Model.Span;
+			span.Should().NotBeNull();
+
+			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
+			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+
+			span!.InsertSpanLinkInternal(new[] { link1 });
+			span.InsertSpanLinkInternal(new[] { link2 });
+
+			span.Links.Should().HaveCount(2, "second call should append, not replace");
+			span.Links.Should().ContainSingle(l => l.SpanId == link1.SpanId);
+			span.Links.Should().ContainSingle(l => l.SpanId == link2.SpanId);
+
+			span.End();
+			transaction.End();
+		}
+
+		[Fact]
+		public void Transaction_InsertSpanLinkInternal_WhenLinksInitiallyNull_DoesNotDuplicate()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction = agent.Tracer.StartTransaction("tx", "test") as Model.Transaction;
+			transaction.Should().NotBeNull();
+
+			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
+			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+
+			transaction!.InsertSpanLinkInternal(new[] { link1, link2 });
+
+			transaction.Links.Should().HaveCount(2, "first InsertSpanLinkInternal call must not duplicate links");
+			transaction.Links.Should().ContainSingle(l => l.SpanId == link1.SpanId);
+			transaction.Links.Should().ContainSingle(l => l.SpanId == link2.SpanId);
+
+			transaction.End();
+		}
+
+		[Fact]
+		public void Transaction_InsertSpanLinkInternal_AppendToExistingLinks()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction = agent.Tracer.StartTransaction("tx", "test") as Model.Transaction;
+			transaction.Should().NotBeNull();
+
+			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
+			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+
+			transaction!.InsertSpanLinkInternal(new[] { link1 });
+			transaction.InsertSpanLinkInternal(new[] { link2 });
+
+			transaction.Links.Should().HaveCount(2, "second call should append, not replace");
+			transaction.Links.Should().ContainSingle(l => l.SpanId == link1.SpanId);
+			transaction.Links.Should().ContainSingle(l => l.SpanId == link2.SpanId);
+
+			transaction.End();
+		}
+
 		private class TestException : Exception
 		{
 			public TestException(string message) : base(message) { }
