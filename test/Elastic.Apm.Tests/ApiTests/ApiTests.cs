@@ -1290,8 +1290,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var span = transaction.StartSpan("op", "test") as Model.Span;
 			span.Should().NotBeNull();
 
-			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
-			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+			// W3C trace-context: span-id is 16 hex chars, trace-id is 32 hex chars.
+			var link1 = new SpanLink("aaaa000000000001", "bbbb0000000000000000000000000001");
+			var link2 = new SpanLink("aaaa000000000002", "bbbb0000000000000000000000000002");
 
 			// Links starts null — first call must not duplicate
 			span!.InsertSpanLinkInternal(new[] { link1, link2 });
@@ -1314,8 +1315,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var span = transaction.StartSpan("op", "test") as Model.Span;
 			span.Should().NotBeNull();
 
-			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
-			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+			// W3C trace-context: span-id is 16 hex chars, trace-id is 32 hex chars.
+			var link1 = new SpanLink("aaaa000000000001", "bbbb0000000000000000000000000001");
+			var link2 = new SpanLink("aaaa000000000002", "bbbb0000000000000000000000000002");
 
 			span!.InsertSpanLinkInternal(new[] { link1 });
 			span.InsertSpanLinkInternal(new[] { link2 });
@@ -1337,8 +1339,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transaction = agent.Tracer.StartTransaction("tx", "test") as Model.Transaction;
 			transaction.Should().NotBeNull();
 
-			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
-			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+			// W3C trace-context: span-id is 16 hex chars, trace-id is 32 hex chars.
+			var link1 = new SpanLink("aaaa000000000001", "bbbb0000000000000000000000000001");
+			var link2 = new SpanLink("aaaa000000000002", "bbbb0000000000000000000000000002");
 
 			transaction!.InsertSpanLinkInternal(new[] { link1, link2 });
 
@@ -1358,8 +1361,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transaction = agent.Tracer.StartTransaction("tx", "test") as Model.Transaction;
 			transaction.Should().NotBeNull();
 
-			var link1 = new SpanLink("aaaa0000000000000000000000000001", "bbbb000000000000000000000000000000000001");
-			var link2 = new SpanLink("aaaa0000000000000000000000000002", "bbbb000000000000000000000000000000000002");
+			// W3C trace-context: span-id is 16 hex chars, trace-id is 32 hex chars.
+			var link1 = new SpanLink("aaaa000000000001", "bbbb0000000000000000000000000001");
+			var link2 = new SpanLink("aaaa000000000002", "bbbb0000000000000000000000000002");
 
 			transaction!.InsertSpanLinkInternal(new[] { link1 });
 			transaction.InsertSpanLinkInternal(new[] { link2 });
