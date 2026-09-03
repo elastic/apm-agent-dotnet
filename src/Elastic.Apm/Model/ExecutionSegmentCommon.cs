@@ -368,12 +368,8 @@ namespace Elastic.Apm.Model
 		}
 
 		/// <summary>
-		/// Merges <paramref name="additionalLinks" /> into <paramref name="existingLinks" /> and returns the value to
-		/// assign back to the span's or transaction's <c>Links</c> property.
-		/// When there are no existing links the input is defensively copied (the caller may keep and later mutate the
-		/// array it passed in); otherwise a single combined list is produced.
-		/// Shared by <see cref="Span.InsertSpanLinkInternal" /> and <see cref="Transaction.InsertSpanLinkInternal" /> so
-		/// the two implementations cannot drift apart.
+		/// Appends <paramref name="additionalLinks" /> to <paramref name="existingLinks" /> and returns the result to
+		/// assign to a span's or transaction's <c>Links</c> property. The returned collection never aliases the caller's input.
 		/// </summary>
 		internal static IEnumerable<SpanLink> InsertSpanLinks(IEnumerable<SpanLink> existingLinks, IEnumerable<SpanLink> additionalLinks)
 		{
