@@ -706,7 +706,8 @@ namespace Elastic.Apm.Model
 		{
 			if (Links == null || !Links.Any())
 			{
-				Links = links as SpanLink[] ?? links.ToArray();
+				// Always copy: the caller may keep and later mutate the passed-in array.
+				Links = links.ToArray();
 				return;
 			}
 			var newList = new List<SpanLink>(Links);

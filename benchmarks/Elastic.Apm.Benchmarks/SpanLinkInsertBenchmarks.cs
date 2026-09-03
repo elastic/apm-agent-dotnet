@@ -53,8 +53,8 @@ public class SpanLinkInsertBenchmarks
 		return currentLinks.Count();
 	}
 
-	/// <summary>New Span logic — early return, no duplicates, zero extra allocations.</summary>
-	[Benchmark(Description = "New: Span first-call (null Links) — correct, zero alloc (array input)")]
+	/// <summary>New Span logic — early return, no duplicates, one defensive copy of the input.</summary>
+	[Benchmark(Description = "New: Span first-call (null Links) — correct, one defensive copy")]
 	public int NewSpan_FirstCall()
 	{
 		IEnumerable<SpanLink> links = _linksToInsert;
@@ -62,7 +62,7 @@ public class SpanLinkInsertBenchmarks
 
 		if (currentLinks == null || !currentLinks.Any())
 		{
-			currentLinks = links as SpanLink[] ?? links.ToArray();
+			currentLinks = links.ToArray();
 			return currentLinks.Count();
 		}
 		var newList = new List<SpanLink>(currentLinks);
@@ -103,7 +103,7 @@ public class SpanLinkInsertBenchmarks
 
 		if (currentLinks == null || !currentLinks.Any())
 		{
-			currentLinks = links as SpanLink[] ?? links.ToArray();
+			currentLinks = links.ToArray();
 			return currentLinks.Count();
 		}
 		var newList = new List<SpanLink>(currentLinks);
