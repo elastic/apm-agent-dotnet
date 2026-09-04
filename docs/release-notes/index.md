@@ -26,6 +26,16 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.34.7 [elastic-apm-net-agent-1347-release-notes]
+**Release date:** September 04, 2026
+
+### Fixes [elastic-apm-net-agent-1347-fixes]
+
+* Replace inefficient LINQ usage in WildcardMatcher [#2791](https://github.com/elastic/apm-agent-dotnet/pull/2791)
+* Prevent leaks for SQL client instrumentation [#2799](https://github.com/elastic/apm-agent-dotnet/pull/2799)
+* Eliminate enumerator boxing in TransactionNameGroups [#2801](https://github.com/elastic/apm-agent-dotnet/pull/2801)
+* Improve CosmosDb tracing in direct mode [#2802](https://github.com/elastic/apm-agent-dotnet/pull/2802)
+
 ## 1.34.6 [elastic-apm-net-agent-1346-release-notes]
 **Release date:** August 24, 2026
 
