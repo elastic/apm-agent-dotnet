@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -364,6 +365,20 @@ namespace Elastic.Apm.Model
 			}
 
 			payloadSender.QueueError(error);
+		}
+
+		/// <summary>
+		/// Appends <paramref name="additionalLinks" /> to <paramref name="existingLinks" /> and returns the result to
+		/// assign to a span's or transaction's <c>Links</c> property. The returned collection never aliases the caller's input.
+		/// </summary>
+		internal static IEnumerable<SpanLink> InsertSpanLinks(IEnumerable<SpanLink> existingLinks, IEnumerable<SpanLink> additionalLinks)
+		{
+			if (existingLinks == null || !existingLinks.Any())
+				return additionalLinks.ToArray();
+
+			var merged = new List<SpanLink>(existingLinks);
+			merged.AddRange(additionalLinks);
+			return merged;
 		}
 	}
 }
