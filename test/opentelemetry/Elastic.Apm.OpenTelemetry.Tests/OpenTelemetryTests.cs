@@ -5,6 +5,7 @@
 
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
@@ -535,5 +536,101 @@ public class OpenTelemetryTests
 		span.Type.Should().Be(ApiConstants.TypeExternal);
 		span.Subtype.Should().Be(ApiConstants.SubtypeHttp);
 		span.Context.Destination.Service.Resource.Should().Be("api.example.com");
+	}
+
+	[Fact]
+	public void CosmosDbOperationActivities_PassThroughBridge_WhenInstrumentationPackageIsLoaded()
+	{
+		var payloadSender = new MockPayloadSender();
+		var components = new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716);
+		using (new ApmAgent(components))
+		{
+			components.ElasticActivityListener.CheckAssembly("Elastic.Apm.Azure.CosmosDb");
+			var src = new ActivitySource(KnownListeners.AzureCosmosOperationActivitySource);
+			var tags = new ActivityTagsCollection
+			{
+				["az.namespace"] = "Microsoft.DocumentDB",
+				["db.system"] = "azure.cosmosdb",
+			};
+			using (src.StartActivity("create_item", ActivityKind.Client, default(ActivityContext), tags))
+			{ }
+		}
+		payloadSender.WaitForTransactions();
+		payloadSender.Transactions.Should().HaveCount(1);
+	}
+
+	[Fact]
+	public void NonCosmosOperation_DocumentDbActivities_AreStillSkipped_WhenInstrumentationPackageIsLoaded()
+	{
+		var payloadSender = new MockPayloadSender();
+		var components = new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716);
+		using (new ApmAgent(components))
+		{
+			components.ElasticActivityListener.CheckAssembly("Elastic.Apm.Azure.CosmosDb");
+			var src = new ActivitySource("Azure.Core");
+			var tags = new ActivityTagsCollection { ["az.namespace"] = "Microsoft.DocumentDB" };
+			using (src.StartActivity("HTTP", ActivityKind.Client, default(ActivityContext), tags))
+			{ }
+		}
+		payloadSender.Transactions.Should().BeEmpty();
+		payloadSender.Spans.Should().BeEmpty();
+	}
+
+	[Fact]
+	public void CosmosDbOperationActivity_NestedUnderTransaction_ProducesOneDbSpan()
+	{
+		var payloadSender = new MockPayloadSender();
+		var components = new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716);
+		using (var agent = new ApmAgent(components))
+		{
+			components.ElasticActivityListener.CheckAssembly("Elastic.Apm.Azure.CosmosDb");
+			agent.Tracer.CaptureTransaction("app-transaction", "request", () =>
+			{
+				var src = new ActivitySource(KnownListeners.AzureCosmosOperationActivitySource);
+				var tags = new ActivityTagsCollection
+				{
+					["az.namespace"] = "Microsoft.DocumentDB",
+					["db.system"] = "azure.cosmosdb",
+					["db.name"] = "mydb",
+				};
+				using (src.StartActivity("create_item", ActivityKind.Client, default(ActivityContext), tags))
+				{ }
+			});
+		}
+
+		payloadSender.WaitForTransactions();
+		payloadSender.WaitForSpans();
+		payloadSender.Transactions.Should().HaveCount(1);
+		var span = payloadSender.Spans.Should().ContainSingle("exactly one span — bridge span; no HTTP diagnostic event is emitted in this synthetic test").Subject;
+		span.Type.Should().Be(ApiConstants.TypeDb);
+		span.Subtype.Should().Be(ApiConstants.SubTypeCosmosDb);
+	}
+
+	[Fact]
+	public void NonCosmosOperation_DocumentDbActivities_NestedUnderCosmosOperation_AreStillSkipped()
+	{
+		var payloadSender = new MockPayloadSender();
+		var components = new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716);
+		using (new ApmAgent(components))
+		{
+			components.ElasticActivityListener.CheckAssembly("Elastic.Apm.Azure.CosmosDb");
+			var operationSrc = new ActivitySource(KnownListeners.AzureCosmosOperationActivitySource);
+			var httpSrc = new ActivitySource("Azure.Core");
+			var operationTags = new ActivityTagsCollection
+			{
+				["az.namespace"] = "Microsoft.DocumentDB",
+				["db.system"] = "azure.cosmosdb",
+			};
+			var httpTags = new ActivityTagsCollection { ["az.namespace"] = "Microsoft.DocumentDB" };
+			using (operationSrc.StartActivity("create_item", ActivityKind.Client, default(ActivityContext), operationTags))
+			using (httpSrc.StartActivity("HTTP", ActivityKind.Client, default(ActivityContext), httpTags))
+			{ }
+		}
+
+		payloadSender.WaitForTransactions();
+		// The Azure.Cosmos.Operation activity becomes a transaction; the nested Azure.Core HTTP
+		// activity is skipped by the dedup guard (not Azure.Cosmos.Operation source).
+		payloadSender.Transactions.Should().HaveCount(1);
+		payloadSender.Spans.Should().BeEmpty("nested Microsoft.DocumentDB HTTP activity must be deduped");
 	}
 }
