@@ -93,7 +93,7 @@ gRPC server calls in ASP.NET Core applications are captured automatically using 
 
 † .NET only; not supported on .NET Framework. The profiler uses the [.NET startup hook](https://learn.microsoft.com/en-us/dotnet/core/tutorials/dotnet-startup-hooks) mechanism to automatically load both `DiagnosticSource` subscribers and the built-in OpenTelemetry Bridge.
 
-‡ Captured using the built-in OpenTelemetry Bridge rather than a dedicated subscriber. `MongoDB.Driver` ≥3.7.0 emits native OpenTelemetry spans that the profiler captures through this bridge. If you have `MongoDB.Driver` 3.0-3.6, use the [MongoDB NuGet integration](/reference/setup-mongo-db.md) instead.
+‡ Captured using the built-in OpenTelemetry Bridge rather than a dedicated subscriber. `MongoDB.Driver` ≥3.7.0 emits native OpenTelemetry spans that the profiler captures through this bridge. The [MongoDB NuGet integration](/reference/setup-mongo-db.md) requires `MongoDB.Driver` ≥3.9.0; earlier 3.x drivers are no longer supported and should be updated.
 
 ::::{important}
 **The .NET CLR Profiling API allows only one profiler to be attached to a .NET process**. Because of this, only one solution that uses the .NET CLR profiling API should be used by an application.
