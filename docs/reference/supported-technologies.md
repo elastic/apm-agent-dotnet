@@ -99,7 +99,7 @@ Streaming is not supported - the agent does not create transactions or spans for
 | Elasticsearch (legacy)<br>`NEST`<br>{applies_to}`apm_agent_dotnet: ga 1.6` | ≥7.6.0<br><8.0.0 | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-elasticsearch.md) | ✗ |
 | Entity Framework Core<br>`Microsoft.EntityFrameworkCore`<br>{applies_to}`apm_agent_dotnet: ga 1.0` | ≥8.0.0<br>≤10.0.x | [✓ ¹](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-ef-core.md) | ✗ |
 | Entity Framework 6<br>`EntityFramework`<br>{applies_to}`apm_agent_dotnet: ga 1.2` | ≥6.2<br>≤6.5.2 | ✗ | [✓](/reference/setup-ef6.md) | ✗ |
-| MongoDB<br>`MongoDB.Driver`<br>{applies_to}`apm_agent_dotnet: ga 1.9` | ≥3.0.0<br><4.0.0 | [✓ (≥3.7.0) ³](/reference/setup-auto-instrumentation.md) | [✓](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
+| MongoDB<br>`MongoDB.Driver`<br>{applies_to}`apm_agent_dotnet: ga 1.9` | ≥3.7.0<br><4.0.0 | [✓ (≥3.7.0) ³](/reference/setup-auto-instrumentation.md) | [✓ (≥3.9.0)](/reference/setup-mongo-db.md) | [✓ (≥3.7.0)](/reference/opentelemetry-bridge.md) |
 | MySQL<br>`MySql.Data`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥6.7.0<br><9.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | Oracle<br>`Oracle.ManagedDataAccess`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥12.2.1100<br><22.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |
 | Oracle<br>`Oracle.ManagedDataAccess.Core`<br>{applies_to}`apm_agent_dotnet: ga 1.12` | ≥2.0.0<br><4.0.0 | [✓](/reference/setup-auto-instrumentation.md) | ✗ | ✗ |

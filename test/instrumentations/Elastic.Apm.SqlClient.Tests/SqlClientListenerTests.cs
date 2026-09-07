@@ -243,11 +243,15 @@ namespace Elastic.Apm.SqlClient.Tests
 				sqlCommand.CommandText = "WAITFOR DELAY '00:00:10'";
 				sqlCommand.CommandTimeout = 1;
 
-				var executionTask = sqlCommand.ExecuteNonQueryAsync();
+				// CancellationToken acts as a cross-platform fallback: CommandTimeout for async
+				// operations is not reliably enforced on Linux for some SqlClient implementations.
+				using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+				var executionTask = sqlCommand.ExecuteNonQueryAsync(cts.Token);
 				SpinWait.SpinUntil(() => store.Count == 1, TimeSpan.FromSeconds(5)).Should().BeTrue();
 				_apmAgent.Tracer.CurrentSpan.Should().BeNull();
 
-				await Assert.ThrowsAnyAsync<DbException>(() => executionTask);
+				var exception = await Record.ExceptionAsync(() => executionTask);
+				exception.Should().NotBeNull("the command should have timed out or been cancelled");
 				store.Count.Should().Be(1);
 			});
 

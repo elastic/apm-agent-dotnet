@@ -17,12 +17,14 @@ applies_to:
 
 | Package | Supported versions |
 | --- | --- |
-| `MongoDB.Driver` | ≥3.0.0 <4.0.0 |
+| `MongoDB.Driver` | ≥3.9.0 <4.0.0 |
 
 For the full compatibility matrix including supported installation methods, refer to [Data access technologies](/reference/supported-technologies.md#supported-data-access-technologies).
 
 ::::{note}
-`MongoDB.Driver` ≥3.7.0 natively emits OpenTelemetry spans. On runtimes where the agent's [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) is supported, those spans are captured automatically, so no extra package is needed. On .NET Framework, the OpenTelemetry Bridge is not supported; use `Elastic.Apm.MongoDb` instead. This package is also required for `MongoDB.Driver` ≥3.0.0 <3.7.0.
+`MongoDB.Driver` ≥3.7.0 natively emits OpenTelemetry spans. On runtimes where the agent's [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) is supported, those spans are captured automatically, so no extra package is needed. On .NET Framework, the OpenTelemetry Bridge is not supported; use `Elastic.Apm.MongoDb` instead.
+
+`Elastic.Apm.MongoDb` requires `MongoDB.Driver` ≥3.9.0. Earlier 3.x driver versions depend on `Snappier` and `SharpCompress` releases that have published security advisories, and the patched `SharpCompress` releases are not binary compatible with drivers older than 3.9.0. If your application references an older 3.x driver, update it to ≥3.9.0 before updating the agent.
 ::::
 
 ## Quick start [_quick_start_14]
