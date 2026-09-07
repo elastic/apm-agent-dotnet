@@ -27,11 +27,13 @@ namespace Elastic.Apm.StartupHook.Tests
 	{
 		private readonly ITestOutputHelper _output = output;
 
-		// NOTE: We test the two latest supported LTS releases.
+		// NOTE: We test the currently supported .NET releases. The DiagnosticSource version is the in-box version of the runtime;
+		// the startup hook selects the agent build by that version (see StartupHook.cs).
 		private static IEnumerable<(string TargetFramework, string RuntimeName, string Version, string ShortVersion)> GetDotNetFrameworkVersionInfos()
 		{
 			yield return ("net8.0", ".NET 8", "8.0.0.0", "80");
 			yield return ("net9.0", ".NET 9", "9.0.0.0", "90");
+			yield return ("net10.0", ".NET 10", "10.0.0.0", "100");
 		}
 
 		private static readonly Dictionary<string, string> CommonEnvVars = new()

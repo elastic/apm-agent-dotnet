@@ -15,6 +15,9 @@ using Xunit;
 
 namespace Elastic.Apm.Tests;
 
+// Shares the "Agent Features" collection with the other classes that replace the AgentFeaturesProvider process-wide
+// feature set, so they cannot reset each other's scope while a test is running.
+[Collection("Agent Features")]
 public class ConstructorTests
 {
 	/// <summary>

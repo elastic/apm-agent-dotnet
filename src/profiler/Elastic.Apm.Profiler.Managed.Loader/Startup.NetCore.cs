@@ -23,7 +23,9 @@ namespace Elastic.Apm.Profiler.Managed.Loader
         {
 			var version = Environment.Version;
 			string framework;
-			if (version.Major >= 8)
+			if (version.Major >= 10)
+				framework = "net10.0";
+			else if (version.Major >= 8)
 				framework = "net8.0";
 			else if ((version.Major == 3 && version.Minor >= 1) || version.Major >= 5)
 				framework = "netstandard2.1";

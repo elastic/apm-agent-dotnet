@@ -120,7 +120,9 @@ module Main =
             Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
                   
             Targets.Target("pack", ["agent-zip"; "profiler-zip"], fun _ -> Build.Pack())
-            
+
+            Targets.Target("verify-platform-packages", fun _ -> Build.VerifyPlatformPackageParity())
+
             let startupHookZip () = 
                 printfn "Running startup hooks zip..."
                 let projs = !! (Paths.SrcProjFile "Elastic.Apm")

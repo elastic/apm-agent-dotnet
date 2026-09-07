@@ -28,8 +28,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				_currentSpan.Value = value;
 				var httpContext = HttpContext.Current;
-				if (httpContext != null)
-					httpContext.Items[CurrentSpanKey] = value;
+				httpContext?.Items[CurrentSpanKey] = value;
 			}
 		}
 
@@ -40,8 +39,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				_currentTransaction.Value = value;
 				var httpContext = HttpContext.Current;
-				if (httpContext != null)
-					httpContext.Items[CurrentTransactionKey] = value;
+				httpContext?.Items[CurrentTransactionKey] = value;
 			}
 		}
 	}

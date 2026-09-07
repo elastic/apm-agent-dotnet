@@ -2,13 +2,36 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
+  <!--
+    Platform package lines (System.Diagnostics.DiagnosticSource and the other .NET-versioned
+    System.* packages that Elastic.Apm references directly).
+
+    Rule, enforced at pack time by the build (Build.verifyPlatformPackageParity):
+      * net8.0 / net10.0 assets reference the in-box line of their runtime (net8.0: the PackageVersion items below,
+        net10.0: Net10PlatformPackageVersion). Referencing higher forces an out-of-band copy into every consumer and
+        breaks startup-hook / profiler loading on that runtime.
+      * netstandard2.0 / netstandard2.1 assets must not reference a version higher than the lowest
+        runtime-specific asset (currently the net8.0 line). Integration packages ship only netstandard
+        assets, those assets land on .NET 8 hosts, and .NET cannot bind to a lower version than referenced.
+        The PackageVersion items below therefore stay on the 8.0.x line.
+      * net462 / net472 assets have no in-box copy, so the package is the only source. They use the newest
+        supported LTS line (the NetFx* properties below). Referencing higher than netstandard is safe here
+        because .NET Framework binding redirects unify upward.
+  -->
+  <PropertyGroup>
+    <!-- net462 / net472: 8.x LTS line of the .NET-versioned platform packages -->
+    <NetFxPlatformPackageVersion>8.0.1</NetFxPlatformPackageVersion>
+    <!-- net10.0: the in-box line of the runtime (DiagnosticSource, PerformanceCounter, Microsoft.Extensions.*). -->
+    <Net10PlatformPackageVersion>10.0.11</Net10PlatformPackageVersion>
+  </PropertyGroup>
   <ItemGroup>
     <GlobalPackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
     <GlobalPackageReference Condition="'$(TargetFramework)' == 'net462'" Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
   <!-- Community Packages -->
   <ItemGroup>
-    <PackageVersion Include="AngleSharp" Version="0.14.0" />
+    <PackageVersion Include="AngleSharp" Version="1.5.2" />
+    <PackageVersion Include="AngleSharp.Io" Version="1.0.0" />
     <PackageVersion Include="Antlr3.Runtime" Version="3.5.1" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.0.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.13.0" />
@@ -104,9 +127,10 @@
     <PackageVersion Include="Microsoft.Azure.Storage.Blob" Version="11.2.2" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.1.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.0" PrivateAssets="All" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.2" PrivateAssets="All" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
@@ -125,13 +149,16 @@
     <PackageVersion Include="System.Data.SQLite" Version="1.0.112" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
+    <PackageVersion Include="System.Text.Encodings.Web" Version="8.0.0" />
     <PackageVersion Include="System.Diagnostics.PerformanceCounter" Version="8.0.1" />
     <PackageVersion Include="System.IO.FileSystem.AccessControl" Version="4.7.0" />
     <PackageVersion Include="System.Reflection.Emit" Version="4.3.0" />
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
-    <PackageVersion Include="System.Reflection.Metadata" Version="5.0.0" />
+    <PackageVersion Include="System.Reflection.Metadata" Version="8.0.1" />
+    <PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
     <PackageVersion Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+    <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="8.0.1" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
   </ItemGroup>
 </Project>

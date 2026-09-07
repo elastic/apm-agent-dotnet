@@ -2,7 +2,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -169,13 +171,15 @@ namespace Elastic.Apm.Tests
 
 #if NET
 		/// <summary>
-		/// Makes sure that transactions on the same Activity are part of the same trace.
+		/// Makes sure the sample rate is applied to transactions and spans created through the OpenTelemetry bridge.
 		/// </summary>
 		[Fact]
 		public async Task ActivityRespectsSampling()
 		{
 			const int count = 100;
 			const double rate = 0.5;
+			const string transactionNamePrefix = nameof(ActivityRespectsSampling) + " transaction ";
+			const string spanName = nameof(ActivityRespectsSampling) + " span";
 
 			Activity.Current = null;
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
@@ -183,31 +187,50 @@ namespace Elastic.Apm.Tests
 
 			var payloadSender = new MockPayloadSender();
 			var config = new MockConfiguration(
-				transactionSampleRate: rate.ToString("N2")
-
+				// The rate has to be formatted with an invariant decimal separator, the agent only parses it that way.
+				transactionSampleRate: rate.ToString("N2", CultureInfo.InvariantCulture)
 			);
 			using var components = new TestAgentComponents(
 				apmServerInfo: MockApmServerInfo.Version716,
 				configuration: config,
 				payloadSender: payloadSender
-
 			);
 			using var agent = new ApmAgent(components);
+			agent.Configuration.TransactionSampleRate.Should().Be(rate);
+
 			for (var i = 0; i < count; i++)
 			{
-				using var transaction = source.StartActivity($"Trace {i}");
-				using var span = source.StartActivity("UnitTestActivity", ActivityKind.Internal);
+				using var transaction = source.StartActivity(transactionNamePrefix + i);
+				using var span = source.StartActivity(spanName, ActivityKind.Internal);
 				await Task.Delay(1);
 			}
-			payloadSender.WaitForTransactions(count: count);
 
-			var sampled = payloadSender.Transactions.Where(t => t.IsSampled).ToArray();
+			// The bridge listens to every ActivitySource in the process, so activities created by tests running in
+			// parallel also end up in this payload sender. Both activities above are ended synchronously by the
+			// `using` scope, so by now every transaction and span this test created has already been queued and only
+			// the ones created here must be counted.
+			var transactions = payloadSender.Transactions
+				.Where(t => t.Name.StartsWith(transactionNamePrefix, StringComparison.Ordinal))
+				.ToArray();
+			transactions.Length.Should().Be(count);
+
+			var sampled = transactions.Where(t => t.IsSampled).ToArray();
 			sampled.Length.Should().BeLessThan(count);
 			sampled.Length.Should().BeGreaterThan(count / 10);
 
-			payloadSender.WaitForSpans(count: sampled.Length);
-			var sampledSpans = payloadSender.Spans.Where(t => t.IsSampled).ToArray();
-			sampledSpans.Length.Should().Be(sampled.Length);
+			// Spans are only reported for sampled transactions, so every span this test produced has to belong to one
+			// of its own sampled transactions. The exact span count is deliberately not asserted: whether an inner
+			// activity is captured as a span depends on the transaction the bridge has current at that moment, and the
+			// bridge is a process-wide listener that tests running in parallel also drive.
+			var sampledIds = sampled.Select(t => t.Id).ToArray();
+			var spanTransactionIds = payloadSender.Spans
+				.Where(s => s.Name == spanName)
+				.Select(s => s.TransactionId)
+				.ToArray();
+
+			spanTransactionIds.Should().NotBeEmpty();
+			spanTransactionIds.Should().OnlyContain(id => sampledIds.Contains(id));
+			spanTransactionIds.Distinct().Should().HaveCountLessThanOrEqualTo(sampled.Length);
 		}
 #endif
 	}

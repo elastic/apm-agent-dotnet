@@ -22,6 +22,11 @@ using Xunit;
 
 namespace Elastic.Apm.Tests
 {
+	// The OpenTelemetry bridge is disabled in these tests. ElasticActivityListener listens to every ActivitySource in
+	// the process, so with the bridge enabled the agent also reports activities created by tests running in parallel.
+	// Such a transaction carries an `otel` object, which the mock APM server rejects, and that fails the whole intake
+	// payload - including the transaction this test is waiting for. PayloadSenderV2 does not retry, so the wait below
+	// would then always time out.
 	public class ServerCertificateTests : IAsyncLifetime
 	{
 		private readonly MockApmServer.MockApmServer _server;
@@ -50,13 +55,18 @@ namespace Elastic.Apm.Tests
 		{
 			using var tempFile = new TempFile();
 			var certPath = Path.Combine(SolutionPaths.Root, "test", "Elastic.Apm.Tests.MockApmServer", "cert.pfx");
+#if NET9_0_OR_GREATER
+			var serverCert = X509CertificateLoader.LoadPkcs12FromFile(certPath, "password");
+#else
 			var serverCert = new X509Certificate2(certPath, "password");
+#endif
 			File.WriteAllBytes(tempFile.Path, serverCert.Export(X509ContentType.Cert));
 
 			var configuration = new MockConfiguration(
 				serverUrl: $"https://localhost:{_port}",
 				serverCert: tempFile.Path,
 				disableMetrics: "*",
+				openTelemetryBridgeEnabled: "false",
 				cloudProvider: "none");
 
 			using var agent = new ApmAgent(new AgentComponents(_logger, configuration));
@@ -66,7 +76,8 @@ namespace Elastic.Apm.Tests
 			});
 
 			var signalled = _waitHandle.WaitOne(TimeSpan.FromMinutes(2));
-			signalled.Should().BeTrue("timed out waiting to receive transaction");
+			signalled.Should().BeTrue("timed out waiting to receive transaction. Invalid payloads received: {0}",
+				string.Join(Environment.NewLine, _server.ReceivedData.InvalidPayloadErrors));
 
 			_server.ReceivedData.Transactions.Should().HaveCount(1);
 			var transaction = _server.ReceivedData.Transactions.First();
@@ -87,6 +98,7 @@ namespace Elastic.Apm.Tests
 				serverUrl: $"https://localhost:{_port}",
 				verifyServerCert: "false",
 				disableMetrics: "*",
+				openTelemetryBridgeEnabled: "false",
 				cloudProvider: "none");
 
 			using var agent = new ApmAgent(new AgentComponents(_logger, configuration));
@@ -96,7 +108,8 @@ namespace Elastic.Apm.Tests
 			});
 
 			var signalled = _waitHandle.WaitOne(TimeSpan.FromMinutes(2));
-			signalled.Should().BeTrue("timed out waiting to receive transaction");
+			signalled.Should().BeTrue("timed out waiting to receive transaction. Invalid payloads received: {0}",
+				string.Join(Environment.NewLine, _server.ReceivedData.InvalidPayloadErrors));
 
 			_server.ReceivedData.Transactions.Should().HaveCount(1);
 			var transaction = _server.ReceivedData.Transactions.First();

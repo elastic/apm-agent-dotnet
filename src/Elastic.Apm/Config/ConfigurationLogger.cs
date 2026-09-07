@@ -109,7 +109,9 @@ namespace Elastic.Apm.Config
 				info.Log("Time zone: {TimeZone}", TimeZoneInfo.Local);
 				info.Log("Runtime: {RunTime}", RuntimeInformation.FrameworkDescription);
 
-#if NET8_0
+#if NET10_0
+				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net10.0");
+#elif NET8_0
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "net8.0");
 #elif NETSTANDARD2_0
 				info.Log("Matched TFM: {TargetFrameworkMoniker}", "netstandard2.0");

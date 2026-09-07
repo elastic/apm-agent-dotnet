@@ -25,8 +25,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 			// allow synchronous reading of the request stream, which is false by default from 3.0 onwards.
 			// Reading must be synchronous as it can happen within a synchronous diagnostic listener method
 			var bodyControlFeature = request.HttpContext.Features.Get<IHttpBodyControlFeature>();
-			if (bodyControlFeature != null)
-				bodyControlFeature.AllowSynchronousIO = true;
+			bodyControlFeature?.AllowSynchronousIO = true;
 
 			return RequestBodyStreamHelper.ToString(request.Body, out longerThanMaxLength);
 #pragma warning restore CS0162 // Unreachable code detected
