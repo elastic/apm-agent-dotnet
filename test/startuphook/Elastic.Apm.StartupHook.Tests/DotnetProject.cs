@@ -166,6 +166,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				throw new InvalidOperationException("global.json is missing sdk.version or it is empty");
 			var rollForward = sdk.TryGetProperty("rollForward", out var rollForwardElement) ? rollForwardElement.GetString() : null;
 			return (version, rollForward ?? "latestFeature");
+		}
 
 		public static DotnetProject Create(ITestOutputHelper output, string name, string template, string framework, params string[] arguments)
 		{
