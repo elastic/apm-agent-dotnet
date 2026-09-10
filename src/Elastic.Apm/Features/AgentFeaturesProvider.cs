@@ -30,7 +30,7 @@ namespace Elastic.Apm.Features
 			if (published != null)
 				return published;
 
-			logger?.Trace()?.Log("[Agent Features] Using '{AgentFeaturesName}' feature set]", created.Name);
+			logger?.Trace()?.Log("[Agent Features] Using '{AgentFeaturesName}' feature set", created.Name);
 			return created;
 		}
 
