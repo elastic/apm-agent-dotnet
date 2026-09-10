@@ -161,9 +161,11 @@ namespace Elastic.Apm.StartupHook.Tests
 		{
 			using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(SolutionPaths.Root, "global.json")));
 			var sdk = document.RootElement.GetProperty("sdk");
-			var rollForward = sdk.TryGetProperty("rollForward", out var rollForwardElement) ? rollForwardElement.GetString() : "latestFeature";
-			return (sdk.GetProperty("version").GetString(), rollForward);
-		}
+			var version = sdk.GetProperty("version").GetString();
+			if (string.IsNullOrWhiteSpace(version))
+				throw new InvalidOperationException("global.json is missing sdk.version or it is empty");
+			var rollForward = sdk.TryGetProperty("rollForward", out var rollForwardElement) ? rollForwardElement.GetString() : null;
+			return (version, rollForward ?? "latestFeature");
 
 		public static DotnetProject Create(ITestOutputHelper output, string name, string template, string framework, params string[] arguments)
 		{
