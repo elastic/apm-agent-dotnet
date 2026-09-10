@@ -74,6 +74,59 @@ Our IIS module requires:
 * The deployed .NET application must NOT run under quirks mode. This makes `LegacyAspNetSynchronizationContext` the async context handler and can break `HttpContext.Items` correctly restoring when async code introduces a thread switch.
 ::::
 
+::::{important}
+**Binding redirects.** The agent's .NET Framework assemblies reference the 8.x line of the .NET platform packages, for example `System.Diagnostics.DiagnosticSource` 8.0.x. ASP.NET applications, including SDK-style projects, do not automatically update `web.config` with binding redirects at build time. Add or update the required redirects in `web.config`, or configure your build tooling to do so. Regardless of project style, verify that the deployed `web.config` redirects the assemblies that the agent brings into the application to the versions deployed to the application's `bin` folder. Missing or outdated redirects can prevent the module from loading with a `FileLoadException`.
+
+The following redirects cover the assemblies the agent itself depends on. The versions match the packages the agent depends on at this release:
+
+```xml
+<runtime>
+  <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+    <dependentAssembly>
+      <assemblyIdentity name="System.Diagnostics.DiagnosticSource" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-8.0.0.1" newVersion="8.0.0.1" />
+    </dependentAssembly>
+    <dependentAssembly>
+      <assemblyIdentity name="System.Threading.Tasks.Dataflow" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-8.0.0.1" newVersion="8.0.0.1" />
+    </dependentAssembly>
+    <dependentAssembly>
+      <assemblyIdentity name="System.Diagnostics.PerformanceCounter" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-8.0.0.1" newVersion="8.0.0.1" />
+    </dependentAssembly>
+    <dependentAssembly>
+      <assemblyIdentity name="System.Reflection.Metadata" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-8.0.0.1" newVersion="8.0.0.1" />
+    </dependentAssembly>
+    <dependentAssembly>
+      <assemblyIdentity name="System.Collections.Immutable" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-8.0.0.0" newVersion="8.0.0.0" />
+    </dependentAssembly>
+    <dependentAssembly>
+      <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-6.0.0.0" newVersion="6.0.0.0" />
+    </dependentAssembly>
+    <dependentAssembly>
+      <assemblyIdentity name="System.Threading.Tasks.Extensions" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-4.2.0.1" newVersion="4.2.0.1" />
+    </dependentAssembly>
+    <!-- The next two entries apply only to applications targeting .NET Framework 4.6.2, where the agent brings these two
+         packages. Include them only when the corresponding assemblies are present in your bin folder. -->
+    <dependentAssembly>
+      <assemblyIdentity name="System.ValueTuple" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-4.0.5.0" newVersion="4.0.5.0" />
+    </dependentAssembly>
+    <dependentAssembly>
+      <assemblyIdentity name="System.Runtime.InteropServices.RuntimeInformation" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+      <bindingRedirect oldVersion="0.0.0.0-4.0.1.0" newVersion="4.0.1.0" />
+    </dependentAssembly>
+  </assemblyBinding>
+</runtime>
+```
+
+In every entry, `newVersion` must be the assembly version of the file that is actually in your `bin` folder, and the upper bound of `oldVersion` must be the same version. If another package in your application brings a newer version of one of these assemblies, or of shared dependencies such as `System.Memory`, `System.Buffers` and `System.Numerics.Vectors`, redirect to the version in `bin` instead of the values shown here. Check the versions again after updating the agent, because they change when the agent updates its dependencies.
+::::
+
 
 1. Recompile your application and deploy it.
 

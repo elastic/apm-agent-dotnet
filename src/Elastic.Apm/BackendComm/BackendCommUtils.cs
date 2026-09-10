@@ -160,7 +160,11 @@ namespace Elastic.Apm.BackendComm
 			{
 				try
 				{
+#if NET9_0_OR_GREATER
+					var serverCertificate = X509CertificateLoader.LoadCertificateFromFile(configuration.ServerCert);
+#else
 					var serverCertificate = new X509Certificate2(configuration.ServerCert);
+#endif
 					var publicKey = serverCertificate.GetPublicKeyString();
 
 					serverCertificateCustomValidationCallback = (_, certificate, _, policyError) =>

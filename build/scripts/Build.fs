@@ -88,6 +88,91 @@ module Build =
             currentDiagnosticSourceVersion <- Some(version)
             version
 
+    /// Verifies the platform package rule documented in Directory.Packages.props against the packed Elastic.Apm nuspec.
+    /// For each of the four .NET-versioned platform packages (DiagnosticSource, Reflection.Metadata,
+    /// Tasks.Dataflow, PerformanceCounter):
+    ///   * net8.0 and net10.0 must not reference a higher major version than their runtime,
+    ///   * netstandard2.0 and netstandard2.1 must reference the same version,
+    ///   * netstandard must not reference a higher version than net8.0 (and net8.0 not higher than net10.0),
+    ///     because netstandard-only integration assets land on those runtimes and .NET cannot bind to a lower version,
+    ///   * net462 and net472 must reference the same version, not lower than netstandard (redirects unify upward),
+    ///   * all six TFM groups must be present (a missing group means the package was not built for that target).
+    let VerifyPlatformPackageParity () =
+        let isCorePackage (file: string) =
+            let name = Path.GetFileName file
+            let prefix = "Elastic.Apm."
+            name.StartsWith(prefix) && name.Length > prefix.Length && Char.IsDigit name.[prefix.Length] && not (name.Contains ".symbols.")
+        let nupkg =
+            if Directory.Exists Paths.NugetOutput then
+                let pkgs =
+                    Directory.GetFiles(Paths.NugetOutput, "Elastic.Apm.*.nupkg")
+                    |> Array.filter isCorePackage
+                // Array.tryHead picks an arbitrary file when stale packages from earlier builds are present.
+                // Fail loudly so callers know to clean the output directory before verifying.
+                if pkgs.Length > 1 then
+                    failwithf "Platform package parity check: %d core packages found in %s; clean the output directory first." pkgs.Length Paths.NugetOutput
+                Array.tryHead pkgs
+            else None
+        match nupkg with
+        | None -> failwithf "Platform package parity check: no Elastic.Apm nupkg found in %s" Paths.NugetOutput
+        | Some path ->
+            use zip = ZipFile.OpenRead path
+            let entry = zip.Entries |> Seq.find (fun e -> e.FullName.EndsWith ".nuspec")
+            use stream = entry.Open()
+            let doc = XDocument.Load stream
+            let ns = doc.Root.GetDefaultNamespace()
+            let groupTfms =
+                doc.Descendants(ns + "group")
+                |> Seq.map (fun g -> g.Attribute(XName.Get "targetFramework").Value)
+                |> Set.ofSeq
+            // All six TFM groups must be present in the nuspec.
+            let requiredTfms = [ ".NETStandard2.0"; ".NETStandard2.1"; "net8.0"; "net10.0"; ".NETFramework4.6.2"; ".NETFramework4.7.2" ]
+            for tfm in requiredTfms do
+                if not (Set.contains tfm groupTfms) then
+                    failwithf "Platform package parity check: expected TFM group '%s' is absent from %s" tfm path
+            let fail rule = failwithf "Platform package parity check failed (%s). See the rule in Directory.Packages.props." rule
+            let checkPackage (packageId: string) =
+                let versionByTfm =
+                    doc.Descendants(ns + "group")
+                    |> Seq.choose (fun g ->
+                        let tfm = g.Attribute(XName.Get "targetFramework").Value
+                        g.Elements(ns + "dependency")
+                        |> Seq.tryFind (fun d -> d.Attribute(XName.Get "id").Value = packageId)
+                        |> Option.map (fun d -> tfm, SemVer.parse (d.Attribute(XName.Get "version").Value)))
+                    |> Map.ofSeq
+                // netstandard and .NET Framework targets have no in-box copy, so the dependency must be explicit.
+                let explicitVersion tfm =
+                    match Map.tryFind tfm versionByTfm with
+                    | Some v -> v
+                    | None -> failwithf "Platform package parity check: no %s dependency for %s in %s" packageId tfm path
+                // Runtime-specific targets: the SDK prunes references that the framework provides in-box, so a
+                // missing dependency means the in-box line of that runtime. Runtime lines are compared by major
+                // version only: a pruned group reads as x.0.0, while an explicit dependency carries a patch (e.g. 8.0.1).
+                let inBoxVersion tfm (inBoxLine: string) =
+                    defaultArg (Map.tryFind tfm versionByTfm) (SemVer.parse inBoxLine)
+                groupTfms |> Set.iter (fun tfm ->
+                    let shown = match Map.tryFind tfm versionByTfm with Some v -> string v | None -> "(in-box, pruned)"
+                    printfn "%-48s %-18s %s" packageId tfm shown)
+                let ns20, ns21 = explicitVersion ".NETStandard2.0", explicitVersion ".NETStandard2.1"
+                let net462, net472 = explicitVersion ".NETFramework4.6.2", explicitVersion ".NETFramework4.7.2"
+                let net8  = inBoxVersion "net8.0"  "8.0.0"
+                let net10 = inBoxVersion "net10.0" "10.0.0"
+                if net8.Major > 8u then fail $"{packageId}: net8.0 must not reference a version line higher than 8"
+                if net10.Major > 10u then fail $"{packageId}: net10.0 must not reference a version line higher than 10"
+                if ns20 <> ns21 then fail $"{packageId}: netstandard2.0 and netstandard2.1 must reference the same version"
+                if ns20.Major > net8.Major then fail $"{packageId}: netstandard must not reference a higher version line than net8.0"
+                if net8.Major > net10.Major then fail $"{packageId}: net8.0 must not reference a higher version line than net10.0"
+                if net462 <> net472 then fail $"{packageId}: net462 and net472 must reference the same version"
+                if net462.Major < ns20.Major then fail $"{packageId}: net462/net472 must not reference a lower version line than netstandard"
+            let platformPackages = [
+                "System.Diagnostics.DiagnosticSource"
+                "System.Reflection.Metadata"
+                "System.Threading.Tasks.Dataflow"
+                "System.Diagnostics.PerformanceCounter"
+            ]
+            platformPackages |> List.iter checkPackage
+            printfn "Platform package parity check passed for %s" (Path.GetFileName path)
+
     /// Publishes specific projects with specific DiagnosticSource versions
     let private publishProjectsWithDiagnosticSourceVersion projects version =
         projects
@@ -219,6 +304,7 @@ module Build =
     /// Packages projects into nuget packages
     let Pack () =
         DotNet.Exec ["pack" ; Paths.Solution; "-c"; "Release"; $"--property:PackageOutputPath=%s{Paths.NugetOutput}"]
+        VerifyPlatformPackageParity()
           
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder

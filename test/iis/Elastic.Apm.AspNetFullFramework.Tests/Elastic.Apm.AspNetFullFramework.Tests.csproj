@@ -8,11 +8,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AngleSharp" />
+    <PackageReference Include="AngleSharp.Io" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.Web.Administration" />
     <PackageReference Include="Polly" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" />
-    
     <ProjectReference Include="$(SrcIntegrations)\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <SetTargetFramework>TargetFramework=net462</SetTargetFramework>
     </ProjectReference>

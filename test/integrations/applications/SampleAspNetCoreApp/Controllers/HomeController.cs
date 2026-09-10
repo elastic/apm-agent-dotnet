@@ -201,8 +201,7 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TransactionWithCustomName()
 		{
-			if (Agent.Tracer.CurrentTransaction != null)
-				Agent.Tracer.CurrentTransaction.Name = "custom";
+			Agent.Tracer.CurrentTransaction?.Name = "custom";
 			return Ok();
 		}
 
@@ -221,8 +220,7 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TransactionWithCustomNameUsingRequestInfo()
 		{
-			if (Agent.Tracer.CurrentTransaction != null)
-				Agent.Tracer.CurrentTransaction.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
+			Agent.Tracer.CurrentTransaction?.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
 			return Ok();
 		}
 
