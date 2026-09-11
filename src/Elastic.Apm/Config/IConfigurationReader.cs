@@ -103,6 +103,37 @@ namespace Elastic.Apm.Config
 		bool OpenTelemetryBridgeEnabled { get; }
 
 		/// <summary>
+		/// A list of wildcard patterns matching the names of the <see cref="System.Diagnostics.ActivitySource" />s the
+		/// OpenTelemetry bridge subscribes to. Defaults to <code>*</code>, which admits every activity source. The
+		/// effective default is every non-experimental source, because
+		/// <see cref="OpenTelemetryBridgeExperimentalSourcesEnabled" /> is disabled.
+		/// <para>
+		/// Evaluated together with <see cref="OpenTelemetryBridgeDeniedActivitySources" />: a source is observed when it
+		/// matches this list and does not match the denied list.
+		/// </para>
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeAllowedActivitySources { get; }
+
+		/// <summary>
+		/// A list of wildcard patterns matching the names of the <see cref="System.Diagnostics.ActivitySource" />s the
+		/// OpenTelemetry bridge must not subscribe to. Empty by default. A match here always wins over
+		/// <see cref="OpenTelemetryBridgeAllowedActivitySources" />.
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeDeniedActivitySources { get; }
+
+		/// <summary>
+		/// Whether the OpenTelemetry bridge subscribes to experimental activity sources, whose names begin
+		/// with <code>Experimental.</code>. Defaults to <code>false</code>.
+		/// <para>
+		/// .NET 9 introduced experimental sources for DNS resolution, socket connect, TLS handshake and HTTP connection
+		/// setup. They only emit while a listener is subscribed, so the bridge is what activates them. When this is
+		/// <code>false</code>, the bridge applies an additional effective <code>Experimental.*</code> deny rule;
+		/// <see cref="OpenTelemetryBridgeDeniedActivitySources" /> itself is left exactly as configured.
+		/// </para>
+		/// </summary>
+		bool OpenTelemetryBridgeExperimentalSourcesEnabled { get; }
+
+		/// <summary>
 		/// The name of the environment this service is deployed in.
 		/// </summary>
 		/// <example>production</example>

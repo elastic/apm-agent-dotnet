@@ -72,6 +72,15 @@ namespace Elastic.Apm.Feature.Tests
 		public bool UsePathAsTransactionName { get; set; } = DefaultValues.UsePathAsTransactionName;
 		public bool VerifyServerCert { get; set; } = DefaultValues.VerifyServerCert;
 		public bool OpenTelemetryBridgeEnabled { get; set; }
+
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeAllowedActivitySources { get; set; } =
+			DefaultValues.OpenTelemetryBridgeAllowedActivitySources;
+
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeDeniedActivitySources { get; set; } =
+			DefaultValues.OpenTelemetryBridgeDeniedActivitySources;
+
+		public bool OpenTelemetryBridgeExperimentalSourcesEnabled { get; set; } =
+			DefaultValues.OpenTelemetryBridgeExperimentalSourcesEnabled;
 		public Uri ProxyUrl { get; set; }
 		public string ProxyUserName { get; set; }
 		public string ProxyPassword { get; set; }

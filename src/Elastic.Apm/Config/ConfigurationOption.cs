@@ -34,6 +34,12 @@ namespace Elastic.Apm.Config
 		Enabled,
 		/// <inheritdoc cref="IConfigurationReader.OpenTelemetryBridgeEnabled"/>
 		OpenTelemetryBridgeEnabled,
+		/// <inheritdoc cref="IConfigurationReader.OpenTelemetryBridgeAllowedActivitySources"/>
+		OpenTelemetryBridgeAllowedActivitySources,
+		/// <inheritdoc cref="IConfigurationReader.OpenTelemetryBridgeDeniedActivitySources"/>
+		OpenTelemetryBridgeDeniedActivitySources,
+		/// <inheritdoc cref="IConfigurationReader.OpenTelemetryBridgeExperimentalSourcesEnabled"/>
+		OpenTelemetryBridgeExperimentalSourcesEnabled,
 		/// <inheritdoc cref="IConfigurationReader.Environment"/>
 		Environment,
 		/// <inheritdoc cref="IConfigurationReader.ExcludedNamespaces"/>
@@ -165,6 +171,9 @@ namespace Elastic.Apm.Config
 				DisableMetrics => EnvPrefix + "DISABLE_METRICS",
 				Enabled => EnvPrefix + "ENABLED",
 				OpenTelemetryBridgeEnabled => EnvPrefix + "OPENTELEMETRY_BRIDGE_ENABLED",
+				OpenTelemetryBridgeAllowedActivitySources => EnvPrefix + "OPENTELEMETRY_BRIDGE_ALLOWED_ACTIVITY_SOURCES",
+				OpenTelemetryBridgeDeniedActivitySources => EnvPrefix + "OPENTELEMETRY_BRIDGE_DENIED_ACTIVITY_SOURCES",
+				OpenTelemetryBridgeExperimentalSourcesEnabled => EnvPrefix + "OPENTELEMETRY_BRIDGE_EXPERIMENTAL_SOURCES_ENABLED",
 				ConfigurationOption.Environment => EnvPrefix + "ENVIRONMENT",
 				ExcludedNamespaces => EnvPrefix + "EXCLUDED_NAMESPACES",
 				ExitSpanMinDuration => EnvPrefix + "EXIT_SPAN_MIN_DURATION",
@@ -222,6 +231,9 @@ namespace Elastic.Apm.Config
 				DisableMetrics => KeyPrefix + nameof(DisableMetrics),
 				Enabled => KeyPrefix + nameof(Enabled),
 				OpenTelemetryBridgeEnabled => KeyPrefix + nameof(OpenTelemetryBridgeEnabled),
+				OpenTelemetryBridgeAllowedActivitySources => KeyPrefix + nameof(OpenTelemetryBridgeAllowedActivitySources),
+				OpenTelemetryBridgeDeniedActivitySources => KeyPrefix + nameof(OpenTelemetryBridgeDeniedActivitySources),
+				OpenTelemetryBridgeExperimentalSourcesEnabled => KeyPrefix + nameof(OpenTelemetryBridgeExperimentalSourcesEnabled),
 				ConfigurationOption.Environment => KeyPrefix + nameof(ConfigurationOption.Environment),
 				ExcludedNamespaces => KeyPrefix + nameof(ExcludedNamespaces),
 				ExitSpanMinDuration => KeyPrefix + nameof(ExitSpanMinDuration),

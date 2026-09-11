@@ -376,3 +376,85 @@ Setting this option to `false` will turn off the [OpenTelemetry Bridge](/referen
 ::::{note}
 The OpenTelemetry Bridge is not supported on .NET Framework.
 ::::
+
+
+## `OpenTelemetryBridgeAllowedActivitySources` [config-opentelemetry-bridge-allowed-activity-sources]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.35
+```
+
+A comma separated list of wildcard patterns matching the names of the activity sources the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) subscribes to. By default the bridge subscribes to every non-experimental activity source, that is every source not excluded by [`OpenTelemetryBridgeExperimentalSourcesEnabled`](#config-opentelemetry-bridge-experimental-sources-enabled).
+
+Patterns support `*` at any position and are matched case insensitively. Prefix a pattern with `(?-i)` to make it case sensitive.
+
+This setting is a gate: an activity source is observed when it matches this list **and** is not matched by [`OpenTelemetryBridgeDeniedActivitySources`](#config-opentelemetry-bridge-denied-activity-sources).
+
+| Environment variable name | IConfiguration key |
+| --- | --- |
+| `ELASTIC_APM_OPENTELEMETRY_BRIDGE_ALLOWED_ACTIVITY_SOURCES` | `ElasticApm:OpenTelemetryBridgeAllowedActivitySources` |
+
+| Default | Type |
+| --- | --- |
+| `*` | Comma separated string |
+
+::::{note}
+This setting is read once when the agent starts and cannot be changed through central configuration. The .NET runtime evaluates the subscription decision once per activity source and caches the answer.
+::::
+
+
+## `OpenTelemetryBridgeDeniedActivitySources` [config-opentelemetry-bridge-denied-activity-sources]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.35
+```
+
+A comma separated list of wildcard patterns matching the names of the activity sources the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) must not subscribe to. Empty by default.
+
+A match here always wins over [`OpenTelemetryBridgeAllowedActivitySources`](#config-opentelemetry-bridge-allowed-activity-sources), so you can allow a whole namespace and exclude part of it:
+
+```
+ELASTIC_APM_OPENTELEMETRY_BRIDGE_ALLOWED_ACTIVITY_SOURCES=Microsoft.*
+ELASTIC_APM_OPENTELEMETRY_BRIDGE_DENIED_ACTIVITY_SOURCES=Microsoft.Something.Noisy
+```
+
+Denying a source only stops the OpenTelemetry Bridge observing it. It does not disable the {{product.apm-agent-dotnet}}s own instrumentation, and it does not remove the data from an OpenTelemetry SDK you have configured yourself.
+
+| Environment variable name | IConfiguration key |
+| --- | --- |
+| `ELASTIC_APM_OPENTELEMETRY_BRIDGE_DENIED_ACTIVITY_SOURCES` | `ElasticApm:OpenTelemetryBridgeDeniedActivitySources` |
+
+| Default | Type |
+| --- | --- |
+| `<empty>` | Comma separated string |
+
+::::{note}
+This setting is read once when the agent starts and cannot be changed through central configuration.
+::::
+
+
+## `OpenTelemetryBridgeExperimentalSourcesEnabled` [config-opentelemetry-bridge-experimental-sources-enabled]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.35
+```
+
+Whether the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) subscribes to the .NET runtime's experimental activity sources, whose names begin with `Experimental.`. Disabled by default.
+
+.NET 9 introduced experimental sources describing connection level work: DNS resolution, socket connect, TLS handshake and HTTP connection setup. These sources only emit while a listener is subscribed to them, so enabling this setting is what causes the runtime to create those activities.
+
+Setting this to `true` adds spans for that connection level work to transactions which open a new connection. Leaving it disabled applies an additional effective `Experimental.*` deny rule, which the agent evaluates alongside [`OpenTelemetryBridgeDeniedActivitySources`](#config-opentelemetry-bridge-denied-activity-sources) rather than adding to it, so an activity source named in [`OpenTelemetryBridgeAllowedActivitySources`](#config-opentelemetry-bridge-allowed-activity-sources) is still not observed while this setting is `false`.
+
+The rule matches every activity source whose name begins with `Experimental.`, not only the runtime's, so a source of your own using that prefix is also excluded while this setting is `false`.
+
+| Environment variable name | IConfiguration key |
+| --- | --- |
+| `ELASTIC_APM_OPENTELEMETRY_BRIDGE_EXPERIMENTAL_SOURCES_ENABLED` | `ElasticApm:OpenTelemetryBridgeExperimentalSourcesEnabled` |
+
+| Default | Type |
+| --- | --- |
+| `false` | Boolean |
+
+::::{note}
+This setting is read once when the agent starts and cannot be changed through central configuration.
+::::

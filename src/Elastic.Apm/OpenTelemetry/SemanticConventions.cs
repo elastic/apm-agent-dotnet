@@ -18,9 +18,13 @@ internal static class SemanticConventions
 	public const string HttpMethod = "http.method";
 	public const string HttpScheme = "http.scheme";
 	public const string HttpHost = "http.host";
+	public const string HttpServerName = "http.server_name";
 
 	// HTTP REQUEST
 	public const string HttpRequestMethod = "http.request.method";
+	public const string HttpRequestMethodOriginal = "http.request.method_original";
+	public const string HttpRoute = "http.route";
+	public const string HttpTarget = "http.target";
 	public const string HttpRequestBodySize = "http.request.body.size";
 
 	// HTTP RESPONSE
@@ -29,6 +33,9 @@ internal static class SemanticConventions
 
 	// URL
 	public const string UrlFull = "url.full";
+	public const string UrlScheme = "url.scheme";
+	public const string UrlPath = "url.path";
+	public const string UrlQuery = "url.query";
 
 	// SERVER
 	public const string ServerAddress = "server.address";
@@ -42,6 +49,8 @@ internal static class SemanticConventions
 	public const string NetPeerIp = "net.peer.ip";
 	public const string NetPeerName = "net.peer.name";
 	public const string NetPeerPort = "net.peer.port";
+	public const string NetHostName = "net.host.name";
+	public const string NetHostPort = "net.host.port";
 
 	// MESSAGING
 	public const string MessagingSystem = "messaging.system";
