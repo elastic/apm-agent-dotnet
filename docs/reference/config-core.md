@@ -418,7 +418,7 @@ ELASTIC_APM_OPENTELEMETRY_BRIDGE_ALLOWED_ACTIVITY_SOURCES=Microsoft.*
 ELASTIC_APM_OPENTELEMETRY_BRIDGE_DENIED_ACTIVITY_SOURCES=Microsoft.Something.Noisy
 ```
 
-Denying a source only stops the OpenTelemetry Bridge observing it. It does not disable the {{product.apm-agent-dotnet}}s own instrumentation, and it does not remove the data from an OpenTelemetry SDK you have configured yourself.
+Denying a source only stops the OpenTelemetry Bridge observing it. It does not deactivate the {{product.apm-agent-dotnet}}s own instrumentation, and it does not remove the data from an OpenTelemetry SDK you have configured yourself.
 
 | Environment variable name | IConfiguration key |
 | --- | --- |
@@ -439,11 +439,11 @@ This setting is read once when the agent starts and cannot be changed through ce
 apm_agent_dotnet: ga 1.35
 ```
 
-Whether the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) subscribes to the .NET runtime's experimental activity sources, whose names begin with `Experimental.`. Disabled by default.
+Whether the [OpenTelemetry Bridge](/reference/opentelemetry-bridge.md) subscribes to the .NET runtime's experimental activity sources, whose names begin with `Experimental.`. Deactivated by default.
 
 .NET 9 introduced experimental sources describing connection level work: DNS resolution, socket connect, TLS handshake and HTTP connection setup. These sources only emit while a listener is subscribed to them, so enabling this setting is what causes the runtime to create those activities.
 
-Setting this to `true` adds spans for that connection level work to transactions which open a new connection. Leaving it disabled applies an additional effective `Experimental.*` deny rule, which the agent evaluates alongside [`OpenTelemetryBridgeDeniedActivitySources`](#config-opentelemetry-bridge-denied-activity-sources) rather than adding to it, so an activity source named in [`OpenTelemetryBridgeAllowedActivitySources`](#config-opentelemetry-bridge-allowed-activity-sources) is still not observed while this setting is `false`.
+Setting this to `true` adds spans for that connection level work to transactions which open a new connection. Leaving it deactivted applies an additional effective `Experimental.*` deny rule, which the agent evaluates alongside [`OpenTelemetryBridgeDeniedActivitySources`](#config-opentelemetry-bridge-denied-activity-sources) rather than adding to it, so an activity source named in [`OpenTelemetryBridgeAllowedActivitySources`](#config-opentelemetry-bridge-allowed-activity-sources) is still not observed while this setting is `false`.
 
 The rule matches every activity source whose name begins with `Experimental.`, not only the runtime's, so a source of your own using that prefix is also excluded while this setting is `false`.
 

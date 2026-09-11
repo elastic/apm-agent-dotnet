@@ -190,9 +190,9 @@ or, through the `appsettings.json` file:
 }
 ```
 
-When enabled, the bridge records these as spans where they are useful, within a transaction, for example the DNS lookup and TLS handshake that a slow outgoing HTTP call had to wait for. It never promotes them to transactions. The runtime deliberately starts `ConnectionSetup` as the root of its own trace, because a connection is shared by many requests and outlives all of them, so promoting these activities would create top level transactions for work such as application startup, background processes or the agent's own communication with the APM Server, which is not useful and clutters the transactions view in Kibana.
+When enabled, the bridge records these as spans where they are useful, within a transaction, for example the DNS lookup and TLS handshake that a slow outgoing HTTP call had to wait for. It never promotes them to transactions. The runtime deliberately starts `ConnectionSetup` as the root of its own trace, because a connection is shared by many requests and outlives them all, so promoting these activities would create top level transactions for work such as application startup, background processes or the agent's own communication with the APM Server, which is not useful and clutters the transactions view in Kibana.
 
-Two things are worth knowing before enabling this. Connection setup happens once per connection rather than once per request, so these spans appear only on the first request to reach a given host, and two otherwise identical transactions can have different span counts. The names and attributes of these sources are also not stable, which is what the `Experimental.` prefix indicates, so they may change between .NET releases.
+Two things are worth knowing before enabling this. Connection setup happens once per connection rather than once per request, so these spans appear only on the first request to reach a given host, and two otherwise identical transactions can have different span counts. The names and attributes of these sources are also not stable, which is what the `Experimental.` prefix indicates, so they might change between .NET releases.
 
 #### Choosing which activity sources are bridged [otel-activity-source-filtering]
 
