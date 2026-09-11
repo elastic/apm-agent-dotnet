@@ -99,6 +99,24 @@ The code snippet above creates a transaction with the Elastic {{product.apm-agen
 Of course these calls don’t have to be in the same method. The concept described here works across different methods, types, or libraries.
 
 
+### Incoming ASP.NET Core requests [otel-aspnetcore-requests]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.35
+```
+
+ASP.NET Core starts an activity named `Microsoft.AspNetCore.Hosting.HttpRequestIn` for every incoming request. When the application uses the [ASP.NET Core integration](/reference/setup-asp-net-core.md) or the [Azure Functions integration](/reference/setup-azure-functions.md), that package creates the transaction for the request, so the bridge skips the activity rather than producing a duplicate.
+
+When neither package is loaded, the bridge creates the transaction from the activity itself. The transaction continues the trace context carried in the incoming `traceparent` and `tracestate` headers, has the type `request`, and every activity started while the request is handled becomes a span beneath it. Its name depends on the runtime version:
+
+* On .NET 10 and later the runtime can record the request method, scheme, path and server address on the activity, and the transaction is named from the method and path, for example `GET /orders/42`. The runtime only records these when the `Microsoft.AspNetCore.Hosting.SuppressActivityOpenTelemetryData` AppContext switch is `false`, and it reads the switch once when the web host starts. The agent sets the switch to `false` when the bridge starts unless the application has set it explicitly, so this works as long as the agent starts before the web host: in `Program.cs` before the host is built, through the profiler or startup hook, or as a hosted service registered with `WebApplication.CreateBuilder`, which starts the web server after all other hosted services. If the agent starts later in your setup, set the switch yourself, for example with `<RuntimeHostConfigurationOption Include="Microsoft.AspNetCore.Hosting.SuppressActivityOpenTelemetryData" Value="false" />` in an `ItemGroup` of the project file.
+* On .NET 8 and .NET 9 the runtime records nothing on the activity, so the transaction keeps the activity name.
+
+Whenever the activity carries the request method and path from the runtime tags above, the transaction also records the request method and URL. Both the current (`url.scheme`, `url.path`, `url.query`, `server.address`, `server.port`) and the older (`http.scheme`, `http.target`, `http.host`) semantic conventions are understood, and an error captured while the request is handled inherits them.
+
+The bridge has no access to the `HttpContext`. Request and response details such as headers, the body, the status code and the route template, and settings which act on the request such as [`TransactionIgnoreUrls`](/reference/config-http.md#config-transaction-ignore-urls), are only available through the ASP.NET Core integration, which remains the recommended way to instrument ASP.NET Core applications.
+
+
 ### Baggage support [baggage-api]
 
 The Elastic {{product.apm-agent-dotnet}} also integrates with [Activity.Baggage](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity.baggage).
@@ -138,3 +156,66 @@ This bridge only supports the tracing API. The Metrics API is currently not supp
 #### Span Events [otel-span-events]
 
 Span events are not currently supported. Events will be silently dropped.
+
+
+#### Runtime connection activities on .NET 9 and later [otel-runtime-infrastructure-activities]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.35
+```
+
+.NET 9 introduced experimental activity sources which describe connection level plumbing:
+
+* `Experimental.System.Net.NameResolution` (DNS lookups)
+* `Experimental.System.Net.Sockets` (socket connects)
+* `Experimental.System.Net.Security` (TLS handshakes)
+* `Experimental.System.Net.Http.Connections` (HTTP connection setup and connection pool waits)
+
+These sources only emit while a listener is subscribed to them, so a listener is what activates them. **The bridge does not subscribe to them by default**, which keeps the .NET default of experimental telemetry being opt in, and avoids the cost of creating those activities in applications which did not ask for them.
+
+To capture them, set [`OpenTelemetryBridgeExperimentalSourcesEnabled`](/reference/config-core.md#config-opentelemetry-bridge-experimental-sources-enabled) to `true`:
+
+```
+ELASTIC_APM_OPENTELEMETRY_BRIDGE_EXPERIMENTAL_SOURCES_ENABLED=true
+```
+
+or, through the `appsettings.json` file:
+
+```js
+{
+  "ElasticApm":
+    {
+      "OpenTelemetryBridgeExperimentalSourcesEnabled": true
+    }
+}
+```
+
+When enabled, the bridge records these as spans where they are useful, within a transaction, for example the DNS lookup and TLS handshake that a slow outgoing HTTP call had to wait for. It never promotes them to transactions. The runtime deliberately starts `ConnectionSetup` as the root of its own trace, because a connection is shared by many requests and outlives them all, so promoting these activities would create top level transactions for work such as application startup, background processes or the agent's own communication with the APM Server, which is not useful and clutters the transactions view in Kibana.
+
+Two things are worth knowing before enabling this. Connection setup happens once per connection rather than once per request, so these spans appear only on the first request to reach a given host, and two otherwise identical transactions can have different span counts. The names and attributes of these sources are also not stable, which is what the `Experimental.` prefix indicates, so they might change between .NET releases.
+
+#### Choosing which activity sources are bridged [otel-activity-source-filtering]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.35
+```
+
+By default the bridge subscribes to every non-experimental activity source. [`OpenTelemetryBridgeAllowedActivitySources`](/reference/config-core.md#config-opentelemetry-bridge-allowed-activity-sources) and [`OpenTelemetryBridgeDeniedActivitySources`](/reference/config-core.md#config-opentelemetry-bridge-denied-activity-sources) narrow that down. Both accept a comma separated list of wildcard patterns matched against the activity source name.
+
+The allowed list is a gate and the denied list is a veto, so a source is bridged when it matches the allowed list and is not matched by the denied list:
+
+```
+# bridge everything except one noisy source
+ELASTIC_APM_OPENTELEMETRY_BRIDGE_DENIED_ACTIVITY_SOURCES=MyApp.InternalTracing
+
+# bridge only your own instrumentation
+ELASTIC_APM_OPENTELEMETRY_BRIDGE_ALLOWED_ACTIVITY_SOURCES=MyApp.*
+
+# bridge a whole namespace apart from one source within it
+ELASTIC_APM_OPENTELEMETRY_BRIDGE_ALLOWED_ACTIVITY_SOURCES=Microsoft.*
+ELASTIC_APM_OPENTELEMETRY_BRIDGE_DENIED_ACTIVITY_SOURCES=Microsoft.Something.Noisy
+```
+
+Filtering is applied when the bridge decides whether to subscribe to a source, so an excluded source is never observed, and a source which only emits while a listener is attached is never even created. That also means these settings are read once when the agent starts and cannot be changed through central configuration.
+
+ASP.NET Core hosting can fall back to a request activity with no source name when its `Microsoft.AspNetCore` source has no listeners but request logging is enabled. The bridge applies the `Microsoft.AspNetCore` source filter to that fallback too, so excluding the source also excludes its fallback request activity. Other activities with no source name are unaffected by this special handling.

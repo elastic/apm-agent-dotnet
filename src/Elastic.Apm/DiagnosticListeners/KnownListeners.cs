@@ -18,9 +18,13 @@ namespace Elastic.Apm.DiagnosticListeners
 		// ActivitySource name emitted by Microsoft.Azure.Cosmos >= 3.36.0 for operation-level spans
 		public const string AzureCosmosOperationActivitySource = "Azure.Cosmos.Operation";
 
+		public const string MicrosoftAspNetCoreActivitySource = "Microsoft.AspNetCore";
+
+		// Activities the OpenTelemetry bridge never captures. The ASP.NET Core request activity,
+		// MicrosoftAspNetCoreHostingHttpRequestIn, is deliberately not in this set: the bridge applies integration
+		// deduplication and activity source filtering to it instead.
 		public static readonly HashSet<string> SkippedActivityNamesSet =
 		[
-			MicrosoftAspNetCoreHostingHttpRequestIn,
 			SystemNetHttpHttpRequestOut,
 			SystemNetHttpDesktopHttpRequestOut,
 			ApmTransactionActivityName

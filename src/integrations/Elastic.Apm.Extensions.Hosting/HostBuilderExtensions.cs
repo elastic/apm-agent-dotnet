@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
@@ -138,6 +139,23 @@ namespace Elastic.Apm.Extensions.Hosting
 			var assembly = assemblies.FirstOrDefault(n => n.GetName().Name == assemblyName);
 			if (assembly != null)
 				return assembly.GetName().Version?.ToString();
+
+			// The assembly may simply not have been loaded yet: the agent is usually started before the web host, and
+			// the 'Microsoft.AspNetCore' facade is loaded late. It resolves from the shared framework in any application
+			// which has one, so load it by name rather than settle for whichever assembly sharing the prefix happened to
+			// load first. That could be an out of band package such as Microsoft.AspNetCore.Mvc.Testing, whose assembly
+			// version carries the package's patch number and differs from the framework's, which made the reported
+			// version depend on assembly load order.
+			try
+			{
+				assembly = Assembly.Load(new AssemblyName(assemblyName));
+				if (assembly != null)
+					return assembly.GetName().Version?.ToString();
+			}
+			catch
+			{
+				// Not an application with that framework or package; fall through to the prefix match.
+			}
 
 			// if no exact match, try to find first assembly name that starts with given name
 			assembly = assemblies

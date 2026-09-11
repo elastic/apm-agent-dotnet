@@ -95,6 +95,12 @@ namespace Elastic.Apm.Config
 			Enabled = ParseEnabled(Lookup(ConfigurationOption.Enabled));
 			OpenTelemetryBridgeEnabled =
 				ParseOpenTelemetryBridgeEnabled(Lookup(ConfigurationOption.OpenTelemetryBridgeEnabled));
+			OpenTelemetryBridgeAllowedActivitySources =
+				ParseOpenTelemetryBridgeAllowedActivitySources(Lookup(ConfigurationOption.OpenTelemetryBridgeAllowedActivitySources));
+			OpenTelemetryBridgeDeniedActivitySources =
+				ParseOpenTelemetryBridgeDeniedActivitySources(Lookup(ConfigurationOption.OpenTelemetryBridgeDeniedActivitySources));
+			OpenTelemetryBridgeExperimentalSourcesEnabled =
+				ParseOpenTelemetryBridgeExperimentalSourcesEnabled(Lookup(ConfigurationOption.OpenTelemetryBridgeExperimentalSourcesEnabled));
 			ExcludedNamespaces = ParseExcludedNamespaces(Lookup(ConfigurationOption.ExcludedNamespaces));
 			ExitSpanMinDuration = ParseExitSpanMinDuration(Lookup(ConfigurationOption.ExitSpanMinDuration));
 			FlushInterval = ParseFlushInterval(Lookup(ConfigurationOption.FlushInterval));
@@ -258,6 +264,12 @@ namespace Elastic.Apm.Config
 		public bool VerifyServerCert { get; }
 
 		public bool OpenTelemetryBridgeEnabled { get; }
+
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeAllowedActivitySources { get; }
+
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeDeniedActivitySources { get; }
+
+		public bool OpenTelemetryBridgeExperimentalSourcesEnabled { get; }
 
 		public Uri ProxyUrl { get; }
 

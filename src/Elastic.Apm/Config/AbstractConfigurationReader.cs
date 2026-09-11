@@ -21,6 +21,13 @@ namespace Elastic.Apm.Config
 {
 	public abstract class AbstractConfigurationReader
 	{
+		private static readonly IReadOnlyList<WildcardMatcher> DefaultBaggageToAttach =
+			new List<WildcardMatcher> { WildcardMatcher.ValueOf(DefaultValues.BaggageToAttach) }.AsReadOnly();
+
+		// DefaultValues.TransactionNameGroups is exposed as IReadOnlyCollection, so it needs a list typed copy here.
+		private static readonly IReadOnlyList<WildcardMatcher> DefaultTransactionNameGroups =
+			new List<WildcardMatcher>(DefaultValues.TransactionNameGroups).AsReadOnly();
+
 		private readonly IApmLogger _logger;
 		private readonly ConfigurationDefaults _defaults;
 
@@ -77,70 +84,13 @@ namespace Elastic.Apm.Config
 		}
 
 		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNames(ConfigurationKeyValue kv)
-		{
-			if (kv?.Value == null)
-				return DefaultValues.SanitizeFieldNames;
-
-			try
-			{
-				_logger?.Trace()?.Log("Try parsing SanitizeFieldNames, values: {SanitizeFieldNamesValues}", kv.Value);
-				var sanitizeFieldNames = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
-
-				var retVal = new List<WildcardMatcher>(sanitizeFieldNames.Count);
-				foreach (var item in sanitizeFieldNames)
-					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
-				return retVal;
-			}
-			catch (Exception e)
-			{
-				_logger?.Error()?.LogException(e, "Failed parsing SanitizeFieldNames, values in the config: {SanitizeFieldNamesValues}", kv.Value);
-				return DefaultValues.SanitizeFieldNames;
-			}
-		}
+			=> ParseWildcardMatchers(kv?.Value, DefaultValues.SanitizeFieldNames, "SanitizeFieldNames", blankIsDefault: false);
 
 		protected IReadOnlyList<WildcardMatcher> ParseBaggageToAttach(ConfigurationKeyValue kv)
-			=> ParseWildcardMatcher(kv?.Value ?? DefaultValues.BaggageToAttach, "BaggageToAttach");
-
-		private IReadOnlyList<WildcardMatcher> ParseWildcardMatcher(string stringValue, string configName)
-		{
-			try
-			{
-				_logger?.Trace()?.Log("Try parsing {ConfigName}, values: {Values}", configName, stringValue);
-				var values = stringValue.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
-
-				var matchers = new List<WildcardMatcher>(values.Count);
-				foreach (var item in values)
-					matchers.Add(WildcardMatcher.ValueOf(item.Trim()));
-				return matchers;
-			}
-			catch (Exception e)
-			{
-				_logger?.Error()?.LogException(e, "Failed parsing {ConfigName}, values in the config: {stringValues}", configName, stringValue);
-				return default;
-			}
-		}
+			=> ParseWildcardMatchers(kv?.Value, DefaultBaggageToAttach, "BaggageToAttach", blankIsDefault: false);
 
 		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv)
-		{
-			if (kv?.Value == null)
-				return DefaultValues.DisableMetrics;
-
-			try
-			{
-				_logger?.Trace()?.Log("Try parsing DisableMetrics, values: {SanitizeFieldNamesValues}", kv.Value);
-				var disableMetrics = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
-
-				var retVal = new List<WildcardMatcher>(disableMetrics.Count);
-				foreach (var item in disableMetrics)
-					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
-				return retVal;
-			}
-			catch (Exception e)
-			{
-				_logger?.Error()?.LogException(e, "Failed parsing DisableMetrics, values in the config: {DisableMetricsNamesValues}", kv.Value);
-				return DefaultValues.DisableMetrics;
-			}
-		}
+			=> ParseWildcardMatchers(kv?.Value, DefaultValues.DisableMetrics, "DisableMetrics", blankIsDefault: false);
 
 		protected double ParseExitSpanMinDuration(ConfigurationKeyValue kv)
 		{
@@ -177,26 +127,7 @@ namespace Elastic.Apm.Config
 		}
 
 		protected IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueues(ConfigurationKeyValue kv)
-		{
-			if (kv?.Value == null || string.IsNullOrWhiteSpace(kv.Value))
-				return DefaultValues.IgnoreMessageQueues;
-
-			try
-			{
-				_logger?.Trace()?.Log("Try parsing IgnoreMessageQueues, values: {IgnoreMessageQueues}", kv.Value);
-				var ignoreMessageQueues = kv.Value.Split(',').Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
-
-				var retVal = new List<WildcardMatcher>(ignoreMessageQueues.Count);
-				foreach (var item in ignoreMessageQueues)
-					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
-				return retVal;
-			}
-			catch (Exception e)
-			{
-				_logger?.Error()?.LogException(e, "Failed parsing IgnoreMessageQueues, values in the config: {IgnoreMessageQueues}", kv.Value);
-				return DefaultValues.IgnoreMessageQueues;
-			}
-		}
+			=> ParseWildcardMatchers(kv?.Value, DefaultValues.IgnoreMessageQueues, "IgnoreMessageQueues", blankIsDefault: true);
 
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
 		{
@@ -247,6 +178,58 @@ namespace Elastic.Apm.Config
 					"Failed parsing value for 'OpenTelemetryBridgeEnabled' setting to 'bool'. Received value: {receivedValue}",
 					kv.Value);
 			return DefaultValues.OpenTelemetryBridgeEnabled;
+		}
+
+		protected bool ParseOpenTelemetryBridgeExperimentalSourcesEnabled(ConfigurationKeyValue kv) =>
+			ParseBoolOption(kv, DefaultValues.OpenTelemetryBridgeExperimentalSourcesEnabled, "OpenTelemetryBridgeExperimentalSourcesEnabled");
+
+		protected IReadOnlyList<WildcardMatcher> ParseOpenTelemetryBridgeAllowedActivitySources(ConfigurationKeyValue kv) =>
+			ParseWildcardMatchers(kv?.Value, DefaultValues.OpenTelemetryBridgeAllowedActivitySources,
+				"OpenTelemetryBridgeAllowedActivitySources", blankIsDefault: true);
+
+		protected IReadOnlyList<WildcardMatcher> ParseOpenTelemetryBridgeDeniedActivitySources(ConfigurationKeyValue kv) =>
+			ParseWildcardMatchers(kv?.Value, DefaultValues.OpenTelemetryBridgeDeniedActivitySources,
+				"OpenTelemetryBridgeDeniedActivitySources", blankIsDefault: true);
+
+		/// <summary>
+		/// Parses a comma separated list of wildcard patterns.
+		/// </summary>
+		/// <param name="value">The configured value, or <c>null</c> when the option is not set.</param>
+		/// <param name="defaultValue">Returned when the value is absent, or cannot be parsed.</param>
+		/// <param name="optionName">The name of the option, used for logging.</param>
+		/// <param name="blankIsDefault">
+		/// When <c>true</c>, a blank value, or one holding only separators such as ", ,", falls back to
+		/// <paramref name="defaultValue" />, so that a stray empty setting cannot silently reduce an allow list to
+		/// nothing. When <c>false</c>, such a value yields an empty list, which is the established meaning of
+		/// explicitly emptying an older list option.
+		/// </param>
+		private IReadOnlyList<WildcardMatcher> ParseWildcardMatchers(string value, IReadOnlyList<WildcardMatcher> defaultValue,
+			string optionName, bool blankIsDefault
+		)
+		{
+			if (value is null || (blankIsDefault && string.IsNullOrWhiteSpace(value)))
+				return defaultValue;
+
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing {OptionName}, values: {OptionValues}", optionName, value);
+
+				var matchers = new List<WildcardMatcher>();
+				foreach (var item in value.Split(','))
+				{
+					var trimmed = item.Trim();
+					if (trimmed.Length > 0)
+						matchers.Add(WildcardMatcher.ValueOf(trimmed));
+				}
+
+				return blankIsDefault && matchers.Count == 0 ? defaultValue : matchers;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()
+					?.LogException(e, "Failed parsing {OptionName}, values in the config: {OptionValues}", optionName, value);
+				return defaultValue;
+			}
 		}
 
 		protected bool ParseRecording(ConfigurationKeyValue kv)
@@ -492,50 +475,10 @@ namespace Elastic.Apm.Config
 		}
 
 		protected IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrls(ConfigurationKeyValue kv)
-		{
-			if (kv?.Value == null)
-				return DefaultValues.TransactionIgnoreUrls;
-
-			try
-			{
-				_logger?.Trace()?.Log("Try parsing TransactionIgnoreUrls, values: {TransactionIgnoreUrlsValues}", kv.Value);
-				var transactionIgnoreUrls = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
-
-				var retVal = new List<WildcardMatcher>(transactionIgnoreUrls.Count);
-				foreach (var item in transactionIgnoreUrls)
-					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
-				return retVal;
-			}
-			catch (Exception e)
-			{
-				_logger?.Error()
-					?.LogException(e, "Failed parsing TransactionIgnoreUrls, values in the config: {TransactionIgnoreUrlsValues}", kv.Value);
-				return DefaultValues.TransactionIgnoreUrls;
-			}
-		}
+			=> ParseWildcardMatchers(kv?.Value, DefaultValues.TransactionIgnoreUrls, "TransactionIgnoreUrls", blankIsDefault: false);
 
 		protected IReadOnlyCollection<WildcardMatcher> ParseTransactionNameGroups(ConfigurationKeyValue kv)
-		{
-			if (kv?.Value == null)
-				return DefaultValues.TransactionNameGroups;
-
-			try
-			{
-				_logger?.Trace()?.Log("Try parsing TransactionNameGroups, values: {TransactionNameGroups}", kv.Value);
-				var transactionNameGroups = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
-
-				var retVal = new List<WildcardMatcher>(transactionNameGroups.Count);
-				foreach (var item in transactionNameGroups)
-					retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
-				return retVal;
-			}
-			catch (Exception e)
-			{
-				_logger?.Error()
-					?.LogException(e, "Failed parsing TransactionNameGroups, values in the config: {TransactionNameGroupsValues}", kv.Value);
-				return DefaultValues.TransactionNameGroups;
-			}
-		}
+			=> ParseWildcardMatchers(kv?.Value, DefaultTransactionNameGroups, "TransactionNameGroups", blankIsDefault: false);
 
 		protected bool ParseSpanCompressionEnabled(ConfigurationKeyValue kv)
 		{

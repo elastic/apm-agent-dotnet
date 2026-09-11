@@ -385,4 +385,31 @@ public class OTelDbSpanTests
 			span.Context.Destination.Port.Should().BeNull();
 		}
 	}
+
+	/// <summary>
+	/// An activity whose attributes match none of the known conventions has nothing to infer a service target from.
+	/// Emitting one with neither a type nor a name violates the intake specification and the span is rejected by APM
+	/// Server, so no target must be attached at all.
+	/// </summary>
+	[Theory]
+	[InlineData(ActivityKind.Client)]
+	[InlineData(ActivityKind.Internal)]
+	[InlineData(ActivityKind.Producer)]
+	[InlineData(ActivityKind.Consumer)]
+	public void UnrecognisedActivityGetsNoServiceTarget(ActivityKind kind)
+	{
+		var payloadSender = new MockPayloadSender();
+		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
+		{
+			agent.Tracer.CaptureTransaction("UserTransaction", "request", () =>
+			{
+				var src = new ActivitySource("Test.NoConventions");
+				using (src.StartActivity("operation", kind))
+				{ }
+			});
+		}
+
+		payloadSender.WaitForSpans();
+		payloadSender.FirstSpan.Context.Service?.Target.Should().BeNull();
+	}
 }
