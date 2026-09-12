@@ -444,17 +444,7 @@ internal class Transaction : ITransaction
 	public IEnumerable<SpanLink> Links { get; private set; }
 
 	internal void InsertSpanLinkInternal(IEnumerable<SpanLink> links)
-	{
-		var spanLinks = links as SpanLink[] ?? links.ToArray();
-		if (Links == null || !Links.Any())
-			Links = spanLinks;
-		else
-		{
-			var newList = new List<SpanLink>(Links);
-			newList.AddRange(spanLinks);
-			Links = new List<SpanLink>(newList);
-		}
-	}
+		=> Links = ExecutionSegmentCommon.InsertSpanLinks(Links, links);
 
 	[MaxLength]
 	public string Name
