@@ -152,6 +152,22 @@ namespace Elastic.Apm.StartupHook.Tests
 
 		public void Dispose() => _process?.Dispose();
 
+		/// <summary>
+		/// Reads the SDK version and roll-forward policy from the repository's global.json so that sample apps resolve the
+		/// same SDK as the test process. The parent dotnet process leaks its MSBuild SDK paths into child processes, so a
+		/// sample app resolving a different SDK version loads task assemblies built for another runtime (MSB4062).
+		/// </summary>
+		private static (string SdkVersion, string RollForward) ReadRepositorySdk()
+		{
+			using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(SolutionPaths.Root, "global.json")));
+			var sdk = document.RootElement.GetProperty("sdk");
+			var version = sdk.GetProperty("version").GetString();
+			if (string.IsNullOrWhiteSpace(version))
+				throw new InvalidOperationException("global.json is missing sdk.version or it is empty");
+			var rollForward = sdk.TryGetProperty("rollForward", out var rollForwardElement) ? rollForwardElement.GetString() : null;
+			return (version, rollForward ?? "latestFeature");
+		}
+
 		public static DotnetProject Create(ITestOutputHelper output, string name, string template, string framework, params string[] arguments)
 		{
 			var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -160,14 +176,15 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			output.WriteLine("Using temp directory '{0}'", directory);
 
+			var (sdkVersion, rollForward) = ReadRepositorySdk();
 			var globalJsonCreationResult = Proc.Start(new StartArguments("dotnet",
 			[
 				"new",
 				"globaljson",
 				"--sdk-version",
-				"9.0.303", // Fixing this specific version, for now
+				sdkVersion,
 				"--roll-forward",
-				"LatestPatch"
+				rollForward
 			])
 			{
 				WorkingDirectory = directory

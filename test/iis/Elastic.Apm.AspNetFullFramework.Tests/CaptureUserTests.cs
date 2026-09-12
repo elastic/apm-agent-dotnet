@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using AngleSharp.Io;
 using AspNetFullFrameworkSampleApp.Models;
 using FluentAssertions;
 using Xunit;
@@ -16,10 +17,8 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
-	public class CaptureUserTests : TestsBase
+	public class CaptureUserTests(ITestOutputHelper xUnitOutputHelper) : TestsBase(xUnitOutputHelper)
 	{
-		public CaptureUserTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
-
 		[AspNetFullFrameworkFact]
 		public async Task User_Should_Contain_Id_And_Email_When_Using_Authenticated_ClaimsPrincipal()
 		{
@@ -58,7 +57,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// verify that the user id and email are captured.
 			await WaitAndCustomVerifyReceivedData(received =>
 			{
-				received.Transactions.Count.Should().BeGreaterThan(0);
+				received.Transactions.Count.Should().BePositive();
 
 				var transaction = received.Transactions
 					.OrderByDescending(t => t.Timestamp)

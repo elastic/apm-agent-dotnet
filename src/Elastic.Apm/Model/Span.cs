@@ -519,8 +519,7 @@ namespace Elastic.Apm.Model
 						if (buffered != null)
 						{
 							QueueSpan(buffered);
-							if (_parentSpan != null)
-								_parentSpan._compressionBuffer = null;
+							_parentSpan?._compressionBuffer = null;
 							_enclosingTransaction.CompressionBuffer = null;
 						}
 

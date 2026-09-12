@@ -13,6 +13,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+      <!-- Not part of the default .NET Framework 4.6.2 reference set. -->
+      <Reference Include="System.Net.Http" Condition="'$(TargetFramework)' == 'net462'" />
     </ItemGroup>
 
 </Project>

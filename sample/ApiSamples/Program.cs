@@ -294,9 +294,9 @@ namespace ApiSamples
 					// ReSharper disable once UseObjectOrCollectionInitializer
 #pragma warning disable IDE0017
 					span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET" };
-#pragma warning restore IDE0017
 					// send request, get response with status code
 					span.Context.Http.StatusCode = 200;
+#pragma warning restore IDE0017
 				});
 
 				transaction.CaptureSpan("SampleSpan2", "SampleSpanType",

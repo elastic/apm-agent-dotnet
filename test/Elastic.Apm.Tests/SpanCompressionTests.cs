@@ -14,6 +14,11 @@ using Xunit;
 
 namespace Elastic.Apm.Tests
 {
+	// The OpenTelemetry bridge is disabled for every agent in this class: on .NET 9 and newer the runtime's
+	// experimental ActivitySources (DNS lookups, connection setup) produce root activities that the bridge turns
+	// into transactions, which would break the transaction and span count assertions below. Because the bridge is a
+	// process-wide listener, those activities can also come from tests running in parallel.
+	// Tracked as a follow-up on the bridge.
 	public class SpanCompressionTests
 	{
 		/// <summary>
@@ -25,7 +30,8 @@ namespace Elastic.Apm.Tests
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
-					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s"))))
+					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
+						   openTelemetryBridgeEnabled: "false"))))
 				Generate10DbCalls(agent, spanName);
 
 			payloadSender.Transactions.Should().HaveCount(1);
@@ -45,7 +51,8 @@ namespace Elastic.Apm.Tests
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
+					   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "false"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{
@@ -74,7 +81,8 @@ namespace Elastic.Apm.Tests
 		{
 			var spanName = "Select * From Table";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version710, payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version710, payloadSender: payloadSender,
+					   configuration: new MockConfiguration(openTelemetryBridgeEnabled: "false"))))
 				Generate10DbCalls(agent, spanName, true, 2);
 
 			payloadSender.Transactions.Should().HaveCount(1);
@@ -112,7 +120,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
 					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
-						   exitSpanMinDuration: "0"))))
+						   exitSpanMinDuration: "0", openTelemetryBridgeEnabled: "false"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{
@@ -161,7 +169,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
 					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
-						   exitSpanMinDuration: "0"))))
+						   exitSpanMinDuration: "0", openTelemetryBridgeEnabled: "false"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{
@@ -224,7 +232,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
 				configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionSameKindMaxDuration: "1ms",
-					spanCompressionExactMatchMaxDuration: "1ms", exitSpanMinDuration: "0")));
+					spanCompressionExactMatchMaxDuration: "1ms", exitSpanMinDuration: "0", openTelemetryBridgeEnabled: "false")));
 			agent.Tracer.CaptureTransaction("foo", "bar", (t) =>
 			{
 				var span1 = t.StartSpan("span", "test", isExitSpan: true);
@@ -255,7 +263,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
 					   configuration: new MockConfiguration(spanCompressionEnabled: "true", spanCompressionExactMatchMaxDuration: "5s",
-						   exitSpanMinDuration: "0"))))
+						   exitSpanMinDuration: "0", openTelemetryBridgeEnabled: "false"))))
 			{
 				agent.Tracer.CaptureTransaction("Foo", "Bar", t =>
 				{

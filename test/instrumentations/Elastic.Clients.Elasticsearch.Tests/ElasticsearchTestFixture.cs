@@ -34,8 +34,6 @@ public sealed class ElasticsearchTestFixture(IMessageSink sink) : IAsyncLifetime
 		settings.ServerCertificateValidationCallback(CertificateValidations.AllowAll);
 
 		Client = new ElasticsearchClient(settings);
-		if (Client == null)
-			throw new Exception("`new ElasticsearchClient(settings)` returned `null`");
 
 		//Increase Elasticsearch high disk watermarks, Github Actions container typically has around
 		//~7GB free (8%) of the available space.

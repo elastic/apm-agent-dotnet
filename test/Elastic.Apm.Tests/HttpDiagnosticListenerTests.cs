@@ -1064,6 +1064,15 @@ namespace Elastic.Apm.Tests
 		[NetCoreAndNetFact]
 		public async Task CallStackContainsCallerMethod()
 		{
+			using var localServer = LocalServer.Create();
+			using var httpClient = new HttpClient();
+
+			// Warm up the handler before the agent subscribes and the transaction starts. On .NET 10, SocketsHttpHandler creates
+			// its inner handler lazily on the first request (CreateHandlerAndSendAsync), so the DiagnosticSource start event of
+			// that first request runs on a thread-pool continuation whose stack has no caller frames. Later requests on the same
+			// handler run the pipeline on the caller's stack. This request is not tracked: no subscriber exists yet.
+			await httpClient.GetAsync(localServer.Uri);
+
 			var (subscriber, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
 
 			using (agent)
@@ -1071,8 +1080,6 @@ namespace Elastic.Apm.Tests
 			{
 				try
 				{
-					using var localServer = LocalServer.Create();
-					using var httpClient = new HttpClient();
 					var response = await httpClient.GetAsync(localServer.Uri);
 					response.IsSuccessStatusCode.Should().BeTrue();
 				}
@@ -1084,6 +1091,44 @@ namespace Elastic.Apm.Tests
 				payloadSender.WaitForSpans();
 				payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
 				payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(CallStackContainsCallerMethod)));
+			}
+		}
+
+		/// <summary>
+		/// Documents the handler warm-up behaviour that <see cref="CallStackContainsCallerMethod"/> works around.
+		/// The first request on a fresh handler always produces a span with a stack trace, but on .NET 10 that stack trace
+		/// may not contain the caller frame because the handler pipeline runs on a thread-pool continuation while the inner
+		/// handler is created. The second request on the same handler runs on the caller's stack and must contain the caller frame.
+		/// </summary>
+		[NetCoreAndNetFact]
+		public async Task CallStackOfColdHandlerHasStackTrace_WarmHandlerContainsCallerMethod()
+		{
+			var (subscriber, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+
+			using (agent)
+			using (subscriber)
+			{
+				using var localServer = LocalServer.Create();
+				using var httpClient = new HttpClient();
+
+				// cold: first request on this handler instance
+				(await httpClient.GetAsync(localServer.Uri)).IsSuccessStatusCode.Should().BeTrue();
+				// warm: second request on the same handler instance
+				(await httpClient.GetAsync(localServer.Uri)).IsSuccessStatusCode.Should().BeTrue();
+
+				payloadSender.WaitForSpans(count: 2);
+				payloadSender.Spans.Should().HaveCount(2);
+
+				var coldSpan = payloadSender.Spans[0];
+				var warmSpan = payloadSender.Spans[1];
+
+				// The cold request is captured with a stack trace on every runtime. Its caller frame is present on .NET 8 and
+				// absent on .NET 10, so only the presence of the stack trace is asserted.
+				coldSpan.StackTrace.Should().NotBeNull();
+
+				warmSpan.StackTrace.Should().NotBeNull();
+				warmSpan.StackTrace.Should()
+					.Contain(n => n.Function.Contains(nameof(CallStackOfColdHandlerHasStackTrace_WarmHandlerContainsCallerMethod)));
 			}
 		}
 

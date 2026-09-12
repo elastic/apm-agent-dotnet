@@ -1,8 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <!-- This sample intentionally uses the WebHost hosting model, which ASP.NET Core 10 marks obsolete (ASPDEPR008),
+         so that the startup hook keeps being exercised against that style of application. -->
+    <NoWarn>$(NoWarn);ASPDEPR008</NoWarn>
   </PropertyGroup>
 
 </Project>

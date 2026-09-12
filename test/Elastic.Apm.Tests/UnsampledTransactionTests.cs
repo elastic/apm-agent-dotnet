@@ -11,6 +11,9 @@ using Xunit;
 
 namespace Elastic.Apm.Tests;
 
+// The OpenTelemetry bridge is disabled in every test below. ElasticActivityListener listens to every ActivitySource
+// in the process, so with the bridge enabled an agent under test also captures activities created by tests running in
+// parallel and reports them to this payload sender, which breaks the "nothing was sent" assertions.
 public class UnsampledTransactionTests
 {
 	/// <summary>
@@ -36,7 +39,7 @@ public class UnsampledTransactionTests
 	{
 		var payloadSender = new MockPayloadSender();
 		using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version716, payloadSender: payloadSender,
-				   configuration: new MockConfiguration(transactionSampleRate: "0"))))
+				   configuration: new MockConfiguration(transactionSampleRate: "0", openTelemetryBridgeEnabled: "false"))))
 			agent.Tracer.CaptureTransaction("foo", "bar", () => { });
 
 		payloadSender.WaitForTransactions(TimeSpan.FromMilliseconds(100));
@@ -51,7 +54,7 @@ public class UnsampledTransactionTests
 	{
 		var payloadSender = new MockPayloadSender();
 		using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
-				   configuration: new MockConfiguration(transactionSampleRate: "0"))))
+				   configuration: new MockConfiguration(transactionSampleRate: "0", openTelemetryBridgeEnabled: "false"))))
 		{
 			agent.Tracer.CaptureTransaction("foo", "bar", (t) =>
 			{
@@ -74,7 +77,7 @@ public class UnsampledTransactionTests
 	{
 		var payloadSender = new MockPayloadSender();
 		using (var agent = new ApmAgent(new TestAgentComponents(apmServerInfo: MockApmServerInfo.Version80, payloadSender: payloadSender,
-				   configuration: new MockConfiguration(transactionSampleRate: "0", exitSpanMinDuration: "0"))))
+				   configuration: new MockConfiguration(transactionSampleRate: "0", exitSpanMinDuration: "0", openTelemetryBridgeEnabled: "false"))))
 		{
 			agent.Tracer.CaptureTransaction("foo", "bar", (t) =>
 			{

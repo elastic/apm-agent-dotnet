@@ -3,9 +3,19 @@
   <PropertyGroup>
     <SqliteVersion Condition="'$(SqliteVersion)'==''">8.0.2</SqliteVersion>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net462;net8.0</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0;net10.0</TargetFrameworks>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      GHSA-2m69-gcr7-jv3q (CVE-2025-6965): SQLitePCLRaw.lib.e_sqlite3 bundles a SQLite native binary
+      older than 3.50.2. As of 2026-09, no version of SQLitePCLRaw.lib.e_sqlite3 packages the fix and
+      every version of Microsoft.Data.Sqlite (including 10.0.9) is still affected. Suppress until a
+      patched SQLitePCLRaw release is available.
+    -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" VersionOverride="$(SqliteVersion)" />

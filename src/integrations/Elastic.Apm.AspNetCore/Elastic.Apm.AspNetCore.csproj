@@ -5,7 +5,7 @@
     <PackageId>Elastic.Apm.AspNetCore</PackageId>
     <Description>Elastic APM for ASP.NET Core. This package contains auto instrumentation for ASP.NET Core. See: https://github.com/elastic/apm-agent-dotnet/tree/main/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore</PackageTags>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net10.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
@@ -22,8 +22,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" VersionOverride="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="2.1.1" />
+    <!-- Pin to a safe version; Microsoft.AspNetCore.Http 2.1.x pulls in the vulnerable 4.5.0 -->
+    <PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net10.0' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>

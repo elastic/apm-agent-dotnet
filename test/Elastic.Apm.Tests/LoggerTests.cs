@@ -387,7 +387,12 @@ namespace Elastic.Apm.Tests
 		public void GetCurrentTransactionNoLogging()
 		{
 			var testLogger = new TestLogger(LogLevel.Trace);
-			using var agent = new ApmAgent(new TestAgentComponents(testLogger));
+
+			// The OpenTelemetry bridge has to stay disabled here: ElasticActivityListener listens to every ActivitySource in
+			// the process and traces every activity it sees, so activities created by tests running in parallel would add
+			// lines to this logger while the assertion below compares line counts.
+			using var agent = new ApmAgent(new TestAgentComponents(testLogger,
+				new MockConfiguration(testLogger, openTelemetryBridgeEnabled: "false")));
 			agent.Tracer.CaptureTransaction("TestTransaction", "Test", () =>
 			{
 				var numberOfLinesPreCurrentTransaction = testLogger.Lines.Count;
