@@ -54,6 +54,15 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		public bool Enabled => _mainConfiguration.Enabled;
 		public bool OpenTelemetryBridgeEnabled => _mainConfiguration.OpenTelemetryBridgeEnabled;
 
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeAllowedActivitySources =>
+			_mainConfiguration.OpenTelemetryBridgeAllowedActivitySources;
+
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeDeniedActivitySources =>
+			_mainConfiguration.OpenTelemetryBridgeDeniedActivitySources;
+
+		public bool OpenTelemetryBridgeExperimentalSourcesEnabled =>
+			_mainConfiguration.OpenTelemetryBridgeExperimentalSourcesEnabled;
+
 		public string Environment => _mainConfiguration.Environment;
 		public IReadOnlyCollection<string> ExcludedNamespaces => _mainConfiguration.ExcludedNamespaces;
 		public double ExitSpanMinDuration => _dynamicConfiguration?.ExitSpanMinDuration ?? _mainConfiguration.ExitSpanMinDuration;

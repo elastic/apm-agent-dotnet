@@ -136,6 +136,15 @@ public class ConstructorTests
 
 		public bool OpenTelemetryBridgeEnabled => ConfigConsts.DefaultValues.OpenTelemetryBridgeEnabled;
 
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeAllowedActivitySources =>
+			ConfigConsts.DefaultValues.OpenTelemetryBridgeAllowedActivitySources;
+
+		public IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeDeniedActivitySources =>
+			ConfigConsts.DefaultValues.OpenTelemetryBridgeDeniedActivitySources;
+
+		public bool OpenTelemetryBridgeExperimentalSourcesEnabled =>
+			ConfigConsts.DefaultValues.OpenTelemetryBridgeExperimentalSourcesEnabled;
+
 		public bool TraceContextIgnoreSampledFalse => ConfigConsts.DefaultValues.TraceContextIgnoreSampledFalse;
 
 		public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;

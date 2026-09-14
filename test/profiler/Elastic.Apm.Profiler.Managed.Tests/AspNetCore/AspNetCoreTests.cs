@@ -87,8 +87,10 @@ namespace Elastic.Apm.Profiler.Managed.Tests.AspNetCore
 			apmServer.ReceivedData.Transactions.Should().HaveCountGreaterOrEqualTo(1);
 			apmServer.ReceivedData.Spans.Should().HaveCountGreaterOrEqualTo(1);
 
-			apmServer.ReceivedData.Spans.Any(span => span.Context.Db != null).Should().BeTrue();
-			apmServer.ReceivedData.Spans.Any(span => span.Context.Http != null).Should().BeTrue();
+			// A span the OTel bridge creates for an activity which matches none of the known semantic conventions,
+			// such as the sample app's 'foo' activity, carries no context at all.
+			apmServer.ReceivedData.Spans.Any(span => span.Context?.Db != null).Should().BeTrue();
+			apmServer.ReceivedData.Spans.Any(span => span.Context?.Http != null).Should().BeTrue();
 		}
 	}
 }

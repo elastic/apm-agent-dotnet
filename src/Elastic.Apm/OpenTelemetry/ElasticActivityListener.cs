@@ -7,8 +7,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
@@ -31,8 +33,36 @@ namespace Elastic.Apm.OpenTelemetry
 		private volatile bool _hasCosmosDbInstrumentation;
 		private volatile bool _hasMongoDbInstrumentation;
 		private volatile bool _hasGrpcClientInstrumentation;
+		private volatile bool _hasAspNetCoreRequestInstrumentation;
+
+		// Initialized to the option defaults so the filter is never in a null state, which nothing matches and which
+		// would therefore silently mute the bridge.
+		private IReadOnlyList<WildcardMatcher> _allowedActivitySources = ConfigConsts.DefaultValues.OpenTelemetryBridgeAllowedActivitySources;
+		private IReadOnlyList<WildcardMatcher> _deniedActivitySources = ConfigConsts.DefaultValues.OpenTelemetryBridgeDeniedActivitySources;
 
 		private bool _disposed;
+
+		/// <summary>
+		/// .NET 9 introduced a set of experimental <see cref="ActivitySource"/>s covering connection level plumbing
+		/// (DNS resolution, socket connect, TLS handshake and HTTP connection setup). They are dormant until a listener
+		/// subscribes, so a listener is what switches them on; the bridge only subscribes to them when
+		/// <see cref="IConfigurationReader.OpenTelemetryBridgeExperimentalSourcesEnabled" /> is enabled.
+		/// <para>
+		/// 'Experimental.System.Net.Http.Connections.ConnectionSetup' is deliberately started as the root of its own
+		/// trace, because a connection is shared by many requests and outlives all of them. Promoting these activities
+		/// to transactions therefore produces meaningless top level entries, such as the connection setup performed
+		/// during application startup or by the agent's own transport.
+		/// </para>
+		/// </summary>
+		private const string RuntimeInfrastructureSourcePrefix = "Experimental.System.Net.";
+
+		/// <summary>
+		/// Matches every experimental activity source, which is a wider set than
+		/// <see cref="RuntimeInfrastructureSourcePrefix" /> on purpose. The 'Experimental.' prefix is the convention for
+		/// telemetry whose names and attributes may still change, so whether to subscribe at all is governed by it, while
+		/// the narrower prefix governs the separate question of whether connection level activities may become transactions.
+		/// </summary>
+		private static readonly WildcardMatcher ExperimentalActivitySources = WildcardMatcher.ValueOf("Experimental.*");
 
 		internal ElasticActivityListener(IApmAgent agent)
 		{
@@ -54,19 +84,135 @@ namespace Elastic.Apm.OpenTelemetry
 
 			_logger?.Debug()?.Log(
 				"ElasticActivityListener started. Detected instrumentation packages: ServiceBus={ServiceBus}, Storage={Storage}, " +
-				"CosmosDb={CosmosDb}, MongoDb={MongoDb}, GrpcClient={GrpcClient}",
+				"CosmosDb={CosmosDb}, MongoDb={MongoDb}, GrpcClient={GrpcClient}, AspNetCoreRequest={AspNetCoreRequest}",
 				_hasServiceBusInstrumentation, _hasStorageInstrumentation, _hasCosmosDbInstrumentation,
-				_hasMongoDbInstrumentation, _hasGrpcClientInstrumentation);
+				_hasMongoDbInstrumentation, _hasGrpcClientInstrumentation, _hasAspNetCoreRequestInstrumentation);
+
+			BuildActivitySourceFilter(_agent.Configuration);
+			EnableAspNetCoreRequestActivityTags();
 
 			_listener = new ActivityListener
 			{
 				ActivityStarted = OnActivityStarted,
 				ActivityStopped = OnActivityStopped,
-				ShouldListenTo = _ => true,
-				Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+				ShouldListenTo = ShouldListenTo,
+				Sample = (ref _) => ActivitySamplingResult.AllData
 			};
 
 			ActivitySource.AddActivityListener(_listener);
+		}
+
+		/// <summary>
+		/// The AppContext switch behind which ASP.NET Core hosting, from .NET 10, records the request method, scheme, path
+		/// and server address as tags on its 'Microsoft.AspNetCore.Hosting.HttpRequestIn' activity. It defaults to
+		/// suppressed, and the OpenTelemetry ASP.NET Core instrumentation reads the same switch to decide whether to add
+		/// those tags itself, so enabling it does not duplicate anything in a pipeline the application configures.
+		/// </summary>
+		internal const string SuppressAspNetCoreActivityTagsSwitch = "Microsoft.AspNetCore.Hosting.SuppressActivityOpenTelemetryData";
+
+		/// <summary>
+		/// Without those tags a request transaction the bridge creates from the request activity can only be named after
+		/// the activity, so every request shares one name. Hosting reads the switch once, when the web host starts, so
+		/// this only takes effect when the agent starts first: in Program.cs before the host is built, through the
+		/// profiler or startup hook, or as a hosted service under WebApplication.CreateBuilder, which starts the web
+		/// server last. The documentation covers setting the switch directly for other arrangements. A value the
+		/// application set explicitly is respected.
+		/// </summary>
+		private void EnableAspNetCoreRequestActivityTags()
+		{
+			if (AppContext.TryGetSwitch(SuppressAspNetCoreActivityTagsSwitch, out var suppressed))
+			{
+				_logger?.Debug()?.Log("AppContext switch '{Switch}' is already set to {Value}; leaving it as configured by the application.",
+					SuppressAspNetCoreActivityTagsSwitch, suppressed);
+				return;
+			}
+
+			AppContext.SetSwitch(SuppressAspNetCoreActivityTagsSwitch, false);
+
+			_logger?.Debug()?.Log("Set AppContext switch '{Switch}' to false so that ASP.NET Core records request tags on its " +
+				"'{ActivityName}' activity, which name a transaction the bridge creates from it.",
+				SuppressAspNetCoreActivityTagsSwitch, KnownListeners.MicrosoftAspNetCoreHostingHttpRequestIn);
+		}
+
+		/// <summary>
+		/// Builds the allow and deny sets used by <see cref="ShouldListenTo" />. Configuration is read once here, because
+		/// <see cref="ActivityListener.ShouldListenTo" /> is evaluated once per activity source and the answer is cached by
+		/// the runtime; these options are therefore deliberately not centrally configurable.
+		/// </summary>
+		private void BuildActivitySourceFilter(IConfigurationReader configuration)
+		{
+			// An IConfigurationReader implemented outside the agent may not populate these members at all. Falling back to
+			// the defaults keeps a null out of the filter, which would otherwise either mute the bridge entirely or throw
+			// out of the agent's constructor.
+			_allowedActivitySources = configuration.OpenTelemetryBridgeAllowedActivitySources
+				?? ConfigConsts.DefaultValues.OpenTelemetryBridgeAllowedActivitySources;
+			var configuredDenied = configuration.OpenTelemetryBridgeDeniedActivitySources
+				?? ConfigConsts.DefaultValues.OpenTelemetryBridgeDeniedActivitySources;
+
+			// The experimental toggle is expressed as a deny entry rather than a separate rule, so there is only ever one
+			// precedence to reason about: a source is observed when it matches the allow list and nothing denies it. The
+			// entry exists in this effective list only; the configured denied list stays as the user wrote it.
+			var experimentalEnabled = configuration.OpenTelemetryBridgeExperimentalSourcesEnabled;
+
+			_deniedActivitySources = experimentalEnabled ? configuredDenied : [.. configuredDenied, ExperimentalActivitySources];
+
+			// Under the profiler, environment variables are the only configuration channel and a mistake is otherwise
+			// invisible, so always record what the filter actually resolved to.
+			_logger?.Debug()?.Log(
+				"ElasticActivityListener activity source filter: allowed=[{AllowedActivitySources}] denied=[{DeniedActivitySources}]. " +
+				"Experimental activity sources are {ExperimentalActivitySourcesState}.",
+				string.Join(", ", _allowedActivitySources.Select(m => m.GetMatcher())),
+				string.Join(", ", _deniedActivitySources.Select(m => m.GetMatcher())),
+				experimentalEnabled ? "enabled" : "disabled");
+		}
+
+		/// <summary>
+		/// A source is observed when it matches the allow list and is not matched by the deny list. The allow list is a
+		/// gate, the deny list is a veto, and the veto always wins. The agent's own source is always observed, whatever
+		/// the filter says.
+		/// </summary>
+		private bool ShouldListenTo(ActivitySource source)
+		{
+			var observed = MatchesSourceFilter(source.Name, out var reason);
+			if (!observed)
+				_logger?.Trace()?.Log("Not subscribing to activity source '{SourceName}'; it {Reason}.", source.Name, reason);
+
+			return observed;
+		}
+
+		/// <summary>
+		/// The filter decision on its own, without the logging <see cref="ShouldListenTo" /> performs. Used when asking
+		/// after the fact whether a source was excluded, where a 'not subscribing' log line would be misleading.
+		/// </summary>
+		private bool MatchesSourceFilter(string sourceName) => MatchesSourceFilter(sourceName, out _);
+
+		private bool MatchesSourceFilter(string sourceName, out string reason)
+		{
+			reason = null;
+
+			// The agent's own activity source has to have a listener at all times. Transaction.StartActivity creates the
+			// activity representing a transaction through ActivitySource.CreateActivity, which returns null when nothing
+			// listens to the source, and the dedicated Transaction.Listener is only registered when the bridge is disabled.
+			// Without that activity, Activity.Current is unset for the duration of every transaction, so an activity started
+			// inside one becomes the root of a separate trace, and an OpenTelemetry SDK the application configures itself
+			// reports a different trace id than the agent. Subscribing costs nothing, because activities from this source
+			// are skipped from capture through KnownListeners.SkippedActivityNamesSet.
+			if (string.Equals(sourceName, Transaction.ElasticApmActivitySourceName, StringComparison.Ordinal))
+				return true;
+
+			if (!WildcardMatcher.IsAnyMatch(_allowedActivitySources, sourceName))
+			{
+				reason = "does not match the allowed activity sources";
+				return false;
+			}
+
+			if (WildcardMatcher.IsAnyMatch(_deniedActivitySources, sourceName))
+			{
+				reason = "matches the denied activity sources";
+				return false;
+			}
+
+			return true;
 		}
 
 		private void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args) =>
@@ -99,6 +245,16 @@ namespace Elastic.Apm.OpenTelemetry
 			{
 				_hasGrpcClientInstrumentation = true;
 				_logger?.Debug()?.Log("Detected 'Elastic.Apm.GrpcClient' — 'Grpc.Net.Client' activities will be skipped by the OTel bridge.");
+			}
+			// Both of these create the transaction for an incoming ASP.NET Core request from the hosting layer's diagnostic
+			// events, so the runtime's request activity would duplicate it. The Azure Functions integration does so for the
+			// ASP.NET Core server the isolated worker hosts, without referencing Elastic.Apm.AspNetCore.
+			else if (name == "Elastic.Apm.AspNetCore" || name == "Elastic.Apm.Azure.Functions")
+			{
+				_hasAspNetCoreRequestInstrumentation = true;
+				_logger?.Debug()?.Log("Detected '{AssemblyName}' — '{ActivityName}' activities will be skipped by the OTel bridge " +
+					"because that package creates the transaction for incoming requests.",
+					name, KnownListeners.MicrosoftAspNetCoreHostingHttpRequestIn);
 			}
 		}
 
@@ -133,7 +289,15 @@ namespace Elastic.Apm.OpenTelemetry
 		}
 
 		/// <summary>
-		/// Central policy for activities the OTel bridge must not capture (dedup, known listeners, broken upstream sources).
+		/// Whether the activity comes from one of the runtime's connection level infrastructure sources. Matched on the
+		/// source name rather than the target framework, because the net8.0 build of the agent also runs on .NET 9+.
+		/// </summary>
+		private static bool IsRuntimeInfrastructureActivity(Activity activity) =>
+			activity.Source.Name.StartsWith(RuntimeInfrastructureSourcePrefix, StringComparison.Ordinal);
+
+		/// <summary>
+		/// Central policy for activities the OTel bridge must not capture (dedup, source-filtered fallbacks, known listeners,
+		/// broken upstream sources).
 		/// Used by both <see cref="OnActivityStarted"/> and <see cref="OnActivityStopped"/> so start/stop stay symmetric.
 		/// </summary>
 		private bool ShouldSkipActivity(Activity activity, out ActivitySkipReason skipReason)
@@ -155,6 +319,25 @@ namespace Elastic.Apm.OpenTelemetry
 			if (KnownListeners.SkippedActivityNamesSet.Contains(activity.OperationName))
 			{
 				skipReason = ActivitySkipReason.KnownListener;
+				return true;
+			}
+
+			// The runtime's activity for an incoming ASP.NET Core request is the transaction when nothing else provides
+			// one. It is only a duplicate while an Elastic integration which creates that transaction itself is loaded;
+			// without one, skipping it would leave every activity started while handling the request without a
+			// transaction to nest under.
+			if (_hasAspNetCoreRequestInstrumentation && IsAspNetCoreRequestActivity(activity))
+			{
+				skipReason = ActivitySkipReason.AspNetCoreRequestDedup;
+				return true;
+			}
+
+			// Hosting can fall back to a plain Activity when its source has no listeners but request logging is enabled.
+			// Apply the hosting source's filter to that fallback without excluding other sourceless activities.
+			if (activity.Source.Name.Length == 0 && IsAspNetCoreRequestActivity(activity)
+				&& !MatchesSourceFilter(KnownListeners.MicrosoftAspNetCoreActivitySource))
+			{
+				skipReason = ActivitySkipReason.AspNetCoreRequestSourceFilter;
 				return true;
 			}
 
@@ -240,6 +423,16 @@ namespace Elastic.Apm.OpenTelemetry
 					_logger?.Trace()?.Log("{Phase}: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped because it matched " +
 						"a skipped activity name defined in KnownListeners.", phase, activity.DisplayName, activity.Id, activity.TraceId);
 					break;
+				case ActivitySkipReason.AspNetCoreRequestDedup:
+					_logger?.Trace()?.Log("{Phase}: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped ASP.NET Core request " +
+						"activity because an Elastic integration which creates the request transaction is present in the application.",
+						phase, activity.DisplayName, activity.Id, activity.TraceId);
+					break;
+				case ActivitySkipReason.AspNetCoreRequestSourceFilter:
+					_logger?.Trace()?.Log("{Phase}: name:{DisplayName} id:{ActivityId} traceId:{TraceId} skipped sourceless ASP.NET Core " +
+						"request activity because '{SourceName}' is excluded by the activity source filter.",
+						phase, activity.DisplayName, activity.Id, activity.TraceId, KnownListeners.MicrosoftAspNetCoreActivitySource);
+					break;
 			}
 		}
 
@@ -252,31 +445,69 @@ namespace Elastic.Apm.OpenTelemetry
 			CosmosDbDedup,
 			MongoDbDedup,
 			GrpcClientDedup,
-			KnownListener
+			KnownListener,
+			AspNetCoreRequestDedup,
+			AspNetCoreRequestSourceFilter
 		}
+
+		/// <summary>
+		/// Whether the activity is the one ASP.NET Core hosting starts for each incoming request. Matched on the operation
+		/// name rather than the source, because hosting falls back to a sourceless <see cref="Activity" /> when nothing
+		/// listens to its 'Microsoft.AspNetCore' source.
+		/// </summary>
+		private static bool IsAspNetCoreRequestActivity(Activity activity) =>
+			string.Equals(activity.OperationName, KnownListeners.MicrosoftAspNetCoreHostingHttpRequestIn, StringComparison.Ordinal);
 
 		private bool CreateTransactionForActivity(Activity activity, long timestamp, List<SpanLink> spanLinks)
 		{
-			Transaction transaction = null;
-			if (activity.ParentId != null && _tracer.CurrentTransaction == null)
-			{
-				var dt = TraceContext.TryExtractTracingData(activity.ParentId, activity.Context.TraceState);
-
-				transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
-					timestamp, true, activity.SpanId.ToString(),
-					distributedTracingData: dt, links: spanLinks?.Count > 0 ? spanLinks : null, current: activity);
-			}
-			else if (activity.ParentId == null && _tracer.CurrentTransaction == null)
-			{
-				transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
-					timestamp, true, activity.SpanId.ToString(),
-					activity.TraceId.ToString(), links: spanLinks?.Count > 0 ? spanLinks : null, current: activity);
-			}
-
-			if (transaction == null)
+			if (_tracer.CurrentTransaction != null)
 				return false;
 
+			// Connection level infrastructure is only meaningful within a trace that already exists. Without a current
+			// transaction there is nothing to attach it to, and CreateSpanForActivity will drop it.
+			if (IsRuntimeInfrastructureActivity(activity))
+			{
+				_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} from runtime infrastructure source " +
+					"'{SourceName}' will not be promoted to a transaction; it is only captured as a span within an existing trace.",
+					activity.DisplayName, activity.Id, activity.Source.Name);
+
+				return false;
+			}
+
+			// An in-process parent the bridge declined on purpose is never sent, so continuing the trace from its id would
+			// leave the transaction pointing at a parent the server never receives. Such a parent is collapsed rather than
+			// severed: the walk moves past every ancestor of that kind and continues from whatever the top-most one
+			// declared as its own parent. That is a remote parent carried in from another service, whose trace context and
+			// sampling decision are then honoured exactly as for a request the agent instruments itself; or a segment which
+			// was captured; or nothing, in which case the activity becomes a root of its trace.
+			var ancestor = activity;
+			while (ancestor.Parent != null && IsDeliberatelyNotCaptured(ancestor.Parent))
+				ancestor = ancestor.Parent;
+
+			if (!ReferenceEquals(ancestor, activity))
+			{
+				_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} has an in-process parent '{ParentDisplayName}' " +
+					"from source '{ParentSourceName}' which the bridge deliberately did not capture; continuing the trace from " +
+					"{ContinuedFrom} instead, so the transaction does not point at a parent which is never sent.",
+					activity.DisplayName, activity.Id, activity.Parent.DisplayName, activity.Parent.Source.Name,
+					ancestor.ParentId ?? "no parent, as a root of its trace");
+			}
+
+			// A parent id which does not parse, such as one in the hierarchical format, falls back to a root as well.
+			var dt = ancestor.ParentId != null
+				? TraceContext.TryExtractTracingData(ancestor.ParentId, ancestor.TraceStateString)
+				: null;
+
+			var transaction = _tracer.StartTransactionInternal(activity.DisplayName, "unknown",
+				timestamp, true, activity.SpanId.ToString(), activity.TraceId.ToString(),
+				distributedTracingData: dt, links: spanLinks?.Count > 0 ? spanLinks : null, current: activity);
+
 			transaction.Otel = new OTel { SpanKind = activity.Kind.ToString() };
+
+			// An incoming request records its method and URL when the activity is created, which is early enough for an
+			// error captured while the request is handled to copy them: the error takes the transaction's context as it
+			// stands at that moment. Tags added later are picked up when the activity stops.
+			OTelActivityMapper.TryUpdateHttpRequestContext(transaction, activity);
 
 			_activeTransactions.AddOrUpdate(activity, transaction);
 
@@ -286,8 +517,59 @@ namespace Elastic.Apm.OpenTelemetry
 			return true;
 		}
 
+		/// <summary>
+		/// Whether the bridge saw this activity and declined it on purpose: <see cref="ShouldSkipActivity" /> rejects it,
+		/// such as 'System.Net.Http.HttpRequestOut', or its source is excluded by the activity source filter. Such an
+		/// activity is never sent.
+		/// <para>
+		/// Absence from the tables on its own does not establish this. A parent the bridge never saw, one created before
+		/// the agent started or belonging to a source only another listener observes, is absent too, and an OpenTelemetry
+		/// pipeline the application configures itself may well have exported it under the very id the child declares.
+		/// Where we cannot tell, the declared parent is kept rather than rewriting the topology. The agent's own
+		/// transaction activity is skipped from capture as well, but its span id is the id of a transaction which is
+		/// sent, so it counts as captured here.
+		/// </para>
+		/// </summary>
+		private bool IsDeliberatelyNotCaptured(Activity parent) =>
+			!_activeTransactions.TryGetValue(parent, out _)
+			&& !_activeSpans.TryGetValue(parent, out _)
+			&& !string.Equals(parent.OperationName, KnownListeners.ApmTransactionActivityName, StringComparison.Ordinal)
+			&& (ShouldSkipActivity(parent, out _) || !MatchesSourceFilter(parent.Source.Name));
+
 		private void CreateSpanForActivity(Activity activity, long timestamp, List<SpanLink> spanLinks)
 		{
+			// The activity declares a parent we did not create in this process (Activity.Parent is null while a ParentSpanId
+			// is set), which is what a messaging consumer does when it continues the producer's context. We are about to nest
+			// it under the ambient segment instead, so record the declared parent as a link rather than discarding it.
+			// A null Parent does not prove the declared parent is remote: an activity started from an ActivityContext the
+			// caller already had in hand arrives the same way. When that context belongs to the trace we are nesting into,
+			// it is an ancestor or sibling already present in this trace, whichever segment we happen to nest under, and a
+			// link would only point back into the same waterfall. The same goes for a context the caller linked explicitly.
+			if (activity.Parent is null && activity.ParentSpanId != default)
+			{
+				var declaredParentId = activity.ParentSpanId.ToString();
+				var declaredTraceId = activity.TraceId.ToString();
+
+				var isInCurrentTrace = string.Equals(declaredTraceId, _tracer.CurrentTransaction?.TraceId, StringComparison.Ordinal);
+				var isAlreadyLinked = ContainsLink(spanLinks, declaredParentId, declaredTraceId);
+
+				if (isInCurrentTrace || isAlreadyLinked)
+				{
+					_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} declares parent {ParentSpanId} " +
+						"which is {SpanLinkSkipReason}; no span link added.", activity.DisplayName, activity.Id, activity.ParentSpanId,
+						isInCurrentTrace ? "part of the trace this span is nested into" : "already present in the activity's links");
+				}
+				else
+				{
+					spanLinks ??= [];
+					spanLinks.Add(new SpanLink(declaredParentId, declaredTraceId));
+
+					_logger?.Trace()?.Log("ActivityStarted: name:{DisplayName} id:{ActivityId} declares remote parent {ParentSpanId} " +
+						"in trace {ParentTraceId}; captured as a span link because the activity is nested under the current span.",
+						activity.DisplayName, activity.Id, activity.ParentSpanId, activity.TraceId);
+				}
+			}
+
 			Span newSpan;
 			if (_tracer.CurrentSpan == null)
 			{
@@ -321,6 +603,33 @@ namespace Elastic.Apm.OpenTelemetry
 				newSpan.Id, newSpan.Name, activity.Id);
 		}
 
+		private static bool ContainsLink(List<SpanLink> links, string spanId, string traceId)
+		{
+			if (links == null)
+				return false;
+
+			foreach (var link in links)
+			{
+				if (link.SpanId == spanId && link.TraceId == traceId)
+					return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Some activities, including the runtime's own System.Net sources, only set their human readable
+		/// <see cref="Activity.DisplayName"/> when they stop, and instrumentation libraries change it once more is
+		/// known, such as the route of an incoming request. The final name is the one any OpenTelemetry exporter would
+		/// report, so adopt it, unless the name was set through the Elastic API in the meantime, which the segment
+		/// records itself and which always wins.
+		/// </summary>
+		private static bool TryGetLateDisplayName(Activity activity, string currentName, bool hasCustomName, out string displayName)
+		{
+			displayName = activity.DisplayName;
+			return !hasCustomName && !string.Equals(displayName, currentName, StringComparison.Ordinal);
+		}
+
 		private void OnActivityStopped(Activity activity)
 		{
 			if (activity == null)
@@ -347,8 +656,27 @@ namespace Elastic.Apm.OpenTelemetry
 				_activeTransactions.Remove(activity);
 				transaction.Duration = activity.Duration.TotalMilliseconds;
 
+				if (TryGetLateDisplayName(activity, transaction.Name, transaction.HasCustomName, out var displayName))
+				{
+					transaction.Name = displayName;
+				}
+				else if (!transaction.HasCustomName && IsAspNetCoreRequestActivity(activity)
+					&& string.Equals(activity.DisplayName, activity.OperationName, StringComparison.Ordinal)
+					&& OTelActivityMapper.TryGetHttpServerRequestName(activity, out var requestName))
+				{
+					// ASP.NET Core hosting never sets a display name of its own, so without an instrumentation library the
+					// transaction would carry the operation name and every request would share it. From .NET 10 the runtime
+					// records the request method and path as tags, see EnableAspNetCoreRequestActivityTags, which give a name
+					// of the same shape the ASP.NET Core integration produces. Only replace the default operation name,
+					// preserving display names supplied by instrumentation even before the activity started.
+					transaction.Name = requestName;
+				}
+
 				OTelActivityMapper.UpdateOTelAttributes(activity, transaction.Otel);
 				OTelActivityMapper.InferTransactionType(transaction, activity);
+
+				// For the tags an instrumentation library adds after the activity was created; a no-op once filled.
+				OTelActivityMapper.TryUpdateHttpRequestContext(transaction, activity);
 
 				transaction.Outcome = Outcome.Unknown;
 #if NET // Not available in netstandard2.1
@@ -371,6 +699,9 @@ namespace Elastic.Apm.OpenTelemetry
 		private static void UpdateSpan(Activity activity, Span span)
 		{
 			span.Duration = activity.Duration.TotalMilliseconds;
+
+			if (TryGetLateDisplayName(activity, span.Name, span.HasCustomName, out var displayName))
+				span.Name = displayName;
 
 			OTelActivityMapper.UpdateOTelAttributes(activity, span.Otel);
 			OTelActivityMapper.InferSpanTypeAndSubType(span, activity);

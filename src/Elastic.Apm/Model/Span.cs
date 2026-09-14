@@ -33,6 +33,7 @@ namespace Elastic.Apm.Model
 		private readonly bool _isDropped;
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
+		private string _name;
 		private readonly IPayloadSender _payloadSender;
 		private readonly bool _restoreCurrentSpanOnEnd;
 
@@ -56,6 +57,7 @@ namespace Elastic.Apm.Model
 			Duration = duration;
 			Id = id;
 			Name = name;
+			HasCustomName = false;
 			ParentId = parentId;
 		}
 
@@ -92,6 +94,7 @@ namespace Elastic.Apm.Model
 			Id = id ?? ActivitySpanId.CreateRandom().ToString();
 			IsExitSpan = isExitSpan;
 			Name = name;
+			HasCustomName = false;
 			Type = type;
 			Links = links;
 
@@ -269,7 +272,22 @@ namespace Elastic.Apm.Model
 		public Dictionary<string, string> Labels => Context.Labels;
 
 		[MaxLength]
-		public string Name { get; set; }
+		public string Name
+		{
+			get => _name;
+			set
+			{
+				HasCustomName = true;
+				_name = value;
+			}
+		}
+
+		/// <summary>
+		/// If true, then the span name was modified by external code after the span was created, and the name should
+		/// not be changed or "fixed" automatically.
+		/// </summary>
+		[JsonIgnore]
+		internal bool HasCustomName { get; private set; }
 
 		/// <summary>
 		/// The outcome of the span: success, failure, or unknown.

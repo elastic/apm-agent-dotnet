@@ -360,11 +360,11 @@ public class OpenTelemetryTests
 	}
 
 	/// <summary>
-	/// Activities whose OperationName matches a known internal listener (ASP.NET Core, System.Net.Http, Elastic APM's own
-	/// transaction activity) must be silently dropped to prevent double-capturing.
+	/// Activities whose OperationName matches a known internal listener (System.Net.Http, Elastic APM's own transaction
+	/// activity) must be silently dropped to prevent double-capturing. The ASP.NET Core request activity is only skipped
+	/// while an integration which creates the request transaction is loaded; see AspNetCoreRequestActivityTests.
 	/// </summary>
 	[Theory]
-	[InlineData("Microsoft.AspNetCore.Hosting.HttpRequestIn")]
 	[InlineData("System.Net.Http.HttpRequestOut")]
 	[InlineData("System.Net.Http.Desktop.HttpRequestOut")]
 	[InlineData("ElasticApm.Transaction")]
@@ -474,8 +474,11 @@ public class OpenTelemetryTests
 		span.Context.Destination.Service.Resource.Should().NotContain(":-1");
 	}
 
-	[Fact]
-	public void HttpSchemeAloneClassifiesClientSpanAsHttp()
+	/// <summary>'url.scheme' is the current convention, 'http.scheme' the older one; either identifies an HTTP span.</summary>
+	[Theory]
+	[InlineData(SemanticConventions.UrlScheme)]
+	[InlineData(SemanticConventions.HttpScheme)]
+	public void SchemeAloneClassifiesClientSpanAsHttp(string schemeAttribute)
 	{
 		var payloadSender = new MockPayloadSender();
 		using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
@@ -483,8 +486,8 @@ public class OpenTelemetryTests
 			agent.Tracer.CaptureTransaction("parent", "test", () =>
 			{
 				var src = new ActivitySource("Test.SchemeOnly");
-				using (var activity = src.StartActivity("scheme-only", ActivityKind.Client))
-					activity?.SetTag(SemanticConventions.HttpScheme, "https");
+				using var activity = src.StartActivity("scheme-only", ActivityKind.Client);
+				activity?.SetTag(schemeAttribute, "https");
 			});
 		}
 
@@ -496,15 +499,17 @@ public class OpenTelemetryTests
 		span.Subtype.Should().Be(ApiConstants.SubtypeHttp);
 	}
 
-	[Fact]
-	public void HttpSchemeAloneClassifiesServerActivityAsRequest()
+	[Theory]
+	[InlineData(SemanticConventions.UrlScheme)]
+	[InlineData(SemanticConventions.HttpScheme)]
+	public void SchemeAloneClassifiesServerActivityAsRequest(string schemeAttribute)
 	{
 		var payloadSender = new MockPayloadSender();
 		using (new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: MockApmServerInfo.Version716)))
 		{
 			var src = new ActivitySource("Test.SchemeOnlyServer");
 			using (var activity = src.StartActivity("scheme-only-server", ActivityKind.Server))
-				activity?.SetTag(SemanticConventions.HttpScheme, "https");
+				activity?.SetTag(schemeAttribute, "https");
 		}
 
 		payloadSender.WaitForTransactions();

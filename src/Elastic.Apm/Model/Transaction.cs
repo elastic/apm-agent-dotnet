@@ -27,13 +27,21 @@ internal class Transaction : ITransaction
 	internal static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 
 #if NET || NETSTANDARD2_1
-	internal static readonly ActivitySource ElasticApmActivitySource = new("Elastic.Apm");
+	/// <summary>
+	/// A compile time constant rather than a read of <see cref="ElasticApmActivitySource" />, so that code which only
+	/// needs the name, such as the OpenTelemetry bridge's activity source filter, cannot re-enter this static
+	/// constructor: constructing an ActivitySource notifies the listeners which already exist, and a listener reading
+	/// the field back at that point would observe it unset.
+	/// </summary>
+	internal const string ElasticApmActivitySourceName = "Elastic.Apm";
+
+	internal static readonly ActivitySource ElasticApmActivitySource = new(ElasticApmActivitySourceName);
 
 	// This simply ensures our transaction activity is always created.
 	internal static readonly ActivityListener Listener = new()
 	{
-		ShouldListenTo = s => s.Name == ElasticApmActivitySource.Name,
-		Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+		ShouldListenTo = s => s.Name == ElasticApmActivitySourceName,
+		Sample = (ref _) => ActivitySamplingResult.AllData
 	};
 #endif
 
@@ -51,8 +59,8 @@ internal class Transaction : ITransaction
 	private bool _endingStarted;
 	private bool _ownsActivity;
 
+#pragma warning disable IDE0051 // Disable warning for unused private members - Used for serialization
 	[JsonConstructor]
-	// ReSharper disable once UnusedMember.Local - this constructor is meant for serialization
 	private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
 		bool isSampled, string result, SpanCount spanCount
 	)
@@ -69,6 +77,7 @@ internal class Transaction : ITransaction
 		Result = result;
 		SpanCount = spanCount;
 	}
+#pragma warning restore IDE0051
 
 	// This constructor is used only by tests that don't care about sampling and distributed tracing
 	internal Transaction(ApmAgent agent, string name, string type, long? timestamp = null)

@@ -28,6 +28,7 @@ namespace Elastic.Apm.Config
 			public const bool CentralConfig = true;
 			public const string CloudProvider = SupportedValues.CloudProviderAuto;
 			public const bool OpenTelemetryBridgeEnabled = true;
+			public const bool OpenTelemetryBridgeExperimentalSourcesEnabled = false;
 			public const string ExitSpanMinDuration = "0ms";
 			public const int ExitSpanMinDurationInMilliseconds = 0;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
@@ -73,6 +74,12 @@ namespace Elastic.Apm.Config
 			public static readonly IReadOnlyList<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>().AsReadOnly();
 
 			public static readonly IReadOnlyList<WildcardMatcher> IgnoreMessageQueues = new List<WildcardMatcher>().AsReadOnly();
+
+			public static readonly IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeAllowedActivitySources =
+				new List<WildcardMatcher> { WildcardMatcher.ValueOf("*") }.AsReadOnly();
+
+			public static readonly IReadOnlyList<WildcardMatcher> OpenTelemetryBridgeDeniedActivitySources =
+				new List<WildcardMatcher>().AsReadOnly();
 
 			public static readonly IReadOnlyList<WildcardMatcher> SanitizeFieldNames;
 

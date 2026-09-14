@@ -25,6 +25,9 @@ applies_to:
 | [`DisableMetrics`](/reference/config-reporter.md#config-disable-metrics) | No | Reporter |
 | [`Enabled`](/reference/config-core.md#config-enabled) | No | Core |
 | [`OpentelemetryBridgeEnabled`](/reference/config-core.md#config-opentelemetry-bridge-enabled) | No | Core |
+| [`OpenTelemetryBridgeAllowedActivitySources`](/reference/config-core.md#config-opentelemetry-bridge-allowed-activity-sources) | No | Core |
+| [`OpenTelemetryBridgeDeniedActivitySources`](/reference/config-core.md#config-opentelemetry-bridge-denied-activity-sources) | No | Core |
+| [`OpenTelemetryBridgeExperimentalSourcesEnabled`](/reference/config-core.md#config-opentelemetry-bridge-experimental-sources-enabled) | No | Core |
 | [`Environment`](/reference/config-core.md#config-environment) | No | Core |
 | [`ExcludedNamespaces`](/reference/config-stacktrace.md#config-excluded-namespaces) | No | Stacktrace |
 | [`ExitSpanMinDuration`](/reference/config-core.md#config-exit-span-min-duration) | Yes | Core, Performance |

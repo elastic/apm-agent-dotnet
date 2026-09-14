@@ -7,6 +7,12 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <!-- Hosts a real ASP.NET Core application in AspNetCoreRequestActivityTests. Deliberately no reference to
+         Elastic.Apm.AspNetCore: those tests cover the bridge on its own. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(SolutionRoot)\test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
     <ProjectReference Include="..\OpenTelemetrySample\OpenTelemetrySample.csproj" />
   </ItemGroup>

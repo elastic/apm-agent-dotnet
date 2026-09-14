@@ -7,8 +7,9 @@ using Xunit;
 
 namespace Elastic.Apm.OpenTelemetry.Tests;
 
-// The ElasticActivityListener registers a global ActivityListener (ShouldListenTo = _ => true),
-// so agents from parallel tests capture each other's activities. Grouping all OTel bridge tests
-// into one collection forces sequential execution and prevents cross-test pollution.
+// The ElasticActivityListener registers a global ActivityListener which, by default, observes every
+// non-experimental ActivitySource, so agents from parallel tests capture each other's activities.
+// Grouping all OTel bridge tests into one collection forces sequential execution and prevents
+// cross-test pollution.
 [CollectionDefinition("OpenTelemetry")]
 public class OpenTelemetryTestsCollection { }

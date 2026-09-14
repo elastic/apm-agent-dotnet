@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Model;
 using FluentAssertions;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -49,6 +50,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 		[JsonProperty("dropped_spans_stats")]
 		public List<DroppedSpanStatsDto> DroppedSpanStats { get; set; }
 
+		public List<SpanLinkDto> Links { get; set; }
+
+		public OTel Otel { get; set; }
+
 		public FaasDto FaaS { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(TransactionDto))
@@ -77,6 +82,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			Duration.DurationAssertValid();
 			Name?.NameAssertValid();
 			Result?.AssertValid();
+			Links?.AssertValid();
 			Type?.AssertValid();
 
 			if (IsSampled)
