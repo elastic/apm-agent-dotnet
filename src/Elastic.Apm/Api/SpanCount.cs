@@ -29,6 +29,17 @@ namespace Elastic.Apm.Api
 
 		internal void IncrementDropped() => Interlocked.Increment(ref _dropped);
 
+		/// <summary>
+		/// Moves <paramref name="count" /> spans that were started but then discarded instead of being reported
+		/// (see <c>exit_span_min_duration</c>) from <see cref="Started" /> to <see cref="Dropped" />, so that
+		/// <see cref="Started" /> keeps reflecting the number of spans that are actually recorded.
+		/// </summary>
+		internal void MoveStartedToDropped(int count)
+		{
+			Interlocked.Add(ref _started, -count);
+			Interlocked.Add(ref _dropped, count);
+		}
+
 		internal int IncrementTotal() => Interlocked.Increment(ref _total);
 
 		public override string ToString() =>

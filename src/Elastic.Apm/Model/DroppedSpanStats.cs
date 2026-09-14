@@ -16,10 +16,10 @@ namespace Elastic.Apm.Model
 	internal class DroppedSpanStats
 	{
 		public DroppedSpanStats(string serviceTargetType, string serviceTargetName, string destinationServiceResource, Outcome outcome,
-			double durationSumUs
+			double durationSumUs, int count
 		)
 		{
-			Duration = new DroppedSpanDuration { Count = 1, Sum = new DroppedSpanDuration.DroppedSpanDurationSum { UsRaw = durationSumUs } };
+			Duration = new DroppedSpanDuration { Count = count, Sum = new DroppedSpanDuration.DroppedSpanDurationSum { UsRaw = durationSumUs } };
 			ServiceTargetType = serviceTargetType;
 			ServiceTargetName = serviceTargetName;
 			DestinationServiceResource = destinationServiceResource;
@@ -73,7 +73,7 @@ namespace Elastic.Apm.Model
 				public double UsRaw { get; set; }
 
 				// As `duration.sum.us` is an integer in the intake API we round during serialization.
-				public int Us => Convert.ToInt32(UsRaw);
+				public long Us => Convert.ToInt64(UsRaw);
 			}
 		}
 	}

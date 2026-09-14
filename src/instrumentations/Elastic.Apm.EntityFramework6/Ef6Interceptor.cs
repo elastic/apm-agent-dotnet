@@ -27,34 +27,33 @@ namespace Elastic.Apm.EntityFramework6
 	{
 		private const string ThisClassName = nameof(Ef6Interceptor);
 
-		private readonly Lazy<Impl> _impl = new Lazy<Impl>(() => new Impl());
+		private readonly Lazy<Impl> _impl = new(() => new Impl());
 
 		public void NonQueryExecuting(DbCommand command, DbCommandInterceptionContext<int> interceptCtx) =>
-			CreateImplIfReadyAndNoConflict()?.StartSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict(command)?.StartSpan(command, interceptCtx);
 
 		public void NonQueryExecuted(DbCommand command, DbCommandInterceptionContext<int> interceptCtx) =>
-			CreateImplIfReadyAndNoConflict()?.EndSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict(command)?.EndSpan(command, interceptCtx);
 
 		public void ReaderExecuting(DbCommand command, DbCommandInterceptionContext<DbDataReader> interceptCtx) =>
-			CreateImplIfReadyAndNoConflict()?.StartSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict(command)?.StartSpan(command, interceptCtx);
 
 		public void ReaderExecuted(DbCommand command, DbCommandInterceptionContext<DbDataReader> interceptCtx) =>
-			CreateImplIfReadyAndNoConflict()?.EndSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict(command)?.EndSpan(command, interceptCtx);
 
 		public void ScalarExecuting(DbCommand command, DbCommandInterceptionContext<object> interceptCtx) =>
-			CreateImplIfReadyAndNoConflict()?.StartSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict(command)?.StartSpan(command, interceptCtx);
 
 		public void ScalarExecuted(DbCommand command, DbCommandInterceptionContext<object> interceptCtx) =>
-			CreateImplIfReadyAndNoConflict()?.EndSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict(command)?.EndSpan(command, interceptCtx);
 
 		/// <summary>
 		/// DB spans can be created only when there's a current transaction
 		/// which in turn means agent singleton instance should already be created.
-		/// Also checks for competing instrumentation. If SqlClient already instrumented, it'll return null, so the interceptor
-		/// won't create
-		/// duplicate spans
+		/// Also checks for competing instrumentation. If the profiler's ADO.NET integrations already trace this command,
+		/// it'll return null, so the interceptor won't create duplicate spans.
 		/// </summary>
-		private Impl CreateImplIfReadyAndNoConflict()
+		private Impl CreateImplIfReadyAndNoConflict(IDbCommand command)
 		{
 			// Make sure agent is configured
 			var impl = Agent.IsConfigured ? _impl.Value : null;
@@ -62,10 +61,7 @@ namespace Elastic.Apm.EntityFramework6
 				return null;
 
 			// Make sure DB spans were not already captured
-			if (!(Agent.Tracer.CurrentSpan is Span span))
-				return impl;
-
-			return span.InstrumentationFlag == InstrumentationFlag.SqlClient ? null : impl;
+			return CompetingInstrumentation.IsCommandTracedByAdoNetModule(Agent.Instance, command) ? null : impl;
 		}
 
 		private class Impl

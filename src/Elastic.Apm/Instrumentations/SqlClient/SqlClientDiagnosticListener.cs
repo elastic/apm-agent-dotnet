@@ -45,13 +45,6 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 		// prefix - Microsoft.Data.SqlClient. or System.Data.SqlClient.
 		protected override void HandleOnNext(KeyValuePair<string, object> value)
 		{
-			// check for competing instrumentation
-			if (ApmAgent.Tracer.CurrentSpan is Span span)
-			{
-				if (span.InstrumentationFlag == InstrumentationFlag.EfCore || span.InstrumentationFlag == InstrumentationFlag.EfClassic)
-					return;
-			}
-
 			if (!value.Key.StartsWith("Microsoft.Data.SqlClient.") && !value.Key.StartsWith("System.Data.SqlClient."))
 				return;
 
@@ -76,6 +69,15 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId
 					&& propertyFetcherSet.StartCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
+					// The command is already traced by a competing instrumentation (Entity Framework or the profiler's ADO.NET
+					// integrations), so don't start a nested span for the very same command. The matching After/Error event is
+					// still handled and finds no pending span to end.
+					if (CompetingInstrumentation.IsCommandTracedByOtherModule(ApmAgent, dbCommand))
+					{
+						Logger.Trace()?.Log("WriteCommandBefore event is skipped, the command is traced by a competing instrumentation.");
+						return;
+					}
+
 					var span = DbSpanCommon.StartSpan(ApmAgent, dbCommand, InstrumentationFlag.SqlClient,
 						ApiConstants.SubtypeMssql, makeCurrent: false);
 					_spans.Add(operationId, span, GetMaxSpanAge(dbCommand));
