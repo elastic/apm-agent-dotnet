@@ -370,6 +370,100 @@ namespace Elastic.Apm.SqlClient.Tests
 		}
 #endif
 
+		/// <summary>
+		/// When the profiler's ADO.NET CallTarget integration already traces the command, its span is the current span while the
+		/// command executes. The diagnostic listener must not add a nested span for the very same command.
+		/// </summary>
+		[Theory]
+		[InlineData((short)InstrumentationFlag.SqlClient)]
+		[InlineData((short)InstrumentationFlag.AdoNet)]
+		[InlineData((short)InstrumentationFlag.EfCore)]
+		[InlineData((short)InstrumentationFlag.EfClassic)]
+		public void CommandBefore_UnderCompetingSpanForTheSameCommand_IsSkipped(short instrumentationFlag)
+		{
+			using var listener = new SqlClientDiagnosticListener(_apmAgent);
+			var operationId = Guid.NewGuid();
+			using var command = CreateCommand();
+
+			var transaction = (Transaction)_apmAgent.Tracer.StartTransaction("transaction", "type");
+			var competingSpan = transaction.StartSpanInternal(DbSpanCommon.GetDbSpanName(command), ApiConstants.TypeDb,
+				ApiConstants.SubtypeMssql, instrumentationFlag: (InstrumentationFlag)instrumentationFlag, isExitSpan: true);
+
+			listener.OnNext(new KeyValuePair<string, object>("Microsoft.Data.SqlClient.WriteCommandBefore",
+				new { OperationId = operationId, Command = command }));
+			listener.PendingSpanCount.Should().Be(0);
+
+			listener.OnNext(new KeyValuePair<string, object>("Microsoft.Data.SqlClient.WriteCommandAfter",
+				new { OperationId = operationId, Command = command }));
+
+			competingSpan.End();
+			transaction.End();
+
+			_payloadSender.Spans.Should().ContainSingle().Which.Id.Should().Be(competingSpan.Id);
+		}
+
+		/// <summary>
+		/// A competing span only suppresses the command it describes. A command executing while an unrelated database span
+		/// is current must still be traced, otherwise concurrent commands on the same execution context are lost.
+		/// </summary>
+		[Fact]
+		public void CommandBefore_UnderCompetingSpanForAnotherCommand_CreatesSpan()
+		{
+			using var listener = new SqlClientDiagnosticListener(_apmAgent);
+			var operationId = Guid.NewGuid();
+			using var command = CreateCommand();
+
+			var transaction = (Transaction)_apmAgent.Tracer.StartTransaction("transaction", "type");
+			var competingSpan = transaction.StartSpanInternal("SELECT FROM SomethingElse", ApiConstants.TypeDb,
+				ApiConstants.SubtypeMssql, instrumentationFlag: InstrumentationFlag.AdoNet, isExitSpan: true);
+
+			listener.OnNext(new KeyValuePair<string, object>("Microsoft.Data.SqlClient.WriteCommandBefore",
+				new { OperationId = operationId, Command = command }));
+			listener.PendingSpanCount.Should().Be(1);
+
+			listener.OnNext(new KeyValuePair<string, object>("Microsoft.Data.SqlClient.WriteCommandAfter",
+				new { OperationId = operationId, Command = command }));
+
+			competingSpan.End();
+			transaction.End();
+
+			_payloadSender.Spans.Should().HaveCount(2);
+			_payloadSender.Spans.Should().Contain(s => s.Id == competingSpan.Id);
+			_payloadSender.Spans.Should().Contain(s => s.Name == DbSpanCommon.GetDbSpanName(command) && s.Id != competingSpan.Id);
+		}
+
+		/// <summary>
+		/// Only the modules that trace the very same command compete. Any other current span, including one started by the
+		/// application itself, must not stop the command from being traced.
+		/// </summary>
+		[Theory]
+		[InlineData((short)InstrumentationFlag.None)]
+		[InlineData((short)InstrumentationFlag.HttpClient)]
+		[InlineData((short)InstrumentationFlag.AspNetCore)]
+		public void CommandBefore_UnderNonCompetingSpan_CreatesSpan(short instrumentationFlag)
+		{
+			using var listener = new SqlClientDiagnosticListener(_apmAgent);
+			var operationId = Guid.NewGuid();
+			using var command = CreateCommand();
+
+			var transaction = (Transaction)_apmAgent.Tracer.StartTransaction("transaction", "type");
+			var currentSpan = transaction.StartSpanInternal(DbSpanCommon.GetDbSpanName(command), ApiConstants.TypeExternal,
+				instrumentationFlag: (InstrumentationFlag)instrumentationFlag);
+
+			listener.OnNext(new KeyValuePair<string, object>("Microsoft.Data.SqlClient.WriteCommandBefore",
+				new { OperationId = operationId, Command = command }));
+			listener.PendingSpanCount.Should().Be(1);
+
+			listener.OnNext(new KeyValuePair<string, object>("Microsoft.Data.SqlClient.WriteCommandAfter",
+				new { OperationId = operationId, Command = command }));
+
+			currentSpan.End();
+			transaction.End();
+
+			_payloadSender.Spans.Should().HaveCount(2);
+			_payloadSender.Spans.Should().ContainSingle(s => s.Type == ApiConstants.TypeDb);
+		}
+
 		public void Dispose() => _apmAgent.Dispose();
 
 		/// <summary>

@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -25,15 +26,19 @@ namespace Elastic.Apm.EntityFrameworkCore
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
-			// check for competing instrumentation
-			if (_agent?.TracerInternal.CurrentSpan is Span { InstrumentationFlag: InstrumentationFlag.SqlClient })
-				return;
-
 			switch (kv.Key)
 			{
 				case { } k when k == RelationalEventId.CommandExecuting.Name && ApmAgent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
+						// The command is already traced by the profiler's ADO.NET integrations, so don't start a nested span
+						// for the very same command. The matching Executed/Error event is still handled and finds nothing to end.
+						if (CompetingInstrumentation.IsCommandTracedByAdoNetModule(_agent, commandEventData.Command))
+						{
+							Logger.Trace()?.Log("CommandExecuting event is skipped, the command is traced by a competing instrumentation.");
+							return;
+						}
+
 						var newSpan = DbSpanCommon.StartSpan(ApmAgent, commandEventData.Command, InstrumentationFlag.EfCore,
 							captureStackTraceOnStart: true);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);

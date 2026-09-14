@@ -376,7 +376,13 @@ internal class Transaction : ITransaction
 	/// </summary>
 	private ConcurrentDictionary<DroppedSpanStatsKey, DroppedSpanStats> _droppedSpanStatsMap;
 
-	private bool _isEnded;
+	private volatile bool _isEnded;
+
+	/// <summary>
+	/// Whether <see cref="End" /> has been called. Read by ending child spans to decide whether they may still be buffered
+	/// for span compression, see <see cref="Span.End" />.
+	/// </summary>
+	internal bool IsEnded => _isEnded;
 
 	private string _name;
 
@@ -394,7 +400,17 @@ internal class Transaction : ITransaction
 	private bool _outcomeChangedThroughApi;
 	internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
+	/// <summary>
+	/// The span buffered for compression directly under the transaction, see <see cref="Span.End" />.
+	/// Only accessed while holding <see cref="CompressionBufferLock" />.
+	/// </summary>
 	internal Span CompressionBuffer;
+
+	/// <summary>
+	/// Guards the compression buffer of the transaction and of every span in it. The span compression spec requires
+	/// setting and retrieving a buffered span to be atomic, as sibling spans may end concurrently.
+	/// </summary>
+	internal readonly object CompressionBufferLock = new();
 
 	/// <summary>
 	/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
@@ -590,9 +606,11 @@ internal class Transaction : ITransaction
 
 	private readonly object _lock = new();
 	internal void UpdateDroppedSpanStats(string serviceTargetType, string serviceTargetName, string destinationServiceResource, Outcome outcome,
-		double duration
+		double duration, int count
 	)
 	{
+		var durationSumUs = duration * 1000;
+
 		//lock the lazy initialization of the dictionary
 		if (_droppedSpanStatsMap == null)
 		{
@@ -607,14 +625,14 @@ internal class Transaction : ITransaction
 			//AddOrUpdate callbacks can run multiple times so still wrapping this in a lock
 			var key = new DroppedSpanStatsKey(serviceTargetType, serviceTargetName, outcome);
 			_droppedSpanStatsMap.AddOrUpdate(key,
-				 _ => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, duration),
+				 _ => new DroppedSpanStats(serviceTargetType, serviceTargetName, destinationServiceResource, outcome, durationSumUs, count),
 				 (_, stats) =>
 				 {
 					 stats.Duration ??=
 						 new DroppedSpanStats.DroppedSpanDuration { Sum = new DroppedSpanStats.DroppedSpanDuration.DroppedSpanDurationSum() };
 
-					 stats.Duration.Count++;
-					 stats.Duration.Sum.UsRaw += duration;
+					 stats.Duration.Count += count;
+					 stats.Duration.Sum.UsRaw += durationSumUs;
 					 return stats;
 				 });
 		}
@@ -785,17 +803,24 @@ internal class Transaction : ITransaction
 		handler?.Invoke(this, EventArgs.Empty);
 		Ended = null;
 
-		if (CompressionBuffer != null)
+		// Report the span buffered for compression, if any (spec: onEnd). Taken under the lock so that a child span ending
+		// concurrently either sees the transaction as ended and reports itself, or is picked up here - never neither or both.
+		Span buffered;
+		lock (CompressionBufferLock)
 		{
-			if (!CompressionBuffer.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
+			buffered = CompressionBuffer;
+			CompressionBuffer = null;
+		}
+
+		if (buffered != null)
+		{
+			if (!buffered.IsSampled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
 			{
 				_logger?.Debug()?.Log("Dropping unsampled compressed span - unsampled span won't be sent on APM Server v8+. SpanId: {id}",
-						CompressionBuffer.Id);
+						buffered.Id);
 			}
 			else
-				_sender.QueueSpan(CompressionBuffer);
-
-			CompressionBuffer = null;
+				buffered.Report();
 		}
 
 		if (IsSampled || _apmServerInfo?.Version < new ElasticVersion(8, 0, 0, string.Empty))

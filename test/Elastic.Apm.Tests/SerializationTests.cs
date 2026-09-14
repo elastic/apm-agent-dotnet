@@ -477,8 +477,11 @@ namespace Elastic.Apm.Tests
 		/// Asserts that dropped span statistic is not flattened but sent as an object to APM Server.
 		/// APM Server expects object and flattening caused issues.
 		/// </summary>
-		[Fact]
-		public void DroppedSpanStatsTest()
+		[Theory]
+		[InlineData(100, 100000L)]
+		[InlineData(100.0014, 100001L)]
+		[InlineData(3000000, 3000000000L)]
+		public void DroppedSpanStatsTest(double duration, long expectedMicroseconds)
 		{
 			using var apmAgent = new ApmAgent(new TestAgentComponents(configuration: new MockConfiguration(transactionMaxSpans: "1")));
 
@@ -489,13 +492,13 @@ namespace Elastic.Apm.Tests
 			//This span will be dropped
 			var span1 = transaction.StartSpan("foo", "bar", isExitSpan: true);
 			span1.Context.Http = new Http { Method = "GET", StatusCode = 200, Url = "https://foo.bar" };
-			span1.Duration = 100;
+			span1.Duration = duration;
 			span1.End();
 
 			transaction.End();
 
 			var json = _payloadItemSerializer.Serialize(transaction);
-			json.Should().Contain("\"duration\":{\"count\":1,\"sum\":{\"us\":100}}");
+			json.Should().Contain("\"duration\":{\"count\":1,\"sum\":{\"us\":" + expectedMicroseconds + "}}");
 		}
 
 		/// <summary>

@@ -48,7 +48,23 @@ namespace Elastic.Apm.Model
 		// which points to this span.
 		private bool _hasPropagatedContext;
 
-		private bool Discardable => IsExitSpan && !_hasPropagatedContext && Outcome == Outcome.Success && Configuration.SpanCompressionEnabled;
+		/// <summary>
+		/// Whether a child span that can reach APM Server was started under this span. Such a span must keep its identity,
+		/// otherwise the child it is the parent of is orphaned: it is neither discarded for being a fast exit span nor
+		/// compressed into a sibling's composite. Children that can never be reported do not set this, so that a huge trace
+		/// whose spans are dropped by transaction_max_spans does not also lose compression.
+		/// </summary>
+		private volatile bool _hasChildren;
+
+		private bool Discardable => IsExitSpan && !_hasPropagatedContext && !_hasChildren
+			&& Outcome == Outcome.Success && Configuration.SpanCompressionEnabled;
+
+		private static readonly ElasticVersion ServerVersion80 = new(8, 0, 0, string.Empty);
+
+		/// <summary>
+		/// Span compression is only applied when it is enabled and APM Server understands composite spans (8.0 and later).
+		/// </summary>
+		private bool IsSpanCompressionActive => Configuration.SpanCompressionEnabled && _apmServerInfo?.Version >= ServerVersion80;
 
 		[JsonConstructor]
 		// ReSharper disable once UnusedMember.Local - this is meant for deserialization
@@ -130,6 +146,10 @@ namespace Elastic.Apm.Model
 			}
 			else
 				SampleRate = 0;
+
+			// Only now is it known whether this child can reach APM Server, see the field for why that matters.
+			if (_parentSpan != null && ShouldBeSentToApmServer)
+				_parentSpan._hasChildren = true;
 
 			CheckAndCaptureBaggage();
 
@@ -505,16 +525,12 @@ namespace Elastic.Apm.Model
 				_logger?.Warning()?.LogException(e, "Failed deducing destination fields for span.");
 			}
 
-			if (_isDropped && _context.IsValueCreated)
-			{
-				_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
-					Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
-			}
-			else if (_isDropped && !_context.IsValueCreated && DroppedSpanStatCache.HasValue)
-			{
-				_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type, DroppedSpanStatCache.Value.Target.Name,
-					DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
-			}
+			if (_isDropped)
+				RecordDroppedSpanStats();
+
+			// Span compression, see https://github.com/elastic/apm/blob/main/specs/agents/handling-huge-traces/tracing-spans-compress.md
+			// A span that ends must first report the child span it has buffered, if any (spec: onEnd).
+			ReportBufferedChild();
 
 			if (ShouldBeSentToApmServer)
 			{
@@ -528,95 +544,13 @@ namespace Elastic.Apm.Model
 				if (IsCaptureStackTraceOnEndEnabled())
 					RawStackTrace = new StackTrace(true);
 
-				var buffered = _parentSpan?._compressionBuffer ?? _enclosingTransaction.CompressionBuffer;
-
-				if (Configuration.SpanCompressionEnabled && _apmServerInfo?.Version >= new ElasticVersion(8, 0, 0, string.Empty))
-				{
-					if (!IsCompressionEligible() || _parentSpan is { IsEnded: true })
-					{
-						if (buffered != null)
-						{
-							QueueSpan(buffered);
-							_parentSpan?._compressionBuffer = null;
-							_enclosingTransaction.CompressionBuffer = null;
-						}
-
-						//If this is a span which has buffered children, we send the composite.
-						if (_compressionBuffer != null)
-							QueueSpan(_compressionBuffer);
-
-						QueueSpan(this);
-						RestoreCurrentSpan();
-						return;
-					}
-					if (buffered == null)
-					{
-						SetThisToParentsBuffer();
-						RestoreCurrentSpan();
-						return;
-					}
-
-					if (!buffered.TryToCompress(this))
-					{
-						QueueSpan(buffered);
-						SetThisToParentsBuffer();
-						RestoreCurrentSpan();
-					}
-				}
+				if (IsSpanCompressionActive)
+					EndWithCompression();
 				else
-					QueueSpan(this);
+					Report();
 			}
 
 			RestoreCurrentSpan();
-
-			void QueueSpan(Span span)
-			{
-				if (span.Composite != null)
-				{
-					var endTimestamp = TimeUtils.TimestampNow();
-					span.Duration = TimeUtils.DurationBetweenTimestamps(span.Timestamp, endTimestamp);
-				}
-
-				if (span.Discardable)
-				{
-					if (span.Composite != null && span.Duration < span.Configuration.ExitSpanMinDuration)
-					{
-						switch (_context.IsValueCreated)
-						{
-							case true:
-								_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
-									Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
-								break;
-							case false when DroppedSpanStatCache.HasValue:
-								_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type,
-									DroppedSpanStatCache.Value.Target.Name,
-									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
-								break;
-						}
-						_logger?.Trace()?.Log("Dropping fast exit span on composite span. Composite duration: {duration}", span.Composite.Sum);
-						return;
-					}
-					if (span.Duration < span.Configuration.ExitSpanMinDuration)
-					{
-						switch (_context.IsValueCreated)
-						{
-							case true:
-								_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
-									Context?.Destination?.Service?.Resource, _outcome, Duration!.Value);
-								break;
-							case false when DroppedSpanStatCache.HasValue:
-								_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type,
-									DroppedSpanStatCache.Value.Target.Name,
-									DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, Duration!.Value);
-								break;
-						}
-						_logger?.Trace()?.Log("Dropping fast exit span. Duration: {duration}", span.Duration);
-						return;
-					}
-				}
-
-				_payloadSender.QueueSpan(span);
-			}
 		}
 
 		private void RestoreCurrentSpan()
@@ -644,9 +578,15 @@ namespace Elastic.Apm.Model
 
 			_childDurationTimer.OnSpanEnd(TimeUtils.TimestampNow());
 			Ended = null;
+			ReportBufferedChild();
 			RestoreCurrentSpan();
 		}
 
+		/// <summary>
+		/// Merges <paramref name="sibling" /> into this span, which its parent has buffered, turning this span into a
+		/// composite one (spec: tryToCompress). Only <paramref name="sibling" /> loses its identity, so only it has to be
+		/// compression eligible; this span keeps its own id and may therefore have children of its own.
+		/// </summary>
 		private bool TryToCompress(Span sibling)
 		{
 			var isAlreadyComposite = Composite != null;
@@ -664,6 +604,12 @@ namespace Elastic.Apm.Model
 
 			Composite.Count++;
 			Composite.Sum += sibling.Duration!.Value;
+
+			// The composite span covers the period from the start of the first compressed span to the end of the last one
+			// (spec: gross duration), so extend the duration when the sibling ended after this span did.
+			var grossDuration = TimeUtils.DurationBetweenTimestamps(Timestamp, sibling.Timestamp) + sibling.Duration.Value;
+			if (grossDuration > Duration)
+				Duration = grossDuration;
 			return true;
 		}
 
@@ -730,15 +676,126 @@ namespace Elastic.Apm.Model
 			Links = new List<SpanLink>(newList);
 		}
 
-		private void SetThisToParentsBuffer()
+		/// <summary>
+		/// Implements the parent's side of the span compression algorithm (spec: onChildEnd) for this ending span: it is either
+		/// reported right away, becomes the buffered span of its parent, or is merged into the span its parent has buffered.
+		/// The parent is the direct parent only. A span whose parent span has nothing buffered must never fall back to the
+		/// transaction's buffer, since that buffer holds a sibling of the parent, not a sibling of this span.
+		/// The decision is taken under the transaction's compression lock so that siblings ending concurrently can neither
+		/// report the same buffered span twice nor overwrite each other's buffered span.
+		/// </summary>
+		private void EndWithCompression()
 		{
-			if (_parentSpan != null)
-				_parentSpan._compressionBuffer = this;
-			else
-				_enclosingTransaction.CompressionBuffer = this;
+			Span previouslyBuffered = null;
+			var reportThis = false;
+
+			lock (_enclosingTransaction.CompressionBufferLock)
+			{
+				var parentEnded = _parentSpan?.IsEnded ?? _enclosingTransaction.IsEnded;
+				var buffered = GetParentCompressionBuffer();
+
+				if (!IsCompressionEligible() || parentEnded)
+				{
+					// Neither this span nor the span buffered so far can take part in any further compression.
+					previouslyBuffered = buffered;
+					SetParentCompressionBuffer(null);
+					reportThis = true;
+				}
+				else if (buffered == null)
+					SetParentCompressionBuffer(this);
+				else if (!buffered.TryToCompress(this))
+				{
+					previouslyBuffered = buffered;
+					SetParentCompressionBuffer(this);
+				}
+				// otherwise this span has been merged into the buffered span and is not reported on its own
+			}
+
+			previouslyBuffered?.Report();
+
+			if (reportThis)
+				Report();
 		}
 
-		public bool IsCompressionEligible() => IsExitSpan && !_hasPropagatedContext && Outcome is Outcome.Success or Outcome.Unknown;
+		/// <summary>
+		/// Reports the child span this span has buffered for compression, if any. A buffered span is reported once its parent
+		/// ends (spec: onEnd); this must also happen when the parent is explicitly abandoned.
+		/// </summary>
+		private void ReportBufferedChild()
+		{
+			Span buffered;
+			lock (_enclosingTransaction.CompressionBufferLock)
+			{
+				buffered = _compressionBuffer;
+				_compressionBuffer = null;
+			}
+
+			buffered?.Report();
+		}
+
+		private Span GetParentCompressionBuffer() =>
+			_parentSpan != null ? _parentSpan._compressionBuffer : _enclosingTransaction.CompressionBuffer;
+
+		private void SetParentCompressionBuffer(Span span)
+		{
+			if (_parentSpan != null)
+				_parentSpan._compressionBuffer = span;
+			else
+				_enclosingTransaction.CompressionBuffer = span;
+		}
+
+		/// <summary>
+		/// Queues this span to be sent to APM Server, unless it is a discardable exit span shorter than exit_span_min_duration,
+		/// in which case it is dropped and only its dropped span statistics are recorded. Every span, including a composite span
+		/// and a span flushed from a compression buffer, is reported through this method.
+		/// </summary>
+		internal void Report()
+		{
+			if (Discardable && Duration < Configuration.ExitSpanMinDuration)
+			{
+				RecordDroppedSpanStats();
+
+				// Every span this one stands for was counted as started when it began, and none of them is reported
+				// (spec: dropping fast exit spans increments span_count.dropped).
+				_enclosingTransaction.SpanCount.MoveStartedToDropped(Composite?.Count ?? 1);
+
+				if (Composite != null)
+				{
+					_logger?.Trace()?.Log("Dropping fast composite span. Duration: {Duration}ms, sum of compressed spans: {Sum}ms",
+						Duration, Composite.Sum);
+				}
+				else
+					_logger?.Trace()?.Log("Dropping fast exit span. Duration: {Duration}ms", Duration);
+
+				return;
+			}
+
+			_payloadSender.QueueSpan(this);
+		}
+
+		private void RecordDroppedSpanStats()
+		{
+			var count = Composite?.Count ?? 1;
+			var duration = Composite?.Sum ?? Duration!.Value;
+			if (_context.IsValueCreated)
+			{
+				_enclosingTransaction.UpdateDroppedSpanStats(Context?.Service?.Target?.Type, Context?.Service?.Target?.Name,
+					Context?.Destination?.Service?.Resource, _outcome, duration, count);
+			}
+			else if (DroppedSpanStatCache.HasValue)
+			{
+				_enclosingTransaction.UpdateDroppedSpanStats(DroppedSpanStatCache.Value.Target.Type, DroppedSpanStatCache.Value.Target.Name,
+					DroppedSpanStatCache.Value.DestinationServiceResource, _outcome, duration, count);
+			}
+		}
+
+		/// <summary>
+		/// Spec: <c>exit &amp;&amp; !context.hasPropagated &amp;&amp; (outcome == null || outcome == "success")</c>. The
+		/// has-no-children condition is an addition: a span that is compressed into a sibling's composite loses its
+		/// identity, which would orphan any child referencing it.
+		/// </summary>
+		public bool IsCompressionEligible() => IsExitSpan && !_hasPropagatedContext && !_hasChildren
+			&& Outcome is Outcome.Success or Outcome.Unknown;
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null

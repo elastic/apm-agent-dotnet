@@ -50,28 +50,43 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 			if (eventData?.Payload == null)
 				return;
 
-			// Check for competing instrumentation
-			if (_apmAgent.TracerInternal.CurrentSpan is Span span)
-			{
-				if (span.InstrumentationFlag == InstrumentationFlag.EfCore || span.InstrumentationFlag == InstrumentationFlag.EfClassic)
-					return;
-			}
+			HandleEvent(eventData.EventId, eventData.Payload);
+		}
+
+		/// <summary>
+		/// Handles a SqlClient EventSource event. Separated from <see cref="OnEventWritten" /> so that it can be exercised
+		/// without an <see cref="EventSource" />.
+		/// </summary>
+		internal void HandleEvent(int eventId, IReadOnlyList<object> payload)
+		{
+			if (payload == null)
+				return;
 
 			try
 			{
-				switch (eventData.EventId)
+				switch (eventId)
 				{
 					case BeginExecuteEventId:
-						ProcessBeginExecute(eventData.Payload);
+						// The command is already traced by a competing instrumentation (Entity Framework or the profiler's
+						// ADO.NET integrations), so don't start a nested span for the very same command. The matching
+						// EndExecute event is still handled below and finds nothing to end. Unlike the diagnostic listener
+						// this event source carries no command object, so the competing span cannot be matched to the command.
+						if (CompetingInstrumentation.IsCommandTracedByOtherModule(_apmAgent))
+						{
+							_logger?.Trace()?.Log("BeginExecute event is skipped, the command is traced by a competing instrumentation.");
+							return;
+						}
+
+						ProcessBeginExecute(payload);
 						break;
 					case EndExecuteId:
-						ProcessEndExecute(eventData.Payload);
+						ProcessEndExecute(payload);
 						break;
 				}
 			}
 			catch (Exception ex)
 			{
-				_logger?.Error()?.LogException(ex, "Error has occurred during handle event from SqlClient. EventData: {EventData}", eventData);
+				_logger?.Error()?.LogException(ex, "Error has occurred during handle event from SqlClient. EventId: {EventId}", eventId);
 			}
 		}
 
@@ -101,8 +116,10 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 				? commandText.Replace(Environment.NewLine, "")
 				: database;
 
+			// A SQL command is an exit span that never has legitimate children, so it isn't made the current span. This also
+			// guarantees that a current span flagged SqlClient belongs to a competing instrumentation, never to this listener.
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_apmAgent, spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql,
-				InstrumentationFlag.SqlClient, isExitSpan: true);
+				InstrumentationFlag.SqlClient, isExitSpan: true, makeCurrent: false);
 
 			if (span == null)
 				return;
@@ -148,8 +165,10 @@ namespace Elastic.Apm.Instrumentations.SqlClient
 
 			if (!_processingSpans.TryRemove(id, out var item))
 			{
-				_logger?.Warning()
-					?.Log("Failed capturing sql statement (failed to remove from ProcessingSpans).");
+				// Expected whenever BeginExecute did not start a span: no current transaction, or the command is traced by a
+				// competing instrumentation.
+				_logger?.Debug()
+					?.Log("No span to end for EndExecute event. Id: {Id}. The command was started outside of a transaction or is traced by a competing instrumentation.", id);
 				return;
 			}
 
