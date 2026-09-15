@@ -26,6 +26,22 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.35.0 [elastic-apm-net-agent-1350-release-notes]
+**Release date:** September 15, 2026
+
+### Features and enhancements [elastic-apm-net-agent-1350-features-enhancements]
+
+* Add `OpenTelemetryBridgeAllowedActivitySources` and `OpenTelemetryBridgeDeniedActivitySources` configuration options for fine-grained control over which activity sources the bridge observes [#2807](https://github.com/elastic/apm-agent-dotnet/pull/2807)
+* Apps using only the core `Elastic.Apm` package with OTel instrumentation libraries (without `Elastic.Apm.AspNetCore`) now correctly receive request transactions from the bridge [#2807](https://github.com/elastic/apm-agent-dotnet/pull/2807)
+
+### Fixes [elastic-apm-net-agent-1350-fixes]
+
+* Raise minimum MongoDB.Driver version to 3.9.0 [#2804](https://github.com/elastic/apm-agent-dotnet/pull/2804)
+* Update System.Diagnostics.DiagnosticSource to 8.0.1 on .NET Framework targets [#2806](https://github.com/elastic/apm-agent-dotnet/pull/2806)
+* Stop automatically subscribing to `Experimental.*` activity sources on .NET 9+ to prevent activating low-level network spans [#2807](https://github.com/elastic/apm-agent-dotnet/pull/2807)
+* Fix bridged spans with unrecognized activity types being silently dropped by APM Server [#2807](https://github.com/elastic/apm-agent-dotnet/pull/2807)
+* Fix SQL duplicate spans on .NET Framework with the profiler [#2811](https://github.com/elastic/apm-agent-dotnet/pull/2811)
+
 ## 1.34.7 [elastic-apm-net-agent-1347-release-notes]
 **Release date:** September 04, 2026
 
@@ -230,10 +246,9 @@ To check for security updates, go to [Security announcements for the Elastic sta
 **Release date:** April 30, 2024
 
 ### Features and enhancements [elastic-apm-net-agent-1270-features-enhancements]
+
 * Add `IServiceCollection` extension methods to register ApmAgent [#2331](https://github.com/elastic/apm-agent-dotnet/pull/2331)
 * Add support for `transaction_name_groups` and `use_path_as_transaction_name` [#2326](https://github.com/elastic/apm-agent-dotnet/pull/2326)
-
-
 * Fix race condition on Add in redis profiler [#2303](https://github.com/elastic/apm-agent-dotnet/pull/2303)
 * Further logging refinements in ElasticApmModule [#2299](https://github.com/elastic/apm-agent-dotnet/pull/2299)
 * Update to .NET 8 SDK [#2304](https://github.com/elastic/apm-agent-dotnet/pull/2304)

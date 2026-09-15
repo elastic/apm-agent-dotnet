@@ -23,6 +23,15 @@ To learn how to upgrade, check out [Upgrading](/reference/upgrading.md).
 % **Action**<br> Steps for mitigating deprecation impact.
 % ::::
 
+## 1.35.0 [elastic-apm-net-agent-1350-breaking-changes]
+**Release date:** September 15, 2026
+
+The OpenTelemetry Bridge no longer subscribes to activity sources whose names begin with `Experimental.`. On .NET 9 and later the runtime uses that prefix for sources describing connection level work (DNS resolution, socket connect, TLS handshake, HTTP connection setup), and they only emit while a listener is subscribed to them. On .NET 9 and later, transactions which open a new HTTP connection no longer contain `DNS lookup`, `socket connect`, `TLS client handshake`, `HTTP connection_setup` and `HTTP wait_for_connection` spans. Applications running on .NET 8 and earlier are unaffected. To restore the previous behaviour, set [`OpenTelemetryBridgeExperimentalSourcesEnabled`](/reference/config-core.md#config-opentelemetry-bridge-experimental-sources-enabled) to `true`. For more information, check [#2807](https://github.com/elastic/apm-agent-dotnet/pull/2807).
+
+The minimum supported `MongoDB.Driver` version has been raised to 3.9.0. Consumers referencing an earlier version receive a NU1605 build error when upgrading `Elastic.Apm.MongoDb` to this release. Update your `MongoDB.Driver` package reference to 3.9.0 or later before upgrading. For more information, check [#2804](https://github.com/elastic/apm-agent-dotnet/pull/2804).
+
+The `Elastic.Apm` package now references `System.Diagnostics.DiagnosticSource` 8.0.1 on .NET Framework targets (net462 and net472). Classic ASP.NET applications that have hand-edited binding redirects for `System.Diagnostics.DiagnosticSource` in `web.config` may need to update those redirects. Visual Studio and the MSBuild `GenerateBindingRedirects` target can regenerate them automatically. For more information, check [#2806](https://github.com/elastic/apm-agent-dotnet/pull/2806).
+
 ## 1.33.0 [elastic-apm-net-agent-1330-breaking-changes]
 **Release date:** August 19, 2025
 
