@@ -57,7 +57,7 @@ Extract the new profiler alongside the old one and update the environment variab
 
 To roll back, revert the environment variables to the previous profiler paths and restart the affected App Pools or IIS.
 
-### Option 2: In-place replacement [upgrading-profiler-inplace]
+### Replace files in place [upgrading-profiler-inplace]
 
 Replace the profiler files in the existing directory. IIS must be fully stopped before the old files are removed.
 
