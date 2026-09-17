@@ -55,7 +55,7 @@ Extract the new profiler alongside the old one and update the environment variab
 
 6. Verify the application launches and check the profiler log files (`%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` by default) and trace data in Elastic Observability.
 
-To roll back, update the environment variables to point to the previous directory and restart the affected App Pools or IIS.
+To roll back, revert the environment variables to the previous profiler paths and restart the affected App Pools or IIS.
 
 ### Option 2: In-place replacement [upgrading-profiler-inplace]
 
