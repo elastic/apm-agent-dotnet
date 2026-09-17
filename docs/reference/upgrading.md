@@ -59,7 +59,7 @@ To roll back, revert the environment variables to the previous profiler paths an
 
 ### Replace files in place [upgrading-profiler-inplace]
 
-Replace the profiler files in the existing directory. IIS must be fully stopped before the old files are removed.
+Replace the profiler files in the existing directory. Stop IIS fully before you remove the old files.
 
 1. Download the new profiler zip from the [GitHub Releases page](https://github.com/elastic/apm-agent-dotnet/releases).
 2. Stop IIS to release the profiler files held open by instrumented worker processes:
