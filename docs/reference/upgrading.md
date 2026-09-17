@@ -83,7 +83,7 @@ Replace the profiler files in the existing directory. IIS must be fully stopped 
 
 This section applies to classic ASP.NET applications running on .NET Framework only.
 
-When the `Elastic.Apm` package bumps the version of a .NET Framework dependency, hand-edited binding redirects for those assemblies in `web.config` may need updating. Check the [breaking changes](/release-notes/breaking-changes.md) for the versions you are upgrading across to identify which assemblies were affected.
+When a release bumps a .NET Framework dependency of `Elastic.Apm`, `web.config` binding redirects for those assemblies might need updating. Check the [breaking changes](/release-notes/breaking-changes.md) for the versions you are upgrading across to identify which assemblies were affected.
 
 For each affected assembly, check your application's `bin` directory for the corresponding DLL. If the DLL is not present, no action is needed. If it is present and you have a hand-edited binding redirect for that assembly in `web.config`, update the `oldVersion` upper bound and `newVersion` to the new version, or delete the entry and let MSBuild regenerate it. If regenerating, rebuild the application and redeploy the updated `web.config` before restarting IIS.
 
