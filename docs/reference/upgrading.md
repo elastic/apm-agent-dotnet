@@ -68,7 +68,11 @@ Replace the profiler files in the existing directory. IIS must be fully stopped 
    Stop-Service WAS -Force
    ```
 
-3. Delete the contents of the existing profiler directory (files and subdirectories). Do not overwrite in place as some releases remove files from the package, and stale files left behind by an in-place overwrite can cause unexpected behavior.
+3. Delete the contents of the existing profiler directory (files and subdirectories). Don't overwrite in place. Some releases remove files from the package, and leftover files can cause unexpected behavior.
+
+    :::{note}
+    If environment variables are set machine-wide rather than per Application Pool, any .NET process that starts before the new files are in place (step 4) starts without profiler instrumentation. Restart that process after the extract. Refer to [Other considerations](#upgrading-profiler-other-considerations).
+    :::
 4. Extract the new profiler zip into the same directory.
 5. Update `web.config` binding redirects if required. Refer to [Binding redirects](#upgrading-profiler-binding-redirects) below.
 6. Start IIS:
