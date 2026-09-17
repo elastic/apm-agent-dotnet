@@ -39,10 +39,10 @@ Extract the new profiler alongside the old one and update the environment variab
 
 1. Download the new profiler zip from the [GitHub Releases page](https://github.com/elastic/apm-agent-dotnet/releases).
 2. Extract the new profiler zip into a new versioned directory, for example `C:\elastic\apm-agent-dotnet\1.35.0`.
-3. Update the following environment variables at the appropriate location (per Application Pool via AppCmd, or machine-wide) to point to the new directory:
-   * `COR_PROFILER_PATH` (for .NET Framework App Pools) or `CORECLR_PROFILER_PATH` (for .NET App Pools)
-   * `ELASTIC_APM_PROFILER_HOME`
-   * `ELASTIC_APM_PROFILER_INTEGRATIONS` - only if this was explicitly set; otherwise the profiler locates `integrations.yml` automatically within `ELASTIC_APM_PROFILER_HOME`
+3. Update the following environment variables at the appropriate location (per Application Pool with AppCmd, or machine-wide):
+   * `COR_PROFILER_PATH` (for .NET Framework App Pools) or `CORECLR_PROFILER_PATH` (for .NET App Pools) to `elastic_apm_profiler.dll` in the new directory
+   * `ELASTIC_APM_PROFILER_HOME` to the new directory
+   * `ELASTIC_APM_PROFILER_INTEGRATIONS` to `integrations.yml` in the new directory - only if this was explicitly set; otherwise the profiler locates `integrations.yml` automatically within `ELASTIC_APM_PROFILER_HOME`
 4. Update `web.config` binding redirects if required. Refer to [Binding redirects](#upgrading-profiler-binding-redirects) below.
 5. Restart the individual instrumented Application Pools or the whole IIS service:
    * If environment variables are set per Application Pool, App Pools can be recycled individually and no full IIS stop is required.
