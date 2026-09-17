@@ -127,6 +127,10 @@ The general steps in configuring profiler auto instrumentation are as follows. R
 2. Unzip the zip file into a folder on the host that is hosting the application to instrument.
 3. Configure the following environment variables:
 
+    ::::{note}
+    `ELASTIC_APM_PROFILER_INTEGRATIONS` is shown in the examples below for completeness but is optional. The profiler automatically locates `integrations.yml` inside the directory specified by `ELASTIC_APM_PROFILER_HOME`. Only set it explicitly if your `integrations.yml` is in a different location.
+    ::::
+
     **.NET Framework**
 
     PowerShell:
@@ -632,6 +636,11 @@ The user account under which the profiler process runs must have permission to w
     The default value is `file`, which logs to the directory specified by `OTEL_DOTNET_AUTO_LOG_DIRECTORY`.
 
     Supersedes the deprecated `ELASTIC_APM_PROFILER_LOG_TARGETS`.
+
+
+## Upgrading [profiler-upgrading]
+
+For step-by-step guidance on upgrading the profiler, including how to handle binding redirects and NuGet package version alignment, refer to [Upgrading profiler auto instrumentation](/reference/upgrading.md#upgrading-profiler).
 
 
 ## Troubleshooting [profiler-troubleshooting]
