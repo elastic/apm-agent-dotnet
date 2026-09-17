@@ -44,7 +44,7 @@ Extract the new profiler alongside the old one and update the environment variab
    * `ELASTIC_APM_PROFILER_HOME`
    * `ELASTIC_APM_PROFILER_INTEGRATIONS` - only if this was explicitly set; otherwise the profiler locates `integrations.yml` automatically within `ELASTIC_APM_PROFILER_HOME`
 4. Update `web.config` binding redirects if required. Refer to [Binding redirects](#upgrading-profiler-binding-redirects) below.
-5. Restart the instrumented Application Pools or all of IIS:
+5. Restart the individual instrumented Application Pools or the whole IIS service:
    * If environment variables are set per Application Pool, App Pools can be recycled individually and no full IIS stop is required.
    * If environment variables are set machine-wide, a full IIS restart is required:
 
@@ -68,7 +68,7 @@ Replace the profiler files in the existing directory. IIS must be fully stopped 
    Stop-Service WAS -Force
    ```
 
-3. Delete the contents of the existing profiler directory (files and subdirectories). Do not overwrite in place as some releases remove files from the package, and stale files left behind by an in-place overwrite can cause unexpected behaviour.
+3. Delete the contents of the existing profiler directory (files and subdirectories). Do not overwrite in place as some releases remove files from the package, and stale files left behind by an in-place overwrite can cause unexpected behavior.
 4. Extract the new profiler zip into the same directory.
 5. Update `web.config` binding redirects if required. Refer to [Binding redirects](#upgrading-profiler-binding-redirects) below.
 6. Start IIS:
