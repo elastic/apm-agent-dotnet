@@ -13,7 +13,7 @@ applies_to:
 
 # Upgrading [upgrading]
 
-Upgrades between minor versions of the agent, like from 1.1 to 1.2 are generally backwards compatible although some dependencies may be updated for security or functional reasons. Upgrades that involve a major version bump often come with some backwards incompatible changes.
+Upgrades between minor versions of the agent, like from 1.1 to 1.2 are generally backwards compatible although occasionally, some dependencies might be updated for security or functional reasons. Upgrades that involve a major version bump often come with some backwards incompatible changes.
 
 Before upgrading the agent, be sure to review the:
 
