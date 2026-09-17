@@ -79,7 +79,7 @@ Replace the profiler files in the existing directory. IIS must be fully stopped 
 
 7. Verify the application launches and check the profiler log files (`%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` by default) and trace data in Elastic Observability.
 
-### Binding redirects [upgrading-profiler-binding-redirects]
+### Update binding redirects [upgrading-profiler-binding-redirects]
 
 This section applies to classic ASP.NET applications running on .NET Framework only.
 
