@@ -128,7 +128,7 @@ The general steps in configuring profiler auto instrumentation are as follows. R
 3. Configure the following environment variables:
 
     ::::{note}
-    `ELASTIC_APM_PROFILER_INTEGRATIONS` is shown in the examples below for completeness but is optional. The profiler automatically locates `integrations.yml` inside the directory specified by `ELASTIC_APM_PROFILER_HOME`. Only set it explicitly if your `integrations.yml` is in a different location.
+    `ELASTIC_APM_PROFILER_INTEGRATIONS` is shown in the following examples for completeness but is optional. The profiler automatically locates `integrations.yml` inside the directory specified by `ELASTIC_APM_PROFILER_HOME`. Only set it explicitly if your `integrations.yml` is in a different location.
     ::::
 
     **.NET Framework**
