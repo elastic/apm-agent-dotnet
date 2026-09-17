@@ -91,7 +91,7 @@ If your binding redirects are MSBuild-generated (the default for most projects),
 
 ### Other considerations [upgrading-profiler-other-considerations]
 
-**NuGet packages alongside the profiler.** If you use any `Elastic.Apm.*` NuGet packages alongside the profiler (for example, `Elastic.Apm` for custom spans, or `Elastic.Apm.EntityFramework6` for EF6 instrumentation) update every `Elastic.Apm.*` package to the same version as the profiler and rebuild and redeploy the application before restarting IIS. A version mismatch between the profiler and any NuGet package will cause errors at startup.
+**NuGet packages alongside the profiler.** If you use any `Elastic.Apm.*` NuGet packages alongside the profiler (for example, `Elastic.Apm` for custom spans, or `Elastic.Apm.EntityFramework6` for EF6 instrumentation), update every `Elastic.Apm.*` package to the same version as the profiler and rebuild and redeploy the application before restarting IIS. A version mismatch between the profiler and any NuGet package causes errors at startup.
 
 **Machine-wide environment variables (Option 2 only).** If profiler environment variables are configured at the machine level rather than per Application Pool, any .NET process that starts between step 3 and step 4 starts without profiler instrumentation. This is not a failure and the process starts normally, but that instance is not instrumented until it is restarted after the new profiler files are in place.
 
