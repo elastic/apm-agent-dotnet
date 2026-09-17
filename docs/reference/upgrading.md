@@ -33,7 +33,7 @@ There are two approaches for IIS. The versioned directory approach is recommende
 Environment variable names differ by runtime. Use the `COR_` prefix for .NET Framework App Pools and the `CORECLR_` prefix for .NET (formerly .NET Core) App Pools. If you have both types on the same host, configure each App Pool with the appropriate prefix.
 ::::
 
-### Option 1: Versioned directory (recommended) [upgrading-profiler-versioned]
+### Use a versioned directory (recommended) [upgrading-profiler-versioned]
 
 Extract the new profiler alongside the old one and update the environment variables to the new profiler paths. You don't need to fully stop IIS. To roll back, revert the environment variables.
 
