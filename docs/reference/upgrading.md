@@ -89,7 +89,10 @@ This section applies to classic ASP.NET applications running on .NET Framework o
 
 When a release bumps a .NET Framework dependency of `Elastic.Apm`, `web.config` binding redirects for those assemblies might need updating. Check the [breaking changes](/release-notes/breaking-changes.md) for the versions you are upgrading across to identify which assemblies were affected.
 
-For each affected assembly, check your application's `bin` directory for the corresponding DLL. If the DLL is not present, no action is needed. If it is present and you have a hand-edited binding redirect for that assembly in `web.config`, update the `oldVersion` upper bound and `newVersion` to the new version, or delete the entry and let MSBuild regenerate it. If regenerating, rebuild the application and redeploy the updated `web.config` before restarting IIS.
+For each affected assembly:
+
+* If the DLL is not in the application's `bin` directory, no action is needed.
+* If the DLL is present and you have a hand-edited binding redirect in `web.config`, update the `oldVersion` upper bound and `newVersion`, or delete the entry, then let MSBuild regenerate it. If regenerating, rebuild the application and redeploy the updated `web.config` before restarting IIS.
 
 If your binding redirects are MSBuild-generated (the default for most projects), they are updated automatically at the next build and no manual action is required.
 
