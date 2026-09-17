@@ -21,7 +21,7 @@ Before upgrading the agent, be sure to review the:
 * [Agent release notes](/release-notes/index.md)
 * [Agent and Server compatibility chart](docs-content://solutions/observability/apm/apm-agent-compatibility.md)
 
-We always recommend testing upgrades in a non-production environment before applying them to production.
+We recommend testing upgrades in a non-production environment before applying them to production.
 
 ## Upgrading profiler auto instrumentation [upgrading-profiler]
 
