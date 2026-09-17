@@ -25,9 +25,9 @@ We recommend testing upgrades in a non-production environment before applying th
 
 ## Upgrading profiler auto instrumentation [upgrading-profiler]
 
-The following steps apply to Windows hosts running IIS. For other platforms and deployment environments, the same principles apply: stop the application, replace the profiler files, and restart.
+These steps are for Windows hosts running IIS. For other environments, stop the application process, update the profiler files, then restart. Refer to [Set up profiler auto instrumentation](/reference/setup-auto-instrumentation.md#instrumenting-containers-and-services) for how other deployments configure the profiler.
 
-There are two approaches. The versioned directory approach is recommended because it avoids a downtime window and makes rollback straightforward.
+There are two approaches for IIS. The versioned directory approach is recommended because it avoids a full IIS stop and makes rollback easier.
 
 ::::{note}
 Environment variable names differ by runtime. Use the `COR_` prefix for .NET Framework App Pools and the `CORECLR_` prefix for .NET (formerly .NET Core) App Pools. If you have both types on the same host, configure each App Pool with the appropriate prefix.
