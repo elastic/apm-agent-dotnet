@@ -1,8 +1,8 @@
 ---
 mapped_pages:
   - https://www.elastic.co/guide/en/apm/agent/dotnet/current/upgrading.html
-description: "Guidance for upgrading the Elastic APM .NET Agent between versions, including links to release notes and agent-server compatibility information."
-navigation_title: MongoDB
+description: "Upgrade the Elastic APM .NET Agent between versions, including profiler auto instrumentation on IIS."
+navigation_title: Upgrading
 applies_to:
   stack:
   serverless:
@@ -13,13 +13,96 @@ applies_to:
 
 # Upgrading [upgrading]
 
-Upgrades between minor versions of the agent, like from 1.1 to 1.2 are always backwards compatible. Upgrades that involve a major version bump often come with some backwards incompatible changes.
+Upgrades between minor versions of the agent, like from 1.1 to 1.2 are generally backwards compatible although occasionally, some dependencies might be updated for security or functional reasons. Upgrades that involve a major version bump often come with some backwards incompatible changes.
 
 Before upgrading the agent, be sure to review the:
 
+* [Breaking changes](/release-notes/breaking-changes.md) for every version between your current version and the target version
 * [Agent release notes](/release-notes/index.md)
 * [Agent and Server compatibility chart](docs-content://solutions/observability/apm/apm-agent-compatibility.md)
 
+We recommend testing upgrades in a non-production environment before applying them to production.
+
+## Upgrading profiler auto instrumentation [upgrading-profiler]
+
+These steps are for Windows hosts running IIS. For other environments, stop the application process, update the profiler files, then restart. Refer to [Set up profiler auto instrumentation](/reference/setup-auto-instrumentation.md#instrumenting-containers-and-services) for how other deployments configure the profiler.
+
+There are two approaches for IIS. The versioned directory approach is recommended because it avoids a full IIS stop and makes rollback easier.
+
+::::{note}
+Environment variable names differ by runtime. Use the `COR_` prefix for .NET Framework Application Pools and the `CORECLR_` prefix for .NET (formerly .NET Core) Application Pools. If you have both types on the same host, configure each Application Pool with the appropriate prefix.
+::::
+
+### Use a versioned directory (recommended) [upgrading-profiler-versioned]
+
+Extract the new profiler alongside the old one and update the environment variables to the new profiler paths. You don't need to fully stop IIS. To roll back, revert the environment variables.
+
+1. Download the new profiler zip from the [GitHub Releases page](https://github.com/elastic/apm-agent-dotnet/releases).
+2. Extract the new profiler zip into a new versioned directory, for example `C:\elastic\apm-agent-dotnet\1.35.0`.
+3. Update the following environment variables at the appropriate location (per Application Pool with AppCmd, or machine-wide):
+   * `COR_PROFILER_PATH` (for .NET Framework Application Pools) or `CORECLR_PROFILER_PATH` (for .NET Application Pools) to `elastic_apm_profiler.dll` in the new directory
+   * `ELASTIC_APM_PROFILER_HOME` to the new directory
+   * `ELASTIC_APM_PROFILER_INTEGRATIONS` to `integrations.yml` in the new directory - only if this was explicitly set; otherwise the profiler locates `integrations.yml` automatically within `ELASTIC_APM_PROFILER_HOME`
+4. Update `web.config` binding redirects if required. Refer to [Binding redirects](#upgrading-profiler-binding-redirects).
+5. Upgrade any direct `Elastic.Apm.*` NuGet package dependencies to the matching version. Refer to [Other considerations](#upgrading-profiler-other-considerations).
+6. Restart the individual instrumented Application Pools or the whole IIS service:
+   * If environment variables are set per Application Pool, Application Pools can be recycled individually and no full IIS stop is required.
+   * If environment variables are set machine-wide, a full IIS restart is required:
+
+     ```powershell
+     Stop-Service WAS -Force
+     Start-Service W3SVC
+     ```
+
+6. Verify the application launches and check the profiler log files (`%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` by default) and trace data in Elastic Observability.
+
+To roll back, revert the environment variables to the previous profiler paths and restart the affected Application Pools or IIS.
+
+### Replace files in place [upgrading-profiler-inplace]
+
+Replace the profiler files in the existing directory. Stop IIS fully before you remove the old files.
+
+1. Download the new profiler zip from the [GitHub Releases page](https://github.com/elastic/apm-agent-dotnet/releases).
+2. Stop IIS to release the profiler files held open by instrumented worker processes:
+
+   ```powershell
+   Stop-Service WAS -Force
+   ```
+
+3. Delete the contents of the existing profiler directory (files and subdirectories). Don't overwrite in place. Some releases remove files from the package, and leftover files can cause unexpected behavior.
+
+    :::{note}
+    If environment variables are set machine-wide rather than per Application Pool, any .NET process that starts before the new files are in place (step 4) starts without profiler instrumentation. Restart that process after the extract. Refer to [Other considerations](#upgrading-profiler-other-considerations).
+    :::
+4. Extract the new profiler zip into the same directory.
+5. Update `web.config` binding redirects if required. Refer to [Binding redirects](#upgrading-profiler-binding-redirects).
+6. Upgrade any direct `Elastic.Apm.*` NuGet package dependencies to the matching version. Refer to [Other considerations](#upgrading-profiler-other-considerations).
+7. Start IIS:
+
+   ```powershell
+   Start-Service W3SVC
+   ```
+
+8. Verify the application launches and check the profiler log files (`%PROGRAMDATA%\elastic\apm-agent-dotnet\logs` by default) and trace data in Elastic Observability.
+
+### Update binding redirects [upgrading-profiler-binding-redirects]
+
+This section applies to classic ASP.NET applications running on .NET Framework only.
+
+When a release bumps a .NET Framework dependency of `Elastic.Apm`, `web.config` binding redirects for those assemblies might need updating. Check the [breaking changes](/release-notes/breaking-changes.md) for the versions you are upgrading across to identify which assemblies were affected.
+
+For each affected assembly:
+
+* If the DLL is not in the application's `bin` directory, no action is needed.
+* If the DLL is present and you have a hand-edited binding redirect in `web.config`, update the `oldVersion` upper bound and `newVersion`, or delete the entry, then let MSBuild regenerate it. If regenerating, rebuild the application and redeploy the updated `web.config` before restarting IIS.
+
+If your binding redirects are MSBuild-generated (the default for most projects), they are updated automatically at the next build and no manual action is required.
+
+### Other considerations [upgrading-profiler-other-considerations]
+
+**NuGet packages alongside the profiler.** If you use any `Elastic.Apm.*` NuGet packages alongside the profiler (for example, `Elastic.Apm` for custom spans, or `Elastic.Apm.EntityFramework6` for EF6 instrumentation), update every `Elastic.Apm.*` package to the same version as the profiler and rebuild and redeploy the application before restarting IIS. A version mismatch between the profiler and any NuGet package causes errors at startup.
+
+**Machine-wide environment variables (Option 2 only).** If profiler environment variables are configured at the machine level rather than per Application Pool, any .NET process that starts between step 3 and step 4 starts without profiler instrumentation. This is not a failure and the process starts normally, but that instance is not instrumented until it is restarted after the new profiler files are in place.
 
 ## End of life dates [end-of-life-dates]
 
