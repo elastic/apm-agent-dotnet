@@ -35,7 +35,7 @@ Environment variable names differ by runtime. Use the `COR_` prefix for .NET Fra
 
 ### Option 1: Versioned directory (recommended) [upgrading-profiler-versioned]
 
-Extract the new profiler alongside the old one and update the environment variables to point to it. IIS does not need to be fully stopped, and rollback is a matter of reverting the environment variables.
+Extract the new profiler alongside the old one and update the environment variables to the new profiler paths. You don't need to fully stop IIS. To roll back, revert the environment variables.
 
 1. Download the new profiler zip from the [GitHub Releases page](https://github.com/elastic/apm-agent-dotnet/releases).
 2. Extract the new profiler zip into a new versioned directory, for example `C:\elastic\apm-agent-dotnet\1.35.0`.
