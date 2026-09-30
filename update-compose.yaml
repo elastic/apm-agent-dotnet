@@ -8,7 +8,7 @@ policies:
       - .ci/updatecli/values.d/apm-data-spec.yml
 
   - name: Handle apm gherkin specs
-    policy: ghcr.io/elastic/oblt-updatecli-policies/apm/apm-gherkin:0.6.0@sha256:dbaf4d855c5c212c3b5a8d2cc98c243a2b769ac347198ae8814393a1a0576587
+    policy: ghcr.io/elastic/oblt-updatecli-policies/apm/apm-gherkin:0.7.0@sha256:2a33de27ed741acbb8f9fa22360261fe51f2d8e565c09770e3487fc0e3c765d7
     values:
       - .ci/updatecli/values.d/scm.yml
       - .ci/updatecli/values.d/apm-gherkin.yml
