@@ -142,7 +142,6 @@
     <PackageVersion Include="Microsoft.NET.Sdk.Functions" Version="4.6.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="Microsoft.Owin.Host.SystemWeb" Version="4.1.1" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageVersion Include="Microsoft.Web.Administration" Version="11.1.0" />
     <PackageVersion Include="MicrosoftAspNetCore.Http" Version="2.1.22" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.20427.1" />
