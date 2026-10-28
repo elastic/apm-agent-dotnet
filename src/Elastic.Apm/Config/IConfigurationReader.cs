@@ -285,6 +285,13 @@ namespace Elastic.Apm.Config
 		string ServerCert { get; }
 
 		/// <summary>
+		/// The maximum amount of time a connection to APM server is reused before it is replaced with a new one.
+		/// Replacing connections periodically makes the agent re-resolve the DNS name of APM server and rebalance
+		/// across the instances behind a load balancer, which would otherwise not happen for as long as a connection stays open.
+		/// </summary>
+		TimeSpan ServerConnectionLifetime { get; }
+
+		/// <summary>
 		/// The URL for APM server.
 		/// </summary>
 		Uri ServerUrl { get; }

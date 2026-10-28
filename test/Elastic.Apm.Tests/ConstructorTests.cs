@@ -103,6 +103,8 @@ public class ConstructorTests
 		public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 		public string SecretToken { get; }
 		public string ServerCert { get; }
+		public TimeSpan ServerConnectionLifetime =>
+			TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.ServerConnectionLifetimeInMilliseconds);
 		public string ApiKey { get; }
 		public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 		public bool UseWindowsCredentials { get; }

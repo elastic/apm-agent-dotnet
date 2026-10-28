@@ -15,6 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 #endif
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
@@ -26,9 +27,26 @@ namespace Elastic.Apm.BackendComm
 	{
 		private const string ThisClassName = nameof(BackendCommUtils);
 
+#if !NET
 		private static readonly LazyContextualInit ConfigServicePointOnceHelper = new LazyContextualInit();
+#endif
 
-		private static readonly TimeSpan DnsTimeout = TimeSpan.FromMinutes(1);
+		/// <summary>
+		/// Converts <see cref="IConfigurationReader.ServerConnectionLifetime"/> into the value expected by
+		/// <c>SocketsHttpHandler.PooledConnectionLifetime</c>, where <see cref="Timeout.InfiniteTimeSpan"/> disables recycling.
+		/// </summary>
+		internal static TimeSpan ToPooledConnectionLifetime(TimeSpan serverConnectionLifetime) =>
+			serverConnectionLifetime <= TimeSpan.Zero ? Timeout.InfiniteTimeSpan : serverConnectionLifetime;
+
+		/// <summary>
+		/// Converts <see cref="IConfigurationReader.ServerConnectionLifetime"/> into the value expected by
+		/// <c>ServicePoint.ConnectionLeaseTimeout</c>, in milliseconds. <c>-1</c> disables recycling, whereas <c>0</c> would
+		/// close the connection after every request.
+		/// </summary>
+		internal static int ToConnectionLeaseTimeout(TimeSpan serverConnectionLifetime) =>
+			serverConnectionLifetime <= TimeSpan.Zero ? Timeout.Infinite
+				: serverConnectionLifetime.TotalMilliseconds >= int.MaxValue ? int.MaxValue
+				: (int)serverConnectionLifetime.TotalMilliseconds;
 
 #if NET462
 		internal static SecurityProtocolType EnsureTls12ForExplicitSecurityProtocols(SecurityProtocolType protocols) =>
@@ -108,7 +126,10 @@ namespace Elastic.Apm.BackendComm
 			}
 		}
 
-		private static void ConfigServicePoint(Uri serverUrlBase, IApmLogger logger) =>
+#if !NET
+		// ServicePointManager only applies to HttpWebRequest-based handlers (.NET Framework). On .NET (Core) the
+		// SocketsHttpHandler ignores it and connection recycling is configured through PooledConnectionLifetime instead.
+		private static void ConfigServicePoint(Uri serverUrlBase, TimeSpan serverConnectionLifetime, IApmLogger logger) =>
 			ConfigServicePointOnceHelper.IfNotInited?.Init(() =>
 			{
 				// ServicePointManager is obsolete
@@ -117,7 +138,10 @@ namespace Elastic.Apm.BackendComm
 #pragma warning restore SYSLIB0014
 				try
 				{
-					servicePoint.ConnectionLeaseTimeout = (int)DnsTimeout.TotalMilliseconds;
+					servicePoint.ConnectionLeaseTimeout = ToConnectionLeaseTimeout(serverConnectionLifetime);
+					logger.Debug()
+						?.Log("ConfigServicePoint - ConnectionLeaseTimeout: {ConnectionLeaseTimeout}ms for {ApmServerUrl} (-1 means connections are not recycled)",
+							servicePoint.ConnectionLeaseTimeout, serverUrlBase.Sanitize());
 				}
 				catch (Exception e)
 				{
@@ -129,25 +153,14 @@ namespace Elastic.Apm.BackendComm
 
 				servicePoint.ConnectionLimit = 20;
 			});
+#endif
 
-		internal static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
+#if !NET462
+		private static RemoteCertificateValidationCallback CreateServerCertificateValidationCallback(IConfiguration configuration, IApmLogger logger)
 		{
-#if NET462 // SSL options are not available in .NET Framework 4.6.2
-			try
-			{
-				var systemNetHttpVersion = typeof(HttpClientHandler).Assembly.GetName().Version;
-				logger.Trace()?.Log("System.Net.Http assembly version if {Version}.", systemNetHttpVersion);
-			}
-			catch (Exception ex)
-			{
-				logger.Error()?.LogException(ex, "Could not determine the assembly version of System.Net.Http.");
-			}
-#else
-			Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback = null;
-
 			if (!configuration.VerifyServerCert)
 			{
-				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
+				return (_, _, _, policyError) =>
 				{
 					if (policyError == SslPolicyErrors.None)
 						return true;
@@ -156,7 +169,8 @@ namespace Elastic.Apm.BackendComm
 					return true;
 				};
 			}
-			else if (!string.IsNullOrEmpty(configuration.ServerCert))
+
+			if (!string.IsNullOrEmpty(configuration.ServerCert))
 			{
 				try
 				{
@@ -167,7 +181,7 @@ namespace Elastic.Apm.BackendComm
 #endif
 					var publicKey = serverCertificate.GetPublicKeyString();
 
-					serverCertificateCustomValidationCallback = (_, certificate, _, policyError) =>
+					return (_, certificate, _, policyError) =>
 					{
 						if (policyError == SslPolicyErrors.None)
 							return true;
@@ -199,19 +213,93 @@ namespace Elastic.Apm.BackendComm
 							"Could not configure {ConfigServerCert} at path {Path} for certificate pinning",
 							nameof(configuration.ServerCert),
 							configuration.ServerCert);
+
+					return null;
 				}
 			}
-			else
-			{
-				// set a default callback to log the policy error
-				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
-				{
-					if (policyError == SslPolicyErrors.None)
-						return true;
 
-					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
-					return false;
-				};
+			// set a default callback to log the policy error
+			return (_, _, _, policyError) =>
+			{
+				if (policyError == SslPolicyErrors.None)
+					return true;
+
+				logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
+				return false;
+			};
+		}
+#endif
+
+		private static WebProxy CreateProxy(IConfiguration configuration)
+		{
+			var proxyUrl = configuration.ProxyUrl;
+
+			if (proxyUrl == null)
+				return null;
+
+			if (string.IsNullOrWhiteSpace(configuration.ProxyUserName) || string.IsNullOrWhiteSpace(configuration.ProxyPassword))
+				return new WebProxy(proxyUrl);
+
+			return new WebProxy(proxyUrl)
+			{
+				Credentials = new NetworkCredential(configuration.ProxyUserName, configuration.ProxyPassword),
+			};
+		}
+
+		internal static HttpMessageHandler CreateHttpMessageHandler(IConfiguration configuration, IApmLogger logger) =>
+#if NET
+			CreateSocketsHttpHandler(configuration, logger);
+#else
+			CreateHttpClientHandler(configuration, logger);
+#endif
+
+#if NET
+		/// <summary>
+		/// On .NET the <see cref="HttpClientHandler"/> is a thin wrapper over <see cref="SocketsHttpHandler"/> that does not expose
+		/// <see cref="SocketsHttpHandler.PooledConnectionLifetime"/>, which is the supported way to make a long-lived
+		/// <see cref="HttpClient"/> respect DNS changes. We therefore use the <see cref="SocketsHttpHandler"/> directly.
+		/// </summary>
+		internal static SocketsHttpHandler CreateSocketsHttpHandler(IConfiguration configuration, IApmLogger logger)
+		{
+			var handler = new SocketsHttpHandler
+			{
+				PooledConnectionLifetime = ToPooledConnectionLifetime(configuration.ServerConnectionLifetime)
+			};
+			logger.Info()
+				?.Log("CreateSocketsHttpHandler - PooledConnectionLifetime: {ServerConnectionLifetime} (0 means connections are not recycled)",
+					configuration.ServerConnectionLifetime.ToHms());
+
+			// Defer protocol selection to the operating system so newer protocols can be used automatically.
+			handler.SslOptions.EnabledSslProtocols = SslProtocols.None;
+			logger.Info()?.Log("CreateSocketsHttpHandler - SslProtocols: {SslProtocols} (OS default)", handler.SslOptions.EnabledSslProtocols);
+
+			handler.SslOptions.RemoteCertificateValidationCallback = CreateServerCertificateValidationCallback(configuration, logger);
+			logger.Info()?.Log("CreateSocketsHttpHandler - Setting RemoteCertificateValidationCallback");
+
+			if (configuration.UseWindowsCredentials)
+				handler.Credentials = CredentialCache.DefaultCredentials;
+
+			var proxy = CreateProxy(configuration);
+			if (proxy != null)
+			{
+				handler.UseProxy = true;
+				handler.Proxy = proxy;
+			}
+
+			return handler;
+		}
+#else
+		internal static HttpClientHandler CreateHttpClientHandler(IConfiguration configuration, IApmLogger logger)
+		{
+#if NET462 // SSL options are not available in .NET Framework 4.6.2
+			try
+			{
+				var systemNetHttpVersion = typeof(HttpClientHandler).Assembly.GetName().Version;
+				logger.Trace()?.Log("System.Net.Http assembly version if {Version}.", systemNetHttpVersion);
+			}
+			catch (Exception ex)
+			{
+				logger.Error()?.LogException(ex, "Could not determine the assembly version of System.Net.Http.");
 			}
 #endif
 
@@ -234,25 +322,34 @@ namespace Elastic.Apm.BackendComm
 					ServicePointManager.SecurityProtocol = securityProtocols;
 				logger.Info()?.Log("CreateHttpClientHandler - SecurityProtocol: {SecurityProtocol}", securityProtocols);
 			}
+
+			// We don't set the ServerCertificateCustomValidationCallback on ServicePointManager here as it would
+			// apply to the whole AppDomain and that may not be desired. A consumer can set this themselves if they
+			// need custom validation behaviour.
 #else
 			// Defer protocol selection to the operating system so newer protocols can be used automatically.
 			httpClientHandler.SslProtocols = SslProtocols.None;
 			logger.Info()?.Log("CreateHttpClientHandler - SslProtocols: {SslProtocols} (OS default)", httpClientHandler.SslProtocols);
-#endif
 
-#if !NET462
-			httpClientHandler.ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
+			var serverCertificateValidationCallback = CreateServerCertificateValidationCallback(configuration, logger);
+			if (serverCertificateValidationCallback != null)
+			{
+				httpClientHandler.ServerCertificateCustomValidationCallback = (_, certificate, chain, policyError) =>
+					serverCertificateValidationCallback(null, certificate, chain, policyError);
+			}
 			logger.Info()?.Log("CreateHttpClientHandler - Setting ServerCertificateCustomValidationCallback");
-#else
-			// We don't set the ServerCertificateCustomValidationCallback on ServicePointManager here as it would
-			// apply to the whole AppDomain and that may not be desired. A consumer can set this themselves if they
-			// need custom validation behaviour.
 #endif
 
-			ConfigureHttpProxy(httpClientHandler, configuration);
+			var proxy = CreateProxy(configuration);
+			if (proxy != null)
+			{
+				httpClientHandler.UseProxy = true;
+				httpClientHandler.Proxy = proxy;
+			}
 
 			return httpClientHandler;
 		}
+#endif
 
 		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfiguration configuration, Service service, string dbgCallerDesc
 			, HttpMessageHandler httpMessageHandler = null
@@ -261,13 +358,15 @@ namespace Elastic.Apm.BackendComm
 			var logger = loggerArg.Scoped(ThisClassName);
 
 			var serverUrlBase = configuration.ServerUrl;
-			ConfigServicePoint(serverUrlBase, loggerArg);
+#if !NET
+			ConfigServicePoint(serverUrlBase, configuration.ServerConnectionLifetime, loggerArg);
+#endif
 
 			logger.Debug()
 				?.Log("Building HTTP client with BaseAddress: {ApmServerUrl} for {dbgCallerDesc}..."
 					, serverUrlBase.Sanitize(), dbgCallerDesc);
 			var httpClient =
-				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(configuration, loggerArg)) { BaseAddress = serverUrlBase };
+				new HttpClient(httpMessageHandler ?? CreateHttpMessageHandler(configuration, loggerArg)) { BaseAddress = serverUrlBase };
 			httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd(GetUserAgent(service));
 			httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",
 				AdaptUserAgentValue(typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version)));
@@ -301,33 +400,6 @@ namespace Elastic.Apm.BackendComm
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
-		}
-
-		private static void ConfigureHttpProxy(HttpClientHandler httpClientHandler, IConfiguration configuration)
-		{
-			var proxyUrl = configuration.ProxyUrl;
-
-			if (proxyUrl != null)
-			{
-				WebProxy proxy;
-
-				if (string.IsNullOrWhiteSpace(configuration.ProxyUserName) || string.IsNullOrWhiteSpace(configuration.ProxyPassword))
-				{
-					proxy = new WebProxy(proxyUrl);
-
-				}
-				else
-				{
-					proxy = new WebProxy(proxyUrl)
-					{
-						Credentials = new NetworkCredential(configuration.ProxyUserName, configuration.ProxyPassword),
-
-					};
-				}
-
-				httpClientHandler.UseProxy = true;
-				httpClientHandler.Proxy = proxy;
-			}
 		}
 
 		private static string GetUserAgent(Service service)

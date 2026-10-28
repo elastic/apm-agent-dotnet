@@ -902,6 +902,12 @@ namespace Elastic.Apm.Tests.Config
 		[InlineData("dsfkldfs", DefaultValues.FlushIntervalInMilliseconds)]
 		[InlineData("2,32", DefaultValues.FlushIntervalInMilliseconds)]
 		[InlineData("785zz", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("NaNms", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("NaN", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("Infinity", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("1e100s", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("1e100ms", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("1e15", DefaultValues.FlushIntervalInMilliseconds)]
 		[Theory]
 		public void FlushInterval_tests(string configValue, int expectedValueInMilliseconds)
 		{
@@ -909,6 +915,35 @@ namespace Elastic.Apm.Tests.Config
 				   new ApmAgent(new TestAgentComponents(
 					   configuration: new MockConfiguration(flushInterval: configValue))))
 				agent.Configuration.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(expectedValueInMilliseconds));
+		}
+
+		[InlineData(null, DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("123ms", 123)]
+		[InlineData("30s", 30 * 1000)]
+		[InlineData("5m", 5 * 60 * 1000)]
+		[InlineData("45", 45 * 1000)]
+		[InlineData("0", 0)]
+		[InlineData("0s", 0)]
+		[InlineData("-3ms", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("-1", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("dsfkldfs", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("2,32", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("785zz", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("NaNms", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("NaN", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("Infinity", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("1e100s", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("1e100ms", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[InlineData("1e15", DefaultValues.ServerConnectionLifetimeInMilliseconds)]
+		[Theory]
+		public void ServerConnectionLifetime_tests(string configValue, int expectedValueInMilliseconds)
+		{
+			using var agent =
+				   new ApmAgent(new TestAgentComponents(
+					   configuration: new MockConfiguration(serverConnectionLifetime: configValue)));
+
+			agent.Configuration.ServerConnectionLifetime.Should().Be(TimeSpan.FromMilliseconds(expectedValueInMilliseconds));
 		}
 
 		[InlineData("1", 1)]

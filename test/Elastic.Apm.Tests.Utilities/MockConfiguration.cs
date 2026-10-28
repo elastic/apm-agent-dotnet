@@ -66,6 +66,10 @@ namespace Elastic.Apm.Tests.Utilities
 			string serverUrl = null,
 			string useWindowsCredentials = null,
 			string serverCert = null,
+			string serverConnectionLifetime = null,
+			string proxyUrl = null,
+			string proxyUserName = null,
+			string proxyPassword = null,
 			string ignoreMessageQueues = null,
 			string traceContextIgnoreSampledFalse = null,
 			string spanCompressionEnabled = null,
@@ -109,6 +113,7 @@ namespace Elastic.Apm.Tests.Utilities
 				ConfigurationOption.SanitizeFieldNames => sanitizeFieldNames,
 				ConfigurationOption.SecretToken => secretToken,
 				ConfigurationOption.ServerCert => serverCert,
+				ConfigurationOption.ServerConnectionLifetime => serverConnectionLifetime,
 				ConfigurationOption.ServerUrl => serverUrl,
 				ConfigurationOption.ServerUrls => serverUrls,
 				ConfigurationOption.UseWindowsCredentials => useWindowsCredentials,
@@ -131,9 +136,9 @@ namespace Elastic.Apm.Tests.Utilities
 				ConfigurationOption.UsePathAsTransactionName => usePathAsTransactionName,
 				ConfigurationOption.VerifyServerCert => verifyServerCert,
 				ConfigurationOption.FullFrameworkConfigurationReaderType => null,
-				ConfigurationOption.ProxyUrl => null,
-				ConfigurationOption.ProxyUserName => null,
-				ConfigurationOption.ProxyPassword => null,
+				ConfigurationOption.ProxyUrl => proxyUrl,
+				ConfigurationOption.ProxyUserName => proxyUserName,
+				ConfigurationOption.ProxyPassword => proxyPassword,
 				_ => throw new Exception($"{nameof(MockConfiguration)} does not have implementation for configuration : {key}")
 			})
 		)

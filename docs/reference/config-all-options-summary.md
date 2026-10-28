@@ -44,6 +44,7 @@ applies_to:
 | [`SanitizeFieldNames`](/reference/config-core.md#config-sanitize-field-names) | Yes | Core |
 | [`SecretToken`](/reference/config-reporter.md#config-secret-token) | No | Reporter |
 | [`ServerCert`](/reference/config-reporter.md#config-server-cert) | No | Reporter |
+| [`ServerConnectionLifetime`](/reference/config-reporter.md#config-server-connection-lifetime) | No | Reporter |
 | [`ServerUrl`](/reference/config-reporter.md#config-server-url) | No | Reporter |
 | [`ServiceName`](/reference/config-core.md#config-service-name) | No | Core |
 | [`ServiceNodeName`](/reference/config-core.md#config-service-node-name) | No | Core |
