@@ -129,7 +129,7 @@ Supports the duration suffixes `ms`, `s` and `m`. Example: `5m`. The default uni
 
 A connection that is in use is never interrupted. A connection that is older than this value is replaced when the next request is sent.
 
-If `ServerConnectionLifetime` is set to `0` (or `0s`, `0ms`, and so on), connections are not replaced because of their age. This is the behavior of previous agent versions on .NET 8 or newer.
+If `ServerConnectionLifetime` is set to `0` (or `0s`, `0ms`, and so on), connections are not replaced because of their age. This is the behavior of previous agent versions on .NET 8 or later.
 
 Setting `ServerConnectionLifetime` to a negative value (for example `-1`, `-54s`, `-89ms`, and so on) is invalid and in that case the agent uses the default value instead.
 
