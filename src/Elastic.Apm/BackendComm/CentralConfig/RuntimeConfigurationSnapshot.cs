@@ -90,6 +90,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		public string ServerCert => _mainConfiguration.ServerCert;
 
+		public TimeSpan ServerConnectionLifetime => _mainConfiguration.ServerConnectionLifetime;
+
 		public Uri ServerUrl => _mainConfiguration.ServerUrl;
 
 		[Obsolete("Use ServerUrl")]

@@ -115,6 +115,41 @@ This configuration setting has no effect on .NET Framework versions 4.6.2 to 4.7
 ::::
 
 
+## `ServerConnectionLifetime` [config-server-connection-lifetime]
+
+```{applies_to}
+apm_agent_dotnet: ga 1.36
+```
+
+The maximum amount of time a connection to {{product.apm-server}} is reused before the agent replaces it with a new one.
+
+Without periodic replacement, the agent keeps using the same connection for as long as it stays open. It therefore doesn't notice when the DNS name of {{product.apm-server}} starts resolving to a different address, for example after a failover or a migration, and it doesn't spread across the instances behind a load balancer that balances per connection. Replacing connections periodically makes the agent look the name up again and connect to whichever address it currently resolves to. The agent picks up a DNS change within about this value plus the time-to-live (TTL) of the DNS record.
+
+Supports the duration suffixes `ms`, `s` and `m`. Example: `5m`. The default unit for this option is `s`.
+
+A connection that is in use is never interrupted. A connection that is older than this value is replaced when the next request is sent.
+
+If `ServerConnectionLifetime` is set to `0` (or `0s`, `0ms`, and so on), connections are not replaced because of their age. This is the behavior of previous agent versions on .NET 8 or later.
+
+Setting `ServerConnectionLifetime` to a negative value (for example `-1`, `-54s`, `-89ms`, and so on) is invalid and in that case the agent uses the default value instead.
+
+Very small values cause the agent to open a new connection, including a new TLS handshake, for nearly every request. Use the default unless you have a specific reason to change it. If you use [`UseWindowsCredentials`](/reference/config-http.md#config-use-windows-credentials) with a proxy that uses connection-based authentication (NTLM or Negotiate), each new connection repeats the authentication handshake. Increase this value if that is a concern.
+
+| Environment variable name | IConfiguration or Web.config key |
+| --- | --- |
+| `ELASTIC_APM_SERVER_CONNECTION_LIFETIME` | `ElasticApm:ServerConnectionLifetime` |
+
+| Default | Type |
+| --- | --- |
+| `1m` | TimeDuration |
+
+::::{note}
+On .NET Framework this option configures `ServicePoint.ConnectionLeaseTimeout`, which has applied a fixed one-minute value in previous agent versions. .NET Framework also caches DNS results for up to two minutes (`ServicePointManager.DnsRefreshTimeout`), and the setting is applied once per process, using the configuration of the first agent that connects to {{product.apm-server}}.
+
+This option has no effect on .NET Core 3.x to .NET 7, which are served by the `netstandard2.1` build of the agent. These runtimes are out of support.
+::::
+
+
 ## `FlushInterval` [config-flush-interval]
 
 ```{applies_to}

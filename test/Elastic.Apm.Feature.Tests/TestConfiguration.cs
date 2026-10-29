@@ -49,6 +49,7 @@ namespace Elastic.Apm.Feature.Tests
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; set; } = DefaultValues.SanitizeFieldNames;
 		public string SecretToken { get; set; }
 		public string ServerCert { get; set; }
+		public TimeSpan ServerConnectionLifetime { get; set; } = TimeSpan.FromMilliseconds(DefaultValues.ServerConnectionLifetimeInMilliseconds);
 		public Uri ServerUrl { get; set; } = DefaultValues.ServerUri;
 		public bool UseWindowsCredentials { get; set; }
 		public IReadOnlyList<Uri> ServerUrls { get; set; } = new List<Uri> { DefaultValues.ServerUri };

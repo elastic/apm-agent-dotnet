@@ -70,6 +70,8 @@ namespace Elastic.Apm.Config
 		SecretToken,
 		/// <inheritdoc cref="IConfigurationReader.ServerCert"/>
 		ServerCert,
+		/// <inheritdoc cref="IConfigurationReader.ServerConnectionLifetime"/>
+		ServerConnectionLifetime,
 		/// <inheritdoc cref="IConfigurationReader.ServerUrl"/>
 		ServerUrl,
 		/// <inheritdoc cref="IConfigurationReader.UseWindowsCredentials"/>
@@ -189,6 +191,7 @@ namespace Elastic.Apm.Config
 				SanitizeFieldNames => EnvPrefix + "SANITIZE_FIELD_NAMES",
 				SecretToken => EnvPrefix + "SECRET_TOKEN",
 				ServerCert => EnvPrefix + "SERVER_CERT",
+				ServerConnectionLifetime => EnvPrefix + "SERVER_CONNECTION_LIFETIME",
 				ServerUrl => EnvPrefix + "SERVER_URL",
 				ServerUrls => EnvPrefix + "SERVER_URLS",
 				UseWindowsCredentials => EnvPrefix + "USE_WINDOWS_CREDENTIALS",
@@ -249,6 +252,7 @@ namespace Elastic.Apm.Config
 				SanitizeFieldNames => KeyPrefix + nameof(SanitizeFieldNames),
 				SecretToken => KeyPrefix + nameof(SecretToken),
 				ServerCert => KeyPrefix + nameof(ServerCert),
+				ServerConnectionLifetime => KeyPrefix + nameof(ServerConnectionLifetime),
 				ServerUrl => KeyPrefix + nameof(ServerUrl),
 				UseWindowsCredentials => KeyPrefix + nameof(UseWindowsCredentials),
 				ServiceName => KeyPrefix + nameof(ServiceName),

@@ -679,6 +679,11 @@ namespace Elastic.Apm.Config
 				TimeSpan.FromMilliseconds(DefaultValues.FlushIntervalInMilliseconds),
 				"FlushInterval");
 
+		protected TimeSpan ParseServerConnectionLifetime(ConfigurationKeyValue kv) =>
+			ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(kv, TimeSuffix.S,
+				TimeSpan.FromMilliseconds(DefaultValues.ServerConnectionLifetimeInMilliseconds),
+				"ServerConnectionLifetime");
+
 		private TimeSpan ParsePositiveOrZeroTimeIntervalInMillisecondsImpl(ConfigurationKeyValue kv, TimeSuffix defaultSuffix,
 			TimeSpan defaultValue, string dbgOptionName
 		)
@@ -731,57 +736,79 @@ namespace Elastic.Apm.Config
 				return defaultValue;
 			}
 
-			return TimeSpan.FromMilliseconds(valueInMilliseconds);
+			try
+			{
+				return TimeSpan.FromMilliseconds(valueInMilliseconds);
+			}
+			catch (OverflowException)
+			{
+				// TryParseTimeInterval bounds the value, but TimeSpan.FromMilliseconds rounds on older runtimes and can still
+				// overflow right at the edge of the representable range.
+				_logger?.Error()
+					?.Log("Provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' is out of range - " +
+						"using default: {Default" + dbgOptionName + "}",
+						kv.Value,
+						defaultValue);
+				return defaultValue;
+			}
 		}
 
 		private bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds, TimeSuffix defaultSuffix)
 		{
-			switch (valueAsString)
+			valueInMilliseconds = 0;
+
+			TimeSuffix suffix;
+			string number;
+			if (valueAsString.EndsWith("ms", StringComparison.OrdinalIgnoreCase))
 			{
-				case string _ when valueAsString.Length >= 2 && valueAsString.Substring(valueAsString.Length - 2).ToLowerInvariant() == "ms":
-					return TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 2), out valueInMilliseconds);
-
-				case string _ when char.ToLower(valueAsString.Last()) == 's':
-					if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInSeconds))
-					{
-						valueInMilliseconds = 0;
-						return false;
-					}
-					valueInMilliseconds = TimeSpan.FromSeconds(valueInSeconds).TotalMilliseconds;
-					return true;
-
-				case string _ when char.ToLower(valueAsString.Last()) == 'm':
-					if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInMinutes))
-					{
-						valueInMilliseconds = 0;
-						return false;
-					}
-					valueInMilliseconds = TimeSpan.FromMinutes(valueInMinutes).TotalMilliseconds;
-					return true;
-				default:
-					if (!TryParseFloatingPoint(valueAsString, out var valueNoUnits))
-					{
-						valueInMilliseconds = 0;
-						return false;
-					}
-
-					switch (defaultSuffix)
-					{
-						case TimeSuffix.M:
-							valueInMilliseconds = TimeSpan.FromMinutes(valueNoUnits).TotalMilliseconds;
-							break;
-						case TimeSuffix.Ms:
-							valueInMilliseconds = TimeSpan.FromMilliseconds(valueNoUnits).TotalMilliseconds;
-							break;
-						case TimeSuffix.S:
-							valueInMilliseconds = TimeSpan.FromSeconds(valueNoUnits).TotalMilliseconds;
-							break;
-						default:
-							throw new ArgumentException($"Unexpected TimeSuffix value: {defaultSuffix}", /* paramName: */ nameof(defaultSuffix));
-					}
-
-					return true;
+				suffix = TimeSuffix.Ms;
+				number = valueAsString.Substring(0, valueAsString.Length - 2);
 			}
+			else if (valueAsString.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+			{
+				suffix = TimeSuffix.S;
+				number = valueAsString.Substring(0, valueAsString.Length - 1);
+			}
+			else if (valueAsString.EndsWith("m", StringComparison.OrdinalIgnoreCase))
+			{
+				suffix = TimeSuffix.M;
+				number = valueAsString.Substring(0, valueAsString.Length - 1);
+			}
+			else
+			{
+				suffix = defaultSuffix;
+				number = valueAsString;
+			}
+
+			// double.TryParse accepts "NaN", "Infinity" and magnitudes far beyond what a TimeSpan can hold. Treat those as parse
+			// failures so callers fall back to the default instead of the TimeSpan conversions throwing during agent setup.
+			if (!TryParseFloatingPoint(number, out var parsed) || double.IsNaN(parsed) || double.IsInfinity(parsed))
+				return false;
+
+			try
+			{
+				switch (suffix)
+				{
+					case TimeSuffix.M:
+						valueInMilliseconds = TimeSpan.FromMinutes(parsed).TotalMilliseconds;
+						break;
+					case TimeSuffix.S:
+						valueInMilliseconds = TimeSpan.FromSeconds(parsed).TotalMilliseconds;
+						break;
+					case TimeSuffix.Ms:
+						// Kept as parsed (not routed through TimeSpan) to preserve sub-millisecond precision on older runtimes.
+						valueInMilliseconds = parsed;
+						break;
+					default:
+						throw new ArgumentException($"Unexpected TimeSuffix value: {suffix}", /* paramName: */ nameof(defaultSuffix));
+				}
+			}
+			catch (OverflowException)
+			{
+				return false;
+			}
+
+			return Math.Abs(valueInMilliseconds) <= TimeSpan.MaxValue.TotalMilliseconds;
 		}
 
 		private static AssemblyName DiscoverEntryAssemblyName()

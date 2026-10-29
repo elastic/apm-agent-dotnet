@@ -114,6 +114,7 @@ namespace Elastic.Apm.Config
 			SanitizeFieldNames = ParseSanitizeFieldNames(Lookup(ConfigurationOption.SanitizeFieldNames));
 			SecretToken = ParseSecretToken(Lookup(ConfigurationOption.SecretToken));
 			ServerCert = ParseServerCert(Lookup(ConfigurationOption.ServerCert));
+			ServerConnectionLifetime = ParseServerConnectionLifetime(Lookup(ConfigurationOption.ServerConnectionLifetime));
 			UseWindowsCredentials = ParseUseWindowsCredentials(Lookup(ConfigurationOption.UseWindowsCredentials));
 			ServiceName = ParseServiceName(Lookup(ConfigurationOption.ServiceName));
 			ServiceNodeName = ParseServiceNodeName(Lookup(ConfigurationOption.ServiceNodeName));
@@ -216,6 +217,8 @@ namespace Elastic.Apm.Config
 		public string SecretToken { get; }
 
 		public string ServerCert { get; }
+
+		public TimeSpan ServerConnectionLifetime { get; }
 
 		/// <inheritdoc />
 		public Uri ServerUrl { get; }

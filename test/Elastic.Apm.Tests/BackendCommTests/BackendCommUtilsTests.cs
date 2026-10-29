@@ -3,12 +3,13 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-#if NET462
 using System.Net;
-#else
+#if NET
 using System.Net.Http;
+using System.Net.Security;
 using System.Security.Authentication;
 #endif
+using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.Tests.Utilities;
@@ -35,13 +36,134 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			BackendCommUtils.EnsureTls12ForExplicitSecurityProtocols((SecurityProtocolType)input)
 				.Should()
 				.Be((SecurityProtocolType)expected);
-#else
-		[Fact]
-		public void CreateHttpClientHandler_uses_os_default_tls_protocols()
-		{
-			using var handler = BackendCommUtils.CreateHttpClientHandler(new MockConfiguration(), new NoopLogger());
+#endif
 
-			handler.SslProtocols.Should().Be(SslProtocols.None);
+		[Theory]
+		[InlineData(0)]
+		[InlineData(-1)]
+		public void ToPooledConnectionLifetime_zero_disables_recycling(int milliseconds) =>
+			BackendCommUtils.ToPooledConnectionLifetime(TimeSpan.FromMilliseconds(milliseconds)).Should().Be(Timeout.InfiniteTimeSpan);
+
+		[Theory]
+		[InlineData(1)]
+		[InlineData(60_000)]
+		public void ToPooledConnectionLifetime_passes_through_positive_values(int milliseconds) =>
+			BackendCommUtils.ToPooledConnectionLifetime(TimeSpan.FromMilliseconds(milliseconds)).Should().Be(TimeSpan.FromMilliseconds(milliseconds));
+
+		// ServicePoint.ConnectionLeaseTimeout: -1 is infinite, whereas 0 closes the connection after every request.
+		[Fact]
+		public void ToConnectionLeaseTimeout_zero_maps_to_infinite_and_not_zero() =>
+			BackendCommUtils.ToConnectionLeaseTimeout(TimeSpan.Zero).Should().Be(Timeout.Infinite);
+
+		[Theory]
+		[InlineData(1, 1)]
+		[InlineData(60_000, 60_000)]
+		[InlineData(int.MaxValue, int.MaxValue)]
+		public void ToConnectionLeaseTimeout_passes_through_positive_values(int milliseconds, int expected) =>
+			BackendCommUtils.ToConnectionLeaseTimeout(TimeSpan.FromMilliseconds(milliseconds)).Should().Be(expected);
+
+		[Fact]
+		public void ToConnectionLeaseTimeout_clamps_values_that_do_not_fit_in_an_int() =>
+			BackendCommUtils.ToConnectionLeaseTimeout(TimeSpan.FromDays(30)).Should().Be(int.MaxValue);
+
+#if NET
+		private static SocketsHttpHandler CreateHandler(MockConfiguration configuration) =>
+			BackendCommUtils.CreateHttpMessageHandler(configuration, new NoopLogger()).Should().BeOfType<SocketsHttpHandler>().Subject;
+
+		[Fact]
+		public void CreateHttpMessageHandler_recycles_connections_every_minute_by_default()
+		{
+			using var handler = CreateHandler(new MockConfiguration());
+
+			handler.PooledConnectionLifetime.Should().Be(TimeSpan.FromMinutes(1));
+		}
+
+		[Theory]
+		[InlineData("5m", 5 * 60 * 1000)]
+		[InlineData("30s", 30 * 1000)]
+		[InlineData("0", -1)]
+		[InlineData("-1", 60 * 1000)] // invalid, falls back to the default
+		public void CreateHttpMessageHandler_applies_server_connection_lifetime(string configValue, int expectedMilliseconds)
+		{
+			using var handler = CreateHandler(new MockConfiguration(serverConnectionLifetime: configValue));
+
+			handler.PooledConnectionLifetime.Should().Be(TimeSpan.FromMilliseconds(expectedMilliseconds));
+		}
+
+		[Fact]
+		public void CreateHttpMessageHandler_uses_os_default_tls_protocols()
+		{
+			using var handler = CreateHandler(new MockConfiguration());
+
+			handler.SslOptions.EnabledSslProtocols.Should().Be(SslProtocols.None);
+		}
+
+		[Theory]
+		[InlineData("false", false)]
+		[InlineData("true", true)]
+		public void CreateHttpMessageHandler_uses_default_credentials_only_when_windows_credentials_are_enabled(string configValue, bool expected)
+		{
+			using var handler = CreateHandler(new MockConfiguration(useWindowsCredentials: configValue));
+
+			if (expected)
+				handler.Credentials.Should().BeSameAs(CredentialCache.DefaultCredentials);
+			else
+				handler.Credentials.Should().BeNull();
+		}
+
+		[Fact]
+		public void CreateHttpMessageHandler_does_not_override_the_default_proxy_when_none_is_configured()
+		{
+			using var handler = CreateHandler(new MockConfiguration());
+
+			handler.UseProxy.Should().BeTrue();
+			handler.Proxy.Should().BeNull();
+		}
+
+		[Fact]
+		public void CreateHttpMessageHandler_configures_proxy_with_credentials()
+		{
+			using var handler = CreateHandler(new MockConfiguration(proxyUrl: "http://proxy.local:8080", proxyUserName: "user", proxyPassword: "pass"));
+
+			handler.UseProxy.Should().BeTrue();
+			var proxy = handler.Proxy.Should().BeOfType<WebProxy>().Subject;
+			proxy.Address.Should().Be(new Uri("http://proxy.local:8080"));
+			var credential = proxy.Credentials.GetCredential(proxy.Address, "Basic");
+			credential.UserName.Should().Be("user");
+			credential.Password.Should().Be("pass");
+		}
+
+		[Fact]
+		public void CreateHttpMessageHandler_configures_proxy_without_credentials()
+		{
+			using var handler = CreateHandler(new MockConfiguration(proxyUrl: "http://proxy.local:8080"));
+
+			var proxy = handler.Proxy.Should().BeOfType<WebProxy>().Subject;
+			proxy.Address.Should().Be(new Uri("http://proxy.local:8080"));
+			proxy.Credentials.Should().BeNull();
+		}
+
+		[Theory]
+		[InlineData(null, SslPolicyErrors.None, true)]
+		[InlineData(null, SslPolicyErrors.RemoteCertificateNameMismatch, false)]
+		[InlineData("true", SslPolicyErrors.None, true)]
+		[InlineData("true", SslPolicyErrors.RemoteCertificateNameMismatch, false)]
+		[InlineData("false", SslPolicyErrors.RemoteCertificateNameMismatch, true)]
+		public void CreateHttpMessageHandler_certificate_validation_honours_verify_server_cert(string verifyServerCert, SslPolicyErrors errors, bool expected)
+		{
+			using var handler = CreateHandler(new MockConfiguration(verifyServerCert: verifyServerCert));
+
+			var callback = handler.SslOptions.RemoteCertificateValidationCallback;
+			callback.Should().NotBeNull();
+			callback(this, null, null, errors).Should().Be(expected);
+		}
+
+		[Fact]
+		public void CreateHttpMessageHandler_falls_back_to_default_validation_when_server_cert_cannot_be_loaded()
+		{
+			using var handler = CreateHandler(new MockConfiguration(serverCert: "does-not-exist.pem"));
+
+			handler.SslOptions.RemoteCertificateValidationCallback.Should().BeNull();
 		}
 #endif
 
