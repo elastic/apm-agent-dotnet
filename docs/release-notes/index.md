@@ -26,6 +26,13 @@ To check for security updates, go to [Security announcements for the Elastic sta
 
 % ### Fixes [elastic-apm-net-agent-versionext-fixes]
 
+## 1.36.0 [elastic-apm-net-agent-1360-release-notes]
+**Release date:** October 30, 2026
+
+### Features and enhancements [elastic-apm-net-agent-1360-features-enhancements]
+
+* Add `ServerConnectionLifetime` to recycle APM Server connections [#2821](https://github.com/elastic/apm-agent-dotnet/pull/2821)
+
 ## 1.35.0 [elastic-apm-net-agent-1350-release-notes]
 **Release date:** September 15, 2026
 
