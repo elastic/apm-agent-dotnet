@@ -54,7 +54,19 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			try
 			{
-				return System.Environment.GetEnvironmentVariable("APP_POOL_ID")?.Trim();
+				var appPoolName = System.Environment.GetEnvironmentVariable("APP_POOL_ID")?.Trim();
+				if (!string.IsNullOrEmpty(appPoolName))
+					return appPoolName;
+
+				// With IIS Application Initialization and preloadEnabled="true", the application is started
+				// before APP_POOL_ID is set in the worker process environment. WAS passes the app pool name
+				// to w3wp as "-ap <name>", so use it as a fallback. APP_POOL_ID stays the first choice
+				// because IIS Express sets it but does not pass -ap.
+				appPoolName = AppPoolNameParser.FromCommandLineArgs(System.Environment.GetCommandLineArgs());
+				if (appPoolName != null)
+					logger?.Debug()?.Log("APP_POOL_ID is not set, using app pool name from the w3wp command line: {AppPoolName}", appPoolName);
+
+				return appPoolName;
 			}
 			catch (Exception ex)
 			{
